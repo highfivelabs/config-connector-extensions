@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Generate deepcopy and CRDs from apis/, the way Config Connector's
+# dev/tasks/generate-crds does for its direct kinds: controller-gen v0.16.5,
+# then Config Connector's own CRD post-processing tools (run from the pinned
+# checkout). Output: apis/**/zz_generated.deepcopy.go, config/crds/*.yaml.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${REPO_ROOT}"
+
+KCC=github.com/GoogleCloudPlatform/k8s-config-connector
+
+rm -rf config/crds
+go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.5 \
+  object:headerFile=hack/boilerplate.go.txt \
+  crd:crdVersions=v1,allowDangerousTypes=true,ignoreUnexportedFields=true \
+  output:crd:artifacts:config=config/crds/ \
+  paths="./apis/..."
+
+# As dev/tasks/generate-crds: OpenAPI validation on refs, then small tweaks.
+# (Config Connector also sets its cnrm.cloud.google.com/version annotation
+# and backports alpha versions; neither applies to our kinds.)
+go run ${KCC}/scripts/add-validation-to-crds --dir config/crds/
+go run ${KCC}/scripts/crd-tools set-field spec.preserveUnknownFields=false --dir config/crds/
+go run ${KCC}/scripts/crd-tools delete-field status --dir config/crds/
+go run ${KCC}/scripts/crd-tools delete-annotation controller-gen.kubebuilder.io/version --dir config/crds/
+go run ${KCC}/scripts/crd-tools reflow-descriptions --dir config/crds/

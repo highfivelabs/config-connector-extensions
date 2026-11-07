@@ -1,0 +1,20 @@
+gaps-gcp
+Copyright 2026 High Five Labs
+
+This product includes software from Config Connector
+(https://github.com/GoogleCloudPlatform/k8s-config-connector),
+Copyright Google LLC, licensed under the Apache License, Version 2.0.
+
+Files copied from Config Connector keep their original copyright and
+licence header and carry a "Modified by High Five Labs for gaps-gcp" note
+naming the source file and what was changed. The commit they were copied
+from is recorded in UPSTREAM.md. The patches in
+patches/k8s-config-connector/ modify Config Connector's mockgcp and are
+likewise Apache-2.0.
+
+At build time this product depends on, but does not include, Config
+Connector's source tree (fetched by hack/upstream.sh), which itself
+vendors the Terraform Google provider (MPL-2.0) and the Declarative
+Resource Client Library (Apache-2.0). Binaries built from this repository
+link code from those projects; their licences are in
+third_party/k8s-config-connector/third_party/ after hack/upstream.sh runs.

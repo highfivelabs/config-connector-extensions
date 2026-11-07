@@ -1,0 +1,86 @@
+// Copyright 2026 High Five Labs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Package controller starts the gaps-gcp kinds on Config Connector's
+// direct-controller reconciler (pkg/controller/direct/directbase) and its
+// deletion defender (pkg/controller/deletiondefender), both unchanged. The
+// direct reconciler adds the deletion-defender finalizer and will not delete
+// until the defender has removed it; the defender abandons the cloud
+// resource instead when the kind's CRD itself is being deleted, so an
+// uninstall never deletes cloud resources.
+// Config Connector chooses its reconcilers from a generated table of its own
+// kinds (pkg/controller/resourceconfig/static_config.go) and skips any other
+// CRD, so our kinds are registered here instead, in our own manager.
+package controller
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/deletiondefender"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/jitter"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
+	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sql"
+)
+
+type kind struct {
+	gvk     schema.GroupVersionKind
+	crdName string
+	model   func(context.Context, *config.ControllerConfig) (directbase.Model, error)
+}
+
+// Kinds is every kind gaps-gcp reconciles.
+var Kinds = []kind{
+	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
+}
+
+// AddToManager adds a direct controller and a deletion defender for every
+// kind in Kinds. The kinds' CRDs must be installed.
+func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.ControllerConfig) error {
+	crds, err := apiextensionsclient.NewForConfig(mgr.GetConfig())
+	if err != nil {
+		return fmt.Errorf("building apiextensions client: %w", err)
+	}
+	deps := directbase.Deps{
+		// No Terraform service mappings or DCL metadata: the reconcile
+		// interval is Config Connector's default, or the object's
+		// cnrm.cloud.google.com/reconcile-interval-in-seconds annotation.
+		JitterGenerator: jitter.NewDefaultGenerator(nil, nil),
+	}
+	for _, k := range Kinds {
+		model, err := k.model(ctx, cfg)
+		if err != nil {
+			return fmt.Errorf("building model for %v: %w", k.gvk, err)
+		}
+		if err := directbase.AddController(mgr, k.gvk, model, deps); err != nil {
+			return fmt.Errorf("adding controller for %v: %w", k.gvk, err)
+		}
+		crd, err := crds.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, k.crdName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("reading CRD %s: %w", k.crdName, err)
+		}
+		if err := deletiondefender.Add(mgr, crd, crcontroller.Options{}); err != nil {
+			return fmt.Errorf("adding deletion defender for %v: %w", k.gvk, err)
+		}
+	}
+	return nil
+}
