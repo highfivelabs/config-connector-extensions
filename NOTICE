@@ -9,8 +9,13 @@ Files copied from Config Connector keep their original copyright and
 licence header and carry a "Modified by High Five Labs for gaps-gcp" note
 naming the source file and what was changed. The commit they were copied
 from is recorded in UPSTREAM.md. The patches in
-patches/k8s-config-connector/ modify Config Connector's mockgcp and are
-likewise Apache-2.0.
+patches/k8s-config-connector/ modify Config Connector's mockgcp, whose
+files are Apache-2.0.
+
+High Five Labs attaches no licence of its own to this repository. If it
+is ever distributed, Apache-2.0 also requires a copy of that licence to go
+with the copied files (it is Config Connector's LICENSE file, in
+third_party/k8s-config-connector/ after hack/upstream.sh runs).
 
 At build time this product depends on, but does not include, Config
 Connector's source tree (fetched by hack/upstream.sh), which itself

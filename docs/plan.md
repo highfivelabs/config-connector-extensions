@@ -125,17 +125,37 @@ code and change as little as possible. For `SQLUser`:
 
 Upstream PR #7148 (open since 2026-03-24, not approved, last updated
 2026-06-04, head `eb5d176a`) migrates `SQLUser` to a direct controller and
-writes `databaseRoles` but leaves it commented out (`/*NOTYET*/`). It is not
-on `master`, so the rule does not point at it; it is the shape upstream is
-likely to take, and the kind we would migrate to (section 6). Two
+writes `databaseRoles` but leaves it commented out (`/*NOTYET*/`) in the
+types, the diff and the mapping. The builder said to use it if it does
+what we need (2026-11-07); it does not yet, so ours stays, and
+`hack/upstream-pr.sh` watches it (UPSTREAM.md, "Watched upstream change").
+It is the shape upstream is likely to take, and the kind we would migrate
+to (section 6). Two
 differences to settle if it merges: it compares `spec.databaseRoles` with
 the roles the API returns on `users.get`, where we compare with what we
 last applied (Terraform does not read roles back either, and we have not
 verified that the API returns them); and its CRD will be in
 `sql.cnrm.cloud.google.com`, so moving means re-creating objects in the
 other group with `cnrm.cloud.google.com/deletion-policy: abandon` and
-acquiring by `resourceID`. Whether to copy that PR's code now instead is
-an open question (section 8).
+acquiring by `resourceID`. 
+
+### Switching to PR #7148
+
+When `hack/upstream-pr.sh` reports `databaseRoles` live:
+
+1. Record the new head in UPSTREAM.md ("PR head", "Read on").
+2. Fetch it into the checkout (the script does) and copy the PR's
+   `sqluser_types.go`, `sqluser_controller.go`, `sqluser_mappings.go` and
+   `sqluser_resolverefs.go` over ours with the group change only, keeping
+   Google's headers and a "Modified by" note; record each in "What is
+   copied" with the PR head as the source.
+3. Re-apply our differences as small edits: revoke on removal
+   (`revokeExistingRoles`) if the PR adds without revoking, and
+   `status.appliedDatabaseRoles` if the API is shown not to return roles.
+4. `make check`; the mockgcp test must still pass unchanged.
+
+Refreshing later is the same steps against the newer head; once the PR
+merges, retire the kind instead ("Retiring a gap kind").
 
 ## 3. Keeping in sync with upstream
 
@@ -246,11 +266,12 @@ kind here.
 | Delete | `users.delete`, unless `deletion-policy: abandon` |
 | Status | `conditions`, `observedGeneration`, `sqlServerUserDetails` (as upstream), `appliedDatabaseRoles` (new) |
 
-Decisions made here that the builder may want to change (also in section 8):
+Decisions (section 8 records the builder's answers):
 
-- `databaseRoles` replaces, not adds, when it changes (Terraform's
-  behaviour); out-of-band grants are not detected while the list is
-  unchanged.
+- `databaseRoles` is the whole set of the user's roles, declaratively: a
+  role removed from the list is revoked (`revokeExistingRoles=true`, as
+  Terraform does). Kept by the builder, 2026-11-07. Out-of-band grants are
+  not detected while the list is unchanged.
 - What was applied is kept in `status.appliedDatabaseRoles`, because the
   API is not relied on to return a user's roles.
 - A password from a Secret is re-sent when the spec generation changes,
@@ -414,20 +435,20 @@ Housekeeping:
 11. A real GitHub repository, when the builder says so (none exists; no
     remote is configured).
 
-## 8. Open questions for the builder
+## 8. Builder's answers (2026-11-07)
 
-1. **Copy upstream's unmerged direct `SQLUser` (PR #7148 at `eb5d176a`)
-   instead of ours?** The rule says "on master"; the PR is not. Copying it
-   would put us closer to what upstream will ship; it is unreviewed and
-   has been idle since June.
-2. **Roles: authoritative or additive?** We follow Terraform (a change
-   revokes roles not listed). The alternative is additive only
-   (`revokeExistingRoles=false`), which never removes a grant someone made
-   by hand.
-3. **Status field name**: `status.appliedDatabaseRoles` is explicit about
-   being what we applied; Config Connector's direct kinds put API output
-   under `status.observedState`. Keep it, or move it if the API is shown
-   to return roles (then it would be observed, not applied)?
-4. **One manager per namespace or one per cluster** for gaps-gcp in Bundt
-   (follows from how Bundt runs Config Connector: the analysis proposes
-   cluster mode with one `ConfigConnectorContext` per routed namespace).
+1. **Upstream's unmerged `SQLUser` (PR #7148)**: "If the unmerged change
+   does what we need, sure use it. Find a way to ref it so we can update
+   that part from upstream easily." It does not yet (`databaseRoles` is
+   `/*NOTYET*/`), so ours stays; `hack/upstream-pr.sh` follows the PR's
+   head and section 2 ("Switching to PR #7148") says how to switch.
+2. **Roles**: replace. The list is the whole set; a role taken off it is
+   revoked.
+3. **Status field name**: `status.appliedDatabaseRoles` stays until a run
+   against real Cloud SQL shows whether `users.get` returns roles
+   (section 7, item 7).
+4. **Managers**: "One controller manager per target/cluster for now.
+   We'll try to go more granular later." The manager watches the whole
+   cluster by default (`--scoped-namespace` unset); namespace scoping
+   stays available for later.
+5. **Licence**: none; the repository stays private (README, NOTICE).

@@ -131,7 +131,9 @@ Helm chart or RBAC yet (`docs/plan.md`, "What is left").
 
 ## Licence
 
-Apache-2.0 (`LICENSE`). Most code here is copied from Config Connector,
-which is Apache-2.0, Copyright Google LLC; each copied file keeps Google's
-header and says how it was changed. See `NOTICE`. Nothing is copied from
-the Terraform provider (MPL-2.0); its behaviour is followed, not its code.
+None. The repository is private and High Five Labs attaches no licence to
+its own work here (builder, 2026-11-07). Code copied from Config Connector
+stays under Config Connector's Apache-2.0: each copied file keeps Google's
+copyright and licence header and says how it was changed, as that licence
+requires; see `NOTICE`. Nothing is copied from the Terraform provider
+(MPL-2.0); its behaviour is followed, not its code.

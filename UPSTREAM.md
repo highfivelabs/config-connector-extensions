@@ -30,7 +30,6 @@ All paths are in Config Connector at the commit above unless noted.
 | `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | no |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
 | `hack/regen-mocksql-users.sh` | `mockgcp/Makefile` (`gen-proto`), `mockgcp/apply-proto-patches.sh`, `mockgcp/fixup-third-party.sh` | one proto file only; our extra fields |
-| `LICENSE` | `LICENSE` | no |
 
 The CRD schema in `config/crds/` has the same property paths as upstream's
 `config/crds/resources/apiextensions.k8s.io_v1_customresourcedefinition_sqlusers.sql.cnrm.cloud.google.com.yaml`
@@ -51,7 +50,22 @@ flattening both).
 | `github.com/googleapis/googleapis` | `731d7f2ab6e4e2ea15030c95039e2cb66174d4fb` (mockgcp's pin, `mockgcp/git.versions`) | the protos mockgcp is generated from |
 | `github.com/googleapis/googleapis` | `bf54c1031efddde9cdfee0f89254315d0116a5f9` (`master`, 2026-11-07) | field numbers of `User.database_roles` (15) and `SqlUsersUpdateRequest.database_roles` / `revoke_existing_roles` (5, 6) |
 | `github.com/hashicorp/terraform-provider-google-beta` | `42eb358f50f54450f5433a359517c42edf10e63f` (`main`, 2026-11-07), `google-beta/services/sql/resource_sql_user.go` | the behaviour of `database_roles` (MPL-2.0; read, not copied) |
-| Config Connector PR #7148 "feat(sql): migrate SQLUser from Terraform to Direct controller" | head `eb5d176ab176d4afa5b7d1878d8f035281a7a072`, open, not approved, last updated 2026-06-04 | upstream's own direct `SQLUser`, with `databaseRoles` written but commented out (`/*NOTYET*/`); see `docs/plan.md` |
+
+## Watched upstream change
+
+Upstream's own direct `SQLUser` is an open pull request. It is not copied:
+at the head below it declares `databaseRoles` but leaves the field, its
+diff and its mapping commented out (`/*NOTYET*/`), so it does not do what
+we need. `hack/upstream-pr.sh` (`make upstream-pr`) fetches the PR's head
+by `refs/pull/<n>/head`, says whether it moved, and whether `databaseRoles`
+is live yet; when it is, follow "Switching to PR #7148" in `docs/plan.md`.
+
+| | |
+| --- | --- |
+| Watched PR | #7148 "feat(sql): migrate SQLUser from Terraform to Direct controller" |
+| PR head | `eb5d176ab176d4afa5b7d1878d8f035281a7a072` |
+| Read on | 2026-11-07 (open, review required, last updated 2026-06-04) |
+| Verdict | not adequate: `databaseRoles` commented out |
 
 ## Updating the pin
 

@@ -12,12 +12,16 @@ SETUP_ENVTEST := sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250
 # (patches/k8s-config-connector/0002-*).
 export MOCKGCP_LISTEN_ADDRESS ?= 127.0.0.1:0
 
-.PHONY: all upstream upstream-check generate build test check clean
+.PHONY: all upstream upstream-check upstream-pr generate build test check clean
 
 all: check
 
 upstream:
 	hack/upstream.sh
+
+# Read-only: is upstream's direct SQLUser (PR #7148) ready to replace ours?
+upstream-pr:
+	hack/upstream-pr.sh
 
 upstream-check:
 	hack/upstream.sh --check
