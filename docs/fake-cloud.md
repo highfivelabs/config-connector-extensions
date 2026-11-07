@@ -1,0 +1,78 @@
+# The fake cloud
+
+A Kubernetes cluster where Config Connector's resources, and ours, become
+Ready against a fake Google Cloud: for Bundt's L2, so Bundt can apply live
+components and read their status back without a real project, credentials
+or cost. Proven 2026-11-07 on an Apple-silicon Mac (Docker 20.10, kind
+0.33).
+
+```sh
+make upstream          # once: the pinned Config Connector checkout
+make fake-cloud-up     # kind cluster, CRDs, bin/fakecloud on the host
+make fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready
+make fake-cloud-down   # stop it and delete the cluster
+```
+
+`export KUBECONFIG=bin/fake-cloud/kubeconfig` to use the cluster; the
+manager's log is `bin/fake-cloud/fakecloud.log`.
+
+## How it works
+
+Config Connector has no switch that points a deployed manager at mockgcp:
+mockgcp is an in-process `http.RoundTripper` and gRPC server, not a network
+endpoint, and Config Connector's own e2e tests run it in mock mode by
+building the manager in the test process
+(`config/tests/samples/create/harness.go`). `cmd/fakecloud` does the same
+outside a test:
+
+- `kccmanager.New`, Config Connector's real manager with every controller
+  (direct, Terraform-based and DCL-based), given mockgcp as its HTTP client
+  and gRPC connection, the same hooks the harness sets (including the
+  Terraform provider's HTTP client transformers);
+- gaps-gcp's controllers (`SQLUser` with `databaseRoles`) in the same
+  manager;
+- mockgcp's in-memory store, with the projects named by `--projects`
+  (default `mock-project`) created at start.
+
+It runs on the host against the kind cluster's API server. The cluster
+holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
+`compute` groups (105 CRDs); `CRD_GROUPS=all` installs all ~800.
+
+## Timings (2026-11-07)
+
+| Step | Time |
+| --- | --- |
+| `go build ./cmd/fakecloud`, first time (Config Connector compiles with it) | about 3 min of CPU, 25 s wall on 6 cores |
+| `make fake-cloud-up`: kind cluster, 105 CRDs, manager started | 41 s |
+| `make fake-cloud-test`: 4 resources applied and Ready | 2 s |
+| `make fake-cloud-down` | about 2 s |
+
+## What does not work, or differs from the real thing
+
+- **The fake cloud forgets.** Its store is in memory: restarting
+  `bin/fakecloud` loses every fake resource, while the Kubernetes objects
+  remain and are recreated in the fake cloud on their next reconcile.
+- **No Config Connector webhooks.** The admission webhook that copies a
+  namespace's `cnrm.cloud.google.com/project-id` annotation onto each
+  resource does not run, so every resource must carry the annotation
+  itself (bundt's `charts/infra/gcp` already does). Defaulting and
+  validation webhooks are absent too.
+- **mockgcp's limits.** Cloud SQL knows Postgres up to 16, not 17 (the
+  sample uses 16; bundt runs 17), and does not refuse a user on an
+  instance that does not exist yet, so our `SQLUser` can be Ready before
+  its `SQLInstance` (upstream's ref resolver does not wait on readiness
+  either; real Cloud SQL would fail and retry). Services mockgcp does not
+  implement fail as they would against an unknown host.
+- **Not in the cluster.** The manager runs on the host, not as a pod; a
+  Target's agent in the cluster cannot reach it. An in-cluster image is
+  the next step if Bundt's L2 needs the fake cloud reachable from inside.
+- **Not the operator.** Config Connector's operator (`ConfigConnector`,
+  `ConfigConnectorContext` installation, per-namespace managers) is not
+  run; the manager watches the whole cluster, one per cluster, as
+  `docs/plan.md` section 8 decides.
+
+## Found on the way
+
+Google requires a service account ID of 6 to 30 characters. bundt's
+`charts/infra/gcp` names bntd's `IAMServiceAccount` `bntd` (4), which real
+Google Cloud would refuse as the fake one did; the sample uses `bntd-app`.

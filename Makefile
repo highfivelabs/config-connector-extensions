@@ -12,7 +12,7 @@ SETUP_ENVTEST := sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250
 # (patches/k8s-config-connector/0002-*).
 export MOCKGCP_LISTEN_ADDRESS ?= 127.0.0.1:0
 
-.PHONY: all upstream upstream-check upstream-pr generate build test check clean
+.PHONY: all upstream upstream-check upstream-pr generate build test check clean fake-cloud-up fake-cloud-test fake-cloud-down
 
 all: check
 
@@ -32,6 +32,7 @@ generate: upstream-check
 
 build: upstream-check
 	go build -o $(BIN)/manager ./cmd/manager
+	go build -o $(BIN)/fakecloud ./cmd/fakecloud
 
 $(BIN)/setup-envtest:
 	GOBIN=$(BIN) go install $(SETUP_ENVTEST)
@@ -49,6 +50,19 @@ check: upstream-check
 	@git diff --exit-code -- apis config || { echo "generated files are stale; commit the output of hack/generate.sh"; exit 1; }
 	go vet ./...
 	$(MAKE) build test
+
+# The fake cloud for Bundt's L2: kind, Config Connector's CRDs and ours, and
+# bin/fakecloud (Config Connector's manager and ours against mockgcp).
+# docs/fake-cloud.md.
+fake-cloud-up: upstream-check
+	go build -o $(BIN)/fakecloud ./cmd/fakecloud
+	hack/fake-cloud/up.sh
+
+fake-cloud-test:
+	hack/fake-cloud/test.sh
+
+fake-cloud-down:
+	hack/fake-cloud/down.sh
 
 clean:
 	rm -rf $(BIN)
