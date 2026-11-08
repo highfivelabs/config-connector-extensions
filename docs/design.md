@@ -1,26 +1,23 @@
-# gaps-gcp plan
+# gaps-gcp design
 
-Status, 2026-11-07 (evening): the repository exists locally with four
-kinds: `SQLUser` with `spec.databaseRoles`, `SQLAdminBackup`, and regional
-`SecretManagerSecret` and `SecretManagerSecretVersion` (section 6.6). Each
-passes its end-to-end test against mockgcp. An operator runs the managers
-as Config Connector's own service accounts, and a kind test proves it in
-cluster and namespaced mode against an in-cluster fake cloud (section 9).
-Images are built locally with ko; there is no registry, release or remote.
-This document says how it is built, why, how it stays in step with Config
-Connector, how it is tested, which gaps come next, and what is left.
+gaps-gcp has four kinds: `SQLUser` with `spec.databaseRoles`,
+`SQLAdminBackup`, and regional `SecretManagerSecret` and
+`SecretManagerSecretVersion` (section 6). Each passes its end-to-end test
+against mockgcp. An operator runs the managers as Config Connector's own
+service accounts, and a kind test proves it in cluster and namespaced mode
+against an in-cluster fake cloud (section 9). Images are built locally
+with ko; there is no registry or release yet. This document says how it is
+built, why, how it stays in step with Config Connector, how it is tested,
+how gaps are chosen, and what is left.
 
-It is grounded in the builder's analysis "Provider controller internals:
-Config Connector, ACK, ASO" (2026-10-31, read at Config Connector 1.160.0)
-and the gap scan `krm-gapscan-results-2026-10-19`.
-
-## 1. What the analysis settles
+## 1. Background
 
 - **One repository per provider.** Each provider's gap kinds are built with
-  that provider's generator against that provider's model input, on three
-  unrelated cadences. So `gaps-gcp`, `gaps-aws`, `gaps-azure`, each
-  versioned on its own and pinned in a Bundt provider bundle beside the
-  upstream controller it extends.
+  that provider's generator against that provider's model input, on
+  unrelated cadences. So `gaps-gcp` beside Config Connector, and in time
+  `gaps-aws` beside ACK and `gaps-azure` beside Azure Service Operator,
+  each versioned on its own and installed beside the upstream controller
+  it extends.
 - **Our kinds live in our groups.** Config Connector's registration
   controller skips any `managed-by-kcc` CRD missing from its static table,
   and its webhooks and ClusterRoles are generated from the in-tree set. A
@@ -32,23 +29,22 @@ and the gap scan `krm-gapscan-results-2026-10-19`.
   (`directbase`: a `Model → Adapter{Find, Create, Update, Delete, Export}`
   interface over the Google Cloud Go clients). Upstream says everything is
   migrating to direct; at our pin the static table has 449 direct, 225
-  Terraform, 65 DCL and 4 IAM kinds of 743 (the analysis counted 441 of
-  735 at 1.160.0). The analysis's recommendation: types, mapper, identity
-  and reference from `dev/tools/controllerbuilder`, a hand-written
-  controller (~265 lines) on `directbase`, and a mockgcp fixture.
-- **GCP is where gaps close fastest upstream**, so `gaps-gcp` should expect
-  to retire kinds as often as it adds them; a kind moves from our group to
-  theirs when the catalog's per-kind conformance says it can.
+  Terraform, 65 DCL and 4 IAM kinds of 743. A direct kind is types, mapper,
+  identity and reference (from `dev/tools/controllerbuilder` where the
+  upstream siblings are generated), a hand-written controller (a few
+  hundred lines) on `directbase`, and a mockgcp fixture.
+- **GCP is where gaps close fastest upstream**, so `gaps-gcp` expects to
+  retire kinds as often as it adds them; a kind moves from our group to
+  theirs when upstream ships it (section 3.4).
 - **Hermetic tests exist upstream**: mockgcp (a fake GCP, separate Go
   module, in the Config Connector repository) plus golden `_http.log`
-  files. That is the "fake cloud (ideal)" the builder asked for, and it is
-  already maintained by Google.
+  files, maintained by Google.
 - **The knobs** (deletion policy, adoption, identity per namespace,
   reconcile cadence) are Config Connector's annotations; because we run
   Config Connector's reconciler, our kinds honour the same ones
   (`cnrm.cloud.google.com/deletion-policy: abandon`, `spec.resourceID`
   acquisition, `.../project-id`, `.../reconcile-interval-in-seconds`), so
-  Bundt's projection writes one set of annotations for both.
+  a tool that writes them for Config Connector writes them for us too.
 
 ## 2. Architecture chosen
 
@@ -61,7 +57,7 @@ identity, config, mockgcp):
 | --- | --- |
 | A. Use Config Connector as a Go module from a checkout at a pinned `master` commit, through `replace` | **Chosen.** The framework stays byte-identical to upstream; syncing is moving the pin. |
 | B. Copy `directbase` and what it needs into this repository | Rejected: `go list -deps ./pkg/controller/direct/directbase` pulls 91 Config Connector packages, and through `krmtotf`/`servicemappings` the Terraform fork and DCL. Copying that is a fork, not a copy. |
-| C. Copy the Terraform-family `SQLUser` (CRD from the TF schema, `krmtotf`, the provider fork) | Rejected: it needs the whole Terraform family, and the code that would change (`resource_sql_user.go`) is MPL-2.0 in a fork with no patch series, which is the analysis's main asterisk on Config Connector. Upstream is moving off it anyway. |
+| C. Copy the Terraform-family `SQLUser` (CRD from the TF schema, `krmtotf`, the provider fork) | Rejected: it needs the whole Terraform family, and the code that would change (`resource_sql_user.go`) is MPL-2.0 in a fork with no patch series. Upstream is moving off it anyway. |
 
 Option A has a cost: Config Connector's `go.mod` requires the Terraform
 fork at `v0.0.0-00010101000000-000000000000` and resolves it, DCL and
@@ -128,18 +124,18 @@ code and change as little as possible. For `SQLUser`:
 Upstream PR #7148 (open since 2026-03-24, not approved, last updated
 2026-06-04, head `eb5d176a`) migrates `SQLUser` to a direct controller and
 writes `databaseRoles` but leaves it commented out (`/*NOTYET*/`) in the
-types, the diff and the mapping. The builder said to use it if it does
-what we need (2026-11-07); it does not yet, so ours stays, and
+types, the diff and the mapping. The intent is to use it once it does
+what this kind needs; it does not yet, so ours stays, and
 `hack/upstream-pr.sh` watches it (UPSTREAM.md, "Watched upstream change").
 It is the shape upstream is likely to take, and the kind we would migrate
-to (section 6). Two
+to. Two
 differences to settle if it merges: it compares `spec.databaseRoles` with
 the roles the API returns on `users.get`, where we compare with what we
 last applied (Terraform does not read roles back either, and we have not
 verified that the API returns them); and its CRD will be in
 `sql.cnrm.cloud.google.com`, so moving means re-creating objects in the
 other group with `cnrm.cloud.google.com/deletion-policy: abandon` and
-acquiring by `resourceID`. 
+acquiring by `resourceID`.
 
 ### Switching to PR #7148
 
@@ -170,20 +166,16 @@ merges, retire the kind instead ("Retiring a gap kind").
   `third_party/k8s-config-connector` and applies
   `patches/k8s-config-connector/*.patch` in order;
   `hack/upstream.sh --check` fails unless the checkout is the pin plus
-  exactly those patches. This is the patch series the analysis found
-  missing from Config Connector's own Terraform fork.
-- Every patch says whether it should go upstream. Both current patches
-  should (they fix mockgcp).
+  exactly those patches.
+- Every patch says whether it should go upstream.
 
 ### 3.2 Moving the pin
 
 The procedure is in `UPSTREAM.md`. Cadence: when a gap closes upstream,
-when a copied file changes upstream, or before a Bundt provider bundle is
-cut, at least monthly while upstream ships every two to three weeks
-(v1.156 to v1.160 took two months). A bundle pins the Config Connector
-version, the gaps-gcp version and the shared model commit together, and
-gaps-gcp should pin a `master` commit at or after the Config Connector
-release in the same bundle.
+when a copied file changes upstream, or before a gaps-gcp release, at
+least monthly while upstream ships every two to three weeks. A gaps-gcp
+release names the Config Connector release it is installed beside, and
+pins a `master` commit at or after that release.
 
 ### 3.3 Generating CRDs and code
 
@@ -200,12 +192,11 @@ release in the same bundle.
 
 ### 3.4 Retiring a gap kind
 
-When upstream `master` gains the kind or field: copy nothing new; mark our
-kind deprecated in the catalog; the provider bundle that carries both
-versions carries the migration (re-create in their group with
-`deletion-policy: abandon` on ours and acquisition by `resourceID` on
-theirs; delete ours with abandon); after the support window, remove the
-kind here.
+When a Config Connector release gains the kind or field: copy nothing
+new; mark our kind deprecated; document the migration (re-create in their
+group with acquisition by `resourceID`, then delete ours with
+`deletion-policy: abandon`); after a support window, remove the kind
+here.
 
 ## 4. Testing with a fake cloud
 
@@ -230,8 +221,8 @@ kind here.
 - **The test** (`pkg/controller/direct/sql/sqluser_mockgcp_test.go`) runs
   a real kube-apiserver and etcd (envtest, Kubernetes 1.33), our manager
   code (Config Connector's direct reconciler and deletion defender with
-  our adapter), and mockgcp as Cloud SQL. It plays Bundt's case: bntd's
-  service account as a `CLOUD_IAM_SERVICE_ACCOUNT` user with
+  our adapter), and mockgcp as Cloud SQL. It plays a common case: an
+  application's service account as a `CLOUD_IAM_SERVICE_ACCOUNT` user with
   `cloudsqlsuperuser`, then adds a role, removes one, and deletes, reading
   the fake cloud after each step through the real `sqladmin` client.
 - **Results** (2026-11-07, `make check`, macOS arm64, Go 1.27.1):
@@ -268,11 +259,11 @@ kind here.
 | Delete | `users.delete`, unless `deletion-policy: abandon` |
 | Status | `conditions`, `observedGeneration`, `sqlServerUserDetails` (as upstream), `appliedDatabaseRoles` (new) |
 
-Decisions (section 8 records the builder's answers):
+Decisions (section 8):
 
 - `databaseRoles` is the whole set of the user's roles, declaratively: a
   role removed from the list is revoked (`revokeExistingRoles=true`, as
-  Terraform does). Kept by the builder, 2026-11-07. Out-of-band grants are
+  Terraform does). Out-of-band grants are
   not detected while the list is unchanged.
 - What was applied is kept in `status.appliedDatabaseRoles`, because the
   API is not relied on to return a user's roles.
@@ -280,154 +271,76 @@ Decisions (section 8 records the builder's answers):
   not when only the Secret changes (Config Connector tracks Secret
   versions with an annotation; not done here).
 
-## 6. The gap scan, ranked for Bundt
+## 6. Choosing gaps
 
-Input: `krm-gapscan-results-2026-10-19`, GCP part, machine-generated from
-Config Connector `cf12e119` (master, 2026-10-17), google-api-go-client
-Discovery documents `abd2ce12` and `terraform-provider-google` docs
-`bb3d14f7`. Read as data.
+A gap becomes a kind here only when a real workload needs it and no
+existing Config Connector kind covers it. Counting missing fields does not
+rank them: Config Connector's existing kinds lack thousands of fields that
+Terraform or the API have, and most of them nobody is blocked on.
 
-### 6.1 Headline numbers
+### 6.1 Upstream first
 
-| | Count |
-| --- | --- |
-| Config Connector kinds | 651 (262 GA, 5 beta, 384 alpha; 351 direct, 235 Terraform, 65 DCL) |
-| Terraform resources | 1,499; 715 with a Config Connector kind, **784 without** |
-| API resource types (create + get collections) | 1,197; **718 without** a Config Connector kind, 572 without Terraform either |
-| Attribute rows compared (kind, Terraform resource) | 20,100 counted: 13,531 in KRM, 728 partial, **5,841 missing** |
-| KRM-only spec fields (no Terraform counterpart) | 3,275 (not counted as gaps) |
+- **Code on Config Connector `master`, not released.** If the next release
+  is near, no kind of ours is needed: install beside that release.
+- **An open upstream pull request.** Copy its code under the copy-upstream
+  rule, and watch the pull request (`hack/upstream-pr.sh`); when it merges
+  and a release ships it, retire ours (section 3.4).
+- **A field missing on a large existing kind** (such as
+  `SQLInstance.retainBackupsOnDelete`): wait for the Config Connector
+  release that carries it. A gap kind for an existing kind, carrying the
+  field, is built only when a workload cannot work without the field and
+  the release is not expected soon enough. It lives in our group, as
+  `SQLUser` does, and retires when the release lands. Config Connector's
+  own manager is never rebuilt with a patch.
+- **In the Google API, in no Config Connector code or pull request.**
+  Written here from the API and Terraform's behaviour, read not copied.
 
-So the gaps are of two kinds: whole resources (784 Terraform resources,
-many of them IAM add-ons and singletons Config Connector covers
-differently) and missing fields on kinds Config Connector already has
-(5,841). For Bundt the second matters more: the kinds Bundt uses exist,
-and the field gaps sit on them.
+### 6.2 What "missing" means
 
-**SQLUser.databaseRoles is in the scan** as an attribute gap:
-`google_sql_user.database_roles`, `in_krm=no`, `in_api=yes`
-(`databaseRoles`). The other `SQLUser` gaps are `iam_email` (output),
-`password_wo` and `password_wo_version` (Terraform write-only arguments).
+Comparing Config Connector's CRDs with Terraform's resources and Google's
+Discovery documents overcounts gaps:
 
-### 6.2 By Bundt's first slices
-
-Counts from `attributes_gcp.csv` / `resources_gcp.csv` (my filter excludes
-rows noted "tf-only field", so totals differ slightly from the summary's).
-
-| Slice | Missing fields on existing kinds (top) | Missing resources |
-| --- | --- | --- |
-| Cloud SQL | `SQLInstance` 123 (read-pool autoscale, performance capture, PSC options, final backup, Entra ID, server CA mode), `SQLUser` 4, `SQLDatabase` 0 | 4: `google_sql_source_representation_instance`, `google_sql_provision_script`, API-only `backupRuns`, `blueGreenDeployments` |
-| GCS | `StorageBucket` 21 (`hierarchical_namespace`, `rpo`, encryption enforcement configs, lifecycle size conditions) | 18, mostly ACL and object resources (`google_storage_bucket_object`, `*_acl`, managed folder IAM) |
-| IAM | `IAMWorkforcePoolProvider` 29, `IAMWorkloadIdentityPool` 27, `IAMWorkloadIdentityPoolProvider` 10; `IAMServiceAccount` none; `IAMPolicyMember` only Terraform's computed `etag` on each `*_iam_member` resource (58) | 21 (`google_iam_workload_identity_pool_*_iam_*`, OAuth clients, org-policy legacy resources) |
-| Artifact Registry | `ArtifactRegistryRepository` 27 (remote repository upstream credentials and custom repositories, vulnerability scanning, `registry_uri`) | 5 (`google_artifact_registry_rule`, project config) |
-| Networking | `ComputeURLMap` 180, `ComputeBackendService` 76+63, `ComputeSecurityPolicy` 72; for a basic VPC: `ComputeSubnetwork` 12, `ComputeNetwork` 9, `ComputeRouterNAT` 6, `ComputeAddress` 3, `ComputeFirewall` 3, `ServiceNetworkingConnection` 1 | 160, mostly regional variants, IAM add-ons and newer network-security products |
-| GKE | `ContainerCluster` 219 (most of any kind), `ContainerNodePool` 30 | 26, mostly GKE on AWS/Azure/on-prem and hub IAM add-ons |
-| Secrets / KMS | `KMSCryptoKey` 6, `SecretManagerSecret` 4 | 14 (`google_secret_manager_regional_secret` and its IAM) |
-
-Proposed order for gaps-gcp, by what Bundt's slices need, not by count:
-
-1. `SQLUser.databaseRoles` (done here).
-2. Whatever the next Bundt slice blocks on, found by trying it: the counts
-   above say where to look (`StorageBucket.hierarchicalNamespace`,
-   `ArtifactRegistryRepository` remote-repository credentials,
-   `ContainerCluster` / `ContainerNodePool` fields) but a field only
-   becomes a gap kind when a Package needs it.
-3. Missing resources only when a Package needs one and no existing kind
-   covers it (many of the 784 are IAM add-ons Config Connector covers with
-   its generic `IAMPolicyMember`, which the scan counts correctly only
-   when the parent's reference doc says so).
-
-### 6.3 Copy upstream master, or truly new
-
-Per the builder's rule, a gap that already exists on Config Connector
-`master` but is not released is copied, not written. Checked by comparing
-the CRDs at our pin (`672414b8`, master) with release `v1.160.0`
-(`c38b031c`), and each missing attribute's camelCase path against both
-(a name heuristic):
-
-- **Resources**: master has 19 kinds that v1.160.0 does not (AI Platform
-  jobs and RAG, API Hub, App Hub services and workloads, Bigtable memory
-  layers, Config deployments, NetApp KMS configs, a network-security rule,
-  SaaS unit kinds, Web Security Scanner). None is in Bundt's slices.
-- **Fields**: of the scan's missing attributes, 7 now exist on master but
-  not in v1.160.0 (in Bundt's slices only
-  `SQLInstance.settings.ipConfiguration.customSubjectAlternativeNames`);
-  46 already exist in the release under the same name (the scan's matcher
-  missed them, so they are not gaps); the rest, about 5,880, are new
-  everywhere. "New" is an upper bound: Config Connector sometimes names a
-  field differently from Terraform.
-- **SQLUser.databaseRoles is truly new**: not in v1.160.0, not on master.
-  `SQLUser` itself is on master (Terraform-based), so its schema is
-  copied; the field is written by us, following Terraform's behaviour, and
-  an unmerged upstream PR (#7148) already contains the same field.
-
-A "master-only" gap needs no kind of ours at all if the next Config
-Connector release is near: pin a bundle to that release instead.
-
-### 6.4 Caveats from the scan's method
-
-- Terraform attributes come from the provider's markdown docs, not its
-  schema; hand-written docs (133) parse less reliably, and 34 nested
-  blocks could not be attached.
-- Discovery documents lack field behaviours, so output-only is a guess
-  and required/immutable are unknown.
-- Only APIs vendored in google-api-go-client are visible (no
-  `memorystore`, `edgecontainer`, `modelarmor` and a few more).
+- Terraform attributes are best read from the provider's schema, not its
+  docs; hand-written docs parse unreliably.
+- Discovery documents lack field behaviours, so output-only is a guess and
+  required or immutable are unknown.
+- Only APIs vendored in google-api-go-client are visible.
 - Terraform resources and API types are not one-to-one (IAM add-ons,
-  singletons, virtual resources).
+  singletons, virtual resources); many IAM add-ons are covered by Config
+  Connector's generic `IAMPolicyMember`.
 - Config Connector's Terraform kinds run a pinned fork that lags upstream
   Terraform, so "missing" mixes "never modelled" with "not yet
   re-vendored".
-- Regional compute variants merged into one direct kind show as uncovered.
-- Maturity for 169 unlabeled direct CRDs is inferred from the served
-  version.
+- Config Connector sometimes names a field differently from Terraform, so
+  a name match is only a heuristic.
 
-### 6.5 AWS and Azure, briefly (from their summaries)
+### 6.3 Candidates (read 2026-11-07)
 
-- **AWS** (ACK controllers, terraform-provider-aws and awscc,
-  aws-sdk-go-v2 models): 1,732 Terraform resources, 470 with an ACK kind
-  and 1,262 without; 281 ACK kinds (66 GA); of 9,077 counted attributes,
-  6,322 in KRM, 1,051 partial, 1,704 missing. Resource coverage is the
-  big gap on AWS.
-- **Azure** (ASO, azurerm, azure-rest-api-specs): 1,106 Terraform
-  resources, 308 with an ASO kind and 798 without; 302 ASO kinds (ARM
-  types known to ASO's config: 297); of 7,964 attribute rows, 2,570 in
-  ASO, 2,141 partial, 3,253 missing. Field coverage is the weakest of the
-  three on Azure.
+From the open pull requests on Config Connector (read-only) and the pinned
+checkout (`672414b8`). `StorageManagedFolder` and `ArtifactRegistryRule`
+already have direct controllers on master: no gap kind, install beside
+the release that ships them.
 
-### 6.6 Second batch: candidates and what was built (2026-11-07)
+Upstream code exists, not released:
 
-The builder asked to start from open pull requests and code on Config
-Connector's `master`, then move to what the Google API has that Config
-Connector does not. Read with read-only `gh` (843 open pull requests) and
-the pinned checkout (`672414b8`); the scan above is three weeks older than
-the pin and is now stale in places (`StorageManagedFolder` and
-`ArtifactRegistryRule` have direct controllers on master: no gap kind,
-pin a bundle on the release that ships them).
-
-**(a) Upstream code exists, not released.** Ranked for Bundt:
-
-| Rank | Candidate | Upstream | Why for Bundt | Done |
+| Rank | Candidate | Upstream | Why | Done |
 | --- | --- | --- | --- | --- |
-| 1 | `SQLAdminBackup`, an on-demand Cloud SQL backup | types on master; controller and mockgcp in PR #12553 (open, review required) | a backup before a plan that can lose data (a major upgrade, a destructive migration); the rollback story for databases | built |
-| 2 | `SecretManagerSecret.spec.location`, regional secrets and their versions | PR #6651 (and its duplicate #5730), on the direct controller | secrets in values at L2, kept in the Environment's region | built |
+| 1 | `SQLAdminBackup`, an on-demand Cloud SQL backup | types on master; controller and mockgcp in PR #12553 | a backup before a change that can lose data (a major upgrade, a destructive migration) | built |
+| 2 | `SecretManagerSecret.spec.location`, regional secrets and their versions | PR #6651 (and its duplicate #5730), on the direct controller | secrets kept in one region (data residency) | built |
 | 3 | `SQLUser` on the direct reconciler | PR #7148 | ours exists; switch when `databaseRoles` is live (section 2) | watched |
-| 4 | `SQLInstance`: `retainBackupsOnDelete` (#14854), `diskEncryptionConfiguration` (#7227), PSC auto-connections (#14419), performance capture (#14431) | PRs on a direct kind of several thousand lines | an Instance's time limit or deletion must not take its backups (`retainBackupsOnDelete` first) | not built: open question 1 |
-| 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | self-service clusters (L2) | not built: open question 1 |
-| 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets in stacks | not built: open question 1 |
+| 4 | `SQLInstance`: `retainBackupsOnDelete` (#14854), `diskEncryptionConfiguration` (#7227), PSC auto-connections (#14419), performance capture (#14431) | PRs on a large direct kind | deleting an instance must not take its backups | wait for the release (6.1) |
+| 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | clusters made from manifests | wait for the release |
+| 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets | wait for the release |
 | 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | not built |
-| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs | Cloud Run stacks | not built |
-| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller | federation for agents, later | not built |
+| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs | Cloud Run services | not built |
+| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller | workload identity federation | not built |
 
-**(b) In the Google API, in no Config Connector code or PR.** From the scan
-(Bundt's services, `covered_by_krm=no`, `covered_by_tf=no`), each
-unverified against the live API: Artifact Registry package tags and
+In the Google API, in no Config Connector code or pull request
+(unverified against the live API): Artifact Registry package tags and
 repository attachments, Workload Identity pool provider keys, Cloud SQL
-`blueGreenDeployments`, Storage HMAC keys (Terraform has
-`google_storage_hmac_key`; the scan's match missed it), Cloud Run v1
-`namespaces.*` (superseded by v2). On fields, the scan's ~5,880 missing
-attributes on existing kinds (sections 6.2, 6.3). None was built in this
-batch: section 6.2's rule is that a gap becomes a kind when a Package needs
-it, and no Bundt Package needs one of these yet.
+`blueGreenDeployments`, Storage HMAC keys. None is built yet.
+
+### 6.4 Notes on what was built
 
 What was built is described in "What is copied" in `UPSTREAM.md`, and:
 
@@ -467,66 +380,72 @@ Before gaps-gcp can run on a real cluster:
 
 1. Images are built locally by ko (`config/default` uses `ko://`
    references). A registry, signing and a release version scheme are not
-   decided; neither is the Bundt provider entry (a Bundt `install`
-   Package wrapping `config/default`).
+   decided.
 2. Done: install manifests (`config/default`) and namespaced identity
    matching Config Connector's (section 9).
-3. Proven only on kind: Workload Identity itself (section 9, "What was
-   proven").
+3. Proven only on kind: Workload Identity itself (section 9.3).
 4. Secret change tracking for `spec.password` (Config Connector's
    observed-secret-versions), and watching referenced Secrets.
 5. Validation webhook parity: Config Connector's webhooks enforce
    immutability (`host`, `type`, `resourceID`); ours relies on the
    controller erroring. Either CEL `x-kubernetes-validations` in the CRD
    or a webhook.
+6. A Kubernetes service account of our own for the managers (section 9.4).
 
-To raise confidence in the kind:
+To raise confidence in the kinds:
 
-6. Port Config Connector's `SQLUser` fixtures (`sqluser`, `sqluser-full`)
+7. Port Config Connector's `SQLUser` fixtures (`sqluser`, `sqluser-full`)
    to our group and run its golden harness, recording `_http.log`.
-7. One run against a real Cloud SQL Postgres instance, to confirm
+8. One run against a real Cloud SQL Postgres instance, to confirm
    `databaseRoles` on insert and update, revoke with an empty list, and
    what `users.get` returns; then correct mockgcp if it differs.
-8. Unit tests for `passwordPolicyEqual`, `sortedRoles` and identity
+9. Unit tests for `passwordPolicyEqual`, `sortedRoles` and identity
    parsing (Config Connector has an identity conformance helper,
    `apis/common/identity`).
-9. Offer patches 0001 and 0002 upstream; comment on PR #7148 with the
-   revoke semantics and the mockgcp change.
+10. Offer patches 0001 and 0002 upstream; comment on PR #7148 with the
+    revoke semantics and the mockgcp change.
 
 Housekeeping:
 
-10. Done: `hack/upstream-pr.sh` also follows the pull requests copied
-    from (`UPSTREAM.md`, "Copied from open pull requests").
 11. The SQLUser test predates `pkg/test/mockenv` and keeps its own harness.
 12. CI: `make check` on Linux (the 127.0.0.2 default then works without
     patch 0002, but the patch stays harmless).
-13. A real GitHub repository, when the builder says so (none exists; no
-    remote is configured).
+13. `tests/operator/run.sh` does not clean the fake cloud on a reused kind
+    cluster; run it on a fresh one.
 
-## 8. Builder's answers (2026-11-07)
+## 8. Decisions
 
-1. **Upstream's unmerged `SQLUser` (PR #7148)**: "If the unmerged change
-   does what we need, sure use it. Find a way to ref it so we can update
-   that part from upstream easily." It does not yet (`databaseRoles` is
-   `/*NOTYET*/`), so ours stays; `hack/upstream-pr.sh` follows the PR's
-   head and section 2 ("Switching to PR #7148") says how to switch.
-2. **Roles**: replace. The list is the whole set; a role taken off it is
+1. **Upstream's unmerged `SQLUser` (PR #7148)**: use it once it does what
+   this kind needs, and keep it easy to update from upstream. It does not
+   yet (`databaseRoles` is `/*NOTYET*/`), so ours stays;
+   `hack/upstream-pr.sh` follows the PR's head and section 2 ("Switching
+   to PR #7148") says how to switch.
+2. **Roles replace.** The list is the whole set; a role taken off it is
    revoked.
 3. **Status field name**: `status.appliedDatabaseRoles` stays until a run
    against real Cloud SQL shows whether `users.get` returns roles
-   (section 7, item 7).
-4. **Managers**: "One controller manager per target/cluster for now.
-   We'll try to go more granular later." The manager watches the whole
-   cluster by default (`--scoped-namespace` unset); namespace scoping
-   stays available for later. Superseded for Config Connector's
-   namespaced mode by section 9.4, answer 3: one manager per namespace.
-5. **Licence**: none; the repository stays private (README, NOTICE).
+   (section 7, item 8).
+4. **Managers follow Config Connector's mode.** In cluster mode one manager
+   watches the whole cluster, because Config Connector has one Google
+   identity there. In namespaced mode there is one manager per
+   `ConfigConnectorContext`, watching only its namespace (section 9).
+5. **Field gaps on large existing kinds** wait for Config Connector's
+   release, with the exception in section 6.1. Never a fork.
+6. **The fake-cloud switch exists only in test builds.**
+   - `--fake-cloud-url` and `pkg/fakecloud` are compiled into the manager
+     only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
+   - A production build has no such flag and refuses to start with it
+     ("flag provided but not defined").
+   - `hack/check-no-fake-cloud.sh`, run by `make check`, fails if the
+     default build links `pkg/fakecloud` or shows the flag.
+   - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
+7. **Licence**: Apache-2.0 (`LICENSE`, `NOTICE`).
 
 ## 9. The operator: Config Connector's identity, per namespace
 
-The builder: "We need to package that as an operator so the crds are avail
-and then controller works. Ideally it can use the same auth as the actual
-kcc cnrm operator when working in the same namespace."
+The goal: install the CRDs and run the managers so that a gap kind acts
+with the same Google identity Config Connector uses in the same
+namespace.
 
 ### 9.1 How Config Connector's operator does it (read at the pin)
 
@@ -558,7 +477,7 @@ kcc cnrm operator when working in the same namespace."
 Workload Identity is bound to a namespace and a service-account name, so
 the cheapest way to have "the same auth in the same namespace" is to run
 in that namespace as that service account: no new Google IAM binding, no
-key, nothing for Bundt to grant. `pkg/operator`:
+key, nothing extra to grant. `pkg/operator`:
 
 - watches `ConfigConnector`, `ConfigConnectorContext`, Config Connector's
   service accounts and its own Deployments, and in one pass applies what
@@ -609,7 +528,7 @@ ok: CRDs installed: secretmanagersecrets, secretmanagersecretversions, sqladminb
 ok: manager pod runs as cnrm-system/cnrm-controller-manager (Workload Identity maps it to kcc@mock-project.iam.gserviceaccount.com)
 ok: cnrm-controller-manager may manage gap kinds in any namespace
 == cluster mode: a regional secret and its version become Ready
-ok: Ready: projects/mock-project/locations/us-central1/secrets/bundt-db-password
+ok: Ready: projects/mock-project/locations/us-central1/secrets/app-db-password
 == namespaced mode: Config Connector's operator moves to one manager per context
 ok: team-a's manager runs as cnrm-system/cnrm-controller-manager-team-a with --scoped-namespace=team-a
 ok: team-a's service account may manage gap kinds in team-a and not in team-b
@@ -636,86 +555,41 @@ Config Connector's own operator was not installed; its footprint (the
 namespace, its service accounts with the annotation, `ConfigConnector`,
 `ConfigConnectorContext`) was made by hand as its code says it makes them.
 
-### 9.4 Builder's answers (2026-11-07)
+### 9.4 Trade-off: sharing Config Connector's Kubernetes service account
 
-The five questions asked after the operator was built, and what was done.
+On the Google side, sharing changes nothing: the same Google service
+account, through the same Workload Identity binding. On the Kubernetes
+side the two directions differ, read from Config Connector's install
+bundle at the pin (`config/installbundle/components/clusterroles/` and
+`releases/scopes/*`):
 
-1. **Field gaps on large existing kinds** (section 6.6, ranks 4 to 6, such
-   as `SQLInstance.retainBackupsOnDelete`). "Wait for config connector
-   release. If it's missing a super critical feature/attribute and their
-   release cadence isn't frequent enough, I suppose we could also release
-   that resource [with] the field."
+- **What our manager gains by running as Config Connector's account.**
+  Cluster mode (`cnrm-controller-manager`, all by ClusterRoleBinding):
+  - `cnrm-admin`: create, update and delete on every
+    `*.cnrm.cloud.google.com` group (180 groups), cluster-wide;
+  - `cnrm-manager-cluster-role`: read CRDs and namespaces; full control of
+    `validatingwebhookconfigurations` and of every
+    `core.cnrm.cloud.google.com` resource;
+  - `cnrm-manager-ns-role`: full control of Secrets, ConfigMaps, Services
+    and events in every namespace.
 
-   The rule:
-   - By default, wait for the Config Connector release that carries the
-     field, and pin the bundle on it.
-   - A gap kind for an existing Config Connector kind, carrying the field,
-     is built only when both hold: a Bundt Package cannot work without the
-     field, and the release that carries it is not expected soon enough.
-     It lives in our group (`<kind>.<service>.gcp.hfl.dev`), as `SQLUser`
-     does, and retires to Config Connector's group when the release lands
-     (section 3.4).
-   - Never a fork: Config Connector's own manager is never rebuilt with a
-     patch.
-2. **Sharing Config Connector's service account.** Accepted, as asked;
-   revisit when Bundt splits its agents by role (Bundt L3). The builder:
-   "this is no different than a standard config connector service
-   account, right?" On the Google side, yes: the same Google service
-   account, through the same Workload Identity binding. On the Kubernetes
-   side the two directions differ, read from the install bundle at the pin
-   (`config/installbundle/components/clusterroles/` and
-   `releases/scopes/*`):
+  Namespaced mode (`cnrm-controller-manager-N`): the same roles, but
+  `cnrm-admin` and `cnrm-manager-ns-role` only in N (and
+  `cnrm-manager-ns-role` in `cnrm-system`); `cnrm-manager-cluster-role`
+  stays cluster-wide.
+- **What our manager needs:** our three groups, read Secrets, write
+  events, and read the five Config Connector groups ours reference
+  (`gaps-gcp-manager` and `gaps-gcp-manager-cluster`,
+  `config/operator/rbac.yaml`).
+- **What Config Connector's pods gain from our binding:** only full
+  control of our three groups (`sql`, `sqladmin` and
+  `secretmanager.gcp.hfl.dev`). Everything else in `gaps-gcp-manager` they
+  already hold.
 
-   - **What our manager gains by running as Config Connector's account.**
-     Cluster mode (`cnrm-controller-manager`, all by ClusterRoleBinding):
-     - `cnrm-admin`: create, update and delete on every
-       `*.cnrm.cloud.google.com` group (180 groups), cluster-wide;
-     - `cnrm-manager-cluster-role`: read CRDs and namespaces; full control
-       of `validatingwebhookconfigurations` and of every
-       `core.cnrm.cloud.google.com` resource;
-     - `cnrm-manager-ns-role`: full control of Secrets, ConfigMaps,
-       Services and events in every namespace.
-
-     Namespaced mode (`cnrm-controller-manager-N`): the same roles, but
-     `cnrm-admin` and `cnrm-manager-ns-role` only in N (and
-     `cnrm-manager-ns-role` in `cnrm-system`); `cnrm-manager-cluster-role`
-     stays cluster-wide.
-   - **What our manager needs:** our three groups, read Secrets, write
-     events, and read the five Config Connector groups ours reference
-     (`gaps-gcp-manager` and `gaps-gcp-manager-cluster`,
-     `config/operator/rbac.yaml`).
-   - **What Config Connector's pods gain from our binding:** only full
-     control of our three groups (`sql`, `sqladmin` and
-     `secretmanager.gcp.hfl.dev`). Everything else in `gaps-gcp-manager`
-     they already hold.
-
-   So Config Connector's side barely widens. Ours widens a lot: a bug or
-   a compromise in the gaps-gcp manager acts with Config Connector's full
-   Kubernetes rights, including writing every Secret in the cluster in
-   cluster mode. In Google Cloud nothing changes. This is the reason to
-   revisit at Bundt L3. The alternative stays our own service account plus
-   one more `roles/iam.workloadIdentityUser` binding per Google service
-   account.
-3. **One manager per namespace.** "I think we want one per namespace."
-   Recorded: in namespaced mode there is one gaps-gcp manager per
-   `ConfigConnectorContext`, as built. This supersedes section 8, answer 4
-   for namespaced mode.
-
-   Reading, for the builder to confirm: in Config Connector's cluster mode
-   there is one Google identity for the whole cluster
-   (`cnrm-controller-manager`), so one gaps-gcp manager stays there. A
-   manager per namespace in cluster mode would share that one identity and
-   gain nothing.
-4. **The fake-cloud switch.** "Put a [build] tag." Done:
-   - `--fake-cloud-url` and `pkg/fakecloud` are compiled into the manager
-     only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
-   - A production build has no such flag and refuses to start with it
-     ("flag provided but not defined").
-   - `hack/check-no-fake-cloud.sh`, run by `make check`, fails if the
-     default build links `pkg/fakecloud` or shows the flag.
-   - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
-5. **Backups before risky plans.** Yes: Bundt writes
-   `cnrm.cloud.google.com/deletion-policy: abandon` on the
-   `SQLAdminBackup`s it takes before a risky plan, so deleting the
-   Instance's live component keeps the backup. That is Bundt's side
-   (its `asks/parked.md`, L2); nothing changes here.
+So Config Connector's side barely widens, and ours widens a lot: a bug or
+a compromise in the gaps-gcp manager acts with Config Connector's full
+Kubernetes rights, including writing every Secret in the cluster in
+cluster mode. The alternative is our own Kubernetes service account with
+only our roles, bound to the same Google service account by one more
+`roles/iam.workloadIdentityUser` binding per Google service account
+(section 7, item 6).

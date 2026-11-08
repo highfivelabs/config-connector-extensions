@@ -41,7 +41,7 @@ All paths are in Config Connector at the commit above unless noted.
 | `pkg/controller/direct/secretmanager/secretmanagersecret_controller.go` | the same file | PR #6651: a regional secret uses `secretmanager.<location>.rep.googleapis.com` |
 | `pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go` | the same file | PR #6651: the same endpoint for its versions; ours: an unset `spec.enabled` means true (upstream dereferences it unchecked; there the direct controller is opt-in) |
 | `pkg/controller/direct/secretmanager/mapper.generated.go`, `secret_mapping.go` | the same files | our KRM types |
-| `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | no |
+| `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | an SPDX line after Google's header, so generated files carry it |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
 | `hack/regen-mocksql-users.sh` | `mockgcp/Makefile` (`gen-proto`), `mockgcp/apply-proto-patches.sh`, `mockgcp/fixup-third-party.sh` | one proto file only; our extra fields |
 
@@ -74,7 +74,7 @@ at the head below it declares `databaseRoles` but leaves the field, its
 diff and its mapping commented out (`/*NOTYET*/`), so it does not do what
 we need. `hack/upstream-pr.sh` (`make upstream-pr`) fetches the PR's head
 by `refs/pull/<n>/head`, says whether it moved, and whether `databaseRoles`
-is live yet; when it is, follow "Switching to PR #7148" in `docs/plan.md`.
+is live yet; when it is, follow "Switching to PR #7148" in `docs/design.md`.
 
 | | |
 | --- | --- |
@@ -95,7 +95,7 @@ is live yet; when it is, follow "Switching to PR #7148" in `docs/plan.md`.
    clone); keep our changes as small as before.
 5. `make check`.
 6. If upstream now has a kind or field we fill, follow "Retiring a gap
-   kind" in `docs/plan.md`.
+   kind" in `docs/design.md`.
 
 ## Copied from open pull requests
 
@@ -103,7 +103,7 @@ Code copied from pull requests that have not merged. `hack/upstream-pr.sh`
 reads this table and says, for each, whether its head moved since the row
 was written and whether it merged. When one moves, re-read its diff for the
 copied files; when it merges and the pin passes it, retire our copy
-(`docs/plan.md` section 3.4) and drop its mockgcp patch.
+(`docs/design.md` section 3.4) and drop its mockgcp patch.
 
 | PR | Head | Read on | Copied for |
 | --- | --- | --- | --- |

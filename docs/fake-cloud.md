@@ -1,9 +1,9 @@
 # The fake cloud
 
 A Kubernetes cluster where Config Connector's resources, and ours, become
-Ready against a fake Google Cloud: for Bundt's L2, so Bundt can apply live
-components and read their status back without a real project, credentials
-or cost. Proven 2026-11-07 on an Apple-silicon Mac (Docker 20.10, kind
+Ready against a fake Google Cloud, so a tool that applies Config Connector
+resources can be tested end to end, reading their status back, without a
+real project, credentials or cost. Proven 2026-11-07 on an Apple-silicon Mac (Docker 20.10, kind
 0.33).
 
 ```sh
@@ -55,24 +55,25 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
 - **No Config Connector webhooks.** The admission webhook that copies a
   namespace's `cnrm.cloud.google.com/project-id` annotation onto each
   resource does not run, so every resource must carry the annotation
-  itself (bundt's `charts/infra/gcp` already does). Defaulting and
+  itself (`hack/fake-cloud/sample.yaml` does). Defaulting and
   validation webhooks are absent too.
 - **mockgcp's limits.** Cloud SQL knows Postgres up to 16, not 17 (the
-  sample uses 16; bundt runs 17), and does not refuse a user on an
+  sample uses 16), and does not refuse a user on an
   instance that does not exist yet, so our `SQLUser` can be Ready before
   its `SQLInstance` (upstream's ref resolver does not wait on readiness
   either; real Cloud SQL would fail and retry). Services mockgcp does not
   implement fail as they would against an unknown host.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
-  the next step if Bundt's L2 needs the fake cloud reachable from inside.
+  the way to make the fake cloud reachable from inside: `cmd/fakegcp` and
+  `config/fake-cloud/`, used by `make operator-e2e`.
 - **Not the operator.** Config Connector's operator (`ConfigConnector`,
   `ConfigConnectorContext` installation, per-namespace managers) is not
-  run; the manager watches the whole cluster, one per cluster, as
-  `docs/plan.md` section 8 decides.
+  run; the manager watches the whole cluster. `make operator-e2e` covers
+  the operator (`docs/design.md` section 9).
 
 ## Found on the way
 
-Google requires a service account ID of 6 to 30 characters. bundt's
-`charts/infra/gcp` names bntd's `IAMServiceAccount` `bntd` (4), which real
-Google Cloud would refuse as the fake one did; the sample uses `bntd-app`.
+Google requires a service account ID of 6 to 30 characters, and mockgcp
+refuses a shorter one as real Google Cloud would; the sample uses
+`app-runtime`.

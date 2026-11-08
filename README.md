@@ -2,9 +2,13 @@
 
 Kubernetes kinds for Google Cloud that
 [Config Connector](https://github.com/GoogleCloudPlatform/k8s-config-connector)
-(KCC) does not have yet, or has without a field we need. It is the GCP
-member of a set of gap-filling providers: `gaps-gcp`, `gaps-aws` (beside
-ACK) and `gaps-azure` (beside Azure Service Operator).
+(KCC) does not have yet, or has without a field a workload needs. Install
+it beside Config Connector; it runs Config Connector's own reconciler for
+a few extra kinds, in its own API groups, and retires each kind when
+Config Connector ships it.
+
+gaps-gcp is not affiliated with or endorsed by Google. "Config Connector"
+names the project it extends.
 
 The kinds:
 
@@ -59,27 +63,23 @@ So:
   no direct controller to copy: the Go types come from KCC's generated
   `SQLUser` types (same schema), and the controller is KCC's direct
   `SQLSSLCert` controller (the sibling Cloud SQL sub-resource that already
-  moved from Terraform to direct) changed for users. See `docs/plan.md`.
+  moved from Terraform to direct) changed for users. See `docs/design.md`.
 - Any change to upstream code we need (so far only the mockgcp fake) is a
   numbered patch in `patches/k8s-config-connector/`, applied to the
   checkout by `hack/upstream.sh`, and is meant to go upstream.
 
-## Relation to Bundt
+## Versions and retiring kinds
 
-Bundt treats each gaps repository as a Provider in its catalog: a provider
-bundle pins the upstream controller (Config Connector) version, the
-`gaps-gcp` version, and the shared API model commit, because the two must
-agree on the API surface. A Package that needs `SQLUser.databaseRoles`
-requires the provider that serves `sqlusers.sql.gcp.hfl.dev`. `gcp`, `aws`
-and `azure` are reserved organisation names in Bundt so that
-`<service>.gcp.hfl.dev` never collides with a Package's
-`<team>.<org>.hfl.dev`. When upstream ships the field, the bundle that
-carries both versions carries the migration, and our kind is deprecated
-for a support window.
+A gaps-gcp release names the Config Connector release it is installed
+beside: the two must agree on the API surface (references, annotations,
+`ConfigConnector` and `ConfigConnectorContext`). When a Config Connector
+release ships a kind or field that gaps-gcp fills, our kind is deprecated
+for a support window, with a documented move to Config Connector's group
+(`docs/design.md` section 3.4).
 
-The motivating case is in the bundt repository, `charts/infra/gcp`:
-bntd's service account is an IAM database user, which starts with no
-privileges; today someone runs a `GRANT` once by hand.
+The first case: an application's Google service account signs in to
+Cloud SQL as an IAM database user, which starts with no privileges.
+Without `databaseRoles`, someone runs a `GRANT` once by hand.
 
 ## Installing it
 
@@ -97,7 +97,7 @@ manager in `cnrm-system` as `cnrm-controller-manager`; in namespaced mode one
 per `ConfigConnectorContext`, watching only that namespace, as
 `cnrm-controller-manager-<namespace>`. With a key Secret instead of Workload
 Identity, it mounts the same Secret the same way. It never makes a service
-account or holds a Google credential. `docs/plan.md` section 9.
+account or holds a Google credential. `docs/design.md` section 9.
 
 ## Developing it
 
@@ -117,14 +117,14 @@ against envtest. No real Google Cloud and no recordings.
 apiVersion: sql.gcp.hfl.dev/v1beta1
 kind: SQLUser
 metadata:
-  name: bundt-bntd
+  name: app-runtime
   annotations:
     cnrm.cloud.google.com/deletion-policy: abandon
 spec:
-  resourceID: bntd@my-project.iam
+  resourceID: app-runtime@my-project.iam
   type: CLOUD_IAM_SERVICE_ACCOUNT
   instanceRef:
-    name: bundt            # a sql.cnrm.cloud.google.com SQLInstance
+    name: example          # a sql.cnrm.cloud.google.com SQLInstance
   databaseRoles:
   - cloudsqlsuperuser
 ```
@@ -155,13 +155,20 @@ against what it last applied, `status.appliedDatabaseRoles`).
 | `patches/k8s-config-connector/` | our changes to the upstream checkout, in order |
 | `hack/` | fetch and check upstream, generate, regenerate mock protos |
 | `UPSTREAM.md` | the pinned commits |
-| `docs/plan.md` | architecture, sync, testing, gap ranking, what is left |
+| `docs/design.md` | architecture, sync, testing, choosing gaps, what is left |
+| `docs/fake-cloud.md` | Config Connector's manager and ours against mockgcp on kind |
+
+## Contributing
+
+See `CONTRIBUTING.md`. Commits are signed off under the Developer
+Certificate of Origin.
 
 ## Licence
 
-None. The repository is private and High Five Labs attaches no licence to
-its own work here (builder, 2026-11-07). Code copied from Config Connector
-stays under Config Connector's Apache-2.0: each copied file keeps Google's
-copyright and licence header and says how it was changed, as that licence
-requires; see `NOTICE`. Nothing is copied from the Terraform provider
-(MPL-2.0); its behaviour is followed, not its code.
+Apache-2.0 (`LICENSE`). Code copied from Config Connector stays under its
+Apache-2.0 licence with Google's copyright: each copied file keeps its
+header and says how it was changed, and `NOTICE` names the sources. Binaries
+also link code that Config Connector depends on, including MPL-2.0
+packages from HashiCorp's Terraform plugin SDK (`NOTICE`). Nothing is
+copied from the Terraform Google provider; its behaviour is followed, not
+its code.
