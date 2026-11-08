@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Watch Config Connector PR #7148 (upstream's direct SQLUser), the change we
-# would copy instead of our own SQLUser controller once it does what we need.
+# would copy instead of our own SQLUser controller once it does what we need,
+# and the pull requests we already copied code from.
 # Read-only: fetches the PR head into the checkout's object store and reports.
 #
 # The PR number and the head we last read are the "Watched PR" rows of
@@ -49,3 +50,25 @@ if awk '/\/\*NOTYET/{c=1} /\*\//{c=0; next} !c && /DatabaseRoles +\[\]string/{f=
 else
   echo "  databaseRoles is still commented out (/*NOTYET*/): keep our controller"
 fi
+
+# The pull requests we copied code from ("Copied from open pull requests" in
+# UPSTREAM.md): did each head move, and did it merge?
+echo
+echo "Copied from open pull requests:"
+while IFS='|' read -r _ pr head _; do
+  pr="$(tr -dc '0-9' <<<"${pr}")"
+  head="$(tr -dc '0-9a-f' <<<"${head}")"
+  [[ -n "${pr}" && ${#head} -eq 40 ]] || continue
+  ref="refs/remotes/pr/${pr}"
+  git -C "${DEST}" fetch --quiet --depth 1 origin "+refs/pull/${pr}/head:${ref}"
+  now="$(git -C "${DEST}" rev-parse "${ref}")"
+  state="unknown (gh not available)"
+  if command -v gh >/dev/null 2>&1; then
+    state="$(gh pr view "${pr}" -R GoogleCloudPlatform/k8s-config-connector --json state --jq .state 2>/dev/null || echo unknown)"
+  fi
+  if [[ "${now}" == "${head}" ]]; then
+    echo "  #${pr}: ${state}, head unchanged"
+  else
+    echo "  #${pr}: ${state}, head moved ${head:0:8} -> ${now:0:8}: re-read the copied files"
+  fi
+done < <(sed -n '/^## Copied from open pull requests/,$p' UPSTREAM.md)

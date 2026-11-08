@@ -1,11 +1,14 @@
 # gaps-gcp plan
 
-Status, 2026-11-07: the repository exists locally with one kind,
-`sql.gcp.hfl.dev/v1beta1` `SQLUser` with `spec.databaseRoles`. It builds,
-and its end-to-end test passes against a fake Cloud SQL (results below).
-It has no image, chart, RBAC or remote. This document says how it is
-built, why, how it stays in step with Config Connector, how it is tested,
-which gaps come next, and what is left.
+Status, 2026-11-07 (evening): the repository exists locally with four
+kinds: `SQLUser` with `spec.databaseRoles`, `SQLAdminBackup`, and regional
+`SecretManagerSecret` and `SecretManagerSecretVersion` (section 6.6). Each
+passes its end-to-end test against mockgcp. An operator runs the managers
+as Config Connector's own service accounts, and a kind test proves it in
+cluster and namespaced mode against an in-cluster fake cloud (section 9).
+Images are built locally with ko; there is no registry, release or remote.
+This document says how it is built, why, how it stays in step with Config
+Connector, how it is tested, which gaps come next, and what is left.
 
 It is grounded in the builder's analysis "Provider controller internals:
 Config Connector, ACK, ASO" (2026-10-31, read at Config Connector 1.160.0)
@@ -86,11 +89,10 @@ which they do wherever Config Connector is installed. In namespaced mode it
 requires a `ConfigConnectorContext` in the object's namespace, as Config
 Connector does.
 
-Identity: the manager authenticates with Application Default Credentials,
-which is one Google service account through Workload Identity. Config
-Connector's per-namespace identity (a StatefulSet per namespace, each with
-the namespace's service account) is not reproduced yet; `--scoped-namespace`
-is there so a per-namespace deployment is possible (section 7).
+Identity: the manager authenticates with Application Default Credentials.
+In a cluster it runs as Config Connector's own Kubernetes service account
+for the scope (section 9), so Workload Identity gives it the Google service
+account Config Connector has there, per namespace in namespaced mode.
 
 ### 2.3 Per-kind code: copy the nearest upstream code
 
@@ -392,22 +394,85 @@ Connector release is near: pin a bundle to that release instead.
   ASO, 2,141 partial, 3,253 missing. Field coverage is the weakest of the
   three on Azure.
 
+### 6.6 Second batch: candidates and what was built (2026-11-07)
+
+The builder asked to start from open pull requests and code on Config
+Connector's `master`, then move to what the Google API has that Config
+Connector does not. Read with read-only `gh` (843 open pull requests) and
+the pinned checkout (`672414b8`); the scan above is three weeks older than
+the pin and is now stale in places (`StorageManagedFolder` and
+`ArtifactRegistryRule` have direct controllers on master: no gap kind,
+pin a bundle on the release that ships them).
+
+**(a) Upstream code exists, not released.** Ranked for Bundt:
+
+| Rank | Candidate | Upstream | Why for Bundt | Done |
+| --- | --- | --- | --- | --- |
+| 1 | `SQLAdminBackup`, an on-demand Cloud SQL backup | types on master; controller and mockgcp in PR #12553 (open, review required) | a backup before a plan that can lose data (a major upgrade, a destructive migration); the rollback story for databases | built |
+| 2 | `SecretManagerSecret.spec.location`, regional secrets and their versions | PR #6651 (and its duplicate #5730), on the direct controller | secrets in values at L2, kept in the Environment's region | built |
+| 3 | `SQLUser` on the direct reconciler | PR #7148 | ours exists; switch when `databaseRoles` is live (section 2) | watched |
+| 4 | `SQLInstance`: `retainBackupsOnDelete` (#14854), `diskEncryptionConfiguration` (#7227), PSC auto-connections (#14419), performance capture (#14431) | PRs on a direct kind of several thousand lines | an Instance's time limit or deletion must not take its backups (`retainBackupsOnDelete` first) | not built: open question 1 |
+| 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | self-service clusters (L2) | not built: open question 1 |
+| 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets in stacks | not built: open question 1 |
+| 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | not built |
+| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs | Cloud Run stacks | not built |
+| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller | federation for agents, later | not built |
+
+**(b) In the Google API, in no Config Connector code or PR.** From the scan
+(Bundt's services, `covered_by_krm=no`, `covered_by_tf=no`), each
+unverified against the live API: Artifact Registry package tags and
+repository attachments, Workload Identity pool provider keys, Cloud SQL
+`blueGreenDeployments`, Storage HMAC keys (Terraform has
+`google_storage_hmac_key`; the scan's match missed it), Cloud Run v1
+`namespaces.*` (superseded by v2). On fields, the scan's ~5,880 missing
+attributes on existing kinds (sections 6.2, 6.3). None was built in this
+batch: section 6.2's rule is that a gap becomes a kind when a Package needs
+it, and no Bundt Package needs one of these yet.
+
+What was built is described in "What is copied" in `UPSTREAM.md`, and:
+
+- `SQLAdminBackup` uses the sqladmin v1beta4 REST client instead of the
+  PR's `cloud.google.com/go/sql`, which is not in the pin's `go.mod`:
+  adding it moved about 65 shared modules (gRPC, genproto, otel and the
+  `cloud.google.com/go/*` clients) off the versions Config Connector is
+  built and tested with. Patch 0003 is the PR's mockgcp.
+- The Secret Manager kinds are master's direct controllers with the PR's
+  change. Two fixes of ours: an unset `spec.enabled` on a version means
+  `true` (upstream dereferences it unchecked; there the direct controller
+  is opt-in behind Terraform's, which defaults it), and the version's
+  `secretRef` is typed without its alias (controller-gen v0.16.5 panics on
+  aliases under Go 1.27). Patch 0004 is the PR's mockgcp plus versions
+  under a regional secret, which the PR's mock never names. The PR's mock
+  serves only `us-central1`'s regional endpoint; other regions need their
+  hosts added.
+- Tests (`make test`, macOS arm64, Go 1.27.1, 2026-11-07):
+
+  ```text
+  --- PASS: TestSQLAdminBackup (10.10s)
+      create takes an on-demand backup; a resync takes no second backup;
+      a backup cannot be changed; delete removes the backup; abandon keeps it
+  --- PASS: TestRegionalSecret (7.20s)
+      created in its region (every request at the regional endpoint);
+      a version holds the Kubernetes Secret's value; cannot move region;
+      delete removes the version and the secret
+  --- PASS: TestGlobalSecretUnchanged (5.86s)
+  ```
+
+  The regional-endpoint check was confirmed to fail with the endpoint
+  removed from the controller.
+
 ## 7. What is left
 
-Before gaps-gcp can run on a cluster:
+Before gaps-gcp can run on a real cluster:
 
-1. Image build (ko or a Dockerfile; Config Connector uses
-   `docker-bake.hcl`), and a release version scheme.
-2. Install manifests: CRDs, a ServiceAccount with Workload Identity, RBAC
-   (our kinds, Secrets read for `spec.password`, events,
-   `ConfigConnector`/`ConfigConnectorContext` read, the
-   `sql.cnrm.cloud.google.com` `SQLInstance` read for `instanceRef.name`,
-   CRDs read for the deletion defender), and a Deployment. As a Helm chart
-   or a Bundt `install` Package; the Bundt provider entry for it.
-3. Namespaced identity, matching Config Connector's: one manager per
-   namespace with `--scoped-namespace` and that namespace's Google service
-   account, or reading the service account from the namespace's
-   `ConfigConnectorContext`. Today one identity serves all namespaces.
+1. Images are built locally by ko (`config/default` uses `ko://`
+   references). A registry, signing and a release version scheme are not
+   decided; neither is the Bundt provider entry (a Bundt `install`
+   Package wrapping `config/default`).
+2. Done: install manifests (`config/default`) and namespaced identity
+   matching Config Connector's (section 9).
+3. Proven only on kind: Workload Identity itself (section 9, "What was
+   proven").
 4. Secret change tracking for `spec.password` (Config Connector's
    observed-secret-versions), and watching referenced Secrets.
 5. Validation webhook parity: Config Connector's webhooks enforce
@@ -430,9 +495,12 @@ To raise confidence in the kind:
 
 Housekeeping:
 
-10. CI: `make check` on Linux (the 127.0.0.2 default then works without
+10. Done: `hack/upstream-pr.sh` also follows the pull requests copied
+    from (`UPSTREAM.md`, "Copied from open pull requests").
+11. The SQLUser test predates `pkg/test/mockenv` and keeps its own harness.
+12. CI: `make check` on Linux (the 127.0.0.2 default then works without
     patch 0002, but the patch stays harmless).
-11. A real GitHub repository, when the builder says so (none exists; no
+13. A real GitHub repository, when the builder says so (none exists; no
     remote is configured).
 
 ## 8. Builder's answers (2026-11-07)
@@ -452,3 +520,147 @@ Housekeeping:
    cluster by default (`--scoped-namespace` unset); namespace scoping
    stays available for later.
 5. **Licence**: none; the repository stays private (README, NOTICE).
+
+## 9. The operator: Config Connector's identity, per namespace
+
+The builder: "We need to package that as an operator so the crds are avail
+and then controller works. Ideally it can use the same auth as the actual
+kcc cnrm operator when working in the same namespace."
+
+### 9.1 How Config Connector's operator does it (read at the pin)
+
+- **Cluster mode, Workload Identity.** One controller manager in
+  `cnrm-system` runs as the Kubernetes service account
+  `cnrm-controller-manager`, which the operator annotates with
+  `iam.gke.io/gcp-service-account: <ConfigConnector.spec.googleServiceAccount>`
+  (`operator/pkg/controllers/configconnector`,
+  `objectTransformForWorkloadIdentity`). The Google side is an IAM binding
+  of `roles/iam.workloadIdentityUser` for
+  `serviceAccount:<project>.svc.id.goog[cnrm-system/cnrm-controller-manager]`,
+  which the user makes when installing Config Connector.
+- **Cluster mode, a key.** `spec.credentialSecretName` names a Secret in
+  `cnrm-system`, mounted as volume `gcp-service-account` at
+  `/var/secrets/google`, with `GOOGLE_APPLICATION_CREDENTIALS` pointing at
+  `key.json` (`config/installbundle/components/manager/authmodes/withsecretvolume`).
+- **Namespaced mode.** For each `ConfigConnectorContext` in namespace N, a
+  StatefulSet with `--scoped-namespace=N`, running as
+  `cnrm-controller-manager-N`, annotated with that context's
+  `googleServiceAccount`, in `cnrm-system`, or in the context's
+  `spec.managerNamespace` under `--manager-namespace-isolation=dedicated`
+  (`operator/channels/packages/configconnector/<v>/namespaced/per-namespace-components.yaml`,
+  `pkg/controllers/configconnectorcontext/namespaced.go`). A context's
+  `requestProjectPolicy` becomes `--user-project-override` and
+  `--billing-project`.
+
+### 9.2 What ours does
+
+Workload Identity is bound to a namespace and a service-account name, so
+the cheapest way to have "the same auth in the same namespace" is to run
+in that namespace as that service account: no new Google IAM binding, no
+key, nothing for Bundt to grant. `pkg/operator`:
+
+- watches `ConfigConnector`, `ConfigConnectorContext`, Config Connector's
+  service accounts and its own Deployments, and in one pass applies what
+  should run and deletes what it made that should not;
+- cluster mode: Deployment `cnrm-system/gaps-gcp-manager` as
+  `cnrm-controller-manager`; with a key, the same Secret mounted the same
+  way;
+- namespaced mode: Deployment `gaps-gcp-manager-N` as
+  `cnrm-controller-manager-N` with `--scoped-namespace=N` and the
+  context's project policy flags, in `cnrm-system` or (dedicated) the
+  context's manager namespace;
+- without a `ConfigConnector` object (Config Connector from its install
+  bundle): cluster mode, Workload Identity if `cnrm-controller-manager`
+  carries the annotation, else the bundle's `gcp-key` Secret;
+- waits for Config Connector's service account rather than run as none;
+- binds Config Connector's service account to the managers' roles
+  (`config/operator/rbac.yaml`): `gaps-gcp-manager` (our kinds, Secrets,
+  events, the Config Connector kinds ours reference) cluster-wide in
+  cluster mode or by RoleBinding in N alone, and `gaps-gcp-manager-cluster`
+  (CRDs, `ConfigConnector`, namespaces) cluster-wide;
+- itself runs in `gaps-gcp-system` as its own service account, holds no
+  Google credentials, may read but never create or annotate service
+  accounts, and may bind only those two roles (RBAC `bind` by name).
+
+A static bundle was the alternative: cheaper, but it can only cover
+cluster mode, because namespaced mode's managers depend on which contexts
+exist. The operator is about 400 lines and covers both.
+
+### 9.3 What was proven (2026-11-07)
+
+`pkg/operator` against envtest (`make test`): cluster mode with Workload
+Identity and with a key; the switch to namespaced mode (the cluster
+manager and its bindings go, one manager per context comes, with its
+RoleBinding only in its namespace and the billing-project flags); a context
+removed takes its manager and bindings; no manager before Config
+Connector's service account exists; Config Connector without its
+operator.
+
+`tests/operator/run.sh` (`make operator-e2e`) on kind 0.33 (Kubernetes
+1.37) with the in-cluster fake cloud (`cmd/fakegcp`; managers get
+`--fake-cloud-url`, which loads no Google credentials), images built by ko
+0.19.1 for linux/arm64, 2026-11-07:
+
+```text
+ok: CRDs installed: secretmanagersecrets, secretmanagersecretversions, sqladminbackups, sqlusers (*.gcp.hfl.dev)
+== cluster mode: one manager in cnrm-system as cnrm-controller-manager
+ok: manager pod runs as cnrm-system/cnrm-controller-manager (Workload Identity maps it to kcc@mock-project.iam.gserviceaccount.com)
+ok: cnrm-controller-manager may manage gap kinds in any namespace
+== cluster mode: a regional secret and its version become Ready
+ok: Ready: projects/mock-project/locations/us-central1/secrets/bundt-db-password
+== namespaced mode: Config Connector's operator moves to one manager per context
+ok: team-a's manager runs as cnrm-system/cnrm-controller-manager-team-a with --scoped-namespace=team-a
+ok: team-a's service account may manage gap kinds in team-a and not in team-b
+ok: team-a/app-config Ready through team-a's manager
+ok: team-b/app-config untouched: no context, no manager
+all checks passed
+```
+
+Found on the way: the manager had never been started as a binary (only
+its controllers, in tests), and it panicked at start ("flag redefined:
+alsologtostderr"): Config Connector's dependencies already register klog's
+flags, so `klog.InitFlags` must not be called again. Fixed in
+`cmd/manager` and `cmd/fakegcp`. mockgcp also needs a writable `/tmp`
+(it links controller-runtime's envtest helpers), and ko must run with an
+empty Docker config on a Mac (Docker Desktop's credential helper blocked
+on the keychain).
+
+Not proven, and cannot be on kind: Workload Identity itself (the GKE
+metadata server exchanging the pod's token for the Google service
+account's). What is proven instead is everything on our side of it: the
+manager pod's service account is exactly Config Connector's for the scope,
+in the same namespace, so on GKE the same IAM binding applies to it.
+Config Connector's own operator was not installed; its footprint (the
+namespace, its service accounts with the annotation, `ConfigConnector`,
+`ConfigConnectorContext`) was made by hand as its code says it makes them.
+
+### 9.4 Open questions for the builder
+
+1. **Field gaps on large existing kinds** (section 6.6, ranks 4 to 6:
+   `SQLInstance.retainBackupsOnDelete` and others). The gap-kind model
+   copies a whole kind into our group; for `SQLInstance` or
+   `ContainerCluster` that is thousands of lines and a second kind for one
+   resource. The options: (a) wait for the release and pin the bundle on
+   it; (b) pin the bundle on a Config Connector `master` commit after the
+   PR merges; (c) build Config Connector's manager ourselves with the PR as
+   a patch, which is a fork. Recommended: (a), or (b) when it cannot wait,
+   never (c).
+2. **Sharing Config Connector's service account cuts both ways.** Our
+   manager also holds Config Connector's Kubernetes rights, and Config
+   Connector's account gains rights to our kinds. The alternative is our
+   own service account plus one more `workloadIdentityUser` binding per
+   Google service account, which someone must grant. Recommended: share,
+   as asked, and revisit with the L3 split of agents by role.
+3. **"One manager per target/cluster"** (section 8, answer 4) and
+   namespaced mode. The operator follows Config Connector's mode, so a
+   namespaced-mode cluster gets one gaps-gcp manager per namespace, as
+   Config Connector has. Confirm that this overrides answer 4 for
+   namespaced mode.
+4. **`--fake-cloud-url` is in the production manager**, as a flag for
+   tests. It loads no credentials, so it cannot leak them; anyone able to
+   set it can also change the image. Keep it, or move it behind a build
+   tag?
+5. **Deleting a `SQLAdminBackup` deletes the backup** (upstream's
+   behaviour; `deletion-policy: abandon` keeps it). For Bundt's "backup
+   before a risky plan", should Bundt write `abandon` on the backups it
+   makes, so deleting the Instance's live component keeps them?

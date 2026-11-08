@@ -6,9 +6,13 @@ Kubernetes kinds for Google Cloud that
 member of a set of gap-filling providers: `gaps-gcp`, `gaps-aws` (beside
 ACK) and `gaps-azure` (beside Azure Service Operator).
 
-The first kind is `SQLUser` with `spec.databaseRoles`: Config Connector's
-`SQLUser` cannot grant a Cloud SQL user its database roles (the Cloud SQL
-Admin API's `User.databaseRoles`, Terraform's `google_sql_user.database_roles`).
+The kinds:
+
+| Kind | Gap it fills | Source |
+| --- | --- | --- |
+| `sql.gcp.hfl.dev/v1beta1` `SQLUser` | `spec.databaseRoles`: Config Connector's `SQLUser` cannot grant a Cloud SQL user its database roles (`User.databaseRoles`, Terraform's `google_sql_user.database_roles`) | ours, on upstream's `SQLSSLCert` controller; upstream PR #7148 is watched |
+| `sqladmin.gcp.hfl.dev/v1alpha1` `SQLAdminBackup` | an on-demand Cloud SQL backup (`backupRuns`); upstream master has the types but no controller | upstream PR #12553 |
+| `secretmanager.gcp.hfl.dev/v1beta1` `SecretManagerSecret`, `SecretManagerSecretVersion` | `spec.location`: a regional secret (Terraform's `google_secret_manager_regional_secret`), in no Config Connector release or on master | master's direct controllers plus upstream PR #6651 |
 
 ## Where it sits
 
@@ -77,18 +81,37 @@ The motivating case is in the bundt repository, `charts/infra/gcp`:
 bntd's service account is an IAM database user, which starts with no
 privileges; today someone runs a `GRANT` once by hand.
 
-## Using it
+## Installing it
+
+Beside Config Connector, with its operator or its install bundle:
+
+```sh
+ko apply -k config/default    # CRDs, the operator (gaps-gcp-system)
+```
+
+The operator (`cmd/operator`, `pkg/operator`) starts gaps-gcp's managers
+where Config Connector runs its own and as Config Connector's own
+Kubernetes service accounts, so a gap kind acts as the same Google
+identity Config Connector would for the same namespace: in cluster mode one
+manager in `cnrm-system` as `cnrm-controller-manager`; in namespaced mode one
+per `ConfigConnectorContext`, watching only that namespace, as
+`cnrm-controller-manager-<namespace>`. With a key Secret instead of Workload
+Identity, it mounts the same Secret the same way. It never makes a service
+account or holds a Google credential. `docs/plan.md` section 9.
+
+## Developing it
 
 ```sh
 make upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
 make check      # pin check, generated files current, gofmt, vet, build, tests
-make build      # bin/manager
+make build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
+make operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
 ```
 
-`make test` runs the controller end to end: a real kube-apiserver
-(envtest), Config Connector's direct reconciler, our adapter, and
-Config Connector's mockgcp as a fake Cloud SQL Admin API. No real Google
-Cloud and no recordings.
+`make test` runs each kind end to end: a real kube-apiserver (envtest),
+Config Connector's direct reconciler, our adapters, and Config Connector's
+mockgcp as a fake Google Cloud (`pkg/test/mockenv`); and the operator
+against envtest. No real Google Cloud and no recordings.
 
 ```yaml
 apiVersion: sql.gcp.hfl.dev/v1beta1
@@ -111,19 +134,24 @@ when the user is created, and whenever the list changes the controller
 calls `users.update` with `revokeExistingRoles`, so the user ends with
 exactly the listed roles, whoever granted the others. Roles granted out of
 band while the list is unchanged are not detected (the controller compares
-against what it last applied, `status.appliedDatabaseRoles`). It is not yet
-installable as a release: there is no image,
-Helm chart or RBAC yet (`docs/plan.md`, "What is left").
+against what it last applied, `status.appliedDatabaseRoles`).
 
 ## Layout
 
 | Path | What |
 | --- | --- |
-| `apis/sql/v1beta1/` | `SQLUser` types and identity (copied, see headers) |
+| `apis/<service>/<version>/` | each kind's types and identity (copied, see headers) |
 | `config/crds/` | generated CRDs (`hack/generate.sh`) |
-| `pkg/controller/direct/sql/` | the `SQLUser` adapter and its test |
+| `config/operator/`, `config/default/` | the operator, its RBAC and the managers' roles; the install |
+| `config/fake-cloud/` | tests only: the install with the in-cluster fake cloud |
+| `pkg/controller/direct/<service>/` | each kind's adapter and its mockgcp test |
 | `pkg/controller/` | registers our kinds on KCC's direct reconciler and deletion defender |
+| `pkg/operator/`, `cmd/operator/` | runs the managers as Config Connector's service accounts |
+| `pkg/test/mockenv/` | the envtest + mockgcp harness the kinds' tests share |
+| `pkg/fakecloud/`, `cmd/fakegcp/` | tests only: mockgcp as a network service, and the manager's `--fake-cloud-url` |
 | `cmd/manager/` | the controller manager |
+| `cmd/fakecloud/` | Config Connector's manager and ours against mockgcp, on the host (`docs/fake-cloud.md`) |
+| `tests/operator/` | the operator on kind |
 | `patches/k8s-config-connector/` | our changes to the upstream checkout, in order |
 | `hack/` | fetch and check upstream, generate, regenerate mock protos |
 | `UPSTREAM.md` | the pinned commits |

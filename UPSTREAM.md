@@ -96,3 +96,16 @@ is live yet; when it is, follow "Switching to PR #7148" in `docs/plan.md`.
 5. `make check`.
 6. If upstream now has a kind or field we fill, follow "Retiring a gap
    kind" in `docs/plan.md`.
+
+## Copied from open pull requests
+
+Code copied from pull requests that have not merged. `hack/upstream-pr.sh`
+reads this table and says, for each, whether its head moved since the row
+was written and whether it merged. When one moves, re-read its diff for the
+copied files; when it merges and the pin passes it, retire our copy
+(`docs/plan.md` section 3.4) and drop its mockgcp patch.
+
+| PR | Head | Read on | Copied for |
+| --- | --- | --- | --- |
+| #12553 | `9611a6de02e08aca9a624affaf59bc104d1cb88f` | 2026-11-07 (open, review required, last updated 2026-09-04) | `SQLAdminBackup`, patch 0003 |
+| #6651 | `9aab204dd9d87716863b966c724b7a12664fd85f` | 2026-11-07 (open, review required, last updated 2026-03-17) | regional `SecretManagerSecret` / `SecretManagerSecretVersion`, patch 0004 |
