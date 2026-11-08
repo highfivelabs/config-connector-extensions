@@ -1,3 +1,5 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # For tests only: Config Connector's mockgcp as a network service
 # (cmd/fakegcp), so managers in the cluster can use a fake Google Cloud.
 # mockgcp keeps some data (Secret Manager payloads) in Kubernetes Secrets in

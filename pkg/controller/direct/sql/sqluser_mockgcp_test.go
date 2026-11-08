@@ -1,4 +1,5 @@
 // Copyright 2026 High Five Labs
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,9 +61,9 @@ import (
 
 const (
 	project   = "mock-project"
-	instance  = "bundt"
-	namespace = "bundt"
-	userName  = "bntd@mock-project.iam"
+	instance  = "example"
+	namespace = "example"
+	userName  = "app-runtime@mock-project.iam"
 )
 
 type harness struct {
@@ -231,11 +232,11 @@ func (h *harness) setRoles(name string, roles []string) {
 	}
 }
 
-// Bundt's case (charts/infra/gcp in the bundt repo): bntd's service account
-// as an IAM database user, granted its roles declaratively.
+// The case: an application's Google service account as an IAM database
+// user, granted its roles declaratively.
 func TestSQLUserDatabaseRoles(t *testing.T) {
 	h := newHarness(t)
-	const name = "bundt-bntd"
+	const name = "app-runtime"
 
 	user := &sqlv1beta1.SQLUser{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},

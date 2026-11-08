@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp. The mapping of Config Connector's
 // open pull request #12553 (head 9611a6de, pkg/controller/direct/sqladmin/
 // mapper.generated.go and mapper.go; UPSTREAM.md), field for field, written

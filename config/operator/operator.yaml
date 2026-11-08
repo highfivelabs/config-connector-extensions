@@ -1,3 +1,5 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # The gaps-gcp operator: holds no Google credentials and never calls Google
 # Cloud. It runs gaps-gcp's managers as Config Connector's service accounts
 # (pkg/operator).

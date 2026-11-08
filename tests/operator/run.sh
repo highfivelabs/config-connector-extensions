@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # The operator on kind, with the fake cloud: CRDs install, gaps-gcp's
 # managers run in Config Connector's namespace as Config Connector's service
 # accounts, and gap kinds become Ready against the fake cloud, first in
@@ -109,7 +111,7 @@ kubectl -n cnrm-system rollout status deploy/gaps-gcp-manager --timeout=180s
 sa="$(kubectl -n cnrm-system get pod -l app.kubernetes.io/name=gaps-gcp-manager -o jsonpath='{.items[0].spec.serviceAccountName}')"
 [[ "${sa}" == "cnrm-controller-manager" ]] || fail "manager pod runs as ${sa}, want cnrm-controller-manager"
 pass "manager pod runs as cnrm-system/cnrm-controller-manager (Workload Identity maps it to $(kubectl -n cnrm-system get sa cnrm-controller-manager -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'))"
-[[ "$(kubectl auth can-i create secretmanagersecrets.secretmanager.gcp.hfl.dev -n bundt --as=system:serviceaccount:cnrm-system:cnrm-controller-manager)" == yes ]] \
+[[ "$(kubectl auth can-i create secretmanagersecrets.secretmanager.gcp.hfl.dev -n example --as=system:serviceaccount:cnrm-system:cnrm-controller-manager)" == yes ]] \
   || fail "Config Connector's service account may not manage gap kinds"
 pass "cnrm-controller-manager may manage gap kinds in any namespace"
 
@@ -118,7 +120,7 @@ kubectl apply -f - <<'YAML'
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: bundt
+  name: example
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
 ---
@@ -126,15 +128,15 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: db
-  namespace: bundt
+  namespace: example
 stringData:
   password: s3cret
 ---
 apiVersion: secretmanager.gcp.hfl.dev/v1beta1
 kind: SecretManagerSecret
 metadata:
-  name: bundt-db-password
-  namespace: bundt
+  name: app-db-password
+  namespace: example
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
 spec:
@@ -143,22 +145,22 @@ spec:
 apiVersion: secretmanager.gcp.hfl.dev/v1beta1
 kind: SecretManagerSecretVersion
 metadata:
-  name: bundt-db-password-1
-  namespace: bundt
+  name: app-db-password-1
+  namespace: example
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
 spec:
   secretRef:
-    name: bundt-db-password
+    name: app-db-password
   secretData:
     valueFrom:
       secretKeyRef:
         name: db
         key: password
 YAML
-wait_for 90 "SecretManagerSecret bundt/bundt-db-password Ready" ready secretmanagersecrets.secretmanager.gcp.hfl.dev bundt bundt-db-password
-wait_for 90 "SecretManagerSecretVersion bundt/bundt-db-password-1 Ready" ready secretmanagersecretversions.secretmanager.gcp.hfl.dev bundt bundt-db-password-1
-pass "Ready: $(kubectl -n bundt get secretmanagersecrets.secretmanager.gcp.hfl.dev bundt-db-password -o jsonpath='{.status.externalRef}')"
+wait_for 90 "SecretManagerSecret example/app-db-password Ready" ready secretmanagersecrets.secretmanager.gcp.hfl.dev example app-db-password
+wait_for 90 "SecretManagerSecretVersion example/app-db-password-1 Ready" ready secretmanagersecretversions.secretmanager.gcp.hfl.dev example app-db-password-1
+pass "Ready: $(kubectl -n example get secretmanagersecrets.secretmanager.gcp.hfl.dev app-db-password -o jsonpath='{.status.externalRef}')"
 
 step "namespaced mode: Config Connector's operator moves to one manager per context"
 kubectl apply -f - <<'YAML'

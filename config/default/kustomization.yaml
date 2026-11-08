@@ -1,3 +1,5 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # gaps-gcp: its CRDs and its operator. Install beside Config Connector;
 # images are ko:// references (ko resolve -f, or ko apply -k).
 apiVersion: kustomize.config.k8s.io/v1beta1

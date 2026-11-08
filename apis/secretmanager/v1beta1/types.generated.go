@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp. Copied from Config Connector
 // apis/secretmanager/v1beta1/types.generated.go (UPSTREAM.md), unchanged
 

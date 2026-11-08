@@ -1,3 +1,5 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # The operator's own namespace. The managers it starts run in Config
 # Connector's namespace (cnrm-system), as Config Connector's service accounts.
 apiVersion: v1

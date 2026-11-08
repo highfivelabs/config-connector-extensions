@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp. Copied from Config Connector's
 // open pull request #12553 (head 9611a6de,
 // pkg/controller/direct/sqladmin/sqladminbackup_controller.go; UPSTREAM.md),

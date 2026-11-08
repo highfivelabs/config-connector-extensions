@@ -1,18 +1,20 @@
-# What bundt's charts/infra/gcp renders for bntd, cut to what the fake
-# cloud needs: a Cloud SQL Postgres instance with IAM sign-in, its
-# database, bntd's Google service account, and its IAM database user with
-# database roles (gaps-gcp's SQLUser). Each names its project, as
-# the chart does: with no Config Connector webhook here, the namespace's
-# project-id annotation is not copied onto resources.
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
+# A typical application database, cut to what the fake cloud needs: a
+# Cloud SQL Postgres instance with IAM sign-in, its database, the
+# application's Google service account, and its IAM database user with
+# database roles (gaps-gcp's SQLUser). Each names its project: with no
+# Config Connector webhook here, the namespace's project-id annotation is
+# not copied onto resources.
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
 kind: SQLInstance
 metadata:
-  name: bundt
+  name: example
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
     cnrm.cloud.google.com/deletion-policy: abandon
 spec:
-  # Bundt runs POSTGRES_17; mockgcp knows Postgres up to 16 (docs/fake-cloud.md).
+  # mockgcp knows Postgres up to 16, not 17 (docs/fake-cloud.md).
   databaseVersion: POSTGRES_16
   region: us-central1
   settings:
@@ -31,36 +33,36 @@ spec:
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
 kind: SQLDatabase
 metadata:
-  name: bundt
+  name: example
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
     cnrm.cloud.google.com/deletion-policy: abandon
 spec:
-  resourceID: bundt
+  resourceID: example
   instanceRef:
-    name: bundt
+    name: example
   charset: UTF8
 ---
 apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMServiceAccount
 metadata:
   # Google requires 6 to 30 characters.
-  name: bntd-app
+  name: app-runtime
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
 spec:
-  displayName: bntd
+  displayName: app-runtime
 ---
 apiVersion: sql.gcp.hfl.dev/v1beta1
 kind: SQLUser
 metadata:
-  name: bntd
+  name: app-runtime
   annotations:
     cnrm.cloud.google.com/project-id: mock-project
 spec:
-  resourceID: bntd-app@mock-project.iam
+  resourceID: app-runtime@mock-project.iam
   type: CLOUD_IAM_SERVICE_ACCOUNT
   instanceRef:
-    name: bundt
+    name: example
   databaseRoles:
     - cloudsqlsuperuser

@@ -1,4 +1,5 @@
 // Copyright 2026 High Five Labs
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +15,8 @@
 
 package sqladmin_test
 
-// SQLAdminBackup end to end on the fake cloud (pkg/test/mockenv): Bundt's
-// case is an on-demand backup of an Instance's database before a plan that
+// SQLAdminBackup end to end on the fake cloud (pkg/test/mockenv). The case:
+// an on-demand backup of an application's database before a change that
 // could lose data (a major version upgrade, a destructive migration).
 
 import (
@@ -39,8 +40,8 @@ import (
 )
 
 const (
-	instance  = "bundt"
-	namespace = "bundt"
+	instance  = "example"
+	namespace = "example"
 )
 
 func newCloudSQL(t *testing.T, env *mockenv.Env) *sqladmin.Service {

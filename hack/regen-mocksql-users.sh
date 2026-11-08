@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # Regenerate mockgcp's Cloud SQL users protos (cloud_sql_users*.pb*.go) in
 # third_party/k8s-config-connector with the extra fields our mock needs,
 # the same way mockgcp's own Makefile does it, but for this one proto file.

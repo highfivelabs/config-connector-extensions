@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp: copied from Config Connector
 // pkg/controller/direct/sql/client.go (UPSTREAM.md); only the clients a
 // user needs are kept.

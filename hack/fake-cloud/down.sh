@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # Stop bin/fakecloud and delete the kind cluster. The fake cloud is in
 # memory, so this forgets every fake Google resource.
 set -o errexit -o nounset -o pipefail

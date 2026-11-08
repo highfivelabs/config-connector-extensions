@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp. Config Connector has no direct
 // controller for SQLUser (on master it is Terraform-based, reconciled by the
 // vendored google_sql_user). This file is Config Connector's direct

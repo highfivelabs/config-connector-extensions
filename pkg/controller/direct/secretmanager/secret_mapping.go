@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp. Copied from Config Connector
 // pkg/controller/direct/secretmanager/secret_mapping.go (UPSTREAM.md): the KRM types are gaps-gcp's
 // (secretmanager.gcp.hfl.dev), otherwise unchanged

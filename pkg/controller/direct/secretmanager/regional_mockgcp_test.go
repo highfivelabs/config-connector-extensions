@@ -1,4 +1,5 @@
 // Copyright 2026 High Five Labs
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +16,9 @@
 package secretmanager_test
 
 // Regional Secret Manager secrets end to end on the fake cloud
-// (pkg/test/mockenv). Bundt's case: an Instance's database password kept in
-// a secret in the Environment's region (data residency), its value written
-// from a Kubernetes Secret as a version.
+// (pkg/test/mockenv). The case: an application's database password kept in
+// a secret in one region (data residency), its value written from a
+// Kubernetes Secret as a version.
 
 import (
 	"strings"
@@ -39,7 +40,7 @@ import (
 )
 
 const (
-	namespace = "bundt"
+	namespace = "example"
 	region    = "us-central1"
 )
 
@@ -74,7 +75,7 @@ func TestRegionalSecret(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	cloud := regionalClient(t, env, region)
 
-	const secretName = "bundt-db-password"
+	const secretName = "app-db-password"
 	if err := env.Kube.Create(env.Ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "db"},
 		Data:       map[string][]byte{"password": []byte("s3cret")},
@@ -123,7 +124,7 @@ func TestRegionalSecret(t *testing.T) {
 		}
 	})
 
-	const versionName = "bundt-db-password-1"
+	const versionName = "app-db-password-1"
 	version := &smv1beta1.SecretManagerSecretVersion{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: versionName, Annotations: projectAnnotation},
 		Spec: smv1beta1.SecretManagerSecretVersionSpec{

@@ -1,3 +1,5 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # For tests only: gaps-gcp with every manager pointed at the in-cluster fake
 # cloud (cmd/fakegcp). tests/operator/run.sh uses it on kind. The manager
 # image must be built with -tags fakecloud: a production manager has no

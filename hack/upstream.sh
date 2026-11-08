@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # Fetch Config Connector at the commit pinned in UPSTREAM.md into
 # third_party/k8s-config-connector, then apply our patch series from
 # patches/k8s-config-connector/ in order.

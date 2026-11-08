@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # Config Connector's go.mod replace directives do not apply to us, so go.mod
 # repeats them. Fail if the version pins in the checkout's go.mod (the
 # "=> module version" lines) are not all in ours.

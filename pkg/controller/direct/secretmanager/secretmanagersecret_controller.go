@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// SPDX-License-Identifier: Apache-2.0
+
 // Modified by High Five Labs for gaps-gcp. Copied from Config Connector
 // pkg/controller/direct/secretmanager/secretmanagersecret_controller.go (UPSTREAM.md) with the regional-secret change from upstream pull
 // request #6651 (head 9aab204d): a regional secret

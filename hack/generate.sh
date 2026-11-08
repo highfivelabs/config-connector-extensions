@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # Generate deepcopy and CRDs from apis/, the way Config Connector's
 # dev/tasks/generate-crds does for its direct kinds: controller-gen v0.16.5,
 # then Config Connector's own CRD post-processing tools (run from the pinned

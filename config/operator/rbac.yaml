@@ -1,3 +1,5 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # What the operator may do: read Config Connector's objects and service
 # accounts, run the managers, and bind Config Connector's service accounts
 # to the two manager roles below, and no other role.

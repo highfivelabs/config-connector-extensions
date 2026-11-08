@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
 # Watch Config Connector PR #7148 (upstream's direct SQLUser), the change we
 # would copy instead of our own SQLUser controller once it does what we need,
 # and the pull requests we already copied code from.
@@ -8,7 +10,7 @@
 # UPSTREAM.md. The PR is adequate when its SQLUser types carry databaseRoles
 # uncommented (it was `/*NOTYET ... */` at eb5d176a). When it is:
 #   1. set "PR head" in UPSTREAM.md to the new SHA;
-#   2. follow "Switching to PR #7148" in docs/plan.md.
+#   2. follow "Switching to PR #7148" in docs/design.md.
 #
 #   hack/upstream-pr.sh   fetch refs/pull/<n>/head and report what changed
 
@@ -46,7 +48,7 @@ if [[ -z "${types}" ]]; then
 fi
 # databaseRoles is adequate when its field is declared outside a /*NOTYET block.
 if awk '/\/\*NOTYET/{c=1} /\*\//{c=0; next} !c && /DatabaseRoles +\[\]string/{f=1} END{exit !f}' <<<"${types}"; then
-  echo "  databaseRoles is live in the PR: it may now do what we need (docs/plan.md, 'Switching to PR #${PR}')"
+  echo "  databaseRoles is live in the PR: it may now do what we need (docs/design.md, 'Switching to PR #${PR}')"
 else
   echo "  databaseRoles is still commented out (/*NOTYET*/): keep our controller"
 fi
