@@ -1,10 +1,11 @@
-# gaps-gcp design
+# config-connector-extensions design
 
-gaps-gcp has four kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has four kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, and regional `SecretManagerSecret` and
 `SecretManagerSecretVersion` (section 6). Each passes its end-to-end test
-against mockgcp. An operator runs the managers as Config Connector's own
-service accounts, and a kind test proves it in cluster and namespaced mode
+against mockgcp. An operator runs the managers beside Config Connector's,
+each as its own Kubernetes service account carrying Config Connector's
+Google identity, and a kind test proves it in cluster and namespaced mode
 against an in-cluster fake cloud (section 9). Images are built locally
 with ko; there is no registry or release yet. This document says how it is
 built, why, how it stays in step with Config Connector, how it is tested,
@@ -14,8 +15,9 @@ how gaps are chosen, and what is left.
 
 - **One repository per provider.** Each provider's gap kinds are built with
   that provider's generator against that provider's model input, on
-  unrelated cadences. So `gaps-gcp` beside Config Connector, and in time
-  `gaps-aws` beside ACK and `gaps-azure` beside Azure Service Operator,
+  unrelated cadences. So `config-connector-extensions` beside Config
+  Connector, and `ack-extensions` beside ACK and `aso-extensions` beside
+  Azure Service Operator,
   each versioned on its own and installed beside the upstream controller
   it extends.
 - **Our kinds live in our groups.** Config Connector's registration
@@ -33,8 +35,9 @@ how gaps are chosen, and what is left.
   identity and reference (from `dev/tools/controllerbuilder` where the
   upstream siblings are generated), a hand-written controller (a few
   hundred lines) on `directbase`, and a mockgcp fixture.
-- **GCP is where gaps close fastest upstream**, so `gaps-gcp` expects to
-  retire kinds as often as it adds them; a kind moves from our group to
+- **GCP is where gaps close fastest upstream**, so
+  `config-connector-extensions` expects to retire kinds as often as it
+  adds them; a kind moves from our group to
   theirs when upstream ships it (section 3.4).
 - **Hermetic tests exist upstream**: mockgcp (a fake GCP, separate Go
   module, in the Config Connector repository) plus golden `_http.log`
@@ -77,7 +80,7 @@ committed (`hack/upstream.sh`). The binary links what `directbase` links:
 optional: the direct reconciler puts the defender's finalizer on every
 object and will not delete until the defender removes it; the defender
 flips objects to abandon when their CRD is being deleted, so uninstalling
-gaps-gcp never deletes cloud resources.
+config-connector-extensions never deletes cloud resources.
 
 The reconciler reads `ConfigConnector` / `ConfigConnectorContext` (actuation
 mode, namespaced vs cluster mode), so those CRDs must exist on the cluster,
@@ -86,9 +89,11 @@ requires a `ConfigConnectorContext` in the object's namespace, as Config
 Connector does.
 
 Identity: the manager authenticates with Application Default Credentials.
-In a cluster it runs as Config Connector's own Kubernetes service account
-for the scope (section 9), so Workload Identity gives it the Google service
-account Config Connector has there, per namespace in namespaced mode.
+In a cluster it runs as its own Kubernetes service account beside Config
+Connector's for the scope, carrying Config Connector's Workload Identity
+annotation, so it acts as the Google service account Config Connector has
+there, per namespace in namespaced mode (section 9). Sharing Config
+Connector's own service account is an opt-in.
 
 ### 2.3 Per-kind code: copy the nearest upstream code
 
@@ -172,10 +177,10 @@ merges, retire the kind instead ("Retiring a gap kind").
 ### 3.2 Moving the pin
 
 The procedure is in `UPSTREAM.md`. Cadence: when a gap closes upstream,
-when a copied file changes upstream, or before a gaps-gcp release, at
-least monthly while upstream ships every two to three weeks. A gaps-gcp
-release names the Config Connector release it is installed beside, and
-pins a `master` commit at or after that release.
+when a copied file changes upstream, or before a release, at least
+monthly while upstream ships every two to three weeks. A release names
+the Config Connector release it is installed beside, and pins a `master`
+commit at or after that release.
 
 ### 3.3 Generating CRDs and code
 
@@ -235,7 +240,7 @@ here.
       --- PASS: TestSQLUserDatabaseRoles/adding_a_role_grants_it (0.22s)
       --- PASS: TestSQLUserDatabaseRoles/removing_a_role_revokes_it (0.22s)
       --- PASS: TestSQLUserDatabaseRoles/delete_removes_the_user (0.22s)
-  ok  github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sql
+  ok  github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql
   ```
 
   The test was also run with `RevokeExistingRoles(false)` in the
@@ -376,7 +381,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
 
 ## 7. What is left
 
-Before gaps-gcp can run on a real cluster:
+Before config-connector-extensions can run on a real cluster:
 
 1. Images are built locally by ko (`config/default` uses `ko://`
    references). A registry, signing and a release version scheme are not
@@ -390,7 +395,8 @@ Before gaps-gcp can run on a real cluster:
    immutability (`host`, `type`, `resourceID`); ours relies on the
    controller erroring. Either CEL `x-kubernetes-validations` in the CRD
    or a webhook.
-6. A Kubernetes service account of our own for the managers (section 9.4).
+6. Done: the managers' own Kubernetes service account, the default, with
+   sharing Config Connector's as an opt-in (section 9.2).
 
 To raise confidence in the kinds:
 
@@ -474,64 +480,132 @@ namespace.
 
 ### 9.2 What ours does
 
-Workload Identity is bound to a namespace and a service-account name, so
-the cheapest way to have "the same auth in the same namespace" is to run
-in that namespace as that service account: no new Google IAM binding, no
-key, nothing extra to grant. `pkg/operator`:
+Workload Identity is bound to a namespace and a service-account name. Two
+ways give "the same auth in the same namespace":
+
+- **Its own service account (the default, `--identity=own`).** The manager
+  runs in Config Connector's namespace as its own Kubernetes service
+  account, which the operator creates with the same
+  `iam.gke.io/gcp-service-account` annotation as Config Connector's
+  (copied from it), and binds only to this project's roles. The Google
+  service account is the same; the Kubernetes rights are ours alone. It
+  costs one more Workload Identity binding per Google service account
+  (below). With a key Secret it costs nothing: the same Secret is mounted
+  the same way.
+- **Config Connector's service account (opt-in, `config-connector`).** The
+  manager runs as Config Connector's own service account. No extra
+  binding, but the manager then holds every Kubernetes right Config
+  Connector's account has (section 9.4). Chosen by `--identity=config-connector`
+  on the operator, or per scope by the annotation
+  `gcp.hfl.dev/identity: config-connector` on the `ConfigConnector` object
+  (every manager) or on one `ConfigConnectorContext` (that namespace's
+  manager). The annotation `gcp.hfl.dev/identity: own` opts a scope back. A
+  context's annotation wins over the `ConfigConnector` object's, which wins
+  over the flag; any other value is refused.
+
+`pkg/operator`:
 
 - watches `ConfigConnector`, `ConfigConnectorContext`, Config Connector's
-  service accounts and its own Deployments, and in one pass applies what
-  should run and deletes what it made that should not;
-- cluster mode: Deployment `cnrm-system/gaps-gcp-manager` as
-  `cnrm-controller-manager`; with a key, the same Secret mounted the same
-  way;
-- namespaced mode: Deployment `gaps-gcp-manager-N` as
-  `cnrm-controller-manager-N` with `--scoped-namespace=N` and the
-  context's project policy flags, in `cnrm-system` or (dedicated) the
-  context's manager namespace;
+  service accounts, its own service accounts and its own Deployments, and
+  in one pass applies what should run and deletes what it made that
+  should not;
+- cluster mode: Deployment and service account
+  `cnrm-system/config-connector-extensions-manager`; with a key, the same
+  Secret mounted the same way;
+- namespaced mode: Deployment and service account
+  `config-connector-extensions-manager-N` with `--scoped-namespace=N` and
+  the context's project policy flags, in `cnrm-system` or (dedicated) the
+  context's manager namespace, annotated with the context's
+  `googleServiceAccount` (copied from `cnrm-controller-manager-N`);
 - without a `ConfigConnector` object (Config Connector from its install
   bundle): cluster mode, Workload Identity if `cnrm-controller-manager`
   carries the annotation, else the bundle's `gcp-key` Secret;
-- waits for Config Connector's service account rather than run as none;
-- binds Config Connector's service account to the managers' roles
-  (`config/operator/rbac.yaml`): `gaps-gcp-manager` (our kinds, Secrets,
-  events, the Config Connector kinds ours reference) cluster-wide in
-  cluster mode or by RoleBinding in N alone, and `gaps-gcp-manager-cluster`
-  (CRDs, `ConfigConnector`, namespaces) cluster-wide;
-- itself runs in `gaps-gcp-system` as its own service account, holds no
-  Google credentials, may read but never create or annotate service
-  accounts, and may bind only those two roles (RBAC `bind` by name).
+- waits for Config Connector's service account for the scope before it
+  makes anything: until it exists Config Connector is not set up there,
+  and there is no identity to copy;
+- binds the manager's service account to the managers' roles
+  (`config/operator/rbac.yaml`): `config-connector-extensions-manager` (our
+  kinds, read Secrets, events, read the Config Connector kinds ours
+  reference) cluster-wide in cluster mode or by RoleBinding in N alone,
+  and `config-connector-extensions-manager-cluster` (CRDs,
+  `ConfigConnector`, namespaces) cluster-wide;
+- itself runs in `config-connector-extensions-system` as its own service
+  account, holds no Google credentials, never changes Config Connector's
+  service accounts, writes only the service accounts it labels as its own
+  (RBAC cannot limit `create` by name, so its role allows service-account
+  writes in every namespace), and may bind only those two roles (RBAC
+  `bind` by name).
 
-A static bundle was the alternative: cheaper, but it can only cover
-cluster mode, because namespaced mode's managers depend on which contexts
-exist. The operator is about 400 lines and covers both.
+**The one step outside the cluster, for Workload Identity.** Allow the
+manager's service account to act as the Google service account Config
+Connector uses for the scope. `<cluster-project>` is the project that owns
+the cluster's workload identity pool, `<gsa>` the Google service account:
+
+```sh
+# cluster mode
+gcloud iam service-accounts add-iam-policy-binding <gsa> \
+  --role=roles/iam.workloadIdentityUser \
+  --member="serviceAccount:<cluster-project>.svc.id.goog[cnrm-system/config-connector-extensions-manager]"
+
+# namespaced mode, for the context in namespace N (its googleServiceAccount)
+gcloud iam service-accounts add-iam-policy-binding <gsa> \
+  --role=roles/iam.workloadIdentityUser \
+  --member="serviceAccount:<cluster-project>.svc.id.goog[cnrm-system/config-connector-extensions-manager-N]"
+```
+
+Under dedicated isolation the namespace in the member is the context's
+`spec.managerNamespace`. The operator logs the member it needs when it
+first creates a manager's service account.
+
+**The symptom when it is missing.** The operator cannot see it (it holds
+no Google credentials), and the manager starts normally. Each gap object
+then fails to reconcile: its `Ready` condition is `False` with a message
+from the GKE metadata server that it could not get an access token for
+the Google service account (`iam.serviceAccounts.getAccessToken`
+permission denied, HTTP 403). Config Connector's own objects in the same
+namespace keep working, which is the tell. Add the binding; the next
+reconcile succeeds.
+
+A static bundle was the alternative to an operator: cheaper, but it can
+only cover cluster mode, because namespaced mode's managers depend on which
+contexts exist.
 
 ### 9.3 What was proven (2026-11-07)
 
 `pkg/operator` against envtest (`make test`): cluster mode with Workload
-Identity and with a key; the switch to namespaced mode (the cluster
-manager and its bindings go, one manager per context comes, with its
-RoleBinding only in its namespace and the billing-project flags); a context
-removed takes its manager and bindings; no manager before Config
-Connector's service account exists; Config Connector without its
-operator.
+Identity (its own service account with Config Connector's annotation,
+bound to our roles; Config Connector's service account left unchanged)
+and with a key (the same Secret, no annotation); the switch to namespaced
+mode (the cluster manager, its service account and bindings go, one
+manager per context comes, with its own service account carrying the
+context's Google service account and its RoleBinding only in its
+namespace, and the billing-project flags); a context removed takes its
+manager, service account and bindings; the opt-in to share Config
+Connector's service account, on the `ConfigConnector` object and back; the
+`--identity=config-connector` flag with one context opting back to its
+own; an unknown identity refused; no manager before Config Connector's
+service account exists; Config Connector without its operator.
 
 `tests/operator/run.sh` (`make operator-e2e`) on kind 0.33 (Kubernetes
 1.37) with the in-cluster fake cloud (`cmd/fakegcp`; managers get
 `--fake-cloud-url`, which loads no Google credentials and since section
 9.4 exists only in builds with `-tags fakecloud`), images built by ko
-0.19.1 for linux/arm64, 2026-11-07:
+0.19.1 for linux/arm64, on a fresh cluster, 2026-11-08:
 
 ```text
 ok: CRDs installed: secretmanagersecrets, secretmanagersecretversions, sqladminbackups, sqlusers (*.gcp.hfl.dev)
-== cluster mode: one manager in cnrm-system as cnrm-controller-manager
-ok: manager pod runs as cnrm-system/cnrm-controller-manager (Workload Identity maps it to kcc@mock-project.iam.gserviceaccount.com)
-ok: cnrm-controller-manager may manage gap kinds in any namespace
+== cluster mode: one manager in cnrm-system as its own service account with Config Connector's identity
+ok: manager pod runs as cnrm-system/config-connector-extensions-manager, mapped like Config Connector's to kcc@mock-project.iam.gserviceaccount.com
+ok: the manager may manage gap kinds, and may not create Secrets, change ConfigConnector or create webhooks
+ok: Config Connector's service account has no rights on gap kinds
 == cluster mode: a regional secret and its version become Ready
 ok: Ready: projects/mock-project/locations/us-central1/secrets/app-db-password
+== the opt-in: share Config Connector's service account, then back
+ok: shared: the manager runs as cnrm-controller-manager, its own service account is gone
+ok: back to its own service account; Config Connector's has no rights on gap kinds again
 == namespaced mode: Config Connector's operator moves to one manager per context
-ok: team-a's manager runs as cnrm-system/cnrm-controller-manager-team-a with --scoped-namespace=team-a
-ok: team-a's service account may manage gap kinds in team-a and not in team-b
+ok: team-a's manager runs as cnrm-system/config-connector-extensions-manager-team-a, mapped like Config Connector's to cnrm-system-team-a@mock-project.iam.gserviceaccount.com, with --scoped-namespace=team-a
+ok: team-a's manager may manage gap kinds in team-a and not in team-b; Config Connector's team-a account has no rights on them
 ok: team-a/app-config Ready through team-a's manager
 ok: team-b/app-config untouched: no context, no manager
 all checks passed
@@ -549,13 +623,17 @@ on the keychain).
 Not proven, and cannot be on kind: Workload Identity itself (the GKE
 metadata server exchanging the pod's token for the Google service
 account's). What is proven instead is everything on our side of it: the
-manager pod's service account is exactly Config Connector's for the scope,
-in the same namespace, so on GKE the same IAM binding applies to it.
+manager pod runs as its own service account in Config Connector's
+namespace, carrying exactly Config Connector's Google service account for
+the scope, with only this project's Kubernetes rights, so on GKE one more
+binding (section 9.2) gives it Config Connector's identity. With the
+opt-in it runs as Config Connector's service account itself, which needs
+no binding.
 Config Connector's own operator was not installed; its footprint (the
 namespace, its service accounts with the annotation, `ConfigConnector`,
 `ConfigConnectorContext`) was made by hand as its code says it makes them.
 
-### 9.4 Trade-off: sharing Config Connector's Kubernetes service account
+### 9.4 Why not share Config Connector's Kubernetes service account by default
 
 On the Google side, sharing changes nothing: the same Google service
 account, through the same Workload Identity binding. On the Kubernetes
@@ -563,7 +641,7 @@ side the two directions differ, read from Config Connector's install
 bundle at the pin (`config/installbundle/components/clusterroles/` and
 `releases/scopes/*`):
 
-- **What our manager gains by running as Config Connector's account.**
+- **What our manager would gain by running as Config Connector's account.**
   Cluster mode (`cnrm-controller-manager`, all by ClusterRoleBinding):
   - `cnrm-admin`: create, update and delete on every
     `*.cnrm.cloud.google.com` group (180 groups), cluster-wide;
@@ -579,17 +657,19 @@ bundle at the pin (`config/installbundle/components/clusterroles/` and
   stays cluster-wide.
 - **What our manager needs:** our three groups, read Secrets, write
   events, and read the five Config Connector groups ours reference
-  (`gaps-gcp-manager` and `gaps-gcp-manager-cluster`,
+  (`config-connector-extensions-manager` and `config-connector-extensions-manager-cluster`,
   `config/operator/rbac.yaml`).
-- **What Config Connector's pods gain from our binding:** only full
-  control of our three groups (`sql`, `sqladmin` and
-  `secretmanager.gcp.hfl.dev`). Everything else in `gaps-gcp-manager` they
-  already hold.
+- **What Config Connector's pods would gain from our binding, when
+  shared:** only full control of our three groups (`sql`, `sqladmin` and
+  `secretmanager.gcp.hfl.dev`). Everything else in
+  `config-connector-extensions-manager` they already hold.
 
-So Config Connector's side barely widens, and ours widens a lot: a bug or
-a compromise in the gaps-gcp manager acts with Config Connector's full
-Kubernetes rights, including writing every Secret in the cluster in
-cluster mode. The alternative is our own Kubernetes service account with
-only our roles, bound to the same Google service account by one more
-`roles/iam.workloadIdentityUser` binding per Google service account
-(section 7, item 6).
+So sharing barely widens Config Connector's side, and widens ours a lot:
+a bug or a compromise in the manager would act with Config Connector's
+full Kubernetes rights, including writing every Secret in the cluster in
+cluster mode. That is why the default is the manager's own service
+account (section 9.2), with only our roles, bound to the same Google
+service account by one more `roles/iam.workloadIdentityUser` binding per
+Google service account. Sharing stays as an opt-in for a quick trial where
+nobody can change IAM. With the default, Config Connector's pods gain
+nothing from this project.
