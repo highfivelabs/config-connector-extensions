@@ -518,7 +518,8 @@ Housekeeping:
 4. **Managers**: "One controller manager per target/cluster for now.
    We'll try to go more granular later." The manager watches the whole
    cluster by default (`--scoped-namespace` unset); namespace scoping
-   stays available for later.
+   stays available for later. Superseded for Config Connector's
+   namespaced mode by section 9.4, answer 3: one manager per namespace.
 5. **Licence**: none; the repository stays private (README, NOTICE).
 
 ## 9. The operator: Config Connector's identity, per namespace
@@ -598,7 +599,8 @@ operator.
 
 `tests/operator/run.sh` (`make operator-e2e`) on kind 0.33 (Kubernetes
 1.37) with the in-cluster fake cloud (`cmd/fakegcp`; managers get
-`--fake-cloud-url`, which loads no Google credentials), images built by ko
+`--fake-cloud-url`, which loads no Google credentials and since section
+9.4 exists only in builds with `-tags fakecloud`), images built by ko
 0.19.1 for linux/arm64, 2026-11-07:
 
 ```text
@@ -634,33 +636,86 @@ Config Connector's own operator was not installed; its footprint (the
 namespace, its service accounts with the annotation, `ConfigConnector`,
 `ConfigConnectorContext`) was made by hand as its code says it makes them.
 
-### 9.4 Open questions for the builder
+### 9.4 Builder's answers (2026-11-07)
 
-1. **Field gaps on large existing kinds** (section 6.6, ranks 4 to 6:
-   `SQLInstance.retainBackupsOnDelete` and others). The gap-kind model
-   copies a whole kind into our group; for `SQLInstance` or
-   `ContainerCluster` that is thousands of lines and a second kind for one
-   resource. The options: (a) wait for the release and pin the bundle on
-   it; (b) pin the bundle on a Config Connector `master` commit after the
-   PR merges; (c) build Config Connector's manager ourselves with the PR as
-   a patch, which is a fork. Recommended: (a), or (b) when it cannot wait,
-   never (c).
-2. **Sharing Config Connector's service account cuts both ways.** Our
-   manager also holds Config Connector's Kubernetes rights, and Config
-   Connector's account gains rights to our kinds. The alternative is our
-   own service account plus one more `workloadIdentityUser` binding per
-   Google service account, which someone must grant. Recommended: share,
-   as asked, and revisit with the L3 split of agents by role.
-3. **"One manager per target/cluster"** (section 8, answer 4) and
-   namespaced mode. The operator follows Config Connector's mode, so a
-   namespaced-mode cluster gets one gaps-gcp manager per namespace, as
-   Config Connector has. Confirm that this overrides answer 4 for
-   namespaced mode.
-4. **`--fake-cloud-url` is in the production manager**, as a flag for
-   tests. It loads no credentials, so it cannot leak them; anyone able to
-   set it can also change the image. Keep it, or move it behind a build
-   tag?
-5. **Deleting a `SQLAdminBackup` deletes the backup** (upstream's
-   behaviour; `deletion-policy: abandon` keeps it). For Bundt's "backup
-   before a risky plan", should Bundt write `abandon` on the backups it
-   makes, so deleting the Instance's live component keeps them?
+The five questions asked after the operator was built, and what was done.
+
+1. **Field gaps on large existing kinds** (section 6.6, ranks 4 to 6, such
+   as `SQLInstance.retainBackupsOnDelete`). "Wait for config connector
+   release. If it's missing a super critical feature/attribute and their
+   release cadence isn't frequent enough, I suppose we could also release
+   that resource [with] the field."
+
+   The rule:
+   - By default, wait for the Config Connector release that carries the
+     field, and pin the bundle on it.
+   - A gap kind for an existing Config Connector kind, carrying the field,
+     is built only when both hold: a Bundt Package cannot work without the
+     field, and the release that carries it is not expected soon enough.
+     It lives in our group (`<kind>.<service>.gcp.hfl.dev`), as `SQLUser`
+     does, and retires to Config Connector's group when the release lands
+     (section 3.4).
+   - Never a fork: Config Connector's own manager is never rebuilt with a
+     patch.
+2. **Sharing Config Connector's service account.** Accepted, as asked;
+   revisit when Bundt splits its agents by role (Bundt L3). The builder:
+   "this is no different than a standard config connector service
+   account, right?" On the Google side, yes: the same Google service
+   account, through the same Workload Identity binding. On the Kubernetes
+   side the two directions differ, read from the install bundle at the pin
+   (`config/installbundle/components/clusterroles/` and
+   `releases/scopes/*`):
+
+   - **What our manager gains by running as Config Connector's account.**
+     Cluster mode (`cnrm-controller-manager`, all by ClusterRoleBinding):
+     - `cnrm-admin`: create, update and delete on every
+       `*.cnrm.cloud.google.com` group (180 groups), cluster-wide;
+     - `cnrm-manager-cluster-role`: read CRDs and namespaces; full control
+       of `validatingwebhookconfigurations` and of every
+       `core.cnrm.cloud.google.com` resource;
+     - `cnrm-manager-ns-role`: full control of Secrets, ConfigMaps,
+       Services and events in every namespace.
+
+     Namespaced mode (`cnrm-controller-manager-N`): the same roles, but
+     `cnrm-admin` and `cnrm-manager-ns-role` only in N (and
+     `cnrm-manager-ns-role` in `cnrm-system`); `cnrm-manager-cluster-role`
+     stays cluster-wide.
+   - **What our manager needs:** our three groups, read Secrets, write
+     events, and read the five Config Connector groups ours reference
+     (`gaps-gcp-manager` and `gaps-gcp-manager-cluster`,
+     `config/operator/rbac.yaml`).
+   - **What Config Connector's pods gain from our binding:** only full
+     control of our three groups (`sql`, `sqladmin` and
+     `secretmanager.gcp.hfl.dev`). Everything else in `gaps-gcp-manager`
+     they already hold.
+
+   So Config Connector's side barely widens. Ours widens a lot: a bug or
+   a compromise in the gaps-gcp manager acts with Config Connector's full
+   Kubernetes rights, including writing every Secret in the cluster in
+   cluster mode. In Google Cloud nothing changes. This is the reason to
+   revisit at Bundt L3. The alternative stays our own service account plus
+   one more `roles/iam.workloadIdentityUser` binding per Google service
+   account.
+3. **One manager per namespace.** "I think we want one per namespace."
+   Recorded: in namespaced mode there is one gaps-gcp manager per
+   `ConfigConnectorContext`, as built. This supersedes section 8, answer 4
+   for namespaced mode.
+
+   Reading, for the builder to confirm: in Config Connector's cluster mode
+   there is one Google identity for the whole cluster
+   (`cnrm-controller-manager`), so one gaps-gcp manager stays there. A
+   manager per namespace in cluster mode would share that one identity and
+   gain nothing.
+4. **The fake-cloud switch.** "Put a [build] tag." Done:
+   - `--fake-cloud-url` and `pkg/fakecloud` are compiled into the manager
+     only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
+   - A production build has no such flag and refuses to start with it
+     ("flag provided but not defined").
+   - `hack/check-no-fake-cloud.sh`, run by `make check`, fails if the
+     default build links `pkg/fakecloud` or shows the flag.
+   - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
+5. **Backups before risky plans.** Yes: Bundt writes
+   `cnrm.cloud.google.com/deletion-policy: abandon` on the
+   `SQLAdminBackup`s it takes before a risky plan, so deleting the
+   Instance's live component keeps the backup. That is Bundt's side
+   (its `asks/parked.md`, L2); nothing changes here.
