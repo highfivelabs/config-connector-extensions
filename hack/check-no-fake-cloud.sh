@@ -7,11 +7,11 @@
 set -o errexit -o nounset -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-if go list -deps ./cmd/manager | grep -qx 'github.com/highfivelabs/gaps-gcp/pkg/fakecloud'; then
+if go list -deps ./cmd/manager | grep -qx 'github.com/highfivelabs/config-connector-extensions/pkg/fakecloud'; then
   echo "cmd/manager links pkg/fakecloud without -tags fakecloud" >&2
   exit 1
 fi
-if ! go list -tags fakecloud -deps ./cmd/manager | grep -qx 'github.com/highfivelabs/gaps-gcp/pkg/fakecloud'; then
+if ! go list -tags fakecloud -deps ./cmd/manager | grep -qx 'github.com/highfivelabs/config-connector-extensions/pkg/fakecloud'; then
   echo "cmd/manager with -tags fakecloud no longer links pkg/fakecloud; update this check" >&2
   exit 1
 fi

@@ -1,10 +1,11 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
 # The operator's own namespace. The managers it starts run in Config
-# Connector's namespace (cnrm-system), as Config Connector's service accounts.
+# Connector's namespace (cnrm-system), each as its own service account with
+# Config Connector's Workload Identity annotation.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: gaps-gcp-system
+  name: config-connector-extensions-system
   labels:
     pod-security.kubernetes.io/enforce: restricted

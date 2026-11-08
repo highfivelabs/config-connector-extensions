@@ -29,8 +29,8 @@ outside a test:
   (direct, Terraform-based and DCL-based), given mockgcp as its HTTP client
   and gRPC connection, the same hooks the harness sets (including the
   Terraform provider's HTTP client transformers);
-- gaps-gcp's controllers (`SQLUser` with `databaseRoles`) in the same
-  manager;
+- this project's controllers (`SQLUser` with `databaseRoles`) in the
+  same manager;
 - mockgcp's in-memory store, with the projects named by `--projects`
   (default `mock-project`) created at start.
 

@@ -1,44 +1,47 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
-# The gaps-gcp operator: holds no Google credentials and never calls Google
-# Cloud. It runs gaps-gcp's managers as Config Connector's service accounts
-# (pkg/operator).
+# The config-connector-extensions operator: holds no Google credentials and
+# never calls Google Cloud. It runs the managers beside Config Connector's,
+# each as its own service account carrying Config Connector's Workload
+# Identity annotation; --identity=config-connector (or the annotation
+# gcp.hfl.dev/identity on ConfigConnector or a ConfigConnectorContext) runs
+# them as Config Connector's service accounts instead (pkg/operator).
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: gaps-gcp-operator
-  namespace: gaps-gcp-system
+  name: config-connector-extensions-operator
+  namespace: config-connector-extensions-system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gaps-gcp-operator
-  namespace: gaps-gcp-system
+  name: config-connector-extensions-operator
+  namespace: config-connector-extensions-system
   labels:
-    app.kubernetes.io/name: gaps-gcp-operator
+    app.kubernetes.io/name: config-connector-extensions-operator
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: gaps-gcp-operator
+      app.kubernetes.io/name: config-connector-extensions-operator
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: gaps-gcp-operator
+        app.kubernetes.io/name: config-connector-extensions-operator
     spec:
-      serviceAccountName: gaps-gcp-operator
+      serviceAccountName: config-connector-extensions-operator
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
       - name: operator
-        image: ko://github.com/highfivelabs/gaps-gcp/cmd/operator
+        image: ko://github.com/highfivelabs/config-connector-extensions/cmd/operator
         env:
-        - name: GAPS_GCP_MANAGER_IMAGE
-          value: ko://github.com/highfivelabs/gaps-gcp/cmd/manager
+        - name: CCE_MANAGER_IMAGE
+          value: ko://github.com/highfivelabs/config-connector-extensions/cmd/manager
         args: []
         resources:
           requests:

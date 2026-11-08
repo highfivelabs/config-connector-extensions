@@ -35,8 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	smv1beta1 "github.com/highfivelabs/gaps-gcp/apis/secretmanager/v1beta1"
-	"github.com/highfivelabs/gaps-gcp/pkg/test/mockenv"
+	smv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 const (

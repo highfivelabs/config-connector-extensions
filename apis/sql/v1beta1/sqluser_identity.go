@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // apis/sql/v1beta1/sqlsslcert_identity.go (UPSTREAM.md) and changed for a
 // user: the identity is projects/{project}/instances/{instance}/users/{name}
 // and the name is user-chosen (spec.resourceID, else metadata.name), not

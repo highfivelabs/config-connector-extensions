@@ -14,11 +14,11 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go (UPSTREAM.md) with the regional-secret change from upstream pull
 // request #6651 (head 9aab204d): a regional
 // secret's versions are reached through its regional endpoint. The KRM
-// types are gaps-gcp's. Also: an unset spec.enabled means true (upstream
+// types are this project's. Also: an unset spec.enabled means true (upstream
 // dereferences it unchecked)
 
 package secretmanager
@@ -36,7 +36,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/registry"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/structuredreporting"
-	krm "github.com/highfivelabs/gaps-gcp/apis/secretmanager/v1beta1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	"google.golang.org/api/option"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -84,7 +84,7 @@ func (m *modelSecretVersion) AdapterForObject(ctx context.Context, op *directbas
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	// gaps-gcp: spec.enabled defaults to true, as the API does. Upstream
+	// config-connector-extensions: spec.enabled defaults to true, as the API does. Upstream
 	// dereferences it unchecked; there the direct controller is opt-in (the
 	// default is Terraform's, which defaults the field), here it is the only one.
 	if obj.Spec.Enabled == nil {

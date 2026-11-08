@@ -40,13 +40,13 @@ func TestManagerRoleCoversEveryKind(t *testing.T) {
 		if err := dec.Decode(&r); err != nil {
 			break
 		}
-		if r.Kind == "ClusterRole" && r.Name == "gaps-gcp-manager" {
+		if r.Kind == "ClusterRole" && r.Name == "config-connector-extensions-manager" {
 			role = &r
 			break
 		}
 	}
 	if role == nil {
-		t.Fatal("config/operator/rbac.yaml has no ClusterRole gaps-gcp-manager")
+		t.Fatal("config/operator/rbac.yaml has no ClusterRole config-connector-extensions-manager")
 	}
 	for _, k := range Kinds {
 		var crud, status bool
@@ -62,7 +62,7 @@ func TestManagerRoleCoversEveryKind(t *testing.T) {
 			}
 		}
 		if !crud || !status {
-			t.Errorf("ClusterRole gaps-gcp-manager does not cover %s (objects: %v, status: %v)", k.gvk.Group, crud, status)
+			t.Errorf("ClusterRole config-connector-extensions-manager does not cover %s (objects: %v, status: %v)", k.gvk.Group, crud, status)
 		}
 	}
 }

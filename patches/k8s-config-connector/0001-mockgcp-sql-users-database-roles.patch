@@ -1,4 +1,4 @@
-gaps-gcp patch 0001: mockgcp Cloud SQL users learn database roles.
+config-connector-extensions patch 0001: mockgcp Cloud SQL users learn database roles.
 
 mockgcp's User proto (googleapis 731d7f2, mockgcp/git.versions) predates
 User.database_roles and the update request's database_roles /

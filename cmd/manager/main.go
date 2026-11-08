@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Command manager runs the gaps-gcp controllers. It is a cut-down
+// Command manager runs the config-connector-extensions controllers. It is a cut-down
 // counterpart of Config Connector's cmd/manager: one controller-runtime
 // manager, cluster-scoped or scoped to one namespace, authenticating to
 // Google Cloud with Application Default Credentials (Workload Identity in a
@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
 )
 
 // useFakeCloud points the controllers at a fake Google Cloud. It is nil
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	cfg := &config.ControllerConfig{
-		UserAgent:           "gaps-gcp",
+		UserAgent:           "config-connector-extensions",
 		UserProjectOverride: userProjectOverride,
 		BillingProject:      billingProject,
 	}
@@ -102,7 +102,7 @@ func main() {
 		klog.Fatalf("adding controllers: %v", err)
 	}
 
-	klog.Info("starting gaps-gcp manager")
+	klog.Info("starting config-connector-extensions manager")
 	if err := mgr.Start(ctx); err != nil {
 		klog.Errorf("manager exited: %v", err)
 		os.Exit(1)

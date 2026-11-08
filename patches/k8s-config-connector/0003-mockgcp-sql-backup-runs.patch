@@ -1,4 +1,4 @@
-gaps-gcp patch 0003: mockgcp serves Cloud SQL backupRuns (insert, get, delete).
+config-connector-extensions patch 0003: mockgcp serves Cloud SQL backupRuns (insert, get, delete).
 
 For sqladmin.gcp.hfl.dev/SQLAdminBackup. Copied from Config Connector's
 open pull request #12553 (head 9611a6de): mockgcp/mocksql/sqlbackup.go as

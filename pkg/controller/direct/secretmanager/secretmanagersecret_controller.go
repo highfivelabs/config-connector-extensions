@@ -14,12 +14,12 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/secretmanager/secretmanagersecret_controller.go (UPSTREAM.md) with the regional-secret change from upstream pull
 // request #6651 (head 9aab204d): a regional secret
 // (spec.location) is reached through its regional endpoint,
 // secretmanager.<location>.rep.googleapis.com. The KRM types are
-// gaps-gcp's; the constructor is exported for pkg/controller
+// this project's; the constructor is exported for pkg/controller
 
 package secretmanager
 
@@ -34,7 +34,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/go-logr/logr"
-	krm "github.com/highfivelabs/gaps-gcp/apis/secretmanager/v1beta1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/common"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"

@@ -1,4 +1,4 @@
-gaps-gcp
+config-connector-extensions
 Copyright 2026 High Five Labs
 
 Licensed under the Apache License, Version 2.0 (LICENSE).
@@ -8,7 +8,7 @@ This product includes software from Config Connector
 Copyright Google LLC, licensed under the Apache License, Version 2.0.
 
 Files copied from Config Connector keep their original copyright and
-licence header and carry a "Modified by High Five Labs for gaps-gcp" note
+licence header and carry a "Modified by High Five Labs for config-connector-extensions" note
 naming the source file and what was changed. The commit they were copied
 from, and the open pull requests some were copied from, are recorded in
 UPSTREAM.md. The patches in patches/k8s-config-connector/ modify Config
@@ -32,7 +32,7 @@ its source. Among it:
     terraform-plugin-log, hcl, errwrap, go-multierror, go-uuid,
     go-version and logutils.
 
-  gaps-gcp modifies none of these files. Their source is at the module
+  config-connector-extensions modifies none of these files. Their source is at the module
   paths above and in Config Connector's repository.
 
 docs/third-party-licenses.csv lists every Go module linked into the

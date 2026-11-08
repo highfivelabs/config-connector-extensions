@@ -14,9 +14,9 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/secretmanager/mapper.generated.go (UPSTREAM.md): the KRM types are
-// gaps-gcp's (secretmanager.gcp.hfl.dev), otherwise unchanged
+// this project's (secretmanager.gcp.hfl.dev), otherwise unchanged
 
 package secretmanager
 
@@ -25,7 +25,7 @@ import (
 
 	pb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
-	krm "github.com/highfivelabs/gaps-gcp/apis/secretmanager/v1beta1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 )
 
 func CustomerManagedEncryptionStatus_FromProto(mapCtx *direct.MapContext, in *pb.CustomerManagedEncryptionStatus) *krm.CustomerManagedEncryptionStatus {

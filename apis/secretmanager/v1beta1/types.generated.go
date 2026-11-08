@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // apis/secretmanager/v1beta1/types.generated.go (UPSTREAM.md), unchanged
 
 package v1beta1

@@ -14,7 +14,7 @@
 // limitations under the License.
 
 // fakecloud runs Config Connector's own controller manager, unchanged and
-// with every controller, plus gaps-gcp's controllers, against a Kubernetes
+// with every controller, plus this project's controllers, against a Kubernetes
 // cluster, with every Google API call answered in process by mockgcp. It is
 // how Config Connector's e2e harness runs in mock mode
 // (config/tests/samples/create/harness.go), outside a Go test: Config
@@ -51,7 +51,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
 )
 
 func main() {
@@ -119,12 +119,12 @@ func run(ctx context.Context, projects []string) error {
 	if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 		return err
 	}
-	cfg := &config.ControllerConfig{HTTPClient: httpClient, UserAgent: "gaps-gcp-fakecloud"}
+	cfg := &config.ControllerConfig{HTTPClient: httpClient, UserAgent: "config-connector-extensions-fakecloud"}
 	if err := controller.AddToManager(ctx, mgr, cfg); err != nil {
-		return fmt.Errorf("adding gaps-gcp controllers: %w", err)
+		return fmt.Errorf("adding config-connector-extensions controllers: %w", err)
 	}
 
-	klog.Infof("fakecloud: Config Connector and gaps-gcp against mockgcp; projects %v", projects)
+	klog.Infof("fakecloud: Config Connector and config-connector-extensions against mockgcp; projects %v", projects)
 	return mgr.Start(ctx)
 }
 

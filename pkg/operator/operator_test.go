@@ -45,10 +45,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/operator"
+	"github.com/highfivelabs/config-connector-extensions/pkg/operator"
 )
 
-const image = "gaps-gcp-manager:test"
+const image = operator.ManagerName + ":test"
 
 type env struct {
 	t    *testing.T
@@ -56,7 +56,7 @@ type env struct {
 	kube client.Client
 }
 
-func start(t *testing.T, isolation string) *env {
+func start(t *testing.T, isolation, identity string) *env {
 	t.Helper()
 	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
 		t.Fatal("KUBEBUILDER_ASSETS is not set; run `make test`")
@@ -92,6 +92,7 @@ func start(t *testing.T, isolation string) *env {
 		Client:    mgr.GetClient(),
 		Settings:  operator.Settings{Image: image, ExtraArgs: []string{"--v=2"}},
 		Isolation: isolation,
+		Identity:  identity,
 		Resync:    time.Minute,
 	}
 	if err := r.SetupWithManager(mgr); err != nil {
@@ -151,19 +152,44 @@ func (e *env) gone(obj client.Object) string {
 	return obj.GetName() + " still exists"
 }
 
-func TestClusterModeRunsAsConfigConnectorsServiceAccount(t *testing.T) {
-	e := start(t, operator.IsolationShared)
-	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, "kcc@p.iam.gserviceaccount.com"))
-	e.create(&operatorv1beta1.ConfigConnector{
+const kccGSA = "kcc@p.iam.gserviceaccount.com"
+
+func clusterConfigConnector() *operatorv1beta1.ConfigConnector {
+	return &operatorv1beta1.ConfigConnector{
 		ObjectMeta: metav1.ObjectMeta{Name: operator.ConfigConnectorName},
-		Spec:       operatorv1beta1.ConfigConnectorSpec{Mode: "cluster", GoogleServiceAccount: "kcc@p.iam.gserviceaccount.com"},
-	})
+		Spec:       operatorv1beta1.ConfigConnectorSpec{Mode: "cluster", GoogleServiceAccount: kccGSA},
+	}
+}
+
+func (e *env) serviceAccount(ns, name string) (*corev1.ServiceAccount, string) {
+	sa := &corev1.ServiceAccount{}
+	if err := e.kube.Get(e.ctx, types.NamespacedName{Namespace: ns, Name: name}, sa); err != nil {
+		return nil, "ServiceAccount " + ns + "/" + name + ": " + err.Error()
+	}
+	return sa, ""
+}
+
+// boundTo checks a binding's role and that its only subject is ns/sa.
+func boundTo(t *testing.T, what string, role rbacv1.RoleRef, subjects []rbacv1.Subject, wantRole, ns, sa string) {
+	t.Helper()
+	if role.Name != wantRole || len(subjects) != 1 || subjects[0].Name != sa || subjects[0].Namespace != ns {
+		t.Errorf("%s = %+v %+v, want %s bound only to %s/%s", what, role, subjects, wantRole, ns, sa)
+	}
+}
+
+func TestClusterModeRunsAsItsOwnServiceAccountWithConfigConnectorsIdentity(t *testing.T) {
+	e := start(t, operator.IsolationShared, "")
+	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, kccGSA))
+	e.create(clusterConfigConnector())
 
 	var d *appsv1.Deployment
-	e.eventually(func() (msg string) { d, msg = e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager"); return })
+	e.eventually(func() (msg string) {
+		d, msg = e.deployment(operator.CNRMSystemNamespace, operator.ManagerName)
+		return
+	})
 	pod := d.Spec.Template.Spec
-	if pod.ServiceAccountName != operator.ClusterModeKSA {
-		t.Errorf("serviceAccountName = %q, want Config Connector's %q", pod.ServiceAccountName, operator.ClusterModeKSA)
+	if pod.ServiceAccountName != operator.ManagerName {
+		t.Errorf("serviceAccountName = %q, want its own %q", pod.ServiceAccountName, operator.ManagerName)
 	}
 	c := pod.Containers[0]
 	if c.Image != image || !slices.Equal(c.Args, []string{"--v=2"}) {
@@ -174,24 +200,38 @@ func TestClusterModeRunsAsConfigConnectorsServiceAccount(t *testing.T) {
 			t.Errorf("Workload Identity mode mounts no key, but GOOGLE_APPLICATION_CREDENTIALS=%s", env.Value)
 		}
 	}
+	sa, msg := e.serviceAccount(operator.CNRMSystemNamespace, operator.ManagerName)
+	if msg != "" {
+		t.Fatal(msg)
+	}
+	if got := sa.Annotations[operator.WorkloadIdentityAnnotation]; got != kccGSA {
+		t.Errorf("own service account's %s = %q, want Config Connector's %q", operator.WorkloadIdentityAnnotation, got, kccGSA)
+	}
+	if sa.Labels[operator.ManagedByLabel] != operator.ManagedByValue {
+		t.Errorf("own service account's labels = %v, want %s=%s", sa.Labels, operator.ManagedByLabel, operator.ManagedByValue)
+	}
 	crb := &rbacv1.ClusterRoleBinding{}
-	if err := e.kube.Get(e.ctx, types.NamespacedName{Name: "gaps-gcp-manager"}, crb); err != nil {
+	if err := e.kube.Get(e.ctx, types.NamespacedName{Name: operator.ManagerName}, crb); err != nil {
 		t.Fatal(err)
 	}
-	if crb.RoleRef.Name != operator.ManagerClusterRole || len(crb.Subjects) != 1 ||
-		crb.Subjects[0].Name != operator.ClusterModeKSA || crb.Subjects[0].Namespace != operator.CNRMSystemNamespace {
-		t.Errorf("ClusterRoleBinding = %+v %+v, want %s bound to cnrm-system/%s", crb.RoleRef, crb.Subjects, operator.ManagerClusterRole, operator.ClusterModeKSA)
-	}
-	if err := e.kube.Get(e.ctx, types.NamespacedName{Name: "gaps-gcp-manager:cluster-scoped"}, crb); err != nil {
+	boundTo(t, "ClusterRoleBinding", crb.RoleRef, crb.Subjects, operator.ManagerClusterRole, operator.CNRMSystemNamespace, operator.ManagerName)
+	if err := e.kube.Get(e.ctx, types.NamespacedName{Name: operator.ManagerName + ":cluster-scoped"}, crb); err != nil {
 		t.Fatal(err)
 	}
-	if crb.RoleRef.Name != operator.ManagerClusterScopedRole || crb.Subjects[0].Name != operator.ClusterModeKSA {
-		t.Errorf("ClusterRoleBinding = %+v %+v, want %s bound to cnrm-system/%s", crb.RoleRef, crb.Subjects, operator.ManagerClusterScopedRole, operator.ClusterModeKSA)
+	boundTo(t, "ClusterRoleBinding", crb.RoleRef, crb.Subjects, operator.ManagerClusterScopedRole, operator.CNRMSystemNamespace, operator.ManagerName)
+
+	// Config Connector's own service account is left as its operator made it.
+	kcc, msg := e.serviceAccount(operator.CNRMSystemNamespace, operator.ClusterModeKSA)
+	if msg != "" {
+		t.Fatal(msg)
+	}
+	if len(kcc.Labels) != 0 || len(kcc.Annotations) != 1 {
+		t.Errorf("Config Connector's service account was changed: labels %v, annotations %v", kcc.Labels, kcc.Annotations)
 	}
 }
 
 func TestClusterModeWithAKeyMountsConfigConnectorsSecret(t *testing.T) {
-	e := start(t, operator.IsolationShared)
+	e := start(t, operator.IsolationShared, "")
 	e.create(&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: operator.ClusterModeKSA, Namespace: operator.CNRMSystemNamespace}})
 	e.create(&operatorv1beta1.ConfigConnector{
 		ObjectMeta: metav1.ObjectMeta{Name: operator.ConfigConnectorName},
@@ -202,7 +242,7 @@ func TestClusterModeWithAKeyMountsConfigConnectorsSecret(t *testing.T) {
 	// follow the ConfigConnector object.
 	var pod corev1.PodSpec
 	e.eventually(func() string {
-		d, msg := e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager")
+		d, msg := e.deployment(operator.CNRMSystemNamespace, operator.ManagerName)
 		if msg != "" {
 			return msg
 		}
@@ -221,18 +261,28 @@ func TestClusterModeWithAKeyMountsConfigConnectorsSecret(t *testing.T) {
 	if !slices.Contains(pod.Containers[0].Env, corev1.EnvVar{Name: "GOOGLE_APPLICATION_CREDENTIALS", Value: "/var/secrets/google/key.json"}) {
 		t.Errorf("env = %v, want GOOGLE_APPLICATION_CREDENTIALS at Config Connector's path", pod.Containers[0].Env)
 	}
+	if pod.ServiceAccountName != operator.ManagerName {
+		t.Errorf("serviceAccountName = %q, want its own %q", pod.ServiceAccountName, operator.ManagerName)
+	}
+	sa, msg := e.serviceAccount(operator.CNRMSystemNamespace, operator.ManagerName)
+	if msg != "" {
+		t.Fatal(msg)
+	}
+	if _, ok := sa.Annotations[operator.WorkloadIdentityAnnotation]; ok {
+		t.Errorf("with a key Secret the own service account carries %s: %v", operator.WorkloadIdentityAnnotation, sa.Annotations)
+	}
 }
 
 func TestNamespacedModeRunsOneManagerPerContext(t *testing.T) {
-	e := start(t, operator.IsolationShared)
-	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, "kcc@p.iam.gserviceaccount.com"))
-	cc := &operatorv1beta1.ConfigConnector{
-		ObjectMeta: metav1.ObjectMeta{Name: operator.ConfigConnectorName},
-		Spec:       operatorv1beta1.ConfigConnectorSpec{Mode: "cluster", GoogleServiceAccount: "kcc@p.iam.gserviceaccount.com"},
-	}
+	e := start(t, operator.IsolationShared, "")
+	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, kccGSA))
+	cc := clusterConfigConnector()
 	e.create(cc)
-	clusterManager := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: operator.CNRMSystemNamespace, Name: "gaps-gcp-manager"}}
-	e.eventually(func() (msg string) { _, msg = e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager"); return })
+	clusterManager := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: operator.CNRMSystemNamespace, Name: operator.ManagerName}}
+	e.eventually(func() (msg string) {
+		_, msg = e.deployment(operator.CNRMSystemNamespace, operator.ManagerName)
+		return
+	})
 
 	// Switch Config Connector to namespaced mode, with two teams.
 	if err := e.kube.Get(e.ctx, client.ObjectKeyFromObject(cc), cc); err != nil {
@@ -259,15 +309,26 @@ func TestNamespacedModeRunsOneManagerPerContext(t *testing.T) {
 	})
 
 	e.eventually(func() string { return e.gone(clusterManager) })
+	e.eventually(func() string {
+		return e.gone(&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: operator.CNRMSystemNamespace, Name: operator.ManagerName}})
+	})
 	for _, team := range []string{"team-a", "team-b"} {
+		name := operator.ManagerName + "-" + team
 		var d *appsv1.Deployment
 		e.eventually(func() (msg string) {
-			d, msg = e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager-"+team)
+			d, msg = e.deployment(operator.CNRMSystemNamespace, name)
 			return
 		})
 		pod := d.Spec.Template.Spec
-		if pod.ServiceAccountName != operator.NamespacedKSAPrefix+team {
-			t.Errorf("%s: serviceAccountName = %q, want Config Connector's %s%s", team, pod.ServiceAccountName, operator.NamespacedKSAPrefix, team)
+		if pod.ServiceAccountName != name {
+			t.Errorf("%s: serviceAccountName = %q, want its own %s", team, pod.ServiceAccountName, name)
+		}
+		sa, msg := e.serviceAccount(operator.CNRMSystemNamespace, name)
+		if msg != "" {
+			t.Fatal(msg)
+		}
+		if got, want := sa.Annotations[operator.WorkloadIdentityAnnotation], team+"@p.iam.gserviceaccount.com"; got != want {
+			t.Errorf("%s: own service account's %s = %q, want the context's %q", team, operator.WorkloadIdentityAnnotation, got, want)
 		}
 		args := pod.Containers[0].Args
 		if !slices.Contains(args, "--scoped-namespace="+team) {
@@ -277,64 +338,162 @@ func TestNamespacedModeRunsOneManagerPerContext(t *testing.T) {
 			t.Errorf("team-b: args = %v, want the BILLING_PROJECT policy's flags", args)
 		}
 		rb := &rbacv1.RoleBinding{}
-		if err := e.kube.Get(e.ctx, types.NamespacedName{Namespace: team, Name: "gaps-gcp-manager"}, rb); err != nil {
+		if err := e.kube.Get(e.ctx, types.NamespacedName{Namespace: team, Name: operator.ManagerName}, rb); err != nil {
 			t.Fatalf("%s: RoleBinding: %v", team, err)
 		}
-		if rb.RoleRef.Name != operator.ManagerClusterRole || rb.Subjects[0].Name != operator.NamespacedKSAPrefix+team {
-			t.Errorf("%s: RoleBinding = %+v %+v", team, rb.RoleRef, rb.Subjects)
-		}
+		boundTo(t, team+": RoleBinding", rb.RoleRef, rb.Subjects, operator.ManagerClusterRole, operator.CNRMSystemNamespace, name)
 		crb := &rbacv1.ClusterRoleBinding{}
-		if err := e.kube.Get(e.ctx, types.NamespacedName{Name: "gaps-gcp-manager-" + team}, crb); err != nil {
+		if err := e.kube.Get(e.ctx, types.NamespacedName{Name: name}, crb); err != nil {
 			t.Fatalf("%s: ClusterRoleBinding: %v", team, err)
 		}
-		if crb.RoleRef.Name != operator.ManagerClusterScopedRole {
-			t.Errorf("%s: a scoped manager is bound cluster-wide to %s, want only %s", team, crb.RoleRef.Name, operator.ManagerClusterScopedRole)
-		}
+		boundTo(t, team+": ClusterRoleBinding", crb.RoleRef, crb.Subjects, operator.ManagerClusterScopedRole, operator.CNRMSystemNamespace, name)
 	}
-	for _, name := range []string{"gaps-gcp-manager", "gaps-gcp-manager:cluster-scoped"} {
+	for _, name := range []string{operator.ManagerName, operator.ManagerName + ":cluster-scoped"} {
 		if msg := e.gone(&rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: name}}); msg != "" {
 			t.Errorf("cluster mode's ClusterRoleBinding outlived cluster mode: %s", msg)
 		}
 	}
 
-	// A team leaves: its manager and bindings go.
+	// A team leaves: its manager, service account and bindings go.
 	ccc := &operatorv1beta1.ConfigConnectorContext{ObjectMeta: metav1.ObjectMeta{Name: "configconnectorcontext.core.cnrm.cloud.google.com", Namespace: "team-a"}}
 	if err := e.kube.Delete(e.ctx, ccc); err != nil {
 		t.Fatal(err)
 	}
 	e.eventually(func() string {
-		return e.gone(&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: operator.CNRMSystemNamespace, Name: "gaps-gcp-manager-team-a"}})
+		return e.gone(&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: operator.CNRMSystemNamespace, Name: operator.ManagerName + "-team-a"}})
 	})
 	e.eventually(func() string {
-		return e.gone(&rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Namespace: "team-a", Name: "gaps-gcp-manager"}})
+		return e.gone(&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: operator.CNRMSystemNamespace, Name: operator.ManagerName + "-team-a"}})
 	})
-	if _, msg := e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager-team-b"); msg != "" {
+	e.eventually(func() string {
+		return e.gone(&rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Namespace: "team-a", Name: operator.ManagerName}})
+	})
+	if _, msg := e.deployment(operator.CNRMSystemNamespace, operator.ManagerName+"-team-b"); msg != "" {
 		t.Error(msg)
 	}
 }
 
-func TestWaitsForConfigConnectorsServiceAccount(t *testing.T) {
-	e := start(t, operator.IsolationShared)
+func TestSharingConfigConnectorsServiceAccountIsAnOptIn(t *testing.T) {
+	e := start(t, operator.IsolationShared, "")
+	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, kccGSA))
+	cc := clusterConfigConnector()
+	cc.Annotations = map[string]string{operator.IdentityAnnotation: operator.IdentityConfigConnector}
+	e.create(cc)
+
+	runsAs := func(want string) func() string {
+		return func() string {
+			d, msg := e.deployment(operator.CNRMSystemNamespace, operator.ManagerName)
+			if msg != "" {
+				return msg
+			}
+			if got := d.Spec.Template.Spec.ServiceAccountName; got != want {
+				return fmt.Sprintf("serviceAccountName = %q, want %q", got, want)
+			}
+			crb := &rbacv1.ClusterRoleBinding{}
+			if err := e.kube.Get(e.ctx, types.NamespacedName{Name: operator.ManagerName}, crb); err != nil {
+				return err.Error()
+			}
+			if len(crb.Subjects) != 1 || crb.Subjects[0].Name != want {
+				return fmt.Sprintf("ClusterRoleBinding subjects = %+v, want only %s", crb.Subjects, want)
+			}
+			return ""
+		}
+	}
+	e.eventually(runsAs(operator.ClusterModeKSA))
+	if _, msg := e.serviceAccount(operator.CNRMSystemNamespace, operator.ManagerName); msg == "" {
+		t.Error("sharing Config Connector's service account, the operator still made one of its own")
+	}
+
+	// Taking the annotation off returns to the manager's own.
+	if err := e.kube.Get(e.ctx, client.ObjectKeyFromObject(cc), cc); err != nil {
+		t.Fatal(err)
+	}
+	delete(cc.Annotations, operator.IdentityAnnotation)
+	if err := e.kube.Update(e.ctx, cc); err != nil {
+		t.Fatal(err)
+	}
+	e.eventually(runsAs(operator.ManagerName))
+}
+
+func TestTheIdentityFlagAndAContextsAnnotation(t *testing.T) {
+	// --identity=config-connector shares everywhere; one context opts back
+	// into its own service account.
+	e := start(t, operator.IsolationShared, operator.IdentityConfigConnector)
 	e.create(&operatorv1beta1.ConfigConnector{
 		ObjectMeta: metav1.ObjectMeta{Name: operator.ConfigConnectorName},
-		Spec:       operatorv1beta1.ConfigConnectorSpec{Mode: "cluster", GoogleServiceAccount: "kcc@p.iam.gserviceaccount.com"},
+		Spec:       operatorv1beta1.ConfigConnectorSpec{Mode: "namespaced"},
 	})
-	time.Sleep(time.Second)
-	if _, msg := e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager"); msg == "" {
-		t.Fatal("a manager was created before Config Connector's service account exists; it would run as no identity")
+	for _, team := range []string{"team-a", "team-b"} {
+		e.create(&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: team}})
+		e.create(ksa(operator.NamespacedKSAPrefix+team, operator.CNRMSystemNamespace, team+"@p.iam.gserviceaccount.com"))
+		ccc := &operatorv1beta1.ConfigConnectorContext{
+			ObjectMeta: metav1.ObjectMeta{Name: "configconnectorcontext.core.cnrm.cloud.google.com", Namespace: team},
+			Spec:       operatorv1beta1.ConfigConnectorContextSpec{GoogleServiceAccount: team + "@p.iam.gserviceaccount.com"},
+		}
+		if team == "team-b" {
+			ccc.Annotations = map[string]string{operator.IdentityAnnotation: operator.IdentityOwn}
+		}
+		e.create(ccc)
 	}
-	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, "kcc@p.iam.gserviceaccount.com"))
-	e.eventually(func() (msg string) { _, msg = e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager"); return })
+	want := map[string]string{"team-a": operator.NamespacedKSAPrefix + "team-a", "team-b": operator.ManagerName + "-team-b"}
+	for team, sa := range want {
+		e.eventually(func() string {
+			d, msg := e.deployment(operator.CNRMSystemNamespace, operator.ManagerName+"-"+team)
+			if msg != "" {
+				return msg
+			}
+			if got := d.Spec.Template.Spec.ServiceAccountName; got != sa {
+				return fmt.Sprintf("%s: serviceAccountName = %q, want %q", team, got, sa)
+			}
+			return ""
+		})
+	}
+}
+
+func TestAnUnknownIdentityIsRefused(t *testing.T) {
+	cc := clusterConfigConnector()
+	cc.Annotations = map[string]string{operator.IdentityAnnotation: "kcc"}
+	_, err := operator.Desired(operator.Observed{ConfigConnector: cc})
+	if err == nil {
+		t.Fatal("an unknown gcp.hfl.dev/identity was accepted")
+	}
+}
+
+func TestWaitsForConfigConnectorsServiceAccount(t *testing.T) {
+	e := start(t, operator.IsolationShared, "")
+	e.create(clusterConfigConnector())
+	time.Sleep(time.Second)
+	if _, msg := e.deployment(operator.CNRMSystemNamespace, operator.ManagerName); msg == "" {
+		t.Fatal("a manager was created before Config Connector's service account exists; there is no identity to copy yet")
+	}
+	if _, msg := e.serviceAccount(operator.CNRMSystemNamespace, operator.ManagerName); msg == "" {
+		t.Fatal("the manager's own service account was created before Config Connector's exists")
+	}
+	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, kccGSA))
+	e.eventually(func() (msg string) {
+		_, msg = e.deployment(operator.CNRMSystemNamespace, operator.ManagerName)
+		return
+	})
 }
 
 func TestWithoutConfigConnectorsOperator(t *testing.T) {
 	// Config Connector from its install bundle: no ConfigConnector object,
 	// only its service account, here with Workload Identity.
-	e := start(t, operator.IsolationShared)
-	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, "kcc@p.iam.gserviceaccount.com"))
+	e := start(t, operator.IsolationShared, "")
+	e.create(ksa(operator.ClusterModeKSA, operator.CNRMSystemNamespace, kccGSA))
 	var d *appsv1.Deployment
-	e.eventually(func() (msg string) { d, msg = e.deployment(operator.CNRMSystemNamespace, "gaps-gcp-manager"); return })
+	e.eventually(func() (msg string) {
+		d, msg = e.deployment(operator.CNRMSystemNamespace, operator.ManagerName)
+		return
+	})
 	if len(d.Spec.Template.Spec.Containers[0].Env) != 0 {
 		t.Errorf("env = %v, want none (Workload Identity)", d.Spec.Template.Spec.Containers[0].Env)
+	}
+	sa, msg := e.serviceAccount(operator.CNRMSystemNamespace, operator.ManagerName)
+	if msg != "" {
+		t.Fatal(msg)
+	}
+	if got := sa.Annotations[operator.WorkloadIdentityAnnotation]; got != kccGSA {
+		t.Errorf("own service account's %s = %q, want %q copied from Config Connector's", operator.WorkloadIdentityAnnotation, got, kccGSA)
 	}
 }

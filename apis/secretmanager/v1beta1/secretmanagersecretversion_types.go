@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // apis/secretmanager/v1beta1/secretmanagersecretversion_types.go (UPSTREAM.md): group
 // secretmanager.gcp.hfl.dev, own short names, no cnrm.cloud.google.com
 // labels, the gap label and upstream-kind annotation. spec.secretRef names a

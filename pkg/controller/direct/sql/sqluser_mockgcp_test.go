@@ -55,8 +55,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
-	"github.com/highfivelabs/gaps-gcp/pkg/controller"
+	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
 )
 
 const (

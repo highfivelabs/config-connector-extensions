@@ -1,6 +1,6 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
-# For tests only: gaps-gcp with every manager pointed at the in-cluster fake
+# For tests only: config-connector-extensions with every manager pointed at the in-cluster fake
 # cloud (cmd/fakegcp). tests/operator/run.sh uses it on kind. The manager
 # image must be built with -tags fakecloud: a production manager has no
 # --fake-cloud-url and refuses to start with it.
@@ -12,11 +12,11 @@ resources:
 patches:
 - target:
     kind: Deployment
-    name: gaps-gcp-operator
+    name: config-connector-extensions-operator
   patch: |-
     - op: add
       path: /spec/template/spec/containers/0/args/-
-      value: --manager-arg=--fake-cloud-url=http://fakegcp.gaps-gcp-system.svc:8080
+      value: --manager-arg=--fake-cloud-url=http://fakegcp.config-connector-extensions-system.svc:8080
     - op: add
       path: /spec/template/spec/containers/0/args/-
       value: --manager-arg=--v=2

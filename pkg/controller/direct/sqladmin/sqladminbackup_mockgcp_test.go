@@ -35,8 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	sqladminv1alpha1 "github.com/highfivelabs/gaps-gcp/apis/sqladmin/v1alpha1"
-	"github.com/highfivelabs/gaps-gcp/pkg/test/mockenv"
+	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 const (

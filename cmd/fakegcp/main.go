@@ -37,7 +37,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/fakecloud"
+	"github.com/highfivelabs/config-connector-extensions/pkg/fakecloud"
 )
 
 func main() {

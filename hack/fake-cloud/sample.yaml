@@ -3,7 +3,7 @@
 # A typical application database, cut to what the fake cloud needs: a
 # Cloud SQL Postgres instance with IAM sign-in, its database, the
 # application's Google service account, and its IAM database user with
-# database roles (gaps-gcp's SQLUser). Each names its project: with no
+# database roles (this project's SQLUser). Each names its project: with no
 # Config Connector webhook here, the namespace's project-id annotation is
 # not copied onto resources.
 apiVersion: sql.cnrm.cloud.google.com/v1beta1

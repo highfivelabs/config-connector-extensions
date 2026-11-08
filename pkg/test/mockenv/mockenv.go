@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package mockenv runs gaps-gcp's kinds end to end on a fake cloud, for
+// Package mockenv runs this project's kinds end to end on a fake cloud, for
 // tests: a real kube-apiserver and etcd (envtest), Config Connector's
-// unchanged direct reconciler with every gaps-gcp controller, and Config
+// unchanged direct reconciler with every config-connector-extensions controller, and Config
 // Connector's mockgcp (with our patches) as Google Cloud. No real Google
 // Cloud, no recordings.
 //
@@ -53,7 +53,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
 )
 
 // Project is the mock project every Env creates.
@@ -101,7 +101,7 @@ func repoRoot() string {
 
 // New starts envtest with our CRDs and Config Connector's operator CRDs
 // (directbase reads ConfigConnector / ConfigConnectorContext), mockgcp with
-// Project created, and a manager running every gaps-gcp controller, and
+// Project created, and a manager running every config-connector-extensions controller, and
 // creates each namespace given. Everything stops when the test ends.
 func New(t *testing.T, namespaces ...string) *Env {
 	t.Helper()

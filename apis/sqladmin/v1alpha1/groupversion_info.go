@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp: copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions: copied from Config Connector
 // apis/sqladmin/v1alpha1/groupversion_info.go (UPSTREAM.md); the group is
 // sqladmin.gcp.hfl.dev instead of sqladmin.cnrm.cloud.google.com.
 

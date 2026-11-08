@@ -2,7 +2,7 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
 # Start the fake cloud: a kind cluster with Config Connector's CRDs and
-# ours, and bin/fakecloud (Config Connector's manager plus gaps-gcp's
+# ours, and bin/fakecloud (Config Connector's manager plus this project's
 # controllers, every Google API answered by mockgcp) running on the host
 # against it. See docs/fake-cloud.md.
 #
@@ -11,7 +11,7 @@
 set -o errexit -o nounset -o pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CLUSTER="${FAKE_CLOUD_CLUSTER:-gaps-fake-cloud}"
+CLUSTER="${FAKE_CLOUD_CLUSTER:-cce-fake-cloud}"
 STATE="${ROOT}/bin/fake-cloud"
 KCC="${ROOT}/third_party/k8s-config-connector"
 CRD_GROUPS="${CRD_GROUPS:-sql iam resourcemanager compute}"

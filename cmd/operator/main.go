@@ -13,8 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Command operator runs gaps-gcp's managers beside Config Connector's, as
-// Config Connector's own service accounts (pkg/operator). It holds no Google
+// Command operator runs this project's managers beside Config Connector's,
+// each as its own service account carrying Config Connector's Workload
+// Identity annotation, or with --identity=config-connector as Config
+// Connector's own service accounts (pkg/operator). It holds no Google
 // credentials and never calls Google Cloud.
 package main
 
@@ -36,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/operator"
+	"github.com/highfivelabs/config-connector-extensions/pkg/operator"
 )
 
 type stringList []string
@@ -48,12 +50,14 @@ func main() {
 	var (
 		image              string
 		isolation          string
+		identity           string
 		resync             time.Duration
 		metricsBindAddress string
 		managerArgs        stringList
 	)
-	flag.StringVar(&image, "manager-image", os.Getenv("GAPS_GCP_MANAGER_IMAGE"), "the gaps-gcp manager image (required; default $GAPS_GCP_MANAGER_IMAGE)")
+	flag.StringVar(&image, "manager-image", os.Getenv("CCE_MANAGER_IMAGE"), "the config-connector-extensions manager image (required; default $CCE_MANAGER_IMAGE)")
 	flag.StringVar(&isolation, "manager-namespace-isolation", operator.IsolationShared, "as Config Connector's operator flag: \"shared\" runs namespaced-mode managers in cnrm-system, \"dedicated\" in each context's spec.managerNamespace")
+	flag.StringVar(&identity, "identity", operator.IdentityOwn, "whose Kubernetes service account managers run as: \"own\" (their own, with Config Connector's Workload Identity annotation; needs one roles/iam.workloadIdentityUser binding per Google service account) or \"config-connector\" (Config Connector's, with all its Kubernetes rights); the annotation "+operator.IdentityAnnotation+" on ConfigConnector or a ConfigConnectorContext overrides it")
 	flag.DurationVar(&resync, "resync", 10*time.Minute, "how often to check the managers with no event")
 	flag.StringVar(&metricsBindAddress, "metrics-bind-address", "0", "controller-runtime metrics address; \"0\" disables it")
 	flag.Var(&managerArgs, "manager-arg", "a flag passed to every manager (repeatable)")
@@ -65,6 +69,10 @@ func main() {
 	}
 	if isolation != operator.IsolationShared && isolation != operator.IsolationDedicated {
 		klog.Fatalf("--manager-namespace-isolation is %q; want %q or %q", isolation, operator.IsolationShared, operator.IsolationDedicated)
+	}
+
+	if identity != operator.IdentityOwn && identity != operator.IdentityConfigConnector {
+		klog.Fatalf("--identity is %q; want %q or %q", identity, operator.IdentityOwn, operator.IdentityConfigConnector)
 	}
 
 	ctx := ctrl.SetupSignalHandler()
@@ -94,12 +102,13 @@ func main() {
 		Client:    mgr.GetClient(),
 		Settings:  operator.Settings{Image: image, ExtraArgs: managerArgs},
 		Isolation: isolation,
+		Identity:  identity,
 		Resync:    resync,
 	}
 	if err := r.SetupWithManager(mgr); err != nil {
 		klog.Fatalf("setting up the operator: %v", err)
 	}
-	klog.Info("starting gaps-gcp operator")
+	klog.Info("starting config-connector-extensions operator")
 	if err := mgr.Start(ctx); err != nil {
 		klog.Errorf("operator exited: %v", err)
 		os.Exit(1)

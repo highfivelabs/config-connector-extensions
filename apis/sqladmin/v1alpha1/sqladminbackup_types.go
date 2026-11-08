@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // apis/sqladmin/v1alpha1/sqladminbackup_types.go (UPSTREAM.md); upstream
 // has the types but no controller yet (its controller is the open pull
 // request #12553). Changed as little as possible: group sqladmin.gcp.hfl.dev

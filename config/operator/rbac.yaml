@@ -6,14 +6,18 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: gaps-gcp-operator
+  name: config-connector-extensions-operator
 rules:
 - apiGroups: ["core.cnrm.cloud.google.com"]
   resources: ["configconnectors", "configconnectorcontexts"]
   verbs: ["get", "list", "watch"]
+# Config Connector's service accounts are only read (to wait for them and
+# copy their Workload Identity annotation). The managers' own service
+# accounts are written; RBAC cannot limit create to names, so this covers
+# every namespace, and the operator writes only the ones it labels.
 - apiGroups: [""]
   resources: ["serviceaccounts"]
-  verbs: ["get", "list", "watch"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["apps"]
   resources: ["deployments"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
@@ -23,20 +27,20 @@ rules:
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["clusterroles"]
   verbs: ["bind"]
-  resourceNames: ["gaps-gcp-manager", "gaps-gcp-manager-cluster"]
+  resourceNames: ["config-connector-extensions-manager", "config-connector-extensions-manager-cluster"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: gaps-gcp-operator
+  name: config-connector-extensions-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: gaps-gcp-operator
+  name: config-connector-extensions-operator
 subjects:
 - kind: ServiceAccount
-  name: gaps-gcp-operator
-  namespace: gaps-gcp-system
+  name: config-connector-extensions-operator
+  namespace: config-connector-extensions-system
 ---
 # A manager's Kubernetes rights, granted to Config Connector's service
 # account: cluster-wide in cluster mode, in the one namespace it watches in
@@ -44,7 +48,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: gaps-gcp-manager
+  name: config-connector-extensions-manager
 rules:
 - apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev"]
   resources: ["*"]
@@ -71,7 +75,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: gaps-gcp-manager-cluster
+  name: config-connector-extensions-manager-cluster
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]

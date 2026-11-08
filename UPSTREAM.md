@@ -1,6 +1,6 @@
 # Upstream
 
-gaps-gcp builds on Config Connector at one commit of `master`.
+config-connector-extensions builds on Config Connector at one commit of `master`.
 `hack/upstream.sh` reads the commit from the table below (the "Commit"
 row), fetches it into `third_party/k8s-config-connector` and applies
 `patches/k8s-config-connector/*.patch` in order; `hack/upstream.sh --check`

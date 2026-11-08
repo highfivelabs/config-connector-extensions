@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector's
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector's
 // open pull request #12553 (head 9611a6de,
 // pkg/controller/direct/sqladmin/sqladminbackup_controller.go; UPSTREAM.md),
 // which adds the direct controller for the SQLAdminBackup types already on
@@ -50,7 +50,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 
-	krm "github.com/highfivelabs/gaps-gcp/apis/sqladmin/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
 )
 
 func init() {

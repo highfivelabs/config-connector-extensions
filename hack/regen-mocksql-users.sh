@@ -74,7 +74,7 @@ patch "${SQL}/cloud_sql_users.proto" User <<'EOF'
 EOF
 
 if [[ -z "${ONLY_UPSTREAM:-}" ]]; then
-# gaps-gcp: User.database_roles, field 15 as in googleapis master.
+# config-connector-extensions: User.database_roles, field 15 as in googleapis master.
 patch "${SQL}/cloud_sql_users.proto" User <<'EOF'
 
   // Optional. Role memberships of the user
@@ -82,7 +82,7 @@ patch "${SQL}/cloud_sql_users.proto" User <<'EOF'
 
 EOF
 
-# gaps-gcp: the update request carries the roles as query parameters, field
+# config-connector-extensions: the update request carries the roles as query parameters, field
 # numbers as in googleapis master.
 patch "${SQL}/cloud_sql_users.proto" SqlUsersUpdateRequest <<'EOF'
 

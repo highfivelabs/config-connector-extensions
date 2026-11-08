@@ -1,4 +1,4 @@
-# Contributing to gaps-gcp
+# Contributing to config-connector-extensions
 
 Thank you for helping fill Config Connector's gaps. This page says how
 changes are signed off, how to test them, and the one rule that shapes
@@ -6,7 +6,7 @@ most of the code.
 
 ## Sign off your commits
 
-gaps-gcp uses the [Developer Certificate of Origin](https://developercertificate.org/)
+config-connector-extensions uses the [Developer Certificate of Origin](https://developercertificate.org/)
 (DCO) instead of a contributor licence agreement. By signing off a commit
 you certify that you wrote it, or otherwise have the right to submit it,
 under the project's licence (Apache-2.0). Add the line with `git commit -s`:

@@ -29,7 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"k8s.io/klog/v2"
 
-	"github.com/highfivelabs/gaps-gcp/pkg/fakecloud"
+	"github.com/highfivelabs/config-connector-extensions/pkg/fakecloud"
 )
 
 func init() {

@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. The mapping of Config Connector's
+// Modified by High Five Labs for config-connector-extensions. The mapping of Config Connector's
 // open pull request #12553 (head 9611a6de, pkg/controller/direct/sqladmin/
 // mapper.generated.go and mapper.go; UPSTREAM.md), field for field, written
 // against the sqladmin v1beta4 REST types instead of the cloud.google.com/go/
@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	api "google.golang.org/api/sqladmin/v1beta4"
 
-	krm "github.com/highfivelabs/gaps-gcp/apis/sqladmin/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
 )
 
 // SQLAdminBackupSpec_ToAPI is the body of backupRuns.insert. The instance is

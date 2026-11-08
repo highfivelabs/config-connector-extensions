@@ -1,4 +1,4 @@
-module github.com/highfivelabs/gaps-gcp
+module github.com/highfivelabs/config-connector-extensions
 
 go 1.26.0
 

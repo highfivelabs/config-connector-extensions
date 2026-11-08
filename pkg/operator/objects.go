@@ -24,20 +24,21 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-// The ClusterRoles the operator binds Config Connector's service accounts
-// to (config/operator/rbac.yaml defines them; the operator may only bind
+// The ClusterRoles the operator binds a manager's service account to
+// (config/operator/rbac.yaml defines them; the operator may only bind
 // these two, by name).
 const (
-	// ManagerClusterRole: gaps-gcp's kinds and what reconciling them reads.
-	ManagerClusterRole = "gaps-gcp-manager"
+	// ManagerClusterRole: this project's kinds and what reconciling them
+	// reads.
+	ManagerClusterRole = Name + "-manager"
 	// ManagerClusterScopedRole: the cluster-scoped reads a manager scoped
 	// to one namespace still needs (CRDs, ConfigConnector, namespaces).
-	ManagerClusterScopedRole = "gaps-gcp-manager-cluster"
+	ManagerClusterScopedRole = Name + "-manager-cluster"
 )
 
 // Settings are how the operator builds a manager's Deployment.
 type Settings struct {
-	// Image is the gaps-gcp manager image.
+	// Image is the config-connector-extensions manager image.
 	Image string
 	// ExtraArgs are appended to every manager's flags (for the fake cloud
 	// in tests: --fake-cloud-url).
@@ -53,6 +54,26 @@ func labels(m Manager) map[string]string {
 		l[ScopedNamespaceLabel] = m.ScopedNamespace
 	}
 	return l
+}
+
+// ServiceAccount is the manager's own service account, for IdentityOwn: in
+// the namespace of Config Connector's (kcc), carrying kcc's Workload
+// Identity annotation, so it acts as the same Google service account once
+// that account allows it (roles/iam.workloadIdentityUser for
+// <pool>[<namespace>/<name>]). Without the annotation (a key Secret) it
+// carries none. nil for IdentityConfigConnector.
+func ServiceAccount(m Manager, kcc *corev1.ServiceAccount) *corev1.ServiceAccount {
+	if m.Identity != IdentityOwn {
+		return nil
+	}
+	sa := &corev1.ServiceAccount{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "ServiceAccount"},
+		ObjectMeta: metav1.ObjectMeta{Name: m.ServiceAccount, Namespace: m.Namespace, Labels: labels(m)},
+	}
+	if gsa := kcc.Annotations[WorkloadIdentityAnnotation]; gsa != "" {
+		sa.Annotations = map[string]string{WorkloadIdentityAnnotation: gsa}
+	}
+	return sa
 }
 
 // Deployment is the manager's Deployment.

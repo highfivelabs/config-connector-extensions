@@ -1,4 +1,4 @@
-gaps-gcp patch 0002: MOCKGCP_LISTEN_ADDRESS overrides mockgcp's gRPC listen address.
+config-connector-extensions patch 0002: MOCKGCP_LISTEN_ADDRESS overrides mockgcp's gRPC listen address.
 
 mockgcp listens on 127.0.0.2 to stay clear of webhook servers on
 localhost; macOS has no 127.0.0.2 unless lo0 is aliased (sudo). The

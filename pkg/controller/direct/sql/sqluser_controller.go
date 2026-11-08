@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Config Connector has no direct
+// Modified by High Five Labs for config-connector-extensions. Config Connector has no direct
 // controller for SQLUser (on master it is Terraform-based, reconciled by the
 // vendored google_sql_user). This file is Config Connector's direct
 // SQLSSLCert controller, pkg/controller/direct/sql/sqlsslcert_controller.go
@@ -48,7 +48,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/registry"
 	api "google.golang.org/api/sqladmin/v1beta4"
 
-	krm "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 )
 
 func init() {

@@ -1,8 +1,14 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
 #
-# gaps-gcp. Every target needs the pinned Config Connector checkout;
-# `make upstream` fetches it (about 650 MB, not committed).
+# config-connector-extensions: kinds for Google Cloud that Config Connector
+# does not have yet, on Config Connector's own reconciler. Every target
+# needs the pinned Config Connector checkout; `make upstream` fetches it
+# (about 650 MB, not committed).
+
+# The project's name, for a rename: the Go module path, the images, the
+# install's object names and pkg/operator.Name carry it too.
+NAME := config-connector-extensions
 
 export GOTOOLCHAIN ?= local
 
@@ -75,7 +81,7 @@ fake-cloud-down:
 # The operator on kind with the in-cluster fake cloud: images by ko, Config
 # Connector's operator footprint made by hand. tests/operator/run.sh.
 operator-e2e: upstream-check
-	tests/operator/run.sh
+	NAME=$(NAME) tests/operator/run.sh
 
 # docs/third-party-licenses.csv from go-licenses; fails on a licence outside
 # Apache-2.0, MIT, BSD, ISC and MPL-2.0. Needs go-licenses on PATH.

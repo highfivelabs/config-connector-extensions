@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package controller starts the gaps-gcp kinds on Config Connector's
+// Package controller starts the config-connector-extensions kinds on Config Connector's
 // direct-controller reconciler (pkg/controller/direct/directbase) and its
 // deletion defender (pkg/controller/deletiondefender), both unchanged. The
 // direct reconciler adds the deletion-defender finalizer and will not delete
@@ -40,12 +40,12 @@ import (
 	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	secretmanagerv1beta1 "github.com/highfivelabs/gaps-gcp/apis/secretmanager/v1beta1"
-	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
-	sqladminv1alpha1 "github.com/highfivelabs/gaps-gcp/apis/sqladmin/v1alpha1"
-	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/secretmanager"
-	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sql"
-	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sqladmin"
+	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
+	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
+	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
 )
 
 type kind struct {
@@ -54,7 +54,7 @@ type kind struct {
 	model   func(context.Context, *config.ControllerConfig) (directbase.Model, error)
 }
 
-// Kinds is every kind gaps-gcp reconciles.
+// Kinds is every kind config-connector-extensions reconciles.
 var Kinds = []kind{
 	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
 	{gvk: sqladminv1alpha1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
@@ -62,7 +62,7 @@ var Kinds = []kind{
 	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
 }
 
-// AddToScheme adds every gaps-gcp API group to a scheme.
+// AddToScheme adds every config-connector-extensions API group to a scheme.
 func AddToScheme(scheme *runtime.Scheme) error {
 	for _, add := range []func(*runtime.Scheme) error{
 		sqlv1beta1.AddToScheme,

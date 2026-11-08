@@ -10,5 +10,5 @@ if [[ -f "${STATE}/fakecloud.pid" ]]; then
   kill "$(cat "${STATE}/fakecloud.pid")" 2>/dev/null || true
   rm -f "${STATE}/fakecloud.pid"
 fi
-kind delete cluster --name "${FAKE_CLOUD_CLUSTER:-gaps-fake-cloud}" --kubeconfig "${STATE}/kubeconfig" 2>/dev/null || true
+kind delete cluster --name "${FAKE_CLOUD_CLUSTER:-cce-fake-cloud}" --kubeconfig "${STATE}/kubeconfig" 2>/dev/null || true
 echo "fake cloud down"

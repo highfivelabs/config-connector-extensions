@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/clients/generated/apis/sql/v1beta1/sqluser_types.go (the Go types of
 // the Terraform-based SQLUser CRD, UPSTREAM.md), changing as little as
 // possible:

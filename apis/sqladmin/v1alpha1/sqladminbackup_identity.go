@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // apis/sqladmin/v1alpha1/sqladminbackup_identity.go (UPSTREAM.md) with the
 // change from upstream pull request #12553 (head 9611a6de): a backup run's
 // ID is chosen by Cloud SQL when it is created, so before creation the

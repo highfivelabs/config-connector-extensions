@@ -14,7 +14,7 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // apis/secretmanager/v1beta1/secretmanagersecretversion_reference.go (UPSTREAM.md) with the regional-secret change from upstream pull
 // request #6651 (head 9aab204d): a
 // regional version's external reference parses.
