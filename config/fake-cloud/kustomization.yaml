@@ -1,5 +1,7 @@
 # For tests only: gaps-gcp with every manager pointed at the in-cluster fake
-# cloud (cmd/fakegcp). tests/operator/run.sh uses it on kind.
+# cloud (cmd/fakegcp). tests/operator/run.sh uses it on kind. The manager
+# image must be built with -tags fakecloud: a production manager has no
+# --fake-cloud-url and refuses to start with it.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:

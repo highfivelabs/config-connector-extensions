@@ -51,6 +51,8 @@ check: upstream-check
 	hack/generate.sh
 	@git diff --exit-code -- apis config || { echo "generated files are stale; commit the output of hack/generate.sh"; exit 1; }
 	go vet ./...
+	go vet -tags fakecloud ./cmd/manager
+	hack/check-no-fake-cloud.sh
 	$(MAKE) build test
 
 # The fake cloud for Bundt's L2: kind, Config Connector's CRDs and ours, and

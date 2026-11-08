@@ -92,8 +92,11 @@ ko_docker_config="$(mktemp -d)"
 DOCKER_HOST="${DOCKER_HOST:-$(docker context inspect --format '{{.Endpoints.docker.Host}}')}"
 export DOCKER_HOST
 trap 'rm -rf "${ko_docker_config}"' EXIT
+# GOFLAGS=-tags=fakecloud: the test images are the only builds with the
+# manager's --fake-cloud-url (cmd/manager/fakecloud.go); a production build
+# has no fake-cloud switch (hack/check-no-fake-cloud.sh).
 kustomize build config/fake-cloud \
-  | DOCKER_CONFIG="${ko_docker_config}" KO_DOCKER_REPO=kind.local KIND_CLUSTER_NAME="${CLUSTER}" ko resolve --platform="linux/${arch}" -f - \
+  | GOFLAGS=-tags=fakecloud DOCKER_CONFIG="${ko_docker_config}" KO_DOCKER_REPO=kind.local KIND_CLUSTER_NAME="${CLUSTER}" ko resolve --platform="linux/${arch}" -f - \
   > bin/operator-e2e/resolved.yaml
 kubectl apply --server-side -f bin/operator-e2e/resolved.yaml >/dev/null
 kubectl -n gaps-gcp-system rollout status deploy/fakegcp --timeout=180s

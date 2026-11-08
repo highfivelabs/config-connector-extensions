@@ -148,7 +148,7 @@ against what it last applied, `status.appliedDatabaseRoles`).
 | `pkg/controller/` | registers our kinds on KCC's direct reconciler and deletion defender |
 | `pkg/operator/`, `cmd/operator/` | runs the managers as Config Connector's service accounts |
 | `pkg/test/mockenv/` | the envtest + mockgcp harness the kinds' tests share |
-| `pkg/fakecloud/`, `cmd/fakegcp/` | tests only: mockgcp as a network service, and the manager's `--fake-cloud-url` |
+| `pkg/fakecloud/`, `cmd/fakegcp/` | tests only: mockgcp as a network service, and the manager's `--fake-cloud-url` (compiled in only with `-tags fakecloud`) |
 | `cmd/manager/` | the controller manager |
 | `cmd/fakecloud/` | Config Connector's manager and ours against mockgcp, on the host (`docs/fake-cloud.md`) |
 | `tests/operator/` | the operator on kind |
