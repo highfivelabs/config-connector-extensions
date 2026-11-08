@@ -39,8 +39,10 @@ import (
 	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	secretmanagerv1beta1 "github.com/highfivelabs/gaps-gcp/apis/secretmanager/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
 	sqladminv1alpha1 "github.com/highfivelabs/gaps-gcp/apis/sqladmin/v1alpha1"
+	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sql"
 	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sqladmin"
 )
@@ -55,6 +57,8 @@ type kind struct {
 var Kinds = []kind{
 	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
 	{gvk: sqladminv1alpha1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
+	{gvk: secretmanagerv1beta1.SecretManagerSecretGVK, crdName: "secretmanagersecrets.secretmanager.gcp.hfl.dev", model: secretmanager.NewModel},
+	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
 }
 
 // AddToScheme adds every gaps-gcp API group to a scheme.
@@ -62,6 +66,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	for _, add := range []func(*runtime.Scheme) error{
 		sqlv1beta1.AddToScheme,
 		sqladminv1alpha1.AddToScheme,
+		secretmanagerv1beta1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err
@@ -81,7 +86,8 @@ func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.Controll
 		// No Terraform service mappings or DCL metadata: the reconcile
 		// interval is Config Connector's default, or the object's
 		// cnrm.cloud.google.com/reconcile-interval-in-seconds annotation.
-		JitterGenerator: jitter.NewDefaultGenerator(nil, nil),
+		JitterGenerator:    jitter.NewDefaultGenerator(nil, nil),
+		SkipNameValidation: cfg.SkipNameValidation,
 	}
 	for _, k := range Kinds {
 		model, err := k.model(ctx, cfg)
@@ -95,7 +101,7 @@ func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.Controll
 		if err != nil {
 			return fmt.Errorf("reading CRD %s: %w", k.crdName, err)
 		}
-		if err := deletiondefender.Add(mgr, crd, crcontroller.Options{}); err != nil {
+		if err := deletiondefender.Add(mgr, crd, crcontroller.Options{SkipNameValidation: &cfg.SkipNameValidation}); err != nil {
 			return fmt.Errorf("adding deletion defender for %v: %w", k.gvk, err)
 		}
 	}

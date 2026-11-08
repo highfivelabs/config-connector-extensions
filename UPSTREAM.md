@@ -32,6 +32,15 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go` | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go`, plus PR #12553's change to it | the backup ID is Cloud SQL's, so it comes from `status.externalRef` (as in the PR) |
 | `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | PR #12553 (head `9611a6de`) `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | the sqladmin v1beta4 REST client instead of `cloud.google.com/go/sql` (not in the pin's go.mod; adding it moves ~65 shared modules); Update compares the fields the spec sets |
 | `pkg/controller/direct/sqladmin/sqladminbackup_mapping.go` | PR #12553 `mapper.generated.go` and `mapper.go` | the same fields, mapped to the REST types |
+| `apis/secretmanager/v1beta1/groupversion_info.go` | `apis/secretmanager/v1beta1/groupversion_info.go` | group `secretmanager.gcp.hfl.dev` |
+| `apis/secretmanager/v1beta1/secretmanagersecret_types.go` | `apis/secretmanager/v1beta1/secretmanagersecret_types.go` | group, labels, short names; `spec.location` from PR #6651 (head `9aab204d`) |
+| `apis/secretmanager/v1beta1/secretmanagersecret_identity.go`, `secretmanagersecret_reference.go` | the same files | PR #6651: a secret's parent carries its location; regional external references parse |
+| `apis/secretmanager/v1beta1/secretmanagersecretversion_types.go` | the same file | group, labels, short names; `secretRef` typed `SecretManagerSecretRef`, not its alias (controller-gen v0.16.5 panics on aliases under Go 1.27; same schema) |
+| `apis/secretmanager/v1beta1/secretmanagersecretversion_identity.go`, `secretmanagersecretversion_reference.go` | the same files | PR #6651: a version's parent is its secret's identity; regional version references parse |
+| `apis/secretmanager/v1beta1/types.generated.go` | the same file | no |
+| `pkg/controller/direct/secretmanager/secretmanagersecret_controller.go` | the same file | PR #6651: a regional secret uses `secretmanager.<location>.rep.googleapis.com` |
+| `pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go` | the same file | PR #6651: the same endpoint for its versions; ours: an unset `spec.enabled` means true (upstream dereferences it unchecked; there the direct controller is opt-in) |
+| `pkg/controller/direct/secretmanager/mapper.generated.go`, `secret_mapping.go` | the same files | our KRM types |
 | `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | no |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
 | `hack/regen-mocksql-users.sh` | `mockgcp/Makefile` (`gen-proto`), `mockgcp/apply-proto-patches.sh`, `mockgcp/fixup-third-party.sh` | one proto file only; our extra fields |
@@ -48,6 +57,7 @@ flattening both).
 | `0001-mockgcp-sql-users-database-roles.patch` | mockgcp's Cloud SQL `User` gains `database_roles`, and `users.update` gains `database_roles` / `revoke_existing_roles` (googleapis master's field numbers); regenerated with `hack/regen-mocksql-users.sh`, which reproduces upstream's committed files byte for byte when run with `ONLY_UPSTREAM=1` | yes |
 | `0002-mockgcp-listen-address-env.patch` | `MOCKGCP_LISTEN_ADDRESS` overrides mockgcp's `127.0.0.2:0` (absent on macOS) | yes |
 | `0003-mockgcp-sql-backup-runs.patch` | mockgcp serves Cloud SQL `backupRuns` insert, get and delete: PR #12553's `mocksql/sqlbackup.go` and its registration, unchanged | it is upstream's; drop it when the PR merges and the pin passes it |
+| `0004-mockgcp-secretmanager-regional.patch` | mockgcp serves regional secrets (PR #6651's `secrets.go` and `service.go` change, applied by hand) and, ours, versions under a regional secret | yes, with the PR |
 
 ## Other sources consulted, not copied
 

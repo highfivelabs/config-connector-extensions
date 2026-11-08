@@ -27,6 +27,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"sync"
 	"testing"
 	"time"
 
@@ -64,6 +66,30 @@ type Env struct {
 	// HTTP reaches the fake cloud; build Google API clients with
 	// option.WithHTTPClient(HTTP) to read what the controllers did.
 	HTTP *http.Client
+
+	requests *recorder
+}
+
+// recorder keeps the method and URL of every request to the fake cloud.
+type recorder struct {
+	inner http.RoundTripper
+	mu    sync.Mutex
+	urls  []string
+}
+
+func (r *recorder) RoundTrip(req *http.Request) (*http.Response, error) {
+	r.mu.Lock()
+	r.urls = append(r.urls, req.Method+" "+req.URL.String())
+	r.mu.Unlock()
+	return r.inner.RoundTrip(req)
+}
+
+// Requests is every request made to the fake cloud so far, as
+// "METHOD URL", by the controllers and the test alike.
+func (e *Env) Requests() []string {
+	e.requests.mu.Lock()
+	defer e.requests.mu.Unlock()
+	return slices.Clone(e.requests.urls)
 }
 
 // repoRoot is the repository root, found from this file's path.
@@ -117,7 +143,8 @@ func New(t *testing.T, namespaces ...string) *Env {
 	// The fake cloud, as Config Connector's own test harness builds it
 	// (config/tests/samples/create/harness.go).
 	mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
-	gcpHTTP := &http.Client{Transport: mockCloud}
+	requests := &recorder{inner: mockCloud}
+	gcpHTTP := &http.Client{Transport: requests}
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, gcpHTTP)
 	createMockProject(t, ctx, gcpHTTP, Project)
 
@@ -128,7 +155,9 @@ func New(t *testing.T, namespaces ...string) *Env {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg := &config.ControllerConfig{HTTPClient: gcpHTTP}
+	// Several Envs in one test binary register the same controller names;
+	// each has its own manager, so the names never meet.
+	cfg := &config.ControllerConfig{HTTPClient: gcpHTTP, SkipNameValidation: true}
 	if err := controller.AddToManager(ctx, mgr, cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +182,7 @@ func New(t *testing.T, namespaces ...string) *Env {
 		}
 	}
 
-	return &Env{T: t, Ctx: ctx, Kube: kube, HTTP: gcpHTTP}
+	return &Env{T: t, Ctx: ctx, Kube: kube, HTTP: gcpHTTP, requests: requests}
 }
 
 // GCPOptions are the client options that reach the fake cloud.

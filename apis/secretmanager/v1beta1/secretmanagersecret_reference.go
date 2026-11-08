@@ -1,0 +1,178 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Modified by High Five Labs for gaps-gcp. Copied from Config Connector
+// apis/secretmanager/v1beta1/secretmanagersecret_reference.go (UPSTREAM.md) with the regional-secret change from upstream pull
+// request #6651 (head 9aab204d): a
+// regional secret's external reference parses. The reference names our
+// kind (SecretManagerSecretGVK is in secretmanager.gcp.hfl.dev).
+
+package v1beta1
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/common/identity"
+	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+var _ refsv1beta1.Ref = &SecretManagerSecretRef{}
+
+// SecretManagerSecretRef is a reference to a SecretManagerSecret.
+// +k8s:deepcopy-gen=true
+type SecretManagerSecretRef struct {
+	// A reference to an externally managed SecretManagerSecret resource.
+	// Should be in the format "projects/{{projectID}}/secrets/{{secretID}}".
+	External string `json:"external,omitempty"`
+
+	// The name of a SecretManagerSecret resource.
+	Name string `json:"name,omitempty"`
+
+	// The namespace of a SecretManagerSecret resource.
+	Namespace string `json:"namespace,omitempty"`
+}
+
+// +k8s:deepcopy-gen=false
+// TODO(kcc): SecretRef is deprecated; use SecretManagerSecretRef instead. Kept for backward compatibility with existing callers.
+type SecretRef = SecretManagerSecretRef
+
+// TODO(kcc): Legacy check to ensure the deprecated SecretRef continues to satisfy ExternalNormalizer for older callers.
+var _ refsv1beta1.ExternalNormalizer = &SecretRef{}
+
+func init() {
+	refsv1beta1.Register(&SecretManagerSecretRef{}, &SecretManagerSecret{})
+}
+
+func (r *SecretManagerSecretRef) GetGVK() schema.GroupVersionKind {
+	return SecretManagerSecretGVK
+}
+
+func (r *SecretManagerSecretRef) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Name:      r.Name,
+		Namespace: r.Namespace,
+	}
+}
+
+func (r *SecretManagerSecretRef) GetExternal() string {
+	return r.External
+}
+
+func (r *SecretManagerSecretRef) SetExternal(ref string) {
+	r.External = ref
+	r.Name = ""
+	r.Namespace = ""
+}
+
+func (r *SecretManagerSecretRef) ValidateExternal(ref string) error {
+	_, err := ParseSecretExternal(ref)
+	return err
+}
+
+func (r *SecretManagerSecretRef) ParseExternalToIdentity() (identity.Identity, error) {
+	id := &SecretIdentity{}
+	if err := id.FromExternal(r.External); err != nil {
+		return nil, err
+	}
+	return id, nil
+}
+
+func (r *SecretManagerSecretRef) Normalize(ctx context.Context, reader client.Reader, defaultNamespace string) error {
+	fallback := func(u *unstructured.Unstructured) string {
+		actualExternalRef, _, err := unstructured.NestedString(u.Object, "status", "name")
+		if err == nil {
+			return actualExternalRef
+		}
+		return ""
+	}
+	return refsv1beta1.NormalizeWithFallback(ctx, reader, r, defaultNamespace, fallback)
+}
+
+// NormalizedExternal provision the "External" value for other resource that depends on SecretManagerSecret.
+// If the "External" is given in the other resource's spec.SecretManagerSecretRef, the given value will be used.
+// Otherwise, the "Name" and "Namespace" will be used to query the actual SecretManagerSecret object from the cluster.
+func (r *SecretManagerSecretRef) NormalizedExternal(ctx context.Context, reader client.Reader, otherNamespace string) (string, error) {
+	if r.External != "" && r.Name != "" {
+		return "", fmt.Errorf("cannot specify both name and external on %s reference", SecretManagerSecretGVK.Kind)
+	}
+	// From given External
+	if r.External != "" {
+		if _, err := ParseSecretExternal(r.External); err != nil {
+			return "", err
+		}
+		return r.External, nil
+	}
+
+	// From the Config Connector object
+	if r.Namespace == "" {
+		r.Namespace = otherNamespace
+	}
+	key := types.NamespacedName{Name: r.Name, Namespace: r.Namespace}
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(SecretManagerSecretGVK)
+	if err := reader.Get(ctx, key, u); err != nil {
+		if apierrors.IsNotFound(err) {
+			return "", k8s.NewReferenceNotFoundError(u.GroupVersionKind(), key)
+		}
+		return "", fmt.Errorf("reading referenced %s %s: %w", SecretManagerSecretGVK, key, err)
+	}
+	// Get external from status.externalRef. This is the most trustworthy place.
+	actualExternalRef, _, err := unstructured.NestedString(u.Object, "status", "externalRef")
+	if err != nil || actualExternalRef == "" {
+		// Backward compatible to Terraform/DCL based resource, which does not have status.externalRef.
+		var err error
+		actualExternalRef, _, err = unstructured.NestedString(u.Object, "status", "name")
+		if err != nil {
+			return "", err
+		}
+	}
+	if actualExternalRef == "" {
+		return "", k8s.NewReferenceNotReadyError(u.GroupVersionKind(), key)
+	}
+	r.External = actualExternalRef
+	return r.External, nil
+}
+
+func ParseSecretExternal(external string) (*SecretIdentity, error) {
+	if external == "" {
+		return nil, fmt.Errorf("missing external value")
+	}
+	external = strings.TrimPrefix(external, "/")
+	tokens := strings.Split(external, "/")
+
+	if len(tokens) == 4 && tokens[0] == "projects" && tokens[2] == "secrets" {
+		return &SecretIdentity{
+			parent: &SecretParent{ProjectID: tokens[1], Location: "global"},
+			id:     tokens[3],
+		}, nil
+	}
+
+	// Check for regional secret format: projects/{{projectId}}/locations/{{location}}/secrets/{{secretID}}
+	if len(tokens) == 6 && tokens[0] == "projects" && tokens[2] == "locations" && tokens[4] == "secrets" {
+		return &SecretIdentity{
+			parent: &SecretParent{ProjectID: tokens[1], Location: tokens[3]},
+			id:     tokens[5],
+		}, nil
+	}
+
+	return nil, fmt.Errorf("format of SecretManagerSecret external=%q was not known (use projects/{{projectId}}/secrets/{{secretID}} or projects/{{projectId}}/locations/{{location}}/secrets/{{secretID}})", external)
+}
