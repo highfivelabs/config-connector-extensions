@@ -1,6 +1,8 @@
 gaps-gcp
 Copyright 2026 High Five Labs
 
+Licensed under the Apache License, Version 2.0 (LICENSE).
+
 This product includes software from Config Connector
 (https://github.com/GoogleCloudPlatform/k8s-config-connector),
 Copyright Google LLC, licensed under the Apache License, Version 2.0.
@@ -8,18 +10,30 @@ Copyright Google LLC, licensed under the Apache License, Version 2.0.
 Files copied from Config Connector keep their original copyright and
 licence header and carry a "Modified by High Five Labs for gaps-gcp" note
 naming the source file and what was changed. The commit they were copied
-from is recorded in UPSTREAM.md. The patches in
-patches/k8s-config-connector/ modify Config Connector's mockgcp, whose
-files are Apache-2.0.
+from, and the open pull requests some were copied from, are recorded in
+UPSTREAM.md. The patches in patches/k8s-config-connector/ modify Config
+Connector's mockgcp, whose files are Apache-2.0.
 
-High Five Labs attaches no licence of its own to this repository. If it
-is ever distributed, Apache-2.0 also requires a copy of that licence to go
-with the copied files (it is Config Connector's LICENSE file, in
-third_party/k8s-config-connector/ after hack/upstream.sh runs).
+Binaries built from this repository also link, unmodified, code that
+Config Connector depends on. That source is not in this repository: it is
+fetched by hack/upstream.sh (Config Connector at the commit in UPSTREAM.md)
+or by the Go toolchain (go.mod), and each module's licence travels with
+its source. Among it:
 
-At build time this product depends on, but does not include, Config
-Connector's source tree (fetched by hack/upstream.sh), which itself
-vendors the Terraform Google provider (MPL-2.0) and the Declarative
-Resource Client Library (Apache-2.0). Binaries built from this repository
-link code from those projects; their licences are in
-third_party/k8s-config-connector/third_party/ after hack/upstream.sh runs.
+- Config Connector itself, including mockgcp (Apache-2.0).
+- The Declarative Resource Client Library (Apache-2.0), in Config
+  Connector's tree at
+  third_party/github.com/GoogleCloudPlatform/declarative-resource-client-library.
+- Packages under the Mozilla Public License 2.0, linked through Config
+  Connector's Terraform-based controllers:
+  - terraform-provider-google-beta (Config Connector's fork, in its tree at
+    third_party/github.com/hashicorp/terraform-provider-google-beta);
+  - github.com/hashicorp/terraform-plugin-sdk, terraform-plugin-go,
+    terraform-plugin-log, hcl, errwrap, go-multierror, go-uuid,
+    go-version and logutils.
+
+  gaps-gcp modifies none of these files. Their source is at the module
+  paths above and in Config Connector's repository.
+
+docs/third-party-licenses.csv lists every Go module linked into the
+manager and the operator, with its licence (hack/licenses.sh).

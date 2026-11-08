@@ -1,3 +1,6 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
+#
 # gaps-gcp. Every target needs the pinned Config Connector checkout;
 # `make upstream` fetches it (about 650 MB, not committed).
 
@@ -12,7 +15,7 @@ SETUP_ENVTEST := sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250
 # (patches/k8s-config-connector/0002-*).
 export MOCKGCP_LISTEN_ADDRESS ?= 127.0.0.1:0
 
-.PHONY: all upstream upstream-check upstream-pr generate build test check clean fake-cloud-up fake-cloud-test fake-cloud-down operator-e2e
+.PHONY: all licenses upstream upstream-check upstream-pr generate build test check clean fake-cloud-up fake-cloud-test fake-cloud-down operator-e2e
 
 all: check
 
@@ -53,9 +56,10 @@ check: upstream-check
 	go vet ./...
 	go vet -tags fakecloud ./cmd/manager
 	hack/check-no-fake-cloud.sh
+	hack/check-spdx.sh
 	$(MAKE) build test
 
-# The fake cloud for Bundt's L2: kind, Config Connector's CRDs and ours, and
+# The fake cloud: kind, Config Connector's CRDs and ours, and
 # bin/fakecloud (Config Connector's manager and ours against mockgcp).
 # docs/fake-cloud.md.
 fake-cloud-up: upstream-check
@@ -72,6 +76,11 @@ fake-cloud-down:
 # Connector's operator footprint made by hand. tests/operator/run.sh.
 operator-e2e: upstream-check
 	tests/operator/run.sh
+
+# docs/third-party-licenses.csv from go-licenses; fails on a licence outside
+# Apache-2.0, MIT, BSD, ISC and MPL-2.0. Needs go-licenses on PATH.
+licenses: upstream-check
+	hack/licenses.sh
 
 clean:
 	rm -rf $(BIN)
