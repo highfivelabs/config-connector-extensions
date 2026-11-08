@@ -27,6 +27,11 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/sql/v1beta1/sqluser_identity.go` | `apis/sql/v1beta1/sqlsslcert_identity.go` | identity is `projects/{project}/instances/{instance}/users/{name}`, name user-chosen, MySQL host carried beside it |
 | `pkg/controller/direct/sql/client.go` | `pkg/controller/direct/sql/client.go` | only the users and operations clients |
 | `pkg/controller/direct/sql/sqluser_controller.go` | `pkg/controller/direct/sql/sqlsslcert_controller.go` | changed for users; `databaseRoles` as Terraform's `google_sql_user` does it |
+| `apis/sqladmin/v1alpha1/groupversion_info.go` | `apis/sqladmin/v1alpha1/groupversion_info.go` | group `sqladmin.gcp.hfl.dev` |
+| `apis/sqladmin/v1alpha1/sqladminbackup_types.go` | `apis/sqladmin/v1alpha1/sqladminbackup_types.go` | group, labels, short names |
+| `apis/sqladmin/v1alpha1/sqladminbackup_identity.go` | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go`, plus PR #12553's change to it | the backup ID is Cloud SQL's, so it comes from `status.externalRef` (as in the PR) |
+| `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | PR #12553 (head `9611a6de`) `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | the sqladmin v1beta4 REST client instead of `cloud.google.com/go/sql` (not in the pin's go.mod; adding it moves ~65 shared modules); Update compares the fields the spec sets |
+| `pkg/controller/direct/sqladmin/sqladminbackup_mapping.go` | PR #12553 `mapper.generated.go` and `mapper.go` | the same fields, mapped to the REST types |
 | `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | no |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
 | `hack/regen-mocksql-users.sh` | `mockgcp/Makefile` (`gen-proto`), `mockgcp/apply-proto-patches.sh`, `mockgcp/fixup-third-party.sh` | one proto file only; our extra fields |
@@ -42,6 +47,7 @@ flattening both).
 | --- | --- | --- |
 | `0001-mockgcp-sql-users-database-roles.patch` | mockgcp's Cloud SQL `User` gains `database_roles`, and `users.update` gains `database_roles` / `revoke_existing_roles` (googleapis master's field numbers); regenerated with `hack/regen-mocksql-users.sh`, which reproduces upstream's committed files byte for byte when run with `ONLY_UPSTREAM=1` | yes |
 | `0002-mockgcp-listen-address-env.patch` | `MOCKGCP_LISTEN_ADDRESS` overrides mockgcp's `127.0.0.2:0` (absent on macOS) | yes |
+| `0003-mockgcp-sql-backup-runs.patch` | mockgcp serves Cloud SQL `backupRuns` insert, get and delete: PR #12553's `mocksql/sqlbackup.go` and its registration, unchanged | it is upstream's; drop it when the PR merges and the pin passes it |
 
 ## Other sources consulted, not copied
 

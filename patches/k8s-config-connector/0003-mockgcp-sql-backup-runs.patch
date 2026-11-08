@@ -1,0 +1,210 @@
+gaps-gcp patch 0003: mockgcp serves Cloud SQL backupRuns (insert, get, delete).
+
+For sqladmin.gcp.hfl.dev/SQLAdminBackup. Copied from Config Connector's
+open pull request #12553 (head 9611a6de): mockgcp/mocksql/sqlbackup.go as
+it is there, its registration in service.go, and the BackupRun case in
+operations_store.go. Not copied from the PR: its rewrite of /v1/ paths for
+the cloud.google.com/go/sql client (we use the v1beta4 REST client), its
+golden-log normalization, and its POSTGRES_14 defaults.
+
+Upstream candidate: it is upstream's own change; drop this patch when the
+PR merges and the pin moves past it.
+
+diff --git a/mockgcp/mocksql/operations_store.go b/mockgcp/mocksql/operations_store.go
+index a5c8e0a40..757ff3b88 100644
+--- a/mockgcp/mocksql/operations_store.go
++++ b/mockgcp/mocksql/operations_store.go
+@@ -17,6 +17,7 @@ package mocksql
+ import (
+ 	"context"
+ 	"fmt"
++	"strconv"
+ 	"time"
+ 
+ 	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/sql/v1beta4"
+@@ -56,6 +57,9 @@ func (s *operations) startLRO(ctx context.Context, op *pb.Operation, obj proto.M
+ 	case *pb.SslCert:
+ 		op.TargetId = obj.Instance
+ 		op.TargetLink = fmt.Sprintf("https://sqladmin.googleapis.com/sql/v1beta4/projects/%s/instances/%s", op.TargetProject, op.TargetId)
++	case *pb.BackupRun:
++		op.TargetId = strconv.FormatInt(obj.Id, 10)
++		op.TargetLink = fmt.Sprintf("https://sqladmin.googleapis.com/sql/v1beta4/projects/%s/instances/%s/backupRuns/%d", op.TargetProject, obj.Instance, obj.Id)
+ 	default:
+ 		klog.Fatalf("unhandled type %T", obj)
+ 	}
+diff --git a/mockgcp/mocksql/service.go b/mockgcp/mocksql/service.go
+index dca2d1355..958995ce1 100644
+--- a/mockgcp/mocksql/service.go
++++ b/mockgcp/mocksql/service.go
+@@ -64,6 +64,7 @@ func (s *MockService) Register(grpcServer *grpc.Server) {
+ 	pb.RegisterSqlUsersServiceServer(grpcServer, s.users)
+ 	pb.RegisterSqlOperationsServiceServer(grpcServer, &sqlOperationsService{MockService: s})
+ 	pb.RegisterSqlSslCertsServiceServer(grpcServer, &sqlSslCertsServer{MockService: s})
++	pb.RegisterSqlBackupRunsServiceServer(grpcServer, &sqlBackupRunsServer{MockService: s})
+ }
+ 
+ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (http.Handler, error) {
+@@ -72,7 +73,8 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 		pb.RegisterSqlInstancesServiceHandler,
+ 		pb.RegisterSqlUsersServiceHandler,
+ 		pb.RegisterSqlOperationsServiceHandler,
+-		pb.RegisterSqlSslCertsServiceHandler)
++		pb.RegisterSqlSslCertsServiceHandler,
++		pb.RegisterSqlBackupRunsServiceHandler)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+diff --git a/mockgcp/mocksql/sqlbackup.go b/mockgcp/mocksql/sqlbackup.go
+new file mode 100644
+index 000000000..8652eba36
+--- /dev/null
++++ b/mockgcp/mocksql/sqlbackup.go
+@@ -0,0 +1,148 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mocksql
++
++import (
++	"context"
++	"fmt"
++	"strconv"
++	"time"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/projects"
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/sql/v1beta4"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/types/known/timestamppb"
++)
++
++type sqlBackupRunsServer struct {
++	*MockService
++	pb.UnimplementedSqlBackupRunsServiceServer
++}
++
++type BackupName struct {
++	Project      *projects.ProjectData
++	InstanceName string
++	BackupID     int64
++}
++
++func (n *BackupName) String() string {
++	return "projects/" + n.Project.ID + "/instances/" + n.InstanceName + "/backupRuns/" + strconv.FormatInt(n.BackupID, 10)
++}
++
++func (s *MockService) buildBackupName(projectID, instanceName string, backupID int64) (*BackupName, error) {
++	project, err := s.projects.GetProjectByID(projectID)
++	if err != nil {
++		return nil, err
++	}
++	return &BackupName{
++		Project:      project,
++		InstanceName: instanceName,
++		BackupID:     backupID,
++	}, nil
++}
++
++func (s *sqlBackupRunsServer) Insert(ctx context.Context, req *pb.SqlBackupRunsInsertRequest) (*pb.Operation, error) {
++	// Assign a timestamp-based backup ID
++	backupID := time.Now().UnixNano() / int64(time.Millisecond)
++
++	name, err := s.buildBackupName(req.GetProject(), req.GetInstance(), backupID)
++	if err != nil {
++		return nil, err
++	}
++
++	fqn := name.String()
++
++	obj := proto.Clone(req.GetBody()).(*pb.BackupRun)
++	obj.Id = backupID
++	obj.Instance = name.InstanceName
++	obj.Kind = "sql#backupRun"
++	obj.SelfLink = fmt.Sprintf("https://sqladmin.googleapis.com/sql/v1beta4/projects/%s/instances/%s/backupRuns/%d",
++		name.Project.ID, name.InstanceName, backupID)
++
++	staticTime := timestamppb.New(time.Date(2024, 4, 1, 12, 34, 56, 123456000, time.UTC))
++	obj.EnqueuedTime = staticTime
++	obj.StartTime = staticTime
++	obj.EndTime = staticTime
++	obj.Status = pb.SqlBackupRunStatus_SUCCESSFUL
++	obj.Type = pb.SqlBackupRunType_ON_DEMAND
++
++	if err := s.storage.Create(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++
++	op := &pb.Operation{
++		TargetProject: name.Project.ID,
++		OperationType: pb.Operation_BACKUP_VOLUME,
++		Status:        pb.Operation_DONE,
++		BackupContext: &pb.BackupContext{
++			BackupId: backupID,
++			Kind:     "sql#backupContext",
++		},
++		Name: fmt.Sprintf("operation-%d", backupID),
++	}
++
++	return s.operations.startLRO(ctx, op, obj, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++func (s *sqlBackupRunsServer) Get(ctx context.Context, req *pb.SqlBackupRunsGetRequest) (*pb.BackupRun, error) {
++	name, err := s.buildBackupName(req.GetProject(), req.GetInstance(), req.GetId())
++	if err != nil {
++		return nil, err
++	}
++
++	fqn := name.String()
++
++	obj := &pb.BackupRun{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "Not Found")
++		}
++		return nil, err
++	}
++
++	return obj, nil
++}
++
++func (s *sqlBackupRunsServer) Delete(ctx context.Context, req *pb.SqlBackupRunsDeleteRequest) (*pb.Operation, error) {
++	name, err := s.buildBackupName(req.GetProject(), req.GetInstance(), req.GetId())
++	if err != nil {
++		return nil, err
++	}
++
++	fqn := name.String()
++
++	deleted := &pb.BackupRun{}
++	if err := s.storage.Delete(ctx, fqn, deleted); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "Not Found")
++		}
++		return nil, err
++	}
++
++	op := &pb.Operation{
++		TargetProject: name.Project.ID,
++		OperationType: pb.Operation_DELETE,
++		Status:        pb.Operation_DONE,
++		Name:          fmt.Sprintf("operation-delete-%d", name.BackupID),
++	}
++
++	return s.operations.startLRO(ctx, op, deleted, func() (proto.Message, error) {
++		return deleted, nil
++	})
++}

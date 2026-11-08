@@ -50,7 +50,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
 	"github.com/highfivelabs/gaps-gcp/pkg/controller"
 )
 
@@ -116,7 +115,7 @@ func run(ctx context.Context, projects []string) error {
 	if err != nil {
 		return fmt.Errorf("building Config Connector's manager: %w", err)
 	}
-	if err := sqlv1beta1.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 		return err
 	}
 	cfg := &config.ControllerConfig{HTTPClient: httpClient, UserAgent: "gaps-gcp-fakecloud"}

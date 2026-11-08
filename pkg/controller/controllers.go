@@ -34,12 +34,15 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/jitter"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
+	sqladminv1alpha1 "github.com/highfivelabs/gaps-gcp/apis/sqladmin/v1alpha1"
 	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sql"
+	"github.com/highfivelabs/gaps-gcp/pkg/controller/direct/sqladmin"
 )
 
 type kind struct {
@@ -51,6 +54,20 @@ type kind struct {
 // Kinds is every kind gaps-gcp reconciles.
 var Kinds = []kind{
 	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
+	{gvk: sqladminv1alpha1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
+}
+
+// AddToScheme adds every gaps-gcp API group to a scheme.
+func AddToScheme(scheme *runtime.Scheme) error {
+	for _, add := range []func(*runtime.Scheme) error{
+		sqlv1beta1.AddToScheme,
+		sqladminv1alpha1.AddToScheme,
+	} {
+		if err := add(scheme); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // AddToManager adds a direct controller and a deletion defender for every

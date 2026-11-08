@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	sqlv1beta1 "github.com/highfivelabs/gaps-gcp/apis/sql/v1beta1"
 	"github.com/highfivelabs/gaps-gcp/pkg/controller"
 )
 
@@ -59,7 +58,7 @@ func main() {
 		// directbase reads ConfigConnector / ConfigConnectorContext to honour
 		// actuation mode, as Config Connector's own controllers do.
 		operatorv1beta1.AddToScheme,
-		sqlv1beta1.AddToScheme,
+		controller.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			klog.Fatalf("building scheme: %v", err)
