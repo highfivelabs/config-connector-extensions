@@ -1,0 +1,52 @@
+# The gaps-gcp operator: holds no Google credentials and never calls Google
+# Cloud. It runs gaps-gcp's managers as Config Connector's service accounts
+# (pkg/operator).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gaps-gcp-operator
+  namespace: gaps-gcp-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaps-gcp-operator
+  namespace: gaps-gcp-system
+  labels:
+    app.kubernetes.io/name: gaps-gcp-operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gaps-gcp-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gaps-gcp-operator
+    spec:
+      serviceAccountName: gaps-gcp-operator
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: operator
+        image: ko://github.com/highfivelabs/gaps-gcp/cmd/operator
+        env:
+        - name: GAPS_GCP_MANAGER_IMAGE
+          value: ko://github.com/highfivelabs/gaps-gcp/cmd/manager
+        args: []
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop: ["ALL"]

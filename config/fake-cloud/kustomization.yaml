@@ -1,0 +1,18 @@
+# For tests only: gaps-gcp with every manager pointed at the in-cluster fake
+# cloud (cmd/fakegcp). tests/operator/run.sh uses it on kind.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../default
+- fakegcp.yaml
+patches:
+- target:
+    kind: Deployment
+    name: gaps-gcp-operator
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --manager-arg=--fake-cloud-url=http://fakegcp.gaps-gcp-system.svc:8080
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --manager-arg=--v=2

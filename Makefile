@@ -12,7 +12,7 @@ SETUP_ENVTEST := sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250
 # (patches/k8s-config-connector/0002-*).
 export MOCKGCP_LISTEN_ADDRESS ?= 127.0.0.1:0
 
-.PHONY: all upstream upstream-check upstream-pr generate build test check clean fake-cloud-up fake-cloud-test fake-cloud-down
+.PHONY: all upstream upstream-check upstream-pr generate build test check clean fake-cloud-up fake-cloud-test fake-cloud-down operator-e2e
 
 all: check
 
@@ -32,6 +32,8 @@ generate: upstream-check
 
 build: upstream-check
 	go build -o $(BIN)/manager ./cmd/manager
+	go build -o $(BIN)/operator ./cmd/operator
+	go build -o $(BIN)/fakegcp ./cmd/fakegcp
 	go build -o $(BIN)/fakecloud ./cmd/fakecloud
 
 $(BIN)/setup-envtest:
@@ -63,6 +65,11 @@ fake-cloud-test:
 
 fake-cloud-down:
 	hack/fake-cloud/down.sh
+
+# The operator on kind with the in-cluster fake cloud: images by ko, Config
+# Connector's operator footprint made by hand. tests/operator/run.sh.
+operator-e2e: upstream-check
+	tests/operator/run.sh
 
 clean:
 	rm -rf $(BIN)

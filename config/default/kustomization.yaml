@@ -1,0 +1,7 @@
+# gaps-gcp: its CRDs and its operator. Install beside Config Connector;
+# images are ko:// references (ko resolve -f, or ko apply -k).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../crds
+- ../operator

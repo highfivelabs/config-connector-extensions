@@ -1,0 +1,100 @@
+# For tests only: Config Connector's mockgcp as a network service
+# (cmd/fakegcp), so managers in the cluster can use a fake Google Cloud.
+# mockgcp keeps some data (Secret Manager payloads) in Kubernetes Secrets in
+# a namespace per project number, which it creates.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fakegcp
+  namespace: gaps-gcp-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gaps-gcp-fakegcp
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "create"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gaps-gcp-fakegcp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gaps-gcp-fakegcp
+subjects:
+- kind: ServiceAccount
+  name: fakegcp
+  namespace: gaps-gcp-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fakegcp
+  namespace: gaps-gcp-system
+  labels:
+    app.kubernetes.io/name: fakegcp
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fakegcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fakegcp
+    spec:
+      serviceAccountName: fakegcp
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: fakegcp
+        image: ko://github.com/highfivelabs/gaps-gcp/cmd/fakegcp
+        args: ["--projects=mock-project", "--listen=:8080"]
+        env:
+        # mockgcp's gRPC listens on 127.0.0.2 unless told otherwise (patch 0002).
+        - name: MOCKGCP_LISTEN_ADDRESS
+          value: 127.0.0.1:0
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          tcpSocket:
+            port: http
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop: ["ALL"]
+        # mockgcp links controller-runtime's envtest helpers, which make a
+        # directory under /tmp when the binary starts.
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fakegcp
+  namespace: gaps-gcp-system
+spec:
+  selector:
+    app.kubernetes.io/name: fakegcp
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http

@@ -21,6 +21,8 @@ package main
 
 import (
 	"flag"
+	"net/http"
+	"net/url"
 	"os"
 
 	operatorv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/operator/pkg/apis/core/v1beta1"
@@ -33,6 +35,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/highfivelabs/gaps-gcp/pkg/controller"
+	"github.com/highfivelabs/gaps-gcp/pkg/fakecloud"
 )
 
 func main() {
@@ -41,12 +44,15 @@ func main() {
 		userProjectOverride bool
 		billingProject      string
 		metricsBindAddress  string
+		fakeCloudURL        string
 	)
 	flag.StringVar(&scopedNamespace, "scoped-namespace", "", "watch only this namespace; if unset, watch the whole cluster")
 	flag.BoolVar(&userProjectOverride, "user-project-override", false, "use the resource project for preconditions, quota and billing (as Config Connector's flag)")
 	flag.StringVar(&billingProject, "billing-project", "", "project for preconditions, quota and billing when --user-project-override is set")
 	flag.StringVar(&metricsBindAddress, "metrics-bind-address", "0", "controller-runtime metrics address; \"0\" disables it")
-	klog.InitFlags(nil)
+	flag.StringVar(&fakeCloudURL, "fake-cloud-url", "", "for tests only: send every Google API call to this fake cloud (cmd/fakegcp) instead of Google; no Google credentials are loaded")
+	// No klog.InitFlags: Config Connector's dependencies already register
+	// klog's flags on the default flag set (calling it again panics).
 	flag.Parse()
 
 	ctx := ctrl.SetupSignalHandler()
@@ -81,6 +87,16 @@ func main() {
 		UserAgent:           "gaps-gcp",
 		UserProjectOverride: userProjectOverride,
 		BillingProject:      billingProject,
+	}
+	if fakeCloudURL != "" {
+		u, err := url.Parse(fakeCloudURL)
+		if err != nil || u.Scheme == "" || u.Host == "" {
+			klog.Fatalf("--fake-cloud-url %q is not a URL", fakeCloudURL)
+		}
+		// With HTTPClient set, the Google client libraries add no
+		// credentials: none are loaded, so none can reach the fake.
+		cfg.HTTPClient = &http.Client{Transport: fakecloud.Redirect(u)}
+		klog.Warningf("using the fake cloud at %s: no Google credentials loaded (tests only)", u)
 	}
 	if err := cfg.Init(ctx); err != nil {
 		klog.Fatalf("initializing controller config: %v", err)

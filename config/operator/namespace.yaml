@@ -1,0 +1,8 @@
+# The operator's own namespace. The managers it starts run in Config
+# Connector's namespace (cnrm-system), as Config Connector's service accounts.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gaps-gcp-system
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
