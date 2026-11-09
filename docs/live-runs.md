@@ -141,6 +141,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | pending | ComputeRegionNetworkEndpoint | PASS | pending, needs `roles/compute.networkAdmin` | not run | none |
 | 2026-11-09 | pending | ComputeRouterRoutePolicy | PASS | pending, needs `roles/compute.networkAdmin` | not run | none |
 | 2026-11-09 | pending | ComputeRegionNetworkFirewallPolicy | PASS | pending, needs `roles/compute.securityAdmin` | not run | none |
+| 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 | 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/hfl-dev-514205'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
 
 `+` means the commit plus the uncommitted changes that became the next
@@ -171,6 +172,18 @@ endpoints, the router and its route policies) and
 `make test-live PROJECT=hfl-dev-514205 KINDS=compute`. The managed identity test's attestation rules name
 made-up Compute Engine instances, and the RunService test asks for an
 NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
+
+`LoggingSettings` (package `logging`) is ready to run live but waits on
+the builder for a test folder and a key; it never changes an
+organization's settings live (that case runs in the fake cloud only). It
+needs: a test folder, passed as `E2E_LOGGING_FOLDER=folders/<id>`, with
+`roles/logging.admin` on it for the live-test service account; and a
+Cloud KMS key, passed as `E2E_LOGGING_KMS_KEY`, on which the folder's
+Log Router service account (`kmsServiceAccountId` in the folder's
+settings) has `roles/cloudkms.cryptoKeyEncrypterDecrypter`. Settings
+cannot be deleted, so the test puts the folder's back as it found them;
+there is nothing for the sweeper. Then:
+`E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... make test-live PROJECT=hfl-dev-514205 KINDS=logging`.
 
 Every run ended with `make live-list` empty (run `cce-11091348-ef59`:
 "0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,

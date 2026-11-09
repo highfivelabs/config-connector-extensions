@@ -44,6 +44,7 @@ import (
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
@@ -52,6 +53,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
@@ -82,6 +84,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
 	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
 	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK, crdName: "computeregionnetworkfirewallpolicies.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyModel},
+	{gvk: loggingv1alpha1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -96,6 +99,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		runv1alpha1.AddToScheme,
 		computev1alpha1.AddToScheme,
 		storagev1alpha1.AddToScheme,
+		loggingv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

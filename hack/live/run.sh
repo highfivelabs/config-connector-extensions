@@ -37,8 +37,8 @@ source hack/live/projects.sh
 # resources, and their tests do not yet take run names. compute (regional
 # network endpoints, router route policies, regional network firewall
 # policies) is ready (run names, cleanup, the sweeper) but waits for
-# roles/compute.networkAdmin and roles/compute.securityAdmin
-# (docs/live-runs.md).
+# roles/compute.networkAdmin and roles/compute.securityAdmin. logging (LoggingSettings) is ready but needs a test folder and a key,
+# E2E_LOGGING_FOLDER and E2E_LOGGING_KMS_KEY (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 
