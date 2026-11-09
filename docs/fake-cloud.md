@@ -156,9 +156,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   mask; and neither adds the default URL filter (priority 2147483647)
   that Terraform's flattener says the real API adds to a URL filtering
   profile, so on the fake the comparison that ignores it is not
-  exercised; live, a resync of a URL filtering profile writes nothing. A
-  project's profile runs live (`docs/live-runs.md`); an organization's
-  is not yet compared with the real API.
+  exercised; live, a resync of a URL filtering profile writes nothing.
+  Neither checks that a group's profile exists, is of the right type, or
+  is under the same parent. A project's profile and group run live
+  (`docs/live-runs.md`); an organization's are not yet compared with the
+  real API.
 - **A project's default network tier in mockgcp** (patch 0023, ours).
   `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
   anything else with a message of our own; what the real API answers for

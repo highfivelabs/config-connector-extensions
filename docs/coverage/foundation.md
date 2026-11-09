@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 38.9% | 1.0% | 60.1% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 2.3% | 30.5% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 2.8% | 30.0% |
 
 By service:
 
@@ -33,7 +33,7 @@ By service:
 | foundation | `vpcaccess.googleapis.com` | 1 | 10 | 100.0% | 0.0% | 0.0% |
 | foundation | `essentialcontacts.googleapis.com` | 3 | 9 | 100.0% | 0.0% | 0.0% |
 | foundation | `servicenetworking.googleapis.com` | 2 | 4 | 100.0% | 0.0% | 0.0% |
-| security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 5.1% | 21.5% |
+| security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 6.7% | 19.9% |
 | security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 0.0% | 28.7% |
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 0.0% | 51.3% |
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 0.0% | 48.1% |
@@ -72,7 +72,7 @@ What these numbers miss, for the foundation:
 | 3 | [Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)](#3-organization-level-custom-iam-roles-covered-by-config-connectors-iamcustomrole) | A | whole | 1 | S | 6 / 14 (57.1%) | `IAMCustomRole` (Terraform-based, `v1beta1`) has it |
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 20 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 131 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
-| 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 30 / 52 (0.0%) | none |
+| 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 57 / 57 (0.0%) | none |
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 171 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 24 / 81 (70.4%) | no pull request for these fields |
@@ -175,13 +175,13 @@ What these numbers miss, for the foundation:
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `networksecurity.googleapis.com/AddressGroup`: 0 / 7 / 0 of 7; NetworkSecurityAddressGroup (ours)
   - `networksecurity.googleapis.com/SecurityProfile`: 0 / 15 / 22 of 37; NetworkSecuritySecurityProfile (ours)
-  - `networksecurity.googleapis.com/SecurityProfileGroup`: 0 / 0 / 8 of 8; no kind
+  - `networksecurity.googleapis.com/SecurityProfileGroup`: 0 / 7 / 1 of 8; NetworkSecuritySecurityProfileGroup (ours)
 - **Missing, whole resources:** Organization-scoped address groups, security profiles and security profile groups, which hierarchical firewall policy rules reference (`srcAddressGroups`, `securityProfileGroup`). Config Connector's `NetworkSecurityAddressGroup`, `...SecurityProfile` and `...SecurityProfileGroup` take a project only (the project-level resources show as covered under `projects.locations.*`).
 - **Missing, attributes that matter:** An `organizationRef` parent; the fields are those of the project kinds (`items[]`, `capacity`, `purpose`, `type`; profile `threatPreventionProfile`, `urlFilteringProfile`, `customMirroringProfile`, `customInterceptProfile`; `wildfireAnalysisProfile` is missing from the project kind too).
   - uncovered in `networksecurity.googleapis.com/SecurityProfile` (measured): `wildfireAnalysisProfile.wildfireInlineCloudAnalysisRules[].action`, `wildfireAnalysisProfile.wildfireInlineCloudAnalysisRules[].customFileTypes.fileTypes[]`, `wildfireAnalysisProfile.wildfireInlineCloudAnalysisRules[].direction`, `wildfireAnalysisProfile.wildfireInlineCloudAnalysisRules[].fileSelectionMode`, `wildfireAnalysisProfile.wildfireInlineMlOverrides[].action`, `wildfireAnalysisProfile.wildfireInlineMlOverrides[].protocol`, `wildfireAnalysisProfile.wildfireInlineMlSetting.fileExceptions[].filename`, `wildfireAnalysisProfile.wildfireInlineMlSetting.fileExceptions[].partialHash`, `wildfireAnalysisProfile.wildfireInlineMlSetting.inlineMlConfigs[].action`, `wildfireAnalysisProfile.wildfireInlineMlSetting.inlineMlConfigs[].fileType` and 12 more
-  - uncovered in `networksecurity.googleapis.com/SecurityProfileGroup` (measured): `customInterceptProfile`, `customMirroringProfile`, `description`, `labels{}`, `name`, `threatPreventionProfile`, `urlFilteringProfile`, `wildfireAnalysisProfile`
+  - uncovered in `networksecurity.googleapis.com/SecurityProfileGroup` (measured): `wildfireAnalysisProfile`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kind or pull request for the organization scope.
-- **Build:** Upstream's kinds copied into our group (direct), each taking an organization or a project as its parent (decision 18: names follow Config Connector, else Terraform; parents are fields, not kinds). `NetworkSecurityAddressGroup` built 2026-11-09 (`networksecurity.gcp.hfl.dev/v1alpha1`, patch 0025; a project's runs live; an organization's is "live: pending, needs test folder", and needs organization access the test folder does not give); `NetworkSecuritySecurityProfile` built 2026-11-09 (patch 0026, REST clients in place of upstream's gRPC; a project's runs live, an organization's is "live: pending, needs test folder"); `NetworkSecuritySecurityProfileGroup` next.
+- **Build:** Upstream's kinds copied into our group (direct), each taking an organization or a project as its parent (decision 18: names follow Config Connector, else Terraform; parents are fields, not kinds). `NetworkSecurityAddressGroup` built 2026-11-09 (`networksecurity.gcp.hfl.dev/v1alpha1`, patch 0025; a project's runs live; an organization's is "live: pending, needs test folder", and needs organization access the test folder does not give); `NetworkSecuritySecurityProfile` built 2026-11-09 (patch 0026, REST clients in place of upstream's gRPC; a project's runs live, an organization's is "live: pending, needs test folder"); `NetworkSecuritySecurityProfileGroup` built 2026-11-09 (the same; a project's runs live, an organization's is "live: pending, needs test folder"). The item is built.
 
 ### 7. BYOIP prefixes and cross-site interconnect groups
 
@@ -513,10 +513,12 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
@@ -805,14 +807,14 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `networksecurity.googleapis.com/SacAttachment` | - | - | 4 | 0 | 0 | 4 | - |
 | security | `networksecurity.googleapis.com/SacRealm` | NetworkSecuritySACRealm (alpha) | - | 3 | 3 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/SecurityProfile` | - | NetworkSecuritySecurityProfile | 37 | 0 | 15 | 22 | 6 |
-| security | `networksecurity.googleapis.com/SecurityProfileGroup` | - | - | 8 | 0 | 0 | 8 | 6 |
+| security | `networksecurity.googleapis.com/SecurityProfileGroup` | - | NetworkSecuritySecurityProfileGroup | 8 | 0 | 7 | 1 | 6 |
 | security | `networksecurity.googleapis.com/ServerTlsPolicy` | NetworkSecurityServerTLSPolicy | - | 11 | 7 | 0 | 4 | - |
 | security | `networksecurity.googleapis.com/TlsInspectionPolicy` | NetworkSecurityTLSInspectionPolicy (alpha) | - | 9 | 8 | 0 | 1 | - |
 | security | `networksecurity.googleapis.com/UrlList` | NetworkSecurityURLList (alpha) | - | 3 | 3 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/projects.locations.addressGroups` | NetworkSecurityAddressGroup (alpha) | NetworkSecurityAddressGroup | 7 | 7 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/projects.locations.firewallEndpoints` | NetworkSecurityFirewallEndpoint (alpha) | - | 14 | 5 | 0 | 9 | - |
 | security | `networksecurity.googleapis.com/projects.locations.firewallEndpoints.wildfireVerdictChangeRequests` | - | - | 3 | 0 | 0 | 3 | - |
-| security | `networksecurity.googleapis.com/projects.locations.securityProfileGroups` | NetworkSecuritySecurityProfileGroup (alpha) | - | 8 | 7 | 0 | 1 | - |
+| security | `networksecurity.googleapis.com/projects.locations.securityProfileGroups` | NetworkSecuritySecurityProfileGroup (alpha) | NetworkSecuritySecurityProfileGroup | 8 | 7 | 0 | 1 | - |
 | security | `networksecurity.googleapis.com/projects.locations.securityProfiles` | NetworkSecuritySecurityProfile (alpha) | NetworkSecuritySecurityProfile | 37 | 15 | 0 | 22 | - |
 | foundation | `orgpolicy.googleapis.com/CustomConstraint` | OrgPolicyCustomConstraint | - | 7 | 7 | 0 | 0 | - |
 | foundation | `orgpolicy.googleapis.com/Policy` | OrgPolicyPolicy | - | 38 | 25 | 0 | 13 | 13 |
