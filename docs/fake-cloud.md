@@ -115,6 +115,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   that the network exists, nor that a network has no policy attached
   from another policy (it refuses only a repeated name or network inside
   one policy), nor what the API fills in itself.
+- **Folder and organization service identities in mockgcp** (patch
+  0022, ours). Any folder or organization ID is accepted, and every
+  service gets an identity of the form
+  `service-folder-{id}@gcp-sa-{service}.iam.gserviceaccount.com` (or
+  `service-org-...`); the real API gives one only to services that have a
+  service agent at that level, and some agents have other domains. Not
+  yet compared with the real API: its live run waits for the test folder.
 - **Log Router settings in mockgcp** (patch 0017, ours). Any
   organization or folder ID is accepted, the key is not checked, and the
   service account IDs only follow the documented form.
