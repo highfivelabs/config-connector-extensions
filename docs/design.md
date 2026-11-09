@@ -1,12 +1,13 @@
 # config-connector-extensions design
 
-config-connector-extensions has nine kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has ten kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolNamespace` and
 `IAMWorkloadIdentityPoolManagedIdentity`, and a narrow direct
-`RunService` with `invokerIamDisabled` and GPUs (section 6). Each passes its end-to-end test
+`RunService` with `invokerIamDisabled` and GPUs, and
+`ComputeRegionNetworkEndpoint` (section 6). Each passes its end-to-end test
 against mockgcp. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
@@ -596,14 +597,32 @@ this repository's rules (6.1, decision 5, section 10).
 | ---: | --- | ---: | --- | --- |
 | 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | question (section 10, question 1) |
 | 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
-| 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | next to build |
-| 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | to build |
+| 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
+| 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | next to build |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | to build; the inventory notes a Bundt hook Job as the alternative |
 | 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | to build |
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
 | 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | to build |
+
+Notes on what was built from this table:
+
+- `ComputeRegionNetworkEndpoint` (`compute.gcp.hfl.dev/v1alpha1`, rank 3).
+  **Written here**, after Config Connector's zonal `ComputeNetworkEndpoint`
+  (whose types have only the group, `ipAddress` and `instanceRef`), with
+  the fields Terraform's `google_compute_region_network_endpoint` has:
+  `regionNetworkEndpointGroupRef` (Config Connector's
+  `ComputeRegionNetworkEndpointGroup` by name, or `external`), `port`,
+  `ipAddress`, `fqdn`, `clientDestinationPort`, `instance`. The controller
+  follows Terraform (read, not copied): `attachNetworkEndpoints`, found by
+  listing the group's endpoints and matching address and port,
+  `detachNetworkEndpoints`; every field is immutable (a change leaves the
+  object not Ready and attaches nothing). An endpoint has no resource name
+  in the API, so `status.externalRef` is the group's name plus
+  `/networkEndpoints/{address}:{port}`, ours. Patch 0011: mockgcp attaches,
+  detaches and lists a regional group's endpoints, adapted from its zonal
+  ones.
 
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
@@ -674,6 +693,10 @@ To raise confidence in `ArtifactRegistryRepository`:
 18. `ArtifactRegistryTag` against a real project: a tag on a version that
     exists, the API's error for one that does not, and a package whose ID
     has a "/" (`%2F` in the name), which the fake test leaves out.
+20. `ComputeRegionNetworkEndpoint` against a real project: the API's checks
+    by group type (an IP address in an `INTERNET_FQDN_PORT` group, a VM in
+    another zone), which mockgcp does not make, and the endpoint's identity
+    when the group holds several with the same address and port.
 
 ## 8. Decisions
 
