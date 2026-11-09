@@ -193,7 +193,8 @@ items:
       project's runs live; an organization's is "live: pending, needs test folder", and needs organization access
       the test folder does not give); `NetworkSecuritySecurityProfile` built 2026-11-09 (patch 0026, REST clients
       in place of upstream's gRPC; a project's runs live, an organization's is "live: pending, needs test folder");
-      `NetworkSecuritySecurityProfileGroup` next.
+      `NetworkSecuritySecurityProfileGroup` built 2026-11-09 (the same; a project's runs live, an organization's is
+      "live: pending, needs test folder"). The item is built.
   - title: BYOIP prefixes and cross-site interconnect groups
     importance: A
     gap: whole

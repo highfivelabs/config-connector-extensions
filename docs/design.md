@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-five kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-six kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -15,8 +15,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `ProjectDefaultServiceAccounts`, and a project's or organization's
-`NetworkSecurityAddressGroup` and `NetworkSecuritySecurityProfile`
-(section 6). Each
+`NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
+`NetworkSecuritySecurityProfileGroup` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -945,6 +945,33 @@ Notes on what was built from this table:
   `roles/compute.networkAdmin` was enough); an organization's is "live:
   pending, needs test folder" (it needs organization access, and a live
   run never touches the organization).
+
+- `NetworkSecuritySecurityProfileGroup` (`networksecurity.gcp.hfl.dev/v1alpha1`,
+  `docs/coverage/foundation.md` item 6, its last kind). The group a
+  firewall policy rule applies (`securityProfileGroup` with action
+  `apply_security_profile_group`): one profile of each type, by
+  reference to our `NetworkSecuritySecurityProfile`. Owned by an
+  organization or a project, as Terraform's
+  `google_network_security_security_profile_group` takes `parent`
+  (decision 18). Upstream (read 2026-11-09, pin `672414b8`): `v1alpha1`,
+  project-only, gRPC, as the profile. **Copied**: the types, identity
+  (and its test), controller, fuzzer and the group's functions of
+  `mapper.generated.go`; the controller in the shape of our profile's
+  (the two upstream controllers differ only in names). Changed:
+  `organizationRef` beside `projectRef`, exactly one (CEL); the REST
+  clients, the organization service's for an organization parent; an
+  unchanged object still gets its status. Magic Modules'
+  `SecurityProfileGroup.yaml` (`aad42de6`) marks only the parent,
+  location and name immutable, as the identity check already does. Not
+  carried: `wildfireAnalysisProfile` (decision 5, as for the profile).
+  Share of the 1,232 non-test lines: 48% generated (controller-gen's CRD
+  and deepcopy here, 42%; upstream's `controllerbuilder` mapper, 6%),
+  38% copied unchanged, 14% written or changed here (the sweeper's
+  groups-then-profiles pass among them). Patch 0026, from the profile's
+  PR, serves an organization's groups. Live: a project's group passes
+  (run `cce-11092345-9b77`, no difference from the fake: the API
+  returns a profile reference as it was sent, so a resync writes
+  nothing); an organization's is "live: pending, needs test folder".
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's

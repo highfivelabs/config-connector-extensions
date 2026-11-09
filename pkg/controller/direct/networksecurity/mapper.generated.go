@@ -16,8 +16,8 @@
 
 // Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/networksecurity/mapper.generated.go (UPSTREAM.md), which
-// controllerbuilder generated: only the NetworkSecurityAddressGroup and
-// NetworkSecuritySecurityProfile functions, unchanged but for the KRM types,
+// controllerbuilder generated: only the NetworkSecurityAddressGroup,
+// NetworkSecuritySecurityProfile and NetworkSecuritySecurityProfileGroup functions, unchanged but for the KRM types,
 // which are this project's (networksecurity.gcp.hfl.dev); the intercept and
 // mirroring endpoint group references stay Config Connector's.
 
@@ -334,5 +334,73 @@ func URLFilteringProfile_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krm.URL
 	}
 	out := &pb.UrlFilteringProfile{}
 	out.UrlFilters = direct.Slice_ToProto(mapCtx, in.URLFilters, URLFilter_v1alpha1_ToProto)
+	return out
+}
+func NetworkSecuritySecurityProfileGroupObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.SecurityProfileGroup) *krm.NetworkSecuritySecurityProfileGroupObservedState {
+	if in == nil {
+		return nil
+	}
+	out := &krm.NetworkSecuritySecurityProfileGroupObservedState{}
+	// MISSING: Name
+	out.CreateTime = direct.StringTimestamp_FromProto(mapCtx, in.GetCreateTime())
+	out.UpdateTime = direct.StringTimestamp_FromProto(mapCtx, in.GetUpdateTime())
+	out.Etag = direct.LazyPtr(in.GetEtag())
+	out.DataPathID = direct.LazyPtr(in.GetDataPathId())
+	return out
+}
+func NetworkSecuritySecurityProfileGroupObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krm.NetworkSecuritySecurityProfileGroupObservedState) *pb.SecurityProfileGroup {
+	if in == nil {
+		return nil
+	}
+	out := &pb.SecurityProfileGroup{}
+	// MISSING: Name
+	out.CreateTime = direct.StringTimestamp_ToProto(mapCtx, in.CreateTime)
+	out.UpdateTime = direct.StringTimestamp_ToProto(mapCtx, in.UpdateTime)
+	out.Etag = direct.ValueOf(in.Etag)
+	out.DataPathId = direct.ValueOf(in.DataPathID)
+	return out
+}
+func NetworkSecuritySecurityProfileGroupSpec_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.SecurityProfileGroup) *krm.NetworkSecuritySecurityProfileGroupSpec {
+	if in == nil {
+		return nil
+	}
+	out := &krm.NetworkSecuritySecurityProfileGroupSpec{}
+	// MISSING: Name
+	out.Description = direct.LazyPtr(in.GetDescription())
+	out.Labels = in.Labels
+	if in.GetThreatPreventionProfile() != "" {
+		out.ThreatPreventionProfileRef = &krm.NetworkSecuritySecurityProfileRef{External: in.GetThreatPreventionProfile()}
+	}
+	if in.GetCustomMirroringProfile() != "" {
+		out.CustomMirroringProfileRef = &krm.NetworkSecuritySecurityProfileRef{External: in.GetCustomMirroringProfile()}
+	}
+	if in.GetCustomInterceptProfile() != "" {
+		out.CustomInterceptProfileRef = &krm.NetworkSecuritySecurityProfileRef{External: in.GetCustomInterceptProfile()}
+	}
+	if in.GetUrlFilteringProfile() != "" {
+		out.URLFilteringProfileRef = &krm.NetworkSecuritySecurityProfileRef{External: in.GetUrlFilteringProfile()}
+	}
+	return out
+}
+func NetworkSecuritySecurityProfileGroupSpec_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krm.NetworkSecuritySecurityProfileGroupSpec) *pb.SecurityProfileGroup {
+	if in == nil {
+		return nil
+	}
+	out := &pb.SecurityProfileGroup{}
+	// MISSING: Name
+	out.Description = direct.ValueOf(in.Description)
+	out.Labels = in.Labels
+	if in.ThreatPreventionProfileRef != nil {
+		out.ThreatPreventionProfile = in.ThreatPreventionProfileRef.External
+	}
+	if in.CustomMirroringProfileRef != nil {
+		out.CustomMirroringProfile = in.CustomMirroringProfileRef.External
+	}
+	if in.CustomInterceptProfileRef != nil {
+		out.CustomInterceptProfile = in.CustomInterceptProfileRef.External
+	}
+	if in.URLFilteringProfileRef != nil {
+		out.UrlFilteringProfile = in.URLFilteringProfileRef.External
+	}
 	return out
 }
