@@ -728,15 +728,23 @@ Notes on what was built from this table:
   `projects/{p}/regions/{r}/firewallPolicies/{policy}/rules/{priority}`.
   The priority and the policy are immutable (CEL, and the identity is
   checked against `status.externalRef`). A rule already at the priority
-  is taken over (Find finds it, Update brings it to the spec). Every
-  update sends the whole rule and `patchRule` only when the fields the
-  spec manages differ from what was read, so a resync writes nothing; the
-  optional strings and booleans taken off the spec are sent as ""
-  and false. A priority with no rule is answered with 400, not 404 (see
-  patch 0020); Find and Delete take that as "gone".
+  is taken over (Find finds it, Update brings it to the spec). `patchRule`
+  is sent only when the fields the spec manages differ from what was read,
+  so a resync writes nothing. What the real API does (live run, 2026-11-09)
+  and the fake cannot show: a priority with no rule is answered with 400,
+  "The firewall policy does not contain a rule at priority N", not 404
+  (Find and Delete take that as "gone"); `patchRule` **keeps a list the
+  body leaves out** (a rule patched without its `srcIpRanges` kept them),
+  so `patchRule` is sent through the Compute Engine REST client (the
+  generated gRPC-style client leaves an empty value out of the body) with
+  a list the cloud's rule has and the spec has not in `ForceSendFields`
+  (sent as `[]`), and the optional strings and booleans always sent, `""`
+  and false when unset; and a rule just changed is "not ready" to the API
+  for a while (a patch then answers 400 "The rule at priority N is not
+  ready"), which the reconciler's retry absorbs.
   Patch 0020: mockgcp serves a regional policy's rules, adapted from the
-  global ones.
-  Live: LIVERESULT
+  global ones (its `patchRule` replaces the whole rule).
+  Live: passes (`docs/live-runs.md`).
 - `LoggingSettings` (`logging.gcp.hfl.dev/v1alpha1`, rank 7). **Written
   here** from the Cloud Logging API's `Settings`: `organizationRef` or
   `folderRef` (exactly one, checked by the CRD), `kmsKeyRef` (Config
@@ -968,6 +976,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     account; and a check that the policy's etag conflict is seen live (the
     fake serves 409; the API's real answer is 409 for most services and
     412 for Compute Engine).
+27. `ComputeRegionNetworkFirewallPolicyRule` against a real project: the
+    API's checks of a rule (`goto_next` with logging, secure tags together
+    with target service accounts, FQDNs or region codes on the wrong
+    direction, the policy's tuple limit), which mockgcp does not make;
+    `securityProfileGroup`, `tlsInspect` and `targetResources`, the
+    fields this kind lacks; how long a changed rule stays "not ready".
 
 ## 8. Decisions
 

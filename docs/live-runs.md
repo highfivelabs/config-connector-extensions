@@ -90,7 +90,7 @@ refuses any project but the ones listed.
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers) |
-| `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy` |
+| `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule` |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
@@ -172,6 +172,8 @@ on the same VM, minutes apart.
 | 2026-11-09 | `aee1155` | RunService | PASS | PASS | none, with the default port and startup probe taken from what was read (no GPU live: no quota) | 2 services (deleted); `make live-list` empty |
 | 2026-11-09 | `a3b6b51` | IAMRoleBinding | PASS | PASS | the project's organization refuses `projectOwner:` and the like as members of a secret's policy ("invalid due to membership type restrictions"; mockgcp accepts any member), so the test binds the project's service accounts; secret policy (global), bucket policy (Cloud Storage JSON API), a conditional binding and the same role without it, a member added out of band removed, delete and abandon all match patch 0018 and the fake | 1 secret, 1 bucket (deleted); `task live-list` empty |
 | 2026-11-09 | `e8dfd1b` | IAMRoleMember | PASS | PASS | none: a regional secret (the regional host's `:getIamPolicy`/`:setIamPolicy`), a managed folder `team/app/` (Cloud Storage's `.../managedFolders/team%2Fapp%2F/iam`, escaped whole, accepted as sent) and a global backend service (Compute Engine's `getIamPolicy`/`setIamPolicy` with `{"policy": ...}`) all match patches 0018 and 0019; the member added by another writer stayed, a removed one was put back, delete and abandon touched only the object's own member, and a conditional member was a binding of its own. The 28 other rows of the resource table are not called live | 1 regional secret, 1 bucket with 1 managed folder, 1 health check and 1 backend service (deleted); `task live-list` empty |
+
+| 2026-11-09 | `39ded9d`+ | ComputeRegionNetworkFirewallPolicyRule | PASS | PASS | after three live runs that found: `patchRule` keeps a list the body leaves out (fixed: the emptied list is sent as `[]`, through the Compute Engine REST client); the unset strings and booleans must still be sent (`""`, false); a rule just changed answers a patch with 400 "The rule at priority N is not ready" (the test's out-of-band patch retries; the reconciler's retry absorbs it). The missing-priority answer is the 400 the code assumed: "Invalid value for field 'priority': '1000'. The firewall policy does not contain a rule at priority 1000." | 2 regional firewall policies and their rules (deleted); `task live-list` showed only the network of a concurrent run |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
