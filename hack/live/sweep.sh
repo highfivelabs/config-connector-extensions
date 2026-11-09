@@ -18,9 +18,10 @@
 # (their users and backups go with them), and Compute Engine network
 # firewall policies, network endpoint groups (their endpoints go with
 # them), Cloud Routers (their route policies go with them) and VPC
-# networks, which take no labels and are found by name. A failed list or
-# delete fails the sweep. Keys of the project's common instance metadata
-# are found by name and aged by the run ID in them.
+# networks, which take no labels and are found by name, Cloud Storage
+# buckets, by name, and keys of the project's common instance metadata,
+# by name and aged by the run ID in them. A failed list or delete fails
+# the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -156,6 +157,22 @@ while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "Cloud Router" "${name} ${region}" "${G[@]}" compute routers delete "${name}" --region="${region}"
 done <<<"${rows}"
+# Cloud Storage: buckets by the run's name prefix (bucket names are
+# global), aged by their creation time; rm -r takes their objects too.
+rows="$("${G[@]}" storage buckets list --verbosity=error --format='value(name,creation_time)')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  if [[ -n "${run}" ]]; then
+    [[ "${name}" == "${run}-"* ]] || continue
+  else
+    [[ "${name}" == "${PREFIX}"* ]] || continue
+    if [[ "${mode}" == "sweep" ]]; then
+      [[ "${made:0:19}Z" < "${cutoff}" ]] || continue
+    fi
+  fi
+  act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
+done <<<"${rows}"
+
 names="$("${G[@]}" compute networks list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
 for name in ${names}; do
   act "VPC network" "${name}" "${G[@]}" compute networks delete "${name}"
