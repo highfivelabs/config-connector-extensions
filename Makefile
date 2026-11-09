@@ -21,7 +21,7 @@ SETUP_ENVTEST := sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250
 # (patches/k8s-config-connector/0002-*).
 export MOCKGCP_LISTEN_ADDRESS ?= 127.0.0.1:0
 
-.PHONY: all licenses upstream upstream-check upstream-pr generate build test check clean fake-cloud-up fake-cloud-test fake-cloud-down operator-e2e
+.PHONY: all licenses upstream upstream-check upstream-pr generate build test test-mock test-live live-sweep live-list check clean fake-cloud-up fake-cloud-test fake-cloud-down operator-e2e
 
 all: check
 
@@ -48,9 +48,27 @@ build: upstream-check
 $(BIN)/setup-envtest:
 	GOBIN=$(BIN) go install $(SETUP_ENVTEST)
 
-test: upstream-check $(BIN)/setup-envtest
-	KUBEBUILDER_ASSETS="$$($(BIN)/setup-envtest use $(ENVTEST_K8S_VERSION) --bin-dir $(BIN)/envtest -p path)" \
-		go test ./... -count=1
+ENVTEST_ASSETS = $$($(BIN)/setup-envtest use $(ENVTEST_K8S_VERSION) --bin-dir $(BIN)/envtest -p path)
+
+# The tests against the fake cloud, whatever E2E_GCP_TARGET says in the
+# environment: make check never reaches a real project.
+test test-mock: upstream-check $(BIN)/setup-envtest
+	E2E_GCP_TARGET=mock KUBEBUILDER_ASSETS="$(ENVTEST_ASSETS)" go test ./... -count=1
+
+# The same end-to-end tests, each kind against the fake cloud and then a
+# real project (docs/live-runs.md): make test-live PROJECT=<project>
+# [KINDS="sql artifactregistry"]. Only projects in hack/live/projects.sh;
+# the credentials must be a service account (an offload VM's --sa).
+test-live: upstream-check $(BIN)/setup-envtest
+	KUBEBUILDER_ASSETS="$(ENVTEST_ASSETS)" hack/live/run.sh --project "$(PROJECT)" $(KINDS)
+
+# Delete live-test leftovers older than 2h (or everything of RUN=<id>).
+live-sweep:
+	hack/live/sweep.sh --project "$(PROJECT)" $(if $(RUN),--run $(RUN))
+
+# List every live-test resource in PROJECT.
+live-list:
+	hack/live/sweep.sh --project "$(PROJECT)" --list
 
 # Everything that must hold before a commit: the checkout is the pin plus
 # our patches, generated files are current, code is formatted and vetted,

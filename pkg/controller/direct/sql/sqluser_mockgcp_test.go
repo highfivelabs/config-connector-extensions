@@ -15,205 +15,65 @@
 
 package sql_test
 
-// SQLUser end to end on a fake cloud: a real kube-apiserver (envtest), Config
-// Connector's unchanged direct reconciler, our SQLUser adapter, and
-// Config Connector's mockgcp (with our database_roles patch) as Cloud SQL.
-// No real Google Cloud, no recordings.
+// SQLUser end to end on the fake cloud (pkg/test/mockenv): a real
+// kube-apiserver (envtest), Config Connector's unchanged direct reconciler,
+// our SQLUser adapter, and Config Connector's mockgcp (with our
+// database_roles patch) as Cloud SQL; or a real project's Cloud SQL with
+// E2E_GCP_TARGET=real (make test-live).
 //
 // Needs KUBEBUILDER_ASSETS (make test sets it).
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
-	"time"
 
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
-	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp"
-	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
-	operatorv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/operator/pkg/apis/core/v1beta1"
-	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
-	"golang.org/x/oauth2"
-	cloudresourcemanagerv1 "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/googleapi"
-	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
-	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-const (
-	project   = "mock-project"
-	instance  = "example"
-	namespace = "example"
-	userName  = "app-runtime@mock-project.iam"
-)
+const namespace = "example"
 
 type harness struct {
-	t    *testing.T
-	ctx  context.Context
-	kube client.Client
-	sql  *sqladmin.Service
+	t        *testing.T
+	env      *mockenv.Env
+	sql      *sqladmin.Service
+	instance string
+	userName string
 }
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
-		t.Fatal("KUBEBUILDER_ASSETS is not set; run `make test`, which installs envtest's kube-apiserver and etcd")
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-
-	root := filepath.Join("..", "..", "..", "..")
-	env := &envtest.Environment{
-		CRDDirectoryPaths: []string{
-			filepath.Join(root, "config", "crds"),
-			// directbase looks up ConfigConnector / ConfigConnectorContext.
-			filepath.Join(root, "third_party", "k8s-config-connector", "operator", "config", "crd", "bases"),
-		},
-		ErrorIfCRDPathMissing: true,
-	}
-	restConfig, err := env.Start()
-	if err != nil {
-		t.Fatalf("starting envtest: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := env.Stop(); err != nil {
-			t.Errorf("stopping envtest: %v", err)
-		}
-	})
-
-	scheme := runtime.NewScheme()
-	for _, add := range []func(*runtime.Scheme) error{clientgoscheme.AddToScheme, operatorv1beta1.AddToScheme, sqlv1beta1.AddToScheme} {
-		if err := add(scheme); err != nil {
-			t.Fatal(err)
-		}
-	}
-	kube, err := client.New(restConfig, client.Options{Scheme: scheme})
+	env := mockenv.New(t, namespace)
+	sqlService, err := sqladmin.NewService(env.Ctx, env.GCPOptions()...)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// The fake cloud, as Config Connector's own test harness builds it
-	// (config/tests/samples/create/harness.go).
-	mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
-	gcpHTTP := &http.Client{Transport: mockCloud}
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, gcpHTTP)
-	createMockProject(t, ctx, gcpHTTP, project)
-
-	mgr, err := ctrl.NewManager(restConfig, ctrl.Options{
-		Scheme:  scheme,
-		Metrics: metricsserver.Options{BindAddress: "0"},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	cfg := &config.ControllerConfig{HTTPClient: gcpHTTP}
-	if err := controller.AddToManager(ctx, mgr, cfg); err != nil {
-		t.Fatal(err)
-	}
-	// Stop the manager before envtest (cleanups run last-registered first),
-	// or kube-apiserver waits on its open watches.
-	mgrCtx, stopMgr := context.WithCancel(ctx)
-	mgrDone := make(chan struct{})
-	go func() {
-		defer close(mgrDone)
-		if err := mgr.Start(mgrCtx); err != nil {
-			t.Errorf("manager: %v", err)
-		}
-	}()
-	t.Cleanup(func() {
-		stopMgr()
-		<-mgrDone
-	})
-
-	sqlService, err := sqladmin.NewService(ctx, option.WithHTTPClient(gcpHTTP))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := kube.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}); err != nil {
-		t.Fatal(err)
-	}
-
-	return &harness{t: t, ctx: ctx, kube: kube, sql: sqlService}
-}
-
-func createMockProject(t *testing.T, ctx context.Context, httpClient *http.Client, projectID string) {
-	t.Helper()
-	crm, err := cloudresourcemanagerv1.NewService(ctx, option.WithHTTPClient(httpClient))
-	if err != nil {
-		t.Fatal(err)
-	}
-	op, err := crm.Projects.Create(&cloudresourcemanagerv1.Project{ProjectId: projectID}).Context(ctx).Do()
-	if err != nil {
-		t.Fatalf("creating mock project %q: %v", projectID, err)
-	}
-	for i := 0; i < 100 && !op.Done; i++ {
-		time.Sleep(100 * time.Millisecond)
-		if op, err = crm.Operations.Get(op.Name).Context(ctx).Do(); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if !op.Done {
-		t.Fatalf("mock project %q was not created", projectID)
-	}
-}
-
-// waitReady waits until the object's Ready condition is True for its
-// current generation, and returns the object.
-func (h *harness) waitReady(name string) *unstructured.Unstructured {
-	h.t.Helper()
-	var last *unstructured.Unstructured
-	deadline := time.Now().Add(60 * time.Second)
-	for time.Now().Before(deadline) {
-		u := &unstructured.Unstructured{}
-		u.SetGroupVersionKind(sqlv1beta1.SQLUserGVK)
-		if err := h.kube.Get(h.ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
-			h.t.Fatal(err)
-		}
-		last = u
-		observed, _, _ := unstructured.NestedInt64(u.Object, "status", "observedGeneration")
-		conditions, _, _ := unstructured.NestedSlice(u.Object, "status", "conditions")
-		for _, c := range conditions {
-			cm, _ := c.(map[string]any)
-			if cm["type"] == "Ready" && cm["status"] == "True" && observed == u.GetGeneration() {
-				return u
-			}
-		}
-		time.Sleep(200 * time.Millisecond)
-	}
-	h.t.Fatalf("SQLUser %s did not become Ready; last status: %v", name, last.Object["status"])
-	return nil
+	// An IAM database user is named by its service account's email without
+	// ".gserviceaccount.com".
+	userName := strings.TrimSuffix(mockenv.ServiceAccount(t), ".gserviceaccount.com")
+	return &harness{t: t, env: env, sql: sqlService, instance: env.SQLInstance(), userName: userName}
 }
 
 func (h *harness) cloudUser() (*sqladmin.User, error) {
-	return h.sql.Users.Get(project, instance, userName).Context(h.ctx).Do()
+	return h.sql.Users.Get(mockenv.Project, h.instance, h.userName).Context(h.env.Ctx).Do()
 }
 
 func (h *harness) cloudRoles() []string {
 	h.t.Helper()
 	u, err := h.cloudUser()
 	if err != nil {
-		h.t.Fatalf("reading the user from the fake cloud: %v", err)
+		h.t.Fatalf("reading the user from the cloud: %v", err)
 	}
 	roles := slices.Clone(u.DatabaseRoles)
 	slices.Sort(roles)
@@ -223,11 +83,11 @@ func (h *harness) cloudRoles() []string {
 func (h *harness) setRoles(name string, roles []string) {
 	h.t.Helper()
 	obj := &sqlv1beta1.SQLUser{}
-	if err := h.kube.Get(h.ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
+	if err := h.env.Kube.Get(h.env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 		h.t.Fatal(err)
 	}
 	obj.Spec.DatabaseRoles = roles
-	if err := h.kube.Update(h.ctx, obj); err != nil {
+	if err := h.env.Kube.Update(h.env.Ctx, obj); err != nil {
 		h.t.Fatal(err)
 	}
 }
@@ -237,22 +97,23 @@ func (h *harness) setRoles(name string, roles []string) {
 func TestSQLUserDatabaseRoles(t *testing.T) {
 	h := newHarness(t)
 	const name = "app-runtime"
+	gvk := sqlv1beta1.SQLUserGVK
 
 	user := &sqlv1beta1.SQLUser{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
 		Spec: sqlv1beta1.SQLUserSpec{
-			ResourceID:    ptr(userName),
-			Type:          ptr("CLOUD_IAM_SERVICE_ACCOUNT"),
-			InstanceRef:   refsv1beta1.SQLInstanceRef{External: fmt.Sprintf("projects/%s/instances/%s", project, instance)},
+			ResourceID:    mockenv.Ptr(h.userName),
+			Type:          mockenv.Ptr("CLOUD_IAM_SERVICE_ACCOUNT"),
+			InstanceRef:   refsv1beta1.SQLInstanceRef{External: fmt.Sprintf("projects/%s/instances/%s", mockenv.Project, h.instance)},
 			DatabaseRoles: []string{"cloudsqlsuperuser"},
 		},
 	}
-	if err := h.kube.Create(h.ctx, user); err != nil {
+	if err := h.env.Kube.Create(h.env.Ctx, user); err != nil {
 		t.Fatal(err)
 	}
 
 	t.Run("create grants the roles", func(t *testing.T) {
-		u := h.waitReady(name)
+		u := h.env.WaitReady(gvk, namespace, name)
 		if got := h.cloudRoles(); !slices.Equal(got, []string{"cloudsqlsuperuser"}) {
 			t.Errorf("cloud roles after create = %v, want [cloudsqlsuperuser]", got)
 		}
@@ -268,7 +129,7 @@ func TestSQLUserDatabaseRoles(t *testing.T) {
 
 	t.Run("adding a role grants it", func(t *testing.T) {
 		h.setRoles(name, []string{"cloudsqlsuperuser", "pg_read_all_data"})
-		h.waitReady(name)
+		h.env.WaitReady(gvk, namespace, name)
 		if got := h.cloudRoles(); !slices.Equal(got, []string{"cloudsqlsuperuser", "pg_read_all_data"}) {
 			t.Errorf("cloud roles = %v, want [cloudsqlsuperuser pg_read_all_data]", got)
 		}
@@ -276,35 +137,23 @@ func TestSQLUserDatabaseRoles(t *testing.T) {
 
 	t.Run("removing a role revokes it", func(t *testing.T) {
 		h.setRoles(name, []string{"pg_read_all_data"})
-		h.waitReady(name)
+		h.env.WaitReady(gvk, namespace, name)
 		if got := h.cloudRoles(); !slices.Equal(got, []string{"pg_read_all_data"}) {
 			t.Errorf("cloud roles = %v, want [pg_read_all_data]", got)
 		}
 	})
 
 	t.Run("delete removes the user", func(t *testing.T) {
-		if err := h.kube.Delete(h.ctx, user); err != nil {
+		if err := h.env.Kube.Delete(h.env.Ctx, user); err != nil {
 			t.Fatal(err)
 		}
-		deadline := time.Now().Add(60 * time.Second)
-		for {
-			err := h.kube.Get(h.ctx, types.NamespacedName{Namespace: namespace, Name: name}, &sqlv1beta1.SQLUser{})
-			if apierrors.IsNotFound(err) {
-				break
-			}
-			if time.Now().After(deadline) {
-				t.Fatalf("SQLUser was not deleted (finalizer not removed): %v", err)
-			}
-			time.Sleep(200 * time.Millisecond)
-		}
+		h.env.WaitGone(&sqlv1beta1.SQLUser{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		_, err := h.cloudUser()
 		var gerr *googleapi.Error
 		if err == nil {
-			t.Errorf("user still exists in the fake cloud after delete")
+			t.Errorf("user still exists in the cloud after delete")
 		} else if !errors.As(err, &gerr) || gerr.Code != http.StatusNotFound {
 			t.Errorf("reading deleted user: got %v, want 404", err)
 		}
 	})
 }
-
-func ptr[T any](v T) *T { return &v }

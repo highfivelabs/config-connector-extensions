@@ -16,7 +16,8 @@
 package artifactregistry_test
 
 // ArtifactRegistryRepository with a custom remote upstream end to end on the
-// fake cloud (pkg/test/mockenv). The case: a remote repository that pulls
+// fake cloud (pkg/test/mockenv), or a real project with E2E_GCP_TARGET=real
+// (make test-live). The case: a remote repository that pulls
 // through a private upstream registry (a company's own Docker registry,
 // Maven repository, npm or Python index) instead of one of the public
 // upstreams Artifact Registry knows by name.
@@ -67,6 +68,7 @@ func newRemoteRepository(name, format string, remote *arv1beta1.ArtifactRegistry
 			Namespace:   namespace,
 			Name:        name,
 			Annotations: map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project},
+			Labels:      mockenv.Labels(),
 		},
 		Spec: arv1beta1.ArtifactRegistryRepositorySpec{
 			Location:               region,
@@ -104,10 +106,10 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 	cloud := newClient(t, env)
 
 	const (
-		name      = "docker-upstream"
 		uri       = "https://registry.example.com"
 		uriChange = "https://mirror.example.com"
 	)
+	name := mockenv.Name("docker-upstream")
 	repo := newRemoteRepository(name, "DOCKER", dockerUpstream(uri))
 	if err := env.Kube.Create(env.Ctx, repo); err != nil {
 		t.Fatal(err)
@@ -120,7 +122,7 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		}
 		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 		if err != nil {
-			t.Fatalf("reading the repository from the fake cloud: %v", err)
+			t.Fatalf("reading the repository from the cloud: %v", err)
 		}
 		if got.GetMode() != pb.Repository_REMOTE_REPOSITORY || got.GetFormat() != pb.Repository_DOCKER {
 			t.Errorf("cloud mode/format = %v/%v, want REMOTE_REPOSITORY/DOCKER", got.GetMode(), got.GetFormat())
@@ -242,20 +244,30 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 	})
 
 	t.Run("abandon keeps the repository", func(t *testing.T) {
-		const kept = "kept-upstream"
+		kept := mockenv.Name("kept-upstream")
 		r := newRemoteRepository(kept, "DOCKER", dockerUpstream(uri))
 		r.Annotations["cnrm.cloud.google.com/deletion-policy"] = "abandon"
 		if err := env.Kube.Create(env.Ctx, r); err != nil {
 			t.Fatal(err)
 		}
 		env.WaitReady(gvk, namespace, kept)
+		// The test deletes what it abandoned (a live run must leave nothing).
+		t.Cleanup(func() {
+			op, err := cloud.DeleteRepository(env.Ctx, &pb.DeleteRepositoryRequest{Name: cloudName(kept)})
+			if err == nil {
+				err = op.Wait(env.Ctx)
+			}
+			if err != nil && status.Code(err) != codes.NotFound {
+				t.Errorf("deleting the abandoned repository: %v", err)
+			}
+		})
 		if err := env.Kube.Delete(env.Ctx, r); err != nil {
 			t.Fatal(err)
 		}
 		env.WaitGone(&arv1beta1.ArtifactRegistryRepository{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: kept}})
 		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(kept)})
 		if err != nil {
-			t.Fatalf("the abandoned repository is gone from the fake cloud: %v", err)
+			t.Fatalf("the abandoned repository is gone from the cloud: %v", err)
 		}
 		if got.GetRemoteRepositoryConfig().GetDockerRepository().GetCustomRepository().GetUri() != uri {
 			t.Errorf("abandoned repository's custom upstream = %v, want %q", got.GetRemoteRepositoryConfig(), uri)
@@ -302,13 +314,23 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 		},
 	} {
 		t.Run(tc.format, func(t *testing.T) {
-			if err := env.Kube.Create(env.Ctx, newRemoteRepository(tc.name, tc.format, tc.remote)); err != nil {
+			name := mockenv.Name(tc.name)
+			repo := newRemoteRepository(name, tc.format, tc.remote)
+			if err := env.Kube.Create(env.Ctx, repo); err != nil {
 				t.Fatal(err)
 			}
-			env.WaitReady(gvk, namespace, tc.name)
-			got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(tc.name)})
+			// The test deletes what it made (a live run must leave nothing).
+			t.Cleanup(func() {
+				if err := env.Kube.Delete(env.Ctx, repo); err != nil {
+					t.Errorf("deleting %s: %v", name, err)
+					return
+				}
+				env.WaitGone(&arv1beta1.ArtifactRegistryRepository{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+			})
+			env.WaitReady(gvk, namespace, name)
+			got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 			if err != nil {
-				t.Fatalf("reading the repository from the fake cloud: %v", err)
+				t.Fatalf("reading the repository from the cloud: %v", err)
 			}
 			if u := tc.read(got.GetRemoteRepositoryConfig()); u != tc.uri {
 				t.Errorf("cloud customRepository.uri = %q, want %q", u, tc.uri)

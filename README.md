@@ -130,12 +130,17 @@ make upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
 make check      # pin check, generated files current, gofmt, vet, build, tests
 make build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
 make operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
+make test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
 ```
 
-`make test` runs each kind end to end: a real kube-apiserver (envtest),
-Config Connector's direct reconciler, our adapters, and Config Connector's
-mockgcp as a fake Google Cloud (`pkg/test/mockenv`); and the operator
-against envtest. No real Google Cloud and no recordings.
+`make test` (also `make test-mock`) runs each kind end to end: a real
+kube-apiserver (envtest), Config Connector's direct reconciler, our
+adapters, and Config Connector's mockgcp as a fake Google Cloud
+(`pkg/test/mockenv`); and the operator against envtest. No real Google
+Cloud and no recordings. With `E2E_GCP_TARGET=real`, which only
+`make test-live` sets, the same tests run against a real project; every
+kind has been run that way at least once (the ledger in
+`docs/live-runs.md`).
 
 ```yaml
 apiVersion: sql.gcp.hfl.dev/v1beta1
@@ -178,9 +183,11 @@ against what it last applied, `status.appliedDatabaseRoles`).
 | `tests/operator/` | the operator on kind |
 | `patches/k8s-config-connector/` | our changes to the upstream checkout, in order |
 | `hack/` | fetch and check upstream, generate, regenerate mock protos |
+| `hack/live/` | live runs against a real project and the sweeper (`docs/live-runs.md`) |
 | `UPSTREAM.md` | the pinned commits |
 | `docs/design.md` | architecture, sync, testing, choosing gaps, what is left |
 | `docs/fake-cloud.md` | Config Connector's manager and ours against mockgcp on kind |
+| `docs/live-runs.md` | the mock/live switch, the live-test service account, the ledger of live runs |
 
 ## Contributing
 
