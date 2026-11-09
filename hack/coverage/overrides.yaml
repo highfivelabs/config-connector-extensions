@@ -180,6 +180,7 @@ subresources:
   ComputeRouterInterface: compute.googleapis.com/Router:interfaces[]
   ComputeFirewallPolicyRule: compute.googleapis.com/FirewallPolicy:rules[]
   ComputeFirewallPolicyAssociation: compute.googleapis.com/FirewallPolicy:associations[]
+  ComputeRegionNetworkFirewallPolicyRule: compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]
   ComputeNetworkFirewallPolicyRule: compute.googleapis.com/NetworkFirewallPolicy:rules[]
   ComputeNetworkFirewallPolicyAssociation: compute.googleapis.com/NetworkFirewallPolicy:associations[]
   ComputeOrganizationSecurityPolicyRule: compute.googleapis.com/OrganizationSecurityPolicy:rules[]

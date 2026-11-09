@@ -396,7 +396,7 @@ compute.googleapis.com,compute.googleapis.com/RegionInstanceTemplate,150,Compute
 compute.googleapis.com,compute.googleapis.com/RegionInstantSnapshot,5,,0,,0,5,false,api=v1:regionInstantSnapshots
 compute.googleapis.com,compute.googleapis.com/RegionInstantSnapshotGroup,3,,0,,0,3,false,api=v1:regionInstantSnapshotGroups
 compute.googleapis.com,compute.googleapis.com/RegionNetworkEndpointGroup,17,ComputeNetworkEndpointGroup;ComputeRegionNetworkEndpointGroup,12,,0,5,false,api=v1:regionNetworkEndpointGroups
-compute.googleapis.com,compute.googleapis.com/RegionNetworkFirewallPolicy,73,,0,ComputeRegionNetworkFirewallPolicy,2,71,false,api=v1:regionNetworkFirewallPolicies; ours-spec-fields-unmatched=3/4
+compute.googleapis.com,compute.googleapis.com/RegionNetworkFirewallPolicy,73,,0,ComputeRegionNetworkFirewallPolicy;ComputeRegionNetworkFirewallPolicyRule,22,51,false,api=v1:regionNetworkFirewallPolicies
 compute.googleapis.com,compute.googleapis.com/RegionNotificationEndpoint,8,,0,,0,8,false,api=v1:regionNotificationEndpoints
 compute.googleapis.com,compute.googleapis.com/RegionSecurityPolicy,86,ComputeSecurityPolicy,36,,0,50,false,api=v1:regionSecurityPolicies; official-spec-fields-unmatched=14/49
 compute.googleapis.com,compute.googleapis.com/RegionSnapshot,27,ComputeSnapshot,12,,0,15,false,api=v1:regionSnapshots; official-spec-fields-unmatched=2/12

@@ -10,54 +10,64 @@ this file only adds to them.
 
 ## Where things stand
 
-On `main` after the `IAMRoleMember` PR: eighteen kinds (`README.md`,
-design.md's intro), mockgcp patches 0001 to 0019 (`UPSTREAM.md`; the next
-free number is **0020**), the live-test switch and the Taskfile
-(`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not `make`). From
-the seed catalog (design.md 6.5): ranks 1 to 5 built; rank 6's policy built;
-rank 7's `LoggingSettings` built (live pending a test folder); rank 10's
-`ComputeProjectMetadataItem` built. Every built kind but `LoggingSettings`
-passes live.
+On `main` after the rule PR: nineteen kinds (`README.md`, design.md's
+intro), mockgcp patches 0001 to 0020 (`UPSTREAM.md`; the next free number
+is **0021**, reserved by the association PR), the live-test switch and the
+Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
+`make`). Every built kind but `LoggingSettings` passes live.
 
-`IAMRoleMember` (rank 2) is built over `pkg/iampolicy`, whose resource
-table now has the 30 rows `IAMPolicyMember` cannot reference
-(`registry_more.go`) and three protocols (the `google.iam.v1` mixin, Cloud
-Storage's, Compute Engine's). Three rows are proven live (a regional
-secret, a managed folder, a backend service); the other 27 are checked for
-names and URLs only. The kind name is a working one: design.md section 10,
-question 3, waits for the builder.
+`ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
+real API did that the fake cannot show is in design.md 6.5 and
+`docs/fake-cloud.md`: a missing priority is a 400, `patchRule` keeps a
+list the body leaves out (so the controller sends `[]` through the
+Compute Engine REST client), and a just-changed rule is "not ready".
+It adds `ComputeRegionNetworkFirewallPolicyRef`, which the association
+kind reuses. Config Connector's reconciler watches a missing reference
+with a watch that outlives the object and keeps kube-apiserver from
+stopping in an envtest: a test that leaves a reference missing at its
+end fails with "timeout waiting for process kube-apiserver to stop";
+make the referenced object in the test.
+
+`task operator-e2e` goes through `hack/operator-e2e.sh`, which fails
+unless `tests/operator/run.sh` is intact (more than 200 lines, errexit,
+the closing `echo "all checks passed"`), exits 0 and ends with that line.
 
 ## What is left, in order
 
-1. **Rank 6's rule and association kinds** for regional firewall policies:
-   the rule is its own PR (`ComputeRegionNetworkFirewallPolicyRule`, patch
-   0020, a rule addressed by priority); the association is the next one
-   (patch 0021; `addAssociation`, `getAssociation`, `removeAssociation`;
-   it needs the policy reference type the rule PR adds,
-   `ComputeRegionNetworkFirewallPolicyRef`).
-2. **The rest of rank 10**: the default network tier (Terraform's
-   `google_compute_project_default_network_tier`; check whether mockgcp
-   serves `setDefaultNetworkTier`) and the project's default service
-   accounts (`google_project_default_service_accounts`). Both change a
-   whole project: live, they run only in a test project under the test
-   folder (item 4), never in `hfl-dev-514205`. Disabling or deleting
-   `hfl-dev-514205`'s compute default service account would break the
-   offload VMs and `RunService`. Until the folder exists, mark them live:
-   pending.
-3. **Ranks 8 and 9** of the table in design.md 6.5, only when upstream has
-   released them (recheck read-only: `v1.160.0` was the latest on
-   2026-11-09, `master` at `b795cda8`).
-4. **`LoggingSettings` live and the test-folder work**, when the
-   coordinator says the test folder exists. The test and the sweeper are
-   ready (`mockenv.LoggingFolder`, `mockenv.LoggingKMSKey`). Wider live
-   testing was approved with these guardrails: everything under **one**
-   dedicated test folder; organization-level policies and existing
-   projects and folders are never touched; every change is undone; test
-   projects are deleted; the sweeper learns folders, projects and
-   organization policies. Do not try to create folders or grant
-   organization-level IAM.
-5. **Live runs for the other 27 `pkg/iampolicy` rows**, as the APIs and
-   quotas allow (design.md section 7, item 26).
+The queue is `docs/coverage/foundation.md` (the builder's priority:
+platform foundations first), not the older rank lists. After the
+association kind: folder and organization `ServiceIdentity`, default
+service accounts, default network tier, organization custom IAM roles,
+organization address groups and security profiles, and so on down the
+report. The builder answered its four Decision items (design.md
+decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
+stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`,
+`ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
+`DNSResponsePolicy` and its rule); Cloud Router is a copy of upstream's
+PR #13960 as a complete kind of ours (14); `LoggingBillingAccountSink`
+now, live pending billing-account access (15); Security Command Center
+kinds with organization, folder and project parents (16). Decision 5
+stands for other field gaps (wait for the release). Whole-resource gaps
+first; any other field gap that needs the builder goes to section 10
+with a recommendation. A deprecation path for our kinds is the builder's
+separate design; do not build it. Org-level live tests wait for the test folder:
+"live: pending, needs test folder"; never create folders, grant
+organization-level IAM or touch the organization.
+
+Still true from before:
+
+- **`LoggingSettings` live and the test-folder work**, when the
+  coordinator says the test folder exists. The test and the sweeper are
+  ready (`mockenv.LoggingFolder`, `mockenv.LoggingKMSKey`). Everything
+  under **one** dedicated test folder; every change is undone; test
+  projects are deleted; the sweeper learns folders, projects and
+  organization policies.
+- The default network tier and default service accounts change a whole
+  project: live, they run only in a test project under the test folder,
+  never in `hfl-dev-514205` (disabling or deleting its compute default
+  service account would break the offload VMs and `RunService`).
+- **Live runs for the other 27 `pkg/iampolicy` rows** (design.md section
+  7, item 26).
 
 ## Conventions that are easy to get wrong
 

@@ -240,9 +240,10 @@ items:
       which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`,
       `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`,
       `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule.
-    decision: >-
-      Ship stable kinds of our own for alpha upstream kinds, or wait for upstream to promote them? (`docs/design.md`
-      6.1 says upstream first.)
+    decided: >-
+      "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when
+      upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with
+      `RunService`, decision 11).
   # ---- A, fields ----
   - title: Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)
     importance: A
@@ -266,9 +267,10 @@ items:
     build: >-
       Wait for the `ComputeRouter` direct migration (#13960); if the BGP peer fields block a chart, they are the
       one critical exception to decision 5.
-    decision: >-
-      Field gaps on Terraform-based official kinds cannot be filled here without a parallel kind. Wait for the
-      release, or fund a parallel `ComputeRouterBgpPeer` of ours?
+    decided: >-
+      "Copy upstream's PR as our kind." Copy #13960's direct `ComputeRouter` into our group as a complete kind that
+      owns the whole router; a workload that needs these fields moves its router to ours (acquire by name, abandon
+      the official object); retire ours when upstream releases (`docs/design.md` decision 14).
   - title: VPN tunnel and Interconnect attachment fields
     importance: A
     gap: field
@@ -425,7 +427,9 @@ items:
     build: >-
       `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with
       `billingAccountRef` (API `billingAccounts.sinks`).
-    decision: Build `LoggingBillingAccountSink` now, or wait for the sink to take a billing account?
+    decided: >-
+      Build `LoggingBillingAccountSink` now (`docs/design.md` decision 15). Its live test needs billing-account
+      access the builder has not granted: "live: pending, needs billing account access"; prove it on the fake.
   - title: KMS fields (key access justifications, key backend)
     importance: A
     gap: field
@@ -489,7 +493,9 @@ items:
       Check #7673 and #14181 for the parent first. If they do not add folder and project parents, our own kinds in
       `securitycenter.gcp.hfl.dev/v1alpha1` (`SecurityCenterMuteConfig` with `parentRef`: organization, folder or
       project; API `securitycenter` v2 `muteConfigs`), copied from the organization kind, one controller family.
-    decision: Wait for upstream's direct SCC kinds, or build ours with all three parents?
+    decided: >-
+      "Build ours with all three parents" (organization, folder, project), accepting that it duplicates what
+      upstream is building and widens the kinds to retire later (`docs/design.md` decision 16).
   - title: VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)
     importance: B
     gap: whole

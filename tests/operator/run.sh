@@ -264,9 +264,10 @@ status="$(kubectl -n team-b get secretmanagersecrets.secretmanager.gcp.hfl.dev a
 pass "team-b/app-config untouched: no context, no manager"
 
 step "done"
-echo "all checks passed"
 if [[ "${KEEP}" == 0 ]]; then
   kind delete cluster --name "${CLUSTER}"
 else
   echo "cluster ${CLUSTER} left up; KUBECONFIG=${KUBECONFIG}; delete with: kind delete cluster --name ${CLUSTER}"
 fi
+# The last line of the output: hack/operator-e2e.sh fails without it.
+echo "all checks passed"

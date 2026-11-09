@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 100 | 3121 | 38.8% | 0.4% | 60.8% |
+| Platform foundation | 150 | 100 | 3121 | 38.8% | 1.0% | 60.2% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 0.7% | 32.1% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 0.3% | 59.3% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 3.2% | 56.3% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 0.0% | 76.0% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 0.0% | 70.5% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 0.0% | 83.5% |
@@ -68,7 +68,7 @@ What these numbers miss, for the foundation:
 | # | Item | Imp. | Gap | Modules | Size | Measured: attributes uncovered / total (official) | Upstream |
 | ---: | --- | :-: | --- | ---: | :-: | --- | --- |
 | 1 | [Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)](#1-hierarchy-and-project-settings-service-identity-at-folder-and-organization-default-service-accounts-default-network-tier) | A | whole | 3 | M | n/a (not a create, or not in the API's create requests) | none |
-| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 131 / 131 (0.0%) | none |
+| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 111 / 131 (0.0%) | none |
 | 3 | [Organization-level custom IAM roles](#3-organization-level-custom-iam-roles) | A | whole | 1 | S | 10 / 14 (28.6%) | none for organization roles |
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 20 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 131 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
@@ -107,14 +107,14 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** whole, **size** M, **modules** 2 (net-firewall-policy, net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours)
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours)
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 20 / 12 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha)
   - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule
 - **Missing, whole resources:** `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` and `ComputeRegionNetworkFirewallPolicyPacketMirroringRule`; the same packet mirroring rule for the global network policy (`google_compute_network_firewall_policy_packet_mirroring_rule`) and the hierarchical policy. Our `ComputeRegionNetworkFirewallPolicy` is the policy only (its `description`).
 - **Missing, attributes that matter:** All of a rule: `priority`, `action`, `direction`, `disabled`, `enableLogging`, `ruleName`, `description`, `match` (`srcIpRanges`, `destIpRanges`, `layer4Configs[]`, `srcFqdns`, `destFqdns`, `srcRegionCodes`, `destRegionCodes`, `srcThreatIntelligences`, `destThreatIntelligences`, `srcAddressGroups`, `destAddressGroups`, `srcSecureTags`, `srcNetworkType`, `destNetworkType`), `targetSecureTags`, `targetServiceAccounts`, `securityProfileGroup`, `tlsInspect`. An association is `attachmentTarget` (a network), `name` and `priority`.
-  - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].action`, `rules[].description`, `rules[].direction`, `rules[].disabled`, `rules[].enableLogging`, `rules[].match.destAddressGroups[]`, `rules[].match.destFqdns[]`, `rules[].match.destIpRanges[]`, `rules[].match.destNetworkContext`, `rules[].match.destNetworkType` and 22 more
+  - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkContext`, `rules[].match.destNetworkType`, `rules[].match.srcNetworkContext`, `rules[].match.srcNetworkType`, `rules[].match.srcNetworks[]`, `rules[].match.srcSecureTags[].name`, `rules[].securityProfileGroup`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetSecureTags[].name` and 2 more
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]` (measured): `associations[].attachmentTarget`, `associations[].name`, `associations[].priority`
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
@@ -223,7 +223,7 @@ What these numbers miss, for the foundation:
   - uncovered in `dns.googleapis.com/ResponsePolicyRule` (measured): `localData.localDatas[].routingPolicy.geo.enableFencing`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[]`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipProtocol`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].loadBalancerType`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].networkUrl`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].port`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].project`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].region`, `localData.localDatas[].routingPolicy.geo.items[].location` and 37 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the release notes before building.
 - **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule.
-- **Decision (builder):** Ship stable kinds of our own for alpha upstream kinds, or wait for upstream to promote them? (`docs/design.md` 6.1 says upstream first.)
+- **Decided (builder, 2026-11-09):** "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with `RunService`, decision 11).
 
 ### 9. Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)
 
@@ -235,7 +235,7 @@ What these numbers miss, for the foundation:
   - uncovered in `compute.googleapis.com/Router` (measured): `bgp.identifierRange`, `bgpPeers[].customLearnedIpRanges[].range`, `bgpPeers[].customLearnedRoutePriority`, `bgpPeers[].enableIpv4`, `bgpPeers[].exportPolicies[]`, `bgpPeers[].importPolicies[]`, `bgpPeers[].interfaceName`, `bgpPeers[].ipv4NexthopAddress`, `bgpPeers[].md5AuthenticationKeyName`, `bgpPeers[].name` and 14 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): no pull request for these fields. Open PR #13960 (2026-10-27) "align migration diffs for ComputeRouter": `ComputeRouter` is moving to the direct controller, which is where new fields would land.
 - **Build:** Wait for the `ComputeRouter` direct migration (#13960); if the BGP peer fields block a chart, they are the one critical exception to decision 5.
-- **Decision (builder):** Field gaps on Terraform-based official kinds cannot be filled here without a parallel kind. Wait for the release, or fund a parallel `ComputeRouterBgpPeer` of ours?
+- **Decided (builder, 2026-11-09):** "Copy upstream's PR as our kind." Copy #13960's direct `ComputeRouter` into our group as a complete kind that owns the whole router; a workload that needs these fields moves its router to ours (acquire by name, abandon the official object); retire ours when upstream releases (`docs/design.md` decision 14).
 
 ### 10. VPN tunnel and Interconnect attachment fields
 
@@ -340,7 +340,7 @@ What these numbers miss, for the foundation:
   - uncovered in `logging.googleapis.com/BillingAccountSink` (measured): `bigqueryOptions.usePartitionedTables`, `description`, `destination`, `disabled`, `exclusions[].description`, `exclusions[].disabled`, `exclusions[].filter`, `exclusions[].name`, `filter`, `includeChildren` and 3 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
 - **Build:** `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with `billingAccountRef` (API `billingAccounts.sinks`).
-- **Decision (builder):** Build `LoggingBillingAccountSink` now, or wait for the sink to take a billing account?
+- **Decided (builder, 2026-11-09):** Build `LoggingBillingAccountSink` now (`docs/design.md` decision 15). Its live test needs billing-account access the builder has not granted: "live: pending, needs billing account access"; prove it on the fake.
 
 ### 18. KMS fields (key access justifications, key backend)
 
@@ -388,7 +388,7 @@ What these numbers miss, for the foundation:
   - uncovered in `securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules` (measured): `cloudProvider`, `customConfig.customOutput.properties[].name`, `customConfig.customOutput.properties[].valueExpression.description`, `customConfig.customOutput.properties[].valueExpression.expression`, `customConfig.customOutput.properties[].valueExpression.location`, `customConfig.customOutput.properties[].valueExpression.title`, `customConfig.description`, `customConfig.predicate.description`, `customConfig.predicate.expression`, `customConfig.predicate.location` and 7 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCustomModule`, 2026-10-26); neither is known to add project or folder parents.
 - **Build:** Check #7673 and #14181 for the parent first. If they do not add folder and project parents, our own kinds in `securitycenter.gcp.hfl.dev/v1alpha1` (`SecurityCenterMuteConfig` with `parentRef`: organization, folder or project; API `securitycenter` v2 `muteConfigs`), copied from the organization kind, one controller family.
-- **Decision (builder):** Wait for upstream's direct SCC kinds, or build ours with all three parents?
+- **Decided (builder, 2026-11-09):** "Build ours with all three parents" (organization, folder, project), accepting that it duplicates what upstream is building and widens the kinds to retire later (`docs/design.md` decision 16).
 
 ### 21. VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)
 
@@ -505,7 +505,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | --- | --- | ---: | :-: |
 | ComputeProjectMetadataItem | (not a create) one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method) | n/a | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
-| ComputeRegionNetworkFirewallPolicy | compute.googleapis.com/RegionNetworkFirewallPolicy | 2 | false |
+| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | IAMRoleBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMRoleMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
@@ -680,7 +680,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `compute.googleapis.com/PacketMirroring` | ComputePacketMirroring | - | 12 | 12 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | - | - | 7 | 0 | 0 | 7 | 7 |
 | foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | - | 15 | 0 | 0 | 15 | 7 |
-| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy | 73 | 0 | 2 | 71 | 2 |
+| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 22 | 51 | 2 |
 | security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | - |
 | security | `compute.googleapis.com/RegionSslPolicy` | ComputeRegionSSLPolicy (alpha) | - | 6 | 5 | 0 | 1 | - |
 | foundation | `compute.googleapis.com/Route` | ComputeRoute | - | 13 | 11 | 0 | 2 | - |

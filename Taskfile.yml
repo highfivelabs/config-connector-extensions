@@ -182,10 +182,10 @@ tasks:
   # The operator on kind with the in-cluster fake cloud: images by ko, Config
   # Connector's operator footprint made by hand. tests/operator/run.sh.
   operator-e2e:
-    desc: The operator on kind with the in-cluster fake cloud (tests/operator/run.sh).
+    desc: The operator on kind with the in-cluster fake cloud (tests/operator/run.sh, through hack/operator-e2e.sh, which fails unless the script is intact and ends with "all checks passed").
     cmds:
       - task: upstream-check
-      - NAME="{{.NAME}}" tests/operator/run.sh
+      - NAME="{{.NAME}}" hack/operator-e2e.sh
 
   # docs/third-party-licenses.csv from go-licenses; fails on a licence outside
   # Apache-2.0, MIT, BSD, ISC and MPL-2.0. Needs go-licenses on PATH.
