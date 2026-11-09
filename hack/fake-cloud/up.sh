@@ -27,7 +27,8 @@ if ! kind get clusters 2>/dev/null | grep -qx "${CLUSTER}"; then
   kind create cluster --name "${CLUSTER}" --kubeconfig "${KUBECONFIG}" --wait 120s
 fi
 
-crds=("${KCC}"/operator/config/crd/bases/core.cnrm.cloud.google.com_*.yaml "${ROOT}"/config/crds/*.yaml)
+# Our CRDs only: config/crds/kustomization.yaml is not an object kubectl can apply.
+crds=("${KCC}"/operator/config/crd/bases/core.cnrm.cloud.google.com_*.yaml "${ROOT}"/config/crds/*.gcp.hfl.dev_*.yaml)
 if [[ "${CRD_GROUPS}" == all ]]; then
   crds+=("${KCC}"/config/crds/resources/*.yaml)
 else

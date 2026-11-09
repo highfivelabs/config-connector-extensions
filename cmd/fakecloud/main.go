@@ -38,7 +38,9 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
+	kcccontroller "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/kccmanager"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/registration"
 	// Registers every direct controller, as Config Connector's cmd/manager does.
 	_ "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/register"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/krmtotf"
@@ -115,6 +117,13 @@ func run(ctx context.Context, projects []string) error {
 	mgr, err := kccmanager.New(ctx, restConfig, kccConfig)
 	if err != nil {
 		return fmt.Errorf("building Config Connector's manager: %w", err)
+	}
+	// Config Connector runs its deletion defender as its own process
+	// (cmd/deletiondefender); without it, its kinds never finish deleting:
+	// their reconcilers wait for the defender to drop its finalizer. Add it
+	// here as that process does. Ours get theirs from controller.AddToManager.
+	if err := registration.AddDeletionDefender(mgr, &kcccontroller.Deps{}); err != nil {
+		return fmt.Errorf("adding Config Connector's deletion defender: %w", err)
 	}
 	if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 		return err

@@ -9,7 +9,7 @@ real project, credentials or cost. Proven 2026-11-07 on an Apple-silicon Mac (Do
 ```sh
 make upstream          # once: the pinned Config Connector checkout
 make fake-cloud-up     # kind cluster, CRDs, bin/fakecloud on the host
-make fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready
+make fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready, then all deleted
 make fake-cloud-down   # stop it and delete the cluster
 ```
 
@@ -31,6 +31,10 @@ outside a test:
   Terraform provider's HTTP client transformers);
 - this project's controllers (`SQLUser` with `databaseRoles`) in the
   same manager;
+- Config Connector's deletion defender, which in a real install runs as
+  its own process (`cmd/deletiondefender`); without it Config Connector's
+  kinds never finish deleting, because their reconcilers wait for it to
+  drop its finalizer. Ours have their own defenders in the manager;
 - mockgcp's in-memory store, with the projects named by `--projects`
   (default `mock-project`) created at start.
 
