@@ -10,9 +10,10 @@ this file only adds to them.
 
 ## Where things stand
 
-On `main` after the rule PR: nineteen kinds (`README.md`, design.md's
-intro), mockgcp patches 0001 to 0020 (`UPSTREAM.md`; the next free number
-is **0021**, reserved by the association PR), the live-test switch and the
+On `main` after the association PR: twenty kinds (`README.md`, design.md's
+intro), mockgcp patches 0001 to 0021 (`UPSTREAM.md`; 0022 is
+`ServiceIdentity`'s, PR #28, and 0023 `ComputeProjectDefaultNetworkTier`'s;
+the next free number is **0024**), the live-test switch and the
 Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
 `make`). Every built kind but `LoggingSettings` passes live.
 
@@ -54,6 +55,28 @@ with a recommendation. A deprecation path for our kinds is the builder's
 separate design; do not build it. Org-level live tests wait for the test folder:
 "live: pending, needs test folder"; never create folders, grant
 organization-level IAM or touch the organization.
+
+Next, **`ProjectDefaultServiceAccounts`** (`resourcemanager.gcp.hfl.dev`,
+foundation item 1's last part), researched 2026-11-09, not started.
+Terraform's `google_project_default_service_accounts` (google-beta
+`24c6f5fd`, read): it lists the project's service accounts and picks the
+defaults by display name ("Compute Engine default service account", "App
+Engine default service account"); `DELETE` deletes, `DISABLE` disables,
+`DEPRIVILEGE` removes `serviceAccount:<email>` from every project binding;
+it records unique ID to email in state, and on destroy, unless
+`restorePolicy: NONE`, undeletes (by unique ID) or enables them
+(`REVERT_AND_IGNORE_FAILURE` logs instead of failing); `DEPRIVILEGE` is
+never reverted; `action` is ForceNew. mockgcp lacks
+`serviceAccounts.list` and `undelete`, and its delete, disable and enable
+take an email, not a unique ID: the patch is the work. Live: a test
+project under the test folder only (`mockenv.FolderProject`), never
+`hfl-dev-514205`. Then organization address groups and security
+profiles (item 6), decisions 13 to 16, packet mirroring rules.
+
+Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
+(lean on `controllerbuilder`; behaviour from Magic Modules' product YAML
+into the proto overlay) and `docs/terraform-leverage.md` in
+`highfivelabs/catalog` (the Terraform route is not ours, decision 2.1).
 
 Still true from before:
 
