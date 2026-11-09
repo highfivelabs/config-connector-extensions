@@ -205,11 +205,8 @@ func (a *regionNetworkFirewallPolicyAssociationAdapter) Delete(ctx context.Conte
 	return true, nil
 }
 
-func (a *regionNetworkFirewallPolicyAssociationAdapter) updateStatus(ctx context.Context, op directbase.Operation, latest *pb.FirewallPolicyAssociation) error {
+func (a *regionNetworkFirewallPolicyAssociationAdapter) updateStatus(ctx context.Context, op directbase.Operation, _ *pb.FirewallPolicyAssociation) error {
 	status := &krm.ComputeRegionNetworkFirewallPolicyAssociationStatus{ExternalRef: direct.LazyPtr(a.id.String())}
-	if latest.GetFirewallPolicyId() != "" {
-		status.FirewallPolicyID = direct.PtrTo(latest.GetFirewallPolicyId())
-	}
 	return op.UpdateStatus(ctx, status, nil)
 }
 

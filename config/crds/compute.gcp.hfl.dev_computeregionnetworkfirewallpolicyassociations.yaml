@@ -172,9 +172,6 @@ spec:
                   (not an API resource name: the API addresses an association by its
                   name in the policy).'
                 type: string
-              firewallPolicyId:
-                description: The policy's numeric ID, as the association reports it.
-                type: string
               observedGeneration:
                 description: ObservedGeneration is the generation of the resource
                   that was most recently observed by the Config Connector controller.

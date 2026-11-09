@@ -50,9 +50,6 @@ type ComputeRegionNetworkFirewallPolicyAssociationStatus struct {
 	// (not an API resource name: the API addresses an association by its
 	// name in the policy).
 	ExternalRef *string `json:"externalRef,omitempty"`
-
-	// The policy's numeric ID, as the association reports it.
-	FirewallPolicyID *string `json:"firewallPolicyId,omitempty"`
 }
 
 // +genclient
