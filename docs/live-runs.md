@@ -179,6 +179,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | `c7f163f`+ | ComputeRegionNetworkFirewallPolicyAssociation | PASS | PASS | after one run that failed only on the draft's `status.firewallPolicyId` (the API returns an association with only `attachmentTarget`, as a full URL, and `name`; the field was dropped): create, resync, a second network's association, a name taken for another network (an error, not a move), an association removed out of band made again, delete, abandon. A missing association is the 400 "An association with that name does not exist." Mock fixed to match (patch 0021) | 2 networks, 1 regional firewall policy with up to 2 associations (deleted); `task live-list` empty |
 | 2026-11-09 | pending | ServiceIdentity | PASS | pending, needs the test folder (`E2E_TEST_FOLDER`) | not run | none |
 | 2026-11-09 | pending | ComputeProjectDefaultNetworkTier | PASS | pending, needs a test project under the test folder (`E2E_TEST_FOLDER_PROJECT`) with `compute.projects.setDefaultNetworkTier` for `cce-live-tests` | not run (a live `compute` run skips it) | none |
+| 2026-11-09 | pending | ProjectDefaultServiceAccounts | PASS | pending, needs a test project under the test folder (`E2E_TEST_FOLDER_PROJECT`) whose Compute Engine API is on | not run (`resourcemanager` is not a default live kind) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -230,6 +231,21 @@ spike in catalog `docs/terraform-leverage.md` got a 403 in
 `hfl-dev-514205`), and the test project in `hack/live/projects.sh`. The
 test puts the project's tier back as it found it; there is nothing for
 the sweeper.
+
+`ProjectDefaultServiceAccounts` (package `resourcemanager`) disables,
+deletes and deprivileges a project's default service accounts, so it too
+runs live only in a test project under the test folder
+(`E2E_TEST_FOLDER_PROJECT`), never in `hfl-dev-514205`, whose compute
+default account the offload VMs and `RunService` run as. The project's
+Compute Engine API must be on (so its default account exists). The
+live-test service account needs `iam.serviceAccounts.list`, `disable`,
+`enable`, `delete` and `undelete` and the project's `getIamPolicy` and
+`setIamPolicy` there (assumed from the IAM reference, not yet seen). The
+test leaves the accounts enabled and present; it does not give back the
+roles `DEPRIVILEGE` removed (never reverted, as Terraform's), so the test
+project's default accounts end without their project roles. Nothing for
+the sweeper. Then:
+`E2E_TEST_FOLDER_PROJECT=... task test-live PROJECT=hfl-dev-514205 KINDS=resourcemanager`.
 
 Every run ended with `task live-list` empty (run `cce-11091348-ef59`:
 "0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,

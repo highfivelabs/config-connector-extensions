@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-two kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-three kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -13,8 +13,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
 `IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
-organization's `ServiceIdentity` and `ComputeProjectDefaultNetworkTier`
-(section 6). Each
+organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier` and
+`ProjectDefaultServiceAccounts` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -647,7 +647,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); folder and organization `ServiceIdentity` built (2026-11-09, `docs/coverage/foundation.md` item 1); the rest are field gaps on existing kinds: wait for the release (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
-| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | per-key metadata built (2026-11-09, `ComputeProjectMetadataItem`); the default network tier built (2026-11-09, `ComputeProjectDefaultNetworkTier`); default service accounts to build |
+| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | per-key metadata built (2026-11-09, `ComputeProjectMetadataItem`); the default network tier built (2026-11-09, `ComputeProjectDefaultNetworkTier`); default service accounts built (2026-11-09, `ProjectDefaultServiceAccounts`) |
 
 Notes on what was built from this table:
 
@@ -841,6 +841,38 @@ Notes on what was built from this table:
   `mockenv.FolderProject`; never `hfl-dev-514205`, whose tier the offload
   VMs rely on) and `compute.projects.setDefaultNetworkTier` there, which
   `cce-live-tests` lacks (the spike's 403).
+
+- `ProjectDefaultServiceAccounts` (`resourcemanager.gcp.hfl.dev/v1alpha1`,
+  rank 10, and `docs/coverage/foundation.md` item 1). **Written here**
+  after Terraform's `google_project_default_service_accounts` (google-beta
+  `24c6f5fd`, read, not copied; Magic Modules hand-writes it, so there is
+  no product YAML): `projectRef`, `action` (`DELETE`, `DISABLE` or
+  `DEPRIVILEGE`, immutable by CEL, as Terraform's is ForceNew) and
+  `restorePolicy` (`REVERT` by default, `REVERT_AND_IGNORE_FAILURE`,
+  `NONE`); status `serviceAccounts`, unique ID to email, as Terraform's
+  state. The defaults are the accounts whose display name is "Compute
+  Engine default service account" or "App Engine default service
+  account" (Terraform's test; their emails may change). `DELETE` and
+  `DISABLE` go through IAM v1 by unique ID; `DEPRIVILEGE` removes
+  `serviceAccount:{email}` from every binding of the project's policy
+  through `pkg/iampolicy` (version 3, etag retry), dropping a binding
+  left empty and keeping conditions. On delete, unless `NONE`, `DELETE`
+  is undone with `undelete` (by unique ID; an account that exists is
+  left alone) and `DISABLE` with `enable`; `REVERT_AND_IGNORE_FAILURE`
+  logs a failure and lets the object go; `DEPRIVILEGE` is never undone;
+  abandon leaves everything. Two choices of ours, not Terraform's:
+  Terraform acts once, at create (its read is a no-op), where this acts
+  on every reconcile, so an account re-enabled by hand, or one that
+  appears when App Engine is turned on later, is acted on, and status
+  only grows; and Terraform reads the policy as version 1, which loses
+  conditional bindings. Upstream (read 2026-11-09): no kind or pull
+  request. Not generated: there is no proto message for it, so
+  `hack/scaffold-kind.sh` does not apply (0% generated beyond the CRD and
+  deepcopy; the group file is copied). Patch 0024: mockgcp lists and
+  undeletes service accounts and takes unique IDs. Live: pending, needs a
+  test project under the test folder (`E2E_TEST_FOLDER_PROJECT`,
+  `mockenv.FolderProject`), never `hfl-dev-514205`, whose compute default
+  account the offload VMs and `RunService` use.
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
@@ -1179,6 +1211,34 @@ To raise confidence in `ArtifactRegistryRepository`:
     all three parents"), organization, folder and project, accepting that
     it duplicates what upstream is building and widens the kinds to
     retire later.
+17. **`ProjectDefaultServiceAccounts` acts on every reconcile and keeps
+    conditional bindings** (the orchestrator, 2026-11-09, accepting the
+    two choices section 6.5 records for the kind). Terraform's
+    `google_project_default_service_accounts` acts once, at create, and
+    its read does nothing. Ours acts on every reconcile, because a
+    Kubernetes object is desired state held continuously, not a one-off
+    command: a default account re-enabled by hand, or one that appears
+    when App Engine is turned on later, is disabled, deleted or
+    deprivileged again, and status only grows. `DEPRIVILEGE` reads and
+    writes the project's IAM policy as version 3, where Terraform reads
+    version 1; a version 1 read drops the conditions of conditional
+    bindings, and writing that back would lose them, so ours keeps them.
+18. **A new kind is named as Config Connector names it, else as
+    Terraform's Google provider does** (the builder, 2026-11-09, on
+    naming: "can we use Terraform as an example of how this should be
+    named? I think it does rather well in the GCP providers"). A new kind
+    takes Config Connector's name for the resource where Config Connector
+    has one, otherwise the Terraform google provider's resource name in
+    CamelCase, in our group. Parents (organization, folder, project) are
+    reference fields on one kind, not separate kinds per parent, as
+    Terraform's `parent` argument is. So organization address groups are
+    `NetworkSecurityAddressGroup` in `networksecurity.gcp.hfl.dev`, taking
+    an organization or a project as its parent as
+    `google_network_security_address_group`'s `parent` does, not
+    `NetworkSecurityOrganizationAddressGroup`, and the security profile
+    kinds follow the same rule. This generalises decision 12 (the IAM
+    kinds) and the folder and organization `ServiceIdentity`, which kept
+    upstream's name with new parents.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
