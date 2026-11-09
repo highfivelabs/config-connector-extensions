@@ -145,6 +145,20 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   Magic Modules marks it). A project's address group runs live
   (`docs/live-runs.md`); an organization's is not yet compared with the
   real API, since a live run never touches the organization.
+- **Organization security profiles in mockgcp** (patch 0026, ours). An
+  organization's security profiles and profile groups are served by a
+  server of ours with its own name parsing (the project service's
+  parses only project names and looks the project up). Neither mockgcp
+  server checks that the organization exists or that the caller may use
+  it, that `type` matches the profile set, that a threat ID or URL
+  matcher is valid, or that a profile is in use by a group when it is
+  deleted; an update replaces the whole profile, whatever the update
+  mask; and neither adds the default URL filter (priority 2147483647)
+  that Terraform's flattener says the real API adds to a URL filtering
+  profile, so on the fake the comparison that ignores it is not
+  exercised; live, a resync of a URL filtering profile writes nothing. A
+  project's profile runs live (`docs/live-runs.md`); an organization's
+  is not yet compared with the real API.
 - **A project's default network tier in mockgcp** (patch 0023, ours).
   `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
   anything else with a message of our own; what the real API answers for

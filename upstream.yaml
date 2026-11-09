@@ -86,6 +86,7 @@ patches:
   - {file: patches/k8s-config-connector/0023-mockgcp-compute-project-default-network-tier.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0024-mockgcp-iam-service-accounts-list-undelete.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0026-mockgcp-networksecurity-organization-security-profiles.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request
@@ -199,11 +200,19 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity.go, apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity_test.go]}
   - here: [pkg/controller/direct/networksecurity/addressgroup_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecurityaddressgroup_controller.go]}
-  # Generated upstream by controllerbuilder; only the address group's functions.
+  # Generated upstream by controllerbuilder; only the address group's and security profile's functions.
   - here: [pkg/controller/direct/networksecurity/mapper.generated.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/mapper.generated.go]}
   - here: [pkg/controller/direct/networksecurity/addressgroup_fuzzer_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecurityaddressgroup_fuzzer.go]}
+  - here: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_types.go]}
+  - here: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity_test.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity_test.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_reference.go]}
+  - here: [pkg/controller/direct/networksecurity/securityprofile_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecuritysecurityprofile_controller.go]}
+  - here: [pkg/controller/direct/networksecurity/securityprofile_fuzzer_test.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecuritysecurityprofile_fuzzer.go]}
   - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]}
   - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.go]
@@ -276,3 +285,6 @@ other_sources:
   - repo: GoogleCloudPlatform/magic-modules
     commit: aad42de6b6564e69c864647145979e60c9eaece1
     used_for: the behaviour of address groups (mmv1/products/networksecurity/AddressGroup.yaml; capacity and parent immutable, organization or project parent)
+  - repo: GoogleCloudPlatform/magic-modules
+    commit: aad42de6b6564e69c864647145979e60c9eaece1
+    used_for: the behaviour of security profiles (mmv1/products/networksecurity/SecurityProfile.yaml and its url_filters custom_flatten; type required and immutable, one profile, lists as sets, the API's default URL filter, organization or project parent)

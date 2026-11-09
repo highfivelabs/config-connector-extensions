@@ -99,6 +99,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
 	{gvk: networksecurityv1alpha1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel},
+	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGVK, crdName: "networksecuritysecurityprofiles.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
