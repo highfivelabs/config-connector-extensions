@@ -130,8 +130,10 @@ func New(t *testing.T, namespaces ...string) *Env {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
 			// ArtifactRegistryTag's repository.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_artifactregistryrepositories.artifactregistry.cnrm.cloud.google.com.yaml"),
-			// IAMWorkloadIdentityPoolNamespace's pool.
+			// IAMWorkloadIdentityPoolNamespace's pool, and a provider key's
+			// provider.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_iamworkloadidentitypools.iam.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_iamworkloadidentitypoolproviders.iam.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}
