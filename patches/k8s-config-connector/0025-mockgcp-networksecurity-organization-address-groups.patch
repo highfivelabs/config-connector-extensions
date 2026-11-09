@@ -5,7 +5,9 @@ organization parent. Written here: mocknetworksecurity/organizationaddressgroup.
 registers the OrganizationAddressGroupService
 (/v1/{parent=organizations/*/locations/*}/addressGroups) and serves its
 create, get, update and delete with the project service's
-AddressGroupServer, which takes any parent; the item methods (addItems,
+AddressGroupServer, which takes any parent, and adds it to the HTTP mux
+by its full name (the client's methods match the project service's
+too); the item methods (addItems,
 removeItems, cloneItems, listReferences) are not served. Upstream
 candidate: yes.
 
@@ -70,7 +72,7 @@ index 000000000..0e1319d4c
 +	return s.projects.DeleteAddressGroup(ctx, req)
 +}
 diff --git a/mockgcp/mocknetworksecurity/service.go b/mockgcp/mocknetworksecurity/service.go
-index b6f9f4a5b..c66cbc670 100644
+index b6f9f4a5b..157aba6a7 100644
 --- a/mockgcp/mocknetworksecurity/service.go
 +++ b/mockgcp/mocknetworksecurity/service.go
 @@ -65,6 +65,7 @@ func (s *MockService) Register(grpcServer *grpc.Server) {
@@ -81,11 +83,12 @@ index b6f9f4a5b..c66cbc670 100644
  }
  
  func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (http.Handler, error) {
-@@ -82,6 +83,7 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+@@ -82,6 +83,8 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
  	mux.AddService(pbv1.NewDnsThreatDetectorServiceClient(conn))
  	mux.AddService(pbv1.NewSecurityProfileGroupServiceClient(conn))
  	mux.AddService(pbv1.NewAddressGroupServiceClient(conn))
-+	mux.AddService(pbv1.NewOrganizationAddressGroupServiceClient(conn))
++	// Named, since the client's methods match the project service's too.
++	mux.AddService(pbv1.NewOrganizationAddressGroupServiceClient(conn), httptogrpc.WithServiceName("google.cloud.networksecurity.v1.OrganizationAddressGroupService"))
  	mux.AddOperationsPath("/v1beta1/{prefix=**}/operations/{name}", conn)
  	mux.AddOperationsPath("/v1/{prefix=**}/operations/{name}", conn)
  
