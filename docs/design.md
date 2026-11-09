@@ -1,8 +1,9 @@
 # config-connector-extensions design
 
-config-connector-extensions has four kinds: `SQLUser` with `spec.databaseRoles`,
-`SQLAdminBackup`, and regional `SecretManagerSecret` and
-`SecretManagerSecretVersion` (section 6). Each passes its end-to-end test
+config-connector-extensions has five kinds: `SQLUser` with `spec.databaseRoles`,
+`SQLAdminBackup`, regional `SecretManagerSecret` and
+`SecretManagerSecretVersion`, and `ArtifactRegistryRepository` with a custom
+remote upstream (section 6). Each passes its end-to-end test
 against mockgcp. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
@@ -336,14 +337,25 @@ Upstream code exists, not released:
 | 4 | `SQLInstance`: `retainBackupsOnDelete` (#14854), `diskEncryptionConfiguration` (#7227), PSC auto-connections (#14419), performance capture (#14431) | PRs on a large direct kind | deleting an instance must not take its backups | wait for the release (6.1) |
 | 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | clusters made from manifests | wait for the release |
 | 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets | wait for the release |
-| 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | not built |
+| 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | built |
 | 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs | Cloud Run services | not built |
 | 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller | workload identity federation | not built |
 
 In the Google API, in no Config Connector code or pull request
 (unverified against the live API): Artifact Registry package tags and
-repository attachments, Workload Identity pool provider keys, Cloud SQL
+repository attachments, a remote repository's `upstreamCredentials`
+(section 10), Workload Identity pool provider keys, Cloud SQL
 `blueGreenDeployments`, Storage HMAC keys. None is built yet.
+
+Rechecked 2026-11-08 (read-only, `gh` and `git fetch` of `master` at
+`c8208a77`), before building rank 7. No candidate above merged or was
+released: the latest release is still `v1.160.0` (2026-10-29), and every
+pull request in the table is open with review required or changes
+requested, none approved. Ranks 4 to 6 stay "wait for the release" (6.1).
+Rank 7, PR #13517 (head `eb2774ce`, opened 2026-09-29 by upstream's
+coding bot), has no human review (only bots fixing its CI), and was
+paused by upstream's bot for inactivity on 2026-10-13: not close to
+merging. `master`'s Artifact Registry code is unchanged since our pin.
 
 ### 6.4 Notes on what was built
 
@@ -378,6 +390,48 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
 
   The regional-endpoint check was confirmed to fail with the endpoint
   removed from the controller.
+- `ArtifactRegistryRepository` is master's direct controller (on `master`
+  it is opt-in; Terraform is the default there) with PR #13517's change:
+  `remoteRepositoryConfig.{docker,maven,npm,python}Repository.customRepository.uri`,
+  a remote repository's upstream at a URI of the user's choosing instead
+  of one of the public upstreams Artifact Registry names. The PR changes
+  only the types, the mapper and the fuzzer for the direct controller (and
+  Terraform's fork, which we do not use); the controller itself is
+  unchanged. mockgcp already stores the field (it keeps the client
+  library's protos as sent), so no mockgcp patch is needed. The CRD has
+  exactly the PR's property paths.
+  - A virtual repository's `upstreamPolicies[].repositoryRef.name` names a
+    repository of ours, as the Secret Manager version's `secretRef` does;
+    a Config Connector repository is named by `repositoryRef.external`.
+  - What the PR does not map, ours does not either: `upstreamCredentials`,
+    `disableUpstreamValidation`, and Apt and Yum remote repositories
+    (section 10).
+  - Changing `customRepository.uri` on an existing repository: Terraform
+    marks it ForceNew; Config Connector's direct controller sends
+    `remoteRepositoryConfig` in an update mask, which mockgcp refuses
+    ("not supported by mockgcp"), so the object goes not Ready and the
+    fake cloud keeps the old URI. What the real API does is not known.
+  - A resync (Config Connector's force-reconcile annotation) reads the
+    repository back and sends no update, which shows the mapper
+    round-trips `customRepository`: a dropped field would be a diff.
+- Tests (`go test ./pkg/controller/direct/artifactregistry/`, envtest
+  Kubernetes 1.33, macOS arm64, Go 1.27.1, 2026-11-08):
+
+  ```text
+  --- PASS: TestArtifactRegistryRepositoryFuzz (1.45s)
+      1000 seeds through the spec and status mappers, customRepository included
+  --- PASS: TestArtifactRegistryRemoteRepository (39.69s)
+      create sets the custom upstream; a resync sends no update; a
+      description change keeps the custom upstream; a changed upstream URI
+      is not applied in the fake cloud; delete removes the repository;
+      abandon keeps the repository
+  --- PASS: TestArtifactRegistryCustomUpstreamFormats (18.49s)
+      MAVEN, NPM, PYTHON
+  ```
+
+  With the mapper's read-back of the Docker `customRepository` removed,
+  the fuzz test and "a resync sends no update" fail (the controller sends
+  an update that mockgcp refuses), so the round trip is what they check.
 
 ## 7. What is left
 
@@ -418,6 +472,17 @@ Housekeeping:
     patch 0002, but the patch stays harmless).
 13. `tests/operator/run.sh` does not clean the fake cloud on a reused kind
     cluster; run it on a fresh one.
+
+To raise confidence in `ArtifactRegistryRepository`:
+
+14. One run against a real project: create a remote repository with a
+    custom upstream, then change its URI, to learn whether the API updates
+    it in place, refuses, or needs a new repository; correct mockgcp to
+    match. Real Artifact Registry also checks that a remote upstream is
+    reachable when the repository is made (hence `disableUpstreamValidation`
+    in the API); mockgcp does not.
+15. Watch PR #13517 (UPSTREAM.md, "Copied from open pull requests"); when
+    it merges and a release ships it, retire ours (section 3.4).
 
 ## 8. Decisions
 
@@ -655,13 +720,13 @@ bundle at the pin (`config/installbundle/components/clusterroles/` and
   `cnrm-admin` and `cnrm-manager-ns-role` only in N (and
   `cnrm-manager-ns-role` in `cnrm-system`); `cnrm-manager-cluster-role`
   stays cluster-wide.
-- **What our manager needs:** our three groups, read Secrets, write
+- **What our manager needs:** our four groups, read Secrets, write
   events, and read the five Config Connector groups ours reference
   (`config-connector-extensions-manager` and `config-connector-extensions-manager-cluster`,
   `config/operator/rbac.yaml`).
 - **What Config Connector's pods would gain from our binding, when
-  shared:** only full control of our three groups (`sql`, `sqladmin` and
-  `secretmanager.gcp.hfl.dev`). Everything else in
+  shared:** only full control of our four groups (`sql`, `sqladmin`,
+  `secretmanager` and `artifactregistry.gcp.hfl.dev`). Everything else in
   `config-connector-extensions-manager` they already hold.
 
 So sharing barely widens Config Connector's side, and widens ours a lot:
@@ -676,5 +741,18 @@ nothing from this project.
 
 ## 10. Open questions
 
-None open. A question for the builder goes here, with a recommendation;
-the answer moves to section 8.
+A question for the builder goes here, with a recommendation; the answer
+moves to section 8.
+
+1. **Does the workload behind rank 7 need upstream credentials?**
+   (2026-11-08) `ArtifactRegistryRepository` now takes a custom upstream
+   URI (PR #13517), but neither it nor Config Connector maps
+   `remoteRepositoryConfig.upstreamCredentials` (a username and a Secret
+   Manager secret version, in the API and in Terraform's
+   `google_artifact_registry_repository`), so a private upstream that needs
+   a login cannot be used through this kind yet; nor
+   `disableUpstreamValidation`. Recommendation: if the private upstream
+   needs a login, build `upstreamCredentials` here next, from the API and
+   Terraform's behaviour (read, not copied, as section 6.1's last case
+   says), with a mockgcp check that the secret version is passed through;
+   if it does not, leave it until a workload needs it.
