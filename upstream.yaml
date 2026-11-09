@@ -1,0 +1,231 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# UPSTREAM.md's tables, machine-readable: the pin, the pull requests copied
+# from or watched, the patch series and the copied files. UPSTREAM.md stays
+# the prose and the record people read; this file says the same things for
+# tools (highfivelabs/factory's daily watch reads it). `task
+# upstream:yaml-check` fails when the two disagree, so change both together.
+#
+# Fields: docs in hack/upstream-yaml/pins/pins.go (a copy of
+# highfivelabs/factory internal/pins/pins.go).
+schema: 1
+
+pins:
+  - name: k8s-config-connector
+    repo: GoogleCloudPlatform/k8s-config-connector
+    branch: master
+    commit: 672414b8191fc2d2c12fff53f6faccf5ae291eef
+    commit_date: "2026-11-07T03:04:32Z"
+    nearest_release: v1.160.0
+    nearest_release_commit: c38b031c7f5e5657b6ac6afc18da95e039066ad8
+    pinned_on: "2026-11-07"
+    patches: patches/k8s-config-connector
+    use: go.mod replace of third_party/k8s-config-connector (hack/upstream.sh)
+
+pull_requests:
+  - ref: GoogleCloudPlatform/k8s-config-connector#7148
+    head: eb5d176ab176d4afa5b7d1878d8f035281a7a072
+    read_on: "2026-11-07"
+    role: watched
+    for: upstream's direct SQLUser; not adequate while databaseRoles is commented out
+  - ref: GoogleCloudPlatform/k8s-config-connector#12553
+    head: 9611a6de02e08aca9a624affaf59bc104d1cb88f
+    read_on: "2026-11-07"
+    role: copied
+    for: SQLAdminBackup, patch 0003
+  - ref: GoogleCloudPlatform/k8s-config-connector#6651
+    head: 9aab204dd9d87716863b966c724b7a12664fd85f
+    read_on: "2026-11-07"
+    role: copied
+    for: regional SecretManagerSecret / SecretManagerSecretVersion, patch 0004
+  - ref: GoogleCloudPlatform/k8s-config-connector#14417
+    head: 9297537aa0479a6457f736f96101190cba876fcb
+    read_on: "2026-11-09"
+    role: copied
+    for: one mockgcp line in patch 0008 (invokerIamDisabled kept on update)
+  - ref: GoogleCloudPlatform/k8s-config-connector#14418
+    head: b080f5dcfae5e5be5acd2361a7afd5c60e33568f
+    read_on: "2026-11-09"
+    role: copied
+    for: IAMWorkloadIdentityPoolManagedIdentity types and identity; the mockgcp proto in patch 0007
+  - ref: GoogleCloudPlatform/k8s-config-connector#14209
+    head: a5e8f5a9e3648a13d3346cfa8cf07cf26e64ec09
+    read_on: "2026-11-09"
+    role: copied
+    for: IAMWorkloadIdentityPoolNamespace types and identity; the mockgcp proto in patch 0006
+  - ref: GoogleCloudPlatform/k8s-config-connector#13517
+    head: eb2774cef2776e8a1dc2f766d6cf491f0931f8b7
+    read_on: "2026-11-08"
+    role: copied
+    for: ArtifactRegistryRepository with customRepository
+
+patches:
+  - {file: patches/k8s-config-connector/0001-mockgcp-sql-users-database-roles.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0002-mockgcp-listen-address-env.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0003-mockgcp-sql-backup-runs.patch, pin: k8s-config-connector, upstream_candidate: "it is upstream's (PR #12553)"}
+  - {file: patches/k8s-config-connector/0004-mockgcp-secretmanager-regional.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #6651"}
+  - {file: patches/k8s-config-connector/0005-mockgcp-artifactregistry-upstream-credentials.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0006-mockgcp-iam-workload-identity-pool-namespaces.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #14209"}
+  - {file: patches/k8s-config-connector/0007-mockgcp-iam-workload-identity-pool-managed-identities.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #14418"}
+  - {file: patches/k8s-config-connector/0008-mockgcp-run-service-update-mask.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0009-mockgcp-artifactregistry-tags.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0010-mockgcp-iam-workload-identity-pool-provider-keys.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0011-mockgcp-compute-region-network-endpoints.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0012-mockgcp-compute-router-route-policies.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0013-mockgcp-storage-object-media.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0014-mockgcp-compute-region-network-firewall-policies.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0015-mockgcp-sql-backup-runs-deleted.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #12553"}
+  - {file: patches/k8s-config-connector/0016-mockgcp-artifactregistry-remote-source-immutable.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0017-mockgcp-logging-settings.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0018-mockgcp-storage-iam-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0019-mockgcp-compute-iam-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0020-mockgcp-compute-region-network-firewall-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0021-mockgcp-compute-region-network-firewall-policy-associations.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+
+# "What is copied, from where": here (our paths) and from (Config Connector's
+# paths at the pin, or at a pull request's head). also_prs: a pull request
+# whose change was carried into the copy too.
+copied:
+  - here: [apis/sql/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/sql/v1beta1/groupversion_info.go]}
+  - here: [apis/sql/v1beta1/sqluser_types.go]
+    from: {pin: k8s-config-connector, paths: [pkg/clients/generated/apis/sql/v1beta1/sqluser_types.go]}
+  - here: [apis/sql/v1beta1/sqluser_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/sql/v1beta1/sqlsslcert_identity.go]}
+  - here: [pkg/controller/direct/sql/client.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/sql/client.go]}
+  - here: [pkg/controller/direct/sql/sqluser_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/sql/sqlsslcert_controller.go]}
+  - here: [apis/sqladmin/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/sqladmin/v1alpha1/groupversion_info.go]}
+  - here: [apis/sqladmin/v1alpha1/sqladminbackup_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/sqladmin/v1alpha1/sqladminbackup_types.go]}
+  - here: [apis/sqladmin/v1alpha1/sqladminbackup_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/sqladmin/v1alpha1/sqladminbackup_identity.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#12553]
+  - here: [pkg/controller/direct/sqladmin/sqladminbackup_controller.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#12553, paths: [pkg/controller/direct/sqladmin/sqladminbackup_controller.go]}
+  - here: [pkg/controller/direct/sqladmin/sqladminbackup_mapping.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#12553, paths: [pkg/controller/direct/sqladmin/mapper.generated.go, pkg/controller/direct/sqladmin/mapper.go]}
+  - here: [apis/secretmanager/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/secretmanager/v1beta1/groupversion_info.go]}
+  - here: [apis/secretmanager/v1beta1/secretmanagersecret_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/secretmanager/v1beta1/secretmanagersecret_types.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#6651]
+  - here: [apis/secretmanager/v1beta1/secretmanagersecret_identity.go, apis/secretmanager/v1beta1/secretmanagersecret_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/secretmanager/v1beta1/secretmanagersecret_identity.go, apis/secretmanager/v1beta1/secretmanagersecret_reference.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#6651]
+  - here: [apis/secretmanager/v1beta1/secretmanagersecretversion_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/secretmanager/v1beta1/secretmanagersecretversion_types.go]}
+  - here: [apis/secretmanager/v1beta1/secretmanagersecretversion_identity.go, apis/secretmanager/v1beta1/secretmanagersecretversion_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/secretmanager/v1beta1/secretmanagersecretversion_identity.go, apis/secretmanager/v1beta1/secretmanagersecretversion_reference.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#6651]
+  - here: [apis/secretmanager/v1beta1/types.generated.go]
+    from: {pin: k8s-config-connector, paths: [apis/secretmanager/v1beta1/types.generated.go]}
+  - here: [pkg/controller/direct/secretmanager/secretmanagersecret_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/secretmanager/secretmanagersecret_controller.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#6651]
+  - here: [pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#6651]
+  - here: [pkg/controller/direct/secretmanager/mapper.generated.go, pkg/controller/direct/secretmanager/secret_mapping.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/secretmanager/mapper.generated.go, pkg/controller/direct/secretmanager/secret_mapping.go]}
+  - here: [apis/artifactregistry/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1beta1/groupversion_info.go]}
+  - here: [apis/artifactregistry/v1beta1/artifactregistryrepository_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1beta1/artifactregistryrepository_types.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#13517]
+  - here: [apis/artifactregistry/v1beta1/artifactregistryrepository_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1beta1/artifactregistryrepository_identity.go]}
+  - here: [apis/artifactregistry/v1beta1/artifactregistryrepository_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1beta1/artifactregistryrepository_reference.go]}
+  - here: [apis/artifactregistry/v1beta1/types.generated.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1beta1/types.generated.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#13517]
+  - here: [pkg/controller/direct/artifactregistry/artifactregistryrepository_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/artifactregistry/artifactregistryrepository_controller.go]}
+  - here: [pkg/controller/direct/artifactregistry/mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/artifactregistry/mapper.go]}
+  - here: [pkg/controller/direct/artifactregistry/mapper.generated.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/artifactregistry/mapper.generated.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#13517]
+  - here: [pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer_test.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer.go]}
+    also_prs: [GoogleCloudPlatform/k8s-config-connector#13517]
+  - here: [apis/artifactregistry/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1alpha1/groupversion_info.go]}
+  - here: [apis/storage/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/storage/v1alpha1/groupversion_info.go]}
+  - here: [apis/compute/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/groupversion_info.go]}
+  - here: [apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_types.go]}
+  - here: [apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_identity.go]}
+  - here: [pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkfirewallpolicy_controller.go, pkg/controller/direct/compute/computenetworkfirewallpolicy_mapper.go]}
+  - here: [apis/iam/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/iam/v1alpha1/groupversion_info.go]}
+  - here: [apis/logging/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/logging/v1alpha1/groupversion_info.go]}
+  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]}
+  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.generated.go]}
+  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_reference.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_reference.generated.go]}
+  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_types.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_types.go]}
+  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_identity.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_identity.generated.go]}
+  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_reference.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_reference.generated.go]}
+  - here: [apis/iam/v1alpha1/types.generated.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/types.generated.go]}
+  - here: [apis/run/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/groupversion_info.go]}
+  - here: [apis/run/v1alpha1/runservice_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/runworkerpool_types.go]}
+  - here: [apis/run/v1alpha1/servicescaling_types.go]
+    from: {written_here: true}
+  - here: [apis/run/v1alpha1/runservice_identity.go, apis/run/v1alpha1/runservice_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/runworkerpool_identity.go, apis/run/v1alpha1/runworkerpool_reference.go]}
+  - here: [apis/run/v1alpha1/types.generated.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/types.generated.go]}
+  - here: [pkg/controller/direct/run/runservice_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_controller.go]}
+  - here: [pkg/controller/direct/run/mapper.generated.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/mapper.generated.go]}
+  - here: [pkg/controller/direct/run/runservice_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_mapper.go]}
+  - here: [pkg/controller/direct/run/resolverefs.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/resolverefs.go]}
+  - here:
+      - apis/iam/v1alpha1/iamrolebinding_types.go
+      - apis/iam/v1alpha1/iamrolebinding_identity.go
+      - apis/iam/v1alpha1/iamrolemember_types.go
+      - apis/iam/v1alpha1/iamrolemember_identity.go
+      - apis/iam/v1alpha1/iamresourceref_types.go
+      - pkg/iampolicy/
+      - pkg/controller/direct/iam/rolebinding_controller.go
+      - pkg/controller/direct/iam/rolemember_controller.go
+      - pkg/controller/direct/iam/policy_common.go
+    from: {written_here: true}
+  - here: [hack/boilerplate.go.txt]
+    from: {pin: k8s-config-connector, paths: [hack/boilerplate.go.txt]}
+  - here: [hack/generate.sh]
+    from: {pin: k8s-config-connector, paths: [dev/tasks/generate-crds]}
+  - here: [hack/regen-mocksql-users.sh]
+    from: {pin: k8s-config-connector, paths: [mockgcp/Makefile, mockgcp/apply-proto-patches.sh, mockgcp/fixup-third-party.sh]}
+
+other_sources:
+  - repo: googleapis/googleapis
+    commit: 731d7f2ab6e4e2ea15030c95039e2cb66174d4fb
+    used_for: the protos mockgcp is generated from (mockgcp's pin, mockgcp/git.versions)
+  - repo: googleapis/googleapis
+    commit: bf54c1031efddde9cdfee0f89254315d0116a5f9
+    used_for: field numbers of User.database_roles and SqlUsersUpdateRequest.database_roles / revoke_existing_roles
+  - repo: hashicorp/terraform-provider-google-beta
+    commit: 42eb358f50f54450f5433a359517c42edf10e63f
+    used_for: the behaviour of database_roles (MPL-2.0; read, not copied)
