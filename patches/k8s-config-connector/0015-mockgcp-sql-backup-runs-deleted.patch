@@ -1,0 +1,41 @@
+config-connector-extensions patch 0015: mockgcp keeps a deleted Cloud SQL backup run, with status DELETED, as the real API does.
+
+Written here, on top of patch 0003 (upstream PR #12553's mockgcp), for
+sqladmin.gcp.hfl.dev SQLAdminBackup. A live run against a real project
+(docs/live-runs.md, 2026-11-09) showed that after backupRuns.delete
+completes, backupRuns.get still returns the run with status DELETED rather
+than 404; patch 0003's mock removed it. Now backupRuns.delete marks the run
+DELETED and keeps it. Deleting a run already DELETED answers 404 (not seen
+live; the simplest choice).
+
+Upstream candidate: yes, with PR #12553, whose mock and
+controller assume a deleted run is gone.
+
+diff --git a/mockgcp/mocksql/sqlbackup.go b/mockgcp/mocksql/sqlbackup.go
+--- a/mockgcp/mocksql/sqlbackup.go
++++ b/mockgcp/mocksql/sqlbackup.go
+@@ -127,13 +127,23 @@
+ 
+ 	fqn := name.String()
+ 
++	// Cloud SQL keeps a deleted backup run: backupRuns.get still returns it,
++	// with status DELETED (seen against the real API, docs/live-runs.md in
++	// config-connector-extensions). Deleting it again is taken as not found.
+ 	deleted := &pb.BackupRun{}
+-	if err := s.storage.Delete(ctx, fqn, deleted); err != nil {
++	if err := s.storage.Get(ctx, fqn, deleted); err != nil {
+ 		if status.Code(err) == codes.NotFound {
+ 			return nil, status.Errorf(codes.NotFound, "Not Found")
+ 		}
+ 		return nil, err
+ 	}
++	if deleted.Status == pb.SqlBackupRunStatus_DELETED {
++		return nil, status.Errorf(codes.NotFound, "Not Found")
++	}
++	deleted.Status = pb.SqlBackupRunStatus_DELETED
++	if err := s.storage.Update(ctx, fqn, deleted); err != nil {
++		return nil, err
++	}
+ 
+ 	op := &pb.Operation{
+ 		TargetProject: name.Project.ID,

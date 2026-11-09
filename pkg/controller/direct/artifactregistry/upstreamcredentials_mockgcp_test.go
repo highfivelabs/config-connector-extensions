@@ -16,8 +16,9 @@
 package artifactregistry_test
 
 // A remote repository that logs in to its private upstream, end to end on
-// the fake cloud (pkg/test/mockenv). Written here: upstreamCredentials is
-// in no Config Connector code or pull request.
+// the fake cloud (pkg/test/mockenv), or a real project with
+// E2E_GCP_TARGET=real (make test-live). Written here: upstreamCredentials
+// is in no Config Connector code or pull request.
 
 import (
 	"net/url"
@@ -26,6 +27,9 @@ import (
 	"time"
 
 	pb "cloud.google.com/go/artifactregistry/apiv1/artifactregistrypb"
+	"cloud.google.com/go/iam/apiv1/iampb"
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	smpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/grpc/codes"
@@ -69,30 +73,83 @@ func updateMasks(t *testing.T, env *mockenv.Env, name string) []string {
 	return masks
 }
 
+// newPasswordSecret makes the upstream's password as a Secret Manager
+// secret with two versions, and returns the secret's name as the API gives
+// it. Against a real project, Artifact Registry's service agent may read it,
+// as the API requires for upstream credentials; the fake cloud has no
+// service agents. The test deletes the secret at the end.
+func newPasswordSecret(t *testing.T, env *mockenv.Env, id string) string {
+	t.Helper()
+	c, err := secretmanager.NewRESTClient(env.Ctx, env.GCPOptions()...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { c.Close() })
+	secret, err := c.CreateSecret(env.Ctx, &smpb.CreateSecretRequest{
+		Parent:   "projects/" + mockenv.Project,
+		SecretId: id,
+		Secret: &smpb.Secret{
+			Labels:      mockenv.Labels(),
+			Replication: &smpb.Replication{Replication: &smpb.Replication_Automatic_{Automatic: &smpb.Replication_Automatic{}}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("creating the password secret: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := c.DeleteSecret(env.Ctx, &smpb.DeleteSecretRequest{Name: secret.GetName()}); err != nil && status.Code(err) != codes.NotFound {
+			t.Errorf("deleting the password secret: %v", err)
+		}
+	})
+	for _, v := range []string{"not-a-real-password", "not-a-real-password-2"} {
+		if _, err := c.AddSecretVersion(env.Ctx, &smpb.AddSecretVersionRequest{
+			Parent:  secret.GetName(),
+			Payload: &smpb.SecretPayload{Data: []byte(v)},
+		}); err != nil {
+			t.Fatalf("adding a password version: %v", err)
+		}
+	}
+	if mockenv.Live() {
+		// projects/{number}/secrets/{id}: the service agent is named by the
+		// project's number.
+		number := strings.Split(secret.GetName(), "/")[1]
+		agent := "serviceAccount:service-" + number + "@gcp-sa-artifactregistry.iam.gserviceaccount.com"
+		if _, err := c.SetIamPolicy(env.Ctx, &iampb.SetIamPolicyRequest{
+			Resource: secret.GetName(),
+			Policy: &iampb.Policy{Bindings: []*iampb.Binding{{
+				Role: "roles/secretmanager.secretAccessor", Members: []string{agent},
+			}}},
+		}); err != nil {
+			t.Fatalf("letting Artifact Registry's service agent read the password: %v", err)
+		}
+	}
+	return secret.GetName()
+}
+
 func readCredentials(t *testing.T, env *mockenv.Env, name string) *pb.RemoteRepositoryConfig {
 	t.Helper()
 	got, err := newClient(t, env).GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 	if err != nil {
-		t.Fatalf("reading the repository from the fake cloud: %v", err)
+		t.Fatalf("reading the repository from the cloud: %v", err)
 	}
 	return got.GetRemoteRepositoryConfig()
 }
 
 func TestArtifactRegistryUpstreamCredentials(t *testing.T) {
 	env := mockenv.New(t, namespace)
-	const (
-		name     = "private-upstream"
-		version1 = "projects/" + mockenv.Project + "/secrets/registry-password/versions/1"
-		version2 = "projects/" + mockenv.Project + "/secrets/registry-password/versions/2"
-	)
+	name := mockenv.Name("private-upstream")
+	secretID := mockenv.Name("registry-password")
+	version1 := "projects/" + mockenv.Project + "/secrets/" + secretID + "/versions/1"
+	version2 := "projects/" + mockenv.Project + "/secrets/" + secretID + "/versions/2"
+	t.Logf("password secret as the API names it: %s", newPasswordSecret(t, env, secretID))
 
 	// The password's secret version, as Config Connector objects.
-	kccObject(t, env, "SecretManagerSecret", "registry-password", map[string]any{
+	kccObject(t, env, "SecretManagerSecret", secretID, map[string]any{
 		"replication": map[string]any{"automatic": true},
 	})
-	kccObject(t, env, "SecretManagerSecretVersion", "registry-password-1", map[string]any{
+	kccObject(t, env, "SecretManagerSecretVersion", secretID+"-1", map[string]any{
 		"resourceID": "1",
-		"secretRef":  map[string]any{"name": "registry-password"},
+		"secretRef":  map[string]any{"name": secretID},
 		"secretData": map[string]any{"value": "not-a-real-password"},
 	})
 
@@ -100,7 +157,7 @@ func TestArtifactRegistryUpstreamCredentials(t *testing.T) {
 	remote.UpstreamCredentials = &arv1beta1.ArtifactRegistryRepositoryUpstreamCredentials{
 		UsernamePasswordCredentials: &arv1beta1.ArtifactRegistryRepositoryUsernamePasswordCredentials{
 			Username:                 mockenv.Ptr("puller"),
-			PasswordSecretVersionRef: &refsv1beta1.SecretManagerSecretVersionRef{Name: "registry-password-1"},
+			PasswordSecretVersionRef: &refsv1beta1.SecretManagerSecretVersionRef{Name: secretID + "-1"},
 		},
 	}
 	remote.DisableUpstreamValidation = mockenv.Ptr(true)

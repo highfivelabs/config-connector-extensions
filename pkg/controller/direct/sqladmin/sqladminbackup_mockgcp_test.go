@@ -15,7 +15,8 @@
 
 package sqladmin_test
 
-// SQLAdminBackup end to end on the fake cloud (pkg/test/mockenv). The case:
+// SQLAdminBackup end to end on the fake cloud (pkg/test/mockenv), or a real
+// project with E2E_GCP_TARGET=real (make test-live). The case:
 // an on-demand backup of an application's database before a change that
 // could lose data (a major version upgrade, a destructive migration).
 
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/googleapi"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,39 +41,22 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-const (
-	instance  = "example"
-	namespace = "example"
-)
+const namespace = "example"
 
-func newCloudSQL(t *testing.T, env *mockenv.Env) *sqladmin.Service {
+// newCloudSQL is a client for Cloud SQL and the instance the backups are
+// of (mockenv's: made in the fake cloud, or the live run's shared one).
+func newCloudSQL(t *testing.T, env *mockenv.Env) (*sqladmin.Service, string) {
 	t.Helper()
 	svc, err := sqladmin.NewService(env.Ctx, env.GCPOptions()...)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// The instance the backups are of, created in the fake cloud directly.
-	op, err := svc.Instances.Insert(mockenv.Project, &sqladmin.DatabaseInstance{
-		Name:            instance,
-		DatabaseVersion: "POSTGRES_16",
-		Region:          "us-central1",
-		Settings:        &sqladmin.Settings{Tier: "db-custom-1-3840"},
-	}).Context(env.Ctx).Do()
-	if err != nil {
-		t.Fatalf("creating the instance in the fake cloud: %v", err)
-	}
-	for i := 0; i < 100 && op.Status != "DONE"; i++ {
-		time.Sleep(100 * time.Millisecond)
-		if op, err = svc.Operations.Get(mockenv.Project, op.Name).Context(env.Ctx).Do(); err != nil {
-			t.Fatal(err)
-		}
-	}
-	return svc
+	return svc, env.SQLInstance()
 }
 
-func newBackup(name, description string) *sqladminv1alpha1.SQLAdminBackup {
+func newBackup(instance, name, description string) *sqladminv1alpha1.SQLAdminBackup {
 	return &sqladminv1alpha1.SQLAdminBackup{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
 		Spec: sqladminv1alpha1.SQLAdminBackupSpec{
 			ProjectRef:  &refsv1beta1.ProjectRef{External: mockenv.Project},
 			InstanceRef: &refsv1beta1.SQLInstanceRef{External: fmt.Sprintf("projects/%s/instances/%s", mockenv.Project, instance)},
@@ -101,6 +86,25 @@ func backupID(t *testing.T, u *unstructured.Unstructured) int64 {
 	return id
 }
 
+// waitOperation waits for a Cloud SQL operation to finish without error.
+func waitOperation(t *testing.T, env *mockenv.Env, cloud *sqladmin.Service, op *sqladmin.Operation) {
+	t.Helper()
+	deadline := time.Now().Add(mockenv.Timeout())
+	for op.Status != "DONE" {
+		if time.Now().After(deadline) {
+			t.Fatalf("operation %s did not finish", op.Name)
+		}
+		time.Sleep(time.Second)
+		var err error
+		if op, err = cloud.Operations.Get(mockenv.Project, op.Name).Context(env.Ctx).Do(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if op.Error != nil && len(op.Error.Errors) > 0 {
+		t.Fatalf("operation %s failed: %s", op.Name, op.Error.Errors[0].Message)
+	}
+}
+
 func isNotFound(err error) bool {
 	var gerr *googleapi.Error
 	return errors.As(err, &gerr) && gerr.Code == http.StatusNotFound
@@ -108,11 +112,11 @@ func isNotFound(err error) bool {
 
 func TestSQLAdminBackup(t *testing.T) {
 	env := mockenv.New(t, namespace)
-	cloud := newCloudSQL(t, env)
+	cloud, instance := newCloudSQL(t, env)
 	gvk := sqladminv1alpha1.SQLAdminBackupGVK
 
 	const name = "before-upgrade"
-	backup := newBackup(name, "before the Postgres 17 upgrade")
+	backup := newBackup(instance, name, "before the Postgres 17 upgrade")
 	if err := env.Kube.Create(env.Ctx, backup); err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +127,7 @@ func TestSQLAdminBackup(t *testing.T) {
 		id = backupID(t, u)
 		run, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do()
 		if err != nil {
-			t.Fatalf("reading the backup run from the fake cloud: %v", err)
+			t.Fatalf("reading the backup run from the cloud: %v", err)
 		}
 		if run.Type != "ON_DEMAND" || run.Status != "SUCCESSFUL" {
 			t.Errorf("backup run type/status = %s/%s, want ON_DEMAND/SUCCESSFUL", run.Type, run.Status)
@@ -161,6 +165,49 @@ func TestSQLAdminBackup(t *testing.T) {
 		}
 	})
 
+	t.Run("a backup deleted outside Kubernetes is taken again", func(t *testing.T) {
+		// Real Cloud SQL keeps a deleted run, with status DELETED
+		// (docs/live-runs.md); the controller must see it as gone.
+		op, err := cloud.BackupRuns.Delete(mockenv.Project, instance, id).Context(env.Ctx).Do()
+		if err != nil {
+			t.Fatalf("deleting the backup run outside Kubernetes: %v", err)
+		}
+		waitOperation(t, env, cloud, op)
+		u := &unstructured.Unstructured{}
+		u.SetGroupVersionKind(gvk)
+		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
+			t.Fatal(err)
+		}
+		ann := u.GetAnnotations()
+		if ann == nil {
+			ann = map[string]string{}
+		}
+		ann[k8s.InternalForceReconcileAnnotation] = "after-out-of-band-delete"
+		u.SetAnnotations(ann)
+		if err := env.Kube.Update(env.Ctx, u); err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.Now().Add(mockenv.Timeout())
+		for {
+			if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
+				t.Fatal(err)
+			}
+			if ready, _ := mockenv.Ready(u); ready && backupID(t, u) != id {
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("no new backup after the old one was deleted outside Kubernetes; status: %v", u.Object["status"])
+			}
+			time.Sleep(time.Second)
+		}
+		newID := backupID(t, u)
+		run, err := cloud.BackupRuns.Get(mockenv.Project, instance, newID).Context(env.Ctx).Do()
+		if err != nil || run.Status != "SUCCESSFUL" {
+			t.Errorf("the new backup run: %v, %v; want SUCCESSFUL", run, err)
+		}
+		id = newID
+	})
+
 	t.Run("a backup cannot be changed", func(t *testing.T) {
 		obj := &sqladminv1alpha1.SQLAdminBackup{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
@@ -181,25 +228,35 @@ func TestSQLAdminBackup(t *testing.T) {
 			t.Fatal(err)
 		}
 		env.WaitGone(&sqladminv1alpha1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
-		if _, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do(); !isNotFound(err) {
-			t.Errorf("reading the deleted backup run: got %v, want 404", err)
+		// Real Cloud SQL keeps a deleted run, with status DELETED
+		// (docs/live-runs.md); mockgcp does the same (patch 0015).
+		if run, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do(); !isNotFound(err) {
+			if err != nil || run.Status != "DELETED" {
+				t.Errorf("reading the deleted backup run: got %v, %v; want 404 or status DELETED", run, err)
+			}
 		}
 	})
 
 	t.Run("abandon keeps the backup", func(t *testing.T) {
 		const kept = "kept"
-		b := newBackup(kept, "kept after its object is deleted")
+		b := newBackup(instance, kept, "kept after its object is deleted")
 		b.Annotations = map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
 		if err := env.Kube.Create(env.Ctx, b); err != nil {
 			t.Fatal(err)
 		}
 		keptID := backupID(t, env.WaitReady(gvk, namespace, kept))
+		// The test deletes what it abandoned (a live run must leave nothing).
+		t.Cleanup(func() {
+			if _, err := cloud.BackupRuns.Delete(mockenv.Project, instance, keptID).Context(env.Ctx).Do(); err != nil && !isNotFound(err) {
+				t.Errorf("deleting the abandoned backup run: %v", err)
+			}
+		})
 		if err := env.Kube.Delete(env.Ctx, b); err != nil {
 			t.Fatal(err)
 		}
 		env.WaitGone(&sqladminv1alpha1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: kept}})
 		if _, err := cloud.BackupRuns.Get(mockenv.Project, instance, keptID).Context(env.Ctx).Do(); err != nil {
-			t.Errorf("the abandoned backup run is gone from the fake cloud: %v", err)
+			t.Errorf("the abandoned backup run is gone from the cloud: %v", err)
 		}
 	})
 }

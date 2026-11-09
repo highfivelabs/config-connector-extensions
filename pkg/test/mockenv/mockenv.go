@@ -16,8 +16,10 @@
 // Package mockenv runs this project's kinds end to end on a fake cloud, for
 // tests: a real kube-apiserver and etcd (envtest), Config Connector's
 // unchanged direct reconciler with every config-connector-extensions controller, and Config
-// Connector's mockgcp (with our patches) as Google Cloud. No real Google
-// Cloud, no recordings.
+// Connector's mockgcp (with our patches) as Google Cloud. No recordings.
+//
+// With E2E_GCP_TARGET=real the same tests run against a real project
+// instead of mockgcp (target.go; make test-live, never make check).
 //
 // Needs KUBEBUILDER_ASSETS (make test sets it).
 package mockenv
@@ -38,6 +40,7 @@ import (
 	operatorv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/operator/pkg/apis/core/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	cloudresourcemanagerv1 "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	corev1 "k8s.io/api/core/v1"
@@ -56,9 +59,6 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
 )
 
-// Project is the mock project every Env creates.
-const Project = "mock-project"
-
 // Env is one running fake cloud and cluster.
 type Env struct {
 	T    *testing.T
@@ -69,6 +69,9 @@ type Env struct {
 	HTTP *http.Client
 
 	requests *recorder
+
+	mockSQL    sync.Once
+	mockSQLErr error
 }
 
 // recorder keeps the method and URL of every request to the fake cloud.
@@ -101,10 +104,12 @@ func repoRoot() string {
 
 // New starts envtest with our CRDs and Config Connector's operator CRDs
 // (directbase reads ConfigConnector / ConfigConnectorContext), mockgcp with
-// Project created, and a manager running every config-connector-extensions controller, and
+// Project created (or, against a real project, Application Default
+// Credentials), and a manager running every config-connector-extensions controller, and
 // creates each namespace given. Everything stops when the test ends.
 func New(t *testing.T, namespaces ...string) *Env {
 	t.Helper()
+	checkTarget(t)
 	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
 		t.Fatal("KUBEBUILDER_ASSETS is not set; run `make test`, which installs envtest's kube-apiserver and etcd")
 	}
@@ -126,6 +131,8 @@ func New(t *testing.T, namespaces ...string) *Env {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computeregionnetworkendpointgroups.compute.cnrm.cloud.google.com.yaml"),
 			// ComputeRouterRoutePolicy's router.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computerouters.compute.cnrm.cloud.google.com.yaml"),
+			// StorageBucketObject's bucket.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
 			// ArtifactRegistryTag's repository.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_artifactregistryrepositories.artifactregistry.cnrm.cloud.google.com.yaml"),
 			// IAMWorkloadIdentityPoolNamespace's pool, and a provider key's
@@ -156,13 +163,26 @@ func New(t *testing.T, namespaces ...string) *Env {
 		t.Fatal(err)
 	}
 
-	// The fake cloud, as Config Connector's own test harness builds it
-	// (config/tests/samples/create/harness.go).
-	mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
-	requests := &recorder{inner: mockCloud}
+	var requests *recorder
+	if Live() {
+		// A real project, with the run's credentials; requests are still
+		// recorded, so the same checks on them hold.
+		authed, err := google.DefaultClient(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			t.Fatalf("Application Default Credentials for E2E_GCP_TARGET=real: %v", err)
+		}
+		requests = &recorder{inner: authed.Transport}
+	} else {
+		// The fake cloud, as Config Connector's own test harness builds it
+		// (config/tests/samples/create/harness.go).
+		mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
+		requests = &recorder{inner: mockCloud}
+	}
 	gcpHTTP := &http.Client{Transport: requests}
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, gcpHTTP)
-	createMockProject(t, ctx, gcpHTTP, Project)
+	if !Live() {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, gcpHTTP)
+		createMockProject(t, ctx, gcpHTTP, Project)
+	}
 
 	mgr, err := ctrl.NewManager(restConfig, ctrl.Options{
 		Scheme:  scheme,
@@ -232,7 +252,7 @@ func createMockProject(t *testing.T, ctx context.Context, httpClient *http.Clien
 func (e *Env) WaitReady(gvk schema.GroupVersionKind, namespace, name string) *unstructured.Unstructured {
 	e.T.Helper()
 	var last *unstructured.Unstructured
-	deadline := time.Now().Add(60 * time.Second)
+	deadline := time.Now().Add(Timeout())
 	for time.Now().Before(deadline) {
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
@@ -254,7 +274,7 @@ func (e *Env) WaitReady(gvk schema.GroupVersionKind, namespace, name string) *un
 func (e *Env) WaitNotReady(gvk schema.GroupVersionKind, namespace, name string) string {
 	e.T.Helper()
 	var last *unstructured.Unstructured
-	deadline := time.Now().Add(60 * time.Second)
+	deadline := time.Now().Add(Timeout())
 	for time.Now().Before(deadline) {
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
@@ -295,7 +315,7 @@ func Ready(u *unstructured.Unstructured) (bool, string) {
 // WaitGone waits until the object no longer exists (its finalizers ran).
 func (e *Env) WaitGone(obj client.Object) {
 	e.T.Helper()
-	deadline := time.Now().Add(60 * time.Second)
+	deadline := time.Now().Add(Timeout())
 	for {
 		err := e.Kube.Get(e.Ctx, client.ObjectKeyFromObject(obj), obj)
 		if apierrors.IsNotFound(err) {

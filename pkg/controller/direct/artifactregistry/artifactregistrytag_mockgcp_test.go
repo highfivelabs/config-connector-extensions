@@ -16,10 +16,18 @@
 package artifactregistry_test
 
 // ArtifactRegistryTag end to end on the fake cloud (pkg/test/mockenv, patch
-// 0009). The case: a "prod" tag on an image, moved from one digest to the
-// next when a release is promoted.
+// 0009), or a real project with E2E_GCP_TARGET=real (make test-live). The
+// case: a "prod" tag on an image, moved from one digest to the next when a
+// release is promoted.
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strings"
 	"testing"
@@ -28,6 +36,7 @@ import (
 	pb "cloud.google.com/go/artifactregistry/apiv1/artifactregistrypb"
 	arv1beta1kcc "github.com/GoogleCloudPlatform/k8s-config-connector/apis/artifactregistry/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,29 +47,108 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-const (
-	digest1 = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
-	digest2 = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
-)
+// pushImage uploads a minimal OCI image (a config with one label, no
+// layers) as package "app" through the Docker registry API of a real
+// repository, and returns its manifest digest: a real tag must point at a
+// version that exists. The fake cloud holds no images, so there the tests
+// use made-up digests.
+func pushImage(t *testing.T, env *mockenv.Env, repo, label string) string {
+	t.Helper()
+	host := region + "-docker.pkg.dev"
+	name := mockenv.Project + "/" + repo + "/app"
+	ts, err := google.DefaultTokenSource(env.Ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tok, err := ts.Token()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The registry's token exchange, as docker login does it.
+	req, _ := http.NewRequestWithContext(env.Ctx, "GET", "https://"+host+"/v2/token?service="+host+"&scope=repository:"+name+":push,pull", nil)
+	req.SetBasicAuth("oauth2accesstoken", tok.AccessToken)
+	var registryToken struct {
+		Token string `json:"token"`
+	}
+	do := func(req *http.Request, want int) *http.Response {
+		t.Helper()
+		if registryToken.Token != "" {
+			req.Header.Set("Authorization", "Bearer "+registryToken.Token)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != want {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			t.Fatalf("%s %s: %s %s", req.Method, req.URL, resp.Status, body)
+		}
+		return resp
+	}
+	resp := do(req, http.StatusOK)
+	if err := json.NewDecoder(resp.Body).Decode(&registryToken); err != nil || registryToken.Token == "" {
+		t.Fatalf("registry token: %v", err)
+	}
+	resp.Body.Close()
+
+	digest := func(b []byte) string { sum := sha256.Sum256(b); return "sha256:" + hex.EncodeToString(sum[:]) }
+	config := []byte(`{"architecture":"amd64","os":"linux","config":{"Labels":{"cce-e2e":"` + label + `"}},"rootfs":{"type":"layers","diff_ids":[]}}`)
+	req, _ = http.NewRequestWithContext(env.Ctx, "POST", "https://"+host+"/v2/"+name+"/blobs/uploads/", nil)
+	resp = do(req, http.StatusAccepted)
+	resp.Body.Close()
+	loc, err := resp.Request.URL.Parse(resp.Header.Get("Location"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := loc.Query()
+	q.Set("digest", digest(config))
+	loc.RawQuery = q.Encode()
+	req, _ = http.NewRequestWithContext(env.Ctx, "PUT", loc.String(), bytes.NewReader(config))
+	req.Header.Set("Content-Type", "application/octet-stream")
+	do(req, http.StatusCreated).Body.Close()
+
+	manifest := []byte(fmt.Sprintf(`{"schemaVersion":2,"mediaType":"application/vnd.oci.image.manifest.v1+json",`+
+		`"config":{"mediaType":"application/vnd.oci.image.config.v1+json","digest":"%s","size":%d},"layers":[]}`, digest(config), len(config)))
+	req, _ = http.NewRequestWithContext(env.Ctx, "PUT", "https://"+host+"/v2/"+name+"/manifests/"+label, bytes.NewReader(manifest))
+	req.Header.Set("Content-Type", "application/vnd.oci.image.manifest.v1+json")
+	do(req, http.StatusCreated).Body.Close()
+	return digest(manifest)
+}
 
 func TestArtifactRegistryTag(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	cloud := newClient(t, env)
 	tagGVK := arv1alpha1.ArtifactRegistryTagGVK
 
-	// The repository, in the fake cloud and as a Config Connector object
-	// (not reconciled here; read to resolve repositoryRef by name).
-	const repo = "images"
+	// The repository, in the cloud and as a Config Connector object (not
+	// reconciled here; read to resolve repositoryRef by name). The test
+	// deletes it, and the tags and images in it, at the end.
+	repo := mockenv.Name("images")
 	op, err := cloud.CreateRepository(env.Ctx, &pb.CreateRepositoryRequest{
 		Parent:       "projects/" + mockenv.Project + "/locations/" + region,
 		RepositoryId: repo,
-		Repository:   &pb.Repository{Format: pb.Repository_DOCKER},
+		Repository:   &pb.Repository{Format: pb.Repository_DOCKER, Labels: mockenv.Labels()},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := op.Wait(env.Ctx); err != nil {
 		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		op, err := cloud.DeleteRepository(env.Ctx, &pb.DeleteRepositoryRequest{Name: cloudName(repo)})
+		if err == nil {
+			err = op.Wait(env.Ctx)
+		}
+		if err != nil && status.Code(err) != codes.NotFound {
+			t.Errorf("deleting the repository: %v", err)
+		}
+	})
+	digest1 := "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+	digest2 := "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+	if mockenv.Live() {
+		digest1, digest2 = pushImage(t, env, repo, "v1"), pushImage(t, env, repo, "v2")
 	}
 	r := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"location": region, "format": "DOCKER"}}}
 	r.SetGroupVersionKind(arv1beta1kcc.ArtifactRegistryRepositoryGVK)
@@ -120,7 +208,7 @@ func TestArtifactRegistryTag(t *testing.T) {
 		}
 		got, err := cloud.GetTag(env.Ctx, &pb.GetTagRequest{Name: tagName})
 		if err != nil {
-			t.Fatalf("reading the tag from the fake cloud: %v", err)
+			t.Fatalf("reading the tag from the cloud: %v", err)
 		}
 		if got.GetVersion() != pkg+"/versions/"+digest1 {
 			t.Errorf("cloud tag version = %q, want %q", got.GetVersion(), pkg+"/versions/"+digest1)
@@ -201,7 +289,7 @@ func TestArtifactRegistryTag(t *testing.T) {
 		}
 		env.WaitGone(k)
 		if _, err := cloud.GetTag(env.Ctx, &pb.GetTagRequest{Name: pkg + "/tags/stable"}); err != nil {
-			t.Errorf("the abandoned tag is gone from the fake cloud: %v", err)
+			t.Errorf("the abandoned tag is gone from the cloud: %v", err)
 		}
 	})
 }
