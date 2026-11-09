@@ -9,8 +9,25 @@ answered "no such object" and nothing served uploads. Written here:
   does; service.go calls it;
 - objects.go: objects.get returns the stored object, and objects.delete
   deletes it and its content.
+- mockgcp_http.go: prefilterRequest, which parses every request body as
+  JSON, leaves /upload/ requests alone.
 Resumable uploads are not served. Upstream candidate: yes.
-
+diff --git a/mockgcp/mockgcp_http.go b/mockgcp/mockgcp_http.go
+index 28a752042..eff79f75d 100644
+--- a/mockgcp/mockgcp_http.go
++++ b/mockgcp/mockgcp_http.go
+@@ -159,6 +159,11 @@ func toHostRegex(host string) *regexp.Regexp {
+ }
+ 
+ func (m *mockRoundTripper) prefilterRequest(req *http.Request) error {
++	// config-connector-extensions (patch 0013): an upload's body is the
++	// object's data (media) or a multipart document, not JSON.
++	if strings.HasPrefix(req.URL.Path, "/upload/") {
++		return nil
++	}
+ 	if req.Body != nil {
+ 		var requestBody bytes.Buffer
+ 		if _, err := io.Copy(&requestBody, req.Body); err != nil {
 diff --git a/mockgcp/mockstorage/objectmedia.go b/mockgcp/mockstorage/objectmedia.go
 new file mode 100644
 index 000000000..f951b35a5

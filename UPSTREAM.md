@@ -99,7 +99,7 @@ flattening all three, 2026-11-08).
 | `0009-mockgcp-artifactregistry-tags.patch` | written here: mockgcp serves Artifact Registry package tags (get, create, patch `version`, delete) in an existing repository | yes |
 | `0011-mockgcp-compute-region-network-endpoints.patch` | written here: mockgcp attaches, detaches and lists a regional network endpoint group's endpoints, adapted from its zonal ones | yes |
 | `0012-mockgcp-compute-router-route-policies.patch` | written here: mockgcp serves a Cloud Router's route policies (get, update, patch, delete, list) | yes |
-| `0013-mockgcp-storage-object-media.patch` | written here: mockgcp stores Cloud Storage objects with their content (media and multipart uploads, `alt=media` reads, get, delete); its objects were stubs | yes |
+| `0013-mockgcp-storage-object-media.patch` | written here: mockgcp stores Cloud Storage objects with their content (media and multipart uploads, `alt=media` reads, get, delete), and its request prefilter leaves upload bodies, which are not JSON, alone; its objects were stubs | yes |
 
 ## Other sources consulted, not copied
 
