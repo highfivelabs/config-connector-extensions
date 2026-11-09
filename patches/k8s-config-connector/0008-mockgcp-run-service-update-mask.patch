@@ -6,13 +6,24 @@ the top-level fields that differ.
   or JSON name), cleared when the request leaves them unset; written here.
 - Without one, the existing behaviour, plus Config Connector pull request
   #14417's (head 9297537a) line keeping invoker_iam_disabled.
+- A container left without ports or a startup probe gets the API's
+  defaults (an http1 port 8080, a TCP startup probe on it), as a live
+  run showed; written here.
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockrun/services.go b/mockgcp/mockrun/services.go
-index b60389a96..c3c062c56 100644
+index b60389a96..0d3a14567 100644
 --- a/mockgcp/mockrun/services.go
 +++ b/mockgcp/mockrun/services.go
-@@ -147,38 +147,47 @@ func (s *ServicesV2) UpdateService(ctx context.Context, req *pb.UpdateServiceReq
+@@ -84,6 +84,7 @@ func (s *ServicesV2) CreateService(ctx context.Context, req *pb.CreateServiceReq
+ 			},
+ 		}
+ 	}
++	fillContainerDefaults(obj.Template)
+ 	for _, container := range obj.Template.Containers {
+ 		if container.Resources == nil {
+ 			container.Resources = &pb.ResourceRequirements{
+@@ -147,42 +148,54 @@ func (s *ServicesV2) UpdateService(ctx context.Context, req *pb.UpdateServiceReq
  
  	// Update logic from request
  	updatedService := req.GetService()
@@ -92,7 +103,14 @@ index b60389a96..c3c062c56 100644
  	}
  
  	obj.UpdateTime = timestamppb.Now()
-@@ -242,3 +251,25 @@ func (s *MockService) parseServiceName(name string) (*serviceName, error) {
+ 
++	// config-connector-extensions: a template sent again gets the API's
++	// container defaults again.
++	fillContainerDefaults(obj.Template)
+ 	if err := s.storage.Update(ctx, fqn, obj); err != nil {
+ 		return nil, err
+ 	}
+@@ -242,3 +255,48 @@ func (s *MockService) parseServiceName(name string) (*serviceName, error) {
  	}
  	return nil, status.Errorf(codes.InvalidArgument, "name %q is not valid", name)
  }
@@ -117,4 +135,27 @@ index b60389a96..c3c062c56 100644
 +		}
 +	}
 +	return nil
++}
++
++// fillContainerDefaults gives each container what the real API fills in
++// when a template leaves it out (config-connector-extensions, seen in a
++// live run, docs/live-runs.md): an http1 port 8080 and a TCP startup probe
++// on it.
++func fillContainerDefaults(t *pb.RevisionTemplate) {
++	if t == nil {
++		return
++	}
++	for _, c := range t.Containers {
++		if len(c.Ports) == 0 {
++			c.Ports = []*pb.ContainerPort{{Name: "http1", ContainerPort: 8080}}
++		}
++		if c.StartupProbe == nil {
++			c.StartupProbe = &pb.Probe{
++				TimeoutSeconds:   240,
++				PeriodSeconds:    240,
++				FailureThreshold: 1,
++				ProbeType:        &pb.Probe_TcpSocket{TcpSocket: &pb.TCPSocketAction{Port: c.Ports[0].ContainerPort}},
++			}
++		}
++	}
 +}
