@@ -57,6 +57,7 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_identity.go` | `apis/compute/v1beta1/computenetworkfirewallpolicy_identity.go` | `projects/{project}/regions/{region}/firewallPolicies/{firewallPolicy}`; the region from `spec.region` |
 | `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` | `pkg/controller/direct/compute/computenetworkfirewallpolicy_controller.go`, `computenetworkfirewallpolicy_mapper.go` | the regional client and the region in each request; our KRM types; written here: the spec mapping (description only) and an unset description sent as "" on update |
 | `apis/iam/v1alpha1/groupversion_info.go` | `apis/iam/v1alpha1/groupversion_info.go` | group `iam.gcp.hfl.dev` |
+| `apis/logging/v1alpha1/groupversion_info.go` | `apis/logging/v1alpha1/groupversion_info.go` | group `logging.gcp.hfl.dev`; its kind, `LoggingSettings`, is written here |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go` | PR #14209 (head `a5e8f5a9`) `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go` | group, labels, short names; written here: `spec.workloadIdentityPoolRef` (the PR has no field for the pool) |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.go` | PR #14209 `iamworkloadidentitypoolnamespace_identity.generated.go` | written here: the pool from `workloadIdentityPoolRef` (the PR's is a stub that always fails) |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_reference.go` | PR #14209 `iamworkloadidentitypoolnamespace_reference.generated.go` | the reference names our kind |
@@ -107,6 +108,7 @@ flattening all three, 2026-11-08).
 | `0014-mockgcp-compute-region-network-firewall-policies.patch` | adapted from mockgcp's global network firewall policies: regional policies (get, list, insert, patch, delete) | yes |
 | `0015-mockgcp-sql-backup-runs-deleted.patch` | written here, on 0003: `backupRuns.delete` keeps the run with status `DELETED`, as real Cloud SQL does (a live run, `docs/live-runs.md`) | yes, with PR #12553 |
 | `0016-mockgcp-artifactregistry-remote-source-immutable.patch` | written here, on 0005: an update of `remoteRepositoryConfig` fails with the API's own error, "Remote source configuartion cannot be updated" (a live run, `docs/live-runs.md`), not mockgcp's "not supported" | yes |
+| `0017-mockgcp-logging-settings.patch` | written here: mockgcp serves Log Router settings (get, update with a mask) for organizations and folders | yes |
 
 ## Other sources consulted, not copied
 
