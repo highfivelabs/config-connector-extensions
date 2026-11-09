@@ -16,7 +16,7 @@
 # Swept: Artifact Registry repositories (every location), Secret Manager
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
-# firewall policies, backend services and health checks, network endpoint groups (their endpoints go with
+# firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
 # them), Cloud Routers (their route policies go with them) and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
@@ -140,10 +140,25 @@ scope() {
   elif [[ -n "$2" ]]; then echo "--zone=$2"
   else echo "--global"; fi
 }
+# assoc_scope REGION: the policy-location flag of the associations commands.
+assoc_scope() {
+  if [[ -n "$1" ]]; then echo "--firewall-policy-region=$1"; else echo "--global-firewall-policy"; fi
+}
 rows="$("${G[@]}" compute network-firewall-policies list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
   [[ -n "${name}" ]] || continue
+  # A policy with a network attached cannot be deleted: remove its
+  # associations first (the describe output lists them).
+  if [[ "${mode}" != "list" && ${dry} -eq 0 ]]; then
+    attached="$("${G[@]}" compute network-firewall-policies describe "${name}" "$(scope "${region}" "")" --verbosity=error \
+      --flatten='associations[]' --format='value(associations.name)' </dev/null)"
+    while read -r assoc; do
+      [[ -n "${assoc}" ]] || continue
+      act "firewall policy association" "${name}/${assoc} ${region:-global}" "${G[@]}" compute network-firewall-policies associations delete \
+        --firewall-policy="${name}" --name="${assoc}" "$(assoc_scope "${region}")"
+    done <<<"${attached}"
+  fi
   act "network firewall policy" "${name} ${region:-global}" "${G[@]}" compute network-firewall-policies delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute backend-services list --verbosity=error \

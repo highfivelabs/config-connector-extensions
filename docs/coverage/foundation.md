@@ -107,9 +107,9 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** whole, **size** M, **modules** 2 (net-firewall-policy, net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 20 / 12 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 20 / 12 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha)
   - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule
 - **Missing, whole resources:** `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` and `ComputeRegionNetworkFirewallPolicyPacketMirroringRule`; the same packet mirroring rule for the global network policy (`google_compute_network_firewall_policy_packet_mirroring_rule`) and the hierarchical policy. Our `ComputeRegionNetworkFirewallPolicy` is the policy only (its `description`).
@@ -505,7 +505,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | --- | --- | ---: | :-: |
 | ComputeProjectMetadataItem | (not a create) one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method) | n/a | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
-| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
+| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | IAMRoleBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMRoleMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
@@ -680,7 +680,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `compute.googleapis.com/PacketMirroring` | ComputePacketMirroring | - | 12 | 12 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | - | - | 7 | 0 | 0 | 7 | 7 |
 | foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | - | 15 | 0 | 0 | 15 | 7 |
-| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 22 | 51 | 2 |
+| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 22 | 51 | 2 |
 | security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | - |
 | security | `compute.googleapis.com/RegionSslPolicy` | ComputeRegionSSLPolicy (alpha) | - | 6 | 5 | 0 | 1 | - |
 | foundation | `compute.googleapis.com/Route` | ComputeRoute | - | 13 | 11 | 0 | 2 | - |

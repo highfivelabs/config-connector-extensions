@@ -101,7 +101,7 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones; their rules are patch 0020). The fingerprint is
   not checked on patch, a policy is deleted even when associated, and
-  associations are not served yet. A rule is stored as sent: mockgcp
+  associations are patch 0021. A rule is stored as sent: mockgcp
   checks none of the API's rules about a rule (a `goto_next` rule with
   logging, secure tags together with target service accounts, a layer 4
   protocol with ports it cannot have, FQDNs and region codes on the wrong
@@ -111,6 +111,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   (the controller sends `[]` for it), and answers 400 "The rule at
   priority N is not ready" to a patch soon after another change, which
   the fake never does.
+  An association (patch 0021) is stored as sent: mockgcp does not check
+  that the network exists, nor that a network has no policy attached
+  from another policy (it refuses only a repeated name or network inside
+  one policy), nor what the API fills in itself.
 - **Log Router settings in mockgcp** (patch 0017, ours). Any
   organization or folder ID is accepted, the key is not checked, and the
   service account IDs only follow the documented form.
