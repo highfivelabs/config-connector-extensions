@@ -25,7 +25,10 @@ package compute
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
@@ -34,6 +37,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/common"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/registry"
+	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -118,7 +122,7 @@ func (a *routePolicyAdapter) Find(ctx context.Context) (bool, error) {
 		Project: a.id.Project, Region: a.id.Region, Router: a.id.Router, Policy: direct.PtrTo(a.id.Policy),
 	})
 	if err != nil {
-		if direct.IsNotFound(err) {
+		if routePolicyMissing(err) {
 			return false, nil
 		}
 		return false, fmt.Errorf("getting ComputeRouterRoutePolicy %s: %w", a.id, err)
@@ -169,7 +173,7 @@ func (a *routePolicyAdapter) Delete(ctx context.Context, deleteOp *directbase.De
 		Project: a.id.Project, Region: a.id.Region, Router: a.id.Router, Policy: direct.PtrTo(a.id.Policy),
 	})
 	if err != nil {
-		if direct.IsNotFound(err) {
+		if routePolicyMissing(err) {
 			return true, nil
 		}
 		return false, fmt.Errorf("deleting ComputeRouterRoutePolicy %s: %w", a.id, err)
@@ -196,4 +200,16 @@ func (a *routePolicyAdapter) updateStatusFrom(ctx context.Context, op directbase
 		ExternalRef:   direct.LazyPtr(a.id.String()),
 		ObservedState: &krm.ComputeRouterRoutePolicyObservedState{Fingerprint: direct.LazyPtr(actual.GetFingerprint())},
 	}, nil)
+}
+
+// routePolicyMissing reports whether err says the route policy does not
+// exist. For a router's missing policy the API answers 400, "Invalid value
+// for field 'policy': '<name>'. The policy does not exist", not 404 (live
+// run cce-11091509-3d77, docs/live-runs.md); a missing router is a 404.
+func routePolicyMissing(err error) bool {
+	if direct.IsNotFound(err) {
+		return true
+	}
+	var ae *apierror.APIError
+	return errors.As(err, &ae) && ae.HTTPCode() == http.StatusBadRequest && strings.Contains(err.Error(), "The policy does not exist")
 }
