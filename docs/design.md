@@ -343,9 +343,15 @@ Upstream code exists, not released:
 | 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller, no mockgcp | workload identity federation | namespace and managed identity built; `mode` needs the DCL fork |
 
 In the Google API, in no Config Connector code or pull request
-(unverified against the live API): Artifact Registry package tags, a
-remote repository's `upstreamCredentials` (built, decision 8), Workload Identity
-pool provider keys, Cloud SQL `blueGreenDeployments`. None is built yet.
+(unverified against the live API), in the order decision 10 takes them:
+
+| Candidate | Done |
+| --- | --- |
+| Artifact Registry package tags | built, `ArtifactRegistryTag` (2026-11-09) |
+| a remote repository's `upstreamCredentials` | built (decision 8) |
+| Workload Identity pool provider keys | next |
+| Cloud SQL `blueGreenDeployments` | skipped: not in the API. Neither `sqladmin/v1` nor `sqladmin/v1beta4` in google-api-go-client v0.287.1 (the pin's) has it; the entry was wrong |
+
 Two entries were dropped from this list on 2026-11-09: Artifact Registry
 repository attachments have a direct controller on `master`
 (`ArtifactRegistryAttachment`, not in `v1.160.0`; install beside the
@@ -532,6 +538,21 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     attestation rules. The PR's proto has no attestation-rule methods; they
     are added from the IAM v1 API, and the proto's duplicate operation
     metadata is dropped.
+- `ArtifactRegistryTag` (`artifactregistry.gcp.hfl.dev/v1alpha1`, decision
+  10, the first unranked candidate). **Written here** in full: no Config
+  Connector code or pull request, and no Terraform resource, has package
+  tags; the kind follows the Artifact Registry API (`tags.create`, `get`,
+  `patch` with update mask `version`, `delete`) on the client the
+  repository controller already uses.
+  - `spec.repositoryRef` is Config Connector's `ArtifactRegistryRepositoryRef`
+    (a Config Connector repository by name, or `external`), `spec.package`
+    the package ID (a "/" in it is sent as `%2F`, as resource names encode
+    it), `spec.resourceID` the tag, `spec.version` the version's ID (for a
+    Docker image its digest). Moving the tag is changing `version`.
+  - Patch 0009: mockgcp serves tags in an existing repository; it holds no
+    packages, so neither the package nor the version is checked.
+  - The managers' role also reads `artifactregistry.cnrm.cloud.google.com`;
+    `pkg/test/mockenv` installs Config Connector's repository CRD.
 
 ## 7. What is left
 
@@ -588,6 +609,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     owned by a Google service (`ownerService`), none of which mockgcp
     models, and which `googleCloudResource` forms the API accepts in an
     attestation rule; then correct mockgcp.
+18. `ArtifactRegistryTag` against a real project: a tag on a version that
+    exists, the API's error for one that does not, and a package whose ID
+    has a "/" (`%2F` in the name), which the fake test leaves out.
 
 ## 8. Decisions
 
@@ -843,7 +867,7 @@ bundle at the pin (`config/installbundle/components/clusterroles/` and
   `cnrm-manager-ns-role` in `cnrm-system`); `cnrm-manager-cluster-role`
   stays cluster-wide.
 - **What our manager needs:** our five groups, read Secrets, write
-  events, and read the five Config Connector groups ours reference
+  events, and read the six Config Connector groups ours reference
   (`config-connector-extensions-manager` and `config-connector-extensions-manager-cluster`,
   `config/operator/rbac.yaml`).
 - **What Config Connector's pods would gain from our binding, when
