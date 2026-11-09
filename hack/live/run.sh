@@ -32,10 +32,13 @@ cd "${ROOT}"
 source hack/live/projects.sh
 
 # Not yet: iam (workload identity pool namespaces, managed identities,
-# provider keys), run (RunService) and compute (regional network
-# endpoints, router route policies), and StorageBucketObject. The live-test service account has
-# no role on them, the sweeper does not know their resources, and their
-# tests do not yet take run names (docs/live-runs.md).
+# provider keys), run (RunService) and StorageBucketObject: the live-test
+# service account has no role on them, the sweeper does not know their
+# resources, and their tests do not yet take run names. compute (regional
+# network endpoints, router route policies, regional network firewall
+# policies) is ready (run names, cleanup, the sweeper) but waits for
+# roles/compute.networkAdmin and roles/compute.securityAdmin
+# (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 

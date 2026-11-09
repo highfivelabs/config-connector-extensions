@@ -81,6 +81,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Regional network firewall policies in mockgcp** (patch 0014, adapted
+  from its global ones). The fingerprint is not checked on patch, a policy
+  is deleted even when associated, and rules and associations are not
+  served yet.
 - **Cloud Storage objects in mockgcp** (patch 0013, ours). Before it,
   objects were stubs. Uploads are media or multipart, not resumable; an
   object's ACLs, holds, retention and storage class are not modelled.

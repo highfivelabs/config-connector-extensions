@@ -15,8 +15,11 @@
 # It refuses any project not in LIVE_PROJECTS (hack/live/projects.sh).
 # Swept: Artifact Registry repositories (every location), Secret Manager
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
-# (their users and backups go with them). A failed list or delete fails
-# the sweep.
+# (their users and backups go with them), and Compute Engine network
+# firewall policies, network endpoint groups (their endpoints go with
+# them), Cloud Routers (their route policies go with them) and VPC
+# networks, which take no labels and are found by name. A failed list or
+# delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -69,7 +72,7 @@ act() { # act KIND NAME CMD...
   found=$((found + 1))
   if [[ "${mode}" == "list" ]]; then echo "  ${kind} ${name}"; return; fi
   if [[ ${dry} -eq 1 ]]; then echo "  would delete ${kind} ${name}"; return; fi
-  if "$@" >/dev/null; then
+  if "$@" </dev/null >/dev/null; then
     echo "  deleted ${kind} ${name}"
   else
     echo "  FAILED to delete ${kind} ${name}" >&2
@@ -116,6 +119,45 @@ names="$("${G[@]}" sql instances list --verbosity=error \
   --filter="$(filter settings.userLabels ^)" --format='value(name)')"
 for name in ${names}; do
   act "Cloud SQL instance" "${name}" "${G[@]}" sql instances delete "${name}"
+done
+
+# Compute Engine: by name only (these take no labels), and by
+# creationTimestamp; what is in a network goes before the network.
+cfilter() {
+  local f
+  if [[ -n "${run}" ]]; then f="name~^${run}-"; else f="name~^${PREFIX}"; fi
+  if [[ "${mode}" == "sweep" && -z "${run}" ]]; then
+    f="(${f}) AND creationTimestamp<${cutoff}"
+  fi
+  echo "${f}"
+}
+# scope REGION ZONE: the location flag for a regional, zonal or global one.
+scope() {
+  if [[ -n "$1" ]]; then echo "--region=$1"
+  elif [[ -n "$2" ]]; then echo "--zone=$2"
+  else echo "--global"; fi
+}
+rows="$("${G[@]}" compute network-firewall-policies list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "network firewall policy" "${name} ${region:-global}" "${G[@]}" compute network-firewall-policies delete "${name}" "$(scope "${region}" "")"
+done <<<"${rows}"
+rows="$("${G[@]}" compute network-endpoint-groups list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename(),zone.basename())')"
+while read -r name region zone; do
+  [[ -n "${name}" ]] || continue
+  act "network endpoint group" "${name} ${region:-${zone:-global}}" "${G[@]}" compute network-endpoint-groups delete "${name}" "$(scope "${region}" "${zone}")"
+done <<<"${rows}"
+rows="$("${G[@]}" compute routers list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "Cloud Router" "${name} ${region}" "${G[@]}" compute routers delete "${name}" --region="${region}"
+done <<<"${rows}"
+names="$("${G[@]}" compute networks list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
+for name in ${names}; do
+  act "VPC network" "${name}" "${G[@]}" compute networks delete "${name}"
 done
 
 if [[ "${mode}" == "list" ]]; then
