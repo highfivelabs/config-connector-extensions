@@ -460,7 +460,7 @@ What these numbers miss, for the foundation:
   - `privateca.googleapis.com/CaPoolCertificateAuthority`: 43 / 0 / 21 of 64; PrivateCACertificateAuthority
   - `privateca.googleapis.com/CertificateTemplate`: 33 / 0 / 11 of 44; PrivateCACertificateTemplate
   - `certificatemanager.googleapis.com/TrustConfig`: 4 / 0 / 5 of 9; CertificateManagerTrustConfig (alpha)
-- **Missing, whole resources:** Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match; verify each against the CRD before building.) IAM on attestors and CA pools is `IAMRoleMember`'s job and is built.
+- **Missing, whole resources:** Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match; verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and is built.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `binaryauthorization.googleapis.com/Attestor` (measured): `userOwnedGrafeasNote.noteReference`, `userOwnedGrafeasNote.publicKeys[].comment`, `userOwnedGrafeasNote.publicKeys[].id`, `userOwnedGrafeasNote.publicKeys[].pkixPublicKey.keyId`
   - uncovered in `binaryauthorization.googleapis.com/PlatformPolicy` (measured): `gkePolicy.checkSets[].checks[].simpleSigningAttestationCheck.attestationAuthenticators[].pkixPublicKeySet.pkixPublicKeys[].keyId`, `gkePolicy.checkSets[].checks[].slsaCheck.rules[].attestationSource.containerAnalysisAttestationProjects[]`, `gkePolicy.checkSets[].checks[].slsaCheck.rules[].configBasedBuildRequired`, `gkePolicy.checkSets[].checks[].slsaCheck.rules[].customConstraints`, `gkePolicy.checkSets[].scope.kubernetesServiceAccount`
@@ -508,8 +508,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
 | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
-| IAMRoleBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
-| IAMRoleMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
+| IAMBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
+| IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |

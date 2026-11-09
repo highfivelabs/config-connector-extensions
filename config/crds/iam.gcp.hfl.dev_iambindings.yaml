@@ -5,20 +5,20 @@ metadata:
   creationTimestamp: null
   labels:
     gcp.hfl.dev/gap: "true"
-  name: iamrolemembers.iam.gcp.hfl.dev
+  name: iambindings.iam.gcp.hfl.dev
 spec:
   group: iam.gcp.hfl.dev
   names:
     categories:
     - gcp
     - hfl
-    kind: IAMRoleMember
-    listKind: IAMRoleMemberList
-    plural: iamrolemembers
+    kind: IAMBinding
+    listKind: IAMBindingList
+    plural: iambindings
     shortNames:
-    - hfliamrolemember
-    - hfliamrolemembers
-    singular: iamrolemember
+    - hfliambinding
+    - hfliambindings
+    singular: iambinding
   preserveUnknownFields: false
   scope: Namespaced
   versions:
@@ -41,7 +41,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: IAMRoleMember is the Schema for the IAMRoleMember API
+        description: IAMBinding is the Schema for the IAMBinding API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -56,15 +56,12 @@ spec:
           metadata:
             type: object
           spec:
-            description: IAMRoleMemberSpec is one member of one role on one resource.
-            oneOf:
-            - required:
-              - member
-            - required:
-              - memberFrom
+            description: IAMBindingSpec is the members of one role on one resource.
             properties:
               condition:
-                description: The condition under which the member has the role. Immutable.
+                description: The condition under which the binding applies. Immutable.
+                  The role with this condition is the binding this kind owns; the
+                  same role without it, or with another condition, is left alone.
                 properties:
                   description:
                     description: The description of the condition.
@@ -83,66 +80,55 @@ spec:
                 x-kubernetes-validations:
                 - message: condition is immutable
                   rule: self == oldSelf
-              member:
-                description: The IAM identity, as the API writes it (user:ada@example.com,
-                  group:team@example.com, serviceAccount:app@project.iam.gserviceaccount.com,
-                  domain:example.com, allAuthenticatedUsers, ...). Immutable. Exactly
-                  one of member and memberFrom is required.
-                type: string
-                x-kubernetes-validations:
-                - message: member is immutable
-                  rule: self == oldSelf
-              memberFrom:
-                description: The identity of a Config Connector object. Immutable.
-                oneOf:
-                - required:
-                  - bigQueryConnectionConnectionRef
-                - required:
-                  - logSinkRef
-                - required:
-                  - serviceAccountRef
-                - required:
-                  - serviceIdentityRef
-                - required:
-                  - sqlInstanceRef
-                properties:
-                  serviceAccountRef:
-                    description: 'The IAMServiceAccount (or an external service account
-                      email) to bind: serviceAccount:{its email}.'
-                    oneOf:
-                    - not:
+              members:
+                description: The IAM identities that have the role, as the API writes
+                  them (user:ada@example.com, group:team@example.com, serviceAccount:app@project.iam.gserviceaccount.com,
+                  domain:example.com, allAuthenticatedUsers, ...). Any other member
+                  of this role and condition on the resource is removed.
+                items:
+                  type: string
+                type: array
+              membersFrom:
+                description: Members that are the identity of a Config Connector object,
+                  added to members.
+                items:
+                  description: IAMBindingMemberFrom is a member taken from an object.
+                  properties:
+                    serviceAccountRef:
+                      description: 'The IAMServiceAccount (or an external service
+                        account email) to bind: serviceAccount:{its email}.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
                         required:
                         - external
-                      required:
-                      - name
-                    - not:
-                        anyOf:
-                        - required:
-                          - name
-                        - required:
-                          - namespace
-                      required:
-                      - external
-                    properties:
-                      external:
-                        description: A reference to an externally managed IAMServiceAccount
-                          resource. Should be in the format "{{serviceAccountID}}@{{projectID}}.iam.gserviceaccount.com".
-                        type: string
-                      name:
-                        description: The name of an IAMServiceAccount resource.
-                        type: string
-                      namespace:
-                        description: The namespace of an IAMServiceAccount resource.
-                        type: string
-                    type: object
-                required:
-                - serviceAccountRef
-                type: object
-                x-kubernetes-validations:
-                - message: memberFrom is immutable
-                  rule: self == oldSelf
+                      properties:
+                        external:
+                          description: A reference to an externally managed IAMServiceAccount
+                            resource. Should be in the format "{{serviceAccountID}}@{{projectID}}.iam.gserviceaccount.com".
+                          type: string
+                        name:
+                          description: The name of an IAMServiceAccount resource.
+                          type: string
+                        namespace:
+                          description: The namespace of an IAMServiceAccount resource.
+                          type: string
+                      type: object
+                  required:
+                  - serviceAccountRef
+                  type: object
+                type: array
               resourceRef:
-                description: The resource whose IAM policy holds the member. Immutable.
+                description: The resource whose IAM policy holds the binding. Immutable.
                 oneOf:
                 - not:
                     required:
@@ -183,7 +169,7 @@ spec:
                     description: The Config Connector kind of the resource, for example
                       Project, Folder, StorageBucket or SecretManagerSecret. The kinds
                       this version accepts are listed in docs/design.md, section 6.5
-                      (IAMRoleBinding).
+                      (IAMBinding).
                     type: string
                   name:
                     description: The name of the Kubernetes object that manages the
@@ -213,12 +199,19 @@ spec:
             - role
             type: object
             x-kubernetes-validations:
-            - message: exactly one of member and memberFrom is required
-              rule: has(self.member) != has(self.memberFrom)
+            - message: at least one of members and membersFrom is required
+              rule: (has(self.members) && size(self.members) > 0) || (has(self.membersFrom)
+                && size(self.membersFrom) > 0)
           status:
-            description: IAMRoleMemberStatus defines the config connector machine
-              state of IAMRoleMember
+            description: IAMBindingStatus defines the config connector machine state
+              of IAMBinding
             properties:
+              appliedMembers:
+                description: The members the binding had when it was last applied,
+                  sorted.
+                items:
+                  type: string
+                type: array
               conditions:
                 description: Conditions represent the latest available observations
                   of the object's current state.
@@ -246,9 +239,9 @@ spec:
                   type: object
                 type: array
               externalRef:
-                description: The member, as {resource}#{role}#{member}, or {resource}#{role}#{member}#{condition
+                description: The binding, as {resource}#{role}, or {resource}#{role}#{condition
                   title} with a condition, where the resource is its full name. The
-                  API has no resource name for a member; this one is ours.
+                  API has no resource name for a binding; this one is ours.
                 type: string
               observedGeneration:
                 description: ObservedGeneration is the generation of the resource

@@ -15,7 +15,7 @@
 
 package iam_test
 
-// IAMRoleBinding end to end on the fake cloud (pkg/test/mockenv; patch
+// IAMBinding end to end on the fake cloud (pkg/test/mockenv; patch
 // 0018 serves Cloud Storage's policy paths) or a real project
 // (docs/live-runs.md). The case: a module that says who has a role on a
 // secret and on a bucket, and expects anyone else to be taken off it, with
@@ -41,7 +41,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-var bindingGVK = iamv1alpha1.IAMRoleBindingGVK
+var bindingGVK = iamv1alpha1.IAMBindingGVK
 
 const (
 	accessor = "roles/secretmanager.secretAccessor"
@@ -49,7 +49,7 @@ const (
 	adder    = "roles/secretmanager.secretVersionAdder"
 )
 
-func TestIAMRoleBinding(t *testing.T) {
+func TestIAMBinding(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	sm, err := secretmanager.NewService(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -77,7 +77,7 @@ func TestIAMRoleBinding(t *testing.T) {
 
 	// The secret, in the cloud and as a Config Connector object (not
 	// reconciled here; read to resolve resourceRef by name).
-	secretID := mockenv.Name("role-binding")
+	secretID := mockenv.Name("iam-binding")
 	secret := "projects/" + mockenv.Project + "/secrets/" + secretID
 	if _, err := sm.Projects.Secrets.Create("projects/"+mockenv.Project, &secretmanager.Secret{
 		Replication: &secretmanager.Replication{Automatic: &secretmanager.Automatic{}}, Labels: mockenv.Labels(),
@@ -137,7 +137,7 @@ func TestIAMRoleBinding(t *testing.T) {
 	}
 	resync := func(t *testing.T, name string) {
 		t.Helper()
-		o := &iamv1alpha1.IAMRoleBinding{}
+		o := &iamv1alpha1.IAMBinding{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, o); err != nil {
 			t.Fatal(err)
 		}
@@ -146,19 +146,19 @@ func TestIAMRoleBinding(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	newBinding := func(name, role string, members ...string) *iamv1alpha1.IAMRoleBinding {
-		return &iamv1alpha1.IAMRoleBinding{
+	newBinding := func(name, role string, members ...string) *iamv1alpha1.IAMBinding {
+		return &iamv1alpha1.IAMBinding{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: iamv1alpha1.IAMRoleBindingSpec{
+			Spec: iamv1alpha1.IAMBindingSpec{
 				ResourceRef: iamv1alpha1.IAMResourceReference{Kind: "SecretManagerSecret", APIVersion: "secretmanager.cnrm.cloud.google.com/v1beta1", Name: "db-password"},
 				Role:        role,
 				Members:     members,
 			},
 		}
 	}
-	update := func(t *testing.T, name string, change func(*iamv1alpha1.IAMRoleBinding)) {
+	update := func(t *testing.T, name string, change func(*iamv1alpha1.IAMBinding)) {
 		t.Helper()
-		o := &iamv1alpha1.IAMRoleBinding{}
+		o := &iamv1alpha1.IAMBinding{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, o); err != nil {
 			t.Fatal(err)
 		}
@@ -230,7 +230,7 @@ func TestIAMRoleBinding(t *testing.T) {
 	})
 
 	t.Run("changing the members changes the role", func(t *testing.T) {
-		update(t, accessors, func(o *iamv1alpha1.IAMRoleBinding) { o.Spec.Members = []string{saMember} })
+		update(t, accessors, func(o *iamv1alpha1.IAMBinding) { o.Spec.Members = []string{saMember} })
 		waitFor(t, "the member to be taken off", func() bool { return slices.Equal(members(t, accessor), []string{saMember}) })
 		env.WaitReady(bindingGVK, namespace, accessors)
 	})
@@ -316,7 +316,7 @@ func TestIAMRoleBinding(t *testing.T) {
 	})
 
 	t.Run("a bucket by its name, through Cloud Storage's own API", func(t *testing.T) {
-		bucket := mockenv.Name("role-binding-bucket")
+		bucket := mockenv.Name("iam-binding-bucket")
 		if _, err := gcs.Buckets.Insert(mockenv.Project, &storageapi.Bucket{Name: bucket, Location: "US", Labels: mockenv.Labels()}).Context(env.Ctx).Do(); err != nil {
 			t.Fatalf("creating the bucket: %v", err)
 		}
@@ -357,7 +357,7 @@ func TestIAMRoleBinding(t *testing.T) {
 	})
 
 	t.Run("delete removes the role's binding and no other", func(t *testing.T) {
-		b := &iamv1alpha1.IAMRoleBinding{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: accessors}}
+		b := &iamv1alpha1.IAMBinding{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: accessors}}
 		if err := env.Kube.Delete(env.Ctx, b); err != nil {
 			t.Fatal(err)
 		}

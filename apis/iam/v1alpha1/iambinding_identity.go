@@ -12,17 +12,17 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/common/identity"
 )
 
-var _ identity.Identity = &IAMRoleBindingIdentity{}
+var _ identity.Identity = &IAMBindingIdentity{}
 
-// IAMRoleBindingIdentity is a binding on a resource:
+// IAMBindingIdentity is a binding on a resource:
 // {resource}#{role}, or {resource}#{role}#{condition title}, where the
 // resource is its full name in the API (projects/{project}/secrets/{id}).
 // It does not name the kind of the resource: the name pattern says it.
-type IAMRoleBindingIdentity struct {
+type IAMBindingIdentity struct {
 	Resource, Role, ConditionTitle string
 }
 
-func (i *IAMRoleBindingIdentity) String() string {
+func (i *IAMBindingIdentity) String() string {
 	s := i.Resource + "#" + i.Role
 	if i.ConditionTitle != "" {
 		s += "#" + i.ConditionTitle
@@ -30,12 +30,12 @@ func (i *IAMRoleBindingIdentity) String() string {
 	return s
 }
 
-func (i *IAMRoleBindingIdentity) FromExternal(ref string) error {
+func (i *IAMBindingIdentity) FromExternal(ref string) error {
 	t := strings.SplitN(ref, "#", 3)
 	if len(t) < 2 || t[0] == "" || t[1] == "" {
-		return fmt.Errorf("format of IAMRoleBinding external=%q was not known (use {resource}#{role} or {resource}#{role}#{condition title})", ref)
+		return fmt.Errorf("format of IAMBinding external=%q was not known (use {resource}#{role} or {resource}#{role}#{condition title})", ref)
 	}
-	*i = IAMRoleBindingIdentity{Resource: t[0], Role: t[1]}
+	*i = IAMBindingIdentity{Resource: t[0], Role: t[1]}
 	if len(t) == 3 {
 		i.ConditionTitle = t[2]
 	}

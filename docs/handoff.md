@@ -4,7 +4,7 @@ This is where an agent that is new to the repository starts. It says what
 is done, what is left (in order), and the working conventions that are not
 obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
-`IAMRoleMember` and the folder and organization `ServiceIdentity`. Read
+`IAMRoleMember` (now `IAMMember`, design.md decision 12) and the folder and organization `ServiceIdentity`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 

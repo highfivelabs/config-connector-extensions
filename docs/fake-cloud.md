@@ -81,7 +81,7 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
-- **IAM policies in mockgcp** (patch 0018, ours, for `IAMRoleBinding`).
+- **IAM policies in mockgcp** (patch 0018, ours, for `IAMBinding`).
   Every `:getIamPolicy` and `:setIamPolicy` is served from one store keyed
   by host and path, for any resource name, existing or not: a policy on a
   secret that does not exist reads as empty and can be set. The etag is
@@ -89,7 +89,7 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   (`user:` with no address is accepted) or whether a role exists.
   Cloud Storage's own `.../iam` paths are served from the same store.
   Compute Engine's `GET .../getIamPolicy` and `POST .../setIamPolicy`
-  (patch 0019, ours, for `IAMRoleBinding` and `IAMRoleMember`) are served
+  (patch 0019, ours, for `IAMBinding` and `IAMMember`) are served
   from it too. The store's etag check and write are atomic (patch 0019; before it, two
   writers that read the same policy both passed the check and the later one
   replaced the earlier). What the store cannot show: a role that does not apply to

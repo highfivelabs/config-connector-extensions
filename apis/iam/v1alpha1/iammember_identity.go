@@ -12,17 +12,17 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/common/identity"
 )
 
-var _ identity.Identity = &IAMRoleMemberIdentity{}
+var _ identity.Identity = &IAMMemberIdentity{}
 
-// IAMRoleMemberIdentity is a member of a role on a resource:
+// IAMMemberIdentity is a member of a role on a resource:
 // {resource}#{role}#{member}, or {resource}#{role}#{member}#{condition
 // title}, where the resource is its full name in the API and the member is
 // as the API writes it (it has a colon, never a hash).
-type IAMRoleMemberIdentity struct {
+type IAMMemberIdentity struct {
 	Resource, Role, Member, ConditionTitle string
 }
 
-func (i *IAMRoleMemberIdentity) String() string {
+func (i *IAMMemberIdentity) String() string {
 	s := i.Resource + "#" + i.Role + "#" + i.Member
 	if i.ConditionTitle != "" {
 		s += "#" + i.ConditionTitle
@@ -30,12 +30,12 @@ func (i *IAMRoleMemberIdentity) String() string {
 	return s
 }
 
-func (i *IAMRoleMemberIdentity) FromExternal(ref string) error {
+func (i *IAMMemberIdentity) FromExternal(ref string) error {
 	t := strings.SplitN(ref, "#", 4)
 	if len(t) < 3 || t[0] == "" || t[1] == "" || t[2] == "" {
-		return fmt.Errorf("format of IAMRoleMember external=%q was not known (use {resource}#{role}#{member} or {resource}#{role}#{member}#{condition title})", ref)
+		return fmt.Errorf("format of IAMMember external=%q was not known (use {resource}#{role}#{member} or {resource}#{role}#{member}#{condition title})", ref)
 	}
-	*i = IAMRoleMemberIdentity{Resource: t[0], Role: t[1], Member: t[2]}
+	*i = IAMMemberIdentity{Resource: t[0], Role: t[1], Member: t[2]}
 	if len(t) == 4 {
 		i.ConditionTitle = t[3]
 	}

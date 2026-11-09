@@ -7,21 +7,21 @@ package v1alpha1
 // the member and leaves every other member of the role alone, and delete
 // removes only that member. It is Terraform's google_*_iam_member and Config
 // Connector's IAMPolicyMember for the resource types IAMPolicyMember cannot
-// reference (docs/design.md 6.5, rank 2); IAMRoleBinding is its
+// reference (docs/design.md 6.5, rank 2); IAMBinding is its
 // role-authoritative sibling. The name is the working one, not yet
 // confirmed by the builder (docs/design.md section 10, question 3): the
-// kind is named only by IAMRoleMemberGVK.
+// kind is named only by IAMMemberGVK.
 
 import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var IAMRoleMemberGVK = GroupVersion.WithKind("IAMRoleMember")
+var IAMMemberGVK = GroupVersion.WithKind("IAMMember")
 
-// IAMRoleMemberSpec is one member of one role on one resource.
+// IAMMemberSpec is one member of one role on one resource.
 // +kubebuilder:validation:XValidation:rule="has(self.member) != has(self.memberFrom)",message="exactly one of member and memberFrom is required"
-type IAMRoleMemberSpec struct {
+type IAMMemberSpec struct {
 	// The resource whose IAM policy holds the member. Immutable.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="resourceRef is immutable"
 	ResourceRef IAMResourceReference `json:"resourceRef"`
@@ -47,11 +47,11 @@ type IAMRoleMemberSpec struct {
 	// The identity of a Config Connector object. Immutable.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="memberFrom is immutable"
 	// +optional
-	MemberFrom *IAMRoleBindingMemberFrom `json:"memberFrom,omitempty"`
+	MemberFrom *IAMBindingMemberFrom `json:"memberFrom,omitempty"`
 }
 
-// IAMRoleMemberStatus defines the config connector machine state of IAMRoleMember
-type IAMRoleMemberStatus struct {
+// IAMMemberStatus defines the config connector machine state of IAMMember
+type IAMMemberStatus struct {
 	/* Conditions represent the latest available observations of the
 	   object's current state. */
 	Conditions []v1alpha1.Condition `json:"conditions,omitempty"`
@@ -68,7 +68,7 @@ type IAMRoleMemberStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:resource:categories=gcp;hfl,shortName=hfliamrolemember;hfliamrolemembers
+// +kubebuilder:resource:categories=gcp;hfl,shortName=hfliammember;hfliammembers
 // +kubebuilder:subresource:status
 // +kubebuilder:metadata:labels="gcp.hfl.dev/gap=true"
 // +kubebuilder:printcolumn:name="Age",JSONPath=".metadata.creationTimestamp",type="date"
@@ -76,25 +76,25 @@ type IAMRoleMemberStatus struct {
 // +kubebuilder:printcolumn:name="Status",JSONPath=".status.conditions[?(@.type=='Ready')].reason",type="string",description="The reason for the value in 'Ready'"
 // +kubebuilder:printcolumn:name="Status Age",JSONPath=".status.conditions[?(@.type=='Ready')].lastTransitionTime",type="date",description="The last transition time for the value in 'Status'"
 
-// IAMRoleMember is the Schema for the IAMRoleMember API
+// IAMMember is the Schema for the IAMMember API
 // +k8s:openapi-gen=true
-type IAMRoleMember struct {
+type IAMMember struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// +required
-	Spec   IAMRoleMemberSpec   `json:"spec,omitempty"`
-	Status IAMRoleMemberStatus `json:"status,omitempty"`
+	Spec   IAMMemberSpec   `json:"spec,omitempty"`
+	Status IAMMemberStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// IAMRoleMemberList contains a list of IAMRoleMember
-type IAMRoleMemberList struct {
+// IAMMemberList contains a list of IAMMember
+type IAMMemberList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []IAMRoleMember `json:"items"`
+	Items           []IAMMember `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&IAMRoleMember{}, &IAMRoleMemberList{})
+	SchemeBuilder.Register(&IAMMember{}, &IAMMemberList{})
 }

@@ -14,7 +14,7 @@
 // limitations under the License.
 
 // Package iampolicy reads and changes the IAM policy of a Google Cloud
-// resource, for the kinds that bind members to roles (IAMRoleBinding and
+// resource, for the kinds that bind members to roles (IAMBinding and
 // the additive kind). Written here. The bindings are changed by Terraform's
 // rules (google_*_iam_binding replaces one role's members; google_*_iam_member
 // adds one), read, not copied. The policy is read and written whole with its

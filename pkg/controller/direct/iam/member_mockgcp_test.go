@@ -15,7 +15,7 @@
 
 package iam_test
 
-// IAMRoleMember end to end on the fake cloud (pkg/test/mockenv; patches 0018
+// IAMMember end to end on the fake cloud (pkg/test/mockenv; patches 0018
 // and 0019 serve Cloud Storage's and Compute Engine's policy paths) or a
 // real project (docs/live-runs.md). The case: a module that gives one
 // member a role on a resource Config Connector's IAMPolicyMember cannot
@@ -50,7 +50,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-var memberGVK = iamv1alpha1.IAMRoleMemberGVK
+var memberGVK = iamv1alpha1.IAMMemberGVK
 
 // storageManagedFolderGVK is Config Connector's StorageManagedFolder, which
 // the member test names by name (it is not reconciled there).
@@ -62,7 +62,7 @@ type target struct {
 	kind, name, role string
 }
 
-func TestIAMRoleMember(t *testing.T) {
+func TestIAMMember(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	policies := &iampolicy.Client{HTTP: env.HTTP}
 
@@ -111,7 +111,7 @@ func TestIAMRoleMember(t *testing.T) {
 	}
 	resync := func(t *testing.T, name string) {
 		t.Helper()
-		o := &iamv1alpha1.IAMRoleMember{}
+		o := &iamv1alpha1.IAMMember{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, o); err != nil {
 			t.Fatal(err)
 		}
@@ -120,17 +120,17 @@ func TestIAMRoleMember(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	newMember := func(name string, tg target, member string) *iamv1alpha1.IAMRoleMember {
-		return &iamv1alpha1.IAMRoleMember{
+	newMember := func(name string, tg target, member string) *iamv1alpha1.IAMMember {
+		return &iamv1alpha1.IAMMember{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: iamv1alpha1.IAMRoleMemberSpec{
+			Spec: iamv1alpha1.IAMMemberSpec{
 				ResourceRef: iamv1alpha1.IAMResourceReference{Kind: tg.kind, External: tg.name},
 				Role:        tg.role,
 				Member:      mockenv.Ptr(member),
 			},
 		}
 	}
-	del := func(t *testing.T, o *iamv1alpha1.IAMRoleMember) {
+	del := func(t *testing.T, o *iamv1alpha1.IAMMember) {
 		t.Helper()
 		if err := env.Kube.Delete(env.Ctx, o); err != nil {
 			t.Fatal(err)
@@ -147,7 +147,7 @@ func TestIAMRoleMember(t *testing.T) {
 
 		first := newMember(prefix+"-mine", tg, mine)
 		second := newMember(prefix+"-theirs", tg, theirs)
-		for _, o := range []*iamv1alpha1.IAMRoleMember{first, second} {
+		for _, o := range []*iamv1alpha1.IAMMember{first, second} {
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
@@ -243,7 +243,7 @@ func TestIAMRoleMember(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		id := mockenv.Name("role-member-secret")
+		id := mockenv.Name("iam-member-secret")
 		parent := "projects/" + mockenv.Project + "/locations/" + region
 		if _, err := sm.Projects.Locations.Secrets.Create(parent, &secretmanager.Secret{Labels: mockenv.Labels()}).SecretId(id).Context(env.Ctx).Do(); err != nil {
 			t.Fatalf("creating the secret: %v", err)
@@ -263,7 +263,7 @@ func TestIAMRoleMember(t *testing.T) {
 				Expression: `request.time < timestamp("2099-01-01T00:00:00Z")`,
 			}
 			plain := newMember("secret-plain", tg, mine)
-			for _, m := range []*iamv1alpha1.IAMRoleMember{plain, o} {
+			for _, m := range []*iamv1alpha1.IAMMember{plain, o} {
 				if err := env.Kube.Create(env.Ctx, m); err != nil {
 					t.Fatal(err)
 				}
@@ -290,7 +290,7 @@ func TestIAMRoleMember(t *testing.T) {
 		t.Run("a member from a service account, named by its email", func(t *testing.T) {
 			o := newMember("secret-from", tg, "")
 			o.Spec.Member = nil
-			o.Spec.MemberFrom = &iamv1alpha1.IAMRoleBindingMemberFrom{}
+			o.Spec.MemberFrom = &iamv1alpha1.IAMBindingMemberFrom{}
 			o.Spec.MemberFrom.ServiceAccountRef.External = strings.TrimPrefix(theirs, "serviceAccount:")
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
@@ -304,7 +304,7 @@ func TestIAMRoleMember(t *testing.T) {
 
 		t.Run("a member and a memberFrom, or neither, are refused", func(t *testing.T) {
 			both := newMember("both", tg, mine)
-			both.Spec.MemberFrom = &iamv1alpha1.IAMRoleBindingMemberFrom{}
+			both.Spec.MemberFrom = &iamv1alpha1.IAMBindingMemberFrom{}
 			both.Spec.MemberFrom.ServiceAccountRef.External = strings.TrimPrefix(theirs, "serviceAccount:")
 			if err := env.Kube.Create(env.Ctx, both); err == nil || !strings.Contains(err.Error(), "exactly one of member and memberFrom") {
 				t.Errorf("both: err = %v", err)
@@ -337,7 +337,7 @@ func TestIAMRoleMember(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		bucket := mockenv.Name("role-member-bucket")
+		bucket := mockenv.Name("iam-member-bucket")
 		if _, err := gcs.Buckets.Insert(mockenv.Project, &storageapi.Bucket{
 			Name: bucket, Location: "US", Labels: mockenv.Labels(),
 			IamConfiguration: &storageapi.BucketIamConfiguration{UniformBucketLevelAccess: &storageapi.BucketIamConfigurationUniformBucketLevelAccess{Enabled: true}},
@@ -427,7 +427,7 @@ func TestIAMRoleMember(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		hcName, bsName := mockenv.Name("role-member-hc"), mockenv.Name("role-member-bs")
+		hcName, bsName := mockenv.Name("iam-member-hc"), mockenv.Name("iam-member-bs")
 		op, err := health.Insert(env.Ctx, &pb.InsertHealthCheckRequest{Project: mockenv.Project, HealthCheckResource: &pb.HealthCheck{
 			Name: mockenv.Ptr(hcName), Type: mockenv.Ptr("HTTP"),
 			HttpHealthCheck: &pb.HTTPHealthCheck{Port: mockenv.Ptr(int32(80))},

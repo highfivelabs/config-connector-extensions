@@ -96,7 +96,7 @@ refuses any project but the ones listed.
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
 | `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
 
-`IAMRoleMember` on a backend service needed no new role: the account's
+`IAMMember` on a backend service needed no new role: the account's
 `roles/compute.networkAdmin` and `roles/compute.securityAdmin` were enough
 (run `cce-11091851-bd92`).
 

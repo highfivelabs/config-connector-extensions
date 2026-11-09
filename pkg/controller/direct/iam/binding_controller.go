@@ -15,7 +15,7 @@
 
 package iam
 
-// Written here: IAMRoleBinding, one role on one resource with its members,
+// Written here: IAMBinding, one role on one resource with its members,
 // authoritative for that role and condition (Terraform's
 // google_*_iam_binding, read, not copied). Create and update are the same:
 // read the policy, make the role's binding have exactly the spec's members,
@@ -46,21 +46,21 @@ import (
 )
 
 func init() {
-	registry.RegisterModel(krm.IAMRoleBindingGVK, NewRoleBindingModel)
+	registry.RegisterModel(krm.IAMBindingGVK, NewBindingModel)
 }
 
-func NewRoleBindingModel(ctx context.Context, config *config.ControllerConfig) (directbase.Model, error) {
-	return &roleBindingModel{config: *config}, nil
+func NewBindingModel(ctx context.Context, config *config.ControllerConfig) (directbase.Model, error) {
+	return &bindingModel{config: *config}, nil
 }
 
-type roleBindingModel struct {
+type bindingModel struct {
 	config config.ControllerConfig
 }
 
-var _ directbase.Model = &roleBindingModel{}
+var _ directbase.Model = &bindingModel{}
 
-func (m *roleBindingModel) AdapterForObject(ctx context.Context, op *directbase.AdapterForObjectOperation) (directbase.Adapter, error) {
-	obj := &krm.IAMRoleBinding{}
+func (m *bindingModel) AdapterForObject(ctx context.Context, op *directbase.AdapterForObjectOperation) (directbase.Adapter, error) {
+	obj := &krm.IAMBinding{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
@@ -69,14 +69,14 @@ func (m *roleBindingModel) AdapterForObject(ctx context.Context, op *directbase.
 		return nil, err
 	}
 	if gone {
-		return &roleBindingAdapter{desired: obj, gone: true}, nil
+		return &bindingAdapter{desired: obj, gone: true}, nil
 	}
-	id := &krm.IAMRoleBindingIdentity{Resource: name, Role: obj.Spec.Role}
+	id := &krm.IAMBindingIdentity{Resource: name, Role: obj.Spec.Role}
 	if obj.Spec.Condition != nil {
 		id.ConditionTitle = obj.Spec.Condition.Title
 	}
 	if ref := direct.ValueOf(obj.Status.ExternalRef); ref != "" && ref != id.String() {
-		return nil, fmt.Errorf("cannot change IAMRoleBinding identity (old=%q, new=%q)", ref, id.String())
+		return nil, fmt.Errorf("cannot change IAMBinding identity (old=%q, new=%q)", ref, id.String())
 	}
 	var members []string
 	if !op.IsDeleting() {
@@ -88,12 +88,12 @@ func (m *roleBindingModel) AdapterForObject(ctx context.Context, op *directbase.
 	if err != nil {
 		return nil, err
 	}
-	return &roleBindingAdapter{id: id, rtype: t, client: c, desired: obj, members: members}, nil
+	return &bindingAdapter{id: id, rtype: t, client: c, desired: obj, members: members}, nil
 }
 
 // desiredMembers is spec.members and the service accounts of
 // spec.membersFrom, as the API writes them.
-func desiredMembers(ctx context.Context, op *directbase.AdapterForObjectOperation, obj *krm.IAMRoleBinding) ([]string, error) {
+func desiredMembers(ctx context.Context, op *directbase.AdapterForObjectOperation, obj *krm.IAMBinding) ([]string, error) {
 	var members []string
 	for _, m := range obj.Spec.Members {
 		if strings.TrimSpace(m) == "" {
@@ -114,28 +114,28 @@ func desiredMembers(ctx context.Context, op *directbase.AdapterForObjectOperatio
 	return members, nil
 }
 
-func (m *roleBindingModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
+func (m *bindingModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
 	return nil, nil
 }
 
-type roleBindingAdapter struct {
-	id      *krm.IAMRoleBindingIdentity
+type bindingAdapter struct {
+	id      *krm.IAMBindingIdentity
 	rtype   *iampolicy.ResourceType
 	client  *iampolicy.Client
-	desired *krm.IAMRoleBinding
+	desired *krm.IAMBinding
 	members []string
 	gone    bool
 
 	policy *iampb.Policy
 }
 
-var _ directbase.Adapter = &roleBindingAdapter{}
+var _ directbase.Adapter = &bindingAdapter{}
 
-func (a *roleBindingAdapter) condition() *iampolicy.Condition {
+func (a *bindingAdapter) condition() *iampolicy.Condition {
 	return conditionOf(a.desired.Spec.Condition)
 }
 
-func (a *roleBindingAdapter) Find(ctx context.Context) (bool, error) {
+func (a *bindingAdapter) Find(ctx context.Context) (bool, error) {
 	if a.gone {
 		return false, nil
 	}
@@ -152,25 +152,25 @@ func (a *roleBindingAdapter) Find(ctx context.Context) (bool, error) {
 }
 
 // apply makes the binding have exactly the spec's members.
-func (a *roleBindingAdapter) apply(ctx context.Context) error {
+func (a *bindingAdapter) apply(ctx context.Context) error {
 	_, err := a.client.Modify(ctx, a.rtype, a.id.Resource, func(p *iampb.Policy) bool {
 		return iampolicy.SetMembers(p, a.desired.Spec.Role, a.condition(), a.members)
 	})
 	return err
 }
 
-func (a *roleBindingAdapter) Create(ctx context.Context, createOp *directbase.CreateOperation) error {
-	klog.FromContext(ctx).V(2).Info("adding IAMRoleBinding", "name", a.id)
+func (a *bindingAdapter) Create(ctx context.Context, createOp *directbase.CreateOperation) error {
+	klog.FromContext(ctx).V(2).Info("adding IAMBinding", "name", a.id)
 	if err := a.apply(ctx); err != nil {
 		return err
 	}
 	return a.updateStatus(ctx, createOp)
 }
 
-func (a *roleBindingAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
+func (a *bindingAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
 	// Find read the policy; write only if it differs from the spec.
 	if a.policy == nil || iampolicy.SetMembers(proto.Clone(a.policy).(*iampb.Policy), a.desired.Spec.Role, a.condition(), a.members) {
-		klog.FromContext(ctx).V(2).Info("updating IAMRoleBinding", "name", a.id)
+		klog.FromContext(ctx).V(2).Info("updating IAMBinding", "name", a.id)
 		if err := a.apply(ctx); err != nil {
 			return err
 		}
@@ -178,11 +178,11 @@ func (a *roleBindingAdapter) Update(ctx context.Context, updateOp *directbase.Up
 	return a.updateStatus(ctx, updateOp)
 }
 
-func (a *roleBindingAdapter) Delete(ctx context.Context, deleteOp *directbase.DeleteOperation) (bool, error) {
+func (a *bindingAdapter) Delete(ctx context.Context, deleteOp *directbase.DeleteOperation) (bool, error) {
 	if a.gone {
 		return false, nil
 	}
-	klog.FromContext(ctx).V(2).Info("removing IAMRoleBinding", "name", a.id)
+	klog.FromContext(ctx).V(2).Info("removing IAMBinding", "name", a.id)
 	_, err := a.client.Modify(ctx, a.rtype, a.id.Resource, func(p *iampb.Policy) bool {
 		return iampolicy.Remove(p, a.desired.Spec.Role, a.condition())
 	})
@@ -195,14 +195,14 @@ func (a *roleBindingAdapter) Delete(ctx context.Context, deleteOp *directbase.De
 	return true, nil
 }
 
-func (a *roleBindingAdapter) Export(ctx context.Context) (*unstructured.Unstructured, error) {
+func (a *bindingAdapter) Export(ctx context.Context) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
 
-func (a *roleBindingAdapter) updateStatus(ctx context.Context, op directbase.Operation) error {
+func (a *bindingAdapter) updateStatus(ctx context.Context, op directbase.Operation) error {
 	applied := append([]string(nil), a.members...)
 	sort.Strings(applied)
-	return op.UpdateStatus(ctx, &krm.IAMRoleBindingStatus{
+	return op.UpdateStatus(ctx, &krm.IAMBindingStatus{
 		ExternalRef:    direct.LazyPtr(a.id.String()),
 		AppliedMembers: applied,
 	}, nil)
