@@ -6,14 +6,17 @@ updateRoutePolicy (create or replace), patchRoutePolicy (merge),
 deleteRoutePolicy and listRoutePolicies on an existing router, as the
 Compute Engine API documents them, with a new fingerprint on each write.
 The protos were already generated.
+A missing policy is answered as the real API answers it, 400 "Invalid
+value for field 'policy': ... The policy does not exist" (a live run,
+docs/live-runs.md).
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockcompute/routeroutepolicies.go b/mockgcp/mockcompute/routeroutepolicies.go
 new file mode 100644
-index 000000000..ece9609c6
+index 000000000..9f838a628
 --- /dev/null
 +++ b/mockgcp/mockcompute/routeroutepolicies.go
-@@ -0,0 +1,153 @@
+@@ -0,0 +1,154 @@
 +// Copyright 2026 High Five Labs
 +// SPDX-License-Identifier: Apache-2.0
 +//
@@ -76,7 +79,8 @@ index 000000000..ece9609c6
 +	obj := &pb.RoutePolicy{}
 +	if err := s.storage.Get(ctx, routePolicyKey(name, req.GetPolicy()), obj); err != nil {
 +		if status.Code(err) == codes.NotFound {
-+			return nil, status.Errorf(codes.NotFound, "The route policy '%s' was not found", req.GetPolicy())
++			// The real API answers a missing policy with 400, not 404.
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'policy': '%s'. The policy does not exist", req.GetPolicy())
 +		}
 +		return nil, err
 +	}

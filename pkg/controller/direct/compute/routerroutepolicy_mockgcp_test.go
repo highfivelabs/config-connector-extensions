@@ -202,8 +202,9 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		_, err := routers.GetRoutePolicy(env.Ctx, &pb.GetRoutePolicyRouterRequest{
 			Project: mockenv.Project, Region: region, Router: router, Policy: mockenv.Ptr(name),
 		})
-		if err == nil || !strings.Contains(err.Error(), "404") {
-			t.Errorf("reading the deleted route policy: got %v, want 404", err)
+		// The API's answer for a missing policy is a 400, not a 404.
+		if err == nil || !strings.Contains(err.Error(), "400") || !strings.Contains(err.Error(), "The policy does not exist") {
+			t.Errorf("reading the deleted route policy: got %v, want the API's 400 \"The policy does not exist\"", err)
 		}
 	})
 

@@ -328,6 +328,15 @@ func compareService(ctx context.Context, actual, desired *pb.Service, mburMatch 
 					actCont = maskedActual.Template.Containers[i]
 				}
 				if actCont != nil {
+					// Written here: the API gives a container an http1 port
+					// 8080 and a TCP startup probe when the template leaves
+					// them out (a live run, docs/live-runs.md).
+					if len(desCont.Ports) == 0 {
+						desCont.Ports = actCont.Ports
+					}
+					if desCont.StartupProbe == nil {
+						desCont.StartupProbe = actCont.StartupProbe
+					}
 					if desCont.Resources == nil && actCont.Resources != nil {
 						desCont.Resources = actCont.Resources
 					} else if desCont.Resources != nil && actCont.Resources != nil {

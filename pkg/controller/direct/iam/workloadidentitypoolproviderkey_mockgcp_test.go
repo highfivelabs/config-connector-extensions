@@ -18,6 +18,9 @@ package iam_test
 // IAMWorkloadIdentityPoolProviderKey end to end on the fake cloud
 // (pkg/test/mockenv, patch 0010). The case: a SAML identity provider that
 // encrypts its assertions, with the public key read from status.
+//
+// Against a real project (docs/live-runs.md) the test makes its own pool
+// (usePool) and deletes it at the end, with everything in it.
 
 import (
 	"strings"
@@ -41,6 +44,8 @@ func TestWorkloadIdentityPoolProviderKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	usePool(t, env, cloud, "key-pool", "")
+	useSAMLProvider(t, env, cloud, "saml-idp")
 	keys := cloud.Projects.Locations.WorkloadIdentityPools.Providers.Keys
 	keyGVK := iamv1alpha1.IAMWorkloadIdentityPoolProviderKeyGVK
 
@@ -102,7 +107,7 @@ func TestWorkloadIdentityPoolProviderKey(t *testing.T) {
 		}
 		got, err := keys.Get(cloudKey).Context(env.Ctx).Do()
 		if err != nil {
-			t.Fatalf("reading the key from the fake cloud: %v", err)
+			t.Fatalf("reading the key from the cloud: %v", err)
 		}
 		if got.State != "ACTIVE" || got.Use != "ENCRYPTION" || got.KeyData.KeySpec != "RSA_2048" {
 			t.Errorf("cloud key = %+v", got)

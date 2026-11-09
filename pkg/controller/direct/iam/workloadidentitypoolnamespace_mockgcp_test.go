@@ -18,6 +18,9 @@ package iam_test
 // IAMWorkloadIdentityPoolNamespace end to end on the fake cloud
 // (pkg/test/mockenv, patch 0006). The case: managed workload identities, a
 // namespace in a workload identity pool for one team's workloads.
+//
+// Against a real project (docs/live-runs.md) the test makes its own pool
+// (usePool) and deletes it at the end, with everything in it.
 
 import (
 	"net/url"
@@ -36,10 +39,11 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-const (
-	namespace = "example"
-	pool      = "app-pool"
-)
+const namespace = "example"
+
+// pool is the workload identity pool of the test running: each test sets
+// it with usePool (helpers_mockgcp_test.go).
+var pool = "app-pool"
 
 var gvk = iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK
 
@@ -75,11 +79,12 @@ func TestWorkloadIdentityPoolNamespace(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	usePool(t, env, cloud, "ns-pool", "TRUST_DOMAIN")
 	get := func(t *testing.T, name string) *api.WorkloadIdentityPoolNamespace {
 		t.Helper()
 		ns, err := cloud.Projects.Locations.WorkloadIdentityPools.Namespaces.Get(cloudName(name)).Context(env.Ctx).Do()
 		if err != nil {
-			t.Fatalf("reading the namespace from the fake cloud: %v", err)
+			t.Fatalf("reading the namespace from the cloud: %v", err)
 		}
 		return ns
 	}

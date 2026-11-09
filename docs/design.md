@@ -705,7 +705,7 @@ Notes on what was built from this table:
   is not a field yet: the API has it, Terraform's vendored resource does
   not. Patch 0014: mockgcp serves regional policies, adapted from its
   global ones. The rules and the association are separate kinds, next.
-  Live: pending, needs `roles/compute.securityAdmin` (`docs/live-runs.md`).
+  Live: passes (`docs/live-runs.md`).
 - `LoggingSettings` (`logging.gcp.hfl.dev/v1alpha1`, rank 7). **Written
   here** from the Cloud Logging API's `Settings`: `organizationRef` or
   `folderRef` (exactly one, checked by the CRD), `kmsKeyRef` (Config
@@ -736,7 +736,7 @@ Notes on what was built from this table:
   `status.externalRef` is ours: `projects/{project}/commonInstanceMetadata/{key}`.
   mockgcp already serves `projects.get` and `setCommonInstanceMetadata`;
   no patch.
-  Live: pending, needs `roles/iam.serviceAccountUser` on the project
+  Live: passes, with `roles/iam.serviceAccountUser` on the project
   (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and

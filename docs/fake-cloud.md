@@ -93,6 +93,8 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   object's ACLs, holds, retention and storage class are not modelled.
 - **Router route policies in mockgcp** (patch 0012, ours). The CEL in
   terms is stored, not parsed, and the fingerprint is not checked on write.
+  A missing policy is answered with the real API's 400 ("The policy does
+  not exist"), not a 404, as a live run showed.
 - **Regional network endpoints in mockgcp** (patch 0011, ours). Any
   endpoint is accepted in any group: the group's type (internet IP, domain
   name, VM) is not checked against the endpoint, nor is the VM.
@@ -110,17 +112,21 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
 - **Managed identities in mockgcp** (patch 0007, ours). One must be in an
   existing, active namespace. An attestation rule's `googleCloudResource`
   is only checked to be non-empty; the real API checks its form and
-  that the workload exists.
+  refuses one naming a project outside the pool's organization (a live
+  run), so against a real project the test names the test project.
 - **Cloud Run services in mockgcp.** Patch 0008 makes `services.patch`
-  honour an update mask. The fake fills in fewer server defaults than the
-  real API (no ports, startup probe or traffic), does not schedule
+  honour an update mask and give a container the API's default port and
+  startup probe, as a live run showed. The fake still fills in fewer
+  server defaults than the real API (no traffic), does not schedule
   anything, so a GPU `nodeSelector` is stored but never checked against
   the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
   serves.
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and
-  the Artifact Registry error above (patch 0016). The same tests run
+  the Artifact Registry error above (patch 0016), a missing route
+  policy's 400 (patch 0012), and a Cloud Run container's default port and
+  startup probe (patch 0008). The same tests run
   against a real project with `make test-live`.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is

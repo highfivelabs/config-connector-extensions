@@ -89,9 +89,16 @@ refuses any project but the ones listed.
 | `roles/storage.objectAdmin` | bucket `gs://hfl-dev-514205-offload` | the offload VM (checkout in, log out) |
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
+| `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers) |
+| `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy` |
+| `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
+| `roles/run.admin` | project | `RunService` |
+| `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
+| `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
 
 APIs enabled for it: `artifactregistry`, `secretmanager`, `sqladmin`,
-`cloudresourcemanager`. A new kind that needs another role or API adds it
+`cloudresourcemanager`, `run`; `compute`, `iam` and `storage` were
+already on. A new kind that needs another role or API adds it
 here, and to the account, in the same change.
 
 ## Adding a kind
@@ -145,35 +152,38 @@ on the same VM, minutes apart.
 | 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 | 2026-11-09 | `756c69f` | StorageBucketObject | PASS | PASS | none: media and multipart uploads, a new generation for new content, content from a ConfigMap and a Secret, delete and abandon all match patch 0013 | 1 bucket (US) with 4 small objects (deleted with the bucket) |
 | 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/hfl-dev-514205'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
+| 2026-11-09 | `2b9fc73` | ComputeRegionNetworkEndpoint | PASS | PASS | none | 1 network, 1 regional internet NEG with 3 endpoints (deleted) |
+| 2026-11-09 | `2b9fc73` | ComputeRegionNetworkFirewallPolicy | PASS | PASS | none | 2 regional firewall policies (deleted) |
+| 2026-11-09 | `2b9fc73` | ComputeRouterRoutePolicy | PASS | FAIL | `routers.getRoutePolicy` answers a missing policy with 400 "Invalid value for field 'policy': ... The policy does not exist", not 404, so Find took it for an error and the policy was never made; mockgcp answered 404. Fixed in the controller and in patch 0012 | 1 network, 1 Cloud Router (deleted) |
+| 2026-11-09 | `2b9fc73` | IAMWorkloadIdentityPoolNamespace | PASS | PASS | none | 1 workload identity pool (TRUST_DOMAIN) with 3 namespaces (deleted; kept 30 days, deleted) |
+| 2026-11-09 | `2b9fc73` | IAMWorkloadIdentityPoolProviderKey | PASS | PASS | none, against a real SAML provider with a fresh self-signed certificate | 1 pool, 1 SAML provider, 2 keys (deleted with the pool) |
+| 2026-11-09 | `2b9fc73` | IAMWorkloadIdentityPoolManagedIdentity | PASS | FAIL | the API refuses attestation rules naming a project outside the pool's organization ("must be within same organization as the WorkloadIdentityPool"); the test's made-up project 123 is now the test project's number live; mockgcp does not check | 1 pool with 1 namespace (deleted) |
+| 2026-11-09 | `2b9fc73` | RunService | PASS | FAIL | no Cloud Run GPU quota without zonal redundancy in the project; the test now runs without a GPU live (`E2E_RUN_GPU=true` where there is quota) | none made |
+| 2026-11-09 | `c459e36` | ComputeProjectMetadataItem and the rest of compute, iam, run | PASS | none | the VM was preempted (run `cce-11091605-8e55`) after the metadata item's first six subtests passed with the new project-level actAs; a resume then failed for want of `make upstream` (see `docs/handoff.md`) | 3 metadata keys left; swept by `make live-sweep RUN=cce-11091605-8e55` |
+| 2026-11-09 | `c459e36`+ | ComputeProjectMetadataItem | PASS | PASS | none (each write takes about 20 s live) | 5 metadata keys (removed) |
+| 2026-11-09 | `c459e36`+ | ComputeRegionNetworkEndpoint, ComputeRegionNetworkFirewallPolicy, ComputeRouterRoutePolicy | PASS | PASS | none, with the route policy fix | 2 networks, 1 NEG, 1 router, 2 firewall policies (deleted) |
+| 2026-11-09 | `c459e36`+ | IAMWorkloadIdentityPoolNamespace, IAMWorkloadIdentityPoolManagedIdentity, IAMWorkloadIdentityPoolProviderKey | PASS | PASS | none, with the attestation rules in the test project | 3 pools, 1 SAML provider (deleted) |
+| 2026-11-09 | `c459e36`+ | RunService | PASS | FAIL | without a GPU, create, a new image, delete and abandon pass; a resync with an unchanged spec sent a `template` update, and turning invoker IAM back on carried `template` too | 2 services (deleted) |
+| 2026-11-09 | `58d6ade` | RunService | PASS | FAIL | the same, now with the cloud's template printed: the API gives each container an http1 port 8080 and a TCP startup probe the spec leaves out. Fixed in the controller and in patch 0008 | 2 services (deleted) |
+| 2026-11-09 | `aee1155` | RunService | PASS | PASS | none, with the default port and startup probe taken from what was read (no GPU live: no quota) | 2 services (deleted); `make live-list` empty |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
 Cloud SQL; nothing made) and `cce-11090806-613a` (preempted while making
 the instance; swept by hand) reached no test.
 
-Not yet run live: `IAMWorkloadIdentityPoolNamespace`,
-`IAMWorkloadIdentityPoolManagedIdentity`,
-`IAMWorkloadIdentityPoolProviderKey` and `RunService` (packages `iam`
-and `run`). Granting the live-test service
-account `roles/iam.workloadIdentityPoolAdmin`, `roles/run.admin` and
-`roles/iam.serviceAccountUser` on the runtime service account is with
-the builder; then their tests need run names and cleanup, and the
-sweeper needs workload identity pools and Cloud Run services.
-
-Package `compute` (`ComputeRegionNetworkEndpoint`,
-`ComputeRouterRoutePolicy`, `ComputeRegionNetworkFirewallPolicy`) is
-ready to run live: its tests take every cloud name from `mockenv.Name`
-(a network, a regional network endpoint group, a router, the firewall
-policies), delete what they make, abandoned resources included, and the
-sweeper finds these by name (they take no labels). It waits for two
-roles on the live-test service account, with the builder:
-`roles/compute.networkAdmin` (the networks, the group and its
-endpoints, the router and its route policies) and
-`roles/compute.securityAdmin` (network firewall policies, which
-`compute.networkAdmin` leaves out). Then:
-`make test-live PROJECT=hfl-dev-514205 KINDS=compute`. The managed identity test's attestation rules name
-made-up Compute Engine instances, and the RunService test asks for an
-NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
+Packages `compute`, `iam` and `run` run live with the roles granted on
+2026-11-09 (the service account table). Their tests take every cloud
+name from `mockenv.Name` and delete what they make, abandoned resources
+included: `compute` makes a network, a regional network endpoint group, a
+router and firewall policies; each `iam` test makes its own workload
+identity pool (its ID is kept 30 days after delete, so it is never
+reused), and the key test a SAML provider with a fresh self-signed
+certificate; `run` makes Cloud Run services from Cloud Run's public
+sample image. The sweeper finds all of these by the run's name prefix.
+The test project has no Cloud Run GPU quota without zonal redundancy, so
+live `RunService` runs without a GPU and skips the GPU checks
+(`E2E_RUN_GPU=true` where there is quota); the fake cloud keeps the GPU.
 
 `LoggingSettings` (package `logging`) is ready to run live but waits on
 the builder for a test folder and a key; it never changes an
