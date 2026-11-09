@@ -47,6 +47,11 @@ from `mockenv.Name`, labels from `mockenv.Labels()`, everything it makes
 deleted): a kind is done after one live run is recorded in
 `docs/live-runs.md`.
 
+A new, changed or retired kind, or a moved Config Connector pin, changes the
+numbers in the README's Coverage section: run `task coverage` (`hack/coverage/run.sh`) and commit
+`docs/coverage/` and `README.md` with it (`task coverage-check` tells
+you whether you need to; `docs/coverage/README.md` says how it works).
+
 Generated files (`config/crds/`, `zz_generated.deepcopy.go`) come from
 `hack/generate.sh`; commit its output. New Go files and shell scripts
 start with:
