@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirteen kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has fourteen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -8,8 +8,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolManagedIdentity` and
 `IAMWorkloadIdentityPoolProviderKey`, a narrow direct
 `RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` and
-`StorageBucketObject` (section 6). Each passes its end-to-end test
+`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
+`StorageBucketObject` and `ComputeProjectMetadataItem` (section 6). Each passes its end-to-end test
 against mockgcp; those in `docs/live-runs.md` also pass it against a real
 project. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
@@ -642,7 +642,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
-| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | to build |
+| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | per-key metadata built (2026-11-09, `ComputeProjectMetadataItem`); the default network tier and default service accounts to build |
 
 Notes on what was built from this table:
 
@@ -690,6 +690,19 @@ Notes on what was built from this table:
   and multipart uploads, content reads, get and delete. The managers' role
   now reads ConfigMaps.
 
+- `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
+  per-key metadata). **Written here** after Terraform's
+  `google_compute_project_metadata_item` (read, not copied): `projectRef`,
+  `resourceID` (the key; `metadata.name` by default), `value`. The
+  controller reads the project's common instance metadata, changes the
+  one key, writes it all back with the fingerprint it read, and reads
+  again and retries on a 412 from another writer; delete removes only its
+  key. Unlike Terraform, which refuses a key that is already there, a key
+  already there is taken over, as Config Connector takes over existing
+  resources. The API has no resource name for one key, so
+  `status.externalRef` is ours: `projects/{project}/commonInstanceMetadata/{key}`.
+  mockgcp already serves `projects.get` and `setCommonInstanceMetadata`;
+  no patch.
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
@@ -776,6 +789,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     change is uploaded at once, not at the next reconcile; and, against a
     real project, a resumable upload for content near the size limit
     (mockgcp serves media and multipart only).
+23. `ComputeProjectMetadataItem`: the 412 retry is not exercised by the
+    fake (its writers do not race the way real ones can); the default
+    network tier and default service accounts, rank 10's other parts.
 
 ## 8. Decisions
 
