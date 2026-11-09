@@ -27,6 +27,8 @@ itself lives in its own repository and is never changed from here.
   unless a field is critical.
 - **What is left and known gaps:** `docs/design.md` §7 "What is left".
 - **The fake cloud:** docs/fake-cloud.md (mockgcp).
+- **Live runs against a real project:** `docs/live-runs.md` (the switch,
+  `make test-live`, the sweeper, the service account, and the ledger).
 - **Identity:** the managers run as their own narrow service account by
   default; sharing the upstream operator's is an opt-in (see `docs/design.md`).
 
@@ -41,10 +43,17 @@ itself lives in its own repository and is never changed from here.
 3. Generate CRDs and code with the repo's make targets; never hand-edit
    generated files.
 4. Test against the fake cloud, including what the fake cannot show,
-   written down in the fake cloud's doc.
-5. Update `docs/design.md` (what was built, what was proven, what is left)
+   written down in the fake cloud's doc. Build the end-to-end test on
+   `pkg/test/mockenv` so the same test runs live (`docs/live-runs.md`,
+   "Adding a kind").
+5. Run it live once: `make test-live PROJECT=hfl-dev-514205 KINDS=<package>`
+   on an offload VM as the live-tests service account, and add a row per
+   kind to the ledger in `docs/live-runs.md`. Fix what live shows: a bug
+   in our controller is a fix plus a test; a gap in the fake is a mockgcp
+   patch. A kind is not done until it has a live row.
+6. Update `docs/design.md` (what was built, what was proven, what is left)
    and `README.md`.
-6. Run `make check` (and `make operator-e2e` when the operator or
+7. Run `make check` (and `make operator-e2e` when the operator or
    install changes) and report the real result, failures included.
 
 ## Always
@@ -60,9 +69,14 @@ itself lives in its own repository and is never changed from here.
 
 ## Never
 
-- Never use real cloud credentials, projects, accounts or subscriptions.
-  Only the fake cloud. A change that needs the real cloud is written up,
-  not tested.
+- Never reach a real cloud except through `make test-live`: on an
+  offload Spot VM running as the live-tests service account
+  (`docs/live-runs.md`), in a project listed in `hack/live/projects.sh`
+  (only `hfl-dev-514205`). Never on a laptop, never with a downloaded
+  service account key, never in any other project, account or
+  subscription, and never from `make check`. Every live resource carries
+  the run's name prefix and labels, the test deletes it, and the run ends
+  with the sweeper and an empty `make live-list`.
 - Never open, comment on, review or react to upstream pull requests or
   issues. Reading them (`gh` read-only, `git fetch`) is fine.
 - Never force-push, rewrite pushed history, or change the repository's

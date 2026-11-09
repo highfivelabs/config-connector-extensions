@@ -30,7 +30,7 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/sqladmin/v1alpha1/groupversion_info.go` | `apis/sqladmin/v1alpha1/groupversion_info.go` | group `sqladmin.gcp.hfl.dev` |
 | `apis/sqladmin/v1alpha1/sqladminbackup_types.go` | `apis/sqladmin/v1alpha1/sqladminbackup_types.go` | group, labels, short names |
 | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go` | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go`, plus PR #12553's change to it | the backup ID is Cloud SQL's, so it comes from `status.externalRef` (as in the PR) |
-| `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | PR #12553 (head `9611a6de`) `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | the sqladmin v1beta4 REST client instead of `cloud.google.com/go/sql` (not in the pin's go.mod; adding it moves ~65 shared modules); Update compares the fields the spec sets |
+| `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | PR #12553 (head `9611a6de`) `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | the sqladmin v1beta4 REST client instead of `cloud.google.com/go/sql` (not in the pin's go.mod; adding it moves ~65 shared modules); Update compares the fields the spec sets; Find takes a run with status `DELETED` as gone (seen live) |
 | `pkg/controller/direct/sqladmin/sqladminbackup_mapping.go` | PR #12553 `mapper.generated.go` and `mapper.go` | the same fields, mapped to the REST types |
 | `apis/secretmanager/v1beta1/groupversion_info.go` | `apis/secretmanager/v1beta1/groupversion_info.go` | group `secretmanager.gcp.hfl.dev` |
 | `apis/secretmanager/v1beta1/secretmanagersecret_types.go` | `apis/secretmanager/v1beta1/secretmanagersecret_types.go` | group, labels, short names; `spec.location` from PR #6651 (head `9aab204d`) |
@@ -101,6 +101,8 @@ flattening all three, 2026-11-08).
 | `0011-mockgcp-compute-region-network-endpoints.patch` | written here: mockgcp attaches, detaches and lists a regional network endpoint group's endpoints, adapted from its zonal ones | yes |
 | `0012-mockgcp-compute-router-route-policies.patch` | written here: mockgcp serves a Cloud Router's route policies (get, update, patch, delete, list) | yes |
 | `0013-mockgcp-storage-object-media.patch` | written here: mockgcp stores Cloud Storage objects with their content (media and multipart uploads, `alt=media` reads, get, delete), and its request prefilter leaves upload bodies, which are not JSON, alone; its objects were stubs | yes |
+| `0015-mockgcp-sql-backup-runs-deleted.patch` | written here, on 0003: `backupRuns.delete` keeps the run with status `DELETED`, as real Cloud SQL does (a live run, `docs/live-runs.md`) | yes, with PR #12553 |
+| `0016-mockgcp-artifactregistry-remote-source-immutable.patch` | written here, on 0005: an update of `remoteRepositoryConfig` fails with the API's own error, "Remote source configuartion cannot be updated" (a live run, `docs/live-runs.md`), not mockgcp's "not supported" | yes |
 
 ## Other sources consulted, not copied
 
