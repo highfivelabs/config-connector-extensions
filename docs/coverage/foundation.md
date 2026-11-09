@@ -223,7 +223,7 @@ What these numbers miss, for the foundation:
   - uncovered in `dns.googleapis.com/ResponsePolicyRule` (measured): `localData.localDatas[].routingPolicy.geo.enableFencing`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[]`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipProtocol`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].loadBalancerType`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].networkUrl`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].port`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].project`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].region`, `localData.localDatas[].routingPolicy.geo.items[].location` and 37 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the release notes before building.
 - **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule.
-- **Decision (builder):** Ship stable kinds of our own for alpha upstream kinds, or wait for upstream to promote them? (`docs/design.md` 6.1 says upstream first.)
+- **Decided (builder, 2026-11-09):** "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with `RunService`, decision 11).
 
 ### 9. Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)
 
@@ -235,7 +235,7 @@ What these numbers miss, for the foundation:
   - uncovered in `compute.googleapis.com/Router` (measured): `bgp.identifierRange`, `bgpPeers[].customLearnedIpRanges[].range`, `bgpPeers[].customLearnedRoutePriority`, `bgpPeers[].enableIpv4`, `bgpPeers[].exportPolicies[]`, `bgpPeers[].importPolicies[]`, `bgpPeers[].interfaceName`, `bgpPeers[].ipv4NexthopAddress`, `bgpPeers[].md5AuthenticationKeyName`, `bgpPeers[].name` and 14 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): no pull request for these fields. Open PR #13960 (2026-10-27) "align migration diffs for ComputeRouter": `ComputeRouter` is moving to the direct controller, which is where new fields would land.
 - **Build:** Wait for the `ComputeRouter` direct migration (#13960); if the BGP peer fields block a chart, they are the one critical exception to decision 5.
-- **Decision (builder):** Field gaps on Terraform-based official kinds cannot be filled here without a parallel kind. Wait for the release, or fund a parallel `ComputeRouterBgpPeer` of ours?
+- **Decided (builder, 2026-11-09):** "Copy upstream's PR as our kind." Copy #13960's direct `ComputeRouter` into our group as a complete kind that owns the whole router; a workload that needs these fields moves its router to ours (acquire by name, abandon the official object); retire ours when upstream releases (`docs/design.md` decision 14).
 
 ### 10. VPN tunnel and Interconnect attachment fields
 
@@ -340,7 +340,7 @@ What these numbers miss, for the foundation:
   - uncovered in `logging.googleapis.com/BillingAccountSink` (measured): `bigqueryOptions.usePartitionedTables`, `description`, `destination`, `disabled`, `exclusions[].description`, `exclusions[].disabled`, `exclusions[].filter`, `exclusions[].name`, `filter`, `includeChildren` and 3 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
 - **Build:** `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with `billingAccountRef` (API `billingAccounts.sinks`).
-- **Decision (builder):** Build `LoggingBillingAccountSink` now, or wait for the sink to take a billing account?
+- **Decided (builder, 2026-11-09):** Build `LoggingBillingAccountSink` now (`docs/design.md` decision 15). Its live test needs billing-account access the builder has not granted: "live: pending, needs billing account access"; prove it on the fake.
 
 ### 18. KMS fields (key access justifications, key backend)
 
@@ -388,7 +388,7 @@ What these numbers miss, for the foundation:
   - uncovered in `securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules` (measured): `cloudProvider`, `customConfig.customOutput.properties[].name`, `customConfig.customOutput.properties[].valueExpression.description`, `customConfig.customOutput.properties[].valueExpression.expression`, `customConfig.customOutput.properties[].valueExpression.location`, `customConfig.customOutput.properties[].valueExpression.title`, `customConfig.description`, `customConfig.predicate.description`, `customConfig.predicate.expression`, `customConfig.predicate.location` and 7 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCustomModule`, 2026-10-26); neither is known to add project or folder parents.
 - **Build:** Check #7673 and #14181 for the parent first. If they do not add folder and project parents, our own kinds in `securitycenter.gcp.hfl.dev/v1alpha1` (`SecurityCenterMuteConfig` with `parentRef`: organization, folder or project; API `securitycenter` v2 `muteConfigs`), copied from the organization kind, one controller family.
-- **Decision (builder):** Wait for upstream's direct SCC kinds, or build ours with all three parents?
+- **Decided (builder, 2026-11-09):** "Build ours with all three parents" (organization, folder, project), accepting that it duplicates what upstream is building and widens the kinds to retire later (`docs/design.md` decision 16).
 
 ### 21. VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)
 

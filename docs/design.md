@@ -1000,7 +1000,13 @@ To raise confidence in `ArtifactRegistryRepository`:
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
-   release, with the exception in section 6.1. Never a fork.
+   release, with the exception in section 6.1. Never a fork. Exceptions
+   the builder has made: decisions 11 and 14 (and 13, 16 for whole
+   kinds). A parallel kind copied from an upstream migration pull
+   request, owning the whole object, is now the accepted pattern when a
+   foundation chart is blocked; a deprecation path for our kinds, for
+   when upstream ships theirs, will be designed separately (the builder's
+   sidebar, 2026-11-09) and is not built.
 6. **The fake-cloud switch exists only in test builds.**
    - `--fake-cloud-url` and `pkg/fakecloud` are compiled into the manager
      only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
@@ -1057,6 +1063,30 @@ To raise confidence in `ArtifactRegistryRepository`:
     but that's fine if authoritative is what you've built"), so Config
     Connector's `IAMPolicyMember` stays the default in everything written
     here, and rank 2 is built additive (section 6.5).
+13. **Alpha-only foundation kinds: ship our own stable kinds** (the
+    builder, 2026-11-09, answering `docs/coverage/foundation.md`: "Ship
+    our own stable kinds."). IAM deny policies, principal access
+    boundary, hierarchical security policy, network firewall rules and
+    DNS response policies: copy upstream's alpha types and controllers
+    into our group as stable kinds. When upstream promotes, users move
+    over by acquiring the same resource (as with `RunService`, decision
+    11).
+14. **Cloud Router: copy upstream's PR as our kind** (the builder,
+    2026-11-09: "Copy upstream's PR as our kind."). Copy PR #13960's
+    direct `ComputeRouter` into our group as a complete kind that owns
+    the whole router (BGP peer fields, NAT, interfaces, MD5 keys). A
+    workload that needs these fields moves its router to ours (acquire by
+    name, abandon the official object); ours is retired when upstream
+    releases.
+15. **Billing account log sink: build `LoggingBillingAccountSink` now**
+    (the builder, 2026-11-09). Its live test needs billing-account
+    access the builder has not granted: mark it "live: pending, needs
+    billing account access" and prove it on the fake.
+16. **Security Command Center at folder and project level: build ours
+    with all three parents** (the builder, 2026-11-09: "Build ours with
+    all three parents"), organization, folder and project, accepting that
+    it duplicates what upstream is building and widens the kinds to
+    retire later.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
