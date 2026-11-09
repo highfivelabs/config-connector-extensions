@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has eighteen kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has nineteen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -10,8 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding` and
-`IAMRoleMember` (section 6). Each
+`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding`,
+`IAMRoleMember` and `ComputeRegionNetworkFirewallPolicyRule` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -640,7 +640,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
-| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based by default, with an opt-in direct controller; its rule and association kinds are Terraform-only) | the policy built (2026-11-09); its rules and association next |
+| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based by default, with an opt-in direct controller; its rule and association kinds are Terraform-only) | the policy and its rules built (2026-11-09); its association next |
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); the rest are field gaps on existing kinds: wait for the release (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
@@ -707,6 +707,36 @@ Notes on what was built from this table:
   not. Patch 0014: mockgcp serves regional policies, adapted from its
   global ones. The rules and the association are separate kinds, next.
   Live: passes (`docs/live-runs.md`).
+- `ComputeRegionNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`,
+  rank 6, the rules). **Written here**: no Config Connector code has a
+  regional policy's rule (`ComputeFirewallPolicyRule` is the rule of an
+  organization or folder policy; the global network policy's rule is
+  Terraform-only). Fields: `firewallPolicyRef`
+  (`ComputeRegionNetworkFirewallPolicyRef`: a `ComputeRegionNetworkFirewallPolicy`
+  by `name`, or `external`; the association kind reuses it), `priority`,
+  `action`, `direction`, `match` (`layer4Configs`, source and destination
+  ranges, address groups, FQDNs, region codes and threat intelligence
+  lists, source secure tags), `ruleName`, `description`, `disabled`,
+  `enableLogging`, `targetServiceAccounts`, `targetSecureTags`. Not here
+  yet: `securityProfileGroup`, `tlsInspect` and `targetResources`
+  (the API has them; Terraform's rule has them; add on demand). The
+  controller follows Terraform's
+  `google_compute_region_network_firewall_policy_rule` (read, not copied):
+  a rule has no resource name, only its priority in the policy, so
+  `getRule`, `addRule`, `patchRule` and `removeRule` all take the priority,
+  and `status.externalRef` is ours,
+  `projects/{p}/regions/{r}/firewallPolicies/{policy}/rules/{priority}`.
+  The priority and the policy are immutable (CEL, and the identity is
+  checked against `status.externalRef`). A rule already at the priority
+  is taken over (Find finds it, Update brings it to the spec). Every
+  update sends the whole rule and `patchRule` only when the fields the
+  spec manages differ from what was read, so a resync writes nothing; the
+  optional strings and booleans taken off the spec are sent as ""
+  and false. A priority with no rule is answered with 400, not 404 (see
+  patch 0020); Find and Delete take that as "gone".
+  Patch 0020: mockgcp serves a regional policy's rules, adapted from the
+  global ones.
+  Live: LIVERESULT
 - `LoggingSettings` (`logging.gcp.hfl.dev/v1alpha1`, rank 7). **Written
   here** from the Cloud Logging API's `Settings`: `organizationRef` or
   `folderRef` (exactly one, checked by the CRD), `kmsKeyRef` (Config

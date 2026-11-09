@@ -1,0 +1,126 @@
+config-connector-extensions patch 0020: mockgcp serves a regional network firewall policy's rules.
+
+For compute.gcp.hfl.dev ComputeRegionNetworkFirewallPolicyRule. On top of
+patch 0014 (which serves the policy only): getRule, addRule, patchRule and
+removeRule, adapted from the global network firewall policies' (a rule is
+addressed by its priority; a missing priority answers 400 "The firewall
+policy does not contain a rule at priority N", as the global mock does,
+which was recorded from the real API). Each change gives the policy a new
+fingerprint and rule tuple count. Adding a rule at a priority that is taken
+is refused.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockcompute/regionnetworkfirewallpolicies.go b/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
+index c9e4776..874f0f8 100644
+--- a/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
++++ b/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
+@@ -208,3 +208,109 @@ func (s *RegionNetworkFirewallPoliciesV1) Delete(ctx context.Context, req *pb.De
+ 		return deleted, nil
+ 	})
+ }
++
++// The rules of a regional policy, adapted from the global ones
++// (networkfirewallpolicies.go): addressed by priority, in the policy's list
++// of rules, and each change gives the policy a new fingerprint.
++
++func (s *RegionNetworkFirewallPoliciesV1) GetRule(ctx context.Context, req *pb.GetRuleRegionNetworkFirewallPolicyRequest) (*pb.FirewallPolicyRule, error) {
++	obj, _, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	for _, r := range obj.GetRules() {
++		if r.Priority != nil && r.GetPriority() == req.GetPriority() {
++			return r, nil
++		}
++	}
++	return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The firewall policy does not contain a rule at priority %d.", req.GetPriority(), req.GetPriority())
++}
++
++func (s *RegionNetworkFirewallPoliciesV1) AddRule(ctx context.Context, req *pb.AddRuleRegionNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	r := proto.CloneOf(req.GetFirewallPolicyRuleResource())
++	if r.Priority == nil {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': ''. Priority is required.")
++	}
++	for _, existing := range obj.GetRules() {
++		if existing.GetPriority() == r.GetPriority() {
++			return nil, status.Errorf(codes.AlreadyExists, "The resource 'projects/%s/regions/%s/firewallPolicies/%s' already has a rule at priority %d.", name.Project.ID, name.Region, name.Name, r.GetPriority())
++		}
++	}
++	mockFieldValuesForRule(r)
++	obj.Rules = append(obj.Rules, r)
++	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.addRule")
++}
++
++func (s *RegionNetworkFirewallPoliciesV1) PatchRule(ctx context.Context, req *pb.PatchRuleRegionNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	found := false
++	rules := []*pb.FirewallPolicyRule{}
++	for _, rule := range obj.GetRules() {
++		if rule.Priority != nil && rule.GetPriority() == req.GetPriority() {
++			found = true
++			r := proto.CloneOf(req.GetFirewallPolicyRuleResource())
++			r.Priority = PtrTo(rule.GetPriority())
++			mockFieldValuesForRule(r)
++			rules = append(rules, r)
++		} else {
++			rules = append(rules, rule)
++		}
++	}
++	if !found {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The firewall policy does not contain a rule at priority %d.", req.GetPriority(), req.GetPriority())
++	}
++	obj.Rules = rules
++	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.patchRule")
++}
++
++func (s *RegionNetworkFirewallPoliciesV1) RemoveRule(ctx context.Context, req *pb.RemoveRuleRegionNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	found := false
++	rules := []*pb.FirewallPolicyRule{}
++	for _, rule := range obj.GetRules() {
++		if rule.Priority != nil && rule.GetPriority() == req.GetPriority() {
++			found = true
++			continue
++		}
++		rules = append(rules, rule)
++	}
++	if !found {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The firewall policy does not contain a rule at priority %d.", req.GetPriority(), req.GetPriority())
++	}
++	obj.Rules = rules
++	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.removeRule")
++}
++
++// saveRuleChange stores the policy with a new fingerprint and its rule
++// tuple count, and starts the operation.
++func (s *RegionNetworkFirewallPoliciesV1) saveRuleChange(ctx context.Context, obj *pb.FirewallPolicy, name *regionNetworkFirewallPolicyName, operationType string) (*pb.Operation, error) {
++	count := int32(0)
++	for _, r := range obj.GetRules() {
++		count += r.GetRuleTupleCount()
++	}
++	obj.RuleTupleCount = PtrTo(count)
++	obj.Fingerprint = nil
++	obj.Fingerprint = PtrTo(computeFingerprint(obj))
++	if err := s.storage.Update(ctx, name.String(), obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo(operationType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, name.Project.ID, name.Region, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}

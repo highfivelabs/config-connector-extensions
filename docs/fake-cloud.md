@@ -99,9 +99,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version and its etag error (409 or 412), which is why the rows of the
   resource table beyond the three with a live run are unproven.
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
-  from its global ones). The fingerprint is not checked on patch, a policy
-  is deleted even when associated, and rules and associations are not
-  served yet.
+  from its global ones; their rules are patch 0020). The fingerprint is
+  not checked on patch, a policy is deleted even when associated, and
+  associations are not served yet. A rule is stored as sent: mockgcp
+  checks none of the API's rules about a rule (a `goto_next` rule with
+  logging, secure tags together with target service accounts, a layer 4
+  protocol with ports it cannot have, FQDNs and region codes on the wrong
+  direction, the policy's limit on rule tuples), and it reports a rule
+  tuple count of 2 for every rule, whatever it matches.
 - **Log Router settings in mockgcp** (patch 0017, ours). Any
   organization or folder ID is accepted, the key is not checked, and the
   service account IDs only follow the documented form.

@@ -339,6 +339,7 @@ compute.googleapis.com,compute.googleapis.com/BackendBucket,21,ComputeBackendBuc
 compute.googleapis.com,compute.googleapis.com/BackendService,135,ComputeBackendService,84,,0,51,false,api=v1:backendServices; official-spec-fields-unmatched=13/96
 compute.googleapis.com,compute.googleapis.com/ComputeProjectMetadataItem,0,,0,ComputeProjectMetadataItem,0,0,false,"outside-denominator; one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)"
 compute.googleapis.com,compute.googleapis.com/ComputeRegionNetworkEndpoint,0,,0,ComputeRegionNetworkEndpoint,0,0,false,"outside-denominator; an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints"
+compute.googleapis.com,compute.googleapis.com/ComputeRegionNetworkFirewallPolicyRule,0,,0,ComputeRegionNetworkFirewallPolicyRule,0,0,false,"outside-denominator; a rule of a regional network firewall policy, written with regionNetworkFirewallPolicies.addRule (a rule is addressed by its priority)"
 compute.googleapis.com,compute.googleapis.com/ComputeRouterRoutePolicy,0,,0,ComputeRouterRoutePolicy,0,0,false,"outside-denominator; a route policy of a Cloud Router, written with routers.patchRoutePolicy"
 compute.googleapis.com,compute.googleapis.com/CrossSiteNetwork,2,,0,,0,2,false,api=v1:crossSiteNetworks
 compute.googleapis.com,compute.googleapis.com/Disk,48,ComputeDisk,27,,0,21,false,api=v1:disks; official-spec-fields-unmatched=8/33

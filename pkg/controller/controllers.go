@@ -86,6 +86,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
 	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
 	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK, crdName: "computeregionnetworkfirewallpolicies.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyModel},
+	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyRuleGVK, crdName: "computeregionnetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyRuleModel},
 	{gvk: loggingv1alpha1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 }
 

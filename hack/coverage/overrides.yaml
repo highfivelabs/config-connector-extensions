@@ -156,6 +156,7 @@ no_resource:
   # ours
   ComputeProjectMetadataItem: one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)
   ComputeRegionNetworkEndpoint: an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints
+  ComputeRegionNetworkFirewallPolicyRule: a rule of a regional network firewall policy, written with regionNetworkFirewallPolicies.addRule (a rule is addressed by its priority)
   ComputeRouterRoutePolicy: a route policy of a Cloud Router, written with routers.patchRoutePolicy
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
   SecretManagerSecretVersion: a secret version, written with secrets.addVersion
