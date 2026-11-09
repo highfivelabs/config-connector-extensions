@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-one kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -11,8 +11,9 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
 `LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding`,
-`IAMRoleMember`, `ComputeRegionNetworkFirewallPolicyRule` and
-`ComputeRegionNetworkFirewallPolicyAssociation` (section 6). Each
+`IAMRoleMember`, `ComputeRegionNetworkFirewallPolicyRule`,
+`ComputeRegionNetworkFirewallPolicyAssociation` and a folder's or
+organization's `ServiceIdentity` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -642,7 +643,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
 | 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based by default, with an opt-in direct controller; its rule and association kinds are Terraform-only) | the policy, its rules and its association built (2026-11-09) |
-| 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); the rest are field gaps on existing kinds: wait for the release (decision 5) |
+| 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); folder and organization `ServiceIdentity` built (2026-11-09, `docs/coverage/foundation.md` item 1); the rest are field gaps on existing kinds: wait for the release (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
 | 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | per-key metadata built (2026-11-09, `ComputeProjectMetadataItem`); the default network tier and default service accounts to build |
@@ -790,6 +791,35 @@ Notes on what was built from this table:
   `updateSettings`.
   Live: pending, needs a test folder with `roles/logging.admin` and a
   KMS key (`docs/live-runs.md`).
+
+- `ServiceIdentity` (`serviceusage.gcp.hfl.dev/v1alpha1`, rank 7, and
+  `docs/coverage/foundation.md` item 1). A folder's or an organization's
+  service agent: `folderRef` or `organizationRef` (exactly one, checked
+  by the CRD), `resourceID` (the service; `metadata.name` by default);
+  status `email` (as upstream's), `externalRef` and `observedState`
+  (`email`, `uniqueID`). Upstream (read 2026-11-09): Config Connector's
+  direct `ServiceIdentity` takes a project only, and no pull request adds
+  a folder or an organization. **The first kind built from
+  `hack/scaffold-kind.sh`**: Config Connector's `controllerbuilder`
+  generated the types scaffold, `types.generated.go` and
+  `mapper.generated.go` from `google.api.serviceusage.v1beta1`, with
+  `hack/scaffold/serviceusage/overlay.proto` marking `email` and
+  `unique_id` output-only (the proto marks nothing, so without it they
+  landed in the spec). The scaffold's `projectRef` and `location` were
+  replaced by the two parents; the controller is upstream's, copied
+  (`generate-controller` writes nothing for a service upstream already
+  has a controller for), with the parent and status changed. The API has
+  only `services.generateServiceIdentity`, so, as upstream's, Find trusts
+  `status.email`, create generates, update rewrites status, and delete
+  leaves the identity; a changed parent or service is refused (the
+  identity against `status.externalRef`). Terraform's
+  `google_folder_service_identity` and
+  `google_organization_service_identity` were read for the request's
+  path, not copied (Magic Modules hand-writes them; there is no product
+  YAML to take behaviour from). Patch 0022: mockgcp serves the folder and
+  organization parents. Live: pending, needs the test folder
+  (`E2E_TEST_FOLDER`, `mockenv.TestFolder`); a live run never uses the
+  organization.
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's

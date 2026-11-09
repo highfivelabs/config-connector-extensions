@@ -3,16 +3,16 @@
 This is where an agent that is new to the repository starts. It says what
 is done, what is left (in order), and the working conventions that are not
 obvious from the code. Written 2026-11-09 by the agent that built the
-seed-catalog kinds (`docs/design.md` 6.5), updated by the one that built
-`IAMRoleMember`. Read
+seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
+`IAMRoleMember` and the folder and organization `ServiceIdentity`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-On `main` after the rule PR: nineteen kinds (`README.md`, design.md's
-intro), mockgcp patches 0001 to 0020 (`UPSTREAM.md`; the next free number
-is **0021**, reserved by the association PR), the live-test switch and the
+On `main` after the `ServiceIdentity` PR: twenty-one kinds (`README.md`,
+design.md's intro), mockgcp patches 0001 to 0022 (`UPSTREAM.md`; the next
+free number is **0023**), the live-test switch and the
 Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
 `make`). Every built kind but `LoggingSettings` passes live.
 
@@ -32,12 +32,27 @@ make the referenced object in the test.
 unless `tests/operator/run.sh` is intact (more than 200 lines, errexit,
 the closing `echo "all checks passed"`), exits 0 and ends with that line.
 
+**Generating a kind.** `hack/scaffold-kind.sh` runs Config Connector's
+`controllerbuilder` (types, mapper, controller) on an offload VM and brings
+the files back as the run's artifacts (`gcloud storage cp -r
+gs://hfl-dev-514205-offload/runs/<run>/offload-artifacts/scaffold <dir>
+--project hfl-dev-514205`); its header says how. It was first used for
+`ServiceIdentity`. What it taught: a proto without `field_behavior` puts
+output fields in the spec, so field behaviour goes in
+`hack/scaffold/<service>/overlay.proto` (from Magic Modules' product YAML
+where one exists: `docs/prior-art.md` in `highfivelabs/factory`, 6.1);
+a proto without `google.api.resource` gets a `projectRef` and `location`
+to replace by hand; and `generate-controller` writes nothing for a service
+upstream already has a controller package for. Report the generated share
+in each PR.
+
 ## What is left, in order
 
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
-association kind: folder and organization `ServiceIdentity`, default
-service accounts, default network tier, organization address groups and security profiles, and so on down the
+folder and organization `ServiceIdentity` (built; live pending the test
+folder): default service accounts, default network tier,
+organization address groups and security profiles, and so on down the
 report. The builder answered its four Decision items (design.md
 decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
 stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`,

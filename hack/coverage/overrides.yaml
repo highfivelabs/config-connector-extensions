@@ -162,6 +162,7 @@ no_resource:
   ComputeRouterRoutePolicy: a route policy of a Cloud Router, written with routers.patchRoutePolicy
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
   SecretManagerSecretVersion: a secret version, written with secrets.addVersion
+  ServiceIdentity: a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)
   IAMRoleBinding: one role binding in another resource's IAM policy, written with setIamPolicy
   IAMRoleMember: one member of one role in another resource's IAM policy, written with setIamPolicy
   # official (IAM policy attachments)

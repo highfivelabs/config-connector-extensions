@@ -175,6 +175,7 @@ on the same VM, minutes apart.
 
 | 2026-11-09 | `39ded9d`+ | ComputeRegionNetworkFirewallPolicyRule | PASS | PASS | after three live runs that found: `patchRule` keeps a list the body leaves out (fixed: the emptied list is sent as `[]`, through the Compute Engine REST client); the unset strings and booleans must still be sent (`""`, false); a rule just changed answers a patch with 400 "The rule at priority N is not ready" (the test's out-of-band patch retries; the reconciler's retry absorbs it). The missing-priority answer is the 400 the code assumed: "Invalid value for field 'priority': '1000'. The firewall policy does not contain a rule at priority 1000." | 2 regional firewall policies and their rules (deleted); `task live-list` showed only the network of a concurrent run |
 | 2026-11-09 | `c7f163f`+ | ComputeRegionNetworkFirewallPolicyAssociation | PASS | PASS | after one run that failed only on the draft's `status.firewallPolicyId` (the API returns an association with only `attachmentTarget`, as a full URL, and `name`; the field was dropped): create, resync, a second network's association, a name taken for another network (an error, not a move), an association removed out of band made again, delete, abandon. A missing association is the 400 "An association with that name does not exist." Mock fixed to match (patch 0021) | 2 networks, 1 regional firewall policy with up to 2 associations (deleted); `task live-list` empty |
+| 2026-11-09 | pending | ServiceIdentity | PASS | pending, needs the test folder (`E2E_TEST_FOLDER`) | not run | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -205,6 +206,16 @@ settings) has `roles/cloudkms.cryptoKeyEncrypterDecrypter`. Settings
 cannot be deleted, so the test puts the folder's back as it found them;
 there is nothing for the sweeper. Then:
 `E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... task test-live PROJECT=hfl-dev-514205 KINDS=logging`.
+
+`ServiceIdentity` (package `serviceusage`) also waits on the test folder,
+passed as `E2E_TEST_FOLDER=folders/<id>`; it never uses the
+organization (that case runs in the fake cloud only). The live-test
+service account needs `serviceusage.services.use` on the folder or the
+quota project (assumed from the Service Usage reference, not yet seen).
+A service identity cannot be deleted, so there is nothing for the
+sweeper; the run leaves the folder's service agent in place, as
+Terraform does. Then:
+`E2E_TEST_FOLDER=... task test-live PROJECT=hfl-dev-514205 KINDS=serviceusage`.
 
 Every run ended with `task live-list` empty (run `cce-11091348-ef59`:
 "0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,
