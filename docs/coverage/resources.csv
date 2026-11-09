@@ -972,7 +972,7 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/MirroringEndpointG
 networksecurity.googleapis.com,networksecurity.googleapis.com/MirroringEndpointGroupAssociation,4,NetworkSecurityMirroringEndpointGroupAssociation,4,,0,0,false,api=v1:projects.locations.mirroringEndpointGroupAssociations; official-spec-fields-unmatched=3/6
 networksecurity.googleapis.com,networksecurity.googleapis.com/SacAttachment,4,,0,,0,4,false,api=v1:projects.locations.sacAttachments
 networksecurity.googleapis.com,networksecurity.googleapis.com/SacRealm,3,NetworkSecuritySACRealm,3,,0,0,false,api=v1:projects.locations.sacRealms; official-spec-fields-unmatched=3/5
-networksecurity.googleapis.com,networksecurity.googleapis.com/SecurityProfile,37,,0,,0,37,false,api=v1:organizations.locations.securityProfiles
+networksecurity.googleapis.com,networksecurity.googleapis.com/SecurityProfile,37,,0,NetworkSecuritySecurityProfile,15,22,false,api=v1:organizations.locations.securityProfiles; ours-spec-fields-unmatched=4/18
 networksecurity.googleapis.com,networksecurity.googleapis.com/SecurityProfileGroup,8,,0,,0,8,false,api=v1:organizations.locations.securityProfileGroups
 networksecurity.googleapis.com,networksecurity.googleapis.com/ServerTlsPolicy,11,NetworkSecurityServerTLSPolicy,7,,0,4,false,api=v1:projects.locations.serverTlsPolicies; official-spec-fields-unmatched=3/9
 networksecurity.googleapis.com,networksecurity.googleapis.com/TlsInspectionPolicy,9,NetworkSecurityTLSInspectionPolicy,8,,0,1,false,api=v1:projects.locations.tlsInspectionPolicies; official-spec-fields-unmatched=3/10
@@ -981,7 +981,7 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.firewallEndpoints,14,NetworkSecurityFirewallEndpoint,5,,0,9,false,api=v1:projects.locations.firewallEndpoints; official-spec-fields-unmatched=4/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.firewallEndpoints.wildfireVerdictChangeRequests,3,,0,,0,3,false,api=v1:projects.locations.firewallEndpoints.wildfireVerdictChangeRequests
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.securityProfileGroups,8,NetworkSecuritySecurityProfileGroup,7,,0,1,false,api=v1:projects.locations.securityProfileGroups; official-spec-fields-unmatched=3/9
-networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.securityProfiles,37,NetworkSecuritySecurityProfile,15,,0,22,false,api=v1:projects.locations.securityProfiles; official-spec-fields-unmatched=3/17
+networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.securityProfiles,37,NetworkSecuritySecurityProfile,15,NetworkSecuritySecurityProfile,0,22,false,api=v1:projects.locations.securityProfiles; official-spec-fields-unmatched=3/17; ours-spec-fields-unmatched=4/18
 networkservices.googleapis.com,networkservices.googleapis.com/AgentConnectivityTemplate,15,,0,,0,15,false,api=v1:projects.locations.agentConnectivityTemplates
 networkservices.googleapis.com,networkservices.googleapis.com/AgentGateway,13,,0,,0,13,false,api=v1:projects.locations.agentGateways
 networkservices.googleapis.com,networkservices.googleapis.com/AuthzExtension,12,NetworkServicesAuthzExtension,10,,0,2,false,api=v1:projects.locations.authzExtensions; official-spec-fields-unmatched=4/13

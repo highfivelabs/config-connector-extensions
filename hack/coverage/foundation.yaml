@@ -191,7 +191,8 @@ items:
       (decision 18: names follow Config Connector, else Terraform; parents are fields, not kinds).
       `NetworkSecurityAddressGroup` built 2026-11-09 (`networksecurity.gcp.hfl.dev/v1alpha1`, patch 0025; a
       project's runs live; an organization's is "live: pending, needs test folder", and needs organization access
-      the test folder does not give); `NetworkSecuritySecurityProfile` and
+      the test folder does not give); `NetworkSecuritySecurityProfile` built 2026-11-09 (patch 0026, REST clients
+      in place of upstream's gRPC; a project's runs live, an organization's is "live: pending, needs test folder");
       `NetworkSecuritySecurityProfileGroup` next.
   - title: BYOIP prefixes and cross-site interconnect groups
     importance: A
