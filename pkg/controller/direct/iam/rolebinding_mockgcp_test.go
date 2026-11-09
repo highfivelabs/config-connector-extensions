@@ -272,6 +272,21 @@ func TestIAMRoleBinding(t *testing.T) {
 			t.Errorf("the message does not name the missing object: %q", msg)
 		}
 		createSecretObject("not-yet")
+		// Config Connector would report the secret Ready; the reconciler
+		// waits for that, then retries the binding at once.
+		o := &unstructured.Unstructured{}
+		o.SetGroupVersionKind(secretManagerSecretGVK)
+		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: "not-yet"}, o); err != nil {
+			t.Fatal(err)
+		}
+		if err := unstructured.SetNestedSlice(o.Object, []any{map[string]any{
+			"type": "Ready", "status": "True", "reason": "UpToDate", "lastTransitionTime": time.Now().UTC().Format(time.RFC3339),
+		}}, "status", "conditions"); err != nil {
+			t.Fatal(err)
+		}
+		if err := env.Kube.Status().Update(env.Ctx, o); err != nil {
+			t.Fatal(err)
+		}
 		env.WaitReady(bindingGVK, namespace, "late")
 		if err := env.Kube.Delete(env.Ctx, b); err != nil {
 			t.Fatal(err)
