@@ -81,6 +81,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **IAM policies in mockgcp** (patch 0018, ours, for `IAMRoleBinding`).
+  Every `:getIamPolicy` and `:setIamPolicy` is served from one store keyed
+  by host and path, for any resource name, existing or not: a policy on a
+  secret that does not exist reads as empty and can be set. The etag is
+  checked on write (409); permissions are not, nor are the members' forms
+  (`user:` with no address is accepted) or whether a role exists.
+  Cloud Storage's own `.../iam` paths are served from the same store.
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones). The fingerprint is not checked on patch, a policy
   is deleted even when associated, and rules and associations are not
