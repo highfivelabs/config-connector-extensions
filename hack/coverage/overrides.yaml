@@ -169,3 +169,51 @@ no_resource:
 
 # Kind-name prefix of a group when it is not the group's own name.
 prefixes: {}
+
+# Kinds that fill one list of another resource's body (Config Connector
+# splits a router's NATs, peers and interfaces, a firewall policy's rules and
+# associations, into kinds of their own): "service/Resource:path". Their
+# fields are matched against the parent's attributes under that path.
+subresources:
+  ComputeRouterNAT: compute.googleapis.com/Router:nats[]
+  ComputeRouterPeer: compute.googleapis.com/Router:bgpPeers[]
+  ComputeRouterInterface: compute.googleapis.com/Router:interfaces[]
+  ComputeFirewallPolicyRule: compute.googleapis.com/FirewallPolicy:rules[]
+  ComputeFirewallPolicyAssociation: compute.googleapis.com/FirewallPolicy:associations[]
+  ComputeNetworkFirewallPolicyRule: compute.googleapis.com/NetworkFirewallPolicy:rules[]
+  ComputeNetworkFirewallPolicyAssociation: compute.googleapis.com/NetworkFirewallPolicy:associations[]
+  ComputeOrganizationSecurityPolicyRule: compute.googleapis.com/OrganizationSecurityPolicy:rules[]
+  ComputeOrganizationSecurityPolicyAssociation: compute.googleapis.com/OrganizationSecurityPolicy:associations[]
+  ComputeInstanceGroupNamedPort: compute.googleapis.com/InstanceGroup:namedPorts[]
+  AccessContextManagerAccessLevelCondition: accesscontextmanager.googleapis.com/AccessPolicyAccessLevel:basic.conditions[]
+  AccessContextManagerServicePerimeterResource: accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter:status.resources[]
+  BigQueryDatasetAccess: bigquery.googleapis.com/Dataset:access[]
+
+# A kind that also fills a list of another resource's body, in addition to
+# its own resource: "service/Resource:path".
+also:
+  ContainerNodePool: container.googleapis.com/Cluster:nodePools[]
+
+# Names the Config Connector kinds give an API path that the rules cannot
+# connect (Terraform's names): per resource, API path prefix to CRD path
+# prefix, the longest prefix wins. Kubernetes Engine is where it matters
+# most (a managed cluster is the end of the foundation).
+aliases:
+  container.googleapis.com/Cluster:
+    autoscaling.autoprovisioningNodePoolDefaults: clusterAutoscaling.autoProvisioningDefaults
+    autoscaling: clusterAutoscaling
+    shieldedNodes.enabled: enableShieldedNodes
+    legacyAbac.enabled: enableLegacyAbac
+    binaryAuthorization.enabled: enableBinaryAuthorization
+    autopilot.enabled: enableAutopilot
+    locations: nodeLocations
+    initialClusterVersion: minMasterVersion
+    defaultMaxPodsConstraint.maxPodsPerNode: defaultMaxPodsPerNode
+    networkConfig.datapathProvider: datapathProvider
+    nodePools[].config: nodePools[].nodeConfig
+    nodePools[].locations: nodePools[].nodeLocations
+    nodePools[].maxPodsConstraint.maxPodsPerNode: nodePools[].maxPodsPerNode
+  container.googleapis.com/ClusterNodePool:
+    config: nodeConfig
+    locations: nodeLocations
+    maxPodsConstraint.maxPodsPerNode: maxPodsPerNode

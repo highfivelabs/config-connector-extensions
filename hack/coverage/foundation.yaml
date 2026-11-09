@@ -1,0 +1,619 @@
+# The foundation gap report's queue (docs/coverage/foundation.md): the
+# judgement, by hand. The order is the rank and must follow: importance
+# (A, B, C), then gap (whole, stability, field), then modules (most first),
+# then size (S, M, L); the generator refuses a file that does not. The
+# numbers (coverage of `resources`, the uncovered attributes, the official
+# kinds) are measured by the generator.
+#
+# resources: "service/Resource" or "service/Resource:path[]" (only the
+#   attributes under the path). Leave empty when the API has no create to
+#   count against.
+# modules: Cloud Foundation Fabric v60.0.0 modules that create the resource
+#   (catalog/docs/gcp-inventory.md, catalog @ 6258f92).
+# Upstream was read 2026-11-09: Config Connector master (3df0e2d5; its CRDs
+#   equal the pin's but for one AI Platform kind) and open pull requests,
+#   read-only.
+items:
+  # ---- A, whole resources ----
+  - title: Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)
+    importance: A
+    gap: whole
+    modules: 3
+    module_names: project, folder, organization
+    size: M
+    resources: []
+    missing: >-
+      `ServiceIdentity` for a folder and for an organization (`google_folder_service_identity`,
+      `google_organization_service_identity`; Config Connector's `ServiceIdentity` is project-only),
+      `ProjectDefaultServiceAccounts` (what the project module does to the default Compute and App Engine service
+      accounts: delete, deprivilege or disable), `ComputeProjectDefaultNetworkTier`.
+    attributes: >-
+      ServiceIdentity: `service` and a `folderRef` or `organizationRef`, status `email`. Default service accounts:
+      `action` (`DELETE`, `DEPRIVILEGE`, `DISABLE`), `restorePolicy`, a `projectRef`. Network tier: `networkTier`
+      (`PREMIUM`, `STANDARD`).
+    upstream: >-
+      none. No kind or pull request for folder or organization service identities, default service accounts or the
+      default network tier (`docs/design.md` 6.5 rows 7 and 10 found the same).
+    build: >-
+      `ServiceIdentity` with a folder or organization parent in `serviceusage.gcp.hfl.dev/v1alpha1`
+      (`serviceusage.googleapis.com` `services:generateServiceIdentity`, a long-running operation returning the
+      email; Terraform's `google_folder_service_identity` read, not copied). `ProjectDefaultServiceAccounts`
+      (`resourcemanager.gcp.hfl.dev`): the Compute default account is `{projectNumber}-compute@developer.gserviceaccount.com`,
+      the App Engine one `{projectId}@appspot.gserviceaccount.com`; `DELETE` is `serviceAccounts.delete`,
+      `DEPRIVILEGE` removes its project role bindings (`projects.setIamPolicy`), `DISABLE` is
+      `serviceAccounts.disable`; abandon restores nothing unless `restorePolicy: REVERT`.
+      `ComputeProjectDefaultNetworkTier`: `projects.setDefaultNetworkTier`, a singleton per project like
+      `ComputeProjectMetadataItem` (copy it).
+  - title: Regional network firewall policy rules, associations and packet mirroring rules
+    importance: A
+    gap: whole
+    modules: 2
+    module_names: net-firewall-policy, net-vpc
+    size: M
+    resources:
+      - compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]
+      - compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]
+      - compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]
+      - compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]
+      - compute.googleapis.com/FirewallPolicy:packetMirroringRules[]
+    missing: >-
+      `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` and
+      `ComputeRegionNetworkFirewallPolicyPacketMirroringRule`; the same packet mirroring rule for the global network
+      policy (`google_compute_network_firewall_policy_packet_mirroring_rule`) and the hierarchical policy. Our
+      `ComputeRegionNetworkFirewallPolicy` is the policy only (its `description`).
+    attributes: >-
+      All of a rule: `priority`, `action`, `direction`, `disabled`, `enableLogging`, `ruleName`, `description`,
+      `match` (`srcIpRanges`, `destIpRanges`, `layer4Configs[]`, `srcFqdns`, `destFqdns`, `srcRegionCodes`,
+      `destRegionCodes`, `srcThreatIntelligences`, `destThreatIntelligences`, `srcAddressGroups`,
+      `destAddressGroups`, `srcSecureTags`, `srcNetworkType`, `destNetworkType`), `targetSecureTags`,
+      `targetServiceAccounts`, `securityProfileGroup`, `tlsInspect`. An association is `attachmentTarget`
+      (a network), `name` and `priority`.
+    upstream: >-
+      none. No kind or pull request for the regional policy; the global `ComputeNetworkFirewallPolicyRule` and
+      `...Association` are Terraform-based (the rule is alpha-only, see the stability item), with no packet mirroring
+      rule at all. `docs/design.md` 6.5 row 6 has the same finding.
+    build: >-
+      Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`,
+      `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy`
+      by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go`
+      and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the
+      regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`,
+      `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`,
+      `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}`
+      plus `priority` for a rule and `name` for an association; every change goes through the policy's
+      fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied).
+      Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014`
+      already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row.
+  - title: Organization-level custom IAM roles
+    importance: A
+    gap: whole
+    modules: 1
+    module_names: organization
+    size: S
+    resources:
+      - iam.googleapis.com/Role
+      - iam.googleapis.com/projects.roles
+    missing: >-
+      An organization's custom role (`google_organization_iam_custom_role`): Config Connector's `IAMCustomRole` has
+      no organization parent (its spec is `title`, `description`, `permissions`, `stage`; it is project-scoped
+      through the project annotation).
+    attributes: >-
+      `organizationRef` on the role; `permissions[]`, `title`, `description`, `stage`; `deleted` (undelete).
+    upstream: >-
+      none for organization roles. Open PR #14425 (2026-11-08) only fixes partitioned project IDs in `IAMCustomRole`.
+    build: >-
+      `IAMOrganizationCustomRole` in `iam.gcp.hfl.dev/v1alpha1` (a new kind beside, not a fork of, `IAMCustomRole`):
+      `organizationRef`, `roleId` (the resource name), `title`, `description`, `permissions[]`, `stage`.
+      API `organizations.roles.create/patch/delete/undelete/get` (iam v1); identity `organizations/{org}/roles/{role}`.
+      The mapping is Terraform's `google_organization_iam_custom_role` (read); the controller is small, the mockgcp
+      patch is the work (mockgcp has `projects.roles`; add the organization path).
+  - title: Workforce identity (SCIM tenants, provider keys) and OAuth clients
+    importance: A
+    gap: whole
+    modules: 1
+    module_names: organization
+    size: M
+    resources:
+      - iam.googleapis.com/WorkforcePoolProviderScimTenant
+      - iam.googleapis.com/WorkforcePoolProviderScimTenantToken
+      - iam.googleapis.com/WorkforcePoolProviderKey
+      - iam.googleapis.com/OauthClient
+      - iam.googleapis.com/OauthClientCredential
+    missing: >-
+      `IAMWorkforcePoolProviderScimTenant` (`google_iam_workforce_pool_provider_scim_tenant`), its token,
+      `IAMWorkforcePoolProviderKey`, `IAMOauthClient` and its credential. Config Connector has `IAMWorkforcePool`
+      and `IAMWorkforcePoolProvider`.
+    attributes: >-
+      Tenant: `displayName`, `description`, `claimMapping{}`; token: `displayName`; key: `use`, `keyData`;
+      OAuth client: `clientType`, `allowedGrantTypes[]`, `allowedRedirectUris[]`, `allowedScopes[]`, `disabled`.
+      Also on the provider: `extendedAttributesOauth2Client`, `extraAttributesOauth2Client`, `scimUsage`,
+      `vendorType`, `detailedAuditLogging` (field gaps on `IAMWorkforcePoolProvider`).
+    upstream: none. No kinds or pull requests for these resources.
+    build: >-
+      Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same
+      location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, `...ScimTenantToken`
+      (secret output, like a service account key), `IAMWorkforcePoolProviderKey`, `IAMOauthClient`,
+      `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`,
+      `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant).
+  - title: A fleet's RBAC role bindings and rollout sequences
+    importance: A
+    gap: whole
+    modules: 0
+    module_names: none (the gke-hub module creates features, feature memberships and memberships only)
+    size: M
+    resources:
+      - gkehub.googleapis.com/MembershipRbacrolebinding
+      - gkehub.googleapis.com/RolloutSequence
+      - gkehub.googleapis.com/MembershipFeature
+    missing: >-
+      `GKEHubMembershipRBACRoleBinding` (Config Connector has the scope-level `GKEHubScopeRBACRoleBinding` only)
+      and `GKEHubRolloutSequence`. `GKEHubFeature` is generic (its spec is a oneof per feature), so the generator
+      cannot measure it: `MembershipFeature` shows 0 official although the kind exists.
+    attributes: >-
+      Role binding: `role` (`predefinedRole` or `customRole`), `user` or `group`; rollout sequence: `displayName`,
+      `stages[]`, `autoUpgradeConfig`, `ignoredClustersSelector`.
+    upstream: >-
+      none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing).
+      Open PRs #7624 and #9089 add mockgcp for GKE Hub v1 and #7745 a `generate.sh` for gkehub: the kinds are
+      being moved to direct, so a new kind here would follow their pattern.
+    build: >-
+      Wait for #7745 to land before building (the generated types would conflict), then
+      `gkehub.gcp.hfl.dev/v1alpha1` `GKEHubMembershipRBACRoleBinding` (`membershipRef`, `role`, `user`/`group`;
+      API `projects.locations.memberships.rbacrolebindings`) after `GKEHubScopeRBACRoleBinding`. Rollout sequences
+      are alpha in the API; defer.
+  - title: Organization-level network security objects (address groups, security profiles)
+    importance: A
+    gap: whole
+    modules: 0
+    module_names: none
+    size: M
+    resources:
+      - networksecurity.googleapis.com/AddressGroup
+      - networksecurity.googleapis.com/SecurityProfile
+      - networksecurity.googleapis.com/SecurityProfileGroup
+    missing: >-
+      Organization-scoped address groups, security profiles and security profile groups, which hierarchical
+      firewall policy rules reference (`srcAddressGroups`, `securityProfileGroup`). Config Connector's
+      `NetworkSecurityAddressGroup`, `...SecurityProfile` and `...SecurityProfileGroup` take a project only
+      (the project-level resources show as covered under `projects.locations.*`).
+    attributes: >-
+      An `organizationRef` parent; the fields are those of the project kinds (`items[]`, `capacity`, `purpose`,
+      `type`; profile `threatPreventionProfile`, `urlFilteringProfile`, `customMirroringProfile`,
+      `customInterceptProfile`; `wildfireAnalysisProfile` is missing from the project kind too).
+    upstream: none. No kind or pull request for the organization scope.
+    build: >-
+      After the regional firewall item, when a module asks for it: `organizationRef` variants as our own kinds,
+      `NetworkSecurityOrganizationAddressGroup` and friends, copied from the project kinds (direct).
+  - title: BYOIP prefixes and cross-site interconnect groups
+    importance: A
+    gap: whole
+    modules: 0
+    module_names: none
+    size: M
+    resources:
+      - compute.googleapis.com/PublicAdvertisedPrefix
+      - compute.googleapis.com/PublicDelegatedPrefix
+      - compute.googleapis.com/GlobalPublicDelegatedPrefix
+      - compute.googleapis.com/InterconnectGroup
+      - compute.googleapis.com/InterconnectAttachmentGroup
+      - compute.googleapis.com/WireGroup
+      - compute.googleapis.com/CrossSiteNetwork
+    missing: >-
+      `ComputePublicAdvertisedPrefix`, `ComputePublicDelegatedPrefix` (regional and global),
+      `ComputeInterconnectGroup`, `ComputeInterconnectAttachmentGroup`, `ComputeWireGroup`,
+      `ComputeCrossSiteNetwork`.
+    attributes: >-
+      Prefixes: `ipCidrRange`, `pdpScope`, `parentPrefix`, `mode`, `allocatablePrefixLength`,
+      `publicDelegatedSubPrefixs[]`; groups: `intent`, `interconnects{}`/`attachments{}`; wire group:
+      `wireProperties`, `endpoints{}`, `adminEnabled`.
+    upstream: none. No kinds or pull requests.
+    build: >-
+      Last of the whole-resource gaps: no tracked module creates any of them. Each is small, regional or global in
+      the Compute API, written after `ComputeRegionNetworkEndpoint`'s pattern. Build when a team asks.
+  # ---- A, stability ----
+  - title: Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)
+    importance: A
+    gap: stability
+    modules: 6
+    module_names: organization, folder, project, net-cloud-armor, net-firewall-policy, dns-response-policy
+    size: L
+    resources:
+      - compute.googleapis.com/OrganizationSecurityPolicy
+      - compute.googleapis.com/NetworkFirewallPolicy
+      - dns.googleapis.com/ResponsePolicy
+      - dns.googleapis.com/ResponsePolicyRule
+    missing: >-
+      Nothing is missing; the kinds exist only as `v1alpha1` and the charts refuse alpha: `IAMDenyPolicy`,
+      `IAMPrincipalAccessBoundaryPolicy`, `IAMAccessBoundaryPolicy`, `IAMAccessPolicy`,
+      `ComputeOrganizationSecurityPolicy` with its association and rule, `ComputeNetworkFirewallPolicyRule`,
+      `DNSResponsePolicy`, `DNSResponsePolicyRule` (the measured list is "Official but alpha-only" below).
+    attributes: >-
+      None known beyond the field gaps in the field items; the work is promotion, not fields.
+    upstream: >-
+      IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request
+      found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the
+      release notes before building.
+    build: >-
+      Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a
+      stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the
+      organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`,
+      which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`,
+      `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`,
+      `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule.
+    decision: >-
+      Ship stable kinds of our own for alpha upstream kinds, or wait for upstream to promote them? (`docs/design.md`
+      6.1 says upstream first.)
+  # ---- A, fields ----
+  - title: Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)
+    importance: A
+    gap: field
+    modules: 6
+    module_names: net-cloudnat, net-vpn-ha, net-vpn-dynamic, net-vlan-attachment, net-ipsec-over-interconnect, ncc-spoke-ra
+    size: S
+    resources:
+      - compute.googleapis.com/Router
+    missing: >-
+      `md5AuthenticationKeys[]` on `ComputeRouter` (a BGP peer's `md5AuthenticationKeyName` needs it); on
+      `ComputeRouterPeer`: `enableIpv4`, `ipv4NexthopAddress`, `peerIpv4NexthopAddress`,
+      `customLearnedRoutePriority`, `customLearnedIpRanges`, `importPolicies`/`exportPolicies` (these two pair with
+      our `ComputeRouterRoutePolicy`); on `ComputeRouterInterface`: `ipVersion`; on `ComputeRouterNAT`:
+      `autoNetworkTier`, `nat64Subnetworks`, `sourceSubnetworkIpRangesToNat64`; `bgp.identifierRange`. (`name`
+      fields are the object's name, not missing.)
+    attributes: The measured list; the first five matter for HA VPN and Interconnect.
+    upstream: >-
+      no pull request for these fields. Open PR #13960 (2026-10-27) "align migration diffs for ComputeRouter":
+      `ComputeRouter` is moving to the direct controller, which is where new fields would land.
+    build: >-
+      Wait for the `ComputeRouter` direct migration (#13960); if the BGP peer fields block a chart, they are the
+      one critical exception to decision 5.
+    decision: >-
+      Field gaps on Terraform-based official kinds cannot be filled here without a parallel kind. Wait for the
+      release, or fund a parallel `ComputeRouterBgpPeer` of ours?
+  - title: VPN tunnel and Interconnect attachment fields
+    importance: A
+    gap: field
+    modules: 5
+    module_names: net-vpn-ha, net-vpn-static, net-vpn-dynamic, net-ipsec-over-interconnect, net-vlan-attachment
+    size: S
+    resources:
+      - compute.googleapis.com/VpnTunnel
+      - compute.googleapis.com/InterconnectAttachment
+      - compute.googleapis.com/Interconnect
+    missing: >-
+      `cipherSuite` on `ComputeVPNTunnel`; `candidateIpv6Subnets`, `candidateCloudRouterIpv6Address`,
+      `candidateCustomerRouterIpv6Address`, `l2Forwarding`, `partnerMetadata` on `ComputeInterconnectAttachment`;
+      `applicationAwareInterconnect` on `ComputeInterconnect`.
+    attributes: The measured lists; `cipherSuite` (IKE phase 1 and 2 algorithms) and the IPv6 candidates matter.
+    upstream: >-
+      none for the fields. Open PR #11260 (2026-08-21) moves `ComputeInterconnectAttachment` to the identity and
+      refs pattern (a step to direct).
+    build: Wait (decision 5); track #11260.
+  - title: Service attachment fields (Private Service Connect producers)
+    importance: A
+    gap: field
+    modules: 5
+    module_names: net-lb-int, net-lb-app-int, net-swp, net-lb-app-int-cross-region, net-lb-proxy-int
+    size: S
+    resources:
+      - compute.googleapis.com/ServiceAttachment
+    missing: >-
+      `consumerAcceptLists[]` (project or network, with a connection limit), `domainNames`, `natIpsPerEndpoint`,
+      `propagatedConnectionLimit`, `reconcileConnections`, `metadata{}` on `ComputeServiceAttachment`.
+    attributes: The measured list; `consumerAcceptLists` and `reconcileConnections` matter.
+    upstream: none found.
+    build: Wait (decision 5).
+  - title: Logging fields (buckets, sinks) and saved queries
+    importance: A
+    gap: field
+    modules: 4
+    module_names: logging-bucket, organization, folder, project
+    size: S
+    resources:
+      - logging.googleapis.com/Bucket
+      - logging.googleapis.com/Sink
+      - logging.googleapis.com/SavedQuery
+    missing: >-
+      On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is
+      `cmekSettings`, present on the kind); on `LoggingLogSink`: `interceptChildren`, `outputVersionFormat`;
+      whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
+    attributes: The measured lists.
+    upstream: >-
+      none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for
+      `LoggingLogSink`) and #14429 (project annotation in the sink) are fixes.
+    build: >-
+      Wait (decision 5) for the fields; `LoggingSavedQuery` is a small new kind (`logging.gcp.hfl.dev`, the API's
+      `savedQueries` under a project, folder or organization location) if a team asks.
+  - title: Organization policy fields (alternate policy)
+    importance: A
+    gap: field
+    modules: 3
+    module_names: project, folder, organization
+    size: S
+    resources:
+      - orgpolicy.googleapis.com/Policy
+    missing: >-
+      `alternate` (`spec` rules and `launch`) on `OrgPolicyPolicy`: the API's replacement for a dry-run spec.
+      Policies at the organization, folder and project level are covered (the kind takes all three refs); custom
+      constraints are covered in full.
+    attributes: >-
+      `alternate.spec.rules[]` (`allowAll`, `denyAll`, `enforce`, `values`, `condition`, `parameters`),
+      `alternate.spec.inheritFromParent`, `alternate.spec.reset`, `alternate.launch`.
+    upstream: >-
+      none. Open PRs #12756 (stop `UpdatePolicy` on every reconcile) and #6719 (structured diff) are fixes to the
+      existing kind.
+    build: Wait (decision 5); `dryRunSpec` covers the use for now.
+  - title: GKE cluster and node pool fields
+    importance: A
+    gap: field
+    modules: 3
+    module_names: gke-cluster-standard, gke-cluster-autopilot, gke-nodepool
+    size: M
+    resources:
+      - container.googleapis.com/Cluster
+      - container.googleapis.com/ClusterNodePool
+    missing: >-
+      On `ContainerNodePool` (and a cluster's default node config): most of `kubeletConfig` (`containerLog*`,
+      `evictionSoft*`, `evictionMinimumReclaim`, `maxParallelImagePulls`, `memoryManager`,
+      `reservedResourcesConfig`, `allowedUnsafeSysctls`, `insecureKubeletReadonlyPort`), `bootDisk`
+      (`diskType`, `sizeGb`, `provisionedIops`), `ephemeralStorageLocalSsdConfig`, `gpuDirectConfig`,
+      `flexStart`, `bestEffortProvisioning`, `containerdConfig.registryHosts`,
+      `advancedMachineFeatures.performanceMonitoringUnit`. On `ContainerCluster`: `controlPlaneDiskEncryptionKey`,
+      the maintenance exclusion `endTimeBehavior`, the Managed Lustre CSI addon. Autopilot, Workload Identity
+      (`workloadIdentityConfig`), private clusters, release channels, Binary Authorization, Dataplane V2 and Fleet
+      registration are present.
+    attributes: >-
+      The measured lists. The generator maps Terraform's renames (`nodeConfig` for `config`, `clusterAutoscaling`
+      for `autoscaling`, `enableShieldedNodes` for `shieldedNodes.enabled`, a node pool's fields counted against
+      the cluster's `nodePools[]` too); what is left is real or in nested names it cannot match.
+    upstream: >-
+      active. Open PRs: #14187 (`kubeletConfig.allowedUnsafeSysctls`, node pool and cluster, 2026-11-08), #14182
+      (`ContainerNodePool` `spec.autoscaling.enabled`), #14193 (maintenance exclusion `EndTimeBehavior`), #8135
+      (`controlPlaneDiskEncryptionKey`), #12906 (Managed Lustre CSI driver addon), #14239 (`nodePoolAutoConfig.networkTags`
+      fix). They arrive with the releases.
+    build: >-
+      Wait for the releases (decision 5): this is the kind where upstream is fastest. Re-measure after each Config
+      Connector release; do not build a parallel `ContainerCluster`.
+  - title: Cloud DNS fields (routing policies, forwarding and peering zones)
+    importance: A
+    gap: field
+    modules: 2
+    module_names: dns, net-vpc
+    size: S
+    resources:
+      - dns.googleapis.com/ResourceRecordSet
+      - dns.googleapis.com/ManagedZone
+      - dns.googleapis.com/Policy
+    missing: >-
+      `routingPolicy` (geo, weighted round robin, primary backup, with `enableFencing` and `trickleTraffic`) on
+      `DNSRecordSet`; `forwardingConfig.targetNameServers[].ipv6Address`, `alternativeNameServerConfig` IPv6,
+      `dns64Config` on `DNSPolicy`.
+    attributes: The measured lists; `routingPolicy` is the one the dns module exposes.
+    upstream: none found.
+    build: Wait (decision 5).
+  - title: Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
+    importance: A
+    gap: field
+    modules: 1
+    module_names: net-vpc
+    size: S
+    resources:
+      - compute.googleapis.com/Network
+      - compute.googleapis.com/Subnetwork
+    missing: >-
+      `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost` on `ComputeNetwork`;
+      `ipCollection`, `allowSubnetCidrRoutesOverlap`, `internalIpv6Prefix`/`externalIpv6Prefix` on `ComputeSubnetwork`
+      and status `networkId`. (`docs/design.md` 6.5 row 9.)
+    attributes: The measured lists.
+    upstream: >-
+      none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork"
+      (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no
+      pull request.
+    build: Wait (decision 5); the subnetwork's direct migration is the vehicle.
+  - title: Billing account log sink
+    importance: A
+    gap: field
+    modules: 1
+    module_names: billing-account
+    size: S
+    resources:
+      - logging.googleapis.com/BillingAccountSink
+    missing: >-
+      A billing account parent on `LoggingLogSink` (`google_logging_billing_account_sink`): Config Connector's sink
+      takes project, folder and organization only.
+    attributes: '`billingAccountRef` plus the sink''s own fields (all present on the other parents).'
+    upstream: none found.
+    build: >-
+      `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with
+      `billingAccountRef` (API `billingAccounts.sinks`).
+    decision: Build `LoggingBillingAccountSink` now, or wait for the sink to take a billing account?
+  - title: KMS fields (key access justifications, key backend)
+    importance: A
+    gap: field
+    modules: 1
+    module_names: kms
+    size: S
+    resources:
+      - cloudkms.googleapis.com/KeyRingCryptoKey
+      - cloudkms.googleapis.com/KeyRingCryptoKeyCryptoKeyVersion
+    missing: >-
+      `keyAccessJustificationsPolicy` and `cryptoKeyBackend` (single-tenant HSM) on `KMSCryptoKey`,
+      `externalProtectionLevelOptions` on `KMSCryptoKeyVersion`; whole: `KMSSingleTenantHsmInstance`.
+    attributes: The measured lists.
+    upstream: >-
+      open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would
+      land. None for single-tenant HSM.
+    build: Wait for #7377 (decision 5).
+  - title: Hierarchical firewall policy rule fields
+    importance: A
+    gap: field
+    modules: 1
+    module_names: net-firewall-policy
+    size: M
+    resources:
+      - compute.googleapis.com/FirewallPolicy:rules[]
+      - compute.googleapis.com/NetworkFirewallPolicy:rules[]
+      - compute.googleapis.com/OrganizationSecurityPolicy:rules[]
+    missing: >-
+      Fields of `ComputeFirewallPolicyRule`, `ComputeNetworkFirewallPolicyRule` and
+      `ComputeOrganizationSecurityPolicyRule` that the API has and the Terraform-based kinds do not (the measured
+      lists); the policy `displayName`/`shortName`.
+    attributes: The measured lists.
+    upstream: none found (`ComputeFirewall` has #12102 "validate direct promotion").
+    build: Wait (decision 5); revisit after the regional firewall item, whose rule kind will have the full field set.
+  # ---- B, whole resources ----
+  - title: Security Command Center at folder and project level
+    importance: B
+    gap: whole
+    modules: 3
+    module_names: organization, folder, project
+    size: M
+    resources:
+      - securitycenter.googleapis.com/projects.muteConfigs
+      - securitycenter.googleapis.com/projects.notificationConfigs
+      - securitycenter.googleapis.com/projects.bigQueryExports
+      - securitycenter.googleapis.com/projects.eventThreatDetectionSettings.customModules
+      - securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules
+    missing: >-
+      The folder and project parents of `SecurityCenterMuteConfig`, `...NotificationConfig`,
+      `...BigQueryExport`, `SecuritycenterEventThreatDetectionCustomModule` and
+      `SecuritycenterSecurityHealthAnalyticsCustomModule`: Config Connector's CRDs take `organizationRef` only.
+      `SecurityCenterManagement*CustomModule` take any parent, but are alpha-only, and so is `SecurityCenterMuteConfig`.
+    attributes: >-
+      A `folderRef` and `projectRef` beside `organizationRef` on each; the fields are the organization
+      kinds' (`filter`, `description`, `expiryTime`, `type`; `pubsubTopic`, `streamingConfig`; `dataset`).
+    upstream: >-
+      in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for
+      `SecuritycenterSecurityHealthAnalyticsCustomModule`, 2026-10-26); neither is known to add project or
+      folder parents.
+    build: >-
+      Check #7673 and #14181 for the parent first. If they do not add folder and project parents, our own kinds in
+      `securitycenter.gcp.hfl.dev/v1alpha1` (`SecurityCenterMuteConfig` with `parentRef`: organization, folder or
+      project; API `securitycenter` v2 `muteConfigs`), copied from the organization kind, one controller family.
+    decision: Wait for upstream's direct SCC kinds, or build ours with all three parents?
+  - title: VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)
+    importance: B
+    gap: whole
+    modules: 3
+    module_names: vpc-sc, organization, project
+    size: M
+    resources:
+      - accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc
+      - accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter
+      - accesscontextmanager.googleapis.com/GcpUserAccessBinding
+    missing: >-
+      `AccessContextManagerAuthorizedOrgsDesc`; on `AccessContextManagerServicePerimeter` the dry-run `spec`
+      (ingress and egress policies, `vpcAccessibleServices`) and its `egressFrom.sources`; on
+      `AccessContextManagerGCPUserAccessBinding` (alpha-only) `scopedAccessSettings`, session settings,
+      `principal`, `dryRunAccessLevels`.
+    attributes: The measured lists; the perimeter's dry-run `spec` is the one every VPC-SC rollout uses.
+    upstream: >-
+      partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08).
+      Nothing for the perimeter's dry-run fields.
+    build: >-
+      Take `AuthorizedOrgsDesc` from #14202 when it merges (while it is open, copy its code under the
+      copy-upstream rule: `UPSTREAM.md`, "Copied from open pull requests"). The perimeter fields: wait (decision 5).
+  - title: Privileged Access Manager grants
+    importance: B
+    gap: whole
+    modules: 0
+    module_names: none (the three hierarchy modules create entitlements only)
+    size: S
+    resources:
+      - privilegedaccessmanager.googleapis.com/Grant
+      - privilegedaccessmanager.googleapis.com/Entitlement
+    missing: '`PrivilegedAccessManagerGrant` (a request to use an entitlement); `privilegedAccess` fields on the entitlement.'
+    attributes: Grant `justification`, `requestedDuration`, `additionalEmailRecipients`.
+    upstream: none found.
+    build: >-
+      A grant is a request, not infrastructure; skip until a team asks (`docs/design.md` 6.2: data, not infrastructure).
+  - title: Resource Manager capability configs, boundaries and tag holds
+    importance: B
+    gap: whole
+    modules: 0
+    module_names: none
+    size: S
+    resources:
+      - cloudresourcemanager.googleapis.com/organizations.capabilityConfigs
+      - cloudresourcemanager.googleapis.com/organizations.boundaries
+      - cloudresourcemanager.googleapis.com/TagValueTagHold
+    missing: '`CapabilityConfig`, `Boundary` (organization governance, new in the API) and `TagValueTagHold`.'
+    attributes: Capability config `types`, `boundaries`, `managementProject`; boundary `resourceFilter`.
+    upstream: none.
+    build: 'Defer: new and unused by any module.'
+  - title: Cloud Identity SSO profiles, assignments and policies
+    importance: B
+    gap: whole
+    modules: 0
+    module_names: none (the cloud-identity-group module covers groups and memberships)
+    size: M
+    resources:
+      - cloudidentity.googleapis.com/InboundSamlSsoProfile
+      - cloudidentity.googleapis.com/InboundOidcSsoProfile
+      - cloudidentity.googleapis.com/InboundSsoAssignment
+      - cloudidentity.googleapis.com/Policy
+    missing: >-
+      `CloudIdentityInboundSamlSsoProfile`, `...InboundOidcSsoProfile`, `...InboundSsoAssignment`,
+      `CloudIdentityPolicy` (the Cloud Identity API is customer-scoped); groups and memberships are covered.
+    attributes: Profile `idpConfig`, `rpConfig`; assignment `ssoMode`, `targetGroup`, `targetOrgUnit`, `rank`.
+    upstream: >-
+      none for these. Open PR #7853 only restructures `apis/cloudidentity` to the `generate.sh` pattern.
+    build: >-
+      Defer until a team federates sign-in through Config Connector; then four kinds in `cloudidentity.gcp.hfl.dev`
+      after our `IAMWorkloadIdentityPoolProviderKey` shape. Wait for #7853 so the group's types do not move under us.
+  # ---- B, fields ----
+  - title: Binary Authorization, Private CA and Certificate Manager fields
+    importance: B
+    gap: field
+    modules: 3
+    module_names: binauthz, certificate-authority-service, certificate-manager
+    size: M
+    resources:
+      - binaryauthorization.googleapis.com/Attestor
+      - binaryauthorization.googleapis.com/PlatformPolicy
+      - privateca.googleapis.com/CaPool
+      - privateca.googleapis.com/CaPoolCertificateAuthority
+      - privateca.googleapis.com/CertificateTemplate
+      - certificatemanager.googleapis.com/TrustConfig
+    missing: >-
+      Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority
+      `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config
+      `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match;
+      verify each against the CRD before building.) IAM on attestors and CA pools is `IAMRoleMember`'s job and
+      is built.
+    attributes: The measured lists.
+    upstream: none found.
+    build: Verify each gap against the CRD, then wait (decision 5).
+  - title: Secret Manager fields
+    importance: B
+    gap: field
+    modules: 1
+    module_names: secret-manager
+    size: S
+    resources:
+      - secretmanager.googleapis.com/Secret
+      - secretmanager.googleapis.com/LocationSecret
+    missing: >-
+      `versionDestroyTtl`, `secretType`, `tags{}`, `topics[]` (matched by name, to verify), customer-managed
+      encryption on a regional secret. Our `SecretManagerSecret` already adds `spec.location` (regional
+      secrets); `SecretManagerSecretVersion` is covered by upstream and ours.
+    attributes: The measured lists.
+    upstream: 'regional secrets: PR #6651 (copied, `UPSTREAM.md`). No pull request for the others.'
+    build: >-
+      Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags`
+      there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`).
+  - title: Cloud Armor security policy fields
+    importance: B
+    gap: field
+    modules: 1
+    module_names: net-cloud-armor
+    size: M
+    resources:
+      - compute.googleapis.com/SecurityPolicy
+      - compute.googleapis.com/OrganizationSecurityPolicy
+    missing: >-
+      On `ComputeSecurityPolicy`: `adaptiveProtectionConfig.layer7DdosDefenseConfig` thresholds,
+      `userDefinedFields`, `ddosProtectionConfig`, `advancedOptionsConfig` details; rules beyond the common match
+      and action. The hierarchical (organization) policy is alpha (the stability item).
+    attributes: The measured lists (rules are `ComputeSecurityPolicy.spec.rule`).
+    upstream: none found.
+    build: Wait (decision 5).
