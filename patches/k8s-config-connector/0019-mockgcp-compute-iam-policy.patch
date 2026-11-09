@@ -1,6 +1,6 @@
 config-connector-extensions patch 0019: mockgcp serves Compute Engine's resource IAM policy, and its policy writes are atomic.
 
-For iam.gcp.hfl.dev IAMRoleBinding and IAMRoleMember on a Compute Engine
+For iam.gcp.hfl.dev IAMBinding and IAMMember on a Compute Engine
 resource (a backend service, a machine image). Compute reads a policy with
 GET {resource}/getIamPolicy and sets it with POST {resource}/setIamPolicy
 (a slash, not the colon of the other services' verbs), so mockgcp's verb

@@ -4,8 +4,8 @@ This is where an agent that is new to the repository starts. It says what
 is done, what is left (in order), and the working conventions that are not
 obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
-`IAMRoleMember`, the folder and organization `ServiceIdentity` and
-`ProjectDefaultServiceAccounts`. Read
+`IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
+organization `ServiceIdentity` and `ProjectDefaultServiceAccounts`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
@@ -91,11 +91,12 @@ The route is to copy each type and controller with an `organizationRef`
 parent, one PR per kind. mockgcp's `mocknetworksecurity/addressgroup.go`,
 `securityprofile.go` and `securityprofilegroup.go` serve project parents
 only, so each kind needs a patch for `organizations/{id}/locations/{l}`.
-The kind names need deciding first. foundation.md suggests
-`NetworkSecurityOrganizationAddressGroup` and so on, but
-`ServiceIdentity` kept upstream's name in our group with a new parent.
-Names are the builder's call: ask in design.md section 10 before
-building. Live: pending, needs the test folder (organization parent).
+The names are settled (design.md decision 18): upstream's names in our
+group, `NetworkSecurityAddressGroup` and its siblings in
+`networksecurity.gcp.hfl.dev`, each taking an organization or a project
+as its parent, as Terraform's `parent` argument does (not
+`NetworkSecurityOrganizationAddressGroup`, which foundation.md first
+suggested). Live: pending, needs the test folder (organization parent).
 
 Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
 (lean on `controllerbuilder`; behaviour from Magic Modules' product YAML

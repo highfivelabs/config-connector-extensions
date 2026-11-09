@@ -12,7 +12,7 @@ package v1alpha1
 type IAMResourceReference struct {
 	// The Config Connector kind of the resource, for example Project,
 	// Folder, StorageBucket or SecretManagerSecret. The kinds this version
-	// accepts are listed in docs/design.md, section 6.5 (IAMRoleBinding).
+	// accepts are listed in docs/design.md, section 6.5 (IAMBinding).
 	Kind string `json:"kind"`
 
 	// The API version of the referenced object, if the kind exists in more

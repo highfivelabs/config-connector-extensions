@@ -1,6 +1,6 @@
 config-connector-extensions patch 0018: mockgcp serves Cloud Storage's bucket IAM policy.
 
-For iam.gcp.hfl.dev IAMRoleBinding on a StorageBucket. Cloud Storage's JSON
+For iam.gcp.hfl.dev IAMBinding on a StorageBucket. Cloud Storage's JSON
 API reads and writes a policy with GET and PUT on /storage/v1/b/{bucket}/iam
 (and on a managed folder's /iam), not the :getIamPolicy verbs mockgcp
 already serves for every other service. They are now served from the same

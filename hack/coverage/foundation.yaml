@@ -187,8 +187,9 @@ items:
       `customInterceptProfile`; `wildfireAnalysisProfile` is missing from the project kind too).
     upstream: none. No kind or pull request for the organization scope.
     build: >-
-      After the regional firewall item, when a module asks for it: `organizationRef` variants as our own kinds,
-      `NetworkSecurityOrganizationAddressGroup` and friends, copied from the project kinds (direct).
+      After the regional firewall item, when a module asks for it: upstream's kinds copied into our group
+      (direct), `NetworkSecurityAddressGroup` and friends, each taking an organization or a project as its
+      parent (decision 18: names follow Config Connector, else Terraform; parents are fields, not kinds).
   - title: BYOIP prefixes and cross-site interconnect groups
     importance: A
     gap: whole
@@ -589,7 +590,7 @@ items:
       Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority
       `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config
       `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match;
-      verify each against the CRD before building.) IAM on attestors and CA pools is `IAMRoleMember`'s job and
+      verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and
       is built.
     attributes: The measured lists.
     upstream: none found.
