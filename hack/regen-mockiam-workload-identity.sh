@@ -2,11 +2,13 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
 #
-# Regenerates mockgcp's Go for workload identity pool namespaces and managed
-# identities (patches/k8s-config-connector/0006-* and 0007-*) from the protos
-# those patches add under mockgcp/apis/mockgcp/iam/v1/ (upstream pull requests
-# #14209's and #14418's mockgcp/apis/google/iam/v1/ protos, moved to package
-# mockgcp.iam.v1). Uses mockgcp's own toolchain, as
+# Regenerates mockgcp's Go for workload identity pool namespaces, managed
+# identities and provider keys (patches/k8s-config-connector/0006-*, 0007-*
+# and 0010-*) from the protos those patches add under
+# mockgcp/apis/mockgcp/iam/v1/ (upstream pull requests #14209's and #14418's
+# mockgcp/apis/google/iam/v1/ protos, moved to package mockgcp.iam.v1; the
+# provider key proto is written here from the API's discovery document).
+# Uses mockgcp's own toolchain, as
 # hack/regen-mocksql-users.sh does: protoc 3.12.4, protoc-gen-go v1.28.1,
 # protoc-gen-go-grpc v1.2.0, grpc-gateway v2.11.3, and googleapis at
 # mockgcp's pin for the imported annotations.
@@ -25,6 +27,7 @@ trap 'rm -rf "${WORK}"' EXIT
 PROTOS=(
   mockgcp/iam/v1/workload_identity_pool_namespace.proto
   mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
+  mockgcp/iam/v1/workload_identity_pool_provider_key.proto
 )
 for proto in "${PROTOS[@]}"; do
   [[ -f "${MOCKGCP}/apis/${proto}" ]] || { echo "missing ${MOCKGCP}/apis/${proto}; apply the patches first (hack/upstream.sh)" >&2; exit 1; }

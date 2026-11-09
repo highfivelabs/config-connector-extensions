@@ -84,6 +84,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   its pool exists; the real API refuses one in a missing pool. Delete is a
   soft delete, as documented, and the ID cannot be reused; the fake never
   purges it. It never sets `ownerService`.
+- **Workload identity pool provider keys in mockgcp** (patch 0010, ours).
+  The public key is a placeholder PEM, not a certificate, and its validity
+  window is made up; the provider is not checked.
 - **Managed identities in mockgcp** (patch 0007, ours). One must be in an
   existing, active namespace. An attestation rule's `googleCloudResource`
   is only checked to be non-empty; the real API checks its form and
