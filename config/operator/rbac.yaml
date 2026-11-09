@@ -50,10 +50,10 @@ kind: ClusterRole
 metadata:
   name: config-connector-extensions-manager
 rules:
-- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev", "compute.gcp.hfl.dev", "storage.gcp.hfl.dev", "logging.gcp.hfl.dev", "serviceusage.gcp.hfl.dev"]
+- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev", "compute.gcp.hfl.dev", "storage.gcp.hfl.dev", "logging.gcp.hfl.dev", "serviceusage.gcp.hfl.dev", "resourcemanager.gcp.hfl.dev"]
   resources: ["*"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev", "compute.gcp.hfl.dev", "storage.gcp.hfl.dev", "logging.gcp.hfl.dev", "serviceusage.gcp.hfl.dev"]
+- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev", "compute.gcp.hfl.dev", "storage.gcp.hfl.dev", "logging.gcp.hfl.dev", "serviceusage.gcp.hfl.dev", "resourcemanager.gcp.hfl.dev"]
   resources: ["*/status", "*/finalizers"]
   verbs: ["get", "update", "patch"]
 # Values from Secrets (SQLUser.spec.password, SecretManagerSecretVersion.spec.secretData)

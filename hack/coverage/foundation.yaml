@@ -42,7 +42,8 @@ items:
       (`resourcemanager.gcp.hfl.dev`): the Compute default account is `{projectNumber}-compute@developer.gserviceaccount.com`,
       the App Engine one `{projectId}@appspot.gserviceaccount.com`; `DELETE` is `serviceAccounts.delete`,
       `DEPRIVILEGE` removes its project role bindings (`projects.setIamPolicy`), `DISABLE` is
-      `serviceAccounts.disable`; abandon restores nothing unless `restorePolicy: REVERT`.
+      `serviceAccounts.disable`; abandon restores nothing unless `restorePolicy: REVERT`: built 2026-11-09
+      (`ProjectDefaultServiceAccounts`, mockgcp patch 0024); live pending a test project under the test folder.
       `ComputeProjectDefaultNetworkTier`: `projects.setDefaultNetworkTier`, a singleton per project like
       `ComputeProjectMetadataItem` (copy it): built 2026-11-09; live pending a test project under the test folder
       and `compute.projects.setDefaultNetworkTier` there.
@@ -186,8 +187,9 @@ items:
       `customInterceptProfile`; `wildfireAnalysisProfile` is missing from the project kind too).
     upstream: none. No kind or pull request for the organization scope.
     build: >-
-      After the regional firewall item, when a module asks for it: `organizationRef` variants as our own kinds,
-      `NetworkSecurityOrganizationAddressGroup` and friends, copied from the project kinds (direct).
+      After the regional firewall item, when a module asks for it: upstream's kinds copied into our group
+      (direct), `NetworkSecurityAddressGroup` and friends, each taking an organization or a project as its
+      parent (decision 18: names follow Config Connector, else Terraform; parents are fields, not kinds).
   - title: BYOIP prefixes and cross-site interconnect groups
     importance: A
     gap: whole

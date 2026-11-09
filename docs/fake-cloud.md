@@ -122,6 +122,18 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   `service-org-...`); the real API gives one only to services that have a
   service agent at that level, and some agents have other domains. Not
   yet compared with the real API: its live run waits for the test folder.
+- **Service accounts listed, undeleted and named by unique ID in
+  mockgcp** (patch 0024, ours). `list` returns one page; a deleted
+  account is kept for ever (the API keeps it 30 days, and undelete can
+  fail for other reasons); `undelete` takes only a unique ID and refuses
+  an account whose email is in use again. The fake project has no default
+  accounts: the test makes accounts with the defaults' display names
+  (their emails are not the real defaults' `{number}-compute@developer...`
+  and `{project}@appspot...`). mockgcp keeps an IAM policy per request
+  path, so a project's policy through cloudresourcemanager v1 and v3 are
+  two policies there (one in the real API); the test uses v3, as the
+  controller does. Not yet compared with the real API: its live run waits
+  for a test project.
 - **A project's default network tier in mockgcp** (patch 0023, ours).
   `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
   anything else with a message of our own; what the real API answers for
