@@ -703,6 +703,8 @@ Notes on what was built from this table:
   `status.externalRef` is ours: `projects/{project}/commonInstanceMetadata/{key}`.
   mockgcp already serves `projects.get` and `setCommonInstanceMetadata`;
   no patch.
+  Live: pending, needs `roles/iam.serviceAccountUser` on the project
+  (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is

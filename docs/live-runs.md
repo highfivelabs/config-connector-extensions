@@ -138,6 +138,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | `08fcc66` | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 2 secrets, 1 version (deleted) |
 | 2026-11-09 | `08fcc66` | SQLUser | PASS | PASS | none | 1 IAM user (deleted with the instance) |
 | 2026-11-09 | `08fcc66` | ArtifactRegistryRepository, ArtifactRegistryTag | PASS | PASS | none | 7 repositories, 2 minimal images, 1 secret (deleted) |
+| 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/hfl-dev-514205'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
