@@ -18,7 +18,9 @@
 # (their users and backups go with them), and Compute Engine network
 # firewall policies, network endpoint groups (their endpoints go with
 # them), Cloud Routers (their route policies go with them) and VPC
-# networks, which take no labels and are found by name. A failed list or
+# networks, which take no labels and are found by name, workload
+# identity pools (with what is in them) and Cloud Run services, by name.
+# A failed list or
 # delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
@@ -155,6 +157,38 @@ while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "Cloud Router" "${name} ${region}" "${G[@]}" compute routers delete "${name}" --region="${region}"
 done <<<"${rows}"
+# by_run NAME [CREATED]: whether this sweep takes NAME: the run's own, or,
+# with no run given, any live-test name made before the cutoff, by CREATED
+# (an RFC 3339 time) or else by the time in the run ID (cce-MMDDhhmm-...,
+# UTC, this year).
+by_run() {
+  local name="$1" made="${2:-}"
+  if [[ -n "${run}" ]]; then [[ "${name}" == "${run}-"* ]]; return; fi
+  [[ "${name}" =~ ^${PREFIX}([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-[0-9a-f]+- ]] || return 1
+  [[ "${mode}" == "sweep" ]] || return 0
+  if [[ -z "${made}" ]]; then
+    made="$(date -u +%Y)-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}T${BASH_REMATCH[3]}:${BASH_REMATCH[4]}:00Z"
+  fi
+  [[ "${made:0:19}Z" < "${cutoff}" ]]
+}
+
+# Workload identity pools: deleting one deletes what is in it (it is kept,
+# deleted, for 30 days, and its ID is not reused).
+rows="$("${G[@]}" iam workload-identity-pools list --location=global --verbosity=error --format='value(name.basename())')"
+for id in ${rows}; do
+  by_run "${id}" || continue
+  act "workload identity pool" "${id}" "${G[@]}" iam workload-identity-pools delete "${id}" --location=global
+done
+
+# Cloud Run services, every region.
+rows="$("${G[@]}" run services list --verbosity=error \
+  --format='value(metadata.name,metadata.labels."cloud.googleapis.com/location",metadata.creationTimestamp)')"
+while read -r name region made; do
+  [[ -n "${name}" ]] || continue
+  by_run "${name}" "${made}" || continue
+  act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
+done <<<"${rows}"
+
 names="$("${G[@]}" compute networks list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
 for name in ${names}; do
   act "VPC network" "${name}" "${G[@]}" compute networks delete "${name}"

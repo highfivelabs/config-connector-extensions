@@ -15,10 +15,14 @@
 
 package run_test
 
-// RunService end to end on the fake cloud (pkg/test/mockenv, patch 0008).
-// The case: a public inference service on a GPU, which Config Connector's
-// RunService cannot express (no invokerIamDisabled, no nodeSelector or
-// gpuZonalRedundancyDisabled).
+// RunService end to end on the fake cloud (pkg/test/mockenv, patch 0008)
+// or a real project (docs/live-runs.md). The case: a public inference
+// service on a GPU, which Config Connector's RunService cannot express (no
+// invokerIamDisabled, no nodeSelector or gpuZonalRedundancyDisabled).
+// Service names are mockenv.Name(...), and the test deletes every service
+// it made at the end, the abandoned one included. Against a real project
+// the images are Cloud Run's public sample, since the made-up ones do not
+// exist.
 
 import (
 	"net/url"
@@ -43,20 +47,31 @@ import (
 const (
 	namespace = "example"
 	region    = "us-central1"
-	image1    = "us-docker.pkg.dev/example/inference/server:1"
-	image2    = "us-docker.pkg.dev/example/inference/server:2"
 )
+
+// image1 and image2 are two images of the service; against a real project
+// they must exist.
+var image1, image2 = images()
+
+func images() (string, string) {
+	if mockenv.Live() {
+		return "us-docker.pkg.dev/cloudrun/container/hello:latest", "us-docker.pkg.dev/cloudrun/container/hello"
+	}
+	return "us-docker.pkg.dev/example/inference/server:1", "us-docker.pkg.dev/example/inference/server:2"
+}
 
 var gvk = runv1alpha1.RunServiceGVK
 
 func cloudName(name string) string {
-	return "projects/" + mockenv.Project + "/locations/" + region + "/services/" + name
+	return "projects/" + mockenv.Project + "/locations/" + region + "/services/" + mockenv.Name(name)
 }
 
 func newService(name string) *runv1alpha1.RunService {
 	return &runv1alpha1.RunService{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: runv1alpha1.RunServiceSpec{
+			ResourceID:         mockenv.Ptr(mockenv.Name(name)),
+			Labels:             mockenv.Labels(),
 			ProjectRef:         &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:           mockenv.Ptr(region),
 			Description:        mockenv.Ptr("inference on a GPU"),
@@ -99,11 +114,23 @@ func TestRunServiceGPUAndInvokerIAM(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { cloud.Close() })
+	// Delete every service the test made, the abandoned one included.
+	t.Cleanup(func() {
+		for _, name := range []string{"inference", "kept"} {
+			op, err := cloud.DeleteService(env.Ctx, &pb.DeleteServiceRequest{Name: cloudName(name)})
+			if err == nil {
+				_, err = op.Wait(env.Ctx)
+			}
+			if err != nil && status.Code(err) != codes.NotFound {
+				t.Errorf("deleting service %s: %v", cloudName(name), err)
+			}
+		}
+	})
 	read := func(t *testing.T, name string) *pb.Service {
 		t.Helper()
 		svc, err := cloud.GetService(env.Ctx, &pb.GetServiceRequest{Name: cloudName(name)})
 		if err != nil {
-			t.Fatalf("reading the service from the fake cloud: %v", err)
+			t.Fatalf("reading the service from the cloud: %v", err)
 		}
 		return svc
 	}

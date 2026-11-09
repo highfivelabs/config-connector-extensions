@@ -19,6 +19,9 @@ package iam_test
 // (pkg/test/mockenv, patches 0006 and 0007). The case: a managed identity
 // for one team's service, in that team's namespace, that two Compute Engine
 // instances may receive.
+//
+// Against a real project (docs/live-runs.md) the test makes its own pool
+// (usePool) and deletes it at the end, with everything in it.
 
 import (
 	"net/url"
@@ -65,6 +68,7 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	usePool(t, env, cloud, "mi-pool", "TRUST_DOMAIN")
 	mis := cloud.Projects.Locations.WorkloadIdentityPools.Namespaces.ManagedIdentities
 
 	// The pool (Config Connector's, read only) and the namespace (ours, Ready).
@@ -112,7 +116,7 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 		t.Helper()
 		resp, err := mis.ListAttestationRules(name).Context(env.Ctx).Do()
 		if err != nil {
-			t.Fatalf("listing attestation rules in the fake cloud: %v", err)
+			t.Fatalf("listing attestation rules in the cloud: %v", err)
 		}
 		out := []string{}
 		for _, r := range resp.AttestationRules {
@@ -130,7 +134,7 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 		}
 		got, err := mis.Get(name).Context(env.Ctx).Do()
 		if err != nil {
-			t.Fatalf("reading the managed identity from the fake cloud: %v", err)
+			t.Fatalf("reading the managed identity from the cloud: %v", err)
 		}
 		if got.Description != "the inference service" || got.State != "ACTIVE" {
 			t.Errorf("cloud managed identity = %+v", got)
