@@ -276,6 +276,7 @@ func prKinds(repo string) map[string]bool {
 type svcSum struct {
 	host string
 	c    counts
+	tier int
 }
 
 type counts struct {
@@ -367,6 +368,16 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 	attrHead := []string{"service", "resource", "attribute", "type", "required", "covered_by", "official_path", "ours_path"}
 	attrBySvc := map[string][][]string{}
 
+	prio, err := loadPriority(repo)
+	if err != nil {
+		return nil, err
+	}
+	tierOf := func(h string) int {
+		if t, ok := prio[h]; ok {
+			return t
+		}
+		return 3
+	}
 	var sums []svcSum
 	var total counts
 	for _, h := range m.hosts {
@@ -417,7 +428,7 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 			}
 		}
 		total.add(sc)
-		sums = append(sums, svcSum{h, sc})
+		sums = append(sums, svcSum{h, sc, tierOf(h)})
 		svcRows = append(svcRows, []string{h, strconv.Itoa(sc.resources), strconv.Itoa(sc.resOff), strconv.Itoa(sc.resBeyond), strconv.Itoa(sc.attrs), strconv.Itoa(sc.off), strconv.Itoa(sc.beyond), strconv.Itoa(sc.uncovered), pct(sc.off, sc.attrs), pct(sc.beyond, sc.attrs), pct(sc.uncovered, sc.attrs)})
 	}
 	// Our kinds with no API resource to count them against.
@@ -465,12 +476,26 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 	}
 	files["docs/coverage/bars/_total.svg"] = []byte(barSVG("Google Cloud, all services", total, true))
 
+	// Tiers: the rollup by how much a service matters (priority.csv).
+	var tierSums [3]counts
+	var tierSvcs [3]int
+	for _, s := range sums {
+		tierSums[s.tier-1].add(s.c)
+		tierSvcs[s.tier-1]++
+	}
+	tierRows := [][]string{{"tier", "services", "resources_total", "resources_official", "resources_ours_beyond", "attributes_total", "attributes_official", "attributes_ours_beyond", "attributes_uncovered", "pct_official", "pct_ours_beyond", "pct_uncovered"}}
+	for i, c := range tierSums {
+		tierRows = append(tierRows, []string{strconv.Itoa(i + 1), strconv.Itoa(tierSvcs[i]), strconv.Itoa(c.resources), strconv.Itoa(c.resOff), strconv.Itoa(c.resBeyond), strconv.Itoa(c.attrs), strconv.Itoa(c.off), strconv.Itoa(c.beyond), strconv.Itoa(c.uncovered), pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs)})
+	}
+	files["docs/coverage/tiers.csv"] = csvBytes(tierRows)
+	files["docs/coverage/bars/_tiers.svg"] = []byte(tiersSVG(tierSums, tierSvcs))
+
 	// Root README section and the docs README statistics.
 	root, err := os.ReadFile(filepath.Join(repo, "README.md"))
 	if err != nil {
 		return nil, err
 	}
-	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, total, len(m.hosts), src))
+	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, tierSums, tierSvcs, total, len(m.hosts), len(uniq(m.excluded)), src))
 	if err != nil {
 		return nil, fmt.Errorf("README.md: %w", err)
 	}

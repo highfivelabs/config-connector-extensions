@@ -55,7 +55,15 @@ func main() {
 	protoDir := flag.String("googleapis", "", "googleapis protos (default <cache>/googleapis)")
 	check := flag.Bool("check", false, "fail if the committed outputs differ from a regeneration")
 	updateSources := flag.Bool("update-sources", false, "rewrite the input digests in docs/coverage/sources.yaml")
+	derive := flag.String("derive-priority", "", "write docs/coverage/priority.csv from the catalog checkout at this path (a one-off; the file is hand-edited afterwards)")
 	flag.Parse()
+	if *derive != "" {
+		if err := derivePriority(*repo, *derive); err != nil {
+			fmt.Fprintln(os.Stderr, "coverage:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(*repo, *cache, *kccDir, *discDir, *protoDir, *check, *updateSources); err != nil {
 		fmt.Fprintln(os.Stderr, "coverage:", err)
 		os.Exit(1)

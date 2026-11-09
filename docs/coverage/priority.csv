@@ -1,0 +1,80 @@
+service,tier,rationale,source
+accesscontextmanager.googleapis.com,1,"used by foundational modules: project, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+artifactregistry.googleapis.com,1,used by foundational modules: artifact-registry,catalog docs/gcp-inventory.md @ 3e0b4ab
+assuredworkloads.googleapis.com,1,used by foundational modules: folder,catalog docs/gcp-inventory.md @ 3e0b4ab
+bigquery.googleapis.com,1,used by foundational modules: bigquery-dataset,catalog docs/gcp-inventory.md @ 3e0b4ab
+bigqueryreservation.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudasset.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudbilling.googleapis.com,1,used by foundational modules: iam-service-account,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudkms.googleapis.com,1,"used by foundational modules: project, folder, kms, gcs",catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudquotas.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudresourcemanager.googleapis.com,1,"used by foundational modules: project, folder, organization, iam-service-account, kms, gcs, artifact-registry, secret-manager, bigquery-dataset, cloud-run-v2",catalog docs/gcp-inventory.md @ 3e0b4ab
+compute.googleapis.com,1,"used by foundational modules: project, folder, organization, net-vpc, net-vpc-firewall, net-cloudnat",catalog docs/gcp-inventory.md @ 3e0b4ab
+container.googleapis.com,1,"used by foundational modules: gke-cluster-standard, gke-cluster-autopilot, gke-nodepool",catalog docs/gcp-inventory.md @ 3e0b4ab
+dns.googleapis.com,1,"used by foundational modules: net-vpc, dns",catalog docs/gcp-inventory.md @ 3e0b4ab
+essentialcontacts.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+eventarc.googleapis.com,1,used by foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 3e0b4ab
+gkebackup.googleapis.com,1,"used by foundational modules: gke-cluster-standard, gke-cluster-autopilot",catalog docs/gcp-inventory.md @ 3e0b4ab
+iam.googleapis.com,1,"used by foundational modules: project, folder, organization, iam-service-account, gke-nodepool, cloud-run-v2",catalog docs/gcp-inventory.md @ 3e0b4ab
+logging.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+modelarmor.googleapis.com,1,used by foundational modules: organization,catalog docs/gcp-inventory.md @ 3e0b4ab
+monitoring.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
+networkconnectivity.googleapis.com,1,used by foundational modules: net-vpc,catalog docs/gcp-inventory.md @ 3e0b4ab
+orgpolicy.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+privilegedaccessmanager.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+pubsub.googleapis.com,1,"used by foundational modules: gcs, gke-cluster-standard, gke-cluster-autopilot, pubsub",catalog docs/gcp-inventory.md @ 3e0b4ab
+run.googleapis.com,1,used by foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 3e0b4ab
+secretmanager.googleapis.com,1,used by foundational modules: secret-manager,catalog docs/gcp-inventory.md @ 3e0b4ab
+securitycenter.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+securitycentermanagement.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
+servicenetworking.googleapis.com,1,used by foundational modules: net-vpc,catalog docs/gcp-inventory.md @ 3e0b4ab
+serviceusage.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
+sqladmin.googleapis.com,1,used by foundational modules: cloudsql-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
+storage.googleapis.com,1,used by foundational modules: gcs,catalog docs/gcp-inventory.md @ 3e0b4ab
+vpcaccess.googleapis.com,1,used by foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 3e0b4ab
+aiplatform.googleapis.com,2,used by modules: geap-agent-runtime,catalog docs/gcp-inventory.md @ 3e0b4ab
+alloydb.googleapis.com,2,used by modules: alloydb,catalog docs/gcp-inventory.md @ 3e0b4ab
+analyticshub.googleapis.com,2,used by modules: analytics-hub,catalog docs/gcp-inventory.md @ 3e0b4ab
+apigateway.googleapis.com,2,used by modules: api-gateway,catalog docs/gcp-inventory.md @ 3e0b4ab
+apigee.googleapis.com,2,used by modules: apigee,catalog docs/gcp-inventory.md @ 3e0b4ab
+backupdr.googleapis.com,2,used by modules: backup-dr,catalog docs/gcp-inventory.md @ 3e0b4ab
+biglake.googleapis.com,2,used by modules: biglake-catalog,catalog docs/gcp-inventory.md @ 3e0b4ab
+bigqueryconnection.googleapis.com,2,used by modules: bigquery-connection,catalog docs/gcp-inventory.md @ 3e0b4ab
+bigtableadmin.googleapis.com,2,used by modules: bigtable-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
+billingbudgets.googleapis.com,2,used by modules: billing-account,catalog docs/gcp-inventory.md @ 3e0b4ab
+binaryauthorization.googleapis.com,2,used by modules: binauthz,catalog docs/gcp-inventory.md @ 3e0b4ab
+certificatemanager.googleapis.com,2,used by modules: certificate-manager,catalog docs/gcp-inventory.md @ 3e0b4ab
+chronicle.googleapis.com,2,used by modules: secops-rules,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudbuild.googleapis.com,2,"used by modules: cloud-build-v2-connection, source-repository",catalog docs/gcp-inventory.md @ 3e0b4ab
+clouddeploy.googleapis.com,2,used by modules: cloud-deploy,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudfunctions.googleapis.com,2,"used by modules: cloud-function-v1, cloud-function-v2",catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudidentity.googleapis.com,2,used by modules: cloud-identity-group,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudscheduler.googleapis.com,2,used by modules: workflows,catalog docs/gcp-inventory.md @ 3e0b4ab
+cloudtasks.googleapis.com,2,used by modules: workflows,catalog docs/gcp-inventory.md @ 3e0b4ab
+containeranalysis.googleapis.com,2,used by modules: binauthz,catalog docs/gcp-inventory.md @ 3e0b4ab
+containerregistry.googleapis.com,2,used by modules: container-registry,catalog docs/gcp-inventory.md @ 3e0b4ab
+datacatalog.googleapis.com,2,"used by modules: data-catalog-policy-tag, data-catalog-tag, data-catalog-tag-template",catalog docs/gcp-inventory.md @ 3e0b4ab
+dataform.googleapis.com,2,used by modules: dataform-repository,catalog docs/gcp-inventory.md @ 3e0b4ab
+datafusion.googleapis.com,2,used by modules: datafusion,catalog docs/gcp-inventory.md @ 3e0b4ab
+dataplex.googleapis.com,2,"used by modules: dataplex, dataplex-aspect-types, dataplex-datascan",catalog docs/gcp-inventory.md @ 3e0b4ab
+dataproc.googleapis.com,2,used by modules: dataproc,catalog docs/gcp-inventory.md @ 3e0b4ab
+dialogflow.googleapis.com,2,used by modules: ai-applications,catalog docs/gcp-inventory.md @ 3e0b4ab
+discoveryengine.googleapis.com,2,used by modules: ai-applications,catalog docs/gcp-inventory.md @ 3e0b4ab
+dlp.googleapis.com,2,used by modules: ai-applications,catalog docs/gcp-inventory.md @ 3e0b4ab
+firestore.googleapis.com,2,used by modules: firestore,catalog docs/gcp-inventory.md @ 3e0b4ab
+gkehub.googleapis.com,2,used by modules: gke-hub,catalog docs/gcp-inventory.md @ 3e0b4ab
+looker.googleapis.com,2,used by modules: looker-core,catalog docs/gcp-inventory.md @ 3e0b4ab
+managedkafka.googleapis.com,2,used by modules: managed-kafka,catalog docs/gcp-inventory.md @ 3e0b4ab
+networksecurity.googleapis.com,2,"used by modules: geap-agent-gateway, net-swp, project-factory",catalog docs/gcp-inventory.md @ 3e0b4ab
+networkservices.googleapis.com,2,"used by modules: geap-agent-gateway, net-swp",catalog docs/gcp-inventory.md @ 3e0b4ab
+notebooks.googleapis.com,2,used by modules: geap-workbench,catalog docs/gcp-inventory.md @ 3e0b4ab
+privateca.googleapis.com,2,used by modules: certificate-authority-service,catalog docs/gcp-inventory.md @ 3e0b4ab
+securesourcemanager.googleapis.com,2,used by modules: secure-source-manager-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
+servicedirectory.googleapis.com,2,used by modules: service-directory,catalog docs/gcp-inventory.md @ 3e0b4ab
+servicemanagement.googleapis.com,2,used by modules: endpoints,catalog docs/gcp-inventory.md @ 3e0b4ab
+sourcerepo.googleapis.com,2,used by modules: source-repository,catalog docs/gcp-inventory.md @ 3e0b4ab
+spanner.googleapis.com,2,used by modules: spanner-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
+tpu.googleapis.com,2,used by modules: compute-vm,catalog docs/gcp-inventory.md @ 3e0b4ab
+vmwareengine.googleapis.com,2,used by modules: gcve-private-cloud,catalog docs/gcp-inventory.md @ 3e0b4ab
+workflows.googleapis.com,2,used by modules: workflows,catalog docs/gcp-inventory.md @ 3e0b4ab
+workstations.googleapis.com,2,used by modules: workstation-cluster,catalog docs/gcp-inventory.md @ 3e0b4ab
