@@ -1,10 +1,12 @@
 # config-connector-extensions design
 
-config-connector-extensions has seven kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has nine kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
-remote upstream and its credentials, and `IAMWorkloadIdentityPoolNamespace`
-and `IAMWorkloadIdentityPoolManagedIdentity` (section 6). Each passes its end-to-end test
+remote upstream and its credentials, `ArtifactRegistryTag`,
+`IAMWorkloadIdentityPoolNamespace` and
+`IAMWorkloadIdentityPoolManagedIdentity`, and a narrow direct
+`RunService` with `invokerIamDisabled` and GPUs (section 6). Each passes its end-to-end test
 against mockgcp. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
@@ -339,7 +341,7 @@ Upstream code exists, not released:
 | 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | clusters made from manifests | wait for the release |
 | 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets | wait for the release |
 | 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | built |
-| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs, Terraform only; no direct `RunService` upstream | Cloud Run services | to build (decision 10) |
+| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs, Terraform only; no direct `RunService` upstream | Cloud Run services | built, as a narrow direct `RunService` (decision 11) |
 | 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller, no mockgcp | workload identity federation | namespace and managed identity built; `mode` needs the DCL fork |
 
 In the Google API, in no Config Connector code or pull request
@@ -538,6 +540,32 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     attestation rules. The PR's proto has no attestation-rule methods; they
     are added from the IAM v1 API, and the proto's duplicate operation
     metadata is dropped.
+- `RunService` (`run.gcp.hfl.dev/v1alpha1`, decisions 10 and 11). Rechecked
+  2026-11-09: PR #14417 (`invokerIamDisabled`, head `9297537a`) and PR
+  #7232 (GPUs) are open, review required, and change only Config
+  Connector's Terraform fork; no direct `RunService` exists upstream.
+  - Copied from Config Connector's direct `RunWorkerPool` (master): the
+    types (template, containers, env, volumes, VPC access, node selector),
+    identity, reference, mappers, reference resolution and controller,
+    renamed for a service, without instance splits.
+  - Written here, from the Cloud Run v2 API: the service's `ingress`,
+    `invokerIamDisabled`, `defaultUriDisabled` and `scaling`; the
+    template's `scaling`, `timeout`, `maxInstanceRequestConcurrency`,
+    `executionEnvironment`, `sessionAffinity`, `healthCheckDisabled` and
+    `gpuZonalRedundancyDisabled`; the URIs in status; and the server
+    defaults a service has that a worker pool does not (ingress, timeout,
+    concurrency, execution environment, template scaling), taken from what
+    was read when the spec leaves them unset.
+  - Not modelled: `traffic` (a service sends all traffic to its latest
+    revision), IAP, multi-region settings, the build config.
+  - Secret references are typed `SecretManagerSecretRef` and
+    `SecretManagerSecretVersionRef`, not their aliases (controller-gen
+    v0.16.5 panics on aliases, as for the Secret Manager kinds).
+  - Patch 0008: mockgcp's `services.patch` honours an update mask (exact
+    top-level fields), and keeps `invokerIamDisabled` without one (PR
+    #14417's line).
+  - The managers' role also reads the `compute`, `vpcaccess`, `storage`
+    and `networkservices` Config Connector groups the template references.
 - `ArtifactRegistryTag` (`artifactregistry.gcp.hfl.dev/v1alpha1`, decision
   10, the first unranked candidate). **Written here** in full: no Config
   Connector code or pull request, and no Terraform resource, has package
@@ -609,6 +637,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     owned by a Google service (`ownerService`), none of which mockgcp
     models, and which `googleCloudResource` forms the API accepts in an
     attestation rule; then correct mockgcp.
+17. `RunService` against a real project: which server defaults the real
+    API fills in beyond mockgcp's (ports, startup probe, traffic), each of
+    which must be taken from what was read or it shows as a difference on
+    every resync; that the API accepts a top-level update mask for
+    `template` and `invokerIamDisabled`; and a GPU service actually
+    scheduling with `nodeSelector` and `gpuZonalRedundancyDisabled`.
 18. `ArtifactRegistryTag` against a real project: a tag on a version that
     exists, the API's error for one that does not, and a package whose ID
     has a "/" (`%2F` in the name), which the fake test leaves out.
@@ -657,6 +691,25 @@ To raise confidence in `ArtifactRegistryRepository`:
     the smallest workable way rather than as all of `RunService`; then the
     unranked candidates in section 6.3, top to bottom, skipping any that
     Config Connector already has.
+11. **Rank 8 as a narrow direct `RunService` that owns the whole service**
+    (2026-11-09; the builder's coordinator agreed). Two ways were weighed:
+    - a field patch beside Config Connector's `RunService`, re-applying
+      `invokerIamDisabled` (and the GPU fields) after Config Connector's
+      updates. Rejected: Config Connector's `RunService` is Terraform-based,
+      and Terraform's update sends the whole service with no update mask,
+      so every change to it (every deploy) resets the fields until the
+      patch runs again; for GPUs the template would flip between revisions
+      with and without the accelerator, and a service whose GPU limit has
+      no node selector may not be creatable at all;
+    - **chosen:** our own `run.gcp.hfl.dev/v1alpha1` `RunService`, copied
+      from Config Connector's direct `RunWorkerPool` (the nearest upstream
+      code: same API family, a revision template with containers,
+      volumes, VPC access, service account and `nodeSelector`), owning the
+      whole service. It updates with an update mask of the top-level fields
+      that differ, so fields it does not model are left alone. A workload
+      that needs `invokerIamDisabled` or a GPU moves its service to this
+      kind (acquire by `resourceID`, delete the Config Connector object with
+      `deletion-policy: abandon`); others stay on Config Connector's.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -866,13 +919,13 @@ bundle at the pin (`config/installbundle/components/clusterroles/` and
   `cnrm-admin` and `cnrm-manager-ns-role` only in N (and
   `cnrm-manager-ns-role` in `cnrm-system`); `cnrm-manager-cluster-role`
   stays cluster-wide.
-- **What our manager needs:** our five groups, read Secrets, write
-  events, and read the six Config Connector groups ours reference
+- **What our manager needs:** our six groups, read Secrets, write
+  events, and read the ten Config Connector groups ours reference
   (`config-connector-extensions-manager` and `config-connector-extensions-manager-cluster`,
   `config/operator/rbac.yaml`).
 - **What Config Connector's pods would gain from our binding, when
-  shared:** only full control of our five groups (`sql`, `sqladmin`,
-  `secretmanager`, `artifactregistry` and `iam.gcp.hfl.dev`). Everything else in
+  shared:** only full control of our six groups (`sql`, `sqladmin`,
+  `secretmanager`, `artifactregistry`, `iam` and `run.gcp.hfl.dev`). Everything else in
   `config-connector-extensions-manager` they already hold.
 
 So sharing barely widens Config Connector's side, and widens ours a lot:

@@ -1,0 +1,120 @@
+config-connector-extensions patch 0008: mockgcp's Cloud Run services.patch honours an update mask and keeps invokerIamDisabled.
+
+For run.gcp.hfl.dev RunService, which updates a service with an update mask of
+the top-level fields that differ.
+- With an update mask, exactly the masked top-level fields change (by proto
+  or JSON name), cleared when the request leaves them unset; written here.
+- Without one, the existing behaviour, plus Config Connector pull request
+  #14417's (head 9297537a) line keeping invoker_iam_disabled.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockrun/services.go b/mockgcp/mockrun/services.go
+index b60389a96..c3c062c56 100644
+--- a/mockgcp/mockrun/services.go
++++ b/mockgcp/mockrun/services.go
+@@ -147,38 +147,47 @@ func (s *ServicesV2) UpdateService(ctx context.Context, req *pb.UpdateServiceReq
+ 
+ 	// Update logic from request
+ 	updatedService := req.GetService()
+-	if updatedService.Template != nil {
+-		obj.Template = updatedService.Template
+-	}
+-	if updatedService.Labels != nil {
+-		obj.Labels = updatedService.Labels
+-	}
+-	if updatedService.Annotations != nil {
+-		obj.Annotations = updatedService.Annotations
+-	}
+-	if updatedService.Description != "" {
+-		obj.Description = updatedService.Description
+-	}
+-	if updatedService.BinaryAuthorization != nil {
+-		obj.BinaryAuthorization = updatedService.BinaryAuthorization
+-	}
+-	if updatedService.Client != "" {
+-		obj.Client = updatedService.Client
+-	}
+-	if updatedService.ClientVersion != "" {
+-		obj.ClientVersion = updatedService.ClientVersion
+-	}
+-	if updatedService.Ingress != 0 {
+-		obj.Ingress = updatedService.Ingress
+-	}
+-	if updatedService.LaunchStage != 0 {
+-		obj.LaunchStage = updatedService.LaunchStage
+-	}
+-	if updatedService.Traffic != nil {
+-		obj.Traffic = updatedService.Traffic
+-	}
+-	if updatedService.Scaling != nil {
+-		obj.Scaling = updatedService.Scaling
++	// config-connector-extensions (patch 0008): with an update mask, change
++	// exactly the masked top-level fields, as the API documents.
++	if paths := req.GetUpdateMask().GetPaths(); len(paths) > 0 {
++		if err := applyServiceUpdateMask(obj, updatedService, paths); err != nil {
++			return nil, err
++		}
++	} else {
++		if updatedService.Template != nil {
++			obj.Template = updatedService.Template
++		}
++		if updatedService.Labels != nil {
++			obj.Labels = updatedService.Labels
++		}
++		if updatedService.Annotations != nil {
++			obj.Annotations = updatedService.Annotations
++		}
++		if updatedService.Description != "" {
++			obj.Description = updatedService.Description
++		}
++		if updatedService.BinaryAuthorization != nil {
++			obj.BinaryAuthorization = updatedService.BinaryAuthorization
++		}
++		if updatedService.Client != "" {
++			obj.Client = updatedService.Client
++		}
++		if updatedService.ClientVersion != "" {
++			obj.ClientVersion = updatedService.ClientVersion
++		}
++		if updatedService.Ingress != 0 {
++			obj.Ingress = updatedService.Ingress
++		}
++		if updatedService.LaunchStage != 0 {
++			obj.LaunchStage = updatedService.LaunchStage
++		}
++		if updatedService.Traffic != nil {
++			obj.Traffic = updatedService.Traffic
++		}
++		if updatedService.Scaling != nil {
++			obj.Scaling = updatedService.Scaling
++		}
++		obj.InvokerIamDisabled = updatedService.InvokerIamDisabled
+ 	}
+ 
+ 	obj.UpdateTime = timestamppb.Now()
+@@ -242,3 +251,25 @@ func (s *MockService) parseServiceName(name string) (*serviceName, error) {
+ 	}
+ 	return nil, status.Errorf(codes.InvalidArgument, "name %q is not valid", name)
+ }
++
++// applyServiceUpdateMask copies each masked top-level field (by its proto or
++// JSON name) from update to obj, clearing it when update leaves it unset.
++// Added by config-connector-extensions (patch 0008).
++func applyServiceUpdateMask(obj, update *pb.Service, paths []string) error {
++	fields := obj.ProtoReflect().Descriptor().Fields()
++	for _, path := range paths {
++		fd := fields.ByName(protoreflect.Name(path))
++		if fd == nil {
++			fd = fields.ByJSONName(path)
++		}
++		if fd == nil {
++			return status.Errorf(codes.InvalidArgument, "update_mask path %q is not a field of Service", path)
++		}
++		if update.ProtoReflect().Has(fd) {
++			obj.ProtoReflect().Set(fd, update.ProtoReflect().Get(fd))
++		} else {
++			obj.ProtoReflect().Clear(fd)
++		}
++	}
++	return nil
++}
