@@ -74,13 +74,16 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   `disableUpstreamValidation` is set. Its update accepts only
   `description`, `labels` and the cleanup policies; changing
   `remoteRepositoryConfig` (for example the custom upstream's URI) is
-  refused, and patch 0014 gives the real API's error for it ("Remote
+  refused, and patch 0016 gives the real API's error for it ("Remote
   source configuartion cannot be updated", seen live). Patch 0005 lets
   it change a remote repository's upstream username and password version
   alone, as the real API and Terraform do; it never reads the secret
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Cloud Storage objects in mockgcp** (patch 0013, ours). Before it,
+  objects were stubs. Uploads are media or multipart, not resumable; an
+  object's ACLs, holds, retention and storage class are not modelled.
 - **Router route policies in mockgcp** (patch 0012, ours). The CEL in
   terms is stored, not parsed, and the fingerprint is not checked on write.
 - **Regional network endpoints in mockgcp** (patch 0011, ours). Any
@@ -109,8 +112,8 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   serves.
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
-  Cloud SQL backup run is kept with status `DELETED` (patch 0013), and
-  the Artifact Registry error above (patch 0014). The same tests run
+  Cloud SQL backup run is kept with status `DELETED` (patch 0015), and
+  the Artifact Registry error above (patch 0016). The same tests run
   against a real project with `make test-live`.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is

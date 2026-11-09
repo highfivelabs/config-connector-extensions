@@ -1,0 +1,310 @@
+config-connector-extensions patch 0013: mockgcp stores Cloud Storage objects with their content.
+
+For storage.gcp.hfl.dev StorageBucketObject. Before, objects.get always
+answered "no such object" and nothing served uploads. Written here:
+- mockstorage/objectmedia.go serves uploads (POST
+  /upload/storage/v1/b/{bucket}/o, uploadType media or multipart) into an
+  existing bucket, each a new generation with its size, MD5 and CRC32C, and
+  content reads (alt=media), beside the generated mux, as handleBucketIAM
+  does; service.go calls it;
+- objects.go: objects.get returns the stored object, and objects.delete
+  deletes it and its content.
+- mockgcp_http.go: prefilterRequest, which parses every request body as
+  JSON, leaves /upload/ requests alone.
+Resumable uploads are not served. Upstream candidate: yes.
+diff --git a/mockgcp/mockgcp_http.go b/mockgcp/mockgcp_http.go
+index 28a752042..eff79f75d 100644
+--- a/mockgcp/mockgcp_http.go
++++ b/mockgcp/mockgcp_http.go
+@@ -159,6 +159,11 @@ func toHostRegex(host string) *regexp.Regexp {
+ }
+ 
+ func (m *mockRoundTripper) prefilterRequest(req *http.Request) error {
++	// config-connector-extensions (patch 0013): an upload's body is the
++	// object's data (media) or a multipart document, not JSON.
++	if strings.HasPrefix(req.URL.Path, "/upload/") {
++		return nil
++	}
+ 	if req.Body != nil {
+ 		var requestBody bytes.Buffer
+ 		if _, err := io.Copy(&requestBody, req.Body); err != nil {
+diff --git a/mockgcp/mockstorage/objectmedia.go b/mockgcp/mockstorage/objectmedia.go
+new file mode 100644
+index 000000000..f951b35a5
+--- /dev/null
++++ b/mockgcp/mockstorage/objectmedia.go
+@@ -0,0 +1,215 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// Added by config-connector-extensions (patch 0013): objects with content.
++// Uploads (POST /upload/storage/v1/b/{bucket}/o, uploadType media or
++// multipart) and content reads (alt=media) are not gRPC-gateway routes, so
++// they are served here, beside the generated mux, as handleBucketIAM is.
++// Each upload makes a new generation, as GCS does. Resumable uploads are not
++// served.
++
++package mockstorage
++
++import (
++	"context"
++	"crypto/md5"
++	"encoding/base64"
++	"encoding/binary"
++	"encoding/json"
++	"fmt"
++	"hash/crc32"
++	"io"
++	"mime"
++	"mime/multipart"
++	"net/http"
++	"net/url"
++	"strings"
++	"time"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/encoding/protojson"
++	"google.golang.org/protobuf/types/known/timestamppb"
++	"google.golang.org/protobuf/types/known/wrapperspb"
++
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/storage/v1"
++)
++
++func objectKey(bucket, name string) string {
++	return "buckets/" + bucket + "/objects/" + name
++}
++
++func objectMediaKey(bucket, name string) string {
++	return objectKey(bucket, name) + "#media"
++}
++
++func (s *MockService) getStoredObject(ctx context.Context, bucket, name string) (*pb.Object, error) {
++	obj := &pb.Object{}
++	if err := s.storage.Get(ctx, objectKey(bucket, name), obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "No such object: %s/%s", bucket, name)
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++func (s *MockService) deleteStoredObject(ctx context.Context, bucket, name string) error {
++	if err := s.storage.Delete(ctx, objectKey(bucket, name), &pb.Object{}); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return status.Errorf(codes.NotFound, "No such object: %s/%s", bucket, name)
++		}
++		return err
++	}
++	_ = s.storage.Delete(ctx, objectMediaKey(bucket, name), &wrapperspb.BytesValue{})
++	return nil
++}
++
++// handleObjectMedia serves uploads and content reads; it reports whether it
++// handled the request.
++func (s *MockService) handleObjectMedia(w http.ResponseWriter, r *http.Request) bool {
++	path := r.URL.EscapedPath()
++	switch {
++	case r.Method == http.MethodPost && strings.HasPrefix(path, "/upload/storage/v1/b/") && strings.HasSuffix(path, "/o"):
++		bucket := strings.TrimSuffix(strings.TrimPrefix(path, "/upload/storage/v1/b/"), "/o")
++		s.upload(w, r, bucket)
++		return true
++	case r.Method == http.MethodGet && r.URL.Query().Get("alt") == "media" &&
++		(strings.HasPrefix(path, "/storage/v1/b/") || strings.HasPrefix(path, "/download/storage/v1/b/")):
++		rest := strings.TrimPrefix(strings.TrimPrefix(path, "/download"), "/storage/v1/b/")
++		bucket, object, ok := strings.Cut(rest, "/o/")
++		if !ok {
++			return false
++		}
++		name, err := url.PathUnescape(object)
++		if err != nil {
++			writeStorageError(w, http.StatusBadRequest, err.Error())
++			return true
++		}
++		media := &wrapperspb.BytesValue{}
++		if err := s.storage.Get(r.Context(), objectMediaKey(bucket, name), media); err != nil {
++			writeStorageError(w, http.StatusNotFound, fmt.Sprintf("No such object: %s/%s", bucket, name))
++			return true
++		}
++		w.Header().Set("Content-Type", "application/octet-stream")
++		_, _ = w.Write(media.GetValue())
++		return true
++	}
++	return false
++}
++
++func writeStorageError(w http.ResponseWriter, code int, message string) {
++	w.Header().Set("Content-Type", "application/json")
++	w.WriteHeader(code)
++	_ = json.NewEncoder(w).Encode(map[string]any{"error": map[string]any{"code": code, "message": message}})
++}
++
++func (s *MockService) upload(w http.ResponseWriter, r *http.Request, bucket string) {
++	ctx := r.Context()
++	if err := s.storage.Get(ctx, "buckets/"+bucket, &pb.Bucket{}); err != nil {
++		writeStorageError(w, http.StatusNotFound, "The specified bucket does not exist.")
++		return
++	}
++	obj := &pb.Object{}
++	var content []byte
++	switch r.URL.Query().Get("uploadType") {
++	case "media":
++		obj.Name = PtrTo(r.URL.Query().Get("name"))
++		obj.ContentType = PtrTo(r.Header.Get("Content-Type"))
++		b, err := io.ReadAll(r.Body)
++		if err != nil {
++			writeStorageError(w, http.StatusBadRequest, err.Error())
++			return
++		}
++		content = b
++	case "multipart":
++		_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
++		if err != nil {
++			writeStorageError(w, http.StatusBadRequest, err.Error())
++			return
++		}
++		mr := multipart.NewReader(r.Body, params["boundary"])
++		meta, err := mr.NextPart()
++		if err != nil {
++			writeStorageError(w, http.StatusBadRequest, "missing metadata part: "+err.Error())
++			return
++		}
++		mb, _ := io.ReadAll(meta)
++		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(mb, obj); err != nil {
++			writeStorageError(w, http.StatusBadRequest, "bad metadata: "+err.Error())
++			return
++		}
++		data, err := mr.NextPart()
++		if err != nil {
++			writeStorageError(w, http.StatusBadRequest, "missing media part: "+err.Error())
++			return
++		}
++		if obj.GetContentType() == "" {
++			obj.ContentType = PtrTo(data.Header.Get("Content-Type"))
++		}
++		content, _ = io.ReadAll(data)
++	default:
++		writeStorageError(w, http.StatusBadRequest, "mockgcp serves uploadType media and multipart only")
++		return
++	}
++	if obj.GetName() == "" {
++		writeStorageError(w, http.StatusBadRequest, "object name is required")
++		return
++	}
++
++	sum := md5.Sum(content)
++	crc := make([]byte, 4)
++	binary.BigEndian.PutUint32(crc, crc32.Checksum(content, crc32.MakeTable(crc32.Castagnoli)))
++	now := time.Now()
++	obj.Bucket = PtrTo(bucket)
++	obj.Kind = PtrTo("storage#object")
++	obj.Size = PtrTo(uint64(len(content)))
++	obj.Md5Hash = PtrTo(base64.StdEncoding.EncodeToString(sum[:]))
++	obj.Crc32C = PtrTo(base64.StdEncoding.EncodeToString(crc))
++	obj.Generation = PtrTo(now.UnixMicro())
++	obj.Metageneration = PtrTo(int64(1))
++	obj.Id = PtrTo(fmt.Sprintf("%s/%s/%d", bucket, obj.GetName(), obj.GetGeneration()))
++	obj.SelfLink = PtrTo("https://www.googleapis.com/storage/v1/b/" + bucket + "/o/" + url.PathEscape(obj.GetName()))
++	obj.MediaLink = PtrTo(obj.GetSelfLink() + "?alt=media")
++	obj.TimeCreated = timestamppb.New(now)
++	obj.Updated = timestamppb.New(now)
++
++	key := objectKey(bucket, obj.GetName())
++	if err := s.storage.Update(ctx, key, obj); err != nil {
++		if status.Code(err) != codes.NotFound {
++			writeStorageError(w, http.StatusInternalServerError, err.Error())
++			return
++		}
++		if err := s.storage.Create(ctx, key, obj); err != nil {
++			writeStorageError(w, http.StatusInternalServerError, err.Error())
++			return
++		}
++	}
++	media := &wrapperspb.BytesValue{Value: content}
++	mkey := objectMediaKey(bucket, obj.GetName())
++	if err := s.storage.Update(ctx, mkey, media); err != nil {
++		if err := s.storage.Create(ctx, mkey, media); err != nil {
++			writeStorageError(w, http.StatusInternalServerError, err.Error())
++			return
++		}
++	}
++	b, err := protojson.Marshal(obj)
++	if err != nil {
++		writeStorageError(w, http.StatusInternalServerError, err.Error())
++		return
++	}
++	w.Header().Set("Content-Type", "application/json")
++	_, _ = w.Write(b)
++}
+diff --git a/mockgcp/mockstorage/objects.go b/mockgcp/mockstorage/objects.go
+index 0d0e9e003..0ad0498a3 100644
+--- a/mockgcp/mockstorage/objects.go
++++ b/mockgcp/mockstorage/objects.go
+@@ -16,8 +16,12 @@ package mockstorage
+ 
+ import (
+ 	"context"
++	"net/http"
++	"net/url"
+ 	"time"
+ 
++	"github.com/golang/protobuf/ptypes/empty"
++
+ 	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/httpmux"
+ 	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/storage/v1"
+ 	"google.golang.org/grpc/codes"
+@@ -42,7 +46,24 @@ func (s *objects) ListObjects(ctx context.Context, req *pb.ListObjectsRequest) (
+ }
+ 
+ func (s *objects) GetObject(ctx context.Context, req *pb.GetObjectRequest) (*pb.Object, error) {
+-	// A stub implementation, just to support deletion (for now)
++	// config-connector-extensions (patch 0013): objects uploaded through
++	// handleObjectMedia (objectmedia.go); before, always not found.
++	name, err := url.PathUnescape(req.GetName())
++	if err != nil {
++		return nil, status.Errorf(codes.InvalidArgument, "object name %q: %v", req.GetName(), err)
++	}
++	return s.getStoredObject(ctx, req.GetBucket(), name)
++}
+ 
+-	return nil, status.Errorf(codes.NotFound, "No such object: %s/%s", req.GetBucket(), req.GetName())
++// DeleteObject: config-connector-extensions (patch 0013).
++func (s *objects) DeleteObject(ctx context.Context, req *pb.DeleteObjectRequest) (*empty.Empty, error) {
++	name, err := url.PathUnescape(req.GetName())
++	if err != nil {
++		return nil, status.Errorf(codes.InvalidArgument, "object name %q: %v", req.GetName(), err)
++	}
++	if err := s.deleteStoredObject(ctx, req.GetBucket(), name); err != nil {
++		return nil, err
++	}
++	httpmux.SetStatusCode(ctx, http.StatusNoContent)
++	return &empty.Empty{}, nil
+ }
+diff --git a/mockgcp/mockstorage/service.go b/mockgcp/mockstorage/service.go
+index 82ac63d28..917d0ef79 100644
+--- a/mockgcp/mockstorage/service.go
++++ b/mockgcp/mockstorage/service.go
+@@ -156,6 +156,10 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 		if s.handleBucketIAM(w, r) {
+ 			return
+ 		}
++		// config-connector-extensions (patch 0013): uploads and content reads.
++		if s.handleObjectMedia(w, r) {
++			return
++		}
+ 		handler.ServeHTTP(w, r)
+ 	}), nil
+ }

@@ -1,4 +1,4 @@
-config-connector-extensions patch 0013: mockgcp keeps a deleted Cloud SQL backup run, with status DELETED, as the real API does.
+config-connector-extensions patch 0015: mockgcp keeps a deleted Cloud SQL backup run, with status DELETED, as the real API does.
 
 Written here, on top of patch 0003 (upstream PR #12553's mockgcp), for
 sqladmin.gcp.hfl.dev SQLAdminBackup. A live run against a real project

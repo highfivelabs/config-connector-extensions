@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twelve kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirteen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -8,7 +8,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolManagedIdentity` and
 `IAMWorkloadIdentityPoolProviderKey`, a narrow direct
 `RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint` and `ComputeRouterRoutePolicy` (section 6). Each passes its end-to-end test
+`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` and
+`StorageBucketObject` (section 6). Each passes its end-to-end test
 against mockgcp; those in `docs/live-runs.md` also pass it against a real
 project. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
@@ -261,12 +262,12 @@ here.
   - `users.get` does return `databaseRoles`, and inserts, adds and
     revokes (`revokeExistingRoles`) behave as patch 0001 fakes them;
   - a deleted Cloud SQL backup run is still returned, with status
-    `DELETED`: `SQLAdminBackup` now takes that as gone, and patch 0013
+    `DELETED`: `SQLAdminBackup` now takes that as gone, and patch 0015
     fakes it;
   - Artifact Registry refuses a remote upstream it cannot reach unless
     `disableUpstreamValidation` is set, and refuses a change of a remote
     repository's source ("Remote source configuartion cannot be
-    updated"), which patch 0014 fakes.
+    updated"), which patch 0016 fakes.
 - **Next** (section 7): port Config Connector's own `SQLUser` fixtures
   (`pkg/test/resourcefixture/testdata/basic/sql/v1beta1/sqluser/`) to our
   group and run them through its golden harness, which records
@@ -636,8 +637,8 @@ this repository's rules (6.1, decision 5, section 10).
 | 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
-| 5 | `StorageBucketObject` | 4 | no kind or PR | next to build; the inventory notes a Bundt hook Job as the alternative |
-| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | to build |
+| 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
+| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | next to build |
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
@@ -672,6 +673,22 @@ Notes on what was built from this table:
   `status.externalRef` is the router's name plus `/routePolicies/{name}`,
   ours. Patch 0012: mockgcp serves a router's route policies with a new
   fingerprint on each write.
+- `StorageBucketObject` (`storage.gcp.hfl.dev/v1alpha1`, rank 5). **Written
+  here**: `bucketRef` (Config Connector's `StorageBucketRef`), `resourceID`
+  (the object name; "/" allowed), the content inline or `contentFrom` a
+  Secret's or ConfigMap's key, `contentType`, `cacheControl`,
+  `contentDisposition`, `contentEncoding`, `contentLanguage`, `metadata`;
+  status carries the generation, MD5, CRC32C, size and media link. The
+  controller follows Terraform's `google_storage_bucket_object` (read, not
+  copied): `objects.insert` uploads it; a changed content (by MD5) or any
+  other changed field uploads it again, a new generation, since Terraform
+  replaces the object for each; `objects.delete`. It is for small objects
+  (a configuration file, a script): the content lives in a Kubernetes
+  object, so about 1 MiB at most. A changed Secret or ConfigMap is uploaded
+  at the next reconcile (`reconcile-interval-in-seconds`), not when it
+  changes. Patch 0013: mockgcp's objects were stubs; it now serves media
+  and multipart uploads, content reads, get and delete. The managers' role
+  now reads ConfigMaps.
 
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
@@ -723,7 +740,7 @@ To raise confidence in `ArtifactRegistryRepository`:
 
 14. Done (2026-11-09, `docs/live-runs.md`): the API refuses a change of a
     custom upstream's URI ("Remote source configuartion cannot be
-    updated"; patch 0014 makes mockgcp answer the same), so the object goes
+    updated"; patch 0016 makes mockgcp answer the same), so the object goes
     not Ready and the repository keeps its URI; Terraform replaces the
     repository instead. Whether ours should replace it too is not decided.
     The API also refuses, at creation, a remote upstream it cannot reach,
@@ -755,6 +772,10 @@ To raise confidence in `ArtifactRegistryRepository`:
 21. `ComputeRouterRoutePolicy` against a real project: the API's checks of
     the CEL expressions and priorities, which mockgcp does not make, and a
     write with a stale fingerprint.
+22. `StorageBucketObject`: watch the referenced Secret or ConfigMap so a
+    change is uploaded at once, not at the next reconcile; and, against a
+    real project, a resumable upload for content near the size limit
+    (mockgcp serves media and multipart only).
 
 ## 8. Decisions
 
