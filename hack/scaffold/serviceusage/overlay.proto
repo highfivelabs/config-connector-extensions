@@ -1,0 +1,18 @@
+// Copyright 2026 High Five Labs
+// SPDX-License-Identifier: Apache-2.0
+//
+// Field behaviour the googleapis protos leave out, for
+// hack/scaffold-kind.sh (Config Connector's controllerbuilder reads it with
+// --overlay, as upstream's apis/batch/v1alpha1/overlay.proto). Each line
+// says where the behaviour comes from.
+
+syntax = "proto3";
+
+package google.api.serviceusage.v1beta1;
+
+// The REST reference documents both fields as returned by
+// services.generateServiceIdentity; nothing sets them.
+message ServiceIdentity {
+  string email = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string unique_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
