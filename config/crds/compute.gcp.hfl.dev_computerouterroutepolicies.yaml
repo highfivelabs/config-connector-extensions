@@ -1,0 +1,256 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computerouterroutepolicies.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeRouterRoutePolicy
+    listKind: ComputeRouterRoutePolicyList
+    plural: computerouterroutepolicies
+    shortNames:
+    - hflcomputerouterroutepolicy
+    - hflcomputerouterroutepolicies
+    singular: computerouterroutepolicy
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeRouterRoutePolicy is a route policy on a Cloud Router,
+          which filters or changes the BGP routes it imports or exports.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ComputeRouterRoutePolicySpec is a route policy on a Cloud
+              Router: terms, in priority order, that match BGP routes and act on them.'
+            properties:
+              description:
+                description: An optional description of the policy.
+                type: string
+              projectRef:
+                description: The project that this resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+              region:
+                description: The router's region. Immutable.
+                type: string
+              resourceID:
+                description: The policy's name. If not given, the metadata.name will
+                  be used. Immutable.
+                type: string
+              routerRef:
+                description: The Cloud Router the policy is on. Immutable.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: An existing router, as "projects/{{projectID}}/regions/{{region}}/routers/{{name}}".
+                    type: string
+                  name:
+                    description: The name of a Config Connector ComputeRouter.
+                    type: string
+                  namespace:
+                    description: The namespace of that ComputeRouter; the referring
+                      object's by default.
+                    type: string
+                type: object
+              terms:
+                description: The policy's terms, applied in priority order.
+                items:
+                  description: RoutePolicyTerm is one term of a route policy.
+                  properties:
+                    actions:
+                      description: CEL expressions run, in order, on a route that
+                        matches.
+                      items:
+                        description: RoutePolicyExpr is a Common Expression Language
+                          expression.
+                        properties:
+                          description:
+                            description: A description of the expression.
+                            type: string
+                          expression:
+                            description: The expression.
+                            type: string
+                          location:
+                            description: Where the expression came from, for reporting.
+                            type: string
+                          title:
+                            description: A title for the expression.
+                            type: string
+                        required:
+                        - expression
+                        type: object
+                      type: array
+                    match:
+                      description: The CEL expression a route must match for the actions
+                        to apply.
+                      properties:
+                        description:
+                          description: A description of the expression.
+                          type: string
+                        expression:
+                          description: The expression.
+                          type: string
+                        location:
+                          description: Where the expression came from, for reporting.
+                          type: string
+                        title:
+                          description: A title for the expression.
+                          type: string
+                      required:
+                      - expression
+                      type: object
+                    priority:
+                      description: The evaluation order of this term; lower first.
+                        0 to 2^31-1, unique within the policy.
+                      format: int32
+                      type: integer
+                  required:
+                  - match
+                  - priority
+                  type: object
+                type: array
+              type:
+                description: 'The policy''s type: ROUTE_POLICY_TYPE_IMPORT or ROUTE_POLICY_TYPE_EXPORT.'
+                type: string
+            required:
+            - projectRef
+            - region
+            - routerRef
+            - terms
+            type: object
+          status:
+            description: ComputeRouterRoutePolicyStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: 'The policy, as projects/{project}/regions/{region}/routers/{router}/routePolicies/{name}
+                  (not an API resource name: a route policy has none).'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              observedState:
+                description: ObservedState is the state of the policy as most recently
+                  observed in GCP.
+                properties:
+                  fingerprint:
+                    description: The policy's fingerprint, which changes with each
+                      update.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
