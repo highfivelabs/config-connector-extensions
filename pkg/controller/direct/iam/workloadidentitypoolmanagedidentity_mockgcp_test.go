@@ -26,12 +26,14 @@ package iam_test
 import (
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 	api "google.golang.org/api/iam/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -44,11 +46,34 @@ import (
 
 var miGVK = iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK
 
-const (
-	vm1 = "//compute.googleapis.com/projects/123/uid/zones/us-central1-a/instances/1001"
-	vm2 = "//compute.googleapis.com/projects/123/uid/zones/us-central1-a/instances/1002"
-	vm3 = "//compute.googleapis.com/projects/123/uid/zones/us-central1-a/instances/1003"
-)
+// vm1, vm2 and vm3 are Compute Engine instances the attestation rules
+// name, in the project the pool is in: the API refuses rules naming a
+// project outside the pool's organization (live run cce-11091509-3d77),
+// and mockgcp checks neither project nor instance. Set by setVMs.
+var vm1, vm2, vm3 string
+
+// setVMs names the instances in project number 123 in the fake cloud, and
+// in the test project's real number against a real project. The instances
+// themselves are made up.
+func setVMs(t *testing.T, env *mockenv.Env) {
+	t.Helper()
+	number := "123"
+	if mockenv.Live() {
+		crm, err := cloudresourcemanager.NewService(env.Ctx, env.GCPOptions()...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p, err := crm.Projects.Get(mockenv.Project).Context(env.Ctx).Do()
+		if err != nil {
+			t.Fatalf("reading project %s: %v", mockenv.Project, err)
+		}
+		number = strconv.FormatInt(p.ProjectNumber, 10)
+	}
+	vm := func(id string) string {
+		return "//compute.googleapis.com/projects/" + number + "/uid/zones/us-central1-a/instances/" + id
+	}
+	vm1, vm2, vm3 = vm("1001"), vm("1002"), vm("1003")
+}
 
 func miCloudName(ns, id string) string {
 	return cloudName(ns) + "/managedIdentities/" + id
@@ -69,6 +94,7 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 	usePool(t, env, cloud, "mi-pool", "TRUST_DOMAIN")
+	setVMs(t, env)
 	mis := cloud.Projects.Locations.WorkloadIdentityPools.Namespaces.ManagedIdentities
 
 	// The pool (Config Connector's, read only) and the namespace (ours, Ready).
