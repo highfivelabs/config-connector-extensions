@@ -25,10 +25,12 @@ package compute
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
@@ -37,6 +39,9 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/registry"
 	"github.com/googleapis/gax-go/v2/apierror"
+	computev1 "google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -96,8 +101,17 @@ func (m *regionNetworkFirewallPolicyRuleModel) AdapterForObject(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
+	opts, err := m.config.RESTClientOptions()
+	if err != nil {
+		return nil, err
+	}
+	patcher, err := computev1.NewService(ctx, append([]option.ClientOption{}, opts...)...)
+	if err != nil {
+		return nil, fmt.Errorf("building Compute Engine client: %w", err)
+	}
 	return &regionNetworkFirewallPolicyRuleAdapter{
 		gcpClient: c,
+		patcher:   patcher,
 		id:        id,
 		desired:   regionNetworkFirewallPolicyRuleSpecToProto(&obj.Spec, serviceAccounts),
 	}, nil
@@ -109,9 +123,12 @@ func (m *regionNetworkFirewallPolicyRuleModel) AdapterForURL(ctx context.Context
 
 type regionNetworkFirewallPolicyRuleAdapter struct {
 	gcpClient *gcp.RegionNetworkFirewallPoliciesClient
-	id        *krm.ComputeRegionNetworkFirewallPolicyRuleIdentity
-	desired   *pb.FirewallPolicyRule
-	actual    *pb.FirewallPolicyRule
+	// patcher sends patchRule, which the generated client cannot do for a
+	// list the spec empties (see patchBody).
+	patcher *computev1.Service
+	id      *krm.ComputeRegionNetworkFirewallPolicyRuleIdentity
+	desired *pb.FirewallPolicyRule
+	actual  *pb.FirewallPolicyRule
 }
 
 var _ directbase.Adapter = &regionNetworkFirewallPolicyRuleAdapter{}
@@ -175,17 +192,16 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) Update(ctx context.Context, upd
 		return a.updateStatus(ctx, updateOp, a.actual)
 	}
 	log.V(2).Info("updating ComputeRegionNetworkFirewallPolicyRule", "name", a.id.String())
-	op, err := a.gcpClient.PatchRule(ctx, &pb.PatchRuleRegionNetworkFirewallPolicyRequest{
-		Project:                    a.id.Policy.Project,
-		Region:                     a.id.Policy.Region,
-		FirewallPolicy:             a.id.Policy.FirewallPolicy,
-		Priority:                   direct.PtrTo(int32(a.id.Priority)),
-		FirewallPolicyRuleResource: a.desired,
-	})
+	body, err := a.patchBody()
 	if err != nil {
 		return fmt.Errorf("updating ComputeRegionNetworkFirewallPolicyRule %s: %w", a.id.String(), err)
 	}
-	if err := a.wait(ctx, op, "update"); err != nil {
+	computeOp, err := a.patcher.RegionNetworkFirewallPolicies.PatchRule(a.id.Policy.Project, a.id.Policy.Region, a.id.Policy.FirewallPolicy, body).
+		Priority(a.id.Priority).Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("updating ComputeRegionNetworkFirewallPolicyRule %s: %w", a.id.String(), err)
+	}
+	if err := a.waitPatch(ctx, computeOp); err != nil {
 		return err
 	}
 	updated, err := a.get(ctx)
@@ -193,6 +209,67 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) Update(ctx context.Context, upd
 		return fmt.Errorf("getting ComputeRegionNetworkFirewallPolicyRule %s: %w", a.id.String(), err)
 	}
 	return a.updateStatus(ctx, updateOp, updated)
+}
+
+// patchBody is the rule to send to patchRule. patchRule keeps a list the
+// request leaves out (a live run: a rule patched without its srcIpRanges
+// kept them), and the generated client leaves an empty list out, so a list
+// the cloud's rule has and the spec has not is sent as [] (a ForceSendFields
+// entry): that clears it.
+func (a *regionNetworkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolicyRule, error) {
+	raw, err := protojson.Marshal(a.desired)
+	if err != nil {
+		return nil, err
+	}
+	body := &computev1.FirewallPolicyRule{}
+	if err := json.Unmarshal(raw, body); err != nil {
+		return nil, err
+	}
+	if body.Match == nil {
+		body.Match = &computev1.FirewallPolicyRuleMatcher{}
+	}
+	have, want := a.actual.GetMatch(), a.desired.GetMatch()
+	emptied := func(field string, haveLen, wantLen int, force *[]string) {
+		if haveLen > 0 && wantLen == 0 {
+			*force = append(*force, field)
+		}
+	}
+	m := &body.Match.ForceSendFields
+	emptied("SrcIpRanges", len(have.GetSrcIpRanges()), len(want.GetSrcIpRanges()), m)
+	emptied("DestIpRanges", len(have.GetDestIpRanges()), len(want.GetDestIpRanges()), m)
+	emptied("SrcAddressGroups", len(have.GetSrcAddressGroups()), len(want.GetSrcAddressGroups()), m)
+	emptied("DestAddressGroups", len(have.GetDestAddressGroups()), len(want.GetDestAddressGroups()), m)
+	emptied("SrcFqdns", len(have.GetSrcFqdns()), len(want.GetSrcFqdns()), m)
+	emptied("DestFqdns", len(have.GetDestFqdns()), len(want.GetDestFqdns()), m)
+	emptied("SrcRegionCodes", len(have.GetSrcRegionCodes()), len(want.GetSrcRegionCodes()), m)
+	emptied("DestRegionCodes", len(have.GetDestRegionCodes()), len(want.GetDestRegionCodes()), m)
+	emptied("SrcThreatIntelligences", len(have.GetSrcThreatIntelligences()), len(want.GetSrcThreatIntelligences()), m)
+	emptied("DestThreatIntelligences", len(have.GetDestThreatIntelligences()), len(want.GetDestThreatIntelligences()), m)
+	emptied("SrcSecureTags", len(have.GetSrcSecureTags()), len(want.GetSrcSecureTags()), m)
+	r := &body.ForceSendFields
+	emptied("TargetServiceAccounts", len(a.actual.GetTargetServiceAccounts()), len(a.desired.GetTargetServiceAccounts()), r)
+	emptied("TargetSecureTags", len(a.actual.GetTargetSecureTags()), len(a.desired.GetTargetSecureTags()), r)
+	return body, nil
+}
+
+// waitPatch waits for the regional operation patchRule started.
+func (a *regionNetworkFirewallPolicyRuleAdapter) waitPatch(ctx context.Context, op *computev1.Operation) error {
+	for op.Status != "DONE" {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+		var err error
+		op, err = a.patcher.RegionOperations.Get(a.id.Policy.Project, a.id.Policy.Region, op.Name).Context(ctx).Do()
+		if err != nil {
+			return fmt.Errorf("waiting for update of ComputeRegionNetworkFirewallPolicyRule %s: %w", a.id.String(), err)
+		}
+	}
+	if op.Error != nil && len(op.Error.Errors) > 0 {
+		return fmt.Errorf("updating ComputeRegionNetworkFirewallPolicyRule %s: %s: %s", a.id.String(), op.Error.Errors[0].Code, op.Error.Errors[0].Message)
+	}
+	return nil
 }
 
 func (a *regionNetworkFirewallPolicyRuleAdapter) Export(ctx context.Context) (*unstructured.Unstructured, error) {
