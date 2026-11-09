@@ -63,13 +63,17 @@ func TestIAMRoleBinding(t *testing.T) {
 	secretType, _ := iampolicy.Lookup("SecretManagerSecret")
 	bucketType, _ := iampolicy.Lookup("StorageBucket")
 
-	// The members: the run's own service account is a real principal live;
-	// the project viewers and editors are convenience members every
-	// resource's policy accepts.
+	// The members: service accounts of the project, which a real policy
+	// accepts (the project's organization refuses the projectOwner and
+	// allUsers kinds on a secret). The run's own and two others that exist
+	// in the project; the fake cloud accepts any.
+	account := func(id string) string {
+		return "serviceAccount:" + id + "@" + mockenv.Project + ".iam.gserviceaccount.com"
+	}
 	saMember := "serviceAccount:" + mockenv.ServiceAccount(t)
-	viewers := "projectViewer:" + mockenv.Project
-	editors := "projectEditor:" + mockenv.Project
-	owners := "projectOwner:" + mockenv.Project
+	viewers := account("offload-runner")
+	editors := account("catalog-live-tests")
+	owners := viewers
 
 	// The secret, in the cloud and as a Config Connector object (not
 	// reconciled here; read to resolve resourceRef by name).
