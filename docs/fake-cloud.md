@@ -9,7 +9,7 @@ real project, credentials or cost. Proven 2026-11-07 on an Apple-silicon Mac (Do
 ```sh
 make upstream          # once: the pinned Config Connector checkout
 make fake-cloud-up     # kind cluster, CRDs, bin/fakecloud on the host
-make fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready
+make fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready, then all deleted
 make fake-cloud-down   # stop it and delete the cluster
 ```
 
@@ -31,6 +31,10 @@ outside a test:
   Terraform provider's HTTP client transformers);
 - this project's controllers (`SQLUser` with `databaseRoles`) in the
   same manager;
+- Config Connector's deletion defender, which in a real install runs as
+  its own process (`cmd/deletiondefender`); without it Config Connector's
+  kinds never finish deleting, because their reconcilers wait for it to
+  drop its finalizer. Ours have their own defenders in the manager;
 - mockgcp's in-memory store, with the projects named by `--projects`
   (default `mock-project`) created at start.
 
@@ -89,6 +93,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   its pool exists; the real API refuses one in a missing pool. Delete is a
   soft delete, as documented, and the ID cannot be reused; the fake never
   purges it. It never sets `ownerService`.
+- **Workload identity pool provider keys in mockgcp** (patch 0010, ours).
+  The public key is a placeholder PEM, not a certificate, and its validity
+  window is made up; the provider is not checked.
 - **Managed identities in mockgcp** (patch 0007, ours). One must be in an
   existing, active namespace. An attestation rule's `googleCloudResource`
   is only checked to be non-empty; the real API checks its form and
