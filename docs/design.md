@@ -831,7 +831,8 @@ Notes on what was built from this table:
   as the API's own error on the object's Ready condition, and is a
   one-row fix. They are listed as such so that nobody relies on them
   before a live run.
-  Live: see `docs/live-runs.md`.
+  Live: passes, on a regional secret, a managed folder and a backend
+  service (`docs/live-runs.md`).
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is

@@ -3,127 +3,65 @@
 This is where an agent that is new to the repository starts. It says what
 is done, what is left (in order), and the working conventions that are not
 obvious from the code. Written 2026-11-09 by the agent that built the
-seed-catalog kinds (`docs/design.md` 6.5), when its context ran out. Read
+seed-catalog kinds (`docs/design.md` 6.5), updated by the one that built
+`IAMRoleMember`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-On `main`: sixteen kinds (`README.md`, design.md's intro), mockgcp patches
-0001 to 0017 (`UPSTREAM.md`; the next free number is **0018**), and the
-live-test switch (`docs/live-runs.md`). From the seed catalog (6.5): ranks
-3, 4, 5 built; rank 6's policy built; rank 7's `LoggingSettings` built;
-rank 10's `ComputeProjectMetadataItem` built. What-is-left items in
-design.md section 7 run to 25.
+On `main` after the `IAMRoleMember` PR: eighteen kinds (`README.md`,
+design.md's intro), mockgcp patches 0001 to 0019 (`UPSTREAM.md`; the next
+free number is **0020**), the live-test switch and the Taskfile
+(`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not `make`). From
+the seed catalog (design.md 6.5): ranks 1 to 5 built; rank 6's policy built;
+rank 7's `LoggingSettings` built (live pending a test folder); rank 10's
+`ComputeProjectMetadataItem` built. Every built kind but `LoggingSettings`
+passes live.
 
-The live-runs PR that adds this file makes packages `compute`, `iam` and
-`run` run live (and by default in `make test-live`), fixes what live
-showed (a route policy's missing-policy 400, the managed identity test's
-attestation rules, RunService's GPU quota and its containers' default
-port and startup probe, the last two also in mockgcp) and records the
-runs in the ledger. Every built kind but `LoggingSettings` now passes
-live.
+`IAMRoleMember` (rank 2) is built over `pkg/iampolicy`, whose resource
+table now has the 30 rows `IAMPolicyMember` cannot reference
+(`registry_more.go`) and three protocols (the `google.iam.v1` mixin, Cloud
+Storage's, Compute Engine's). Three rows are proven live (a regional
+secret, a managed folder, a backend service); the other 27 are checked for
+names and URLs only. The kind name is a working one: design.md section 10,
+question 3, waits for the builder.
 
 ## What is left, in order
 
-The builder's decisions behind items 1 and 2 (2026-11-09, through the
-coordinator):
-
-- Kind name approved: **`IAMRoleBinding`** (`iam.gcp.hfl.dev/v1alpha1`),
-  in the builder's words "sounds like the right name": one role, an
-  optional condition and a list of members on one resource, authoritative
-  for that role and condition. This closes design.md section 10,
-  question 1; record it there with those words.
-- "I think I would prefer the non-authoritative, but that's fine if
-  authoritative is what you've built." So: Config Connector's
-  `IAMPolicyMember` stays the default in everything we write; rank 2 is
-  built in the **additive** (non-authoritative) form.
-
-1. **`IAMRoleBinding` (rank 1) is built; the additive IAM kind (rank 2)
-   is next.** `IAMRoleBinding` (this PR): `pkg/iampolicy` is the shared
-   engine (a table of resource types in `registry.go`, a policy client,
-   the binding rules in `bindings.go` with `SetMembers` authoritative and
-   `AddMembers`/`RemoveMembers` additive, and `Resolve` for a
-   `resourceRef`); `pkg/controller/direct/iam/policy_common.go` is the
-   plumbing a second kind reuses. The additive kind needs only: types
-   (`apis/iam/v1alpha1`, one `member`/`memberFrom` and `role`, shaped like
-   `IAMPolicyMember`, reusing `IAMResourceReference` and `IAMCondition`),
-   a controller (`AddMembers` on create/update, `RemoveMembers` on delete,
-   `Find` = the member is in the binding), a test, the `iamrefs` member
-   reference, and registry rows for the rank-2 resource types (the 32 in
-   `highfivelabs/catalog` `docs/gcp-inventory.md`, which are the
-   `NotInIAMPolicyMember` rows plus those without a Config Connector kind:
-   managed folders (Storage protocol, patch 0018 already serves them),
-   log views, Cloud Run worker pools and jobs, Cloud Functions, and so
-   on; compute resources need a third protocol, since Compute Engine's
-   `getIamPolicy` is GET with `optionsRequestedPolicyVersion` and its
-   `setIamPolicy` body is `{bindings, etag, policy}`). Working name to
-   propose to the builder: **`IAMRoleMember`** (one member of one role on
-   one resource; pairs with `IAMRoleBinding`); record it in design.md
-   section 10 as a question with that recommendation, keep the kind name
-   in the one `GVK` var. Cut it from main after this PR merges. Live test
-   members must be service accounts of the project (an organization
-   policy refuses `projectOwner:` and similar on secrets).
-
-2. **Taskfile instead of make.** Done in this PR: `Taskfile.yml`, the
-   shared `taskfiles/go.yml` (the one ack-extensions has, plus the optional
-   `CMD` variable on `go:test-envtest`), `taskfiles/README.md` (how to
-   share it across repositories). The task names are unchanged and
-   `task test-live PROJECT=... KINDS=...` takes the same arguments.
-
-3. **`LoggingSettings` live.** Built and merged; the test and the sweeper
-   are ready (`mockenv.LoggingFolder`, `mockenv.LoggingKMSKey` in
-   `pkg/test/mockenv/target.go`). Live is pending until the coordinator
-   passes `E2E_LOGGING_FOLDER=folders/<id>` and a KMS key
-   (`E2E_LOGGING_KMS_KEY`) the folder's Log Router can use. A live run
-   never changes an organization's settings: that subtest skips live.
-   Wider live testing was approved by the builder with these guardrails
-   (coordinator, 2026-11-09): everything under **one** dedicated test
-   folder; organization-level policies and existing projects and folders
-   are never touched; every change is undone; test projects are deleted;
-   the sweeper learns folders, projects and organization policies. The
-   folder does not exist yet and the live-test account cannot create
-   folders: do not try. Prepare the sweeper coverage for folders,
-   projects and org policies under that folder in the meantime.
-
-4. **Rank 6's rule and association kinds.** Not started; cut from main
-   (the policy kind is merged). Pointers: Terraform's
-   `resource_compute_region_network_firewall_policy_rule.go` and
-   `..._association.go` under
-   `third_party/k8s-config-connector/third_party/github.com/hashicorp/terraform-provider-google-beta/google-beta/services/compute/`
-   (read, not copied); Config Connector's direct `ComputeFirewallPolicyRule`
-   (`apis/compute/v1beta1/computefirewallpolicyrule_types.go`,
-   `pkg/controller/direct/compute/computefirewallpolicyrule_controller.go`,
-   `firewallpolicyrule_resolverefs.go`) is the nearest code to copy for
-   the rule's match fields. The API is
-   `regionNetworkFirewallPolicies.{addRule,getRule,patchRule,removeRule}`
-   and `{addAssociation,getAssociation,removeAssociation}`. Patch 0014's
-   regional mock (`mockcompute/regionnetworkfirewallpolicies.go`) serves
-   only the policy: add the rule and association methods in a new patch,
-   adapted from the global mock's (`networkfirewallpolicies.go`, which
-   uses `mockFieldValuesForRule`). One PR per kind; each needs a live run
-   (`roles/compute.securityAdmin` is granted; an association needs a
-   network of the run's own, as `newNetwork` in the compute tests makes).
-
-5. **The rest of rank 10.** The default network tier
-   (Terraform's `google_compute_project_default_network_tier`; mockgcp's
-   compute project has `defaultNetworkTier`, check whether it serves
-   `setDefaultNetworkTier`) and the project's default service accounts
-   (`google_project_default_service_accounts`). Both change a whole
-   project: live, they run only in a test project under the test folder
-   (item 3), never in `hfl-dev-514205`. Disabling or deleting
+1. **Rank 6's rule and association kinds** for regional firewall policies:
+   the rule is its own PR (`ComputeRegionNetworkFirewallPolicyRule`, patch
+   0020, a rule addressed by priority); the association is the next one
+   (patch 0021; `addAssociation`, `getAssociation`, `removeAssociation`;
+   it needs the policy reference type the rule PR adds,
+   `ComputeRegionNetworkFirewallPolicyRef`).
+2. **The rest of rank 10**: the default network tier (Terraform's
+   `google_compute_project_default_network_tier`; check whether mockgcp
+   serves `setDefaultNetworkTier`) and the project's default service
+   accounts (`google_project_default_service_accounts`). Both change a
+   whole project: live, they run only in a test project under the test
+   folder (item 4), never in `hfl-dev-514205`. Disabling or deleting
    `hfl-dev-514205`'s compute default service account would break the
-   offload VMs and `RunService`.
-
-6. **Live: pending.** Only `LoggingSettings` (item 3). Everything else
-   passed live on 2026-11-09 (`docs/live-runs.md`). RunService's GPU
-   checks are skipped live: the project has no Cloud Run GPU quota without
-   zonal redundancy; `E2E_RUN_GPU=true` runs them where there is. Every
-   new kind needs its own live run before it is done.
+   offload VMs and `RunService`. Until the folder exists, mark them live:
+   pending.
+3. **Ranks 8 and 9** of the table in design.md 6.5, only when upstream has
+   released them (recheck read-only: `v1.160.0` was the latest on
+   2026-11-09, `master` at `b795cda8`).
+4. **`LoggingSettings` live and the test-folder work**, when the
+   coordinator says the test folder exists. The test and the sweeper are
+   ready (`mockenv.LoggingFolder`, `mockenv.LoggingKMSKey`). Wider live
+   testing was approved with these guardrails: everything under **one**
+   dedicated test folder; organization-level policies and existing
+   projects and folders are never touched; every change is undone; test
+   projects are deleted; the sweeper learns folders, projects and
+   organization policies. Do not try to create folders or grant
+   organization-level IAM.
+5. **Live runs for the other 27 `pkg/iampolicy` rows**, as the APIs and
+   quotas allow (design.md section 7, item 26).
 
 ## Conventions that are easy to get wrong
 
-**Nothing heavy on the laptop.** No `make check`, `make operator-e2e`,
+**Nothing heavy on the laptop.** No `task check`, `task operator-e2e`,
 envtest, kind, Docker, or `go test` beyond one small package. `go build`
 and `go vet` of a package or two, `hack/generate.sh` and `hack/upstream.sh`
 are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
