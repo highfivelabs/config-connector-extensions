@@ -26,6 +26,8 @@
 // calls are the same (backupRuns.insert, get, delete; operations.get); the
 // generated proto mapper is replaced by sqladminbackup_mapping.go, and the
 // structured diff in Update by a comparison of the fields the spec sets.
+// And Find takes a backup run with status DELETED as gone: real Cloud SQL
+// keeps a deleted run readable (docs/live-runs.md).
 
 package sqladmin
 
@@ -165,6 +167,11 @@ func (a *sqlAdminBackupAdapter) Find(ctx context.Context) (bool, error) {
 			return false, nil
 		}
 		return false, fmt.Errorf("getting backup run %d: %w", a.backupID, err)
+	}
+	// Cloud SQL keeps a deleted backup run, with status DELETED, where
+	// mockgcp used to answer 404 (docs/live-runs.md): it is gone all the same.
+	if actual.Status == "DELETED" {
+		return false, nil
 	}
 
 	a.actual = actual

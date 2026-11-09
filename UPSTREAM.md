@@ -30,7 +30,7 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/sqladmin/v1alpha1/groupversion_info.go` | `apis/sqladmin/v1alpha1/groupversion_info.go` | group `sqladmin.gcp.hfl.dev` |
 | `apis/sqladmin/v1alpha1/sqladminbackup_types.go` | `apis/sqladmin/v1alpha1/sqladminbackup_types.go` | group, labels, short names |
 | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go` | `apis/sqladmin/v1alpha1/sqladminbackup_identity.go`, plus PR #12553's change to it | the backup ID is Cloud SQL's, so it comes from `status.externalRef` (as in the PR) |
-| `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | PR #12553 (head `9611a6de`) `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | the sqladmin v1beta4 REST client instead of `cloud.google.com/go/sql` (not in the pin's go.mod; adding it moves ~65 shared modules); Update compares the fields the spec sets |
+| `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | PR #12553 (head `9611a6de`) `pkg/controller/direct/sqladmin/sqladminbackup_controller.go` | the sqladmin v1beta4 REST client instead of `cloud.google.com/go/sql` (not in the pin's go.mod; adding it moves ~65 shared modules); Update compares the fields the spec sets; Find takes a run with status `DELETED` as gone (seen live) |
 | `pkg/controller/direct/sqladmin/sqladminbackup_mapping.go` | PR #12553 `mapper.generated.go` and `mapper.go` | the same fields, mapped to the REST types |
 | `apis/secretmanager/v1beta1/groupversion_info.go` | `apis/secretmanager/v1beta1/groupversion_info.go` | group `secretmanager.gcp.hfl.dev` |
 | `apis/secretmanager/v1beta1/secretmanagersecret_types.go` | `apis/secretmanager/v1beta1/secretmanagersecret_types.go` | group, labels, short names; `spec.location` from PR #6651 (head `9aab204d`) |
@@ -73,6 +73,7 @@ flattening all three, 2026-11-08).
 | `0003-mockgcp-sql-backup-runs.patch` | mockgcp serves Cloud SQL `backupRuns` insert, get and delete: PR #12553's `mocksql/sqlbackup.go` and its registration, unchanged | it is upstream's; drop it when the PR merges and the pin passes it |
 | `0004-mockgcp-secretmanager-regional.patch` | mockgcp serves regional secrets (PR #6651's `secrets.go` and `service.go` change, applied by hand) and, ours, versions under a regional secret | yes, with the PR |
 | `0005-mockgcp-artifactregistry-upstream-credentials.patch` | written here: mockgcp's Artifact Registry accepts the update mask paths for a remote repository's upstream username and password version, and does not store the input-only `disableUpstreamValidation` | yes |
+| `0006-mockgcp-sql-backup-runs-deleted.patch` | written here, on 0003: `backupRuns.delete` keeps the run with status `DELETED`, as real Cloud SQL does (a live run, `docs/live-runs.md`) | yes, with PR #12553 |
 
 ## Other sources consulted, not copied
 

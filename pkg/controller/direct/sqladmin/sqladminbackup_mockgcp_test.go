@@ -30,6 +30,7 @@ import (
 	"time"
 
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/googleapi"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,6 +84,25 @@ func backupID(t *testing.T, u *unstructured.Unstructured) int64 {
 		t.Errorf("status.observedState.id = %d, want %d (from externalRef)", observed, id)
 	}
 	return id
+}
+
+// waitOperation waits for a Cloud SQL operation to finish without error.
+func waitOperation(t *testing.T, env *mockenv.Env, cloud *sqladmin.Service, op *sqladmin.Operation) {
+	t.Helper()
+	deadline := time.Now().Add(mockenv.Timeout())
+	for op.Status != "DONE" {
+		if time.Now().After(deadline) {
+			t.Fatalf("operation %s did not finish", op.Name)
+		}
+		time.Sleep(time.Second)
+		var err error
+		if op, err = cloud.Operations.Get(mockenv.Project, op.Name).Context(env.Ctx).Do(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if op.Error != nil && len(op.Error.Errors) > 0 {
+		t.Fatalf("operation %s failed: %s", op.Name, op.Error.Errors[0].Message)
+	}
 }
 
 func isNotFound(err error) bool {
@@ -145,6 +165,49 @@ func TestSQLAdminBackup(t *testing.T) {
 		}
 	})
 
+	t.Run("a backup deleted outside Kubernetes is taken again", func(t *testing.T) {
+		// Real Cloud SQL keeps a deleted run, with status DELETED
+		// (docs/live-runs.md); the controller must see it as gone.
+		op, err := cloud.BackupRuns.Delete(mockenv.Project, instance, id).Context(env.Ctx).Do()
+		if err != nil {
+			t.Fatalf("deleting the backup run outside Kubernetes: %v", err)
+		}
+		waitOperation(t, env, cloud, op)
+		u := &unstructured.Unstructured{}
+		u.SetGroupVersionKind(gvk)
+		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
+			t.Fatal(err)
+		}
+		ann := u.GetAnnotations()
+		if ann == nil {
+			ann = map[string]string{}
+		}
+		ann[k8s.InternalForceReconcileAnnotation] = "after-out-of-band-delete"
+		u.SetAnnotations(ann)
+		if err := env.Kube.Update(env.Ctx, u); err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.Now().Add(mockenv.Timeout())
+		for {
+			if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
+				t.Fatal(err)
+			}
+			if ready, _ := mockenv.Ready(u); ready && backupID(t, u) != id {
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("no new backup after the old one was deleted outside Kubernetes; status: %v", u.Object["status"])
+			}
+			time.Sleep(time.Second)
+		}
+		newID := backupID(t, u)
+		run, err := cloud.BackupRuns.Get(mockenv.Project, instance, newID).Context(env.Ctx).Do()
+		if err != nil || run.Status != "SUCCESSFUL" {
+			t.Errorf("the new backup run: %v, %v; want SUCCESSFUL", run, err)
+		}
+		id = newID
+	})
+
 	t.Run("a backup cannot be changed", func(t *testing.T) {
 		obj := &sqladminv1alpha1.SQLAdminBackup{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
@@ -165,8 +228,12 @@ func TestSQLAdminBackup(t *testing.T) {
 			t.Fatal(err)
 		}
 		env.WaitGone(&sqladminv1alpha1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
-		if _, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do(); !isNotFound(err) {
-			t.Errorf("reading the deleted backup run: got %v, want 404", err)
+		// Real Cloud SQL keeps a deleted run, with status DELETED
+		// (docs/live-runs.md); mockgcp does the same (patch 0006).
+		if run, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do(); !isNotFound(err) {
+			if err != nil || run.Status != "DELETED" {
+				t.Errorf("reading the deleted backup run: got %v, %v; want 404 or status DELETED", run, err)
+			}
 		}
 	})
 
