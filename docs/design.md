@@ -7,7 +7,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolNamespace` and
 `IAMWorkloadIdentityPoolManagedIdentity`, and a narrow direct
 `RunService` with `invokerIamDisabled` and GPUs (section 6). Each passes its end-to-end test
-against mockgcp. An operator runs the managers beside Config Connector's,
+against mockgcp, and the same test against a real project
+(`docs/live-runs.md`). An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
 against an in-cluster fake cloud (section 9). Images are built locally
@@ -250,11 +251,24 @@ here.
   The test was also run with `RevokeExistingRoles(false)` in the
   controller and failed as it should ("cloud roles = [cloudsqlsuperuser
   pg_read_all_data], want [pg_read_all_data]").
+- **Live runs** (`docs/live-runs.md`). The same tests run against a real
+  project with `E2E_GCP_TARGET=real` (`make test-live`, on an offload VM as
+  a least-privilege service account, never from `make check`). Every
+  built kind has passed live, and the ledger there records each run and
+  what differed from mockgcp. Found live on 2026-11-09:
+  - `users.get` does return `databaseRoles`, and inserts, adds and
+    revokes (`revokeExistingRoles`) behave as patch 0001 fakes them;
+  - a deleted Cloud SQL backup run is still returned, with status
+    `DELETED`: `SQLAdminBackup` now takes that as gone, and patch 0010
+    fakes it;
+  - Artifact Registry refuses a remote upstream it cannot reach unless
+    `disableUpstreamValidation` is set, and refuses a change of a remote
+    repository's source ("Remote source configuartion cannot be
+    updated"), which patch 0011 fakes.
 - **Next** (section 7): port Config Connector's own `SQLUser` fixtures
   (`pkg/test/resourcefixture/testdata/basic/sql/v1beta1/sqluser/`) to our
   group and run them through its golden harness, which records
-  `_http.log`; one run against a real project to check mockgcp against
-  the real API, in particular whether `users.get` returns `databaseRoles`.
+  `_http.log`.
 
 ## 5. The first resource: SQLUser
 
@@ -605,9 +619,10 @@ To raise confidence in the kinds:
 
 7. Port Config Connector's `SQLUser` fixtures (`sqluser`, `sqluser-full`)
    to our group and run its golden harness, recording `_http.log`.
-8. One run against a real Cloud SQL Postgres instance, to confirm
-   `databaseRoles` on insert and update, revoke with an empty list, and
-   what `users.get` returns; then correct mockgcp if it differs.
+8. Done (2026-11-09, `docs/live-runs.md`): against a real Cloud SQL
+   Postgres 16 instance, `databaseRoles` on insert, adding a role and
+   revoking one all match mockgcp, and `users.get` returns the roles. Not
+   yet run live: an empty list (revoke everything).
 9. Unit tests for `passwordPolicyEqual`, `sortedRoles` and identity
    parsing (Config Connector has an identity conformance helper,
    `apis/common/identity`).
@@ -616,7 +631,7 @@ To raise confidence in the kinds:
 
 Housekeeping:
 
-11. The SQLUser test predates `pkg/test/mockenv` and keeps its own harness.
+11. Done: the SQLUser test runs on `pkg/test/mockenv`, so it runs live too.
 12. CI: `make check` on Linux (the 127.0.0.2 default then works without
     patch 0002, but the patch stays harmless).
 13. `tests/operator/run.sh` does not clean the fake cloud on a reused kind
@@ -624,12 +639,13 @@ Housekeeping:
 
 To raise confidence in `ArtifactRegistryRepository`:
 
-14. One run against a real project: create a remote repository with a
-    custom upstream, then change its URI, to learn whether the API updates
-    it in place, refuses, or needs a new repository; correct mockgcp to
-    match. Real Artifact Registry also checks that a remote upstream is
-    reachable when the repository is made (hence `disableUpstreamValidation`
-    in the API); mockgcp does not.
+14. Done (2026-11-09, `docs/live-runs.md`): the API refuses a change of a
+    custom upstream's URI ("Remote source configuartion cannot be
+    updated"; patch 0011 makes mockgcp answer the same), so the object goes
+    not Ready and the repository keeps its URI; Terraform replaces the
+    repository instead. Whether ours should replace it too is not decided.
+    The API also refuses, at creation, a remote upstream it cannot reach,
+    unless `disableUpstreamValidation` is set; mockgcp does not check.
 15. Watch PR #13517 (UPSTREAM.md, "Copied from open pull requests"); when
     it merges and a release ships it, retire ours (section 3.4).
 16. The workload identity kinds against a real project: the API's
@@ -940,5 +956,13 @@ nothing from this project.
 
 ## 10. Open questions
 
-None open. A question for the builder goes here, with a recommendation;
-the answer moves to section 8.
+A question for the builder goes here, with a recommendation; the answer
+moves to section 8.
+
+1. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+   Decision 3 kept the field "until a run against real Cloud SQL shows
+   whether `users.get` returns roles". It does (`docs/live-runs.md`).
+   Upstream PR #7148 compares the spec with the roles `users.get` returns.
+   Recommendation: keep the field and the comparison with what was
+   applied until we switch to PR #7148 (section 2), since changing it now
+   changes the CRD for no user-visible gain; then follow the PR.
