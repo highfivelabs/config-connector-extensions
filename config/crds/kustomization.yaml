@@ -7,6 +7,7 @@ resources:
 - compute.gcp.hfl.dev_computeprojectmetadataitems.yaml
 - compute.gcp.hfl.dev_computeregionnetworkendpoints.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicies.yaml
+- compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - iam.gcp.hfl.dev_iamrolebindings.yaml

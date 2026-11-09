@@ -1,0 +1,85 @@
+config-connector-extensions patch 0021: mockgcp serves a regional network firewall policy's associations.
+
+For compute.gcp.hfl.dev ComputeRegionNetworkFirewallPolicyAssociation. On top
+of patches 0014 and 0020: getAssociation, addAssociation and
+removeAssociation, written here (the global network policies' mock has no
+associations). An association is addressed by its name in the policy; adding
+one whose name or network is taken is refused unless
+replaceExistingAssociation is set; a missing name answers 400, as a missing
+rule priority does. Each change gives the policy a new fingerprint.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockcompute/regionnetworkfirewallpolicies.go b/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
+index 874f0f8b..416465c6 100644
+--- a/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
++++ b/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
+@@ -314,3 +314,69 @@ func (s *RegionNetworkFirewallPoliciesV1) saveRuleChange(ctx context.Context, ob
+ 		return obj, nil
+ 	})
+ }
++
++// The associations of a regional policy: the networks it is attached to,
++// addressed by the association's name in the policy.
++
++func (s *RegionNetworkFirewallPoliciesV1) GetAssociation(ctx context.Context, req *pb.GetAssociationRegionNetworkFirewallPolicyRequest) (*pb.FirewallPolicyAssociation, error) {
++	obj, _, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	for _, a := range obj.GetAssociations() {
++		if a.GetName() == req.GetName() {
++			return a, nil
++		}
++	}
++	return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'name': '%s'. The firewall policy does not contain an association named '%s'.", req.GetName(), req.GetName())
++}
++
++func (s *RegionNetworkFirewallPoliciesV1) AddAssociation(ctx context.Context, req *pb.AddAssociationRegionNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	a := proto.CloneOf(req.GetFirewallPolicyAssociationResource())
++	if a.GetName() == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.name': ''. The association needs a name.")
++	}
++	if a.GetAttachmentTarget() == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.attachmentTarget': ''. The association needs an attachment target.")
++	}
++	associations := []*pb.FirewallPolicyAssociation{}
++	for _, existing := range obj.GetAssociations() {
++		if existing.GetName() == a.GetName() || existing.GetAttachmentTarget() == a.GetAttachmentTarget() {
++			if !req.GetReplaceExistingAssociation() {
++				return nil, status.Errorf(codes.AlreadyExists, "The resource 'projects/%s/regions/%s/firewallPolicies/%s' already has an association named '%s' or for the network '%s'.", name.Project.ID, name.Region, name.Name, a.GetName(), a.GetAttachmentTarget())
++			}
++			continue
++		}
++		associations = append(associations, existing)
++	}
++	a.FirewallPolicyId = PtrTo(strconv.FormatUint(obj.GetId(), 10))
++	a.ShortName = obj.Name
++	a.DisplayName = obj.Name
++	obj.Associations = append(associations, a)
++	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.addAssociation")
++}
++
++func (s *RegionNetworkFirewallPoliciesV1) RemoveAssociation(ctx context.Context, req *pb.RemoveAssociationRegionNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.resolvePolicy(ctx, req.GetProject(), req.GetRegion(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	found := false
++	associations := []*pb.FirewallPolicyAssociation{}
++	for _, a := range obj.GetAssociations() {
++		if a.GetName() == req.GetName() {
++			found = true
++			continue
++		}
++		associations = append(associations, a)
++	}
++	if !found {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'name': '%s'. The firewall policy does not contain an association named '%s'.", req.GetName(), req.GetName())
++	}
++	obj.Associations = associations
++	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.removeAssociation")
++}
