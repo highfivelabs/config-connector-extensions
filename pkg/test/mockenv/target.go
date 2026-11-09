@@ -167,6 +167,27 @@ func TestFolder(t *testing.T) string {
 	return f
 }
 
+// FolderProject is a project for kinds that change a whole project's
+// settings (its default network tier, its default service accounts): the
+// fake cloud's project, and against a real project the test project under
+// the test folder in E2E_TEST_FOLDER_PROJECT, never the run's own project
+// (Project), whose settings the offload VMs and other tests rely on.
+// Without one, a live run skips the test.
+func FolderProject(t *testing.T) string {
+	t.Helper()
+	if !Live() {
+		return Project
+	}
+	p := os.Getenv("E2E_TEST_FOLDER_PROJECT")
+	if p == "" {
+		t.Skip("E2E_TEST_FOLDER_PROJECT is not set; this live test changes a whole project and runs only in a test project under the test folder (docs/live-runs.md)")
+	}
+	if p == Project {
+		t.Fatalf("E2E_TEST_FOLDER_PROJECT is the run's own project %s; it must be a test project under the test folder", p)
+	}
+	return p
+}
+
 // LoggingKMSKey is a Cloud KMS key for the Log Router of LoggingFolder: a
 // made-up one in the fake cloud, which does not check keys, and against a
 // real project the key in E2E_LOGGING_KMS_KEY, which the folder's Log

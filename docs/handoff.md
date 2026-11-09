@@ -10,11 +10,14 @@ this file only adds to them.
 
 ## Where things stand
 
-On `main` after the `ServiceIdentity` PR: twenty-one kinds (`README.md`,
-design.md's intro), mockgcp patches 0001 to 0022 (`UPSTREAM.md`; the next
-free number is **0023**), the live-test switch and the
+On `main` after the `ServiceIdentity` and default network tier PRs:
+twenty-two kinds (`README.md`, design.md's intro), mockgcp patches 0001
+to 0023 (`UPSTREAM.md`; the next free number is **0024**), the
+live-test switch and the
 Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
-`make`). Every built kind but `LoggingSettings` passes live.
+`make`). Every built kind passes live but `LoggingSettings`,
+`ServiceIdentity` and `ComputeProjectDefaultNetworkTier`, which wait on
+the test folder.
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -51,7 +54,8 @@ in each PR.
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
-folder): default service accounts, default network tier,
+folder) and the default network tier (built: `ComputeProjectDefaultNetworkTier`,
+live pending a test project under the test folder): default service accounts,
 organization address groups and security profiles, and so on down the
 report. The builder answered its four Decision items (design.md
 decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
@@ -69,6 +73,28 @@ not a gap: Config Connector's `IAMCustomRole` takes the
 `cnrm.cloud.google.com/organization-id` annotation (the item says where). Org-level live tests wait for the test folder:
 "live: pending, needs test folder"; never create folders, grant
 organization-level IAM or touch the organization.
+
+Next, **`ProjectDefaultServiceAccounts`** (`resourcemanager.gcp.hfl.dev`,
+foundation item 1's last part), researched 2026-11-09, not started.
+Terraform's `google_project_default_service_accounts` (google-beta
+`24c6f5fd`, read): it lists the project's service accounts and picks the
+defaults by display name ("Compute Engine default service account", "App
+Engine default service account"); `DELETE` deletes, `DISABLE` disables,
+`DEPRIVILEGE` removes `serviceAccount:<email>` from every project binding;
+it records unique ID to email in state, and on destroy, unless
+`restorePolicy: NONE`, undeletes (by unique ID) or enables them
+(`REVERT_AND_IGNORE_FAILURE` logs instead of failing); `DEPRIVILEGE` is
+never reverted; `action` is ForceNew. mockgcp lacks
+`serviceAccounts.list` and `undelete`, and its delete, disable and enable
+take an email, not a unique ID: the patch is the work. Live: a test
+project under the test folder only (`mockenv.FolderProject`), never
+`hfl-dev-514205`. Then organization address groups and security
+profiles (item 6), decisions 13 to 16, packet mirroring rules.
+
+Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
+(lean on `controllerbuilder`; behaviour from Magic Modules' product YAML
+into the proto overlay) and `docs/terraform-leverage.md` in
+`highfivelabs/catalog` (the Terraform route is not ours, decision 2.1).
 
 Still true from before:
 

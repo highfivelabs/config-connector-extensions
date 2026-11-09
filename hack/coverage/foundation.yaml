@@ -44,7 +44,8 @@ items:
       `DEPRIVILEGE` removes its project role bindings (`projects.setIamPolicy`), `DISABLE` is
       `serviceAccounts.disable`; abandon restores nothing unless `restorePolicy: REVERT`.
       `ComputeProjectDefaultNetworkTier`: `projects.setDefaultNetworkTier`, a singleton per project like
-      `ComputeProjectMetadataItem` (copy it).
+      `ComputeProjectMetadataItem` (copy it): built 2026-11-09; live pending a test project under the test folder
+      and `compute.projects.setDefaultNetworkTier` there.
   - title: Regional network firewall policy rules, associations and packet mirroring rules
     importance: A
     gap: whole

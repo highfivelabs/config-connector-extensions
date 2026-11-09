@@ -158,6 +158,7 @@ kinds:
 no_resource:
   # ours
   ComputeProjectMetadataItem: one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)
+  ComputeProjectDefaultNetworkTier: a project's default network tier, written with projects.setDefaultNetworkTier (it always exists)
   ComputeRegionNetworkEndpoint: an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints
   ComputeRouterRoutePolicy: a route policy of a Cloud Router, written with routers.patchRoutePolicy
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
