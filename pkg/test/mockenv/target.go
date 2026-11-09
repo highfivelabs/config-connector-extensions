@@ -151,6 +151,22 @@ func LoggingFolder(t *testing.T) string {
 	return f
 }
 
+// TestFolder is a folder for kinds whose parent is a folder, as
+// folders/{id}: a made-up one in the fake cloud, and against a real project
+// the dedicated test folder in E2E_TEST_FOLDER (docs/live-runs.md). A live
+// run never uses an organization.
+func TestFolder(t *testing.T) string {
+	t.Helper()
+	if !Live() {
+		return "folders/123456"
+	}
+	f := os.Getenv("E2E_TEST_FOLDER")
+	if f == "" {
+		t.Fatal("E2E_TEST_FOLDER is not set; this live test needs the test folder (docs/live-runs.md)")
+	}
+	return f
+}
+
 // FolderProject is a project for kinds that change a whole project's
 // settings (its default network tier, its default service accounts): the
 // fake cloud's project, and against a real project the test project under

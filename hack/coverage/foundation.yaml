@@ -37,7 +37,8 @@ items:
     build: >-
       `ServiceIdentity` with a folder or organization parent in `serviceusage.gcp.hfl.dev/v1alpha1`
       (`serviceusage.googleapis.com` `services:generateServiceIdentity`, a long-running operation returning the
-      email; Terraform's `google_folder_service_identity` read, not copied). `ProjectDefaultServiceAccounts`
+      email; Terraform's `google_folder_service_identity` read, not copied): built 2026-11-09, generated with
+      `hack/scaffold-kind.sh`; live pending the test folder. `ProjectDefaultServiceAccounts`
       (`resourcemanager.gcp.hfl.dev`): the Compute default account is `{projectNumber}-compute@developer.gserviceaccount.com`,
       the App Engine one `{projectId}@appspot.gserviceaccount.com`; `DELETE` is `serviceAccounts.delete`,
       `DEPRIVILEGE` removes its project role bindings (`projects.setIamPolicy`), `DISABLE` is
@@ -85,7 +86,7 @@ items:
       fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied).
       Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014`
       already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row.
-  - title: Organization-level custom IAM roles
+  - title: Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
     importance: A
     gap: whole
     modules: 1
@@ -95,19 +96,21 @@ items:
       - iam.googleapis.com/Role
       - iam.googleapis.com/projects.roles
     missing: >-
-      An organization's custom role (`google_organization_iam_custom_role`): Config Connector's `IAMCustomRole` has
-      no organization parent (its spec is `title`, `description`, `permissions`, `stage`; it is project-scoped
-      through the project annotation).
+      Nothing: not a gap. Config Connector's `IAMCustomRole` takes an organization through the
+      `cnrm.cloud.google.com/organization-id` annotation, as it takes a project through `project-id`. Evidence at the
+      pin: `config/servicemappings/iam.yaml` maps `IAMCustomRole` to the Config Connector-only Terraform resource
+      `google_iam_custom_role` with containers `project` and `organization` (`org_id`) and ID template
+      `{{project?}}#{{org_id?}}#{{role_id}}`; that resource (`resource_iam_custom_role.go` in the provider fork)
+      makes `organizations/{org_id}/roles/{role_id}` when the organization is set; and
+      `config/samples/resources/iamcustomrole/organization-role` is an organization role. Found by the Terraform
+      research (catalog `docs/terraform-leverage.md`), confirmed in the code 2026-11-09; not yet run against a real
+      organization (a live run never touches the organization).
     attributes: >-
-      `organizationRef` on the role; `permissions[]`, `title`, `description`, `stage`; `deleted` (undelete).
+      The same as a project role's: `deleted` (undelete) is a field of neither.
     upstream: >-
-      none for organization roles. Open PR #14425 (2026-11-08) only fixes partitioned project IDs in `IAMCustomRole`.
-    build: >-
-      `IAMOrganizationCustomRole` in `iam.gcp.hfl.dev/v1alpha1` (a new kind beside, not a fork of, `IAMCustomRole`):
-      `organizationRef`, `roleId` (the resource name), `title`, `description`, `permissions[]`, `stage`.
-      API `organizations.roles.create/patch/delete/undelete/get` (iam v1); identity `organizations/{org}/roles/{role}`.
-      The mapping is Terraform's `google_organization_iam_custom_role` (read); the controller is small, the mockgcp
-      patch is the work (mockgcp has `projects.roles`; add the organization path).
+      `IAMCustomRole` (Terraform-based, `v1beta1`) has it. Open PR #14425 (2026-11-08) only fixes partitioned project
+      IDs.
+    build: Nothing. The measured numbers count `IAMCustomRole` against both resources (`overrides.yaml`, `kinds`).
   - title: Workforce identity (SCIM tenants, provider keys) and OAuth clients
     importance: A
     gap: whole

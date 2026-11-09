@@ -115,6 +115,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   that the network exists, nor that a network has no policy attached
   from another policy (it refuses only a repeated name or network inside
   one policy), nor what the API fills in itself.
+- **Folder and organization service identities in mockgcp** (patch
+  0022, ours). Any folder or organization ID is accepted, and every
+  service gets an identity of the form
+  `service-folder-{id}@gcp-sa-{service}.iam.gserviceaccount.com` (or
+  `service-org-...`); the real API gives one only to services that have a
+  service agent at that level, and some agents have other domains. Not
+  yet compared with the real API: its live run waits for the test folder.
 - **A project's default network tier in mockgcp** (patch 0023, ours).
   `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
   anything else with a message of our own; what the real API answers for
