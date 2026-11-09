@@ -138,6 +138,9 @@ on the same VM, minutes apart.
 | 2026-11-09 | `08fcc66` | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 2 secrets, 1 version (deleted) |
 | 2026-11-09 | `08fcc66` | SQLUser | PASS | PASS | none | 1 IAM user (deleted with the instance) |
 | 2026-11-09 | `08fcc66` | ArtifactRegistryRepository, ArtifactRegistryTag | PASS | PASS | none | 7 repositories, 2 minimal images, 1 secret (deleted) |
+| 2026-11-09 | pending | ComputeRegionNetworkEndpoint | PASS | pending, needs `roles/compute.networkAdmin` | not run | none |
+| 2026-11-09 | pending | ComputeRouterRoutePolicy | PASS | pending, needs `roles/compute.networkAdmin` | not run | none |
+| 2026-11-09 | pending | ComputeRegionNetworkFirewallPolicy | PASS | pending, needs `roles/compute.securityAdmin` | not run | none |
 | 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 
 `+` means the commit plus the uncommitted changes that became the next
@@ -148,13 +151,24 @@ the instance; swept by hand) reached no test.
 Not yet run live: `IAMWorkloadIdentityPoolNamespace`,
 `IAMWorkloadIdentityPoolManagedIdentity`,
 `IAMWorkloadIdentityPoolProviderKey` and `RunService` (packages `iam`
-and `run`), and `ComputeRegionNetworkEndpoint` and
-`ComputeRouterRoutePolicy` (package `compute`), and `StorageBucketObject`. Granting the live-test
-service account `roles/iam.workloadIdentityPoolAdmin`, `roles/run.admin`
-and `roles/iam.serviceAccountUser` on the runtime service account (and,
-for `compute`, a network role) is with the builder; then their tests
-need run names and cleanup, and the sweeper needs workload identity
-pools, Cloud Run services and the network resources. The managed identity test's attestation rules name
+and `run`), and `StorageBucketObject`. Granting the live-test service
+account `roles/iam.workloadIdentityPoolAdmin`, `roles/run.admin` and
+`roles/iam.serviceAccountUser` on the runtime service account is with
+the builder; then their tests need run names and cleanup, and the
+sweeper needs workload identity pools and Cloud Run services.
+
+Package `compute` (`ComputeRegionNetworkEndpoint`,
+`ComputeRouterRoutePolicy`, `ComputeRegionNetworkFirewallPolicy`) is
+ready to run live: its tests take every cloud name from `mockenv.Name`
+(a network, a regional network endpoint group, a router, the firewall
+policies), delete what they make, abandoned resources included, and the
+sweeper finds these by name (they take no labels). It waits for two
+roles on the live-test service account, with the builder:
+`roles/compute.networkAdmin` (the networks, the group and its
+endpoints, the router and its route policies) and
+`roles/compute.securityAdmin` (network firewall policies, which
+`compute.networkAdmin` leaves out). Then:
+`make test-live PROJECT=hfl-dev-514205 KINDS=compute`. The managed identity test's attestation rules name
 made-up Compute Engine instances, and the RunService test asks for an
 NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
 

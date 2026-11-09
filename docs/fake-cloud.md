@@ -81,6 +81,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Regional network firewall policies in mockgcp** (patch 0014, adapted
+  from its global ones). The fingerprint is not checked on patch, a policy
+  is deleted even when associated, and rules and associations are not
+  served yet.
 - **Log Router settings in mockgcp** (patch 0017, ours). Any
   organization or folder ID is accepted, the key is not checked, and the
   service account IDs only follow the documented form.
