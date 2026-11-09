@@ -311,6 +311,7 @@ cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Capabili
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Folder,4,Folder,3,,0,1,false,api=v3:folders; official-spec-fields-unmatched=2/4
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Lien,6,ResourceManagerLien,5,,0,1,false,api=v3:liens; official-spec-fields-unmatched=1/5
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Project,5,Project,2,,0,3,false,api=v3:projects; official-spec-fields-unmatched=4/5
+cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/ProjectDefaultServiceAccounts,0,,0,ProjectDefaultServiceAccounts,0,0,false,"outside-denominator; what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method)"
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagBinding,3,TagsLocationTagBinding;TagsTagBinding,2,,0,1,false,api=v3:tagBindings
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagKey,7,TagsTagKey,6,,0,1,false,api=v3:tagKeys; official-spec-fields-unmatched=1/6
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagValue,4,TagsTagValue,4,,0,0,false,api=v3:tagValues; official-spec-fields-unmatched=1/4

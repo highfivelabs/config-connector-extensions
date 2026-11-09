@@ -4,20 +4,22 @@ This is where an agent that is new to the repository starts. It says what
 is done, what is left (in order), and the working conventions that are not
 obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
-`IAMRoleMember` and the folder and organization `ServiceIdentity`. Read
+`IAMRoleMember`, the folder and organization `ServiceIdentity` and
+`ProjectDefaultServiceAccounts`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-On `main` after the `ServiceIdentity` and default network tier PRs:
-twenty-two kinds (`README.md`, design.md's intro), mockgcp patches 0001
-to 0023 (`UPSTREAM.md`; the next free number is **0024**), the
+On `main` after the `ProjectDefaultServiceAccounts` PR: twenty-three
+kinds (`README.md`, design.md's intro), mockgcp patches 0001 to 0024
+(`UPSTREAM.md` and `upstream.yaml`, which must agree: `task
+upstream:yaml-check`; the next free number is **0025**), the
 live-test switch and the
 Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
 `make`). Every built kind passes live but `LoggingSettings`,
-`ServiceIdentity` and `ComputeProjectDefaultNetworkTier`, which wait on
-the test folder.
+`ServiceIdentity`, `ComputeProjectDefaultNetworkTier` and
+`ProjectDefaultServiceAccounts`, which wait on the test folder.
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -54,8 +56,9 @@ in each PR.
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
-folder) and the default network tier (built: `ComputeProjectDefaultNetworkTier`,
-live pending a test project under the test folder): default service accounts,
+folder), the default network tier and the default service accounts
+(built: `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`;
+live pending a test project under the test folder):
 organization address groups and security profiles, and so on down the
 report. The builder answered its four Decision items (design.md
 decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
@@ -74,22 +77,25 @@ not a gap: Config Connector's `IAMCustomRole` takes the
 "live: pending, needs test folder"; never create folders, grant
 organization-level IAM or touch the organization.
 
-Next, **`ProjectDefaultServiceAccounts`** (`resourcemanager.gcp.hfl.dev`,
-foundation item 1's last part), researched 2026-11-09, not started.
-Terraform's `google_project_default_service_accounts` (google-beta
-`24c6f5fd`, read): it lists the project's service accounts and picks the
-defaults by display name ("Compute Engine default service account", "App
-Engine default service account"); `DELETE` deletes, `DISABLE` disables,
-`DEPRIVILEGE` removes `serviceAccount:<email>` from every project binding;
-it records unique ID to email in state, and on destroy, unless
-`restorePolicy: NONE`, undeletes (by unique ID) or enables them
-(`REVERT_AND_IGNORE_FAILURE` logs instead of failing); `DEPRIVILEGE` is
-never reverted; `action` is ForceNew. mockgcp lacks
-`serviceAccounts.list` and `undelete`, and its delete, disable and enable
-take an email, not a unique ID: the patch is the work. Live: a test
-project under the test folder only (`mockenv.FolderProject`), never
-`hfl-dev-514205`. Then organization address groups and security
-profiles (item 6), decisions 13 to 16, packet mirroring rules.
+`ProjectDefaultServiceAccounts` (foundation item 1's last part) is
+built (design.md 6.5; patch 0024); live pending a test project under the
+test folder. Next, organization address groups and security profiles
+(item 6), then decisions 13 to 16, then packet mirroring rules.
+
+Item 6, looked at 2026-11-09, not started: Config Connector's
+`NetworkSecurityAddressGroup`, `...SecurityProfile` and
+`...SecurityProfileGroup` are direct controllers at the pin, `v1alpha1`
+only and project-only (`projects/{p}/locations/{l}/...`;
+`apis/networksecurity/v1alpha1`, `pkg/controller/direct/networksecurity`).
+The route is to copy each type and controller with an `organizationRef`
+parent, one PR per kind. mockgcp's `mocknetworksecurity/addressgroup.go`,
+`securityprofile.go` and `securityprofilegroup.go` serve project parents
+only, so each kind needs a patch for `organizations/{id}/locations/{l}`.
+The kind names need deciding first. foundation.md suggests
+`NetworkSecurityOrganizationAddressGroup` and so on, but
+`ServiceIdentity` kept upstream's name in our group with a new parent.
+Names are the builder's call: ask in design.md section 10 before
+building. Live: pending, needs the test folder (organization parent).
 
 Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
 (lean on `controllerbuilder`; behaviour from Magic Modules' product YAML
