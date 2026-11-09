@@ -338,14 +338,18 @@ Upstream code exists, not released:
 | 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | clusters made from manifests | wait for the release |
 | 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets | wait for the release |
 | 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | built |
-| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs | Cloud Run services | not built |
-| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller | workload identity federation | not built |
+| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs, Terraform only; no direct `RunService` upstream | Cloud Run services | question (section 10) |
+| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller, no mockgcp | workload identity federation | question (section 10) |
 
 In the Google API, in no Config Connector code or pull request
-(unverified against the live API): Artifact Registry package tags and
-repository attachments, a remote repository's `upstreamCredentials`
-(section 10), Workload Identity pool provider keys, Cloud SQL
-`blueGreenDeployments`, Storage HMAC keys. None is built yet.
+(unverified against the live API): Artifact Registry package tags, a
+remote repository's `upstreamCredentials` (section 10), Workload Identity
+pool provider keys, Cloud SQL `blueGreenDeployments`. None is built yet.
+Two entries were dropped from this list on 2026-11-09: Artifact Registry
+repository attachments have a direct controller on `master`
+(`ArtifactRegistryAttachment`, not in `v1.160.0`; install beside the
+release that ships it), and Storage HMAC keys are Config Connector's
+`StorageHMACKey`, already in `v1.160.0`.
 
 Rechecked 2026-11-08 (read-only, `gh` and `git fetch` of `master` at
 `c8208a77`), before building rank 7. No candidate above merged or was
@@ -356,6 +360,23 @@ Rank 7, PR #13517 (head `eb2774ce`, opened 2026-09-29 by upstream's
 coding bot), has no human review (only bots fixing its CI), and was
 paused by upstream's bot for inactivity on 2026-10-13: not close to
 merging. `master`'s Artifact Registry code is unchanged since our pin.
+
+Rechecked 2026-11-09 (read-only, `master` at `7822e4bd`), for ranks 8
+and 9 after rank 7 was built. Still no release after `v1.160.0`; none of
+their pull requests merged or was approved. Neither can be built by
+copying upstream code, so both wait on a question (section 10, question
+2):
+
+- Rank 8: `RunService` is Terraform-only on `master` (`static_config.go`
+  lists Terraform as its only controller), and #14417 (opened 2026-10-25,
+  review required, no reviews) and #7232 (opened 2026-03-27, review
+  required) change only the Terraform fork and its generated types.
+  Upstream has no direct `RunService` types or controller, and no pull
+  request for one; `apis/run/v1beta1` has only its identity and reference.
+- Rank 9: #14209 (changes requested) and #14418 (review required) add
+  v1alpha1 types and identities only, no controller. mockgcp serves no
+  workload identity pools at all (the pool is DCL-based), and #14227
+  (`mode`, changes requested) changes the DCL fork, which we do not run.
 
 ### 6.4 Notes on what was built
 
@@ -764,3 +785,28 @@ moves to section 8.
    Terraform's behaviour (read, not copied, as section 6.1's last case
    says), with a mockgcp check that the secret version is passed through;
    if it does not, leave it until a workload needs it.
+2. **Ranks 8 and 9 have no upstream controller to copy: build either?**
+   (2026-11-09) Both are rechecked in section 6.3.
+   - Rank 8, `RunService` `invokerIamDisabled` and GPUs: a gap kind here
+     would be a direct `RunService` written here, types and controller,
+     for the whole kind (its Terraform schema has 134 fields), on the
+     template types the direct `RunJob` already has. That is new code,
+     not a copy, and it is a field gap on a large existing kind, which
+     decision 5 says waits for the release unless a workload cannot work
+     without it. #14417 is small (the Terraform schema and one mockgcp
+     line) and was assigned for review on 2026-11-08.
+   - Rank 9, workload identity pool namespaces and managed identities
+     (managed workload identities): upstream has types only. Building
+     them means two direct controllers written here, on
+     `google.golang.org/api/iam/v1` (which has the namespaces API), and a
+     mockgcp patch serving pools, namespaces and managed identities, which
+     mockgcp has none of. Pool `mode` cannot be done without the DCL fork.
+
+   Recommendation: mark rank 8 "wait for the release" (decision 5),
+   unless a workload is blocked on `invokerIamDisabled` (for example an
+   organization policy that refuses `allUsers` as an invoker). Build rank
+   9 only if a workload uses managed workload identities; then start with
+   `IAMWorkloadIdentityPoolNamespace`, copying #14209's types, and expect
+   several times rank 7's work. With both waiting, no ranked candidate is
+   left to build; the next would come from the unranked list above, for a
+   workload the builder names.
