@@ -16,7 +16,7 @@
 package logging_test
 
 // LoggingSettings end to end on the fake cloud (pkg/test/mockenv, patch
-// 0015). The case: a landing zone's folder and organization keep their
+// 0017). The case: a landing zone's folder and organization keep their
 // logs in Europe, encrypted with their own key, with the _Default sink off
 // because an aggregated sink already collects everything.
 

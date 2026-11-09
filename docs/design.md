@@ -671,7 +671,7 @@ Notes on what was built from this table:
   left unset (or taken off the spec) is not managed; delete leaves the
   settings as they are. Project settings are read-only in the API and
   not a field here; `defaultSinkConfig` waits for mockgcp's logging
-  protos to have it. Patch 0015: mockgcp serves `getSettings` and
+  protos to have it. Patch 0017: mockgcp serves `getSettings` and
   `updateSettings`.
 
 Below the top ten, each needed by one module (Looker instances, Endpoints

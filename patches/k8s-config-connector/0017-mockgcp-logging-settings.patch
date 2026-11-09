@@ -1,4 +1,4 @@
-config-connector-extensions patch 0015: mockgcp serves Cloud Logging's Log Router settings.
+config-connector-extensions patch 0017: mockgcp serves Cloud Logging's Log Router settings.
 
 For logging.gcp.hfl.dev LoggingSettings. Written here:
 mocklogging/settings.go serves getSettings and updateSettings (with an
