@@ -80,6 +80,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Regional network endpoints in mockgcp** (patch 0011, ours). Any
+  endpoint is accepted in any group: the group's type (internet IP, domain
+  name, VM) is not checked against the endpoint, nor is the VM.
 - **Artifact Registry tags in mockgcp** (patch 0009, ours). A tag must be
   in an existing repository; the fake holds no packages, so a tag on a
   version that was never pushed is accepted.
