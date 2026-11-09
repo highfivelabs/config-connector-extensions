@@ -39,23 +39,31 @@ coordinator):
   `IAMPolicyMember` stays the default in everything we write; rank 2 is
   built in the **additive** (non-authoritative) form.
 
-1. **`IAMRoleBinding` (rank 1), then the additive IAM kind (rank 2).**
-   Not started. One PR each, `IAMRoleBinding` first. Pointers: design.md
-   6.5 ranks 1 and 2 and section 10 question 1 (the recommendation and why
-   `IAMPolicyBinding` was not used: upstream PR #14133 is IAM v3's
-   principal access boundary `PolicyBinding`); Config Connector's
-   `IAMPolicyMember`, `IAMPartialPolicy` and `IAMPolicy` (in
-   `third_party/k8s-config-connector`, `pkg/controller/iam/` and the IAM
-   client code it uses) are the nearest upstream code to copy from;
-   Terraform's `google_*_iam_binding` (authoritative per role) and
-   `google_*_iam_member` (additive) are the behaviour to read. Rank 2 is
-   "IAM on the 32 resource types `IAMPolicyMember` cannot reference" (the
-   list is in the catalog's inventory, `highfivelabs/catalog`
-   `docs/gcp-inventory.md`, read-only). Pick a working name for the
-   additive kind, record it in design.md as an assumption, and keep a
-   rename cheap (one place for the kind name; no name baked into
-   identities or annotations); the coordinator takes the name to the
-   builder. Each needs a live run (below).
+1. **`IAMRoleBinding` (rank 1) is built; the additive IAM kind (rank 2)
+   is next.** `IAMRoleBinding` (this PR): `pkg/iampolicy` is the shared
+   engine (a table of resource types in `registry.go`, a policy client,
+   the binding rules in `bindings.go` with `SetMembers` authoritative and
+   `AddMembers`/`RemoveMembers` additive, and `Resolve` for a
+   `resourceRef`); `pkg/controller/direct/iam/policy_common.go` is the
+   plumbing a second kind reuses. The additive kind needs only: types
+   (`apis/iam/v1alpha1`, one `member`/`memberFrom` and `role`, shaped like
+   `IAMPolicyMember`, reusing `IAMResourceReference` and `IAMCondition`),
+   a controller (`AddMembers` on create/update, `RemoveMembers` on delete,
+   `Find` = the member is in the binding), a test, the `iamrefs` member
+   reference, and registry rows for the rank-2 resource types (the 32 in
+   `highfivelabs/catalog` `docs/gcp-inventory.md`, which are the
+   `NotInIAMPolicyMember` rows plus those without a Config Connector kind:
+   managed folders (Storage protocol, patch 0018 already serves them),
+   log views, Cloud Run worker pools and jobs, Cloud Functions, and so
+   on; compute resources need a third protocol, since Compute Engine's
+   `getIamPolicy` is GET with `optionsRequestedPolicyVersion` and its
+   `setIamPolicy` body is `{bindings, etag, policy}`). Working name to
+   propose to the builder: **`IAMRoleMember`** (one member of one role on
+   one resource; pairs with `IAMRoleBinding`); record it in design.md
+   section 10 as a question with that recommendation, keep the kind name
+   in the one `GVK` var. Cut it from main after this PR merges. Live test
+   members must be service accounts of the project (an organization
+   policy refuses `projectOwner:` and similar on secrets).
 
 2. **Taskfile instead of make.** Not started; do it after the in-flight
    PRs merge, as one dedicated PR. Replace the `Makefile` with

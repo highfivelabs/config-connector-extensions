@@ -1,0 +1,262 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: iamrolebindings.iam.gcp.hfl.dev
+spec:
+  group: iam.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: IAMRoleBinding
+    listKind: IAMRoleBindingList
+    plural: iamrolebindings
+    shortNames:
+    - hfliamrolebinding
+    - hfliamrolebindings
+    singular: iamrolebinding
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: IAMRoleBinding is the Schema for the IAMRoleBinding API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: IAMRoleBindingSpec is the members of one role on one resource.
+            properties:
+              condition:
+                description: The condition under which the binding applies. Immutable.
+                  The role with this condition is the binding this kind owns; the
+                  same role without it, or with another condition, is left alone.
+                properties:
+                  description:
+                    description: The description of the condition.
+                    type: string
+                  expression:
+                    description: The Common Expression Language expression, for example
+                      request.time < timestamp('2030-01-01T00:00:00Z').
+                    type: string
+                  title:
+                    description: The title of the condition.
+                    type: string
+                required:
+                - expression
+                - title
+                type: object
+                x-kubernetes-validations:
+                - message: condition is immutable
+                  rule: self == oldSelf
+              members:
+                description: The IAM identities that have the role, as the API writes
+                  them (user:ada@example.com, group:team@example.com, serviceAccount:app@project.iam.gserviceaccount.com,
+                  domain:example.com, allAuthenticatedUsers, ...). Any other member
+                  of this role and condition on the resource is removed.
+                items:
+                  type: string
+                type: array
+              membersFrom:
+                description: Members that are the identity of a Config Connector object,
+                  added to members.
+                items:
+                  description: IAMRoleBindingMemberFrom is a member taken from an
+                    object.
+                  properties:
+                    serviceAccountRef:
+                      description: 'The IAMServiceAccount (or an external service
+                        account email) to bind: serviceAccount:{its email}.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: A reference to an externally managed IAMServiceAccount
+                            resource. Should be in the format "{{serviceAccountID}}@{{projectID}}.iam.gserviceaccount.com".
+                          type: string
+                        name:
+                          description: The name of an IAMServiceAccount resource.
+                          type: string
+                        namespace:
+                          description: The namespace of an IAMServiceAccount resource.
+                          type: string
+                      type: object
+                  required:
+                  - serviceAccountRef
+                  type: object
+                type: array
+              resourceRef:
+                description: The resource whose IAM policy holds the binding. Immutable.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                    - required:
+                      - apiVersion
+                    - required:
+                      - external
+                properties:
+                  apiVersion:
+                    description: The API version of the referenced object, if the
+                      kind exists in more than one group (a kind this project provides
+                      and Config Connector's).
+                    type: string
+                  external:
+                    description: 'The resource, when it is not managed by a Kubernetes
+                      object: its full name (projects/{project}/locations/{location}/secrets/{secret}),
+                      or for a project, folder, organization, bucket or service account
+                      its ID, number, name or email.'
+                    type: string
+                  kind:
+                    description: The Config Connector kind of the resource, for example
+                      Project, Folder, StorageBucket or SecretManagerSecret. The kinds
+                      this version accepts are listed in docs/design.md, section 6.5
+                      (IAMRoleBinding).
+                    type: string
+                  name:
+                    description: The name of the Kubernetes object that manages the
+                      resource. Exactly one of name and external is required.
+                    type: string
+                  namespace:
+                    description: The namespace of that object; the binding's own if
+                      unset.
+                    type: string
+                required:
+                - kind
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+                - message: exactly one of name and external is required
+                  rule: has(self.name) != has(self.external)
+              role:
+                description: The role. Immutable.
+                pattern: ^((projects|organizations)/[^/]+/)?roles/[\w_\.]+$
+                type: string
+                x-kubernetes-validations:
+                - message: role is immutable
+                  rule: self == oldSelf
+            required:
+            - resourceRef
+            - role
+            type: object
+            x-kubernetes-validations:
+            - message: at least one of members and membersFrom is required
+              rule: (has(self.members) && size(self.members) > 0) || (has(self.membersFrom)
+                && size(self.membersFrom) > 0)
+          status:
+            description: IAMRoleBindingStatus defines the config connector machine
+              state of IAMRoleBinding
+            properties:
+              appliedMembers:
+                description: The members the binding had when it was last applied,
+                  sorted.
+                items:
+                  type: string
+                type: array
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The binding, as {resource}#{role}, or {resource}#{role}#{condition
+                  title} with a condition, where the resource is its full name. The
+                  API has no resource name for a binding; this one is ours.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
