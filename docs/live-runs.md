@@ -144,6 +144,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | pending | ComputeRegionNetworkFirewallPolicy | PASS | pending, needs `roles/compute.securityAdmin` | not run | none |
 | 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 | 2026-11-09 | `756c69f` | StorageBucketObject | PASS | PASS | none: media and multipart uploads, a new generation for new content, content from a ConfigMap and a Secret, delete and abandon all match patch 0013 | 1 bucket (US) with 4 small objects (deleted with the bucket) |
+| 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/hfl-dev-514205'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
