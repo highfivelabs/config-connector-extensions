@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-one kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -11,8 +11,9 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
 `LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding`,
-`IAMRoleMember`, `ComputeRegionNetworkFirewallPolicyRule` and
-`ComputeRegionNetworkFirewallPolicyAssociation` (section 6). Each
+`IAMRoleMember`, `ComputeRegionNetworkFirewallPolicyRule`,
+`ComputeRegionNetworkFirewallPolicyAssociation` and
+`ComputeProjectDefaultNetworkTier` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -645,7 +646,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); the rest are field gaps on existing kinds: wait for the release (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
-| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | per-key metadata built (2026-11-09, `ComputeProjectMetadataItem`); the default network tier and default service accounts to build |
+| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | per-key metadata built (2026-11-09, `ComputeProjectMetadataItem`); the default network tier built (2026-11-09, `ComputeProjectDefaultNetworkTier`); default service accounts to build |
 
 Notes on what was built from this table:
 
@@ -790,6 +791,26 @@ Notes on what was built from this table:
   `updateSettings`.
   Live: pending, needs a test folder with `roles/logging.admin` and a
   KMS key (`docs/live-runs.md`).
+
+- `ComputeProjectDefaultNetworkTier` (`compute.gcp.hfl.dev/v1alpha1`,
+  rank 10, and `docs/coverage/foundation.md` item 1). **Written here**
+  after Terraform's `google_compute_project_default_network_tier` (read,
+  not copied), in the shape of `ComputeProjectMetadataItem`: `projectRef`
+  and `networkTier` (`PREMIUM` or `STANDARD`, checked by the CRD). The
+  setting always exists, so Find reads the project, create and update
+  call `projects.setDefaultNetworkTier` only when the tier differs (a
+  tier changed by hand is put back at the next reconcile), and delete
+  leaves the tier as it is, as Terraform's does. Upstream (read
+  2026-11-09): no kind or pull request. Not generated: Compute Engine has
+  no googleapis proto resource for it, so `hack/scaffold-kind.sh` does
+  not apply; the Terraform route (catalog `docs/terraform-leverage.md`,
+  spike 2) was not taken, since it would load Config Connector's
+  Terraform family into our manager (decision 2.1). Patch 0023: mockgcp
+  serves `setDefaultNetworkTier`. Live: pending, needs a test project
+  under the test folder (`E2E_TEST_FOLDER_PROJECT`,
+  `mockenv.FolderProject`; never `hfl-dev-514205`, whose tier the offload
+  VMs rely on) and `compute.projects.setDefaultNetworkTier` there, which
+  `cce-live-tests` lacks (the spike's 403).
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's

@@ -115,6 +115,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   that the network exists, nor that a network has no policy attached
   from another policy (it refuses only a repeated name or network inside
   one policy), nor what the API fills in itself.
+- **A project's default network tier in mockgcp** (patch 0023, ours).
+  `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
+  anything else with a message of our own; what the real API answers for
+  `FIXED_STANDARD` is not known (the CRD refuses it first). Not yet
+  compared with the real API: its live run waits for a test project.
 - **Log Router settings in mockgcp** (patch 0017, ours). Any
   organization or folder ID is accepted, the key is not checked, and the
   service account IDs only follow the documented form.
