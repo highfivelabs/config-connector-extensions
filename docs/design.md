@@ -10,8 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding`,
-`IAMRoleMember`, `ComputeRegionNetworkFirewallPolicyRule`,
+`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
+`IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
 organization's `ServiceIdentity` and `ComputeProjectDefaultNetworkTier`
 (section 6). Each
@@ -638,8 +638,8 @@ this repository's rules (6.1, decision 5, section 10).
 
 | Rank | Gap | Modules | Upstream (2026-11-09) | Here |
 | ---: | --- | ---: | --- | --- |
-| 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | built (2026-11-09), as `IAMRoleBinding` (decision 12) |
-| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | built (2026-11-09), as `IAMRoleMember` (a working name, section 10 question 3), over the same resource table as `IAMRoleBinding`, which accepts the same 32 resource types |
+| 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | built (2026-11-09), as `IAMRoleBinding`, now `IAMBinding` (decision 12) |
+| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | built (2026-11-09), as `IAMRoleMember`, now `IAMMember` (decision 12), over the same resource table as `IAMBinding`, which accepts the same 32 resource types |
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
@@ -857,7 +857,8 @@ Notes on what was built from this table:
   no patch.
   Live: passes, with `roles/iam.serviceAccountUser` on the project
   (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
-- `IAMRoleBinding` (`iam.gcp.hfl.dev/v1alpha1`, rank 1). **Written here**:
+- `IAMBinding` (`iam.gcp.hfl.dev/v1alpha1`, rank 1; built as
+  `IAMRoleBinding`, renamed by decision 12). **Written here**:
   `resourceRef` (`kind`, `name` or `external`, shaped like
   `IAMPolicyMember`'s), `role`, `condition` (title, description,
   expression), `members` (strings as the API writes them) and
@@ -900,9 +901,10 @@ Notes on what was built from this table:
   Patch 0018: mockgcp serves Cloud Storage's `.../iam` paths from the
   store it already keeps for the `:getIamPolicy` verbs.
   Live: passes, on a secret and a bucket (`docs/live-runs.md`).
-- `IAMRoleMember` (`iam.gcp.hfl.dev/v1alpha1`, rank 2). **Written here**,
-  the additive sibling of `IAMRoleBinding`, shaped like Config Connector's
-  `IAMPolicyMember`: `resourceRef` (the same type as `IAMRoleBinding`'s),
+- `IAMMember` (`iam.gcp.hfl.dev/v1alpha1`, rank 2; built as
+  `IAMRoleMember`, renamed by decision 12). **Written here**,
+  the additive sibling of `IAMBinding`, shaped like Config Connector's
+  `IAMPolicyMember`: `resourceRef` (the same type as `IAMBinding`'s),
   `role`, `condition`, and one of `member` or `memberFrom.serviceAccountRef`
   (CEL: exactly one). Every field is immutable, as in `IAMPolicyMember`.
   It adds its member to the role's binding (`AddMembers`) and removes only
@@ -913,7 +915,7 @@ Notes on what was built from this table:
   in the binding"; a member taken off out of band is put back at the next
   reconcile, a member somebody else added is left. `status.externalRef` is
   ours: `{resource}#{role}#{member}`, plus `#{condition title}`.
-  It shares everything else with `IAMRoleBinding` (`pkg/iampolicy`,
+  It shares everything else with `IAMBinding` (`pkg/iampolicy`,
   `policy_common.go`), and the resource table grew by the rows
   `IAMPolicyMember` cannot reference, which both kinds accept (marked
   `NotInIAMPolicyMember` in `registry_more.go`: 30 rows, and the regional
@@ -1048,7 +1050,7 @@ To raise confidence in `ArtifactRegistryRepository`:
 25. `ComputeProjectMetadataItem`: the 412 retry is not exercised by the
     fake (its writers do not race the way real ones can); the default
     network tier and default service accounts, rank 10's other parts.
-26. `IAMRoleBinding` and `IAMRoleMember`: live runs of the rows in
+26. `IAMBinding` and `IAMMember`: live runs of the rows in
     `pkg/iampolicy/registry_more.go` that have only been checked for
     their names and URLs (each service's quirks: GET or POST for the read,
     the API version, the policy version it accepts; a BigQuery dataset has
@@ -1132,13 +1134,23 @@ To raise confidence in `ArtifactRegistryRepository`:
       that needs `invokerIamDisabled` or a GPU moves its service to this
       kind (acquire by `resourceID`, delete the Config Connector object with
       `deletion-policy: abandon`); others stay on Config Connector's.
-12. **Role-authoritative IAM is `IAMRoleBinding`** (the builder,
-    2026-11-09, through the coordinator: "sounds like the right name").
-    `iam.gcp.hfl.dev/v1alpha1`: one role, an optional condition and a
-    list of members on one resource, authoritative for that role and
-    condition. `IAMPolicyBinding`, the catalog's suggestion, is not used:
-    Config Connector's open PR #14133 gives it to IAM v3's principal
-    access boundary `PolicyBinding`. The builder's preference is the
+12. **IAM kinds are named as Terraform's Google provider names them:
+    `IAMBinding` and `IAMMember`** (the builder, 2026-11-09, through the
+    coordinator: "can we use Terraform as an example of how this should be
+    named? I think it does rather well in the GCP providers"). Terraform's
+    `google_<resource>_iam_binding` is authoritative for one role and
+    `google_<resource>_iam_member` is additive, and ours follow that.
+    Each is one generic kind in `iam.gcp.hfl.dev/v1alpha1` with a resource
+    reference. `IAMBinding` is one role, an optional condition and a list
+    of members on one resource, authoritative for that role and
+    condition. `IAMMember` is one member of one role on one resource,
+    additive. The two were first built as `IAMRoleBinding` (the builder
+    first said it "sounds like the right name") and `IAMRoleMember` (a
+    working name, section 10 question 3). They were renamed before
+    anything used them, so nothing needed migrating.
+    `IAMPolicyBinding`, the catalog's suggestion, is not used: Config
+    Connector's open PR #14133 gives that name to IAM v3's principal
+    access boundary `PolicyBinding`. The builder prefers the
     non-authoritative form ("I think I would prefer the non-authoritative,
     but that's fine if authoritative is what you've built"), so Config
     Connector's `IAMPolicyMember` stays the default in everything written
@@ -1400,7 +1412,8 @@ nothing from this project.
 A question for the builder goes here, with a recommendation; the answer
 moves to section 8.
 
-1. Answered 2026-11-09: the kind is `IAMRoleBinding` (decision 12).
+1. Answered 2026-11-09: the kind is `IAMBinding`, first built as
+   `IAMRoleBinding` (decision 12).
 
 2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows
@@ -1410,13 +1423,7 @@ moves to section 8.
    applied until we switch to PR #7148 (section 2), since changing it now
    changes the CRD for no user-visible gain; then follow the PR.
 
-3. **The additive IAM kind's name** (2026-11-09; an assumption, not yet
-   the builder's). The kind built for rank 2 is called **`IAMRoleMember`**
-   (`iam.gcp.hfl.dev/v1alpha1`): one member of one role on one resource,
-   additive, pairing with `IAMRoleBinding` (one role, all its members,
-   authoritative). Alternatives: `IAMMemberBinding`, or `IAMPolicyMember`
-   (no: Config Connector's kind has that name in another group, and two
-   kinds of one name make manifests ambiguous to read). Recommendation:
-   keep `IAMRoleMember`. A rename is the `IAMRoleMemberGVK` var
-   (`apis/iam/v1alpha1/iamrolemember_types.go`), the type names, the CRD
-   file and one line in `pkg/controller/controllers.go`.
+3. Answered 2026-11-09: the additive kind is `IAMMember`, and the
+   authoritative one is renamed with it to `IAMBinding`. Both mirror
+   Terraform's `google_<resource>_iam_member` and `_iam_binding`
+   (decision 12). The question had recommended keeping `IAMRoleMember`.

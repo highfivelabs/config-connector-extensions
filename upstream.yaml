@@ -220,14 +220,14 @@ copied:
   - here: [pkg/controller/direct/run/resolverefs.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/resolverefs.go]}
   - here:
-      - apis/iam/v1alpha1/iamrolebinding_types.go
-      - apis/iam/v1alpha1/iamrolebinding_identity.go
-      - apis/iam/v1alpha1/iamrolemember_types.go
-      - apis/iam/v1alpha1/iamrolemember_identity.go
+      - apis/iam/v1alpha1/iambinding_types.go
+      - apis/iam/v1alpha1/iambinding_identity.go
+      - apis/iam/v1alpha1/iammember_types.go
+      - apis/iam/v1alpha1/iammember_identity.go
       - apis/iam/v1alpha1/iamresourceref_types.go
       - pkg/iampolicy/
-      - pkg/controller/direct/iam/rolebinding_controller.go
-      - pkg/controller/direct/iam/rolemember_controller.go
+      - pkg/controller/direct/iam/binding_controller.go
+      - pkg/controller/direct/iam/member_controller.go
       - pkg/controller/direct/iam/policy_common.go
     from: {written_here: true}
   - here: [hack/boilerplate.go.txt]

@@ -18,11 +18,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var IAMRoleBindingGVK = GroupVersion.WithKind("IAMRoleBinding")
+var IAMBindingGVK = GroupVersion.WithKind("IAMBinding")
 
-// IAMRoleBindingSpec is the members of one role on one resource.
+// IAMBindingSpec is the members of one role on one resource.
 // +kubebuilder:validation:XValidation:rule="(has(self.members) && size(self.members) > 0) || (has(self.membersFrom) && size(self.membersFrom) > 0)",message="at least one of members and membersFrom is required"
-type IAMRoleBindingSpec struct {
+type IAMBindingSpec struct {
 	// The resource whose IAM policy holds the binding. Immutable.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="resourceRef is immutable"
 	ResourceRef IAMResourceReference `json:"resourceRef"`
@@ -50,18 +50,18 @@ type IAMRoleBindingSpec struct {
 	// Members that are the identity of a Config Connector object, added to
 	// members.
 	// +optional
-	MembersFrom []IAMRoleBindingMemberFrom `json:"membersFrom,omitempty"`
+	MembersFrom []IAMBindingMemberFrom `json:"membersFrom,omitempty"`
 }
 
-// IAMRoleBindingMemberFrom is a member taken from an object.
-type IAMRoleBindingMemberFrom struct {
+// IAMBindingMemberFrom is a member taken from an object.
+type IAMBindingMemberFrom struct {
 	// The IAMServiceAccount (or an external service account email) to
 	// bind: serviceAccount:{its email}.
 	ServiceAccountRef iamrefs.IAMServiceAccountRef `json:"serviceAccountRef"`
 }
 
-// IAMRoleBindingStatus defines the config connector machine state of IAMRoleBinding
-type IAMRoleBindingStatus struct {
+// IAMBindingStatus defines the config connector machine state of IAMBinding
+type IAMBindingStatus struct {
 	/* Conditions represent the latest available observations of the
 	   object's current state. */
 	Conditions []v1alpha1.Condition `json:"conditions,omitempty"`
@@ -80,7 +80,7 @@ type IAMRoleBindingStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:resource:categories=gcp;hfl,shortName=hfliamrolebinding;hfliamrolebindings
+// +kubebuilder:resource:categories=gcp;hfl,shortName=hfliambinding;hfliambindings
 // +kubebuilder:subresource:status
 // +kubebuilder:metadata:labels="gcp.hfl.dev/gap=true"
 // +kubebuilder:printcolumn:name="Age",JSONPath=".metadata.creationTimestamp",type="date"
@@ -88,25 +88,25 @@ type IAMRoleBindingStatus struct {
 // +kubebuilder:printcolumn:name="Status",JSONPath=".status.conditions[?(@.type=='Ready')].reason",type="string",description="The reason for the value in 'Ready'"
 // +kubebuilder:printcolumn:name="Status Age",JSONPath=".status.conditions[?(@.type=='Ready')].lastTransitionTime",type="date",description="The last transition time for the value in 'Status'"
 
-// IAMRoleBinding is the Schema for the IAMRoleBinding API
+// IAMBinding is the Schema for the IAMBinding API
 // +k8s:openapi-gen=true
-type IAMRoleBinding struct {
+type IAMBinding struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// +required
-	Spec   IAMRoleBindingSpec   `json:"spec,omitempty"`
-	Status IAMRoleBindingStatus `json:"status,omitempty"`
+	Spec   IAMBindingSpec   `json:"spec,omitempty"`
+	Status IAMBindingStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// IAMRoleBindingList contains a list of IAMRoleBinding
-type IAMRoleBindingList struct {
+// IAMBindingList contains a list of IAMBinding
+type IAMBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []IAMRoleBinding `json:"items"`
+	Items           []IAMBinding `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&IAMRoleBinding{}, &IAMRoleBindingList{})
+	SchemeBuilder.Register(&IAMBinding{}, &IAMBindingList{})
 }
