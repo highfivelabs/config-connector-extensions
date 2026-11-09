@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirteen kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has fourteen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -8,9 +8,10 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolManagedIdentity` and
 `IAMWorkloadIdentityPoolProviderKey`, a narrow direct
 `RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` and
-`ComputeRegionNetworkFirewallPolicy` (section 6). Each passes its end-to-end test
-against mockgcp. An operator runs the managers beside Config Connector's,
+`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
+`StorageBucketObject` and `ComputeRegionNetworkFirewallPolicy` (section
+6). Each passes its end-to-end test against mockgcp; those in
+`docs/live-runs.md` also pass it against a real project. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
 against an in-cluster fake cloud (section 9). Images are built locally
@@ -253,11 +254,24 @@ here.
   The test was also run with `RevokeExistingRoles(false)` in the
   controller and failed as it should ("cloud roles = [cloudsqlsuperuser
   pg_read_all_data], want [pg_read_all_data]").
+- **Live runs** (`docs/live-runs.md`). The same tests run against a real
+  project with `E2E_GCP_TARGET=real` (`make test-live`, on an offload VM as
+  a least-privilege service account, never from `make check`). The ledger
+  there records each run, which kinds have passed live, and what differed
+  from mockgcp. Found live on 2026-11-09:
+  - `users.get` does return `databaseRoles`, and inserts, adds and
+    revokes (`revokeExistingRoles`) behave as patch 0001 fakes them;
+  - a deleted Cloud SQL backup run is still returned, with status
+    `DELETED`: `SQLAdminBackup` now takes that as gone, and patch 0015
+    fakes it;
+  - Artifact Registry refuses a remote upstream it cannot reach unless
+    `disableUpstreamValidation` is set, and refuses a change of a remote
+    repository's source ("Remote source configuartion cannot be
+    updated"), which patch 0016 fakes.
 - **Next** (section 7): port Config Connector's own `SQLUser` fixtures
   (`pkg/test/resourcefixture/testdata/basic/sql/v1beta1/sqluser/`) to our
   group and run them through its golden harness, which records
-  `_http.log`; one run against a real project to check mockgcp against
-  the real API, in particular whether `users.get` returns `databaseRoles`.
+  `_http.log`.
 
 ## 5. The first resource: SQLUser
 
@@ -623,7 +637,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
-| 5 | `StorageBucketObject` | 4 | no kind or PR | next to build; the inventory notes a Bundt hook Job as the alternative |
+| 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
 | 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based by default, with an opt-in direct controller; its rule and association kinds are Terraform-only) | the policy built (2026-11-09); its rules and association next |
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
@@ -659,6 +673,22 @@ Notes on what was built from this table:
   `status.externalRef` is the router's name plus `/routePolicies/{name}`,
   ours. Patch 0012: mockgcp serves a router's route policies with a new
   fingerprint on each write.
+- `StorageBucketObject` (`storage.gcp.hfl.dev/v1alpha1`, rank 5). **Written
+  here**: `bucketRef` (Config Connector's `StorageBucketRef`), `resourceID`
+  (the object name; "/" allowed), the content inline or `contentFrom` a
+  Secret's or ConfigMap's key, `contentType`, `cacheControl`,
+  `contentDisposition`, `contentEncoding`, `contentLanguage`, `metadata`;
+  status carries the generation, MD5, CRC32C, size and media link. The
+  controller follows Terraform's `google_storage_bucket_object` (read, not
+  copied): `objects.insert` uploads it; a changed content (by MD5) or any
+  other changed field uploads it again, a new generation, since Terraform
+  replaces the object for each; `objects.delete`. It is for small objects
+  (a configuration file, a script): the content lives in a Kubernetes
+  object, so about 1 MiB at most. A changed Secret or ConfigMap is uploaded
+  at the next reconcile (`reconcile-interval-in-seconds`), not when it
+  changes. Patch 0013: mockgcp's objects were stubs; it now serves media
+  and multipart uploads, content reads, get and delete. The managers' role
+  now reads ConfigMaps.
 - `ComputeRegionNetworkFirewallPolicy` (`compute.gcp.hfl.dev/v1alpha1`,
   rank 6, the policy). **Copied** from Config Connector's opt-in direct
   `ComputeNetworkFirewallPolicy` (types, identity, controller, the status
@@ -703,9 +733,10 @@ To raise confidence in the kinds:
 
 7. Port Config Connector's `SQLUser` fixtures (`sqluser`, `sqluser-full`)
    to our group and run its golden harness, recording `_http.log`.
-8. One run against a real Cloud SQL Postgres instance, to confirm
-   `databaseRoles` on insert and update, revoke with an empty list, and
-   what `users.get` returns; then correct mockgcp if it differs.
+8. Done (2026-11-09, `docs/live-runs.md`): against a real Cloud SQL
+   Postgres 16 instance, `databaseRoles` on insert, adding a role and
+   revoking one all match mockgcp, and `users.get` returns the roles. Not
+   yet run live: an empty list (revoke everything).
 9. Unit tests for `passwordPolicyEqual`, `sortedRoles` and identity
    parsing (Config Connector has an identity conformance helper,
    `apis/common/identity`).
@@ -714,7 +745,7 @@ To raise confidence in the kinds:
 
 Housekeeping:
 
-11. The SQLUser test predates `pkg/test/mockenv` and keeps its own harness.
+11. Done: the SQLUser test runs on `pkg/test/mockenv`, so it runs live too.
 12. CI: `make check` on Linux (the 127.0.0.2 default then works without
     patch 0002, but the patch stays harmless).
 13. `tests/operator/run.sh` does not clean the fake cloud on a reused kind
@@ -722,12 +753,13 @@ Housekeeping:
 
 To raise confidence in `ArtifactRegistryRepository`:
 
-14. One run against a real project: create a remote repository with a
-    custom upstream, then change its URI, to learn whether the API updates
-    it in place, refuses, or needs a new repository; correct mockgcp to
-    match. Real Artifact Registry also checks that a remote upstream is
-    reachable when the repository is made (hence `disableUpstreamValidation`
-    in the API); mockgcp does not.
+14. Done (2026-11-09, `docs/live-runs.md`): the API refuses a change of a
+    custom upstream's URI ("Remote source configuartion cannot be
+    updated"; patch 0016 makes mockgcp answer the same), so the object goes
+    not Ready and the repository keeps its URI; Terraform replaces the
+    repository instead. Whether ours should replace it too is not decided.
+    The API also refuses, at creation, a remote upstream it cannot reach,
+    unless `disableUpstreamValidation` is set; mockgcp does not check.
 15. Watch PR #13517 (UPSTREAM.md, "Copied from open pull requests"); when
     it merges and a release ships it, retire ours (section 3.4).
 16. The workload identity kinds against a real project: the API's
@@ -755,7 +787,11 @@ To raise confidence in `ArtifactRegistryRepository`:
 21. `ComputeRouterRoutePolicy` against a real project: the API's checks of
     the CEL expressions and priorities, which mockgcp does not make, and a
     write with a stale fingerprint.
-22. `ComputeRegionNetworkFirewallPolicy` against a real project: whether a
+22. `StorageBucketObject`: watch the referenced Secret or ConfigMap so a
+    change is uploaded at once, not at the next reconcile; and, against a
+    real project, a resumable upload for content near the size limit
+    (mockgcp serves media and multipart only).
+23. `ComputeRegionNetworkFirewallPolicy` against a real project: whether a
     patch with a stale fingerprint is refused, whether `description: ""`
     clears the description, and deleting a policy that is still
     associated with a network (mockgcp checks none of these).
@@ -1070,3 +1106,11 @@ moves to section 8.
    reference and the get/set IAM policy flow from Config Connector's
    `IAMPartialPolicy`, and let rank 2 (IAM on the 32 resource types
    `IAMPolicyMember` cannot reference) be resource types it accepts.
+
+2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+   Decision 3 kept the field "until a run against real Cloud SQL shows
+   whether `users.get` returns roles". It does (`docs/live-runs.md`).
+   Upstream PR #7148 compares the spec with the roles `users.get` returns.
+   Recommendation: keep the field and the comparison with what was
+   applied until we switch to PR #7148 (section 2), since changing it now
+   changes the CRD for no user-visible gain; then follow the PR.

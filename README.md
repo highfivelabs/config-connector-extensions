@@ -22,6 +22,7 @@ The kinds:
 | `iam.gcp.hfl.dev/v1alpha1` `IAMWorkloadIdentityPoolManagedIdentity` | a managed identity in a pool namespace, with the attestation rules that say which workloads may receive it (Terraform's `google_iam_workload_identity_pool_managed_identity`); types only in a Config Connector pull request, no controller | upstream PR #14418's types; controller, the namespace reference and `attestationRules` written here |
 | `run.gcp.hfl.dev/v1alpha1` `RunService` | a Cloud Run service with `invokerIamDisabled` (public without IAM, where an organization policy refuses `allUsers`) and GPUs (`template.nodeSelector`, `gpuZonalRedundancyDisabled`), which Config Connector's Terraform-based `RunService` cannot express; a narrow direct kind that owns the whole service | Config Connector's direct `RunWorkerPool`, for a service; the service fields written here |
 | `iam.gcp.hfl.dev/v1alpha1` `IAMWorkloadIdentityPoolProviderKey` | a key for a workload identity pool provider, whose public half (in status) encrypts the provider's SAML assertions; in no Config Connector code, pull request or Terraform resource | written here from the IAM v1 API |
+| `storage.gcp.hfl.dev/v1alpha1` `StorageBucketObject` | a small object in a bucket (a configuration file, a script), its content inline or from a Secret or ConfigMap; in no Config Connector code or pull request | written here from the Cloud Storage JSON API |
 | `compute.gcp.hfl.dev/v1alpha1` `ComputeRouterRoutePolicy` | a Cloud Router route policy (import or export terms, as CEL), as HA VPN and interconnect setups use; in no Config Connector code or pull request | written here from the Compute Engine API |
 | `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionNetworkEndpoint` | an endpoint (internet address, domain name or VM port) in a regional network endpoint group, such as a regional load balancer's backend; Config Connector has zonal and global endpoints only | written here after Config Connector's zonal `ComputeNetworkEndpoint` |
 | `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionNetworkFirewallPolicy` | a regional network firewall policy, for firewall rules that apply to a VPC in one region; Config Connector has only the global policy | Config Connector's opt-in direct `ComputeNetworkFirewallPolicy`, for a region |
@@ -138,12 +139,17 @@ make upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
 make check      # pin check, generated files current, gofmt, vet, build, tests
 make build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
 make operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
+make test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
 ```
 
-`make test` runs each kind end to end: a real kube-apiserver (envtest),
-Config Connector's direct reconciler, our adapters, and Config Connector's
-mockgcp as a fake Google Cloud (`pkg/test/mockenv`); and the operator
-against envtest. No real Google Cloud and no recordings.
+`make test` (also `make test-mock`) runs each kind end to end: a real
+kube-apiserver (envtest), Config Connector's direct reconciler, our
+adapters, and Config Connector's mockgcp as a fake Google Cloud
+(`pkg/test/mockenv`); and the operator against envtest. No real Google
+Cloud and no recordings. With `E2E_GCP_TARGET=real`, which only
+`make test-live` sets, the same tests run against a real project; every
+kind has been run that way at least once (the ledger in
+`docs/live-runs.md`).
 
 ```yaml
 apiVersion: sql.gcp.hfl.dev/v1beta1
@@ -186,9 +192,11 @@ against what it last applied, `status.appliedDatabaseRoles`).
 | `tests/operator/` | the operator on kind |
 | `patches/k8s-config-connector/` | our changes to the upstream checkout, in order |
 | `hack/` | fetch and check upstream, generate, regenerate mock protos |
+| `hack/live/` | live runs against a real project and the sweeper (`docs/live-runs.md`) |
 | `UPSTREAM.md` | the pinned commits |
 | `docs/design.md` | architecture, sync, testing, choosing gaps, what is left |
 | `docs/fake-cloud.md` | Config Connector's manager and ours against mockgcp on kind |
+| `docs/live-runs.md` | the mock/live switch, the live-test service account, the ledger of live runs |
 
 ## Contributing
 

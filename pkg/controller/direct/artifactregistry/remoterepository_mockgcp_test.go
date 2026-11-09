@@ -16,7 +16,8 @@
 package artifactregistry_test
 
 // ArtifactRegistryRepository with a custom remote upstream end to end on the
-// fake cloud (pkg/test/mockenv). The case: a remote repository that pulls
+// fake cloud (pkg/test/mockenv), or a real project with E2E_GCP_TARGET=real
+// (make test-live). The case: a remote repository that pulls
 // through a private upstream registry (a company's own Docker registry,
 // Maven repository, npm or Python index) instead of one of the public
 // upstreams Artifact Registry knows by name.
@@ -67,6 +68,7 @@ func newRemoteRepository(name, format string, remote *arv1beta1.ArtifactRegistry
 			Namespace:   namespace,
 			Name:        name,
 			Annotations: map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project},
+			Labels:      mockenv.Labels(),
 		},
 		Spec: arv1beta1.ArtifactRegistryRepositorySpec{
 			Location:               region,
@@ -78,9 +80,16 @@ func newRemoteRepository(name, format string, remote *arv1beta1.ArtifactRegistry
 	}
 }
 
+// The upstreams here (example.com) do not exist. Real Artifact Registry
+// checks a remote upstream when a repository is made, and refuses one it
+// cannot reach ("Failed to validate remote upstream", seen live,
+// docs/live-runs.md); mockgcp does not check. So every repository here
+// sets disableUpstreamValidation.
+
 func dockerUpstream(uri string) *arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig {
 	return &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{
-		Description: mockenv.Ptr("private Docker registry"),
+		Description:               mockenv.Ptr("private Docker registry"),
+		DisableUpstreamValidation: mockenv.Ptr(true),
 		DockerRepository: &arv1beta1.ArtifactRegistryRepositoryDockerRepository{
 			CustomRepository: &arv1beta1.ArtifactRegistryRepositoryDockerRepositoryCustomRepository{URI: mockenv.Ptr(uri)},
 		},
@@ -104,10 +113,10 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 	cloud := newClient(t, env)
 
 	const (
-		name      = "docker-upstream"
 		uri       = "https://registry.example.com"
 		uriChange = "https://mirror.example.com"
 	)
+	name := mockenv.Name("docker-upstream")
 	repo := newRemoteRepository(name, "DOCKER", dockerUpstream(uri))
 	if err := env.Kube.Create(env.Ctx, repo); err != nil {
 		t.Fatal(err)
@@ -120,7 +129,7 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		}
 		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 		if err != nil {
-			t.Fatalf("reading the repository from the fake cloud: %v", err)
+			t.Fatalf("reading the repository from the cloud: %v", err)
 		}
 		if got.GetMode() != pb.Repository_REMOTE_REPOSITORY || got.GetFormat() != pb.Repository_DOCKER {
 			t.Errorf("cloud mode/format = %v/%v, want REMOTE_REPOSITORY/DOCKER", got.GetMode(), got.GetFormat())
@@ -204,11 +213,11 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		}
 	})
 
-	t.Run("a changed upstream URI is not applied in the fake cloud", func(t *testing.T) {
+	t.Run("a changed upstream URI is refused", func(t *testing.T) {
 		// Terraform marks custom_repository ForceNew; Config Connector's
 		// direct controller sends remoteRepositoryConfig in an update mask,
-		// which mockgcp refuses.
-		// What the real API does is not known (docs/fake-cloud.md).
+		// which the real API refuses (seen live, docs/live-runs.md), and
+		// mockgcp with it (patch 0016).
 		obj := &arv1beta1.ArtifactRegistryRepository{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
@@ -218,8 +227,8 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 		msg := env.WaitNotReady(gvk, namespace, name)
-		if !strings.Contains(msg, "remoteRepositoryConfig") {
-			t.Errorf("Ready message = %q, want it to name remoteRepositoryConfig", msg)
+		if !strings.Contains(msg, "Remote source configuartion cannot be updated") {
+			t.Errorf("Ready message = %q, want the API's refusal (\"Remote source configuartion cannot be updated\")", msg)
 		}
 		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 		if err != nil {
@@ -242,20 +251,30 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 	})
 
 	t.Run("abandon keeps the repository", func(t *testing.T) {
-		const kept = "kept-upstream"
+		kept := mockenv.Name("kept-upstream")
 		r := newRemoteRepository(kept, "DOCKER", dockerUpstream(uri))
 		r.Annotations["cnrm.cloud.google.com/deletion-policy"] = "abandon"
 		if err := env.Kube.Create(env.Ctx, r); err != nil {
 			t.Fatal(err)
 		}
 		env.WaitReady(gvk, namespace, kept)
+		// The test deletes what it abandoned (a live run must leave nothing).
+		t.Cleanup(func() {
+			op, err := cloud.DeleteRepository(env.Ctx, &pb.DeleteRepositoryRequest{Name: cloudName(kept)})
+			if err == nil {
+				err = op.Wait(env.Ctx)
+			}
+			if err != nil && status.Code(err) != codes.NotFound {
+				t.Errorf("deleting the abandoned repository: %v", err)
+			}
+		})
 		if err := env.Kube.Delete(env.Ctx, r); err != nil {
 			t.Fatal(err)
 		}
 		env.WaitGone(&arv1beta1.ArtifactRegistryRepository{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: kept}})
 		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(kept)})
 		if err != nil {
-			t.Fatalf("the abandoned repository is gone from the fake cloud: %v", err)
+			t.Fatalf("the abandoned repository is gone from the cloud: %v", err)
 		}
 		if got.GetRemoteRepositoryConfig().GetDockerRepository().GetCustomRepository().GetUri() != uri {
 			t.Errorf("abandoned repository's custom upstream = %v, want %q", got.GetRemoteRepositoryConfig(), uri)
@@ -277,7 +296,7 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 	}{
 		{
 			name: "maven-upstream", format: "MAVEN", uri: "https://maven.example.com/releases",
-			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{MavenRepository: &arv1beta1.ArtifactRegistryRepositoryMavenRepository{
+			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{DisableUpstreamValidation: mockenv.Ptr(true), MavenRepository: &arv1beta1.ArtifactRegistryRepositoryMavenRepository{
 				CustomRepository: &arv1beta1.ArtifactRegistryRepositoryMavenRepositoryCustomRepository{URI: mockenv.Ptr("https://maven.example.com/releases")},
 			}},
 			read: func(c *pb.RemoteRepositoryConfig) string {
@@ -286,14 +305,14 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 		},
 		{
 			name: "npm-upstream", format: "NPM", uri: "https://npm.example.com",
-			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{NpmRepository: &arv1beta1.ArtifactRegistryRepositoryNpmRepository{
+			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{DisableUpstreamValidation: mockenv.Ptr(true), NpmRepository: &arv1beta1.ArtifactRegistryRepositoryNpmRepository{
 				CustomRepository: &arv1beta1.ArtifactRegistryRepositoryNpmRepositoryCustomRepository{URI: mockenv.Ptr("https://npm.example.com")},
 			}},
 			read: func(c *pb.RemoteRepositoryConfig) string { return c.GetNpmRepository().GetCustomRepository().GetUri() },
 		},
 		{
 			name: "python-upstream", format: "PYTHON", uri: "https://pypi.example.com/simple",
-			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{PythonRepository: &arv1beta1.ArtifactRegistryRepositoryPythonRepository{
+			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{DisableUpstreamValidation: mockenv.Ptr(true), PythonRepository: &arv1beta1.ArtifactRegistryRepositoryPythonRepository{
 				CustomRepository: &arv1beta1.ArtifactRegistryRepositoryPythonRepositoryCustomRepository{URI: mockenv.Ptr("https://pypi.example.com/simple")},
 			}},
 			read: func(c *pb.RemoteRepositoryConfig) string {
@@ -302,13 +321,23 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 		},
 	} {
 		t.Run(tc.format, func(t *testing.T) {
-			if err := env.Kube.Create(env.Ctx, newRemoteRepository(tc.name, tc.format, tc.remote)); err != nil {
+			name := mockenv.Name(tc.name)
+			repo := newRemoteRepository(name, tc.format, tc.remote)
+			if err := env.Kube.Create(env.Ctx, repo); err != nil {
 				t.Fatal(err)
 			}
-			env.WaitReady(gvk, namespace, tc.name)
-			got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(tc.name)})
+			// The test deletes what it made (a live run must leave nothing).
+			t.Cleanup(func() {
+				if err := env.Kube.Delete(env.Ctx, repo); err != nil {
+					t.Errorf("deleting %s: %v", name, err)
+					return
+				}
+				env.WaitGone(&arv1beta1.ArtifactRegistryRepository{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+			})
+			env.WaitReady(gvk, namespace, name)
+			got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 			if err != nil {
-				t.Fatalf("reading the repository from the fake cloud: %v", err)
+				t.Fatalf("reading the repository from the cloud: %v", err)
 			}
 			if u := tc.read(got.GetRemoteRepositoryConfig()); u != tc.uri {
 				t.Errorf("cloud customRepository.uri = %q, want %q", u, tc.uri)

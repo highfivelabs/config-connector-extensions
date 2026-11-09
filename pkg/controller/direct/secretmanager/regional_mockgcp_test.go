@@ -16,7 +16,8 @@
 package secretmanager_test
 
 // Regional Secret Manager secrets end to end on the fake cloud
-// (pkg/test/mockenv). The case: an application's database password kept in
+// (pkg/test/mockenv), or a real project with E2E_GCP_TARGET=real (make
+// test-live). The case: an application's database password kept in
 // a secret in one region (data residency), its value written from a
 // Kubernetes Secret as a version.
 
@@ -45,6 +46,12 @@ const (
 )
 
 var projectAnnotation = map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project}
+
+// meta is an object's metadata: the project annotation, and the live run's
+// labels (none in the fake cloud).
+func meta(name string) metav1.ObjectMeta {
+	return metav1.ObjectMeta{Namespace: namespace, Name: name, Annotations: projectAnnotation, Labels: mockenv.Labels()}
+}
 
 // regionalClient reads the fake cloud through the regional endpoint, as
 // the controller does.
@@ -75,7 +82,7 @@ func TestRegionalSecret(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	cloud := regionalClient(t, env, region)
 
-	const secretName = "app-db-password"
+	secretName := mockenv.Name("app-db-password")
 	if err := env.Kube.Create(env.Ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "db"},
 		Data:       map[string][]byte{"password": []byte("s3cret")},
@@ -84,7 +91,7 @@ func TestRegionalSecret(t *testing.T) {
 	}
 
 	secret := &smv1beta1.SecretManagerSecret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: secretName, Annotations: projectAnnotation},
+		ObjectMeta: meta(secretName),
 		Spec:       smv1beta1.SecretManagerSecretSpec{Location: mockenv.Ptr(region)},
 	}
 	if err := env.Kube.Create(env.Ctx, secret); err != nil {
@@ -101,7 +108,7 @@ func TestRegionalSecret(t *testing.T) {
 		}
 		got, err := cloud.GetSecret(env.Ctx, &pb.GetSecretRequest{Name: secretRef})
 		if err != nil {
-			t.Fatalf("reading the secret from the fake cloud: %v", err)
+			t.Fatalf("reading the secret from the cloud: %v", err)
 		}
 		if !strings.Contains(got.Name, "/locations/"+region+"/secrets/"+secretName) {
 			t.Errorf("cloud secret name = %q, want it in %s", got.Name, region)
@@ -124,9 +131,9 @@ func TestRegionalSecret(t *testing.T) {
 		}
 	})
 
-	const versionName = "app-db-password-1"
+	versionName := mockenv.Name("app-db-password-1")
 	version := &smv1beta1.SecretManagerSecretVersion{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: versionName, Annotations: projectAnnotation},
+		ObjectMeta: meta(versionName),
 		Spec: smv1beta1.SecretManagerSecretVersionSpec{
 			SecretRef: &smv1beta1.SecretManagerSecretRef{Name: secretName},
 			SecretData: &smv1beta1.SecretData_OneOf{Legacy: &refsv1beta1secret.Legacy{
@@ -147,7 +154,7 @@ func TestRegionalSecret(t *testing.T) {
 		}
 		got, err := cloud.AccessSecretVersion(env.Ctx, &pb.AccessSecretVersionRequest{Name: versionRef})
 		if err != nil {
-			t.Fatalf("accessing the version in the fake cloud: %v", err)
+			t.Fatalf("accessing the version in the cloud: %v", err)
 		}
 		if string(got.GetPayload().GetData()) != "s3cret" {
 			t.Errorf("version payload = %q, want the Secret's value", got.GetPayload().GetData())
@@ -202,9 +209,9 @@ func TestGlobalSecretUnchanged(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	cloud := regionalClient(t, env, "global")
 
-	const name = "global-secret"
+	name := mockenv.Name("global-secret")
 	secret := &smv1beta1.SecretManagerSecret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Annotations: projectAnnotation},
+		ObjectMeta: meta(name),
 		Spec: smv1beta1.SecretManagerSecretSpec{
 			Replication: &smv1beta1.Replication{LegacyAutomatic: &smv1beta1.Replication_Automatic{}},
 		},
@@ -218,6 +225,14 @@ func TestGlobalSecretUnchanged(t *testing.T) {
 		t.Errorf("status.externalRef = %q, want %q", ref, want)
 	}
 	if _, err := cloud.GetSecret(env.Ctx, &pb.GetSecretRequest{Name: ref}); err != nil {
-		t.Errorf("reading the global secret from the fake cloud: %v", err)
+		t.Errorf("reading the global secret from the cloud: %v", err)
+	}
+	// The test deletes what it made (a live run must leave nothing).
+	if err := env.Kube.Delete(env.Ctx, secret); err != nil {
+		t.Fatal(err)
+	}
+	env.WaitGone(&smv1beta1.SecretManagerSecret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+	if _, err := cloud.GetSecret(env.Ctx, &pb.GetSecretRequest{Name: ref}); status.Code(err) != codes.NotFound {
+		t.Errorf("reading the deleted global secret: got %v, want NotFound", err)
 	}
 }

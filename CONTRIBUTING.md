@@ -21,7 +21,9 @@ author.
 ## Build and test
 
 Everything runs against a fake Google Cloud (Config Connector's mockgcp);
-no real project or credentials are needed, and tests must never use them.
+no real project or credentials are needed. The same end-to-end tests also
+run against a real project, but only through `make test-live`, by a
+maintainer, in a project set aside for it (`docs/live-runs.md`).
 
 ```sh
 make upstream      # once: Config Connector at the pin (~650 MB) plus patches/
@@ -36,7 +38,10 @@ end-to-end test on `pkg/test/mockenv` (a real kube-apiserver, Config
 Connector's direct reconciler, and mockgcp) covering create, update,
 delete and `deletion-policy: abandon`. If mockgcp lacks the API, extend it
 with a numbered patch in `patches/k8s-config-connector/` and say whether
-the patch should go upstream.
+the patch should go upstream. Write the test so it also runs live (names
+from `mockenv.Name`, labels from `mockenv.Labels()`, everything it makes
+deleted): a kind is done after one live run is recorded in
+`docs/live-runs.md`.
 
 Generated files (`config/crds/`, `zz_generated.deepcopy.go`) come from
 `hack/generate.sh`; commit its output. New Go files and shell scripts

@@ -1,0 +1,224 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: storagebucketobjects.storage.gcp.hfl.dev
+spec:
+  group: storage.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: StorageBucketObject
+    listKind: StorageBucketObjectList
+    plural: storagebucketobjects
+    shortNames:
+    - hflstoragebucketobject
+    - hflstoragebucketobjects
+    singular: storagebucketobject
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: StorageBucketObject is an object in a Cloud Storage bucket, with
+          its content from the spec, a Secret or a ConfigMap.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'StorageBucketObjectSpec is a small object in a bucket: a
+              configuration file, a script, a seed document. Content is limited by
+              the Kubernetes object''s size (about 1 MiB); larger data belongs elsewhere.'
+            properties:
+              bucketRef:
+                description: The bucket the object is in. Immutable.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed StorageBucket
+                      resource. Should be in the format "projects/{{projectID}}/buckets/{{bucketID}}".
+                    type: string
+                  name:
+                    description: The name of a StorageBucket resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a StorageBucket resource.
+                    type: string
+                type: object
+              cacheControl:
+                description: The Cache-Control of the object's data.
+                type: string
+              content:
+                description: The object's content, as text. One of content and contentFrom.
+                type: string
+              contentDisposition:
+                description: The Content-Disposition of the object's data.
+                type: string
+              contentEncoding:
+                description: The Content-Encoding of the object's data.
+                type: string
+              contentFrom:
+                description: The object's content, from a key of a Secret or ConfigMap
+                  in the object's namespace. One of content and contentFrom.
+                properties:
+                  configMapKeyRef:
+                    description: A key of a ConfigMap.
+                    properties:
+                      key:
+                        description: The key.
+                        type: string
+                      name:
+                        description: The Secret's or ConfigMap's name.
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  secretKeyRef:
+                    description: A key of a Secret.
+                    properties:
+                      key:
+                        description: The key.
+                        type: string
+                      name:
+                        description: The Secret's or ConfigMap's name.
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                type: object
+              contentLanguage:
+                description: The Content-Language of the object's data.
+                type: string
+              contentType:
+                description: The Content-Type of the object's data.
+                type: string
+              metadata:
+                additionalProperties:
+                  type: string
+                description: User-provided metadata.
+                type: object
+              resourceID:
+                description: The object's name, which may contain "/" (for example
+                  "config/app.yaml"). If not given, the metadata.name will be used.
+                  Immutable.
+                type: string
+            required:
+            - bucketRef
+            type: object
+          status:
+            description: StorageBucketObjectStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The object, as projects/_/buckets/{bucket}/objects/{name}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              observedState:
+                description: ObservedState is the state of the object as most recently
+                  observed in GCP.
+                properties:
+                  crc32c:
+                    description: The CRC32C checksum of the data, base64.
+                    type: string
+                  generation:
+                    description: The content generation of the object; a new upload
+                      makes a new one.
+                    format: int64
+                    type: integer
+                  md5Hash:
+                    description: The MD5 hash of the data, base64.
+                    type: string
+                  mediaLink:
+                    description: A URL to download the object's data.
+                    type: string
+                  size:
+                    description: The size of the data in bytes.
+                    format: int64
+                    type: integer
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
