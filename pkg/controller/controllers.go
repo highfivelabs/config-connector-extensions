@@ -45,6 +45,7 @@ import (
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
@@ -55,6 +56,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/resourcemanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/serviceusage"
@@ -93,6 +95,7 @@ var Kinds = []kind{
 	{gvk: loggingv1alpha1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
+	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -109,6 +112,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,
+		resourcemanagerv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err
