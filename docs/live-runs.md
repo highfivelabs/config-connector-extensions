@@ -94,6 +94,7 @@ refuses any project but the ones listed.
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
+| `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
 
 APIs enabled for it: `artifactregistry`, `secretmanager`, `sqladmin`,
 `cloudresourcemanager`, `run`; `compute`, `iam` and `storage` were
@@ -151,6 +152,20 @@ on the same VM, minutes apart.
 | 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 | 2026-11-09 | `756c69f` | StorageBucketObject | PASS | PASS | none: media and multipart uploads, a new generation for new content, content from a ConfigMap and a Secret, delete and abandon all match patch 0013 | 1 bucket (US) with 4 small objects (deleted with the bucket) |
 | 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/hfl-dev-514205'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
+| 2026-11-09 | `2b9fc73` | ComputeRegionNetworkEndpoint | PASS | PASS | none | 1 network, 1 regional internet NEG with 3 endpoints (deleted) |
+| 2026-11-09 | `2b9fc73` | ComputeRegionNetworkFirewallPolicy | PASS | PASS | none | 2 regional firewall policies (deleted) |
+| 2026-11-09 | `2b9fc73` | ComputeRouterRoutePolicy | PASS | FAIL | `routers.getRoutePolicy` answers a missing policy with 400 "Invalid value for field 'policy': ... The policy does not exist", not 404, so Find took it for an error and the policy was never made; mockgcp answered 404. Fixed in the controller and in patch 0012 | 1 network, 1 Cloud Router (deleted) |
+| 2026-11-09 | `2b9fc73` | IAMWorkloadIdentityPoolNamespace | PASS | PASS | none | 1 workload identity pool (TRUST_DOMAIN) with 3 namespaces (deleted; kept 30 days, deleted) |
+| 2026-11-09 | `2b9fc73` | IAMWorkloadIdentityPoolProviderKey | PASS | PASS | none, against a real SAML provider with a fresh self-signed certificate | 1 pool, 1 SAML provider, 2 keys (deleted with the pool) |
+| 2026-11-09 | `2b9fc73` | IAMWorkloadIdentityPoolManagedIdentity | PASS | FAIL | the API refuses attestation rules naming a project outside the pool's organization ("must be within same organization as the WorkloadIdentityPool"); the test's made-up project 123 is now the test project's number live; mockgcp does not check | 1 pool with 1 namespace (deleted) |
+| 2026-11-09 | `2b9fc73` | RunService | PASS | FAIL | no Cloud Run GPU quota without zonal redundancy in the project; the test now runs without a GPU live (`E2E_RUN_GPU=true` where there is quota) | none made |
+| 2026-11-09 | `c459e36` | ComputeProjectMetadataItem and the rest of compute, iam, run | PASS | none | the VM was preempted (run `cce-11091605-8e55`) after the metadata item's first six subtests passed with the new project-level actAs; a resume then failed for want of `make upstream` (see `docs/handoff.md`) | 3 metadata keys left; swept by `make live-sweep RUN=cce-11091605-8e55` |
+| 2026-11-09 | `c459e36`+ | ComputeProjectMetadataItem | PASS | PASS | none (each write takes about 20 s live) | 5 metadata keys (removed) |
+| 2026-11-09 | `c459e36`+ | ComputeRegionNetworkEndpoint, ComputeRegionNetworkFirewallPolicy, ComputeRouterRoutePolicy | PASS | PASS | none, with the route policy fix | 2 networks, 1 NEG, 1 router, 2 firewall policies (deleted) |
+| 2026-11-09 | `c459e36`+ | IAMWorkloadIdentityPoolNamespace, IAMWorkloadIdentityPoolManagedIdentity, IAMWorkloadIdentityPoolProviderKey | PASS | PASS | none, with the attestation rules in the test project | 3 pools, 1 SAML provider (deleted) |
+| 2026-11-09 | `c459e36`+ | RunService | PASS | FAIL | without a GPU, create, a new image, delete and abandon pass; a resync with an unchanged spec sent a `template` update, and turning invoker IAM back on carried `template` too | 2 services (deleted) |
+| 2026-11-09 | `58d6ade` | RunService | PASS | FAIL | the same, now with the cloud's template printed: the API gives each container an http1 port 8080 and a TCP startup probe the spec leaves out. Fixed in the controller and in patch 0008 | 2 services (deleted) |
+| 2026-11-09 | `aee1155` | RunService | PASS | PASS | none, with the default port and startup probe taken from what was read (no GPU live: no quota) | 2 services (deleted); `make live-list` empty |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for

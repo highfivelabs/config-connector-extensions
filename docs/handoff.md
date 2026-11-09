@@ -17,9 +17,12 @@ rank 10's `ComputeProjectMetadataItem` built. What-is-left items in
 design.md section 7 run to 25.
 
 The live-runs PR that adds this file makes packages `compute`, `iam` and
-`run` run live, fixes what live showed (a route policy's missing-policy
-400, the managed identity test's attestation rules, RunService's GPU
-quota) and records the runs in the ledger.
+`run` run live (and by default in `make test-live`), fixes what live
+showed (a route policy's missing-policy 400, the managed identity test's
+attestation rules, RunService's GPU quota and its containers' default
+port and startup probe, the last two also in mockgcp) and records the
+runs in the ledger. Every built kind but `LoggingSettings` now passes
+live.
 
 ## What is left, in order
 
@@ -114,11 +117,11 @@ coordinator):
    `hfl-dev-514205`'s compute default service account would break the
    offload VMs and `RunService`.
 
-6. **Live: pending.** The ledger in `docs/live-runs.md` is the record.
-   `LoggingSettings` waits for item 3. See the latest ledger rows for the
-   compute, iam and run packages; anything not PASS there is listed with
-   its reason. Cloud Run GPU checks are skipped live (no GPU quota without
-   zonal redundancy; `E2E_RUN_GPU=true` where there is).
+6. **Live: pending.** Only `LoggingSettings` (item 3). Everything else
+   passed live on 2026-11-09 (`docs/live-runs.md`). RunService's GPU
+   checks are skipped live: the project has no Cloud Run GPU quota without
+   zonal redundancy; `E2E_RUN_GPU=true` runs them where there is. Every
+   new kind needs its own live run before it is done.
 
 ## Conventions that are easy to get wrong
 
