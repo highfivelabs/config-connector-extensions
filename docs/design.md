@@ -338,12 +338,12 @@ Upstream code exists, not released:
 | 5 | `ContainerNodePool` `autoscaling.enabled` (#14182), kubelet sysctls (#14187) | PRs | clusters made from manifests | wait for the release |
 | 6 | `StorageBucket` `rpo` (#13713), encryption enforcement (#15145), direct controller (#11533) | PRs; the kind is Terraform-based on master | buckets | wait for the release |
 | 7 | `ArtifactRegistryRepository` custom remote repositories (#13517) | PR | pulling through a private upstream | built |
-| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs, Terraform only; no direct `RunService` upstream | Cloud Run services | question (section 10) |
-| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller, no mockgcp | workload identity federation | question (section 10) |
+| 8 | `RunService` `invokerIamDisabled` (#14417), GPUs (#7232) | PRs, Terraform only; no direct `RunService` upstream | Cloud Run services | to build (decision 10) |
+| 9 | `IAMWorkloadIdentityPoolNamespace`, `...ManagedIdentity` (#14209, #14418), pool `mode` (#14227) | types only, no controller, no mockgcp | workload identity federation | to build (decision 9) |
 
 In the Google API, in no Config Connector code or pull request
 (unverified against the live API): Artifact Registry package tags, a
-remote repository's `upstreamCredentials` (section 10), Workload Identity
+remote repository's `upstreamCredentials` (built, decision 8), Workload Identity
 pool provider keys, Cloud SQL `blueGreenDeployments`. None is built yet.
 Two entries were dropped from this list on 2026-11-09: Artifact Registry
 repository attachments have a direct controller on `master`
@@ -364,8 +364,8 @@ merging. `master`'s Artifact Registry code is unchanged since our pin.
 Rechecked 2026-11-09 (read-only, `master` at `7822e4bd`), for ranks 8
 and 9 after rank 7 was built. Still no release after `v1.160.0`; none of
 their pull requests merged or was approved. Neither can be built by
-copying upstream code, so both wait on a question (section 10, question
-2):
+copying upstream code, so both waited on a question, since answered
+(decisions 9 and 10):
 
 - Rank 8: `RunService` is Terraform-only on `master` (`static_config.go`
   lists Terraform as its only controller), and #14417 (opened 2026-10-25,
@@ -424,9 +424,9 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   - A virtual repository's `upstreamPolicies[].repositoryRef.name` names a
     repository of ours, as the Secret Manager version's `secretRef` does;
     a Config Connector repository is named by `repositoryRef.external`.
-  - What the PR does not map, ours does not either: `upstreamCredentials`,
-    `disableUpstreamValidation`, and Apt and Yum remote repositories
-    (section 10).
+  - What the PR does not map, ours does not either: Apt and Yum remote
+    repositories. `upstreamCredentials` and `disableUpstreamValidation`
+    were added later, written here (below).
   - Changing `customRepository.uri` on an existing repository: Terraform
     marks it ForceNew; Config Connector's direct controller sends
     `remoteRepositoryConfig` in an update mask, which mockgcp refuses
@@ -461,6 +461,32 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   operator test applies no Artifact Registry object; the kind's behaviour
   is proven by the envtest test above. `tests/operator/run.sh` needs
   `kustomize` on the path.
+- `upstreamCredentials` and `disableUpstreamValidation` on
+  `ArtifactRegistryRepository` (decision 8) are **written here**, from the
+  Artifact Registry API and Terraform's `google_artifact_registry_repository`
+  (provider `main` at `42eb358f`, read, not copied). No Config Connector
+  code or pull request has them.
+  - `remoteRepositoryConfig.upstreamCredentials.usernamePasswordCredentials`
+    takes `username` and `passwordSecretVersionRef`, Config Connector's
+    `refs/v1beta1.SecretManagerSecretVersionRef` (as `CloudBuildConnection`
+    and `DataformRepository` use it): a Config Connector
+    `SecretManagerSecretVersion` by name, resolved to
+    `projects/{p}/secrets/{s}/versions/{v}`, or that string as `external`.
+  - Credentials change in place, as Terraform does: when only they differ,
+    the update mask names
+    `remoteRepositoryConfig.upstreamCredentials.usernamePasswordCredentials.{username,passwordSecretVersion}`
+    instead of the whole `remoteRepositoryConfig`.
+  - `disableUpstreamValidation` is input only (the API does not return
+    it), so it is copied from the spec onto what was read before
+    comparing, and never causes an update by itself. It is sent with
+    every create and with any update of the remote config.
+  - Patch 0005: mockgcp accepts those two mask paths and does not store
+    `disableUpstreamValidation`, as the API documents.
+  - Written-here code is marked "Written here" in the copied files and
+    lives in `upstreamcredentials_types.go` and
+    `upstreamcredentials_mapping.go`. `pkg/test/mockenv` now installs
+    Config Connector's two Secret Manager CRDs, so a reference by name
+    resolves in tests.
 
 ## 7. What is left
 
@@ -540,6 +566,23 @@ To raise confidence in `ArtifactRegistryRepository`:
      default build links `pkg/fakecloud` or shows the flag.
    - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
 7. **Licence**: Apache-2.0 (`LICENSE`, `NOTICE`).
+8. **`upstreamCredentials`: build it now** (the builder, 2026-11-09,
+   answering section 10's question 1 of 2026-11-08). The remote
+   repository's `upstreamCredentials` and `disableUpstreamValidation` are
+   written here from the API and Terraform's behaviour (section 6.4).
+9. **Rank 9: build it now** (the builder, 2026-11-09, answering section
+   10's question 2): `IAMWorkloadIdentityPoolNamespace` first, copying PR
+   #14209's types, a direct controller written here on
+   `google.golang.org/api/iam/v1`, and a minimal mockgcp patch; then
+   managed identities (#14418) if they follow cleanly.
+10. **Then rank 8, and on down the list** (the builder, 2026-11-09:
+    "carry it on in rank order as far as you can go … Chew through as
+    many as you can do and try to get some confidence that we've built a
+    working operator"). This overrides decision 5's "wait for the release"
+    for rank 8 (`RunService` `invokerIamDisabled` and GPUs), to be built
+    the smallest workable way rather than as all of `RunService`; then the
+    unranked candidates in section 6.3, top to bottom, skipping any that
+    Config Connector already has.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -770,43 +813,5 @@ nothing from this project.
 
 ## 10. Open questions
 
-A question for the builder goes here, with a recommendation; the answer
-moves to section 8.
-
-1. **Does the workload behind rank 7 need upstream credentials?**
-   (2026-11-08) `ArtifactRegistryRepository` now takes a custom upstream
-   URI (PR #13517), but neither it nor Config Connector maps
-   `remoteRepositoryConfig.upstreamCredentials` (a username and a Secret
-   Manager secret version, in the API and in Terraform's
-   `google_artifact_registry_repository`), so a private upstream that needs
-   a login cannot be used through this kind yet; nor
-   `disableUpstreamValidation`. Recommendation: if the private upstream
-   needs a login, build `upstreamCredentials` here next, from the API and
-   Terraform's behaviour (read, not copied, as section 6.1's last case
-   says), with a mockgcp check that the secret version is passed through;
-   if it does not, leave it until a workload needs it.
-2. **Ranks 8 and 9 have no upstream controller to copy: build either?**
-   (2026-11-09) Both are rechecked in section 6.3.
-   - Rank 8, `RunService` `invokerIamDisabled` and GPUs: a gap kind here
-     would be a direct `RunService` written here, types and controller,
-     for the whole kind (its Terraform schema has 134 fields), on the
-     template types the direct `RunJob` already has. That is new code,
-     not a copy, and it is a field gap on a large existing kind, which
-     decision 5 says waits for the release unless a workload cannot work
-     without it. #14417 is small (the Terraform schema and one mockgcp
-     line) and was assigned for review on 2026-11-08.
-   - Rank 9, workload identity pool namespaces and managed identities
-     (managed workload identities): upstream has types only. Building
-     them means two direct controllers written here, on
-     `google.golang.org/api/iam/v1` (which has the namespaces API), and a
-     mockgcp patch serving pools, namespaces and managed identities, which
-     mockgcp has none of. Pool `mode` cannot be done without the DCL fork.
-
-   Recommendation: mark rank 8 "wait for the release" (decision 5),
-   unless a workload is blocked on `invokerIamDisabled` (for example an
-   organization policy that refuses `allUsers` as an invoker). Build rank
-   9 only if a workload uses managed workload identities; then start with
-   `IAMWorkloadIdentityPoolNamespace`, copying #14209's types, and expect
-   several times rank 7's work. With both waiting, no ranked candidate is
-   left to build; the next would come from the unranked list above, for a
-   workload the builder names.
+None open. A question for the builder goes here, with a recommendation;
+the answer moves to section 8.

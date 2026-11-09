@@ -20,7 +20,9 @@
 //   - only the ArtifactRegistryRepository (v1beta1) functions; the
 //     v1alpha1 kinds' (attachments, rules, VPC-SC config) are left out;
 //   - the KRM types are this project's (artifactregistry.gcp.hfl.dev);
-//   - new (from the PR): remoteRepositoryConfig.{docker,maven,npm,python}Repository.customRepository.
+//   - new (from the PR): remoteRepositoryConfig.{docker,maven,npm,python}Repository.customRepository;
+//   - written here: the remote repository's upstreamCredentials and
+//     disableUpstreamValidation, mapped in upstreamcredentials_mapping.go.
 
 package artifactregistry
 
@@ -236,8 +238,9 @@ func ArtifactRegistryRepositoryRemoteRepositoryConfig_v1beta1_FromProto(mapCtx *
 	// MISSING: YumRepository
 	out.CommonRepository = ArtifactRegistryRepositoryCommonRepository_v1beta1_FromProto(mapCtx, in.GetCommonRepository())
 	out.Description = direct.LazyPtr(in.GetDescription())
-	// MISSING: UpstreamCredentials
-	// MISSING: DisableUpstreamValidation
+	// Written here (upstreamcredentials_mapping.go).
+	out.UpstreamCredentials = ArtifactRegistryRepositoryUpstreamCredentials_FromProto(mapCtx, in.GetUpstreamCredentials())
+	out.DisableUpstreamValidation = direct.LazyPtr(in.GetDisableUpstreamValidation())
 	return out
 }
 func ArtifactRegistryRepositoryRemoteRepositoryConfig_v1beta1_ToProto(mapCtx *direct.MapContext, in *krmartifactregistryv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig) *pb.RemoteRepositoryConfig {
@@ -263,8 +266,9 @@ func ArtifactRegistryRepositoryRemoteRepositoryConfig_v1beta1_ToProto(mapCtx *di
 		out.RemoteSource = &pb.RemoteRepositoryConfig_CommonRepository{CommonRepository: oneof}
 	}
 	out.Description = direct.ValueOf(in.Description)
-	// MISSING: UpstreamCredentials
-	// MISSING: DisableUpstreamValidation
+	// Written here (upstreamcredentials_mapping.go).
+	out.UpstreamCredentials = ArtifactRegistryRepositoryUpstreamCredentials_ToProto(mapCtx, in.UpstreamCredentials)
+	out.DisableUpstreamValidation = direct.ValueOf(in.DisableUpstreamValidation)
 	return out
 }
 func ArtifactRegistryRepositorySpec_v1beta1_FromProto(mapCtx *direct.MapContext, in *pb.Repository) *krmartifactregistryv1beta1.ArtifactRegistryRepositorySpec {
