@@ -1,80 +1,125 @@
-service,tier,rationale,source
-accesscontextmanager.googleapis.com,1,"used by foundational modules: project, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-artifactregistry.googleapis.com,1,used by foundational modules: artifact-registry,catalog docs/gcp-inventory.md @ 3e0b4ab
-assuredworkloads.googleapis.com,1,used by foundational modules: folder,catalog docs/gcp-inventory.md @ 3e0b4ab
-bigquery.googleapis.com,1,used by foundational modules: bigquery-dataset,catalog docs/gcp-inventory.md @ 3e0b4ab
-bigqueryreservation.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudasset.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudbilling.googleapis.com,1,used by foundational modules: iam-service-account,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudkms.googleapis.com,1,"used by foundational modules: project, folder, kms, gcs",catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudquotas.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudresourcemanager.googleapis.com,1,"used by foundational modules: project, folder, organization, iam-service-account, kms, gcs, artifact-registry, secret-manager, bigquery-dataset, cloud-run-v2",catalog docs/gcp-inventory.md @ 3e0b4ab
-compute.googleapis.com,1,"used by foundational modules: project, folder, organization, net-vpc, net-vpc-firewall, net-cloudnat",catalog docs/gcp-inventory.md @ 3e0b4ab
-container.googleapis.com,1,"used by foundational modules: gke-cluster-standard, gke-cluster-autopilot, gke-nodepool",catalog docs/gcp-inventory.md @ 3e0b4ab
-dns.googleapis.com,1,"used by foundational modules: net-vpc, dns",catalog docs/gcp-inventory.md @ 3e0b4ab
-essentialcontacts.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-eventarc.googleapis.com,1,used by foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 3e0b4ab
-gkebackup.googleapis.com,1,"used by foundational modules: gke-cluster-standard, gke-cluster-autopilot",catalog docs/gcp-inventory.md @ 3e0b4ab
-iam.googleapis.com,1,"used by foundational modules: project, folder, organization, iam-service-account, gke-nodepool, cloud-run-v2",catalog docs/gcp-inventory.md @ 3e0b4ab
-logging.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-modelarmor.googleapis.com,1,used by foundational modules: organization,catalog docs/gcp-inventory.md @ 3e0b4ab
-monitoring.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
-networkconnectivity.googleapis.com,1,used by foundational modules: net-vpc,catalog docs/gcp-inventory.md @ 3e0b4ab
-orgpolicy.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-privilegedaccessmanager.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-pubsub.googleapis.com,1,"used by foundational modules: gcs, gke-cluster-standard, gke-cluster-autopilot, pubsub",catalog docs/gcp-inventory.md @ 3e0b4ab
-run.googleapis.com,1,used by foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 3e0b4ab
-secretmanager.googleapis.com,1,used by foundational modules: secret-manager,catalog docs/gcp-inventory.md @ 3e0b4ab
-securitycenter.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-securitycentermanagement.googleapis.com,1,"used by foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 3e0b4ab
-servicenetworking.googleapis.com,1,used by foundational modules: net-vpc,catalog docs/gcp-inventory.md @ 3e0b4ab
-serviceusage.googleapis.com,1,used by foundational modules: project,catalog docs/gcp-inventory.md @ 3e0b4ab
-sqladmin.googleapis.com,1,used by foundational modules: cloudsql-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
-storage.googleapis.com,1,used by foundational modules: gcs,catalog docs/gcp-inventory.md @ 3e0b4ab
-vpcaccess.googleapis.com,1,used by foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 3e0b4ab
-aiplatform.googleapis.com,2,used by modules: geap-agent-runtime,catalog docs/gcp-inventory.md @ 3e0b4ab
-alloydb.googleapis.com,2,used by modules: alloydb,catalog docs/gcp-inventory.md @ 3e0b4ab
-analyticshub.googleapis.com,2,used by modules: analytics-hub,catalog docs/gcp-inventory.md @ 3e0b4ab
-apigateway.googleapis.com,2,used by modules: api-gateway,catalog docs/gcp-inventory.md @ 3e0b4ab
-apigee.googleapis.com,2,used by modules: apigee,catalog docs/gcp-inventory.md @ 3e0b4ab
-backupdr.googleapis.com,2,used by modules: backup-dr,catalog docs/gcp-inventory.md @ 3e0b4ab
-biglake.googleapis.com,2,used by modules: biglake-catalog,catalog docs/gcp-inventory.md @ 3e0b4ab
-bigqueryconnection.googleapis.com,2,used by modules: bigquery-connection,catalog docs/gcp-inventory.md @ 3e0b4ab
-bigtableadmin.googleapis.com,2,used by modules: bigtable-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
-billingbudgets.googleapis.com,2,used by modules: billing-account,catalog docs/gcp-inventory.md @ 3e0b4ab
-binaryauthorization.googleapis.com,2,used by modules: binauthz,catalog docs/gcp-inventory.md @ 3e0b4ab
-certificatemanager.googleapis.com,2,used by modules: certificate-manager,catalog docs/gcp-inventory.md @ 3e0b4ab
-chronicle.googleapis.com,2,used by modules: secops-rules,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudbuild.googleapis.com,2,"used by modules: cloud-build-v2-connection, source-repository",catalog docs/gcp-inventory.md @ 3e0b4ab
-clouddeploy.googleapis.com,2,used by modules: cloud-deploy,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudfunctions.googleapis.com,2,"used by modules: cloud-function-v1, cloud-function-v2",catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudidentity.googleapis.com,2,used by modules: cloud-identity-group,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudscheduler.googleapis.com,2,used by modules: workflows,catalog docs/gcp-inventory.md @ 3e0b4ab
-cloudtasks.googleapis.com,2,used by modules: workflows,catalog docs/gcp-inventory.md @ 3e0b4ab
-containeranalysis.googleapis.com,2,used by modules: binauthz,catalog docs/gcp-inventory.md @ 3e0b4ab
-containerregistry.googleapis.com,2,used by modules: container-registry,catalog docs/gcp-inventory.md @ 3e0b4ab
-datacatalog.googleapis.com,2,"used by modules: data-catalog-policy-tag, data-catalog-tag, data-catalog-tag-template",catalog docs/gcp-inventory.md @ 3e0b4ab
-dataform.googleapis.com,2,used by modules: dataform-repository,catalog docs/gcp-inventory.md @ 3e0b4ab
-datafusion.googleapis.com,2,used by modules: datafusion,catalog docs/gcp-inventory.md @ 3e0b4ab
-dataplex.googleapis.com,2,"used by modules: dataplex, dataplex-aspect-types, dataplex-datascan",catalog docs/gcp-inventory.md @ 3e0b4ab
-dataproc.googleapis.com,2,used by modules: dataproc,catalog docs/gcp-inventory.md @ 3e0b4ab
-dialogflow.googleapis.com,2,used by modules: ai-applications,catalog docs/gcp-inventory.md @ 3e0b4ab
-discoveryengine.googleapis.com,2,used by modules: ai-applications,catalog docs/gcp-inventory.md @ 3e0b4ab
-dlp.googleapis.com,2,used by modules: ai-applications,catalog docs/gcp-inventory.md @ 3e0b4ab
-firestore.googleapis.com,2,used by modules: firestore,catalog docs/gcp-inventory.md @ 3e0b4ab
-gkehub.googleapis.com,2,used by modules: gke-hub,catalog docs/gcp-inventory.md @ 3e0b4ab
-looker.googleapis.com,2,used by modules: looker-core,catalog docs/gcp-inventory.md @ 3e0b4ab
-managedkafka.googleapis.com,2,used by modules: managed-kafka,catalog docs/gcp-inventory.md @ 3e0b4ab
-networksecurity.googleapis.com,2,"used by modules: geap-agent-gateway, net-swp, project-factory",catalog docs/gcp-inventory.md @ 3e0b4ab
-networkservices.googleapis.com,2,"used by modules: geap-agent-gateway, net-swp",catalog docs/gcp-inventory.md @ 3e0b4ab
-notebooks.googleapis.com,2,used by modules: geap-workbench,catalog docs/gcp-inventory.md @ 3e0b4ab
-privateca.googleapis.com,2,used by modules: certificate-authority-service,catalog docs/gcp-inventory.md @ 3e0b4ab
-securesourcemanager.googleapis.com,2,used by modules: secure-source-manager-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
-servicedirectory.googleapis.com,2,used by modules: service-directory,catalog docs/gcp-inventory.md @ 3e0b4ab
-servicemanagement.googleapis.com,2,used by modules: endpoints,catalog docs/gcp-inventory.md @ 3e0b4ab
-sourcerepo.googleapis.com,2,used by modules: source-repository,catalog docs/gcp-inventory.md @ 3e0b4ab
-spanner.googleapis.com,2,used by modules: spanner-instance,catalog docs/gcp-inventory.md @ 3e0b4ab
-tpu.googleapis.com,2,used by modules: compute-vm,catalog docs/gcp-inventory.md @ 3e0b4ab
-vmwareengine.googleapis.com,2,used by modules: gcve-private-cloud,catalog docs/gcp-inventory.md @ 3e0b4ab
-workflows.googleapis.com,2,used by modules: workflows,catalog docs/gcp-inventory.md @ 3e0b4ab
-workstations.googleapis.com,2,used by modules: workstation-cluster,catalog docs/gcp-inventory.md @ 3e0b4ab
+service,tier,category,rationale,source
+billingbudgets.googleapis.com,1,platform-foundation,other modules: billing-account,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudbilling.googleapis.com,1,platform-foundation,foundational modules: iam-service-account; other modules: billing-account,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudidentity.googleapis.com,1,platform-foundation,other modules: cloud-identity-group,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudkms.googleapis.com,1,platform-foundation,"foundational modules: project, folder, kms, gcs; other modules: compute-vm",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudresourcemanager.googleapis.com,1,platform-foundation,"foundational modules: project, folder, organization, iam-service-account, kms, gcs, artifact-registry, secret-manager, bigquery-dataset, cloud-run-v2; other modules: alloydb, billing-account, cloud-function-v1, cloud-function-v2, compute-vm, geap-agent-runtime and 3 more",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com,1,platform-foundation,"foundational modules: project, folder, organization, net-vpc, net-vpc-firewall, net-cloudnat; other modules: api-gateway, compute-mig, compute-vm, datafusion, ncc-spoke-ra, net-address and 17 more",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+container.googleapis.com,1,platform-foundation,"foundational modules: gke-cluster-standard, gke-cluster-autopilot, gke-nodepool",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dns.googleapis.com,1,platform-foundation,"foundational modules: net-vpc, dns; other modules: dns-response-policy",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+essentialcontacts.googleapis.com,1,platform-foundation,"foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+gkehub.googleapis.com,1,platform-foundation,other modules: gke-hub,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+iam.googleapis.com,1,platform-foundation,"foundational modules: project, folder, organization, iam-service-account, gke-nodepool, cloud-run-v2; other modules: api-gateway, cloud-function-v1, cloud-function-v2, compute-vm, geap-agent-gateway, geap-agent-runtime and 2 more",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+logging.googleapis.com,1,platform-foundation,"foundational modules: project, folder, organization; other modules: billing-account, logging-bucket",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+networkconnectivity.googleapis.com,1,platform-foundation,foundational modules: net-vpc; other modules: ncc-spoke-ra,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+orgpolicy.googleapis.com,1,platform-foundation,"foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+servicenetworking.googleapis.com,1,platform-foundation,foundational modules: net-vpc,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+serviceusage.googleapis.com,1,platform-foundation,foundational modules: project; other modules: api-gateway,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+vpcaccess.googleapis.com,1,platform-foundation,"foundational modules: cloud-run-v2; other modules: cloud-function-v1, cloud-function-v2",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+accesscontextmanager.googleapis.com,2,security-adjacent,"foundational modules: project, organization; other modules: vpc-sc",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+aiplatform.googleapis.com,2,application,other modules: geap-agent-runtime,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+alloydb.googleapis.com,2,application,other modules: alloydb,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+analyticshub.googleapis.com,2,application,other modules: analytics-hub,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+apigateway.googleapis.com,2,application,other modules: api-gateway,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+apigee.googleapis.com,2,application,other modules: apigee,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+appengine.googleapis.com,2,application,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+artifactregistry.googleapis.com,2,application,foundational modules: artifact-registry,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+assuredworkloads.googleapis.com,2,security-adjacent,foundational modules: folder,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+backupdr.googleapis.com,2,application,other modules: backup-dr,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+biglake.googleapis.com,2,application,other modules: biglake-catalog,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+bigquery.googleapis.com,2,application,foundational modules: bigquery-dataset,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+bigqueryconnection.googleapis.com,2,application,other modules: bigquery-connection,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+bigqueryreservation.googleapis.com,2,application,foundational modules: project,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+bigtableadmin.googleapis.com,2,application,other modules: bigtable-instance,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+binaryauthorization.googleapis.com,2,security-adjacent,other modules: binauthz,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+certificatemanager.googleapis.com,2,security-adjacent,other modules: certificate-manager,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+chronicle.googleapis.com,2,application,other modules: secops-rules,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudasset.googleapis.com,2,security-adjacent,"foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudbuild.googleapis.com,2,application,"other modules: cloud-build-v2-connection, source-repository",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+clouddeploy.googleapis.com,2,application,other modules: cloud-deploy,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudfunctions.googleapis.com,2,application,"other modules: cloud-function-v1, cloud-function-v2",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudquotas.googleapis.com,2,application,foundational modules: project,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudscheduler.googleapis.com,2,application,other modules: workflows,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+cloudtasks.googleapis.com,2,application,other modules: workflows,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+composer.googleapis.com,2,application,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+containerregistry.googleapis.com,2,application,other modules: container-registry,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+datacatalog.googleapis.com,2,application,"other modules: data-catalog-policy-tag, data-catalog-tag, data-catalog-tag-template",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dataflow.googleapis.com,2,application,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dataform.googleapis.com,2,application,other modules: dataform-repository,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+datafusion.googleapis.com,2,application,other modules: datafusion,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dataplex.googleapis.com,2,application,"other modules: dataplex, dataplex-aspect-types, dataplex-datascan",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dataproc.googleapis.com,2,application,other modules: dataproc,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+datastore.googleapis.com,2,application,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dialogflow.googleapis.com,2,application,other modules: ai-applications,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+discoveryengine.googleapis.com,2,application,other modules: ai-applications,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+dlp.googleapis.com,2,application,other modules: ai-applications,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+eventarc.googleapis.com,2,application,foundational modules: cloud-run-v2; other modules: workflows,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+firestore.googleapis.com,2,application,other modules: firestore,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+gkebackup.googleapis.com,2,application,"foundational modules: gke-cluster-standard, gke-cluster-autopilot",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+looker.googleapis.com,2,application,other modules: looker-core,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+managedkafka.googleapis.com,2,application,other modules: managed-kafka,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+memcache.googleapis.com,2,application,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+modelarmor.googleapis.com,2,application,foundational modules: organization,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+monitoring.googleapis.com,2,application,foundational modules: project; other modules: billing-account,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+networksecurity.googleapis.com,2,security-adjacent,"other modules: geap-agent-gateway, net-swp, project-factory",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+networkservices.googleapis.com,2,application,"other modules: geap-agent-gateway, net-swp",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+notebooks.googleapis.com,2,application,other modules: geap-workbench,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+privateca.googleapis.com,2,security-adjacent,other modules: certificate-authority-service,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+privilegedaccessmanager.googleapis.com,2,application,"foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+pubsub.googleapis.com,2,application,"foundational modules: gcs, gke-cluster-standard, gke-cluster-autopilot, pubsub",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+recaptchaenterprise.googleapis.com,2,security-adjacent,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+redis.googleapis.com,2,application,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+run.googleapis.com,2,application,foundational modules: cloud-run-v2,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+secretmanager.googleapis.com,2,security-adjacent,foundational modules: secret-manager,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+securesourcemanager.googleapis.com,2,application,other modules: secure-source-manager-instance,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+securitycenter.googleapis.com,2,security-adjacent,"foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+securitycentermanagement.googleapis.com,2,security-adjacent,"foundational modules: project, folder, organization",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+securityposture.googleapis.com,2,security-adjacent,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+servicedirectory.googleapis.com,2,application,other modules: service-directory,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+servicemanagement.googleapis.com,2,application,other modules: endpoints,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+sourcerepo.googleapis.com,2,application,other modules: source-repository,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+spanner.googleapis.com,2,application,other modules: spanner-instance,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+sqladmin.googleapis.com,2,application,foundational modules: cloudsql-instance,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+storage.googleapis.com,2,application,"foundational modules: gcs; other modules: cloud-function-v1, cloud-function-v2, geap-agent-runtime",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+tpu.googleapis.com,2,application,other modules: compute-vm,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+vmwareengine.googleapis.com,2,application,other modules: gcve-private-cloud,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+websecurityscanner.googleapis.com,2,security-adjacent,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+workflows.googleapis.com,2,application,other modules: workflows,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+workstations.googleapis.com,2,application,other modules: workstation-cluster,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+containeranalysis.googleapis.com,3,other,other modules: binauthz,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+policysimulator.googleapis.com,3,other,no tracked module uses it,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+recaptchaenterprise.googleapis.com/Assessment,3,other,"an assessment is a request, not configuration",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+securitycenter.googleapis.com/SourceFinding,3,other,findings are scan output,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/*,2,application,"Compute Engine machines, disks, images, load balancers and the rest",catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Address,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/CrossSiteNetwork,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/ExternalVpnGateway,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Firewall,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/FirewallPolicy,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/GlobalAddress,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/GlobalPublicDelegatedPrefix,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Interconnect,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/InterconnectAttachment,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/InterconnectAttachmentGroup,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/InterconnectGroup,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Network,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/NetworkAttachment,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/NetworkEdgeSecurityService,2,security-adjacent,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/NetworkFirewallPolicy,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/OrganizationSecurityPolicy,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/PacketMirroring,2,security-adjacent,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/PublicAdvertisedPrefix,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/PublicDelegatedPrefix,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/RegionNetworkFirewallPolicy,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/RegionSecurityPolicy,2,security-adjacent,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/RegionSslPolicy,2,security-adjacent,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Route,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Router,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/SecurityPolicy,2,security-adjacent,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/ServiceAttachment,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/SslPolicy,2,security-adjacent,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/Subnetwork,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/TargetVpnGateway,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/VpnGateway,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/VpnTunnel,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand
+compute.googleapis.com/WireGroup,1,platform-foundation,VPC networking and network security,catalog docs/gcp-inventory.md @ 6258f92; category by hand

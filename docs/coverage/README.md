@@ -10,9 +10,11 @@ the root `README.md` live here.
 | [`services.csv`](services.csv) | service | the rollup: resources and attributes, official, ours beyond official, uncovered, with percentages |
 | [`resources.csv`](resources.csv) | resource | attributes of the resource, the kinds that cover them (official and ours), and notes on the mapping |
 | [`attributes.csv`](attributes.csv) | attribute | the dotted path of a writable field, its type, whether the API requires it, who covers it (`official`, `ours`, `both`, `none`) and the CRD path that does |
-| [`tiers.csv`](tiers.csv) | tier | the rollup by tier (see "Tiers"), same columns as `services.csv` with `tier` and `services` first |
-| [`priority.csv`](priority.csv) | service | the tier of each service, with the rationale and source; hand-edited, read by the generator |
-| [`bars/`](bars) | service | `<service>.svg`, `_total.svg` and `_tiers.svg` (one bar per tier): blue is official, green is ours beyond official, grey is uncovered |
+| [`tiers.csv`](tiers.csv) | tier | the rollup by tier (see "Tiers and categories"): `tier`, `services`, then the columns of `services.csv` |
+| [`categories.csv`](categories.csv) | category | the rollup by category, per resource: `category`, `services`, then the columns of `services.csv` |
+| [`priority.csv`](priority.csv) | service (or resource) | `service,tier,category,rationale,source`; hand-edited, read by the generator |
+| [`foundation.md`](foundation.md) | | the ranked foundation gap report: the work queue for the kind agents |
+| [`bars/`](bars) | service | `<service>.svg`, `_total.svg`, `_tiers.svg` and `_categories.svg` (one bar per tier or category): blue is official, green is ours beyond official, grey is uncovered |
 | [`sources.yaml`](sources.yaml) | | the pinned inputs: commits, dates, digests |
 
 The schema is the same in `config-connector-extensions`, `ack-extensions`
@@ -69,46 +71,70 @@ files read from each; the generator refuses to run when an input differs.
 CRDs of kinds not yet in a release. A CRD existing does not mean a controller
 reconciles it well; the count is of what the schema exposes.
 
-## Tiers
+## Tiers and categories
 
 Services do not matter in the same way, and the total is dominated by the
 biggest schemas (here `aiplatform`, `dlp`, `compute`; in the AWS repository
-QuickSight alone is 60% of the attributes). So every service has a tier, and
-the README shows a bar per tier next to the total and sorts its table by tier.
+QuickSight alone is 60% of the attributes). So every service has a **category**
+and a **tier**, the README shows a bar for each next to the total, and its table
+is sorted by tier. The builder's rule: everything up through a managed
+Kubernetes cluster is table stakes for a platform team establishing a target;
+security teams need what sits next to it; the rest is application primitives.
 
-- **Tier 1**: a service used by a foundational module, the first ones people
-  migrate: modules ranked 1 to 19 in the catalog's inventory (project, folder,
-  organization, iam-service-account, net-vpc, net-vpc-firewall, net-cloudnat,
-  dns, kms, gcs, artifact-registry, secret-manager, cloudsql-instance, the GKE
-  modules, pubsub, bigquery-dataset, cloud-run-v2).
-- **Tier 2**: any other service some tracked module uses.
-- **Tier 3**: everything else (the default for a service not in the file).
+| Category | Tier | What |
+| --- | :-: | --- |
+| `platform-foundation` | 1 | organization, folders, projects (creation, billing association, labels, API enablement, liens), organization policy, IAM at every level (bindings, members, custom roles, deny policies, principal access boundary), tags, essential contacts, Shared VPC, VPC networking (networks, subnets, routes, firewall and hierarchical firewall policies, NAT, routers, VPN, interconnect, DNS), KMS, log sinks and buckets, billing, Cloud Identity groups, and everything to a managed GKE cluster (cluster, node pools, Autopilot, Workload Identity, Fleet) |
+| `security-adjacent` | 2 | Security Command Center, VPC Service Controls (Access Context Manager), Cloud Asset, Binary Authorization, Secret Manager, Private CA and Certificate Manager, Cloud Armor and network security, IAP, Privileged Access Manager, Assured Workloads |
+| `application` | 2 | Pub/Sub, Storage, Run, Functions, SQL, Spanner, BigQuery, Artifact Registry and the other services a tracked module creates |
+| `other` | 3 | everything else, and data that is not configuration (Container Analysis notes and occurrences, Security Command Center findings, reCAPTCHA assessments, policy simulation) |
 
-[`priority.csv`](priority.csv) (`service,tier,rationale,source`) lists tiers 1
-and 2; the generator reads it and never recomputes it, so a tier is changed by
-editing the file (and running `task coverage`). It was first written by
-`hack/coverage/run.sh`'s binary with `-derive-priority <catalog checkout>` from
-`docs/gcp-inventory.md` of the catalog repository (Cloud Foundation Fabric
-v60.0.0 modules, their Terraform resource types, the module ranks): each
-Terraform resource type is mapped to its service by prefix (`tfService` in
-`hack/coverage/priority.go`), and `*_iam_*` resources of another service's
-resource do not count as using that service. The Terraform resource, not the
-create method, is what ties a module to a service.
+[`priority.csv`](priority.csv) (`service,tier,category,rationale,source`) holds
+both, and is what the generator reads: it never recomputes it, so a tier or a
+category is changed by editing the file and running `task coverage`. A service
+missing from it is tier 3, `other`. A row whose first column is a resource
+(`compute.googleapis.com/Instance`, or a prefix with a `*`) sets the category of
+that resource, overriding its service's; the longest match wins. That is how
+Compute Engine is split: its VPC networking, interconnect and network firewall
+policies are `platform-foundation`, its security and SSL policies and packet
+mirroring are `security-adjacent`, and every other resource (machines, disks,
+images, load balancers) is `application`. The per-category rollup
+([`categories.csv`](categories.csv), `bars/_categories.svg`) therefore counts
+each resource in its own category, while the per-tier rollup
+([`tiers.csv`](tiers.csv), `bars/_tiers.svg`) counts whole services.
+
+The file was first written by the generator's binary with
+`-derive-priority <catalog checkout>` from `docs/gcp-inventory.md` of the
+catalog repository (Cloud Foundation Fabric v60.0.0 modules, their Terraform
+resource types, the module ranks): each Terraform resource type is mapped to its
+service by prefix (`tfService` in `hack/coverage/priority.go`), a `*_iam_*`
+resource of another service's resource does not count as using that service, the
+category comes from the tables in that file (by hand), and the module usage (the
+foundational modules, ranked 1 to 19 in the inventory, first) is kept as the
+rationale. A service a module uses and no table names is `application`.
 
 Limits:
 
-- **Usage by modules is a proxy for what teams need.** A service no module
-  uses may still be what a team needs, and a service a module uses in a corner
-  is not as important as its tier suggests.
-- **Tier 1 is wide.** The project, folder and organization modules are large
-  and touch many services in optional corners (Security Command Center, Model
-  Armor, Assured Workloads), so those services are tier 1. Demote them in the
-  file if that is not what you mean.
-- Tiers say which services matter; they do not weight resources or attributes
-  within a service.
+- **Usage by modules is a proxy for what teams need.** A service no module uses
+  may still be what a team needs, and a service a module uses in a corner is not
+  as important as its category suggests.
+- **The categories are a judgement**, written down in `priority.go` and the
+  file. The line between security-adjacent and application, and which
+  resources are data (`other`), can be argued.
+- **Compute Engine's split is by resource name** (the lists in `priority.go`);
+  a new Compute resource is `application` until someone moves it.
+- Categories and tiers say which services matter; they do not weight resources
+  or attributes within a service.
 - The inventory is of Cloud Foundation Fabric only, and of Terraform resource
   types, so a service reached through a type the prefix table does not know is
-  tier 3 until someone adds it.
+  `other` until someone adds it.
+
+**What to build.** [`foundation.md`](foundation.md) is the ranked gap report for
+the two categories above `application`: for each item the measured coverage, what
+is missing, what upstream (Config Connector `master` and open pull requests,
+read-only) already has, how many Cloud Foundation Fabric modules need it, a size,
+and the kinds to build. It is generated from the coverage data and from
+`hack/coverage/foundation.yaml`, which holds the ranking and the judgement by
+hand and which the generator checks is in rank order.
 
 **What is counted.** The services are Google Cloud infrastructure APIs. The
 Discovery directory also holds Workspace, advertising, Play, Android, YouTube,
@@ -238,6 +264,29 @@ step only for what the earlier ones left:
 8. a leaf name of eight characters or more that only one unmatched API field
    and one unused CRD path have (`billing.requesterPays` and `requesterPays`).
 
+Four things cover more than field names do, each kept in `overrides.yaml`
+or in the matcher:
+
+- **A kind that fills one list of another resource's body** (`subresources`):
+  Config Connector splits a router's NATs, peers and interfaces, a firewall
+  policy's rules and associations, a perimeter's resources and a dataset's
+  access into kinds of their own. Their fields are matched against the parent's
+  attributes under that path (`nats[]`), and the kind is listed with the parent.
+  `also` does the same for a kind that has its own resource as well (a
+  `ContainerNodePool` is also the cluster's `nodePools[]`).
+- **A kind with `folderRef`, `organizationRef` or `billingAccountRef`** covers
+  the folder, organization and billing account variants of the resource it maps
+  to (`LoggingLogSink`, `OrgPolicyPolicy`, `EssentialContactsContact`), and a
+  `projectRef` the project one; a kind without the ref does not, which is how a
+  missing parent (Security Command Center at project level) shows as a gap.
+- **Aliases** (`aliases`): per resource, an API path prefix to the name the
+  kinds give it, for Terraform's renames the rules cannot connect. Only
+  Kubernetes Engine has any (`autoscaling` is `clusterAutoscaling`,
+  `shieldedNodes.enabled` is `enableShieldedNodes`, a node pool's `config` is
+  `nodeConfig`), added because a managed cluster is the end of the foundation.
+- **`parent`**: an attribute `parent` is covered by a kind's `folderRef`,
+  `organizationRef` or `projectRef`.
+
 Two more rules count as covered without a spec field: an API attribute `name`
 by `metadata.name` (every kind is named by its object), and a top-level
 `labels{}` by `metadata.labels` for a Terraform-based kind whose service
@@ -334,6 +383,11 @@ the counts are approximate. Of about 55 fuzzy matches judged, one was wrong
 (Kubernetes Engine's `nodePools[].autoscaling.enabled` matched
 `clusterAutoscaling.enabled`).
 
+The Kubernetes Engine rows were measured before the aliases above were added
+for them; with the aliases `container/Cluster` is 294 of 715 attributes covered
+(it was 165) and `container/ClusterNodePool` 108 of 213. The nested `nodePools[]`
+attributes are counted against both the cluster and the node pool.
+
 Also checked: our own kinds. `RunService` covers 20 attributes beyond the
 Terraform-based official kind (`invokerIamDisabled`, the GPU fields, the scaling
 block); `SQLUser` adds `databaseRoles`; `SecretManagerSecret` covers the
@@ -381,12 +435,12 @@ Generated by `hack/coverage`; do not edit between the markers.
 | Services in the denominator (with at least one resource) | 207 |
 | Resources (REST resources with an insert or create method) | 1244 |
 | Attributes (writable fields) | 43589 |
-| Resources with an official kind | 692 |
+| Resources with an official kind | 738 |
 | Resources covered only by our kinds | 7 |
-| Attributes: official / ours beyond official / uncovered | 14063 / 59 / 29467 |
+| Attributes: official / ours beyond official / uncovered | 15513 / 59 / 28017 |
 | Official kinds (Config Connector CRDs in `*.cnrm.cloud.google.com`) | 801 |
-| Official kinds mapped to at least one resource | 691 |
-| Official kinds **unmapped** | 110 |
+| Official kinds mapped to at least one resource | 704 |
+| Official kinds **unmapped** | 97 |
 | Our kinds | 18 |
 | Our kinds mapped to at least one resource | 11 |
 | Our kinds outside the denominator | 7 |
@@ -413,7 +467,7 @@ These are in the official column of no row, so the official percentages undercou
 - no Discovery service for the group (gRPC-only API, not in Discovery, or excluded) (15): `APIQuotaAdjusterSettings`, `APIQuotaPreference`, `AnalyticsAccount`, `ApigeeRegistryAPI`, `ApigeeRegistryArtifact`, `ApigeeRegistryInstance`, `ApigeeregistryAPIDeployment`, `ApigeeregistryAPISpec`, `ColabRuntime`, `ColabRuntimeTemplate`, `ConfigControllerInstance`, `MapManagementMapConfig`, `MapManagementStyleConfig`, `MapmanagementMapContextConfig`, `SourceRepoRepository`
 - one member in another resource's IAM policy, written with setIamPolicy (1): `IAMPolicyMember`
 - part of another resource's IAM policy, written with setIamPolicy (1): `IAMPartialPolicy`
-- service found, no creatable resource with a matching name (90): `AIPlatformModel`, `AIPlatformModelMonitor`, `AIPlatformRAGCorpus`, `APIHubExternalAPI`, `AccessContextManagerAccessLevelCondition`, `AccessContextManagerServicePerimeterResource`, `ApigeeAddonsConfig`, `ApigeeSyncAuthorization`, `AppEngineFirewallRule`, `AppEngineServiceSplitTraffic`, `ArtifactRegistryVPCSCConfig`, `BatchTask`, `BeyondCorpAppConnection`, `BeyondCorpAppConnector`, `BeyondCorpAppGateway`, `BeyondCorpClientConnectorService`, `BigQueryDatasetAccess`, `BigtableGCPolicy`, `BigtableMemoryLayer`, `CloudBatchResourceAllowance`, `ComputeBackendBucketSignedURLKey`, `ComputeBackendServiceSignedURLKey`, `ComputeDiskResourcePolicyAttachment`, `ComputeFirewallPolicyAssociation`, `ComputeFirewallPolicyRule`, `ComputeGlobalNetworkEndpoint`, `ComputeInstanceGroupNamedPort`, `ComputeNetworkEndpoint`, `ComputeNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkPeering`, `ComputeNetworkPeeringRoutesConfig`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeOrganizationSecurityPolicyRule`, `ComputePerInstanceConfig`, `ComputeProjectMetadata`, `ComputeRegionDiskResourcePolicyAttachment`, `ComputeRegionPerInstanceConfig`, `ComputeRouterInterface`, `ComputeRouterNAT`, `ComputeRouterPeer`, `ComputeSharedVPCServiceProject`, `DataCatalogEntry`, `DataCatalogEntryGroup`, `DataCatalogTag`, `DataCatalogTagTemplate`, `DataflowFlexTemplateJob`, `DataplexContent`, `DataplexDataAttribute`, `DataplexDataTaxonomy`, `DataplexEnvironment`, `DataprocJob`, `DialogflowFulfillment`, `DiscoveryEngineSampleQuerySet`, `DiscoveryEngineUserStore`, `DocumentAIProcessorDefaultVersion`, `DocumentAIProcessorVersion`, `EdgeContainerMachine`, `EventarcGoogleChannelConfig`, `FirebaseHostingChannel`, `FirebaseHostingSite`, `FirebaseProject`, `FirestoreDocument`, `FirestoreField`, `IAMAccessBoundaryPolicy`, `IAMAccessPolicy`, `IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`, `IAPSettings`, `IdentityPlatformProjectDefaultConfig`, `KMSAutokeyConfig`, `KMSSecretCiphertext`, `ManagedKafkaConsumerGroup`, `ModelArmorFloorSetting`, `NetworkSecurityPartnerSSEGateway`, `NetworkSecurityPartnerSSERealm`, `NetworkServicesEdgeCacheKeyset`, `NetworkServicesEdgeCacheOrigin`, `NetworkServicesEdgeCacheService`, `OSConfigGuestPolicy`, `RedisClusterEndpoint`, `ResourceManagerPolicy`, `Service`, `ServiceIdentity`, `ServiceUsageConsumerQuotaOverride`, `SpeechRecognizer`, `StorageAnywhereCache`, `StorageHMACKey`, `StorageRapidCache`, `VertexAIExampleStore`
+- service found, no creatable resource with a matching name (77): `AIPlatformModel`, `AIPlatformModelMonitor`, `AIPlatformRAGCorpus`, `APIHubExternalAPI`, `ApigeeAddonsConfig`, `ApigeeSyncAuthorization`, `AppEngineFirewallRule`, `AppEngineServiceSplitTraffic`, `ArtifactRegistryVPCSCConfig`, `BatchTask`, `BeyondCorpAppConnection`, `BeyondCorpAppConnector`, `BeyondCorpAppGateway`, `BeyondCorpClientConnectorService`, `BigtableGCPolicy`, `BigtableMemoryLayer`, `CloudBatchResourceAllowance`, `ComputeBackendBucketSignedURLKey`, `ComputeBackendServiceSignedURLKey`, `ComputeDiskResourcePolicyAttachment`, `ComputeGlobalNetworkEndpoint`, `ComputeNetworkEndpoint`, `ComputeNetworkPeering`, `ComputeNetworkPeeringRoutesConfig`, `ComputePerInstanceConfig`, `ComputeProjectMetadata`, `ComputeRegionDiskResourcePolicyAttachment`, `ComputeRegionPerInstanceConfig`, `ComputeSharedVPCServiceProject`, `DataCatalogEntry`, `DataCatalogEntryGroup`, `DataCatalogTag`, `DataCatalogTagTemplate`, `DataflowFlexTemplateJob`, `DataplexContent`, `DataplexDataAttribute`, `DataplexDataTaxonomy`, `DataplexEnvironment`, `DataprocJob`, `DialogflowFulfillment`, `DiscoveryEngineSampleQuerySet`, `DiscoveryEngineUserStore`, `DocumentAIProcessorDefaultVersion`, `DocumentAIProcessorVersion`, `EdgeContainerMachine`, `EventarcGoogleChannelConfig`, `FirebaseHostingChannel`, `FirebaseHostingSite`, `FirebaseProject`, `FirestoreDocument`, `FirestoreField`, `IAMAccessBoundaryPolicy`, `IAMAccessPolicy`, `IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`, `IAPSettings`, `IdentityPlatformProjectDefaultConfig`, `KMSAutokeyConfig`, `KMSSecretCiphertext`, `ManagedKafkaConsumerGroup`, `ModelArmorFloorSetting`, `NetworkSecurityPartnerSSEGateway`, `NetworkSecurityPartnerSSERealm`, `NetworkServicesEdgeCacheKeyset`, `NetworkServicesEdgeCacheOrigin`, `NetworkServicesEdgeCacheService`, `OSConfigGuestPolicy`, `RedisClusterEndpoint`, `ResourceManagerPolicy`, `Service`, `ServiceIdentity`, `ServiceUsageConsumerQuotaOverride`, `SpeechRecognizer`, `StorageAnywhereCache`, `StorageHMACKey`, `StorageRapidCache`, `VertexAIExampleStore`
 
 ### Discovery APIs excluded as not Google Cloud
 

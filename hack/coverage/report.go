@@ -70,17 +70,20 @@ func barSVG(name string, c counts, big bool) string {
 	return b.String()
 }
 
-var tierNames = [3]string{"Tier 1: foundational", "Tier 2: used by other modules", "Tier 3: everything else"}
+var tierNames = [3]string{"Tier 1: platform foundation", "Tier 2: security-adjacent and application", "Tier 3: everything else"}
 
-// tiersSVG is one bar per tier, in the same card style as barSVG.
-func tiersSVG(cs [3]counts, svcs [3]int) string {
+var categoryNames = [4]string{"Platform foundation", "Security-adjacent", "Application", "Other"}
+
+// rollupSVG is one bar per row (tier or category), in the same card style
+// as barSVG.
+func rollupSVG(title string, names []string, cs []counts, svcs []int) string {
 	const w, rowH, bx, bw, bh = 640, 40, 10, 620, 14
-	h := rowH*3 + 6
+	h := rowH*len(cs) + 6
 	var b strings.Builder
 	font := "font-family=\"-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif\""
-	label := "Coverage by tier:"
+	label := title + ":"
 	for i, c := range cs {
-		label += fmt.Sprintf(" tier %d official %s%%, ours beyond official %s%%, uncovered %s%%;", i+1, pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs))
+		label += fmt.Sprintf(" %s official %s%%, ours beyond official %s%%, uncovered %s%%;", names[i], pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs))
 	}
 	fmt.Fprintf(&b, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" role=\"img\" aria-label=\"%s\">\n", w, h, w, h, label)
 	fmt.Fprintf(&b, "<title>%s</title>\n", label)
@@ -88,7 +91,7 @@ func tiersSVG(cs [3]counts, svcs [3]int) string {
 	for i, c := range cs {
 		y := 3 + i*rowH
 		fmt.Fprintf(&b, "<clipPath id=\"c%d\"><rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\" rx=\"3\"/></clipPath>\n", i, bx, y+18, bw, bh)
-		fmt.Fprintf(&b, "<text x=\"%d\" y=\"%d\" %s font-size=\"12\" fill=\"#24292f\">%s (%d services, %d attributes): ", bx, y+13, font, tierNames[i], svcs[i], c.attrs)
+		fmt.Fprintf(&b, "<text x=\"%d\" y=\"%d\" %s font-size=\"12\" fill=\"#24292f\">%s (%d services, %d attributes): ", bx, y+13, font, names[i], svcs[i], c.attrs)
 		fmt.Fprintf(&b, "<tspan fill=\"#0969da\">%s%%</tspan> / <tspan fill=\"#1a7f37\">%s%%</tspan> / <tspan fill=\"#57606a\">%s%%</tspan></text>\n", pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs))
 		scale := func(n int) float64 {
 			if c.attrs == 0 {
@@ -110,7 +113,7 @@ func tiersSVG(cs [3]counts, svcs [3]int) string {
 	return b.String()
 }
 
-func rootSection(sums []svcSum, tierSums [3]counts, tierSvcs [3]int, total counts, nServices, nExcluded int, src *Sources) string {
+func rootSection(sums []svcSum, prio *Priority, tierSums [3]counts, tierSvcs [3]int, catSums [4]counts, catN [4]int, total counts, nServices, nExcluded int, src *Sources) string {
 	// Tiers 1 and 2 list every service, covered or not (an uncovered
 	// priority service is the point); tier 3 only where something is
 	// covered. Tier first, then covered attributes.
@@ -136,14 +139,18 @@ func rootSection(sums []svcSum, tierSums [3]counts, tierSvcs [3]int, total count
 	b.WriteString("**Official** is what Config Connector's CRDs at the pin (`UPSTREAM.md`) cover; **ours beyond official** is what only this repository's kinds cover; **uncovered** is in the API and in neither. ")
 	b.WriteString("The counts come from matching CRD fields to API fields by name, so they are estimates: see [docs/coverage](docs/coverage/README.md) for the method, its error and how to regenerate.\n\n")
 	b.WriteString("![All services](docs/coverage/bars/_total.svg)\n\n")
-	b.WriteString("Services do not matter equally, so the total misleads. They are in three tiers ([`priority.csv`](docs/coverage/priority.csv), editable): **tier 1** the services the foundational modules use, **tier 2** the services other tracked modules use, **tier 3** the rest. ")
-	fmt.Fprintf(&b, "The services counted are Google Cloud infrastructure APIs; %d non-cloud APIs in Discovery (Workspace, Ads, Play, Maps, YouTube, ...) are left out ([how](docs/coverage/README.md#tiers)).\n\n", nExcluded)
+	b.WriteString("Services do not matter equally, so the total misleads. Everything up through a managed Kubernetes cluster is table stakes for a platform team; security teams need what sits next to it; the rest is application primitives. Each service has a **category** and a **tier** ([`priority.csv`](docs/coverage/priority.csv), editable): ")
+	b.WriteString("**tier 1** is `platform-foundation` (organization, folders, projects, organization policy, IAM, tags, networking, DNS, KMS, log sinks, GKE and Fleet), **tier 2** is `security-adjacent` (Security Command Center, VPC Service Controls, Cloud Asset, Binary Authorization, Secret Manager, CA, Armor) and `application` (Pub/Sub, Storage, Run, SQL, BigQuery, ...), **tier 3** is the rest. ")
+	fmt.Fprintf(&b, "The services counted are Google Cloud infrastructure APIs; %d non-cloud APIs in Discovery (Workspace, Ads, Play, Maps, YouTube, ...) are left out ([how](docs/coverage/README.md#tiers-and-categories)).\n\n", nExcluded)
+	b.WriteString("By category, counted per resource (Compute Engine's VPC networking is foundation, its machines and load balancers are application):\n\n")
+	b.WriteString("![Coverage by category](docs/coverage/bars/_categories.svg)\n\n")
+	b.WriteString("By tier, counted per service:\n\n")
 	b.WriteString("![Coverage by tier](docs/coverage/bars/_tiers.svg)\n\n")
-	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Rollup: [`tiers.csv`](docs/coverage/tiers.csv), every service: [`services.csv`](docs/coverage/services.csv).</sub>\n\n")
+	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md).</sub>\n\n")
 	row := func(s svcSum) string {
-		return fmt.Sprintf("| %d | `%s` | ![%s](docs/coverage/bars/%s.svg) | %s%% | %s%% | %s%% |\n", s.tier, s.host, s.host, s.host, pct(s.c.off, s.c.attrs), pct(s.c.beyond, s.c.attrs), pct(s.c.uncovered, s.c.attrs))
+		return fmt.Sprintf("| %d | %s | `%s` | ![%s](docs/coverage/bars/%s.svg) | %s%% | %s%% | %s%% |\n", s.tier, catShort(prio.Cat[s.host]), s.host, s.host, s.host, pct(s.c.off, s.c.attrs), pct(s.c.beyond, s.c.attrs), pct(s.c.uncovered, s.c.attrs))
 	}
-	head := "| Tier | Service | Coverage | Official | Ours beyond | Uncovered |\n| ---: | --- | --- | ---: | ---: | ---: |\n"
+	head := "| Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered |\n| ---: | --- | --- | --- | ---: | ---: | ---: |\n"
 	for t := 1; t <= 3; t++ {
 		var rows []svcSum
 		for _, s := range list {
@@ -247,4 +254,16 @@ func uniq(s []string) []string {
 		}
 	}
 	return out
+}
+
+func catShort(c string) string {
+	switch c {
+	case "platform-foundation":
+		return "foundation"
+	case "security-adjacent":
+		return "security"
+	case "application":
+		return "application"
+	}
+	return "other"
 }
