@@ -46,6 +46,7 @@ var bindingGVK = iamv1alpha1.IAMRoleBindingGVK
 const (
 	accessor = "roles/secretmanager.secretAccessor"
 	viewer   = "roles/secretmanager.viewer"
+	adder    = "roles/secretmanager.secretVersionAdder"
 )
 
 func TestIAMRoleBinding(t *testing.T) {
@@ -262,7 +263,7 @@ func TestIAMRoleBinding(t *testing.T) {
 	})
 
 	t.Run("a binding waits for the object it names", func(t *testing.T) {
-		b := newBinding("late", viewer, owners)
+		b := newBinding("late", adder, owners)
 		b.Spec.ResourceRef.Name = "not-yet"
 		if err := env.Kube.Create(env.Ctx, b); err != nil {
 			t.Fatal(err)
@@ -295,7 +296,7 @@ func TestIAMRoleBinding(t *testing.T) {
 	})
 
 	t.Run("a kind it does not know is refused", func(t *testing.T) {
-		b := newBinding("unknown", viewer, owners)
+		b := newBinding("unknown", adder, owners)
 		b.Spec.ResourceRef.Kind = "Spaceship"
 		if err := env.Kube.Create(env.Ctx, b); err != nil {
 			t.Fatal(err)
