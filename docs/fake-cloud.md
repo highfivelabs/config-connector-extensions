@@ -85,6 +85,12 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   existing, active namespace. An attestation rule's `googleCloudResource`
   is only checked to be non-empty; the real API checks its form and
   that the workload exists.
+- **Cloud Run services in mockgcp.** Patch 0008 makes `services.patch`
+  honour an update mask. The fake fills in fewer server defaults than the
+  real API (no ports, startup probe or traffic), does not schedule
+  anything, so a GPU `nodeSelector` is stored but never checked against
+  the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
+  serves.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
   the way to make the fake cloud reachable from inside: `cmd/fakegcp` and
