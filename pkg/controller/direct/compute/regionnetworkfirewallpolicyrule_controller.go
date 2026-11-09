@@ -247,6 +247,10 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) patchBody() (*computev1.Firewal
 	emptied("DestThreatIntelligences", len(have.GetDestThreatIntelligences()), len(want.GetDestThreatIntelligences()), m)
 	emptied("SrcSecureTags", len(have.GetSrcSecureTags()), len(want.GetSrcSecureTags()), m)
 	r := &body.ForceSendFields
+	// The optional strings and booleans are sent as "" and false when the
+	// spec leaves them unset (the generated client did this for the proto's
+	// optional fields; this client leaves a zero value out unless forced).
+	*r = append(*r, "Priority", "Description", "RuleName", "Disabled", "EnableLogging")
 	emptied("TargetServiceAccounts", len(a.actual.GetTargetServiceAccounts()), len(a.desired.GetTargetServiceAccounts()), r)
 	emptied("TargetSecureTags", len(a.actual.GetTargetSecureTags()), len(a.desired.GetTargetSecureTags()), r)
 	return body, nil
