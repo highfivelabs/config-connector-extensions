@@ -21,7 +21,11 @@
 //     cnrm.cloud.google.com labels, the gap label and upstream-kind
 //     annotation;
 //   - new (from the PR): remoteRepositoryConfig.{docker,maven,npm,python}Repository.customRepository,
-//     a remote repository's upstream at a URI of the user's choosing.
+//     a remote repository's upstream at a URI of the user's choosing;
+//   - written here (in no Config Connector code or pull request):
+//     remoteRepositoryConfig.upstreamCredentials and
+//     remoteRepositoryConfig.disableUpstreamValidation; their types are in
+//     upstreamcredentials_types.go.
 
 package v1beta1
 
@@ -162,6 +166,18 @@ type ArtifactRegistryRepositoryRemoteRepositoryConfig struct {
 	// The description of the remote source.
 	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.description
 	Description *string `json:"description,omitempty"`
+
+	// Written here: not in Config Connector or upstream pull request #13517.
+
+	// The credentials used to access the remote repository.
+	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.upstream_credentials
+	UpstreamCredentials *ArtifactRegistryRepositoryUpstreamCredentials `json:"upstreamCredentials,omitempty"`
+
+	// Input only. If true, the remote repository's upstream and upstream
+	//  credentials are not validated when the repository is created or
+	//  updated. The API does not return it.
+	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.disable_upstream_validation
+	DisableUpstreamValidation *bool `json:"disableUpstreamValidation,omitempty"`
 }
 
 // +kcc:proto=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.CommonRemoteRepository

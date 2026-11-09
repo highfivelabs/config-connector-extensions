@@ -21,6 +21,8 @@
 // kept when a custom repository is set. A test file here, run by
 // TestArtifactRegistryRepositoryFuzz instead of registered with Config
 // Connector's fuzz runner, so the manager does not link the fuzz harness.
+// Written here: upstream_credentials and disable_upstream_validation are no
+// longer "not yet triaged".
 
 // +tool:fuzz-gen
 // proto.message: google.devtools.artifactregistry.v1.Repository
@@ -101,8 +103,8 @@ func ArtifactRegistryRepositoryFuzzer() fuzztesting.KRMFuzzer {
 	f.Unimplemented_NotYetTriaged(".registry_uri")
 
 	// Sub-fields of remote_repository_config that are not mapped in KRM spec
-	f.Unimplemented_NotYetTriaged(".remote_repository_config.upstream_credentials")
-	f.Unimplemented_NotYetTriaged(".remote_repository_config.disable_upstream_validation")
+	// Written here: upstream_credentials and disable_upstream_validation are
+	// mapped (upstreamcredentials_mapping.go).
 	f.Unimplemented_NotYetTriaged(".remote_repository_config.apt_repository")
 	f.Unimplemented_NotYetTriaged(".remote_repository_config.yum_repository")
 
