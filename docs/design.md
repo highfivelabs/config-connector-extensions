@@ -781,7 +781,7 @@ Notes on what was built from this table:
   are not offered; `members` takes the address.
   Patch 0018: mockgcp serves Cloud Storage's `.../iam` paths from the
   store it already keeps for the `:getIamPolicy` verbs.
-  Live: see `docs/live-runs.md`.
+  Live: passes, on a secret and a bucket (`docs/live-runs.md`).
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is

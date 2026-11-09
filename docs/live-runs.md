@@ -166,6 +166,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | `c459e36`+ | RunService | PASS | FAIL | without a GPU, create, a new image, delete and abandon pass; a resync with an unchanged spec sent a `template` update, and turning invoker IAM back on carried `template` too | 2 services (deleted) |
 | 2026-11-09 | `58d6ade` | RunService | PASS | FAIL | the same, now with the cloud's template printed: the API gives each container an http1 port 8080 and a TCP startup probe the spec leaves out. Fixed in the controller and in patch 0008 | 2 services (deleted) |
 | 2026-11-09 | `aee1155` | RunService | PASS | PASS | none, with the default port and startup probe taken from what was read (no GPU live: no quota) | 2 services (deleted); `make live-list` empty |
+| 2026-11-09 | `a3b6b51` | IAMRoleBinding | PASS | PASS | the project's organization refuses `projectOwner:` and the like as members of a secret's policy ("invalid due to membership type restrictions"; mockgcp accepts any member), so the test binds the project's service accounts; secret policy (global), bucket policy (Cloud Storage JSON API), a conditional binding and the same role without it, a member added out of band removed, delete and abandon all match patch 0018 and the fake | 1 secret, 1 bucket (deleted); `task live-list` empty |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
