@@ -17,7 +17,7 @@ package artifactregistry_test
 
 // A remote repository that logs in to its private upstream, end to end on
 // the fake cloud (pkg/test/mockenv), or a real project with
-// E2E_GCP_TARGET=real (make test-live). Written here: upstreamCredentials
+// E2E_GCP_TARGET=real (task test-live). Written here: upstreamCredentials
 // is in no Config Connector code or pull request.
 
 import (

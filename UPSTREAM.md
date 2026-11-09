@@ -123,7 +123,7 @@ flattening all three, 2026-11-08).
 Upstream's own direct `SQLUser` is an open pull request. It is not copied:
 at the head below it declares `databaseRoles` but leaves the field, its
 diff and its mapping commented out (`/*NOTYET*/`), so it does not do what
-we need. `hack/upstream-pr.sh` (`make upstream-pr`) fetches the PR's head
+we need. `hack/upstream-pr.sh` (`task upstream-pr`) fetches the PR's head
 by `refs/pull/<n>/head`, says whether it moved, and whether `databaseRoles`
 is live yet; when it is, follow "Switching to PR #7148" in `docs/design.md`.
 
@@ -144,7 +144,7 @@ is live yet; when it is, follow "Switching to PR #7148" in `docs/design.md`.
 4. Re-read the upstream files in the table above at the new commit and
    carry over their changes (`git diff <old>..<new> -- <path>` in a full
    clone); keep our changes as small as before.
-5. `make check`.
+5. `task check`.
 6. If upstream now has a kind or field we fill, follow "Retiring a gap
    kind" in `docs/design.md`.
 

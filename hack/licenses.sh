@@ -6,7 +6,7 @@
 # manager and the operator, and its licence, as go-licenses reports it.
 # Fails if a module's licence is not one the project accepts. Needs
 # go-licenses on PATH (go install github.com/google/go-licenses@latest)
-# and the pinned Config Connector checkout (make upstream).
+# and the pinned Config Connector checkout (task upstream).
 set -o errexit -o nounset -o pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

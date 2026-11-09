@@ -16,7 +16,7 @@
 package sqladmin_test
 
 // SQLAdminBackup end to end on the fake cloud (pkg/test/mockenv), or a real
-// project with E2E_GCP_TARGET=real (make test-live). The case:
+// project with E2E_GCP_TARGET=real (task test-live). The case:
 // an on-demand backup of an application's database before a change that
 // could lose data (a major version upgrade, a destructive migration).
 

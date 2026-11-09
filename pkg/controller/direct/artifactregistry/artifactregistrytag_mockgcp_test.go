@@ -16,7 +16,7 @@
 package artifactregistry_test
 
 // ArtifactRegistryTag end to end on the fake cloud (pkg/test/mockenv, patch
-// 0009), or a real project with E2E_GCP_TARGET=real (make test-live). The
+// 0009), or a real project with E2E_GCP_TARGET=real (task test-live). The
 // case: a "prod" tag on an image, moved from one digest to the next when a
 // release is promoted.
 
