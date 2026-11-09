@@ -89,9 +89,15 @@ refuses any project but the ones listed.
 | `roles/storage.objectAdmin` | bucket `gs://hfl-dev-514205-offload` | the offload VM (checkout in, log out) |
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
+| `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers) |
+| `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy` |
+| `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
+| `roles/run.admin` | project | `RunService` |
+| `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
 
 APIs enabled for it: `artifactregistry`, `secretmanager`, `sqladmin`,
-`cloudresourcemanager`. A new kind that needs another role or API adds it
+`cloudresourcemanager`, `run`; `compute`, `iam` and `storage` were
+already on. A new kind that needs another role or API adds it
 here, and to the account, in the same change.
 
 ## Adding a kind
@@ -151,29 +157,18 @@ commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
 Cloud SQL; nothing made) and `cce-11090806-613a` (preempted while making
 the instance; swept by hand) reached no test.
 
-Not yet run live: `IAMWorkloadIdentityPoolNamespace`,
-`IAMWorkloadIdentityPoolManagedIdentity`,
-`IAMWorkloadIdentityPoolProviderKey` and `RunService` (packages `iam`
-and `run`). Granting the live-test service
-account `roles/iam.workloadIdentityPoolAdmin`, `roles/run.admin` and
-`roles/iam.serviceAccountUser` on the runtime service account is with
-the builder; then their tests need run names and cleanup, and the
-sweeper needs workload identity pools and Cloud Run services.
-
-Package `compute` (`ComputeRegionNetworkEndpoint`,
-`ComputeRouterRoutePolicy`, `ComputeRegionNetworkFirewallPolicy`) is
-ready to run live: its tests take every cloud name from `mockenv.Name`
-(a network, a regional network endpoint group, a router, the firewall
-policies), delete what they make, abandoned resources included, and the
-sweeper finds these by name (they take no labels). It waits for two
-roles on the live-test service account, with the builder:
-`roles/compute.networkAdmin` (the networks, the group and its
-endpoints, the router and its route policies) and
-`roles/compute.securityAdmin` (network firewall policies, which
-`compute.networkAdmin` leaves out). Then:
-`make test-live PROJECT=hfl-dev-514205 KINDS=compute`. The managed identity test's attestation rules name
-made-up Compute Engine instances, and the RunService test asks for an
-NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
+Packages `compute`, `iam` and `run` run live with the roles granted on
+2026-11-09 (the service account table). Their tests take every cloud
+name from `mockenv.Name` and delete what they make, abandoned resources
+included: `compute` makes a network, a regional network endpoint group, a
+router and firewall policies; each `iam` test makes its own workload
+identity pool (its ID is kept 30 days after delete, so it is never
+reused), and the key test a SAML provider with a fresh self-signed
+certificate; `run` makes Cloud Run services from Cloud Run's public
+sample image. The sweeper finds all of these by the run's name prefix.
+The test project has no Cloud Run GPU quota without zonal redundancy, so
+live `RunService` runs without a GPU and skips the GPU checks
+(`E2E_RUN_GPU=true` where there is quota); the fake cloud keeps the GPU.
 
 `LoggingSettings` (package `logging`) is ready to run live but waits on
 the builder for a test folder and a key; it never changes an

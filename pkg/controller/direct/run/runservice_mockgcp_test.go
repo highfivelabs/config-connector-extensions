@@ -37,6 +37,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -220,7 +221,10 @@ func TestRunServiceGPUAndInvokerIAM(t *testing.T) {
 		time.Sleep(time.Second)
 		env.WaitReady(gvk, namespace, name)
 		if m := masks(t, env, name)[before:]; len(m) != 0 {
-			t.Errorf("updates after a resync with an unchanged spec: %q, want none", m)
+			// The template as the cloud holds it, to see which server
+			// defaults the controller does not yet take from what it read.
+			tmpl, _ := protojson.Marshal(read(t, name).GetTemplate())
+			t.Errorf("updates after a resync with an unchanged spec: %q, want none; the cloud's template: %s", m, tmpl)
 		}
 	})
 
