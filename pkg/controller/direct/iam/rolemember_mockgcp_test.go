@@ -306,7 +306,9 @@ func TestIAMRoleMember(t *testing.T) {
 			}
 			neither := newMember("neither", tg, "")
 			neither.Spec.Member = nil
-			if err := env.Kube.Create(env.Ctx, neither); err == nil || !strings.Contains(err.Error(), "exactly one of member and memberFrom") {
+			if err := env.Kube.Create(env.Ctx, neither); err == nil || !strings.Contains(err.Error(), "member") {
+				// The CRD's oneOf (from Config Connector's validation step)
+				// answers before the CEL rule does.
 				t.Errorf("neither: err = %v", err)
 			}
 		})

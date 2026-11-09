@@ -74,7 +74,7 @@ All paths are in Config Connector at the commit above unless noted.
 | `pkg/controller/direct/run/mapper.generated.go` | the same file | only the v1alpha1 functions and three Condition reason helpers; our KRM types; the worker pool's template mapping for a `RevisionTemplate`, plus (written here) the fields a service template has |
 | `pkg/controller/direct/run/runservice_mapper.go` | `pkg/controller/direct/run/runworkerpool_mapper.go` | the spec and observed state for a `Service`; written here: the spec's `FromProto`, the service fields, the scaling mappings |
 | `pkg/controller/direct/run/resolverefs.go` | the same file | `ResolveRunServiceRefs` only; no v1beta1 cases |
-| `apis/iam/v1alpha1/iamrolebinding_types.go`, `iamrolebinding_identity.go`, `iamresourceref_types.go`, `pkg/iampolicy/`, `pkg/controller/direct/iam/rolebinding_controller.go`, `policy_common.go` | written here | `IAMRoleBinding`: no Config Connector code (its IAM kinds run on the Terraform provider, which this manager does not load); `membersFrom` reuses `apis/iam/iamrefs.IAMServiceAccountRef`; Terraform's `google_*_iam_binding` read, not copied |
+| `apis/iam/v1alpha1/iamrolebinding_types.go`, `iamrolebinding_identity.go`, `iamrolemember_types.go`, `iamrolemember_identity.go`, `iamresourceref_types.go`, `pkg/iampolicy/`, `pkg/controller/direct/iam/rolebinding_controller.go`, `rolemember_controller.go`, `policy_common.go` | written here | `IAMRoleBinding` and `IAMRoleMember`: no Config Connector code (its IAM kinds run on the Terraform provider, which this manager does not load); `membersFrom` reuses `apis/iam/iamrefs.IAMServiceAccountRef`; Terraform's `google_*_iam_binding` read, not copied |
 | `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | an SPDX line after Google's header, so generated files carry it |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
 | `hack/regen-mocksql-users.sh` | `mockgcp/Makefile` (`gen-proto`), `mockgcp/apply-proto-patches.sh`, `mockgcp/fixup-third-party.sh` | one proto file only; our extra fields |
@@ -111,6 +111,7 @@ flattening all three, 2026-11-08).
 | `0016-mockgcp-artifactregistry-remote-source-immutable.patch` | written here, on 0005: an update of `remoteRepositoryConfig` fails with the API's own error, "Remote source configuartion cannot be updated" (a live run, `docs/live-runs.md`), not mockgcp's "not supported" | yes |
 | `0017-mockgcp-logging-settings.patch` | written here: mockgcp serves Log Router settings (get, update with a mask) for organizations and folders | yes |
 | `0018-mockgcp-storage-iam-policy.patch` | written here: mockgcp serves Cloud Storage's `GET`/`PUT /storage/v1/b/{bucket}/iam` (and a managed folder's) from the store it keeps for the `:getIamPolicy` verbs | yes |
+| `0019-mockgcp-compute-iam-policy.patch` | written here, on 0018: mockgcp serves Compute Engine's `GET {resource}/getIamPolicy` and `POST {resource}/setIamPolicy` from the store it keeps for the `:getIamPolicy` verbs | yes |
 
 ## Other sources consulted, not copied
 

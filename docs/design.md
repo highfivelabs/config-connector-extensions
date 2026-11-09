@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has seventeen kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has eighteen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -10,8 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem` and `IAMRoleBinding`
-(section 6). Each
+`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding` and
+`IAMRoleMember` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -636,7 +636,7 @@ this repository's rules (6.1, decision 5, section 10).
 | Rank | Gap | Modules | Upstream (2026-11-09) | Here |
 | ---: | --- | ---: | --- | --- |
 | 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | built (2026-11-09), as `IAMRoleBinding` (decision 12) |
-| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | next: an additive kind over the same resource table as `IAMRoleBinding`; `IAMRoleBinding` already accepts a regional secret |
+| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | built (2026-11-09), as `IAMRoleMember` (a working name, section 10 question 3), over the same resource table as `IAMRoleBinding`, which accepts the same 32 resource types |
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
@@ -782,6 +782,56 @@ Notes on what was built from this table:
   Patch 0018: mockgcp serves Cloud Storage's `.../iam` paths from the
   store it already keeps for the `:getIamPolicy` verbs.
   Live: passes, on a secret and a bucket (`docs/live-runs.md`).
+- `IAMRoleMember` (`iam.gcp.hfl.dev/v1alpha1`, rank 2). **Written here**,
+  the additive sibling of `IAMRoleBinding`, shaped like Config Connector's
+  `IAMPolicyMember`: `resourceRef` (the same type as `IAMRoleBinding`'s),
+  `role`, `condition`, and one of `member` or `memberFrom.serviceAccountRef`
+  (CEL: exactly one). Every field is immutable, as in `IAMPolicyMember`.
+  It adds its member to the role's binding (`AddMembers`) and removes only
+  that member on delete (`RemoveMembers`, and the binding if it was the
+  last): other members of the role, other roles and the audit configs are
+  carried through unchanged, so several objects can give one role to
+  several members and anyone else's grants stay. `Find` is "the member is
+  in the binding"; a member taken off out of band is put back at the next
+  reconcile, a member somebody else added is left. `status.externalRef` is
+  ours: `{resource}#{role}#{member}`, plus `#{condition title}`.
+  It shares everything else with `IAMRoleBinding` (`pkg/iampolicy`,
+  `policy_common.go`), and the resource table grew by the rows
+  `IAMPolicyMember` cannot reference, which both kinds accept (marked
+  `NotInIAMPolicyMember` in `registry_more.go`: 30 rows, and the regional
+  `SecretManagerSecret` that was already there; the catalog counts 32 by
+  its own grouping, and a type missing is a row to add): `StorageManagedFolder`
+  (Cloud Storage's own paths with the folder's name escaped whole and
+  ending in a slash), `LoggingLogView`, `RunWorkerPool`, `PrivateCACAPool`,
+  `CloudDeployDeliveryPipeline`, `CloudDeployTarget`, `DataformRepository`,
+  `DataplexLake`, `DataplexZone`, `DataplexDataScan`, `DataplexAspectType`,
+  `WorkstationConfig`, `Workstation`, `BigQueryAnalyticsHubDataExchange`,
+  `BigQueryAnalyticsHubListing`, `APIGatewayAPI`, `APIGatewayAPIConfig`,
+  `APIGatewayGateway`, `BinaryAuthorizationAttestor`,
+  `BigQueryConnectionConnection`, `SecureSourceManagerInstance`,
+  `SecureSourceManagerRepository`, `DataCatalogTagTemplate`,
+  `CloudBuildConnection`, `WorkbenchInstance`, `EndpointsService`,
+  `IAPTunnelInstance`, `IAPWebCloudRunService`, and, with the third
+  protocol, `ComputeBackendService` (global and regional) and
+  `ComputeMachineImage`. The kinds Config Connector has can be named by
+  `name` (the project, `spec.location` and the ID make the full name, or
+  `status.externalRef` when it already is one); the others by `external`.
+  **Compute Engine's protocol** is `GET {resource}/getIamPolicy?optionsRequestedPolicyVersion=3`
+  and `POST {resource}/setIamPolicy` with `{"policy": ...}`, as Terraform
+  sends it (the handoff's `{bindings, etag, policy}` body is the same
+  request, whose `policy` field is the one used). Patch 0019: mockgcp
+  serves those paths from the same store as the verbs.
+  **Which rows are proven.** Three are exercised end to end, on the fake
+  cloud and on a real project: a regional `SecretManagerSecret`, a
+  `StorageManagedFolder` and a `ComputeBackendService`. The others are
+  written from each service's REST reference and Terraform's matching
+  `google_*_iam_*` resources (read, not copied) and checked only for their
+  names and URLs (`registry_test.go`); none has been called against the
+  real API. A wrong path, verb (GET or POST for the read) or version shows
+  as the API's own error on the object's Ready condition, and is a
+  one-row fix. They are listed as such so that nobody relies on them
+  before a live run.
+  Live: see `docs/live-runs.md`.
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
@@ -879,13 +929,14 @@ To raise confidence in `ArtifactRegistryRepository`:
 25. `ComputeProjectMetadataItem`: the 412 retry is not exercised by the
     fake (its writers do not race the way real ones can); the default
     network tier and default service accounts, rank 10's other parts.
-26. `IAMRoleBinding`: the other resource types in IAM's catalog of 32
-    (rank 2), each a row in `pkg/iampolicy/registry.go` that needs a live
-    run for its API's quirks (compute resources use a different request
-    shape; a BigQuery dataset has no IAM policy, only `access`); `memberFrom`
-    sources beyond a service account; and a check that the policy's etag
-    conflict is seen live (the fake serves 409; the API's real answer is
-    409 for most services and 412 for Compute Engine).
+26. `IAMRoleBinding` and `IAMRoleMember`: live runs of the rows in
+    `pkg/iampolicy/registry_more.go` that have only been checked for
+    their names and URLs (each service's quirks: GET or POST for the read,
+    the API version, the policy version it accepts; a BigQuery dataset has
+    no IAM policy, only `access`); `memberFrom` sources beyond a service
+    account; and a check that the policy's etag conflict is seen live (the
+    fake serves 409; the API's real answer is 409 for most services and
+    412 for Compute Engine).
 
 ## 8. Decisions
 
@@ -1203,3 +1254,14 @@ moves to section 8.
    Recommendation: keep the field and the comparison with what was
    applied until we switch to PR #7148 (section 2), since changing it now
    changes the CRD for no user-visible gain; then follow the PR.
+
+3. **The additive IAM kind's name** (2026-11-09; an assumption, not yet
+   the builder's). The kind built for rank 2 is called **`IAMRoleMember`**
+   (`iam.gcp.hfl.dev/v1alpha1`): one member of one role on one resource,
+   additive, pairing with `IAMRoleBinding` (one role, all its members,
+   authoritative). Alternatives: `IAMMemberBinding`, or `IAMPolicyMember`
+   (no: Config Connector's kind has that name in another group, and two
+   kinds of one name make manifests ambiguous to read). Recommendation:
+   keep `IAMRoleMember`. A rename is the `IAMRoleMemberGVK` var
+   (`apis/iam/v1alpha1/iamrolemember_types.go`), the type names, the CRD
+   file and one line in `pkg/controller/controllers.go`.

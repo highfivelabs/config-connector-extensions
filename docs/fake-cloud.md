@@ -88,6 +88,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   checked on write (409); permissions are not, nor are the members' forms
   (`user:` with no address is accepted) or whether a role exists.
   Cloud Storage's own `.../iam` paths are served from the same store.
+  Compute Engine's `GET .../getIamPolicy` and `POST .../setIamPolicy`
+  (patch 0019, ours, for `IAMRoleBinding` and `IAMRoleMember`) are served
+  from it too. What the store cannot show: a role that does not apply to
+  the resource (`roles/viewer` on a managed folder), a member the
+  resource's organization refuses, a managed folder that does not exist,
+  and each service's own choice of GET or POST for the read, its API
+  version and its etag error (409 or 412), which is why the rows of the
+  resource table beyond the three with a live run are unproven.
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones). The fingerprint is not checked on patch, a policy
   is deleted even when associated, and rules and associations are not
