@@ -1,0 +1,203 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computeregionnetworkendpoints.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeRegionNetworkEndpoint
+    listKind: ComputeRegionNetworkEndpointList
+    plural: computeregionnetworkendpoints
+    shortNames:
+    - hflcomputeregionnetworkendpoint
+    - hflcomputeregionnetworkendpoints
+    singular: computeregionnetworkendpoint
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeRegionNetworkEndpoint is one endpoint (an internet address,
+          a domain name or a VM port) in a regional network endpoint group, such as
+          a load balancer backend.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ComputeRegionNetworkEndpointSpec is one endpoint in a regional
+              network endpoint group. Every field is immutable: an endpoint is attached
+              or detached, never changed.'
+            properties:
+              clientDestinationPort:
+                description: The client destination port (GCE_VM_IP_PORTMAP groups).
+                format: int32
+                type: integer
+              fqdn:
+                description: The fully qualified domain name of the endpoint (INTERNET_FQDN_PORT
+                  groups).
+                type: string
+              instance:
+                description: The VM the endpoint is on (GCE_VM_IP_PORTMAP groups),
+                  as its name in the group's project and zone, or its URL.
+                type: string
+              ipAddress:
+                description: The IPv4 address of the endpoint (INTERNET_IP_PORT and
+                  GCE_VM_IP_PORTMAP groups).
+                type: string
+              port:
+                description: The port of the endpoint.
+                format: int32
+                minimum: 1
+                type: integer
+              projectRef:
+                description: The project that this resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+              region:
+                description: The region of the network endpoint group.
+                type: string
+              regionNetworkEndpointGroupRef:
+                description: The regional network endpoint group the endpoint is in.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: An existing group, as "projects/{{projectID}}/regions/{{region}}/networkEndpointGroups/{{name}}".
+                    type: string
+                  name:
+                    description: The name of a Config Connector ComputeRegionNetworkEndpointGroup.
+                    type: string
+                  namespace:
+                    description: The namespace of that ComputeRegionNetworkEndpointGroup;
+                      the referring object's by default.
+                    type: string
+                type: object
+            required:
+            - port
+            - projectRef
+            - region
+            - regionNetworkEndpointGroupRef
+            type: object
+          status:
+            description: ComputeRegionNetworkEndpointStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: 'The endpoint, as projects/{project}/regions/{region}/networkEndpointGroups/{group}/networkEndpoints/{ipAddress
+                  or fqdn}:{port} (not an API resource name: endpoints have none).'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
