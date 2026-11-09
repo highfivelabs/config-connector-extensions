@@ -235,15 +235,25 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 	t.Run("a rule changed out of band is put back", func(t *testing.T) {
 		got, _ := cloudRule(t, 1000)
 		got.Action = mockenv.Ptr("deny")
-		op, err := policies.PatchRule(env.Ctx, &pb.PatchRuleRegionNetworkFirewallPolicyRequest{
-			Project: mockenv.Project, Region: region, FirewallPolicy: policyName, Priority: mockenv.Ptr(int32(1000)),
-			FirewallPolicyRuleResource: got,
-		})
-		if err == nil {
-			err = op.Wait(env.Ctx)
+		// A rule just changed is "not ready" to the API for a while, and a
+		// patch then answers 400: try again.
+		var patchErr error
+		for i := 0; i < 60; i++ {
+			var op *gcp.Operation
+			op, patchErr = policies.PatchRule(env.Ctx, &pb.PatchRuleRegionNetworkFirewallPolicyRequest{
+				Project: mockenv.Project, Region: region, FirewallPolicy: policyName, Priority: mockenv.Ptr(int32(1000)),
+				FirewallPolicyRuleResource: got,
+			})
+			if patchErr == nil {
+				patchErr = op.Wait(env.Ctx)
+			}
+			if patchErr == nil || !strings.Contains(patchErr.Error(), "is not ready") {
+				break
+			}
+			time.Sleep(2 * time.Second)
 		}
-		if err != nil {
-			t.Fatalf("changing the rule out of band: %v", err)
+		if patchErr != nil {
+			t.Fatalf("changing the rule out of band: %v", patchErr)
 		}
 		resync(t, health)
 		waitFor(t, func() bool {
