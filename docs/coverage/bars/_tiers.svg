@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="126" viewBox="0 0 640 126" role="img" aria-label="Coverage by tier: Tier 1: platform foundation official 45.5%, ours beyond official 0.5%, uncovered 54.0%; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.2%, uncovered 60.6%; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%;">
-<title>Coverage by tier: Tier 1: platform foundation official 45.5%, ours beyond official 0.5%, uncovered 54.0%; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.2%, uncovered 60.6%; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%;</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="126" viewBox="0 0 640 126" role="img" aria-label="Coverage by tier: Tier 1: platform foundation official 45.6%, ours beyond official 0.5%, uncovered 53.9%; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.2%, uncovered 60.6%; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%;">
+<title>Coverage by tier: Tier 1: platform foundation official 45.6%, ours beyond official 0.5%, uncovered 53.9%; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.2%, uncovered 60.6%; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%;</title>
 <rect x="0.5" y="0.5" width="639" height="125" rx="4" fill="#ffffff" stroke="#d0d7de"/>
 <clipPath id="c0"><rect x="10" y="21" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 1: platform foundation (16 services, 5880 attributes): <tspan fill="#0969da">45.5%</tspan> / <tspan fill="#1a7f37">0.5%</tspan> / <tspan fill="#57606a">54.0%</tspan></text>
+<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 1: platform foundation (16 services, 5880 attributes): <tspan fill="#0969da">45.6%</tspan> / <tspan fill="#1a7f37">0.5%</tspan> / <tspan fill="#57606a">53.9%</tspan></text>
 <g clip-path="url(#c0)">
 <rect x="10" y="21" width="620" height="14" fill="#d0d7de"/>
-<rect x="10" y="21" width="282.06" height="14" fill="#2f81f7"/>
-<rect x="292.06" y="21" width="3.27" height="14" fill="#2da44e"/>
+<rect x="10" y="21" width="282.48" height="14" fill="#2f81f7"/>
+<rect x="292.48" y="21" width="3.27" height="14" fill="#2da44e"/>
 </g>
 <clipPath id="c1"><rect x="10" y="61" width="620" height="14" rx="3"/></clipPath>
 <text x="10" y="56" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 2: security-adjacent and application (68 services, 23615 attributes): <tspan fill="#0969da">39.2%</tspan> / <tspan fill="#1a7f37">0.2%</tspan> / <tspan fill="#57606a">60.6%</tspan></text>
