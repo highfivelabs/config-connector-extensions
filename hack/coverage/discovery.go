@@ -64,6 +64,7 @@ type APIResource struct {
 	Name      string // Service
 	Disco     string // projects.locations.services
 	Names     []string
+	Aliases   map[string]string
 	Attrs     []Attr
 	Wrapper   string // request wrapper schema stripped, if any
 	Truncated int    // leaves cut by the depth guard

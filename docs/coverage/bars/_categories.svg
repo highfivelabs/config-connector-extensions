@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="166" viewBox="0 0 640 166" role="img" aria-label="Coverage by category: Platform foundation official 38.8%, ours beyond official 1.0%, uncovered 60.2%; Security-adjacent official 67.2%, ours beyond official 0.7%, uncovered 32.1%; Application official 39.9%, ours beyond official 0.2%, uncovered 60.0%; Other official 24.6%, ours beyond official 0.0%, uncovered 75.4%;">
+<title>Coverage by category: Platform foundation official 38.8%, ours beyond official 1.0%, uncovered 60.2%; Security-adjacent official 67.2%, ours beyond official 0.7%, uncovered 32.1%; Application official 39.9%, ours beyond official 0.2%, uncovered 60.0%; Other official 24.6%, ours beyond official 0.0%, uncovered 75.4%;</title>
+<rect x="0.5" y="0.5" width="639" height="165" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+<clipPath id="c0"><rect x="10" y="21" width="620" height="14" rx="3"/></clipPath>
+<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Platform foundation (16 services, 3121 attributes): <tspan fill="#0969da">38.8%</tspan> / <tspan fill="#1a7f37">1.0%</tspan> / <tspan fill="#57606a">60.2%</tspan></text>
+<g clip-path="url(#c0)">
+<rect x="10" y="21" width="620" height="14" fill="#d0d7de"/>
+<rect x="10" y="21" width="240.57" height="14" fill="#2f81f7"/>
+<rect x="250.57" y="21" width="6.16" height="14" fill="#2da44e"/>
+</g>
+<clipPath id="c1"><rect x="10" y="61" width="620" height="14" rx="3"/></clipPath>
+<text x="10" y="56" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Security-adjacent (14 services, 1406 attributes): <tspan fill="#0969da">67.2%</tspan> / <tspan fill="#1a7f37">0.7%</tspan> / <tspan fill="#57606a">32.1%</tspan></text>
+<g clip-path="url(#c1)">
+<rect x="10" y="61" width="620" height="14" fill="#d0d7de"/>
+<rect x="10" y="61" width="416.71" height="14" fill="#2f81f7"/>
+<rect x="426.71" y="61" width="4.41" height="14" fill="#2da44e"/>
+</g>
+<clipPath id="c2"><rect x="10" y="101" width="620" height="14" rx="3"/></clipPath>
+<text x="10" y="96" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Application (56 services, 24523 attributes): <tspan fill="#0969da">39.9%</tspan> / <tspan fill="#1a7f37">0.2%</tspan> / <tspan fill="#57606a">60.0%</tspan></text>
+<g clip-path="url(#c2)">
+<rect x="10" y="101" width="620" height="14" fill="#d0d7de"/>
+<rect x="10" y="101" width="247.26" height="14" fill="#2f81f7"/>
+<rect x="257.26" y="101" width="0.96" height="14" fill="#2da44e"/>
+</g>
+<clipPath id="c3"><rect x="10" y="141" width="620" height="14" rx="3"/></clipPath>
+<text x="10" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Other (125 services, 14539 attributes): <tspan fill="#0969da">24.6%</tspan> / <tspan fill="#1a7f37">0.0%</tspan> / <tspan fill="#57606a">75.4%</tspan></text>
+<g clip-path="url(#c3)">
+<rect x="10" y="141" width="620" height="14" fill="#d0d7de"/>
+<rect x="10" y="141" width="152.54" height="14" fill="#2f81f7"/>
+</g>
+</svg>

@@ -106,7 +106,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   logging, secure tags together with target service accounts, a layer 4
   protocol with ports it cannot have, FQDNs and region codes on the wrong
   direction, the policy's limit on rule tuples), and it reports a rule
-  tuple count of 2 for every rule, whatever it matches.
+  tuple count of 2 for every rule, whatever it matches. Its `patchRule`
+  replaces the whole rule; the real API keeps a list the body leaves out
+  (the controller sends `[]` for it), and answers 400 "The rule at
+  priority N is not ready" to a patch soon after another change, which
+  the fake never does.
 - **Log Router settings in mockgcp** (patch 0017, ours). Any
   organization or folder ID is accepted, the key is not checked, and the
   service account IDs only follow the documented form.
