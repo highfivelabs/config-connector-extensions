@@ -1,0 +1,170 @@
+# Hand-kept parts of the kind-to-resource mapping. Every entry is a
+# decision to be checked; docs/coverage/README.md says how.
+
+# Discovery documents (by their "name") that are not Google Cloud
+# infrastructure APIs: Google Workspace, Ads and marketing, Play and
+# Android, YouTube and media, Maps and consumer, and legacy or partner
+# APIs. They are the one hand-made cut of the denominator.
+exclude_services:
+  # Workspace
+  - admin
+  - appsmarket
+  - calendar
+  - chat
+  - chromemanagement
+  - chromepolicy
+  - chromewebstore
+  - chromeuxreport
+  - classroom
+  - cloudsearch
+  - docs
+  - drive
+  - driveactivity
+  - drivelabels
+  - forms
+  - gmail
+  - gmailpostmastertools
+  - groupsmigration
+  - groupssettings
+  - keep
+  - licensing
+  - meet
+  - people
+  - reseller
+  - script
+  - sheets
+  - slides
+  - tasks
+  - vault
+  - verifiedaccess
+  - workspaceevents
+  # Ads, analytics and marketing
+  - adexchangebuyer2
+  - adexperiencereport
+  - admob
+  - adsense
+  - adsenseplatform
+  - agenciesandbrands
+  - analyticsadmin
+  - analyticsdata
+  - authorizedbuyersmarketplace
+  - dfareporting
+  - displayvideo
+  - doubleclickbidmanager
+  - doubleclicksearch
+  - marketingplatformadmin
+  - realtimebidding
+  - searchads360
+  - tagmanager
+  - datamanager
+  - css
+  - merchantapi
+  - manufacturers
+  - localservices
+  # Play, Android, devices
+  - androiddeveloperidstatus
+  - androiddeviceprovisioning
+  - androidenterprise
+  - androidmanagement
+  - androidpublisher
+  - playcustomapp
+  - playdeveloperreporting
+  - playgrouping
+  - playintegrity
+  - readerrevenuesubscriptionlinking
+  - paymentsresellersubscription
+  - walletobjects
+  - smartdevicemanagement
+  - homegraph
+  - sasportal
+  - prod_tt_sasportal
+  - checks
+  # YouTube, media, consumer, Maps, search
+  - abusiveexperiencereport
+  - acceleratedmobilepageurl
+  - addressvalidation
+  - airquality
+  - areainsights
+  - blogger
+  - books
+  - businessprofileperformance
+  - civicinfo
+  - customsearch
+  - digitalassetlinks
+  - factchecktools
+  - fitness
+  - games
+  - gamesConfiguration
+  - gamesManagement
+  - indexing
+  - kgsearch
+  - libraryagent
+  - mybusinessaccountmanagement
+  - mybusinessbusinessinformation
+  - mybusinesslodging
+  - mybusinessnotifications
+  - mybusinessplaceactions
+  - mybusinessverifications
+  - oauth2
+  - pagespeedonline
+  - places
+  - pollen
+  - safebrowsing
+  - searchconsole
+  - siteVerification
+  - solar
+  - streetviewpublish
+  - travelimpactmodel
+  - versionhistory
+  - webfonts
+  - youtube
+  - youtubeAnalytics
+  - youtubereporting
+  - curationpartners
+  - deepreview
+  - discovery
+  - webcontentpublisher
+  - dataportability
+  - devicerun
+
+# Kind group (the part of the API group before the first dot) to the
+# service hosts it covers, where Config Connector's service mapping and
+# the Discovery name do not already say so.
+group_hosts:
+  tags: [cloudresourcemanager.googleapis.com]
+  filestore: [file.googleapis.com]
+  cloudfunctions2: [cloudfunctions.googleapis.com]
+  cloudids: [ids.googleapis.com]
+  bigqueryanalyticshub: [analyticshub.googleapis.com]
+  bigquerybiglake: [biglake.googleapis.com]
+  clouddms: [datamigration.googleapis.com]
+  dialogflowcx: [dialogflow.googleapis.com]
+  identityplatform: [identitytoolkit.googleapis.com]
+  mlengine: [ml.googleapis.com]
+  cloudtalentsolution: [jobs.googleapis.com]
+  configdeployment: [config.googleapis.com]
+  grafeas: [containeranalysis.googleapis.com]
+  visionai: [visionai.googleapis.com, warehouse-visionai.googleapis.com]
+  vertexai: [aiplatform.googleapis.com]
+
+# Kind to resource ids ("host/Resource"), where the name rule fails.
+kinds: {}
+
+# Kinds that are not an API resource with a create method (IAM policy
+# attachments, associations), with the reason.
+no_resource:
+  # ours
+  ComputeProjectMetadataItem: one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)
+  ComputeRegionNetworkEndpoint: an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints
+  ComputeRouterRoutePolicy: a route policy of a Cloud Router, written with routers.patchRoutePolicy
+  LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
+  SecretManagerSecretVersion: a secret version, written with secrets.addVersion
+  IAMRoleBinding: one role binding in another resource's IAM policy, written with setIamPolicy
+  # official (IAM policy attachments)
+  IAMPolicy: an IAM policy of another resource, written with setIamPolicy
+  IAMPolicyMember: one member in another resource's IAM policy, written with setIamPolicy
+  IAMPartialPolicy: part of another resource's IAM policy, written with setIamPolicy
+  IAMAuditConfig: audit configs of another resource's IAM policy, written with setIamPolicy
+
+# Kind-name prefix of a group when it is not the group's own name.
+prefixes: {}

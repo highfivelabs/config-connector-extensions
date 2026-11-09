@@ -1,0 +1,30 @@
+# Pinned inputs of hack/coverage. The generator fails if an input differs
+# from its digest or if the Config Connector commit differs from
+# UPSTREAM.md. Our own CRDs (config/crds/) are the third input: they are
+# read from the working tree.
+#
+# To move a pin: change the commit, commit_date and fetched, run
+# `hack/coverage/run.sh --fetch --update-sources`, then
+# `hack/coverage/run.sh`, and commit the result.
+discovery:
+  repo: https://github.com/googleapis/discovery-artifact-manager
+  commit: 9f8a165ecc629ec648b3bf96353eceb9d7e1ed88
+  commit_date: "2026-11-09T11:43:52Z"
+  fetched: "2026-11-09"
+  # sha256 over the sorted "<sha256> <path>" lines of discoveries/*.json
+  digest: 2ecb98bb4fefddd65b4fa0ac4d8c1748be59cb37beb80946c3d11bfa2c7af17a
+googleapis:
+  repo: https://github.com/googleapis/googleapis
+  commit: 855217a6b3054992d6d0cb58370312bda024af04
+  commit_date: "2026-11-09T18:22:51Z"
+  fetched: "2026-11-09"
+  # sha256 over the sorted "<sha256> <path>" lines of google/**/*.proto
+  digest: 0113444e1cae9feeca52ddd2c137991f57381ba9251005e7f2c48615743b6c30
+config_connector:
+  repo: https://github.com/GoogleCloudPlatform/k8s-config-connector
+  commit: 672414b8191fc2d2c12fff53f6faccf5ae291eef
+  commit_date: "2026-11-07T03:04:32Z"
+  nearest_release: v1.160.0
+  fetched: "2026-11-09"
+  # sha256 over config/crds/resources/*, config/servicemappings/* and apis/*/*/*_types.go
+  digest: 1aca77e2fdc159c3f859927ac5e46d344b544a3de50c0abfee24a42ff278a3ba
