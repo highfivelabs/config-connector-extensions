@@ -4,8 +4,8 @@
 #
 # Run each kind's end-to-end tests twice from the same checkout: against
 # the fake cloud (mockgcp), then against a real project, and write a
-# summary for docs/live-runs.md. `make test-live PROJECT=...` calls this;
-# make check never does.
+# summary for docs/live-runs.md. `task test-live PROJECT=...` calls this;
+# task check never does.
 #
 #   hack/live/run.sh --project P [KIND...]
 #
@@ -50,7 +50,7 @@ live_project_allowed "${project}" || exit 2
 for k in "${kinds[@]}"; do
   [[ -d "pkg/controller/direct/${k}" ]] || { echo "live: no kind package pkg/controller/direct/${k}" >&2; exit 2; }
 done
-: "${KUBEBUILDER_ASSETS:?run through make test-live, which installs envtest}"
+: "${KUBEBUILDER_ASSETS:?run through task test-live, which installs envtest}"
 
 G=(gcloud --quiet --project "${project}")
 if [[ -n "${LIVE_ACCOUNT:-}" ]]; then G+=(--account "${LIVE_ACCOUNT}"); fi

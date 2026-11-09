@@ -7,10 +7,10 @@ real project, credentials or cost. Proven 2026-11-07 on an Apple-silicon Mac (Do
 0.33).
 
 ```sh
-make upstream          # once: the pinned Config Connector checkout
-make fake-cloud-up     # kind cluster, CRDs, bin/fakecloud on the host
-make fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready, then all deleted
-make fake-cloud-down   # stop it and delete the cluster
+task upstream          # once: the pinned Config Connector checkout
+task fake-cloud-up     # kind cluster, CRDs, bin/fakecloud on the host
+task fake-cloud-test   # SQLInstance, SQLDatabase, IAMServiceAccount, SQLUser: all Ready, then all deleted
+task fake-cloud-down   # stop it and delete the cluster
 ```
 
 `export KUBECONFIG=bin/fake-cloud/kubeconfig` to use the cluster; the
@@ -47,9 +47,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
 | Step | Time |
 | --- | --- |
 | `go build ./cmd/fakecloud`, first time (Config Connector compiles with it) | about 3 min of CPU, 25 s wall on 6 cores |
-| `make fake-cloud-up`: kind cluster, 105 CRDs, manager started | 41 s |
-| `make fake-cloud-test`: 4 resources applied and Ready | 2 s |
-| `make fake-cloud-down` | about 2 s |
+| `task fake-cloud-up`: kind cluster, 105 CRDs, manager started | 41 s |
+| `task fake-cloud-test`: 4 resources applied and Ready | 2 s |
+| `task fake-cloud-down` | about 2 s |
 
 ## What does not work, or differs from the real thing
 
@@ -81,6 +81,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **IAM policies in mockgcp** (patch 0018, ours, for `IAMRoleBinding`).
+  Every `:getIamPolicy` and `:setIamPolicy` is served from one store keyed
+  by host and path, for any resource name, existing or not: a policy on a
+  secret that does not exist reads as empty and can be set. The etag is
+  checked on write (409); permissions are not, nor are the members' forms
+  (`user:` with no address is accepted) or whether a role exists.
+  Cloud Storage's own `.../iam` paths are served from the same store.
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones). The fingerprint is not checked on patch, a policy
   is deleted even when associated, and rules and associations are not
@@ -127,14 +134,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   the Artifact Registry error above (patch 0016), a missing route
   policy's 400 (patch 0012), and a Cloud Run container's default port and
   startup probe (patch 0008). The same tests run
-  against a real project with `make test-live`.
+  against a real project with `task test-live`.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
   the way to make the fake cloud reachable from inside: `cmd/fakegcp` and
-  `config/fake-cloud/`, used by `make operator-e2e`.
+  `config/fake-cloud/`, used by `task operator-e2e`.
 - **Not the operator.** Config Connector's operator (`ConfigConnector`,
   `ConfigConnectorContext` installation, per-namespace managers) is not
-  run; the manager watches the whole cluster. `make operator-e2e` covers
+  run; the manager watches the whole cluster. `task operator-e2e` covers
   the operator (`docs/design.md` section 9).
 
 ## Found on the way

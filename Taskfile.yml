@@ -1,0 +1,201 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# config-connector-extensions: kinds for Google Cloud that Config Connector
+# does not have yet, on Config Connector's own reconciler. Every task needs
+# the pinned Config Connector checkout; `task upstream` fetches it (about
+# 650 MB, not committed).
+#
+# `task` lists the tasks. Install it with `brew install go-task` or
+# `go install github.com/go-task/task/v3/cmd/task@latest`. Variables are
+# given on the command line: `task test-live PROJECT=hfl-dev-514205 KINDS=iam`.
+version: '3'
+
+set: [errexit, pipefail]
+
+includes:
+  go:
+    taskfile: ./taskfiles/go.yml
+    vars:
+      BIN: '{{.ROOT_DIR}}/bin'
+
+env:
+  GOTOOLCHAIN: '{{.GOTOOLCHAIN | default "local"}}'
+  # mockgcp listens on 127.0.0.2 by default, which macOS lacks
+  # (patches/k8s-config-connector/0002-*).
+  MOCKGCP_LISTEN_ADDRESS: '{{.MOCKGCP_LISTEN_ADDRESS | default "127.0.0.1:0"}}'
+
+vars:
+  # The project's name, for a rename: the Go module path, the images, the
+  # install's object names and pkg/operator.Name carry it too.
+  NAME: config-connector-extensions
+  BIN: '{{.ROOT_DIR}}/bin'
+  ENVTEST_K8S_VERSION: 1.33.x
+  # setup-envtest from controller-runtime's release-0.20 branch (the
+  # controller-runtime Config Connector pins), as resolved on 2026-11-07.
+  SETUP_ENVTEST: sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250517180713-32e5e9e948a5
+
+tasks:
+  default:
+    desc: Everything that must hold before a commit (check).
+    cmds:
+      - task: check
+
+  setup-envtest:
+    internal: true
+    cmds:
+      - task: go:install-tool
+        vars: {NAME: setup-envtest, PKG: '{{.SETUP_ENVTEST}}'}
+
+  tools:
+    desc: Config Connector at the pin plus patches/, and the tools the other tasks need.
+    cmds:
+      - task: upstream
+      - task: setup-envtest
+
+  upstream:
+    desc: Fetch Config Connector at the pin (about 650 MB) and apply patches/.
+    cmds:
+      - hack/upstream.sh
+
+  # Read-only: is upstream's direct SQLUser (PR #7148) ready to replace ours?
+  upstream-pr:
+    desc: Read-only - is upstream's direct SQLUser (PR #7148) ready to replace ours?
+    cmds:
+      - hack/upstream-pr.sh
+
+  upstream-check:
+    desc: Fail if third_party/ is not the pin plus patches/, or go.mod lacks Config Connector's pins.
+    cmds:
+      - hack/upstream.sh --check
+      - hack/check-go-mod.sh
+
+  generate:
+    desc: Regenerate the CRDs and deepcopy code.
+    cmds:
+      - task: upstream-check
+      - hack/generate.sh
+
+  coverage:
+    desc: Regenerate the README's Coverage section and docs/coverage/ from the pinned inputs (hack/coverage).
+    cmds:
+      - hack/coverage/run.sh
+
+  coverage-check:
+    desc: Fail if the committed coverage outputs differ from a regeneration (fetches the pinned inputs).
+    cmds:
+      - hack/coverage/run.sh --check
+
+  build:
+    desc: Build bin/manager, bin/operator, bin/fakegcp and bin/fakecloud.
+    cmds:
+      - task: upstream-check
+      - mkdir -p "{{.BIN}}"
+      - go build -o "{{.BIN}}/manager" ./cmd/manager
+      - go build -o "{{.BIN}}/operator" ./cmd/operator
+      - go build -o "{{.BIN}}/fakegcp" ./cmd/fakegcp
+      - go build -o "{{.BIN}}/fakecloud" ./cmd/fakecloud
+
+  # The tests against the fake cloud, whatever E2E_GCP_TARGET says in the
+  # environment: `task check` never reaches a real project.
+  test-mock:
+    aliases: [test]
+    desc: The tests against the fake cloud (mockgcp), whatever E2E_GCP_TARGET says.
+    cmds:
+      - task: upstream-check
+      - task: setup-envtest
+      - task: go:test-envtest
+        vars:
+          ENVTEST_K8S_VERSION: '{{.ENVTEST_K8S_VERSION}}'
+          CMD: E2E_GCP_TARGET=mock go test ./... -count=1
+
+  # The same end-to-end tests, each kind against the fake cloud and then a
+  # real project (docs/live-runs.md): task test-live PROJECT=<project>
+  # [KINDS="sql artifactregistry"]. Only projects in hack/live/projects.sh;
+  # the credentials must be a service account (an offload VM's --sa).
+  test-live:
+    desc: 'Each kind against the fake cloud, then a real project: task test-live PROJECT=<project> [KINDS="sql run"] (docs/live-runs.md).'
+    requires:
+      vars: [PROJECT]
+    cmds:
+      - task: upstream-check
+      - task: setup-envtest
+      - task: go:test-envtest
+        vars:
+          ENVTEST_K8S_VERSION: '{{.ENVTEST_K8S_VERSION}}'
+          CMD: hack/live/run.sh --project "{{.PROJECT}}" {{.KINDS}}
+
+  live-sweep:
+    desc: 'Delete live-test leftovers older than 2h, or everything of RUN=<id>: task live-sweep PROJECT=<project> [RUN=<id>].'
+    requires:
+      vars: [PROJECT]
+    cmds:
+      - hack/live/sweep.sh --project "{{.PROJECT}}"{{if .RUN}} --run "{{.RUN}}"{{end}}
+
+  live-list:
+    desc: 'List every live-test resource in PROJECT: task live-list PROJECT=<project>.'
+    requires:
+      vars: [PROJECT]
+    cmds:
+      - hack/live/sweep.sh --project "{{.PROJECT}}" --list
+
+  # Everything that must hold before a commit: the checkout is the pin plus
+  # our patches, generated files are current, code is formatted and vetted,
+  # it builds, and the tests pass.
+  check:
+    desc: Pin, generated files current, gofmt, vet, SPDX lines, build, tests against the fake cloud.
+    cmds:
+      - task: upstream-check
+      - task: go:fmt-check
+        vars: {DIRS: apis cmd pkg}
+      - hack/generate.sh
+      - task: go:committed
+        vars: {PATHS: apis config, WHAT: generated files}
+      - go vet ./...
+      - go vet -tags fakecloud ./cmd/manager
+      - hack/check-no-fake-cloud.sh
+      - hack/check-spdx.sh
+      - task: build
+      - task: test-mock
+
+  # The fake cloud: kind, Config Connector's CRDs and ours, and
+  # bin/fakecloud (Config Connector's manager and ours against mockgcp).
+  # docs/fake-cloud.md.
+  fake-cloud-up:
+    desc: kind, the CRDs and bin/fakecloud (docs/fake-cloud.md).
+    cmds:
+      - task: upstream-check
+      - mkdir -p "{{.BIN}}"
+      - go build -o "{{.BIN}}/fakecloud" ./cmd/fakecloud
+      - hack/fake-cloud/up.sh
+
+  fake-cloud-test:
+    desc: Apply the sample resources to the fake cloud and wait for Ready.
+    cmds:
+      - hack/fake-cloud/test.sh
+
+  fake-cloud-down:
+    desc: Stop the fake cloud and delete the cluster.
+    cmds:
+      - hack/fake-cloud/down.sh
+
+  # The operator on kind with the in-cluster fake cloud: images by ko, Config
+  # Connector's operator footprint made by hand. tests/operator/run.sh.
+  operator-e2e:
+    desc: The operator on kind with the in-cluster fake cloud (tests/operator/run.sh).
+    cmds:
+      - task: upstream-check
+      - NAME="{{.NAME}}" tests/operator/run.sh
+
+  # docs/third-party-licenses.csv from go-licenses; fails on a licence outside
+  # Apache-2.0, MIT, BSD, ISC and MPL-2.0. Needs go-licenses on PATH.
+  licenses:
+    desc: Write docs/third-party-licenses.csv; fail on a licence outside the accepted set (needs go-licenses on PATH).
+    cmds:
+      - task: upstream-check
+      - hack/licenses.sh
+
+  clean:
+    desc: Remove bin/.
+    cmds:
+      - rm -rf "{{.BIN}}"

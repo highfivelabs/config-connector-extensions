@@ -39,39 +39,37 @@ coordinator):
   `IAMPolicyMember` stays the default in everything we write; rank 2 is
   built in the **additive** (non-authoritative) form.
 
-1. **`IAMRoleBinding` (rank 1), then the additive IAM kind (rank 2).**
-   Not started. One PR each, `IAMRoleBinding` first. Pointers: design.md
-   6.5 ranks 1 and 2 and section 10 question 1 (the recommendation and why
-   `IAMPolicyBinding` was not used: upstream PR #14133 is IAM v3's
-   principal access boundary `PolicyBinding`); Config Connector's
-   `IAMPolicyMember`, `IAMPartialPolicy` and `IAMPolicy` (in
-   `third_party/k8s-config-connector`, `pkg/controller/iam/` and the IAM
-   client code it uses) are the nearest upstream code to copy from;
-   Terraform's `google_*_iam_binding` (authoritative per role) and
-   `google_*_iam_member` (additive) are the behaviour to read. Rank 2 is
-   "IAM on the 32 resource types `IAMPolicyMember` cannot reference" (the
-   list is in the catalog's inventory, `highfivelabs/catalog`
-   `docs/gcp-inventory.md`, read-only). Pick a working name for the
-   additive kind, record it in design.md as an assumption, and keep a
-   rename cheap (one place for the kind name; no name baked into
-   identities or annotations); the coordinator takes the name to the
-   builder. Each needs a live run (below).
+1. **`IAMRoleBinding` (rank 1) is built; the additive IAM kind (rank 2)
+   is next.** `IAMRoleBinding` (this PR): `pkg/iampolicy` is the shared
+   engine (a table of resource types in `registry.go`, a policy client,
+   the binding rules in `bindings.go` with `SetMembers` authoritative and
+   `AddMembers`/`RemoveMembers` additive, and `Resolve` for a
+   `resourceRef`); `pkg/controller/direct/iam/policy_common.go` is the
+   plumbing a second kind reuses. The additive kind needs only: types
+   (`apis/iam/v1alpha1`, one `member`/`memberFrom` and `role`, shaped like
+   `IAMPolicyMember`, reusing `IAMResourceReference` and `IAMCondition`),
+   a controller (`AddMembers` on create/update, `RemoveMembers` on delete,
+   `Find` = the member is in the binding), a test, the `iamrefs` member
+   reference, and registry rows for the rank-2 resource types (the 32 in
+   `highfivelabs/catalog` `docs/gcp-inventory.md`, which are the
+   `NotInIAMPolicyMember` rows plus those without a Config Connector kind:
+   managed folders (Storage protocol, patch 0018 already serves them),
+   log views, Cloud Run worker pools and jobs, Cloud Functions, and so
+   on; compute resources need a third protocol, since Compute Engine's
+   `getIamPolicy` is GET with `optionsRequestedPolicyVersion` and its
+   `setIamPolicy` body is `{bindings, etag, policy}`). Working name to
+   propose to the builder: **`IAMRoleMember`** (one member of one role on
+   one resource; pairs with `IAMRoleBinding`); record it in design.md
+   section 10 as a question with that recommendation, keep the kind name
+   in the one `GVK` var. Cut it from main after this PR merges. Live test
+   members must be service accounts of the project (an organization
+   policy refuses `projectOwner:` and similar on secrets).
 
-2. **Taskfile instead of make.** Not started; do it after the in-flight
-   PRs merge, as one dedicated PR. Replace the `Makefile` with
-   `Taskfile.yml` keeping the task names (`check`, `operator-e2e`,
-   `test-mock`, `test-live`, `live-sweep`, `live-list`, `upstream`,
-   `upstream-check`, `tools`, `generate`, and the rest), and update
-   `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, the docs and the
-   live-runs page (the ledger keeps its history; new rows say `task`).
-   Put the tasks other repositories could share in a separate common
-   Taskfile that this one includes, and in the PR recommend how to share
-   it across repositories (Task's remote includes from a private
-   repository, or a vendored copy with a sync script), with the trade-offs.
-   Do not create a GitHub repository; say what is needed and the
-   coordinator asks the builder. The offload VM image is said to have
-   `task` installed: verify that first, then use `task check` in offload
-   `--step`s from then on.
+2. **Taskfile instead of make.** Done in this PR: `Taskfile.yml`, the
+   shared `taskfiles/go.yml` (the one ack-extensions has, plus the optional
+   `CMD` variable on `go:test-envtest`), `taskfiles/README.md` (how to
+   share it across repositories). The task names are unchanged and
+   `task test-live PROJECT=... KINDS=...` takes the same arguments.
 
 3. **`LoggingSettings` live.** Built and merged; the test and the sweeper
    are ready (`mockenv.LoggingFolder`, `mockenv.LoggingKMSKey` in
@@ -133,22 +131,21 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 **offload.** From the repository root:
 
 ```sh
-../offload/offload run --hours 3 --step 'make upstream' --step 'make check' --step 'make operator-e2e'
+../offload/offload run --hours 3 --prep 'task upstream' --step-skippable 'task check' --step 'task operator-e2e'
 ../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 \
-  --step 'make upstream && make check' \
-  --step 'make upstream && make test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
+  --prep 'task upstream' --step-skippable 'task check' \
+  --step 'task test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
 ```
 
-- **Batch `make upstream` into every step that needs it.** When a Spot VM
-  is preempted, offload resumes the run on a fresh VM and skips the steps
-  that passed, `make upstream` included, so the next step finds no
-  `third_party/k8s-config-connector` ("is missing; run hack/upstream.sh")
-  and fails at once. `make upstream && make test-live ...` in one step
-  survives a resume.
+- **Put `task upstream` in a `--prep`.** `third_party` is gitignored and
+  not uploaded, so every fresh VM needs it again; `--prep` steps rerun on
+  every attempt, `--step-skippable` ones (`task check`) do not. There is
+  no `tools` prep to add: `task tools` also fetches setup-envtest, which
+  the tasks that need it do themselves.
 - **After a preempted live run, sweep it.** The live run's own sweep only
   takes leftovers older than 2h. Sweep the interrupted run by ID before
   the next run:
-  `--step 'make live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
+  `--step 'task live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
 - **Start offload with the tool's background mode**, never with a shell
   `&`: a shell-backgrounded offload dies with the shell and orphans its
   VM. If that happens, `../offload/offload ls`, then

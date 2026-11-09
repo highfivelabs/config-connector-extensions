@@ -15,8 +15,8 @@ The end-to-end tests are built on `pkg/test/mockenv`, which reads
 
 | `E2E_GCP_TARGET` | Google Cloud is | Set by |
 | --- | --- | --- |
-| unset or `mock` | mockgcp, in process, with our patches | `make test`, `make test-mock`, `make check` (which force `mock`) |
-| `real` | the project in `GCP_PROJECT_ID`, with Application Default Credentials | `make test-live` only |
+| unset or `mock` | mockgcp, in process, with our patches | `task test`, `task test-mock`, `task check` (which force `mock`) |
+| `real` | the project in `GCP_PROJECT_ID`, with Application Default Credentials | `task test-live` only |
 
 The test code is the same for both. What differs is data, all in
 `pkg/test/mockenv/target.go`:
@@ -37,12 +37,12 @@ Requests are recorded in both modes, so checks on what the controller sent
 ## Running it
 
 ```sh
-make test-mock                                  # the default; what make check runs
-make test-live PROJECT=hfl-dev-514205           # every built kind, mock then live
-make test-live PROJECT=hfl-dev-514205 KINDS=sql # one kind (a package under pkg/controller/direct)
-make live-sweep PROJECT=hfl-dev-514205          # delete leftovers older than 2h
-make live-sweep PROJECT=hfl-dev-514205 RUN=cce-11091530-a3f2   # everything of one run
-make live-list PROJECT=hfl-dev-514205           # list every live-test resource
+task test-mock                                  # the default; what task check runs
+task test-live PROJECT=hfl-dev-514205           # every built kind, mock then live
+task test-live PROJECT=hfl-dev-514205 KINDS=sql # one kind (a package under pkg/controller/direct)
+task live-sweep PROJECT=hfl-dev-514205          # delete leftovers older than 2h
+task live-sweep PROJECT=hfl-dev-514205 RUN=cce-11091530-a3f2   # everything of one run
+task live-list PROJECT=hfl-dev-514205           # list every live-test resource
 ```
 
 Live runs happen on a short-lived Spot VM that runs as a dedicated
@@ -50,10 +50,10 @@ service account, never on a laptop and never with a downloaded key:
 
 ```sh
 ../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 -- \
-  bash -c 'make upstream && make test-live PROJECT=hfl-dev-514205'
+  bash -c 'task upstream && task test-live PROJECT=hfl-dev-514205'
 ```
 
-`hack/live/run.sh` (what `make test-live` runs):
+`hack/live/run.sh` (what `task test-live` runs):
 
 1. refuses any project not in `hack/live/projects.sh` and any credentials
    that are not a service account;
@@ -111,7 +111,7 @@ A kind is not done until it has one live run in the ledger below:
    resources included.
 2. The sweeper knows its resource type (`hack/live/sweep.sh`), and the
    service account has the role it needs.
-3. `make test-live PROJECT=hfl-dev-514205 KINDS=<package>` on an offload VM.
+3. `task test-live PROJECT=hfl-dev-514205 KINDS=<package>` on an offload VM.
 4. A row per kind below. A difference between mock and live is fixed where
    it belongs: in our controller (with a test), or in mockgcp (a patch in
    `patches/k8s-config-connector/`), or written down in `docs/fake-cloud.md`
@@ -166,6 +166,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | `c459e36`+ | RunService | PASS | FAIL | without a GPU, create, a new image, delete and abandon pass; a resync with an unchanged spec sent a `template` update, and turning invoker IAM back on carried `template` too | 2 services (deleted) |
 | 2026-11-09 | `58d6ade` | RunService | PASS | FAIL | the same, now with the cloud's template printed: the API gives each container an http1 port 8080 and a TCP startup probe the spec leaves out. Fixed in the controller and in patch 0008 | 2 services (deleted) |
 | 2026-11-09 | `aee1155` | RunService | PASS | PASS | none, with the default port and startup probe taken from what was read (no GPU live: no quota) | 2 services (deleted); `make live-list` empty |
+| 2026-11-09 | `a3b6b51` | IAMRoleBinding | PASS | PASS | the project's organization refuses `projectOwner:` and the like as members of a secret's policy ("invalid due to membership type restrictions"; mockgcp accepts any member), so the test binds the project's service accounts; secret policy (global), bucket policy (Cloud Storage JSON API), a conditional binding and the same role without it, a member added out of band removed, delete and abandon all match patch 0018 and the fake | 1 secret, 1 bucket (deleted); `task live-list` empty |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -195,9 +196,9 @@ Log Router service account (`kmsServiceAccountId` in the folder's
 settings) has `roles/cloudkms.cryptoKeyEncrypterDecrypter`. Settings
 cannot be deleted, so the test puts the folder's back as it found them;
 there is nothing for the sweeper. Then:
-`E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... make test-live PROJECT=hfl-dev-514205 KINDS=logging`.
+`E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... task test-live PROJECT=hfl-dev-514205 KINDS=logging`.
 
-Every run ended with `make live-list` empty (run `cce-11091348-ef59`:
+Every run ended with `task live-list` empty (run `cce-11091348-ef59`:
 "0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,
 roughly: five db-f1-micro instances for 25 to 40 minutes each (well under
 $0.50 together), Spot VMs of 4 to 8 vCPUs for about 4 VM-hours (about

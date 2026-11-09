@@ -35,6 +35,7 @@ import (
 	"time"
 
 	api "google.golang.org/api/iam/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
@@ -138,3 +139,7 @@ func waitIAM(env *mockenv.Env, cloud *api.Service, op *api.Operation) error {
 	}
 	return nil
 }
+
+// secretManagerSecretGVK is Config Connector's SecretManagerSecret, which
+// the IAM binding test names by name (it is not reconciled there).
+var secretManagerSecretGVK = schema.GroupVersionKind{Group: "secretmanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "SecretManagerSecret"}

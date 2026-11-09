@@ -1,0 +1,62 @@
+config-connector-extensions patch 0018: mockgcp serves Cloud Storage's bucket IAM policy.
+
+For iam.gcp.hfl.dev IAMRoleBinding on a StorageBucket. Cloud Storage's JSON
+API reads and writes a policy with GET and PUT on /storage/v1/b/{bucket}/iam
+(and on a managed folder's /iam), not the :getIamPolicy verbs mockgcp
+already serves for every other service. They are now served from the same
+per-resource store: the PUT body is the policy itself, the etag is checked,
+and the store does not know whether the bucket exists.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockgcp_http.go b/mockgcp/mockgcp_http.go
+index eff79f7..052a254 100644
+--- a/mockgcp/mockgcp_http.go
++++ b/mockgcp/mockgcp_http.go
+@@ -303,6 +303,37 @@ func (m *mockRoundTripper) roundTripIAMPolicy(req *http.Request) (*http.Response
+ 	}
+ }
+ 
++// storageIAMPath matches Cloud Storage's JSON API policy paths, which are
++// GET and PUT on {bucket or managed folder}/iam, not the :getIamPolicy
++// verbs: /storage/v1/b/{bucket}/iam and
++// /storage/v1/b/{bucket}/managedFolders/{folder}/iam.
++var storageIAMPath = regexp.MustCompile(`^/storage/v1/b/[^/]+(/managedFolders/.+)?/iam$`)
++
++// roundTripStorageIAMPolicy serves those paths from the same store as the
++// verbs, so a policy is kept per resource and a read sees the last write.
++// The JSON API's policy is the body itself, where :setIamPolicy wraps it
++// in {"policy": ...}.
++func (m *mockRoundTripper) roundTripStorageIAMPolicy(req *http.Request) (*http.Response, error) {
++	resourcePath := req.URL.Host + strings.TrimSuffix(req.URL.Path, "/iam")
++	switch req.Method {
++	case "GET":
++		return m.iamPolicies.serveGetIAMPolicy(resourcePath)
++	case "PUT":
++		policy, err := io.ReadAll(req.Body)
++		if err != nil {
++			return nil, err
++		}
++		wrapped := *req
++		wrapped.Body = io.NopCloser(strings.NewReader(`{"policy":` + string(policy) + `}`))
++		return m.iamPolicies.serveSetIAMPolicy(resourcePath, &wrapped)
++	}
++	return &http.Response{
++		StatusCode: http.StatusMethodNotAllowed,
++		Status:     "method not supported",
++		Body:       io.NopCloser(strings.NewReader("{}")),
++	}, nil
++}
++
+ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+ 	klog.Infof("mockgcp request: %v %v", req.Method, req.URL)
+ 
+@@ -310,6 +341,9 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
+ 	if strings.HasSuffix(requestPath, ":getIamPolicy") || strings.HasSuffix(requestPath, ":setIamPolicy") {
+ 		return m.roundTripIAMPolicy(req)
+ 	}
++	if req.URL.Host == "storage.googleapis.com" && storageIAMPath.MatchString(requestPath) {
++		return m.roundTripStorageIAMPolicy(req)
++	}
+ 
+ 	var mux http.Handler
+ 	for _, service := range m.services {

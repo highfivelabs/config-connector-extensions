@@ -214,6 +214,7 @@ The kinds:
 | `logging.gcp.hfl.dev/v1alpha1` `LoggingSettings` | an organization's or folder's Log Router settings: the CMEK key, the default log bucket location, the `_Default` sink off for new projects; in no Config Connector code (one closed scaffold PR) | written here from the Cloud Logging API |
 | `compute.gcp.hfl.dev/v1alpha1` `ComputeProjectMetadataItem` | one key of a project's common instance metadata (for example `enable-oslogin`), leaving the other keys alone; Config Connector's `ComputeProjectMetadata` owns the whole metadata | written here after Terraform's `google_compute_project_metadata_item` |
 | `artifactregistry.gcp.hfl.dev/v1alpha1` `ArtifactRegistryTag` | a tag on a package's version (for example `prod` on an image digest), moved by changing `spec.version`; in no Config Connector code, pull request or Terraform resource | written here from the Artifact Registry API |
+| `iam.gcp.hfl.dev/v1alpha1` `IAMRoleBinding` | one role on one resource with its members, authoritative for that role (Terraform's `google_*_iam_binding`): members added out of band are removed; Config Connector's `IAMPolicyMember` is additive and `IAMPartialPolicy` keeps what it lists | written here (`pkg/iampolicy`), reading and writing the policy over HTTP |
 
 ## Where it sits
 
@@ -322,20 +323,20 @@ writing every Secret in cluster mode. `docs/design.md` sections 9.2 and
 ## Developing it
 
 ```sh
-make upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
-make check      # pin check, generated files current, gofmt, vet, build, tests
-make build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
-make operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
-make test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
-hack/coverage/run.sh   # regenerate the Coverage section and docs/coverage/ (--check to verify)
+task upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
+task check      # pin check, generated files current, gofmt, vet, build, tests
+task build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
+task operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
+task test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
+task coverage   # regenerate the Coverage section and docs/coverage/ (task coverage-check to verify)
 ```
 
-`make test` (also `make test-mock`) runs each kind end to end: a real
+`task test` (also `task test-mock`) runs each kind end to end: a real
 kube-apiserver (envtest), Config Connector's direct reconciler, our
 adapters, and Config Connector's mockgcp as a fake Google Cloud
 (`pkg/test/mockenv`); and the operator against envtest. No real Google
 Cloud and no recordings. With `E2E_GCP_TARGET=real`, which only
-`make test-live` sets, the same tests run against a real project; every
+`task test-live` sets, the same tests run against a real project; every
 kind has been run that way at least once (the ledger in
 `docs/live-runs.md`).
 

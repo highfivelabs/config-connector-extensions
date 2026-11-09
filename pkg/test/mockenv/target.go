@@ -19,7 +19,7 @@ package mockenv
 // against either; Config Connector's own harness uses the same variable
 // (E2E_GCP_TARGET=mock|real in config/tests/samples/create/harness.go) and
 // GCP_PROJECT_ID for the real project (pkg/test/gcp). hack/live/run.sh
-// (make test-live) is the only thing that sets the real target; it also
+// (task test-live) is the only thing that sets the real target; it also
 // creates what a run shares (a Cloud SQL instance) and sweeps afterwards.
 // docs/live-runs.md.
 
@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	// TargetMock is mockgcp, in process: the default, what make check runs.
+	// TargetMock is mockgcp, in process: the default, what task check runs.
 	TargetMock = "mock"
 	// TargetReal is the Google Cloud project in GCP_PROJECT_ID, with
 	// Application Default Credentials.
@@ -107,10 +107,10 @@ func checkTarget(t *testing.T) {
 	case TargetMock:
 	case TargetReal:
 		if Project == "" {
-			t.Fatal("E2E_GCP_TARGET=real needs GCP_PROJECT_ID; run `make test-live PROJECT=...`")
+			t.Fatal("E2E_GCP_TARGET=real needs GCP_PROJECT_ID; run `task test-live PROJECT=...`")
 		}
 		if RunID == "" {
-			t.Fatal("E2E_GCP_TARGET=real needs E2E_RUN_ID (the run's name prefix and label); run `make test-live PROJECT=...`")
+			t.Fatal("E2E_GCP_TARGET=real needs E2E_RUN_ID (the run's name prefix and label); run `task test-live PROJECT=...`")
 		}
 		t.Logf("target: real project %s, run %s", Project, RunID)
 	default:

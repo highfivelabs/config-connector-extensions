@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has sixteen kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has seventeen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -10,7 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings` and `ComputeProjectMetadataItem` (section 6). Each
+`LoggingSettings`, `ComputeProjectMetadataItem` and `IAMRoleBinding`
+(section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -164,7 +165,7 @@ When `hack/upstream-pr.sh` reports `databaseRoles` live:
 3. Re-apply our differences as small edits: revoke on removal
    (`revokeExistingRoles`) if the PR adds without revoking, and
    `status.appliedDatabaseRoles` if the API is shown not to return roles.
-4. `make check`; the mockgcp test must still pass unchanged.
+4. `task check`; the mockgcp test must still pass unchanged.
 
 Refreshing later is the same steps against the newer head; once the PR
 merges, retire the kind instead ("Retiring a gap kind").
@@ -196,7 +197,7 @@ commit at or after that release.
 - `hack/generate.sh` is Config Connector's `dev/tasks/generate-crds` for
   our tree: controller-gen v0.16.5 (`object` and `crd`), then Config
   Connector's own `scripts/add-validation-to-crds` and `scripts/crd-tools`
-  run from the pinned checkout. `make check` fails if its output differs
+  run from the pinned checkout. `task check` fails if its output differs
   from what is committed.
 - For proto-backed kinds, run Config Connector's `controllerbuilder`
   (`generate-types`, `generate-mapper`) from the checkout against the
@@ -231,7 +232,7 @@ here.
   `ONLY_UPSTREAM=1` the script reproduces upstream's committed generated
   files byte for byte, which is how we know the patch is only our fields.
 - **Patch 0002**: mockgcp listens on `127.0.0.2`, which macOS does not
-  have; `MOCKGCP_LISTEN_ADDRESS` overrides it, and the Makefile sets it.
+  have; `MOCKGCP_LISTEN_ADDRESS` overrides it, and the Taskfile sets it.
 - **The test** (`pkg/controller/direct/sql/sqluser_mockgcp_test.go`) runs
   a real kube-apiserver and etcd (envtest, Kubernetes 1.33), our manager
   code (Config Connector's direct reconciler and deletion defender with
@@ -239,7 +240,7 @@ here.
   application's service account as a `CLOUD_IAM_SERVICE_ACCOUNT` user with
   `cloudsqlsuperuser`, then adds a role, removes one, and deletes, reading
   the fake cloud after each step through the real `sqladmin` client.
-- **Results** (2026-11-07, `make check`, macOS arm64, Go 1.27.1):
+- **Results** (2026-11-07, `task check`, macOS arm64, Go 1.27.1):
 
   ```text
   ok: third_party/k8s-config-connector is 672414b8191fc2d2c12fff53f6faccf5ae291eef plus 2 patch(es)
@@ -256,8 +257,8 @@ here.
   controller and failed as it should ("cloud roles = [cloudsqlsuperuser
   pg_read_all_data], want [pg_read_all_data]").
 - **Live runs** (`docs/live-runs.md`). The same tests run against a real
-  project with `E2E_GCP_TARGET=real` (`make test-live`, on an offload VM as
-  a least-privilege service account, never from `make check`). The ledger
+  project with `E2E_GCP_TARGET=real` (`task test-live`, on an offload VM as
+  a least-privilege service account, never from `task check`). The ledger
   there records each run, which kinds have passed live, and what differed
   from mockgcp. Found live on 2026-11-09:
   - `users.get` does return `databaseRoles`, and inserts, adds and
@@ -423,7 +424,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   under a regional secret, which the PR's mock never names. The PR's mock
   serves only `us-central1`'s regional endpoint; other regions need their
   hosts added.
-- Tests (`make test`, macOS arm64, Go 1.27.1, 2026-11-07):
+- Tests (`task test`, macOS arm64, Go 1.27.1, 2026-11-07):
 
   ```text
   --- PASS: TestSQLAdminBackup (10.10s)
@@ -480,7 +481,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   With the mapper's read-back of the Docker `customRepository` removed,
   the fuzz test and "a resync sends no update" fail (the controller sends
   an update that mockgcp refuses), so the round trip is what they check.
-- `make check` and `make operator-e2e` on a Linux amd64 VM (16 CPUs, Go
+- `task check` and `task operator-e2e` on a Linux amd64 VM (16 CPUs, Go
   1.27.3, kind 0.27.0, ko 0.19.1, kustomize 5.7.1), 2026-11-09: both pass.
   Every package's tests pass, the artifactregistry package's included; the
   operator installs `artifactregistryrepositories.artifactregistry.gcp.hfl.dev`
@@ -634,8 +635,8 @@ this repository's rules (6.1, decision 5, section 10).
 
 | Rank | Gap | Modules | Upstream (2026-11-09) | Here |
 | ---: | --- | ---: | --- | --- |
-| 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | question (section 10, question 1) |
-| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
+| 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | built (2026-11-09), as `IAMRoleBinding` (decision 12) |
+| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | next: an additive kind over the same resource table as `IAMRoleBinding`; `IAMRoleBinding` already accepts a regional secret |
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
@@ -738,6 +739,49 @@ Notes on what was built from this table:
   no patch.
   Live: passes, with `roles/iam.serviceAccountUser` on the project
   (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
+- `IAMRoleBinding` (`iam.gcp.hfl.dev/v1alpha1`, rank 1). **Written here**:
+  `resourceRef` (`kind`, `name` or `external`, shaped like
+  `IAMPolicyMember`'s), `role`, `condition` (title, description,
+  expression), `members` (strings as the API writes them) and
+  `membersFrom[].serviceAccountRef`. It owns one role under one condition
+  on one resource: members added out of band are removed at the next
+  reconcile, every other role (and the same role under another condition),
+  the audit configs and the etag are carried through unchanged, and delete
+  removes only that binding (`deletion-policy: abandon` leaves it).
+  `resourceRef`, `role` and `condition` are immutable (CEL). Two objects
+  for the same role, condition and resource would overwrite each other, as
+  two Terraform `google_*_iam_binding`s do.
+  The controller does not use Config Connector's IAM client, which needs
+  the Terraform provider and service mappings this manager does not load
+  (section 2.1). `pkg/iampolicy` reads and writes a policy over HTTP: one
+  table of resource types (`registry.go`) says, for each `kind`, the API
+  host and version, whether the policy is read with GET or POST, the
+  pattern of the resource's full name, how a bare ID becomes one
+  (`external`) and how a referenced object becomes one (`name`: its
+  `status.externalRef` when it sets it, else the project, `spec.location`
+  and `spec.resourceID` or the object's name). Two protocols: the
+  `google.iam.v1` mixin (`{resource}:getIamPolicy`, `:setIamPolicy`) and
+  Cloud Storage's `GET`/`PUT .../iam`. The policy is read at version 3,
+  changed, and written back with its etag; a 409 or 412 reads and tries
+  again (five times). A member is compared as the API writes it (the
+  address of a `user:`, `group:`, `serviceAccount:` or `domain:` member is
+  lower-cased), in any order. A referenced object that is missing is "not
+  found", one whose Ready condition is not True is "not ready", and the
+  reconciler waits and retries; while the binding is being deleted, a
+  missing object means there is nothing to remove. A kind that is not in
+  the table is refused with the list of kinds.
+  Kinds in the table (2026-11-09): `Project`, `Folder`, `Organization`,
+  `IAMServiceAccount`, `StorageBucket`, `SecretManagerSecret` (global and
+  regional; not in `IAMPolicyMember`), `ArtifactRegistryRepository`,
+  `RunService`, `PubSubTopic`, `PubSubSubscription`, `KMSKeyRing`,
+  `KMSCryptoKey`. A `Folder`, `Organization` or `KMSCryptoKey` is named by
+  `external`; the others also by `name`. The table grows by one row per
+  resource type, with no change to the kind. `logSinkRef`,
+  `sqlInstanceRef` and the other `memberFrom` sources of `IAMPolicyMember`
+  are not offered; `members` takes the address.
+  Patch 0018: mockgcp serves Cloud Storage's `.../iam` paths from the
+  store it already keeps for the `:getIamPolicy` verbs.
+  Live: passes, on a secret and a bucket (`docs/live-runs.md`).
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
@@ -779,7 +823,7 @@ To raise confidence in the kinds:
 Housekeeping:
 
 11. Done: the SQLUser test runs on `pkg/test/mockenv`, so it runs live too.
-12. CI: `make check` on Linux (the 127.0.0.2 default then works without
+12. CI: `task check` on Linux (the 127.0.0.2 default then works without
     patch 0002, but the patch stays harmless).
 13. `tests/operator/run.sh` does not clean the fake cloud on a reused kind
     cluster; run it on a fresh one.
@@ -835,6 +879,13 @@ To raise confidence in `ArtifactRegistryRepository`:
 25. `ComputeProjectMetadataItem`: the 412 retry is not exercised by the
     fake (its writers do not race the way real ones can); the default
     network tier and default service accounts, rank 10's other parts.
+26. `IAMRoleBinding`: the other resource types in IAM's catalog of 32
+    (rank 2), each a row in `pkg/iampolicy/registry.go` that needs a live
+    run for its API's quirks (compute resources use a different request
+    shape; a BigQuery dataset has no IAM policy, only `access`); `memberFrom`
+    sources beyond a service account; and a check that the policy's etag
+    conflict is seen live (the fake serves 409; the API's real answer is
+    409 for most services and 412 for Compute Engine).
 
 ## 8. Decisions
 
@@ -859,7 +910,7 @@ To raise confidence in `ArtifactRegistryRepository`:
      only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
    - A production build has no such flag and refuses to start with it
      ("flag provided but not defined").
-   - `hack/check-no-fake-cloud.sh`, run by `make check`, fails if the
+   - `hack/check-no-fake-cloud.sh`, run by `task check`, fails if the
      default build links `pkg/fakecloud` or shows the flag.
    - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
 7. **Licence**: Apache-2.0 (`LICENSE`, `NOTICE`).
@@ -899,6 +950,17 @@ To raise confidence in `ArtifactRegistryRepository`:
       that needs `invokerIamDisabled` or a GPU moves its service to this
       kind (acquire by `resourceID`, delete the Config Connector object with
       `deletion-policy: abandon`); others stay on Config Connector's.
+12. **Role-authoritative IAM is `IAMRoleBinding`** (the builder,
+    2026-11-09, through the coordinator: "sounds like the right name").
+    `iam.gcp.hfl.dev/v1alpha1`: one role, an optional condition and a
+    list of members on one resource, authoritative for that role and
+    condition. `IAMPolicyBinding`, the catalog's suggestion, is not used:
+    Config Connector's open PR #14133 gives it to IAM v3's principal
+    access boundary `PolicyBinding`. The builder's preference is the
+    non-authoritative form ("I think I would prefer the non-authoritative,
+    but that's fine if authoritative is what you've built"), so Config
+    Connector's `IAMPolicyMember` stays the default in everything written
+    here, and rank 2 is built additive (section 6.5).
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -1025,7 +1087,7 @@ contexts exist.
 
 ### 9.3 What was proven (2026-11-07)
 
-`pkg/operator` against envtest (`make test`): cluster mode with Workload
+`pkg/operator` against envtest (`task test`): cluster mode with Workload
 Identity (its own service account with Config Connector's annotation,
 bound to our roles; Config Connector's service account left unchanged)
 and with a key (the same Secret, no annotation); the switch to namespaced
@@ -1039,7 +1101,7 @@ Connector's service account, on the `ConfigConnector` object and back; the
 own; an unknown identity refused; no manager before Config Connector's
 service account exists; Config Connector without its operator.
 
-`tests/operator/run.sh` (`make operator-e2e`) on kind 0.33 (Kubernetes
+`tests/operator/run.sh` (`task operator-e2e`) on kind 0.33 (Kubernetes
 1.37) with the in-cluster fake cloud (`cmd/fakegcp`; managers get
 `--fake-cloud-url`, which loads no Google credentials and since section
 9.4 exists only in builds with `-tags fakecloud`), images built by ko
@@ -1132,20 +1194,7 @@ nothing from this project.
 A question for the builder goes here, with a recommendation; the answer
 moves to section 8.
 
-1. **What to name role-authoritative IAM (6.5, rank 1)?** (2026-11-09)
-   The seed catalog suggests `IAMPolicyBinding`: a resource, a role and
-   its members (and an optional condition), owning that role on the
-   resource, as Terraform's `google_*_iam_binding` does, which 43 fabric
-   modules use. But Config Connector's open PR #14133 adds an
-   `iam.cnrm.cloud.google.com` `IAMPolicyBinding` for a different
-   resource, IAM v3's `PolicyBinding` (principal access boundary
-   policies). The same kind name in two groups would make `kubectl get
-   iampolicybinding` ambiguous, and our rule of retiring a kind when
-   upstream ships it would point at the wrong thing. Recommendation: name
-   ours `iam.gcp.hfl.dev/v1alpha1` `IAMRoleBinding`, copying the resource
-   reference and the get/set IAM policy flow from Config Connector's
-   `IAMPartialPolicy`, and let rank 2 (IAM on the 32 resource types
-   `IAMPolicyMember` cannot reference) be resource types it accepts.
+1. Answered 2026-11-09: the kind is `IAMRoleBinding` (decision 12).
 
 2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows

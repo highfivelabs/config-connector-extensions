@@ -22,18 +22,22 @@ author.
 
 Everything runs against a fake Google Cloud (Config Connector's mockgcp);
 no real project or credentials are needed. The same end-to-end tests also
-run against a real project, but only through `make test-live`, by a
+run against a real project, but only through `task test-live`, by a
 maintainer, in a project set aside for it (`docs/live-runs.md`).
 
+Install [Task](https://taskfile.dev) (`brew install go-task`, or
+`go install github.com/go-task/task/v3/cmd/task@latest`); `task` lists the
+tasks. The shared ones are in `taskfiles/` (`taskfiles/README.md`).
+
 ```sh
-make upstream      # once: Config Connector at the pin (~650 MB) plus patches/
-make check         # pin, go.mod pins, generated files, gofmt, vet, SPDX lines, build, tests
-make operator-e2e  # the operator on a fresh kind cluster with the in-cluster fake cloud
-make fake-cloud-up && make fake-cloud-test && make fake-cloud-down
+task upstream      # once: Config Connector at the pin (~650 MB) plus patches/
+task check         # pin, go.mod pins, generated files, gofmt, vet, SPDX lines, build, tests
+task operator-e2e  # the operator on a fresh kind cluster with the in-cluster fake cloud
+task fake-cloud-up && task fake-cloud-test && task fake-cloud-down
                    # Config Connector's manager and ours against mockgcp on kind
 ```
 
-`make check` must pass before a pull request. Each new kind needs an
+`task check` must pass before a pull request. Each new kind needs an
 end-to-end test on `pkg/test/mockenv` (a real kube-apiserver, Config
 Connector's direct reconciler, and mockgcp) covering create, update,
 delete and `deletion-policy: abandon`. If mockgcp lacks the API, extend it
@@ -44,8 +48,8 @@ deleted): a kind is done after one live run is recorded in
 `docs/live-runs.md`.
 
 A new, changed or retired kind, or a moved Config Connector pin, changes the
-numbers in the README's Coverage section: run `hack/coverage/run.sh` and commit
-`docs/coverage/` and `README.md` with it (`hack/coverage/run.sh --check` tells
+numbers in the README's Coverage section: run `task coverage` (`hack/coverage/run.sh`) and commit
+`docs/coverage/` and `README.md` with it (`task coverage-check` tells
 you whether you need to; `docs/coverage/README.md` says how it works).
 
 Generated files (`config/crds/`, `zz_generated.deepcopy.go`) come from

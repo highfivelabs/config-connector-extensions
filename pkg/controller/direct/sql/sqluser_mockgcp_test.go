@@ -19,9 +19,9 @@ package sql_test
 // kube-apiserver (envtest), Config Connector's unchanged direct reconciler,
 // our SQLUser adapter, and Config Connector's mockgcp (with our
 // database_roles patch) as Cloud SQL; or a real project's Cloud SQL with
-// E2E_GCP_TARGET=real (make test-live).
+// E2E_GCP_TARGET=real (task test-live).
 //
-// Needs KUBEBUILDER_ASSETS (make test sets it).
+// Needs KUBEBUILDER_ASSETS (task test sets it).
 
 import (
 	"errors"
