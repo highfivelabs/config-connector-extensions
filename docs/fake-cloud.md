@@ -90,7 +90,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   Cloud Storage's own `.../iam` paths are served from the same store.
   Compute Engine's `GET .../getIamPolicy` and `POST .../setIamPolicy`
   (patch 0019, ours, for `IAMRoleBinding` and `IAMRoleMember`) are served
-  from it too. What the store cannot show: a role that does not apply to
+  from it too. The store's etag check and write are atomic (patch 0019; before it, two
+  writers that read the same policy both passed the check and the later one
+  replaced the earlier). What the store cannot show: a role that does not apply to
   the resource (`roles/viewer` on a managed folder), a member the
   resource's organization refuses, a managed folder that does not exist,
   and each service's own choice of GET or POST for the read, its API

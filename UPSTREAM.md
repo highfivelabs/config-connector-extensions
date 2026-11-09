@@ -111,7 +111,7 @@ flattening all three, 2026-11-08).
 | `0016-mockgcp-artifactregistry-remote-source-immutable.patch` | written here, on 0005: an update of `remoteRepositoryConfig` fails with the API's own error, "Remote source configuartion cannot be updated" (a live run, `docs/live-runs.md`), not mockgcp's "not supported" | yes |
 | `0017-mockgcp-logging-settings.patch` | written here: mockgcp serves Log Router settings (get, update with a mask) for organizations and folders | yes |
 | `0018-mockgcp-storage-iam-policy.patch` | written here: mockgcp serves Cloud Storage's `GET`/`PUT /storage/v1/b/{bucket}/iam` (and a managed folder's) from the store it keeps for the `:getIamPolicy` verbs | yes |
-| `0019-mockgcp-compute-iam-policy.patch` | written here, on 0018: mockgcp serves Compute Engine's `GET {resource}/getIamPolicy` and `POST {resource}/setIamPolicy` from the store it keeps for the `:getIamPolicy` verbs | yes |
+| `0019-mockgcp-compute-iam-policy.patch` | written here, on 0018: mockgcp serves Compute Engine's `GET {resource}/getIamPolicy` and `POST {resource}/setIamPolicy` from the store it keeps for the `:getIamPolicy` verbs, and makes the store's etag check and write atomic (two racing writers lost an update) | yes |
 
 ## Other sources consulted, not copied
 

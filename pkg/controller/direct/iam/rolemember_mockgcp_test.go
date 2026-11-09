@@ -42,6 +42,7 @@ import (
 	storageapi "google.golang.org/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
@@ -50,6 +51,10 @@ import (
 )
 
 var memberGVK = iamv1alpha1.IAMRoleMemberGVK
+
+// storageManagedFolderGVK is Config Connector's StorageManagedFolder, which
+// the member test names by name (it is not reconciled there).
+var storageManagedFolderGVK = schema.GroupVersionKind{Group: "storage.cnrm.cloud.google.com", Version: "v1alpha1", Kind: "StorageManagedFolder"}
 
 // target is a resource under test: its kind and full name in the cloud, a
 // role it accepts, and how to read its policy.
@@ -313,19 +318,6 @@ func TestIAMRoleMember(t *testing.T) {
 			}
 		})
 
-		t.Run("a member waits for the object it names", func(t *testing.T) {
-			o := newMember("late", tg, mine)
-			o.Spec.ResourceRef = iamv1alpha1.IAMResourceReference{Kind: "SecretManagerSecret", APIVersion: "secretmanager.cnrm.cloud.google.com/v1beta1", Name: "not-yet"}
-			if err := env.Kube.Create(env.Ctx, o); err != nil {
-				t.Fatal(err)
-			}
-			if msg := env.WaitNotReady(memberGVK, namespace, "late"); !strings.Contains(msg, "not-yet") {
-				t.Errorf("the message does not name the missing object: %q", msg)
-			}
-			// Nothing was made for it, so the delete has nothing to remove.
-			del(t, o)
-		})
-
 		t.Run("a kind it does not know is refused", func(t *testing.T) {
 			o := newMember("unknown", tg, mine)
 			o.Spec.ResourceRef.Kind = "Spaceship"
@@ -367,6 +359,51 @@ func TestIAMRoleMember(t *testing.T) {
 		})
 		tg := target{kind: "StorageManagedFolder", name: "projects/_/buckets/" + bucket + "/managedFolders/" + folder, role: "roles/storage.objectViewer"}
 		exercise(t, tg, "folder")
+
+		t.Run("a member named by the Config Connector object of the folder", func(t *testing.T) {
+			// The folder's object is not reconciled by anything here (it is
+			// Config Connector's); its status.externalRef is what names the
+			// folder, in Config Connector's own spelling.
+			o := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+				"projectRef":       map[string]any{"external": mockenv.Project},
+				"storagebucketRef": map[string]any{"name": bucket},
+				"resourceID":       "team/app",
+			}}}
+			o.SetGroupVersionKind(storageManagedFolderGVK)
+			o.SetNamespace(namespace)
+			o.SetName("app-folder")
+			if err := env.Kube.Create(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			late := newMember("folder-late", tg, mine)
+			late.Spec.ResourceRef = iamv1alpha1.IAMResourceReference{Kind: "StorageManagedFolder", Name: "app-folder"}
+			if err := env.Kube.Create(env.Ctx, late); err != nil {
+				t.Fatal(err)
+			}
+			// No status yet: the member waits.
+			if msg := env.WaitNotReady(memberGVK, namespace, late.Name); !strings.Contains(msg, "externalRef") {
+				t.Errorf("the message should say the folder has no status.externalRef yet: %q", msg)
+			}
+			if err := unstructured.SetNestedField(o.Object, "projects/"+mockenv.Project+"/buckets/"+bucket+"/managedfolders/team/app", "status", "externalRef"); err != nil {
+				t.Fatal(err)
+			}
+			if err := unstructured.SetNestedSlice(o.Object, []any{map[string]any{
+				"type": "Ready", "status": "True", "reason": "UpToDate", "lastTransitionTime": time.Now().UTC().Format(time.RFC3339),
+			}}, "status", "conditions"); err != nil {
+				t.Fatal(err)
+			}
+			if err := env.Kube.Status().Update(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			u := env.WaitReady(memberGVK, namespace, late.Name)
+			if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != tg.name+"#"+tg.role+"#"+mine {
+				t.Errorf("status.externalRef = %q, want the folder's full name (%s) in it", ref, tg.name)
+			}
+			if got := members(t, tg); !slices.Contains(got, mine) {
+				t.Errorf("members = %v, want %s among them", got, mine)
+			}
+			del(t, late)
+		})
 
 		t.Run("the folder's policy is the folder's own", func(t *testing.T) {
 			// The bucket's policy is not the folder's: nothing above touched it.
