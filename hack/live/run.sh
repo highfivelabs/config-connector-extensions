@@ -94,18 +94,25 @@ if [[ ${needs_sql} -eq 1 ]]; then
   sql_instance="${run_id}-pg"
   echo "== live: creating Cloud SQL instance ${sql_instance} (shared by the SQL kinds; minutes)"
   t0=$(date +%s)
-  # gcloud gives up waiting after about 10 minutes while the operation
-  # goes on; then wait for the instance itself.
-  "${G[@]}" sql instances create "${sql_instance}" \
-    --database-version POSTGRES_16 --edition ENTERPRISE --tier db-f1-micro \
-    --zone "${ZONE}" --availability-type zonal \
-    --storage-type HDD --storage-size 10 --no-storage-auto-increase \
-    --no-backup --no-deletion-protection \
-    --database-flags cloudsql.iam_authentication=on \
-    --labels "cce-e2e=true,cce-run=${run_id}" || true
+  # Through the API: gcloud's GA track has no --labels for Cloud SQL.
+  body="$(cat <<JSON
+{"name": "${sql_instance}", "databaseVersion": "POSTGRES_16", "region": "${ZONE%-*}",
+ "settings": {"edition": "ENTERPRISE", "tier": "db-f1-micro", "availabilityType": "ZONAL",
+  "locationPreference": {"zone": "${ZONE}"},
+  "dataDiskType": "PD_HDD", "dataDiskSizeGb": "10", "storageAutoResize": false,
+  "backupConfiguration": {"enabled": false}, "deletionProtectionEnabled": false,
+  "databaseFlags": [{"name": "cloudsql.iam_authentication", "value": "on"}],
+  "userLabels": {"cce-e2e": "true", "cce-run": "${run_id}"}}}
+JSON
+)"
+  curl -sS --fail-with-body -X POST -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    -H 'Content-Type: application/json' -d "${body}" \
+    "https://sqladmin.googleapis.com/v1/projects/${project}/instances" >"${out}/sql-create.json" \
+    || { cat "${out}/sql-create.json" >&2; exit 1; }
+  state=""
   for _ in $(seq 1 60); do
     state="$("${G[@]}" sql instances describe "${sql_instance}" --format='value(state)' 2>/dev/null || true)"
-    [[ "${state}" == RUNNABLE ]] && break
+    [[ "${state}" == RUNNABLE || "${state}" == FAILED ]] && break
     sleep 20
   done
   [[ "${state}" == RUNNABLE ]] || { echo "live: instance ${sql_instance} is ${state:-missing}, not RUNNABLE" >&2; exit 1; }
@@ -126,15 +133,16 @@ for k in "${kinds[@]}"; do
   echo "== live: ${k}: mock"
   mock=PASS
   E2E_GCP_TARGET=mock go test -count=1 -v -timeout 15m "${pkg}" >"${out}/${k}.mock.log" 2>&1 || mock=FAIL
-  grep -E '^(=== RUN|\s*--- (PASS|FAIL|SKIP)|(ok|FAIL)\s)' "${out}/${k}.mock.log" | grep -v '=== RUN' || true
+  grep -E '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:' "${out}/${k}.mock.log" || true
   echo "== live: ${k}: live"
   live=PASS
   t0=$(date +%s)
+  # Streamed as it runs, so a preempted VM's log still has it.
   E2E_GCP_TARGET=real GCP_PROJECT_ID="${project}" E2E_RUN_ID="${run_id}" \
     E2E_SERVICE_ACCOUNT="${sa}" E2E_SQL_INSTANCE="${sql_instance}" \
-    go test -count=1 -v -timeout 60m "${pkg}" >"${out}/${k}.live.log" 2>&1 || live=FAIL
+    go test -count=1 -v -timeout 60m "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
+    | grep -E --line-buffered '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:|^=== RUN' || live=FAIL
   secs=$(( $(date +%s) - t0 ))
-  grep -E '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:' "${out}/${k}.live.log" || true
   [[ "${mock}" == PASS && "${live}" == PASS ]] || failed=1
   echo "| ${k} | ${mock} | ${live} | ${secs}s |" >>"${out}/summary.md"
 done
