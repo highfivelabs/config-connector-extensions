@@ -83,7 +83,7 @@ const (
 )
 
 // Name is the project's name; every name the operator gives an object
-// starts with it (the Makefile's NAME, for a rename).
+// starts with it (the Taskfile's NAME, for a rename).
 const Name = "config-connector-extensions"
 
 // Labels on everything the operator makes, so it can find what to remove.

@@ -65,21 +65,11 @@ coordinator):
    members must be service accounts of the project (an organization
    policy refuses `projectOwner:` and similar on secrets).
 
-2. **Taskfile instead of make.** Not started; do it after the in-flight
-   PRs merge, as one dedicated PR. Replace the `Makefile` with
-   `Taskfile.yml` keeping the task names (`check`, `operator-e2e`,
-   `test-mock`, `test-live`, `live-sweep`, `live-list`, `upstream`,
-   `upstream-check`, `tools`, `generate`, and the rest), and update
-   `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, the docs and the
-   live-runs page (the ledger keeps its history; new rows say `task`).
-   Put the tasks other repositories could share in a separate common
-   Taskfile that this one includes, and in the PR recommend how to share
-   it across repositories (Task's remote includes from a private
-   repository, or a vendored copy with a sync script), with the trade-offs.
-   Do not create a GitHub repository; say what is needed and the
-   coordinator asks the builder. The offload VM image is said to have
-   `task` installed: verify that first, then use `task check` in offload
-   `--step`s from then on.
+2. **Taskfile instead of make.** Done in this PR: `Taskfile.yml`, the
+   shared `taskfiles/go.yml` (the one ack-extensions has, plus the optional
+   `CMD` variable on `go:test-envtest`), `taskfiles/README.md` (how to
+   share it across repositories). The task names are unchanged and
+   `task test-live PROJECT=... KINDS=...` takes the same arguments.
 
 3. **`LoggingSettings` live.** Built and merged; the test and the sweeper
    are ready (`mockenv.LoggingFolder`, `mockenv.LoggingKMSKey` in
@@ -141,22 +131,21 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 **offload.** From the repository root:
 
 ```sh
-../offload/offload run --hours 3 --step 'make upstream' --step 'make check' --step 'make operator-e2e'
+../offload/offload run --hours 3 --prep 'task upstream' --step-skippable 'task check' --step 'task operator-e2e'
 ../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 \
-  --step 'make upstream && make check' \
-  --step 'make upstream && make test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
+  --prep 'task upstream' --step-skippable 'task check' \
+  --step 'task test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
 ```
 
-- **Batch `make upstream` into every step that needs it.** When a Spot VM
-  is preempted, offload resumes the run on a fresh VM and skips the steps
-  that passed, `make upstream` included, so the next step finds no
-  `third_party/k8s-config-connector` ("is missing; run hack/upstream.sh")
-  and fails at once. `make upstream && make test-live ...` in one step
-  survives a resume.
+- **Put `task upstream` in a `--prep`.** `third_party` is gitignored and
+  not uploaded, so every fresh VM needs it again; `--prep` steps rerun on
+  every attempt, `--step-skippable` ones (`task check`) do not. There is
+  no `tools` prep to add: `task tools` also fetches setup-envtest, which
+  the tasks that need it do themselves.
 - **After a preempted live run, sweep it.** The live run's own sweep only
   takes leftovers older than 2h. Sweep the interrupted run by ID before
   the next run:
-  `--step 'make live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
+  `--step 'task live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
 - **Start offload with the tool's background mode**, never with a shell
   `&`: a shell-backgrounded offload dies with the shell and orphans its
   VM. If that happens, `../offload/offload ls`, then

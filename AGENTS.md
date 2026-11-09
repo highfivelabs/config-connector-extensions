@@ -18,9 +18,9 @@ itself lives in its own repository and is never changed from here.
 ## Where things are
 
 - **Upstream and the pin:** `UPSTREAM.md`; fetched into `third_party/` by
-  `make upstream` (or `make tools`), with `patches/` applied in order.
+  `task upstream` (or `task tools`), with `patches/` applied in order.
 - **Unreleased upstream code** (master, pull requests): `docs/design.md`
-  §2.3 and "Switching to PR #7148" (building from an upstream pull request), §3 (pin, patches, moving the pin, generating CRDs and code, retiring a kind); `make upstream-pr` watches the pull requests we depend on.
+  §2.3 and "Switching to PR #7148" (building from an upstream pull request), §3 (pin, patches, moving the pin, generating CRDs and code, retiring a kind); `task upstream-pr` watches the pull requests we depend on.
 - **What to build next:** `docs/design.md` §6 "Choosing gaps". Upstream first: a gap
   is built here only when upstream has neither released it nor has a
   pull request close to merging; when it does, wait for the release
@@ -28,7 +28,7 @@ itself lives in its own repository and is never changed from here.
 - **What is left and known gaps:** `docs/design.md` §7 "What is left".
 - **The fake cloud:** docs/fake-cloud.md (mockgcp).
 - **Live runs against a real project:** `docs/live-runs.md` (the switch,
-  `make test-live`, the sweeper, the service account, and the ledger).
+  `task test-live`, the sweeper, the service account, and the ledger).
 - **Identity:** the managers run as their own narrow service account by
   default; sharing the upstream operator's is an opt-in (see `docs/design.md`).
 
@@ -40,20 +40,20 @@ itself lives in its own repository and is never changed from here.
    (`CONTRIBUTING.md`, "The copy-upstream rule"); record each copied file
    in `UPSTREAM.md`. Changes to upstream code go in `patches/`, never by
    editing `third_party/`.
-3. Generate CRDs and code with the repo's make targets; never hand-edit
+3. Generate CRDs and code with the repo's tasks; never hand-edit
    generated files.
 4. Test against the fake cloud, including what the fake cannot show,
    written down in the fake cloud's doc. Build the end-to-end test on
    `pkg/test/mockenv` so the same test runs live (`docs/live-runs.md`,
    "Adding a kind").
-5. Run it live once: `make test-live PROJECT=hfl-dev-514205 KINDS=<package>`
+5. Run it live once: `task test-live PROJECT=hfl-dev-514205 KINDS=<package>`
    on an offload VM as the live-tests service account, and add a row per
    kind to the ledger in `docs/live-runs.md`. Fix what live shows: a bug
    in our controller is a fix plus a test; a gap in the fake is a mockgcp
    patch. A kind is not done until it has a live row.
 6. Update `docs/design.md` (what was built, what was proven, what is left)
    and `README.md`.
-7. Run `make check` (and `make operator-e2e` when the operator or
+7. Run `task check` (and `task operator-e2e` when the operator or
    install changes) and report the real result, failures included.
 
 ## Always
@@ -69,14 +69,14 @@ itself lives in its own repository and is never changed from here.
 
 ## Never
 
-- Never reach a real cloud except through `make test-live`: on an
+- Never reach a real cloud except through `task test-live`: on an
   offload Spot VM running as the live-tests service account
   (`docs/live-runs.md`), in a project listed in `hack/live/projects.sh`
   (only `hfl-dev-514205`). Never on a laptop, never with a downloaded
   service account key, never in any other project, account or
-  subscription, and never from `make check`. Every live resource carries
+  subscription, and never from `task check`. Every live resource carries
   the run's name prefix and labels, the test deletes it, and the run ends
-  with the sweeper and an empty `make live-list`.
+  with the sweeper and an empty `task live-list`.
 - Never open, comment on, review or react to upstream pull requests or
   issues. Reading them (`gh` read-only, `git fetch`) is fine.
 - Never force-push, rewrite pushed history, or change the repository's

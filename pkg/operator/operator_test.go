@@ -59,7 +59,7 @@ type env struct {
 func start(t *testing.T, isolation, identity string) *env {
 	t.Helper()
 	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
-		t.Fatal("KUBEBUILDER_ASSETS is not set; run `make test`")
+		t.Fatal("KUBEBUILDER_ASSETS is not set; run `task test`")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)

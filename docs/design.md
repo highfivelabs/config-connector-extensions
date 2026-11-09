@@ -165,7 +165,7 @@ When `hack/upstream-pr.sh` reports `databaseRoles` live:
 3. Re-apply our differences as small edits: revoke on removal
    (`revokeExistingRoles`) if the PR adds without revoking, and
    `status.appliedDatabaseRoles` if the API is shown not to return roles.
-4. `make check`; the mockgcp test must still pass unchanged.
+4. `task check`; the mockgcp test must still pass unchanged.
 
 Refreshing later is the same steps against the newer head; once the PR
 merges, retire the kind instead ("Retiring a gap kind").
@@ -197,7 +197,7 @@ commit at or after that release.
 - `hack/generate.sh` is Config Connector's `dev/tasks/generate-crds` for
   our tree: controller-gen v0.16.5 (`object` and `crd`), then Config
   Connector's own `scripts/add-validation-to-crds` and `scripts/crd-tools`
-  run from the pinned checkout. `make check` fails if its output differs
+  run from the pinned checkout. `task check` fails if its output differs
   from what is committed.
 - For proto-backed kinds, run Config Connector's `controllerbuilder`
   (`generate-types`, `generate-mapper`) from the checkout against the
@@ -232,7 +232,7 @@ here.
   `ONLY_UPSTREAM=1` the script reproduces upstream's committed generated
   files byte for byte, which is how we know the patch is only our fields.
 - **Patch 0002**: mockgcp listens on `127.0.0.2`, which macOS does not
-  have; `MOCKGCP_LISTEN_ADDRESS` overrides it, and the Makefile sets it.
+  have; `MOCKGCP_LISTEN_ADDRESS` overrides it, and the Taskfile sets it.
 - **The test** (`pkg/controller/direct/sql/sqluser_mockgcp_test.go`) runs
   a real kube-apiserver and etcd (envtest, Kubernetes 1.33), our manager
   code (Config Connector's direct reconciler and deletion defender with
@@ -240,7 +240,7 @@ here.
   application's service account as a `CLOUD_IAM_SERVICE_ACCOUNT` user with
   `cloudsqlsuperuser`, then adds a role, removes one, and deletes, reading
   the fake cloud after each step through the real `sqladmin` client.
-- **Results** (2026-11-07, `make check`, macOS arm64, Go 1.27.1):
+- **Results** (2026-11-07, `task check`, macOS arm64, Go 1.27.1):
 
   ```text
   ok: third_party/k8s-config-connector is 672414b8191fc2d2c12fff53f6faccf5ae291eef plus 2 patch(es)
@@ -257,8 +257,8 @@ here.
   controller and failed as it should ("cloud roles = [cloudsqlsuperuser
   pg_read_all_data], want [pg_read_all_data]").
 - **Live runs** (`docs/live-runs.md`). The same tests run against a real
-  project with `E2E_GCP_TARGET=real` (`make test-live`, on an offload VM as
-  a least-privilege service account, never from `make check`). The ledger
+  project with `E2E_GCP_TARGET=real` (`task test-live`, on an offload VM as
+  a least-privilege service account, never from `task check`). The ledger
   there records each run, which kinds have passed live, and what differed
   from mockgcp. Found live on 2026-11-09:
   - `users.get` does return `databaseRoles`, and inserts, adds and
@@ -424,7 +424,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   under a regional secret, which the PR's mock never names. The PR's mock
   serves only `us-central1`'s regional endpoint; other regions need their
   hosts added.
-- Tests (`make test`, macOS arm64, Go 1.27.1, 2026-11-07):
+- Tests (`task test`, macOS arm64, Go 1.27.1, 2026-11-07):
 
   ```text
   --- PASS: TestSQLAdminBackup (10.10s)
@@ -481,7 +481,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   With the mapper's read-back of the Docker `customRepository` removed,
   the fuzz test and "a resync sends no update" fail (the controller sends
   an update that mockgcp refuses), so the round trip is what they check.
-- `make check` and `make operator-e2e` on a Linux amd64 VM (16 CPUs, Go
+- `task check` and `task operator-e2e` on a Linux amd64 VM (16 CPUs, Go
   1.27.3, kind 0.27.0, ko 0.19.1, kustomize 5.7.1), 2026-11-09: both pass.
   Every package's tests pass, the artifactregistry package's included; the
   operator installs `artifactregistryrepositories.artifactregistry.gcp.hfl.dev`
@@ -823,7 +823,7 @@ To raise confidence in the kinds:
 Housekeeping:
 
 11. Done: the SQLUser test runs on `pkg/test/mockenv`, so it runs live too.
-12. CI: `make check` on Linux (the 127.0.0.2 default then works without
+12. CI: `task check` on Linux (the 127.0.0.2 default then works without
     patch 0002, but the patch stays harmless).
 13. `tests/operator/run.sh` does not clean the fake cloud on a reused kind
     cluster; run it on a fresh one.
@@ -910,7 +910,7 @@ To raise confidence in `ArtifactRegistryRepository`:
      only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
    - A production build has no such flag and refuses to start with it
      ("flag provided but not defined").
-   - `hack/check-no-fake-cloud.sh`, run by `make check`, fails if the
+   - `hack/check-no-fake-cloud.sh`, run by `task check`, fails if the
      default build links `pkg/fakecloud` or shows the flag.
    - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
 7. **Licence**: Apache-2.0 (`LICENSE`, `NOTICE`).
@@ -1087,7 +1087,7 @@ contexts exist.
 
 ### 9.3 What was proven (2026-11-07)
 
-`pkg/operator` against envtest (`make test`): cluster mode with Workload
+`pkg/operator` against envtest (`task test`): cluster mode with Workload
 Identity (its own service account with Config Connector's annotation,
 bound to our roles; Config Connector's service account left unchanged)
 and with a key (the same Secret, no annotation); the switch to namespaced
@@ -1101,7 +1101,7 @@ Connector's service account, on the `ConfigConnector` object and back; the
 own; an unknown identity refused; no manager before Config Connector's
 service account exists; Config Connector without its operator.
 
-`tests/operator/run.sh` (`make operator-e2e`) on kind 0.33 (Kubernetes
+`tests/operator/run.sh` (`task operator-e2e`) on kind 0.33 (Kubernetes
 1.37) with the in-cluster fake cloud (`cmd/fakegcp`; managers get
 `--fake-cloud-url`, which loads no Google credentials and since section
 9.4 exists only in builds with `-tags fakecloud`), images built by ko

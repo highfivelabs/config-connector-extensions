@@ -16,7 +16,7 @@
 package secretmanager_test
 
 // Regional Secret Manager secrets end to end on the fake cloud
-// (pkg/test/mockenv), or a real project with E2E_GCP_TARGET=real (make
+// (pkg/test/mockenv), or a real project with E2E_GCP_TARGET=real (task
 // test-live). The case: an application's database password kept in
 // a secret in one region (data residency), its value written from a
 // Kubernetes Secret as a version.

@@ -138,19 +138,19 @@ writing every Secret in cluster mode. `docs/design.md` sections 9.2 and
 ## Developing it
 
 ```sh
-make upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
-make check      # pin check, generated files current, gofmt, vet, build, tests
-make build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
-make operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
-make test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
+task upstream   # fetch Config Connector at the pin (~650 MB) and apply patches/
+task check      # pin check, generated files current, gofmt, vet, build, tests
+task build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
+task operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
+task test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
 ```
 
-`make test` (also `make test-mock`) runs each kind end to end: a real
+`task test` (also `task test-mock`) runs each kind end to end: a real
 kube-apiserver (envtest), Config Connector's direct reconciler, our
 adapters, and Config Connector's mockgcp as a fake Google Cloud
 (`pkg/test/mockenv`); and the operator against envtest. No real Google
 Cloud and no recordings. With `E2E_GCP_TARGET=real`, which only
-`make test-live` sets, the same tests run against a real project; every
+`task test-live` sets, the same tests run against a real project; every
 kind has been run that way at least once (the ledger in
 `docs/live-runs.md`).
 

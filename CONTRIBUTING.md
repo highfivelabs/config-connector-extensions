@@ -22,18 +22,22 @@ author.
 
 Everything runs against a fake Google Cloud (Config Connector's mockgcp);
 no real project or credentials are needed. The same end-to-end tests also
-run against a real project, but only through `make test-live`, by a
+run against a real project, but only through `task test-live`, by a
 maintainer, in a project set aside for it (`docs/live-runs.md`).
 
+Install [Task](https://taskfile.dev) (`brew install go-task`, or
+`go install github.com/go-task/task/v3/cmd/task@latest`); `task` lists the
+tasks. The shared ones are in `taskfiles/` (`taskfiles/README.md`).
+
 ```sh
-make upstream      # once: Config Connector at the pin (~650 MB) plus patches/
-make check         # pin, go.mod pins, generated files, gofmt, vet, SPDX lines, build, tests
-make operator-e2e  # the operator on a fresh kind cluster with the in-cluster fake cloud
-make fake-cloud-up && make fake-cloud-test && make fake-cloud-down
+task upstream      # once: Config Connector at the pin (~650 MB) plus patches/
+task check         # pin, go.mod pins, generated files, gofmt, vet, SPDX lines, build, tests
+task operator-e2e  # the operator on a fresh kind cluster with the in-cluster fake cloud
+task fake-cloud-up && task fake-cloud-test && task fake-cloud-down
                    # Config Connector's manager and ours against mockgcp on kind
 ```
 
-`make check` must pass before a pull request. Each new kind needs an
+`task check` must pass before a pull request. Each new kind needs an
 end-to-end test on `pkg/test/mockenv` (a real kube-apiserver, Config
 Connector's direct reconciler, and mockgcp) covering create, update,
 delete and `deletion-policy: abandon`. If mockgcp lacks the API, extend it

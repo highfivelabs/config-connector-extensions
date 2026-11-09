@@ -17,7 +17,7 @@ package artifactregistry_test
 
 // ArtifactRegistryRepository with a custom remote upstream end to end on the
 // fake cloud (pkg/test/mockenv), or a real project with E2E_GCP_TARGET=real
-// (make test-live). The case: a remote repository that pulls
+// (task test-live). The case: a remote repository that pulls
 // through a private upstream registry (a company's own Docker registry,
 // Maven repository, npm or Python index) instead of one of the public
 // upstreams Artifact Registry knows by name.

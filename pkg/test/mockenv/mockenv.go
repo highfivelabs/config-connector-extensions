@@ -19,9 +19,9 @@
 // Connector's mockgcp (with our patches) as Google Cloud. No recordings.
 //
 // With E2E_GCP_TARGET=real the same tests run against a real project
-// instead of mockgcp (target.go; make test-live, never make check).
+// instead of mockgcp (target.go; task test-live, never task check).
 //
-// Needs KUBEBUILDER_ASSETS (make test sets it).
+// Needs KUBEBUILDER_ASSETS (task test sets it).
 package mockenv
 
 import (
@@ -111,7 +111,7 @@ func New(t *testing.T, namespaces ...string) *Env {
 	t.Helper()
 	checkTarget(t)
 	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
-		t.Fatal("KUBEBUILDER_ASSETS is not set; run `make test`, which installs envtest's kube-apiserver and etcd")
+		t.Fatal("KUBEBUILDER_ASSETS is not set; run `task test`, which installs envtest's kube-apiserver and etcd")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
