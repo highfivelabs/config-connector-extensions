@@ -11,3 +11,4 @@ resources:
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
 - sqladmin.gcp.hfl.dev_sqladminbackups.yaml
+- storage.gcp.hfl.dev_storagebucketobjects.yaml

@@ -47,12 +47,14 @@ import (
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
+	storagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/storage"
 )
 
 type kind struct {
@@ -72,6 +74,7 @@ var Kinds = []kind{
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK, crdName: "iamworkloadidentitypoolmanagedidentities.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolManagedIdentityModel},
 	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel},
+	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -84,6 +87,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		artifactregistryv1alpha1.AddToScheme,
 		iamv1alpha1.AddToScheme,
 		runv1alpha1.AddToScheme,
+		storagev1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

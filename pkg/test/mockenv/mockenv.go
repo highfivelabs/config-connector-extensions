@@ -122,6 +122,8 @@ func New(t *testing.T, namespaces ...string) *Env {
 			// (ArtifactRegistryRepository's upstream password version).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_secretmanagersecrets.secretmanager.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_secretmanagersecretversions.secretmanager.cnrm.cloud.google.com.yaml"),
+			// StorageBucketObject's bucket.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
 			// ArtifactRegistryTag's repository.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_artifactregistryrepositories.artifactregistry.cnrm.cloud.google.com.yaml"),
 			// IAMWorkloadIdentityPoolNamespace's pool.

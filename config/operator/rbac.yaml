@@ -50,15 +50,16 @@ kind: ClusterRole
 metadata:
   name: config-connector-extensions-manager
 rules:
-- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev"]
+- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev", "storage.gcp.hfl.dev"]
   resources: ["*"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev"]
+- apiGroups: ["sql.gcp.hfl.dev", "sqladmin.gcp.hfl.dev", "secretmanager.gcp.hfl.dev", "artifactregistry.gcp.hfl.dev", "iam.gcp.hfl.dev", "run.gcp.hfl.dev", "storage.gcp.hfl.dev"]
   resources: ["*/status", "*/finalizers"]
   verbs: ["get", "update", "patch"]
-# Values from Secrets (SQLUser.spec.password, SecretManagerSecretVersion.spec.secretData).
+# Values from Secrets (SQLUser.spec.password, SecretManagerSecretVersion.spec.secretData)
+# and ConfigMaps (StorageBucketObject.spec.contentFrom).
 - apiGroups: [""]
-  resources: ["secrets"]
+  resources: ["secrets", "configmaps"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["", "events.k8s.io"]
   resources: ["events"]
