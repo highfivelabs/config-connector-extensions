@@ -200,15 +200,21 @@ func (a *namespaceAdapter) Export(ctx context.Context) (*unstructured.Unstructur
 	return out, nil
 }
 
-// wait polls a long-running operation until it is done.
 func (a *namespaceAdapter) wait(ctx context.Context, op *api.Operation) error {
+	return waitOperation(ctx, op, func(name string) (*api.Operation, error) {
+		return a.namespaces().Operations.Get(name).Context(ctx).Do()
+	})
+}
+
+// waitOperation polls a long-running operation until it is done.
+func waitOperation(ctx context.Context, op *api.Operation, get func(name string) (*api.Operation, error)) error {
 	for !op.Done {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-time.After(500 * time.Millisecond):
 		}
-		next, err := a.namespaces().Operations.Get(op.Name).Context(ctx).Do()
+		next, err := get(op.Name)
 		if err != nil {
 			return fmt.Errorf("waiting for operation %s: %w", op.Name, err)
 		}

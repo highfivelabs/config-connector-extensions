@@ -92,3 +92,26 @@ func resolveWorkloadIdentityPool(ctx context.Context, reader client.Reader, obj 
 	}
 	return poolID, nil
 }
+
+// resolveManagedIdentityNamespace returns the namespace a managed identity is
+// in, from spec.workloadIdentityPoolNamespaceRef (an
+// IAMWorkloadIdentityPoolNamespace of ours by name, once it has a
+// status.externalRef, or a namespace as external), and refuses one in
+// another project or location than the managed identity's.
+func resolveManagedIdentityNamespace(ctx context.Context, reader client.Reader, obj *IAMWorkloadIdentityPoolManagedIdentity, projectID, location string) (*IAMWorkloadIdentityPoolNamespaceIdentity, error) {
+	ref := obj.Spec.WorkloadIdentityPoolNamespaceRef
+	if ref == nil || (ref.External == "" && ref.Name == "") {
+		return nil, fmt.Errorf("spec.workloadIdentityPoolNamespaceRef is required")
+	}
+	if err := ref.Normalize(ctx, reader, obj.GetNamespace()); err != nil {
+		return nil, err
+	}
+	ns := &IAMWorkloadIdentityPoolNamespaceIdentity{}
+	if err := ns.FromExternal(ref.External); err != nil {
+		return nil, err
+	}
+	if ns.Project != projectID || ns.Location != location {
+		return nil, fmt.Errorf("workloadIdentityPoolNamespaceRef is in projects/%s/locations/%s, but the managed identity is in projects/%s/locations/%s", ns.Project, ns.Location, projectID, location)
+	}
+	return ns, nil
+}

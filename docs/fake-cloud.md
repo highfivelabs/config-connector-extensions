@@ -81,6 +81,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   its pool exists; the real API refuses one in a missing pool. Delete is a
   soft delete, as documented, and the ID cannot be reused; the fake never
   purges it. It never sets `ownerService`.
+- **Managed identities in mockgcp** (patch 0007, ours). One must be in an
+  existing, active namespace. An attestation rule's `googleCloudResource`
+  is only checked to be non-empty; the real API checks its form and
+  that the workload exists.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
   the way to make the fake cloud reachable from inside: `cmd/fakegcp` and

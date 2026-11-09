@@ -1,0 +1,3586 @@
+config-connector-extensions patch 0007: mockgcp serves IAM workload identity pool managed identities and their attestation rules.
+
+For iam.gcp.hfl.dev IAMWorkloadIdentityPoolManagedIdentity; applies on top
+of patch 0006.
+- mockgcp/apis/mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
+  is Config Connector pull request #14418's (head b080f5dc)
+  mockgcp/apis/google/iam/v1/workload_identity_pool_managed_identity.proto,
+  with the package changed to mockgcp.iam.v1, without the
+  WorkloadIdentityPoolOperationMetadata that 0006's proto already defines,
+  and, written here, with SetAttestationRules and ListAttestationRules (from
+  the IAM v1 API) and the message mockgcp stores the rules in;
+- generated/mockgcp/iam/v1/workload_identity_pool_managed_identity*.go are
+  generated from it by hack/regen-mockiam-workload-identity.sh;
+- mockiam/workloadidentitypoolmanagedidentities.go, written here, serves
+  get, create (in an existing, active namespace), patch (description,
+  disabled), soft delete, undelete, list, and attestation rules (set
+  replaces them, at most 50); service.go registers it.
+Upstream candidate: yes, with the PR.
+
+diff --git a/mockgcp/apis/mockgcp/iam/v1/workload_identity_pool_managed_identity.proto b/mockgcp/apis/mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
+new file mode 100644
+index 000000000..25d99368e
+--- /dev/null
++++ b/mockgcp/apis/mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
+@@ -0,0 +1,288 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// Modified by High Five Labs for config-connector-extensions (patch 0007):
++// copied from Config Connector pull request #14418 (head b080f5dc),
++// mockgcp/apis/google/iam/v1/workload_identity_pool_managed_identity.proto:
++//   - package mockgcp.iam.v1, as mockgcp's own copies are;
++//   - WorkloadIdentityPoolOperationMetadata is left out: patch 0006's
++//     workload_identity_pool_namespace.proto defines it in the same package;
++//   - written here: the SetAttestationRules and ListAttestationRules methods
++//     (from the IAM v1 API) and their messages, and
++//     ManagedIdentityAttestationRules, which only mockgcp stores.
++
++syntax = "proto3";
++
++package mockgcp.iam.v1;
++
++import "google/api/annotations.proto";
++import "google/api/client.proto";
++import "google/api/field_behavior.proto";
++import "google/api/resource.proto";
++import "google/longrunning/operations.proto";
++import "google/protobuf/field_mask.proto";
++import "google/protobuf/timestamp.proto";
++
++option go_package = "cloud.google.com/go/iam/apiv1/iampb;iampb";
++option java_multiple_files = true;
++option java_outer_classname = "WorkloadIdentityPoolManagedIdentityProto";
++option java_package = "com.google.iam.v1";
++
++// Manages WorkloadIdentityPoolManagedIdentities.
++service WorkloadIdentityPoolManagedIdentities {
++  option (google.api.default_host) = "iam.googleapis.com";
++  option (google.api.oauth_scopes) = "https://www.googleapis.com/auth/cloud-platform";
++
++  // Gets an individual WorkloadIdentityPoolManagedIdentity.
++  rpc GetWorkloadIdentityPoolManagedIdentity(GetWorkloadIdentityPoolManagedIdentityRequest) returns (WorkloadIdentityPoolManagedIdentity) {
++    option (google.api.http) = {
++      get: "/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"
++    };
++    option (google.api.method_signature) = "name";
++  }
++
++  // Creates a new WorkloadIdentityPoolManagedIdentity in a WorkloadIdentityPoolNamespace.
++  rpc CreateWorkloadIdentityPoolManagedIdentity(CreateWorkloadIdentityPoolManagedIdentityRequest) returns (google.longrunning.Operation) {
++    option (google.api.http) = {
++      post: "/v1/{parent=projects/*/locations/*/workloadIdentityPools/*/namespaces/*}/managedIdentities"
++      body: "workload_identity_pool_managed_identity"
++    };
++    option (google.api.method_signature) = "parent,workload_identity_pool_managed_identity,workload_identity_pool_managed_identity_id";
++    option (google.longrunning.operation_info) = {
++      response_type: "WorkloadIdentityPoolManagedIdentity"
++      metadata_type: "WorkloadIdentityPoolOperationMetadata"
++    };
++  }
++
++  // Updates an existing WorkloadIdentityPoolManagedIdentity in a WorkloadIdentityPoolNamespace.
++  rpc UpdateWorkloadIdentityPoolManagedIdentity(UpdateWorkloadIdentityPoolManagedIdentityRequest) returns (google.longrunning.Operation) {
++    option (google.api.http) = {
++      patch: "/v1/{workload_identity_pool_managed_identity.name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"
++      body: "workload_identity_pool_managed_identity"
++    };
++    option (google.api.method_signature) = "workload_identity_pool_managed_identity,update_mask";
++    option (google.longrunning.operation_info) = {
++      response_type: "WorkloadIdentityPoolManagedIdentity"
++      metadata_type: "WorkloadIdentityPoolOperationMetadata"
++    };
++  }
++
++  // Deletes a WorkloadIdentityPoolManagedIdentity.
++  rpc DeleteWorkloadIdentityPoolManagedIdentity(DeleteWorkloadIdentityPoolManagedIdentityRequest) returns (google.longrunning.Operation) {
++    option (google.api.http) = {
++      delete: "/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"
++    };
++    option (google.api.method_signature) = "name";
++    option (google.longrunning.operation_info) = {
++      response_type: "WorkloadIdentityPoolManagedIdentity"
++      metadata_type: "WorkloadIdentityPoolOperationMetadata"
++    };
++  }
++
++  // Undeletes a WorkloadIdentityPoolManagedIdentity, as long as it was deleted fewer than 30 days ago.
++  rpc UndeleteWorkloadIdentityPoolManagedIdentity(UndeleteWorkloadIdentityPoolManagedIdentityRequest) returns (google.longrunning.Operation) {
++    option (google.api.http) = {
++      post: "/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:undelete"
++      body: "*"
++    };
++    option (google.api.method_signature) = "name";
++    option (google.longrunning.operation_info) = {
++      response_type: "WorkloadIdentityPoolManagedIdentity"
++      metadata_type: "WorkloadIdentityPoolOperationMetadata"
++    };
++  }
++
++  // Lists all non-deleted WorkloadIdentityPoolManagedIdentities in a workload identity pool namespace.
++  rpc ListWorkloadIdentityPoolManagedIdentities(ListWorkloadIdentityPoolManagedIdentitiesRequest) returns (ListWorkloadIdentityPoolManagedIdentitiesResponse) {
++    option (google.api.http) = {
++      get: "/v1/{parent=projects/*/locations/*/workloadIdentityPools/*/namespaces/*}/managedIdentities"
++    };
++    option (google.api.method_signature) = "parent";
++  }
++
++  // Written here: sets a managed identity's attestation rules, replacing any.
++  rpc SetAttestationRules(SetAttestationRulesRequest) returns (google.longrunning.Operation) {
++    option (google.api.http) = {
++      post: "/v1/{resource=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:setAttestationRules"
++      body: "*"
++    };
++    option (google.longrunning.operation_info) = {
++      response_type: "SetAttestationRulesResponse"
++      metadata_type: "WorkloadIdentityPoolOperationMetadata"
++    };
++  }
++
++  // Written here: lists a managed identity's attestation rules.
++  rpc ListAttestationRules(ListAttestationRulesRequest) returns (ListAttestationRulesResponse) {
++    option (google.api.http) = {
++      get: "/v1/{resource=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:listAttestationRules"
++    };
++  }
++}
++
++// Represents a managed identity for a workload identity pool namespace.
++message WorkloadIdentityPoolManagedIdentity {
++  option (google.api.resource) = {
++    type: "iam.googleapis.com/WorkloadIdentityPoolManagedIdentity"
++    pattern: "projects/{project}/locations/{location}/workloadIdentityPools/{workload_identity_pool}/namespaces/{workload_identity_pool_namespace}/managedIdentities/{workload_identity_pool_managed_identity}"
++  };
++
++  // The current state of the managed identity.
++  enum State {
++    // State unspecified.
++    STATE_UNSPECIFIED = 0;
++
++    // The managed identity is active.
++    ACTIVE = 1;
++
++    // The managed identity is soft-deleted. Soft-deleted managed identities are permanently deleted after approximately 30 days.
++    DELETED = 2;
++  }
++
++  // Identifier. The resource name of the managed identity.
++  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
++
++  // Optional. A description of the managed identity. Cannot exceed 256 characters.
++  string description = 2 [(google.api.field_behavior) = OPTIONAL];
++
++  // Output only. The state of the managed identity.
++  State state = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
++
++  // Optional. Whether the managed identity is disabled.
++  bool disabled = 4 [(google.api.field_behavior) = OPTIONAL];
++
++  // Output only. Time after which the managed identity will be permanently purged and cannot be recovered.
++  google.protobuf.Timestamp expire_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
++}
++
++// Request message for GetWorkloadIdentityPoolManagedIdentity.
++message GetWorkloadIdentityPoolManagedIdentityRequest {
++  // Required. The name of the managed identity to retrieve.
++  string name = 1 [
++    (google.api.field_behavior) = REQUIRED,
++    (google.api.resource_reference) = {
++      type: "iam.googleapis.com/WorkloadIdentityPoolManagedIdentity"
++    }
++  ];
++}
++
++// Request message for CreateWorkloadIdentityPoolManagedIdentity.
++message CreateWorkloadIdentityPoolManagedIdentityRequest {
++  // Required. The parent resource to create the managed identity in.
++  string parent = 1 [
++    (google.api.field_behavior) = REQUIRED,
++    (google.api.resource_reference) = {
++      type: "iam.googleapis.com/WorkloadIdentityPoolNamespace"
++    }
++  ];
++
++  // Required. The managed identity to create.
++  WorkloadIdentityPoolManagedIdentity workload_identity_pool_managed_identity = 2 [(google.api.field_behavior) = REQUIRED];
++
++  // Required. The ID to use for the managed identity.
++  string workload_identity_pool_managed_identity_id = 3 [(google.api.field_behavior) = REQUIRED];
++}
++
++// Request message for UpdateWorkloadIdentityPoolManagedIdentity.
++message UpdateWorkloadIdentityPoolManagedIdentityRequest {
++  // Required. The managed identity to update.
++  WorkloadIdentityPoolManagedIdentity workload_identity_pool_managed_identity = 1 [(google.api.field_behavior) = REQUIRED];
++
++  // Required. The list of fields to update.
++  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
++}
++
++// Request message for DeleteWorkloadIdentityPoolManagedIdentity.
++message DeleteWorkloadIdentityPoolManagedIdentityRequest {
++  // Required. The name of the managed identity to delete.
++  string name = 1 [
++    (google.api.field_behavior) = REQUIRED,
++    (google.api.resource_reference) = {
++      type: "iam.googleapis.com/WorkloadIdentityPoolManagedIdentity"
++    }
++  ];
++}
++
++// Request message for UndeleteWorkloadIdentityPoolManagedIdentity.
++message UndeleteWorkloadIdentityPoolManagedIdentityRequest {
++  // Required. The name of the managed identity to undelete.
++  string name = 1 [
++    (google.api.field_behavior) = REQUIRED,
++    (google.api.resource_reference) = {
++      type: "iam.googleapis.com/WorkloadIdentityPoolManagedIdentity"
++    }
++  ];
++}
++
++// Request message for ListWorkloadIdentityPoolManagedIdentities.
++message ListWorkloadIdentityPoolManagedIdentitiesRequest {
++  // Required. The parent resource to list managed identities for.
++  string parent = 1 [
++    (google.api.field_behavior) = REQUIRED,
++    (google.api.resource_reference) = {
++      type: "iam.googleapis.com/WorkloadIdentityPoolNamespace"
++    }
++  ];
++
++  // The maximum number of managed identities to return.
++  int32 page_size = 2;
++
++  // A page token, received from a previous `ListWorkloadIdentityPoolManagedIdentities` call.
++  string page_token = 3;
++
++  // Whether to return soft-deleted managed identities.
++  bool show_deleted = 4;
++}
++
++// Response message for ListWorkloadIdentityPoolManagedIdentities.
++message ListWorkloadIdentityPoolManagedIdentitiesResponse {
++  // A list of managed identities.
++  repeated WorkloadIdentityPoolManagedIdentity workload_identity_pool_managed_identities = 1;
++
++  // A token, which can be sent as `page_token` to retrieve the next page.
++  string next_page_token = 2;
++}
++
++// Written here, from the IAM v1 API: a workload allowed to receive a managed
++// identity.
++message AttestationRule {
++  // A single workload operating on Google Cloud.
++  string google_cloud_resource = 1;
++}
++
++message SetAttestationRulesRequest {
++  string resource = 1;
++  repeated AttestationRule attestation_rules = 2;
++}
++
++message SetAttestationRulesResponse {}
++
++message ListAttestationRulesRequest {
++  string resource = 1;
++  string filter = 2;
++  int32 page_size = 3;
++  string page_token = 4;
++}
++
++message ListAttestationRulesResponse {
++  repeated AttestationRule attestation_rules = 1;
++  string next_page_token = 2;
++}
++
++// Written here: how mockgcp stores a managed identity's attestation rules;
++// not part of the API.
++message ManagedIdentityAttestationRules {
++  string name = 1;
++  repeated AttestationRule attestation_rules = 2;
++}
+diff --git a/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity.pb.go b/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity.pb.go
+new file mode 100644
+index 000000000..1ed72d664
+--- /dev/null
++++ b/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity.pb.go
+@@ -0,0 +1,1563 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// Modified by High Five Labs for config-connector-extensions (patch 0007):
++// copied from Config Connector pull request #14418 (head b080f5dc),
++// mockgcp/apis/google/iam/v1/workload_identity_pool_managed_identity.proto:
++//   - package mockgcp.iam.v1, as mockgcp's own copies are;
++//   - WorkloadIdentityPoolOperationMetadata is left out: patch 0006's
++//     workload_identity_pool_namespace.proto defines it in the same package;
++//   - written here: the SetAttestationRules and ListAttestationRules methods
++//     (from the IAM v1 API) and their messages, and
++//     ManagedIdentityAttestationRules, which only mockgcp stores.
++
++// Code generated by protoc-gen-go. DO NOT EDIT.
++// versions:
++// 	protoc-gen-go v1.28.1
++// 	protoc        v3.12.4
++// source: mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
++
++package iampb
++
++import (
++	longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
++	timestamp "github.com/golang/protobuf/ptypes/timestamp"
++	_ "google.golang.org/genproto/googleapis/api/annotations"
++	field_mask "google.golang.org/genproto/protobuf/field_mask"
++	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
++	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
++	reflect "reflect"
++	sync "sync"
++)
++
++const (
++	// Verify that this generated code is sufficiently up-to-date.
++	_ = protoimpl.EnforceVersion(20 - protoimpl.MinVersion)
++	// Verify that runtime/protoimpl is sufficiently up-to-date.
++	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
++)
++
++// The current state of the managed identity.
++type WorkloadIdentityPoolManagedIdentity_State int32
++
++const (
++	// State unspecified.
++	WorkloadIdentityPoolManagedIdentity_STATE_UNSPECIFIED WorkloadIdentityPoolManagedIdentity_State = 0
++	// The managed identity is active.
++	WorkloadIdentityPoolManagedIdentity_ACTIVE WorkloadIdentityPoolManagedIdentity_State = 1
++	// The managed identity is soft-deleted. Soft-deleted managed identities are permanently deleted after approximately 30 days.
++	WorkloadIdentityPoolManagedIdentity_DELETED WorkloadIdentityPoolManagedIdentity_State = 2
++)
++
++// Enum value maps for WorkloadIdentityPoolManagedIdentity_State.
++var (
++	WorkloadIdentityPoolManagedIdentity_State_name = map[int32]string{
++		0: "STATE_UNSPECIFIED",
++		1: "ACTIVE",
++		2: "DELETED",
++	}
++	WorkloadIdentityPoolManagedIdentity_State_value = map[string]int32{
++		"STATE_UNSPECIFIED": 0,
++		"ACTIVE":            1,
++		"DELETED":           2,
++	}
++)
++
++func (x WorkloadIdentityPoolManagedIdentity_State) Enum() *WorkloadIdentityPoolManagedIdentity_State {
++	p := new(WorkloadIdentityPoolManagedIdentity_State)
++	*p = x
++	return p
++}
++
++func (x WorkloadIdentityPoolManagedIdentity_State) String() string {
++	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
++}
++
++func (WorkloadIdentityPoolManagedIdentity_State) Descriptor() protoreflect.EnumDescriptor {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_enumTypes[0].Descriptor()
++}
++
++func (WorkloadIdentityPoolManagedIdentity_State) Type() protoreflect.EnumType {
++	return &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_enumTypes[0]
++}
++
++func (x WorkloadIdentityPoolManagedIdentity_State) Number() protoreflect.EnumNumber {
++	return protoreflect.EnumNumber(x)
++}
++
++// Deprecated: Use WorkloadIdentityPoolManagedIdentity_State.Descriptor instead.
++func (WorkloadIdentityPoolManagedIdentity_State) EnumDescriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{0, 0}
++}
++
++// Represents a managed identity for a workload identity pool namespace.
++type WorkloadIdentityPoolManagedIdentity struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Identifier. The resource name of the managed identity.
++	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
++	// Optional. A description of the managed identity. Cannot exceed 256 characters.
++	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
++	// Output only. The state of the managed identity.
++	State WorkloadIdentityPoolManagedIdentity_State `protobuf:"varint,3,opt,name=state,proto3,enum=mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity_State" json:"state,omitempty"`
++	// Optional. Whether the managed identity is disabled.
++	Disabled bool `protobuf:"varint,4,opt,name=disabled,proto3" json:"disabled,omitempty"`
++	// Output only. Time after which the managed identity will be permanently purged and cannot be recovered.
++	ExpireTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=expire_time,json=expireTime,proto3" json:"expire_time,omitempty"`
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) Reset() {
++	*x = WorkloadIdentityPoolManagedIdentity{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[0]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*WorkloadIdentityPoolManagedIdentity) ProtoMessage() {}
++
++func (x *WorkloadIdentityPoolManagedIdentity) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[0]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use WorkloadIdentityPoolManagedIdentity.ProtoReflect.Descriptor instead.
++func (*WorkloadIdentityPoolManagedIdentity) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{0}
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) GetName() string {
++	if x != nil {
++		return x.Name
++	}
++	return ""
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) GetDescription() string {
++	if x != nil {
++		return x.Description
++	}
++	return ""
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) GetState() WorkloadIdentityPoolManagedIdentity_State {
++	if x != nil {
++		return x.State
++	}
++	return WorkloadIdentityPoolManagedIdentity_STATE_UNSPECIFIED
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) GetDisabled() bool {
++	if x != nil {
++		return x.Disabled
++	}
++	return false
++}
++
++func (x *WorkloadIdentityPoolManagedIdentity) GetExpireTime() *timestamp.Timestamp {
++	if x != nil {
++		return x.ExpireTime
++	}
++	return nil
++}
++
++// Request message for GetWorkloadIdentityPoolManagedIdentity.
++type GetWorkloadIdentityPoolManagedIdentityRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Required. The name of the managed identity to retrieve.
++	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
++}
++
++func (x *GetWorkloadIdentityPoolManagedIdentityRequest) Reset() {
++	*x = GetWorkloadIdentityPoolManagedIdentityRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[1]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *GetWorkloadIdentityPoolManagedIdentityRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*GetWorkloadIdentityPoolManagedIdentityRequest) ProtoMessage() {}
++
++func (x *GetWorkloadIdentityPoolManagedIdentityRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[1]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use GetWorkloadIdentityPoolManagedIdentityRequest.ProtoReflect.Descriptor instead.
++func (*GetWorkloadIdentityPoolManagedIdentityRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{1}
++}
++
++func (x *GetWorkloadIdentityPoolManagedIdentityRequest) GetName() string {
++	if x != nil {
++		return x.Name
++	}
++	return ""
++}
++
++// Request message for CreateWorkloadIdentityPoolManagedIdentity.
++type CreateWorkloadIdentityPoolManagedIdentityRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Required. The parent resource to create the managed identity in.
++	Parent string `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
++	// Required. The managed identity to create.
++	WorkloadIdentityPoolManagedIdentity *WorkloadIdentityPoolManagedIdentity `protobuf:"bytes,2,opt,name=workload_identity_pool_managed_identity,json=workloadIdentityPoolManagedIdentity,proto3" json:"workload_identity_pool_managed_identity,omitempty"`
++	// Required. The ID to use for the managed identity.
++	WorkloadIdentityPoolManagedIdentityId string `protobuf:"bytes,3,opt,name=workload_identity_pool_managed_identity_id,json=workloadIdentityPoolManagedIdentityId,proto3" json:"workload_identity_pool_managed_identity_id,omitempty"`
++}
++
++func (x *CreateWorkloadIdentityPoolManagedIdentityRequest) Reset() {
++	*x = CreateWorkloadIdentityPoolManagedIdentityRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[2]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *CreateWorkloadIdentityPoolManagedIdentityRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*CreateWorkloadIdentityPoolManagedIdentityRequest) ProtoMessage() {}
++
++func (x *CreateWorkloadIdentityPoolManagedIdentityRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[2]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use CreateWorkloadIdentityPoolManagedIdentityRequest.ProtoReflect.Descriptor instead.
++func (*CreateWorkloadIdentityPoolManagedIdentityRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{2}
++}
++
++func (x *CreateWorkloadIdentityPoolManagedIdentityRequest) GetParent() string {
++	if x != nil {
++		return x.Parent
++	}
++	return ""
++}
++
++func (x *CreateWorkloadIdentityPoolManagedIdentityRequest) GetWorkloadIdentityPoolManagedIdentity() *WorkloadIdentityPoolManagedIdentity {
++	if x != nil {
++		return x.WorkloadIdentityPoolManagedIdentity
++	}
++	return nil
++}
++
++func (x *CreateWorkloadIdentityPoolManagedIdentityRequest) GetWorkloadIdentityPoolManagedIdentityId() string {
++	if x != nil {
++		return x.WorkloadIdentityPoolManagedIdentityId
++	}
++	return ""
++}
++
++// Request message for UpdateWorkloadIdentityPoolManagedIdentity.
++type UpdateWorkloadIdentityPoolManagedIdentityRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Required. The managed identity to update.
++	WorkloadIdentityPoolManagedIdentity *WorkloadIdentityPoolManagedIdentity `protobuf:"bytes,1,opt,name=workload_identity_pool_managed_identity,json=workloadIdentityPoolManagedIdentity,proto3" json:"workload_identity_pool_managed_identity,omitempty"`
++	// Required. The list of fields to update.
++	UpdateMask *field_mask.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
++}
++
++func (x *UpdateWorkloadIdentityPoolManagedIdentityRequest) Reset() {
++	*x = UpdateWorkloadIdentityPoolManagedIdentityRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[3]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *UpdateWorkloadIdentityPoolManagedIdentityRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*UpdateWorkloadIdentityPoolManagedIdentityRequest) ProtoMessage() {}
++
++func (x *UpdateWorkloadIdentityPoolManagedIdentityRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[3]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use UpdateWorkloadIdentityPoolManagedIdentityRequest.ProtoReflect.Descriptor instead.
++func (*UpdateWorkloadIdentityPoolManagedIdentityRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{3}
++}
++
++func (x *UpdateWorkloadIdentityPoolManagedIdentityRequest) GetWorkloadIdentityPoolManagedIdentity() *WorkloadIdentityPoolManagedIdentity {
++	if x != nil {
++		return x.WorkloadIdentityPoolManagedIdentity
++	}
++	return nil
++}
++
++func (x *UpdateWorkloadIdentityPoolManagedIdentityRequest) GetUpdateMask() *field_mask.FieldMask {
++	if x != nil {
++		return x.UpdateMask
++	}
++	return nil
++}
++
++// Request message for DeleteWorkloadIdentityPoolManagedIdentity.
++type DeleteWorkloadIdentityPoolManagedIdentityRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Required. The name of the managed identity to delete.
++	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
++}
++
++func (x *DeleteWorkloadIdentityPoolManagedIdentityRequest) Reset() {
++	*x = DeleteWorkloadIdentityPoolManagedIdentityRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[4]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *DeleteWorkloadIdentityPoolManagedIdentityRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*DeleteWorkloadIdentityPoolManagedIdentityRequest) ProtoMessage() {}
++
++func (x *DeleteWorkloadIdentityPoolManagedIdentityRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[4]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use DeleteWorkloadIdentityPoolManagedIdentityRequest.ProtoReflect.Descriptor instead.
++func (*DeleteWorkloadIdentityPoolManagedIdentityRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{4}
++}
++
++func (x *DeleteWorkloadIdentityPoolManagedIdentityRequest) GetName() string {
++	if x != nil {
++		return x.Name
++	}
++	return ""
++}
++
++// Request message for UndeleteWorkloadIdentityPoolManagedIdentity.
++type UndeleteWorkloadIdentityPoolManagedIdentityRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Required. The name of the managed identity to undelete.
++	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
++}
++
++func (x *UndeleteWorkloadIdentityPoolManagedIdentityRequest) Reset() {
++	*x = UndeleteWorkloadIdentityPoolManagedIdentityRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[5]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *UndeleteWorkloadIdentityPoolManagedIdentityRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*UndeleteWorkloadIdentityPoolManagedIdentityRequest) ProtoMessage() {}
++
++func (x *UndeleteWorkloadIdentityPoolManagedIdentityRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[5]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use UndeleteWorkloadIdentityPoolManagedIdentityRequest.ProtoReflect.Descriptor instead.
++func (*UndeleteWorkloadIdentityPoolManagedIdentityRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{5}
++}
++
++func (x *UndeleteWorkloadIdentityPoolManagedIdentityRequest) GetName() string {
++	if x != nil {
++		return x.Name
++	}
++	return ""
++}
++
++// Request message for ListWorkloadIdentityPoolManagedIdentities.
++type ListWorkloadIdentityPoolManagedIdentitiesRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// Required. The parent resource to list managed identities for.
++	Parent string `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
++	// The maximum number of managed identities to return.
++	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
++	// A page token, received from a previous `ListWorkloadIdentityPoolManagedIdentities` call.
++	PageToken string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
++	// Whether to return soft-deleted managed identities.
++	ShowDeleted bool `protobuf:"varint,4,opt,name=show_deleted,json=showDeleted,proto3" json:"show_deleted,omitempty"`
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) Reset() {
++	*x = ListWorkloadIdentityPoolManagedIdentitiesRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[6]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*ListWorkloadIdentityPoolManagedIdentitiesRequest) ProtoMessage() {}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[6]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use ListWorkloadIdentityPoolManagedIdentitiesRequest.ProtoReflect.Descriptor instead.
++func (*ListWorkloadIdentityPoolManagedIdentitiesRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{6}
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) GetParent() string {
++	if x != nil {
++		return x.Parent
++	}
++	return ""
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) GetPageSize() int32 {
++	if x != nil {
++		return x.PageSize
++	}
++	return 0
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) GetPageToken() string {
++	if x != nil {
++		return x.PageToken
++	}
++	return ""
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesRequest) GetShowDeleted() bool {
++	if x != nil {
++		return x.ShowDeleted
++	}
++	return false
++}
++
++// Response message for ListWorkloadIdentityPoolManagedIdentities.
++type ListWorkloadIdentityPoolManagedIdentitiesResponse struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// A list of managed identities.
++	WorkloadIdentityPoolManagedIdentities []*WorkloadIdentityPoolManagedIdentity `protobuf:"bytes,1,rep,name=workload_identity_pool_managed_identities,json=workloadIdentityPoolManagedIdentities,proto3" json:"workload_identity_pool_managed_identities,omitempty"`
++	// A token, which can be sent as `page_token` to retrieve the next page.
++	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesResponse) Reset() {
++	*x = ListWorkloadIdentityPoolManagedIdentitiesResponse{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[7]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesResponse) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*ListWorkloadIdentityPoolManagedIdentitiesResponse) ProtoMessage() {}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesResponse) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[7]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use ListWorkloadIdentityPoolManagedIdentitiesResponse.ProtoReflect.Descriptor instead.
++func (*ListWorkloadIdentityPoolManagedIdentitiesResponse) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{7}
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesResponse) GetWorkloadIdentityPoolManagedIdentities() []*WorkloadIdentityPoolManagedIdentity {
++	if x != nil {
++		return x.WorkloadIdentityPoolManagedIdentities
++	}
++	return nil
++}
++
++func (x *ListWorkloadIdentityPoolManagedIdentitiesResponse) GetNextPageToken() string {
++	if x != nil {
++		return x.NextPageToken
++	}
++	return ""
++}
++
++// Written here, from the IAM v1 API: a workload allowed to receive a managed
++// identity.
++type AttestationRule struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	// A single workload operating on Google Cloud.
++	GoogleCloudResource string `protobuf:"bytes,1,opt,name=google_cloud_resource,json=googleCloudResource,proto3" json:"google_cloud_resource,omitempty"`
++}
++
++func (x *AttestationRule) Reset() {
++	*x = AttestationRule{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[8]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *AttestationRule) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*AttestationRule) ProtoMessage() {}
++
++func (x *AttestationRule) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[8]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use AttestationRule.ProtoReflect.Descriptor instead.
++func (*AttestationRule) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{8}
++}
++
++func (x *AttestationRule) GetGoogleCloudResource() string {
++	if x != nil {
++		return x.GoogleCloudResource
++	}
++	return ""
++}
++
++type SetAttestationRulesRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	Resource         string             `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
++	AttestationRules []*AttestationRule `protobuf:"bytes,2,rep,name=attestation_rules,json=attestationRules,proto3" json:"attestation_rules,omitempty"`
++}
++
++func (x *SetAttestationRulesRequest) Reset() {
++	*x = SetAttestationRulesRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[9]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *SetAttestationRulesRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*SetAttestationRulesRequest) ProtoMessage() {}
++
++func (x *SetAttestationRulesRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[9]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use SetAttestationRulesRequest.ProtoReflect.Descriptor instead.
++func (*SetAttestationRulesRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{9}
++}
++
++func (x *SetAttestationRulesRequest) GetResource() string {
++	if x != nil {
++		return x.Resource
++	}
++	return ""
++}
++
++func (x *SetAttestationRulesRequest) GetAttestationRules() []*AttestationRule {
++	if x != nil {
++		return x.AttestationRules
++	}
++	return nil
++}
++
++type SetAttestationRulesResponse struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++}
++
++func (x *SetAttestationRulesResponse) Reset() {
++	*x = SetAttestationRulesResponse{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[10]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *SetAttestationRulesResponse) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*SetAttestationRulesResponse) ProtoMessage() {}
++
++func (x *SetAttestationRulesResponse) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[10]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use SetAttestationRulesResponse.ProtoReflect.Descriptor instead.
++func (*SetAttestationRulesResponse) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{10}
++}
++
++type ListAttestationRulesRequest struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	Resource  string `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
++	Filter    string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
++	PageSize  int32  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
++	PageToken string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
++}
++
++func (x *ListAttestationRulesRequest) Reset() {
++	*x = ListAttestationRulesRequest{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[11]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *ListAttestationRulesRequest) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*ListAttestationRulesRequest) ProtoMessage() {}
++
++func (x *ListAttestationRulesRequest) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[11]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use ListAttestationRulesRequest.ProtoReflect.Descriptor instead.
++func (*ListAttestationRulesRequest) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{11}
++}
++
++func (x *ListAttestationRulesRequest) GetResource() string {
++	if x != nil {
++		return x.Resource
++	}
++	return ""
++}
++
++func (x *ListAttestationRulesRequest) GetFilter() string {
++	if x != nil {
++		return x.Filter
++	}
++	return ""
++}
++
++func (x *ListAttestationRulesRequest) GetPageSize() int32 {
++	if x != nil {
++		return x.PageSize
++	}
++	return 0
++}
++
++func (x *ListAttestationRulesRequest) GetPageToken() string {
++	if x != nil {
++		return x.PageToken
++	}
++	return ""
++}
++
++type ListAttestationRulesResponse struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	AttestationRules []*AttestationRule `protobuf:"bytes,1,rep,name=attestation_rules,json=attestationRules,proto3" json:"attestation_rules,omitempty"`
++	NextPageToken    string             `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
++}
++
++func (x *ListAttestationRulesResponse) Reset() {
++	*x = ListAttestationRulesResponse{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[12]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *ListAttestationRulesResponse) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*ListAttestationRulesResponse) ProtoMessage() {}
++
++func (x *ListAttestationRulesResponse) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[12]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use ListAttestationRulesResponse.ProtoReflect.Descriptor instead.
++func (*ListAttestationRulesResponse) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{12}
++}
++
++func (x *ListAttestationRulesResponse) GetAttestationRules() []*AttestationRule {
++	if x != nil {
++		return x.AttestationRules
++	}
++	return nil
++}
++
++func (x *ListAttestationRulesResponse) GetNextPageToken() string {
++	if x != nil {
++		return x.NextPageToken
++	}
++	return ""
++}
++
++// Written here: how mockgcp stores a managed identity's attestation rules;
++// not part of the API.
++type ManagedIdentityAttestationRules struct {
++	state         protoimpl.MessageState
++	sizeCache     protoimpl.SizeCache
++	unknownFields protoimpl.UnknownFields
++
++	Name             string             `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
++	AttestationRules []*AttestationRule `protobuf:"bytes,2,rep,name=attestation_rules,json=attestationRules,proto3" json:"attestation_rules,omitempty"`
++}
++
++func (x *ManagedIdentityAttestationRules) Reset() {
++	*x = ManagedIdentityAttestationRules{}
++	if protoimpl.UnsafeEnabled {
++		mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[13]
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		ms.StoreMessageInfo(mi)
++	}
++}
++
++func (x *ManagedIdentityAttestationRules) String() string {
++	return protoimpl.X.MessageStringOf(x)
++}
++
++func (*ManagedIdentityAttestationRules) ProtoMessage() {}
++
++func (x *ManagedIdentityAttestationRules) ProtoReflect() protoreflect.Message {
++	mi := &file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[13]
++	if protoimpl.UnsafeEnabled && x != nil {
++		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
++		if ms.LoadMessageInfo() == nil {
++			ms.StoreMessageInfo(mi)
++		}
++		return ms
++	}
++	return mi.MessageOf(x)
++}
++
++// Deprecated: Use ManagedIdentityAttestationRules.ProtoReflect.Descriptor instead.
++func (*ManagedIdentityAttestationRules) Descriptor() ([]byte, []int) {
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP(), []int{13}
++}
++
++func (x *ManagedIdentityAttestationRules) GetName() string {
++	if x != nil {
++		return x.Name
++	}
++	return ""
++}
++
++func (x *ManagedIdentityAttestationRules) GetAttestationRules() []*AttestationRule {
++	if x != nil {
++		return x.AttestationRules
++	}
++	return nil
++}
++
++var File_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto protoreflect.FileDescriptor
++
++var file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDesc = []byte{
++	0x0a, 0x3c, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2f, 0x69, 0x61, 0x6d, 0x2f, 0x76, 0x31,
++	0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f,
++	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0e,
++	0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x1a, 0x1c,
++	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x61, 0x6e, 0x6e, 0x6f, 0x74,
++	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x67, 0x6f,
++	0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x2e,
++	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70,
++	0x69, 0x2f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x5f, 0x62, 0x65, 0x68, 0x61, 0x76, 0x69, 0x6f, 0x72,
++	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61,
++	0x70, 0x69, 0x2f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
++	0x6f, 0x1a, 0x23, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x6c, 0x6f, 0x6e, 0x67, 0x72, 0x75,
++	0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x2f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
++	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x20, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70,
++	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x5f, 0x6d, 0x61,
++	0x73, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
++	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
++	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd9, 0x04, 0x0a, 0x23, 0x57, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x12, 0x17, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
++	0x03, 0xe0, 0x41, 0x08, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x25, 0x0a, 0x0b, 0x64, 0x65,
++	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
++	0x03, 0xe0, 0x41, 0x01, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f,
++	0x6e, 0x12, 0x54, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e,
++	0x32, 0x39, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76,
++	0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x42, 0x03, 0xe0, 0x41, 0x03,
++	0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x08, 0x64, 0x69, 0x73, 0x61, 0x62,
++	0x6c, 0x65, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x42, 0x03, 0xe0, 0x41, 0x01, 0x52, 0x08,
++	0x64, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x40, 0x0a, 0x0b, 0x65, 0x78, 0x70, 0x69,
++	0x72, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
++	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
++	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x03, 0xe0, 0x41, 0x03, 0x52, 0x0a,
++	0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x22, 0x37, 0x0a, 0x05, 0x53, 0x74,
++	0x61, 0x74, 0x65, 0x12, 0x15, 0x0a, 0x11, 0x53, 0x54, 0x41, 0x54, 0x45, 0x5f, 0x55, 0x4e, 0x53,
++	0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x41, 0x43,
++	0x54, 0x49, 0x56, 0x45, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x44, 0x45, 0x4c, 0x45, 0x54, 0x45,
++	0x44, 0x10, 0x02, 0x3a, 0xff, 0x01, 0xea, 0x41, 0xfb, 0x01, 0x0a, 0x36, 0x69, 0x61, 0x6d, 0x2e,
++	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x57,
++	0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50,
++	0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x12, 0xc0, 0x01, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x2f, 0x7b, 0x70,
++	0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x7d, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
++	0x73, 0x2f, 0x7b, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x7d, 0x2f, 0x77, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f,
++	0x6c, 0x73, 0x2f, 0x7b, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x7d, 0x2f, 0x6e, 0x61, 0x6d, 0x65,
++	0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64,
++	0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6e,
++	0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x7d, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x7b, 0x77, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70,
++	0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x7d, 0x22, 0x83, 0x01, 0x0a, 0x2d, 0x47, 0x65, 0x74, 0x57, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f,
++	0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79,
++	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x52, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
++	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x3e, 0xe0, 0x41, 0x02, 0xfa, 0x41, 0x38, 0x0a, 0x36, 0x69,
++	0x61, 0x6d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f,
++	0x6d, 0x2f, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0xf5, 0x02, 0x0a, 0x30,
++	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
++	0x12, 0x50, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
++	0x42, 0x38, 0xe0, 0x41, 0x02, 0xfa, 0x41, 0x32, 0x0a, 0x30, 0x69, 0x61, 0x6d, 0x2e, 0x67, 0x6f,
++	0x6f, 0x67, 0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x57, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f,
++	0x6c, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x06, 0x70, 0x61, 0x72, 0x65,
++	0x6e, 0x74, 0x12, 0x8e, 0x01, 0x0a, 0x27, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f,
++	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61,
++	0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x18, 0x02,
++	0x20, 0x01, 0x28, 0x0b, 0x32, 0x33, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69,
++	0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x42, 0x03, 0xe0, 0x41, 0x02, 0x52, 0x23,
++	0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79,
++	0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x79, 0x12, 0x5e, 0x0a, 0x2a, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f,
++	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61,
++	0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x69,
++	0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x03, 0xe0, 0x41, 0x02, 0x52, 0x25, 0x77, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x49, 0x64, 0x22, 0x85, 0x02, 0x0a, 0x30, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x57, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x8e, 0x01, 0x0a, 0x27, 0x77, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70,
++	0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x33, 0x2e, 0x6d, 0x6f, 0x63,
++	0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b,
++	0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
++	0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x42,
++	0x03, 0xe0, 0x41, 0x02, 0x52, 0x23, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x40, 0x0a, 0x0b, 0x75, 0x70, 0x64,
++	0x61, 0x74, 0x65, 0x5f, 0x6d, 0x61, 0x73, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a,
++	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
++	0x2e, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4d, 0x61, 0x73, 0x6b, 0x42, 0x03, 0xe0, 0x41, 0x02, 0x52,
++	0x0a, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x73, 0x6b, 0x22, 0x86, 0x01, 0x0a, 0x30,
++	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
++	0x12, 0x52, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x3e,
++	0xe0, 0x41, 0x02, 0xfa, 0x41, 0x38, 0x0a, 0x36, 0x69, 0x61, 0x6d, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
++	0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x57, 0x6f, 0x72, 0x6b, 0x6c,
++	0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d,
++	0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x04,
++	0x6e, 0x61, 0x6d, 0x65, 0x22, 0x88, 0x01, 0x0a, 0x32, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x74,
++	0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x52, 0x0a, 0x04, 0x6e,
++	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x3e, 0xe0, 0x41, 0x02, 0xfa, 0x41,
++	0x38, 0x0a, 0x36, 0x69, 0x61, 0x6d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x61, 0x70, 0x69,
++	0x73, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22,
++	0xe3, 0x01, 0x0a, 0x30, 0x4c, 0x69, 0x73, 0x74, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64,
++	0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61,
++	0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71,
++	0x75, 0x65, 0x73, 0x74, 0x12, 0x50, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x18, 0x01,
++	0x20, 0x01, 0x28, 0x09, 0x42, 0x38, 0xe0, 0x41, 0x02, 0xfa, 0x41, 0x32, 0x0a, 0x30, 0x69, 0x61,
++	0x6d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f, 0x6d,
++	0x2f, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x06,
++	0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x73,
++	0x69, 0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53,
++	0x69, 0x7a, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x6f, 0x6b, 0x65,
++	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x61, 0x67, 0x65, 0x54, 0x6f, 0x6b,
++	0x65, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x73, 0x68, 0x6f, 0x77, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x74,
++	0x65, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0b, 0x73, 0x68, 0x6f, 0x77, 0x44, 0x65,
++	0x6c, 0x65, 0x74, 0x65, 0x64, 0x22, 0xeb, 0x01, 0x0a, 0x31, 0x4c, 0x69, 0x73, 0x74, 0x57, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8d, 0x01, 0x0a, 0x29,
++	0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
++	0x33, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31,
++	0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x52, 0x25, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x12, 0x26, 0x0a, 0x0f, 0x6e,
++	0x65, 0x78, 0x74, 0x5f, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x02,
++	0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x6e, 0x65, 0x78, 0x74, 0x50, 0x61, 0x67, 0x65, 0x54, 0x6f,
++	0x6b, 0x65, 0x6e, 0x22, 0x45, 0x0a, 0x0f, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
++	0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x12, 0x32, 0x0a, 0x15, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
++	0x5f, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x5f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18,
++	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x43, 0x6c, 0x6f,
++	0x75, 0x64, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x22, 0x86, 0x01, 0x0a, 0x1a, 0x53,
++	0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c,
++	0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x73,
++	0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x73,
++	0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x4c, 0x0a, 0x11, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
++	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
++	0x32, 0x1f, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76,
++	0x31, 0x2e, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c,
++	0x65, 0x52, 0x10, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75,
++	0x6c, 0x65, 0x73, 0x22, 0x1d, 0x0a, 0x1b, 0x53, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74,
++	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
++	0x73, 0x65, 0x22, 0x8d, 0x01, 0x0a, 0x1b, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73,
++	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
++	0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x01,
++	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x16,
++	0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
++	0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x73,
++	0x69, 0x7a, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53,
++	0x69, 0x7a, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x6f, 0x6b, 0x65,
++	0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x61, 0x67, 0x65, 0x54, 0x6f, 0x6b,
++	0x65, 0x6e, 0x22, 0x94, 0x01, 0x0a, 0x1c, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73,
++	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
++	0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x11, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
++	0x6f, 0x6e, 0x5f, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f,
++	0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e,
++	0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x52,
++	0x10, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65,
++	0x73, 0x12, 0x26, 0x0a, 0x0f, 0x6e, 0x65, 0x78, 0x74, 0x5f, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x74,
++	0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x6e, 0x65, 0x78, 0x74,
++	0x50, 0x61, 0x67, 0x65, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x22, 0x83, 0x01, 0x0a, 0x1f, 0x4d, 0x61,
++	0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x41, 0x74, 0x74,
++	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x12, 0x12, 0x0a,
++	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
++	0x65, 0x12, 0x4c, 0x0a, 0x11, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
++	0x5f, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6d,
++	0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x74,
++	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x52, 0x10, 0x61,
++	0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x32,
++	0xed, 0x15, 0x0a, 0x25, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x12, 0x87, 0x02, 0x0a, 0x26, 0x47, 0x65,
++	0x74, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x12, 0x3d, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69,
++	0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e,
++	0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75,
++	0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61,
++	0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64,
++	0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x22, 0x69, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x5c,
++	0x12, 0x5a, 0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x3d, 0x70, 0x72, 0x6f, 0x6a,
++	0x65, 0x63, 0x74, 0x73, 0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
++	0x2f, 0x2a, 0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73,
++	0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x2a, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x2a, 0x7d, 0xda, 0x41, 0x04, 0x6e,
++	0x61, 0x6d, 0x65, 0x12, 0xc6, 0x03, 0x0a, 0x29, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x57, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x12, 0x40, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e,
++	0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e,
++	0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75,
++	0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x6c, 0x6f, 0x6e,
++	0x67, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69,
++	0x6f, 0x6e, 0x22, 0xb7, 0x02, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x85, 0x01, 0x22, 0x5a, 0x2f, 0x76,
++	0x31, 0x2f, 0x7b, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x3d, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63,
++	0x74, 0x73, 0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x2a,
++	0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61,
++	0x63, 0x65, 0x73, 0x2f, 0x2a, 0x7d, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x3a, 0x27, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f,
++	0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c,
++	0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0xda, 0x41, 0x59, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x2c, 0x77, 0x6f, 0x72, 0x6b, 0x6c,
++	0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f,
++	0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x2c, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0xca, 0x41, 0x4c,
++	0x0a, 0x23, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x25, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4f, 0x70, 0x65, 0x72, 0x61,
++	0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0xc9, 0x03, 0x0a,
++	0x29, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67,
++	0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x40, 0x2e, 0x6d, 0x6f, 0x63,
++	0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61,
++	0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x67,
++	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x6c, 0x6f, 0x6e, 0x67, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e,
++	0x67, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xba, 0x02, 0x82, 0xd3,
++	0xe4, 0x93, 0x02, 0xae, 0x01, 0x32, 0x82, 0x01, 0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x77, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70,
++	0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e,
++	0x74, 0x69, 0x74, 0x79, 0x2e, 0x6e, 0x61, 0x6d, 0x65, 0x3d, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63,
++	0x74, 0x73, 0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x2a,
++	0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61,
++	0x63, 0x65, 0x73, 0x2f, 0x2a, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x2a, 0x7d, 0x3a, 0x27, 0x77, 0x6f, 0x72, 0x6b,
++	0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f,
++	0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x79, 0xda, 0x41, 0x33, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x69,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x6d, 0x61, 0x6e,
++	0x61, 0x67, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x2c, 0x75, 0x70,
++	0x64, 0x61, 0x74, 0x65, 0x5f, 0x6d, 0x61, 0x73, 0x6b, 0xca, 0x41, 0x4c, 0x0a, 0x23, 0x57, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x12, 0x25, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
++	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0xc7, 0x02, 0x0a, 0x29, 0x44, 0x65, 0x6c,
++	0x65, 0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x40, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70,
++	0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x6f,
++	0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f,
++	0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
++	0x65, 0x2e, 0x6c, 0x6f, 0x6e, 0x67, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x2e, 0x4f, 0x70,
++	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xb8, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x5c,
++	0x2a, 0x5a, 0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x3d, 0x70, 0x72, 0x6f, 0x6a,
++	0x65, 0x63, 0x74, 0x73, 0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
++	0x2f, 0x2a, 0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73,
++	0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x2a, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x2a, 0x7d, 0xda, 0x41, 0x04, 0x6e,
++	0x61, 0x6d, 0x65, 0xca, 0x41, 0x4c, 0x0a, 0x23, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64,
++	0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61,
++	0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x25, 0x57, 0x6f, 0x72,
++	0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f,
++	0x6c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
++	0x74, 0x61, 0x12, 0xd7, 0x02, 0x0a, 0x2b, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57,
++	0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50,
++	0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x12, 0x42, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d,
++	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x6f, 0x72, 0x6b,
++	0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
++	0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52,
++	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
++	0x6c, 0x6f, 0x6e, 0x67, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x2e, 0x4f, 0x70, 0x65, 0x72,
++	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xc4, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x68, 0x22, 0x63,
++	0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x3d, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63,
++	0x74, 0x73, 0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x2a,
++	0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61,
++	0x63, 0x65, 0x73, 0x2f, 0x2a, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x2a, 0x7d, 0x3a, 0x75, 0x6e, 0x64, 0x65, 0x6c,
++	0x65, 0x74, 0x65, 0x3a, 0x01, 0x2a, 0xda, 0x41, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0xca, 0x41, 0x4c,
++	0x0a, 0x23, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x25, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49,
++	0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4f, 0x70, 0x65, 0x72, 0x61,
++	0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x9d, 0x02, 0x0a,
++	0x29, 0x4c, 0x69, 0x73, 0x74, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64,
++	0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x12, 0x40, 0x2e, 0x6d, 0x6f, 0x63,
++	0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74,
++	0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79,
++	0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x41, 0x2e, 0x6d,
++	0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69,
++	0x73, 0x74, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69,
++	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65,
++	0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
++	0x6b, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x5c, 0x12, 0x5a, 0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x70, 0x61,
++	0x72, 0x65, 0x6e, 0x74, 0x3d, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x2f, 0x2a, 0x2f,
++	0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x2a, 0x2f, 0x77, 0x6f, 0x72, 0x6b,
++	0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
++	0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x2a,
++	0x7d, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x69, 0x65, 0x73, 0xda, 0x41, 0x06, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x12, 0xa7, 0x02, 0x0a,
++	0x13, 0x53, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
++	0x75, 0x6c, 0x65, 0x73, 0x12, 0x2a, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69,
++	0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
++	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
++	0x1a, 0x1d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x6c, 0x6f, 0x6e, 0x67, 0x72, 0x75,
++	0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
++	0xc4, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x77, 0x22, 0x72, 0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x72,
++	0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x3d, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73,
++	0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x2a, 0x2f, 0x77,
++	0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50,
++	0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a, 0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65,
++	0x73, 0x2f, 0x2a, 0x2f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74,
++	0x69, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x2a, 0x7d, 0x3a, 0x73, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65,
++	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x3a, 0x01, 0x2a, 0xca,
++	0x41, 0x44, 0x0a, 0x1b, 0x53, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
++	0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
++	0x25, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
++	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65,
++	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0xee, 0x01, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x41,
++	0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x12,
++	0x2b, 0x2e, 0x6d, 0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31,
++	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
++	0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x6d,
++	0x6f, 0x63, 0x6b, 0x67, 0x63, 0x70, 0x2e, 0x69, 0x61, 0x6d, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69,
++	0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x75, 0x6c,
++	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x7b, 0x82, 0xd3, 0xe4, 0x93,
++	0x02, 0x75, 0x12, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x7b, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63,
++	0x65, 0x3d, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x2f, 0x2a, 0x2f, 0x6c, 0x6f, 0x63,
++	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x2a, 0x2f, 0x77, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x2f, 0x2a,
++	0x2f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x2a, 0x2f, 0x6d, 0x61,
++	0x6e, 0x61, 0x67, 0x65, 0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2f,
++	0x2a, 0x7d, 0x3a, 0x6c, 0x69, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
++	0x6f, 0x6e, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x1a, 0x46, 0xca, 0x41, 0x12, 0x69, 0x61, 0x6d, 0x2e,
++	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f, 0x6d, 0xd2, 0x41,
++	0x2e, 0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x67, 0x6f, 0x6f,
++	0x67, 0x6c, 0x65, 0x61, 0x70, 0x69, 0x73, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x75, 0x74, 0x68,
++	0x2f, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x2d, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x42,
++	0x6a, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x69, 0x61,
++	0x6d, 0x2e, 0x76, 0x31, 0x42, 0x28, 0x57, 0x6f, 0x72, 0x6b, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x64,
++	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65,
++	0x64, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
++	0x5a, 0x29, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x63,
++	0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x2f, 0x69, 0x61, 0x6d, 0x2f, 0x61, 0x70, 0x69, 0x76, 0x31, 0x2f,
++	0x69, 0x61, 0x6d, 0x70, 0x62, 0x3b, 0x69, 0x61, 0x6d, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
++	0x74, 0x6f, 0x33,
++}
++
++var (
++	file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescOnce sync.Once
++	file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescData = file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDesc
++)
++
++func file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescGZIP() []byte {
++	file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescOnce.Do(func() {
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescData = protoimpl.X.CompressGZIP(file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescData)
++	})
++	return file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDescData
++}
++
++var file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
++var file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
++var file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_goTypes = []interface{}{
++	(WorkloadIdentityPoolManagedIdentity_State)(0),             // 0: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity.State
++	(*WorkloadIdentityPoolManagedIdentity)(nil),                // 1: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity
++	(*GetWorkloadIdentityPoolManagedIdentityRequest)(nil),      // 2: mockgcp.iam.v1.GetWorkloadIdentityPoolManagedIdentityRequest
++	(*CreateWorkloadIdentityPoolManagedIdentityRequest)(nil),   // 3: mockgcp.iam.v1.CreateWorkloadIdentityPoolManagedIdentityRequest
++	(*UpdateWorkloadIdentityPoolManagedIdentityRequest)(nil),   // 4: mockgcp.iam.v1.UpdateWorkloadIdentityPoolManagedIdentityRequest
++	(*DeleteWorkloadIdentityPoolManagedIdentityRequest)(nil),   // 5: mockgcp.iam.v1.DeleteWorkloadIdentityPoolManagedIdentityRequest
++	(*UndeleteWorkloadIdentityPoolManagedIdentityRequest)(nil), // 6: mockgcp.iam.v1.UndeleteWorkloadIdentityPoolManagedIdentityRequest
++	(*ListWorkloadIdentityPoolManagedIdentitiesRequest)(nil),   // 7: mockgcp.iam.v1.ListWorkloadIdentityPoolManagedIdentitiesRequest
++	(*ListWorkloadIdentityPoolManagedIdentitiesResponse)(nil),  // 8: mockgcp.iam.v1.ListWorkloadIdentityPoolManagedIdentitiesResponse
++	(*AttestationRule)(nil),                                    // 9: mockgcp.iam.v1.AttestationRule
++	(*SetAttestationRulesRequest)(nil),                         // 10: mockgcp.iam.v1.SetAttestationRulesRequest
++	(*SetAttestationRulesResponse)(nil),                        // 11: mockgcp.iam.v1.SetAttestationRulesResponse
++	(*ListAttestationRulesRequest)(nil),                        // 12: mockgcp.iam.v1.ListAttestationRulesRequest
++	(*ListAttestationRulesResponse)(nil),                       // 13: mockgcp.iam.v1.ListAttestationRulesResponse
++	(*ManagedIdentityAttestationRules)(nil),                    // 14: mockgcp.iam.v1.ManagedIdentityAttestationRules
++	(*timestamp.Timestamp)(nil),                                // 15: google.protobuf.Timestamp
++	(*field_mask.FieldMask)(nil),                               // 16: google.protobuf.FieldMask
++	(*longrunningpb.Operation)(nil),                            // 17: google.longrunning.Operation
++}
++var file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_depIdxs = []int32{
++	0,  // 0: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity.state:type_name -> mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity.State
++	15, // 1: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity.expire_time:type_name -> google.protobuf.Timestamp
++	1,  // 2: mockgcp.iam.v1.CreateWorkloadIdentityPoolManagedIdentityRequest.workload_identity_pool_managed_identity:type_name -> mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity
++	1,  // 3: mockgcp.iam.v1.UpdateWorkloadIdentityPoolManagedIdentityRequest.workload_identity_pool_managed_identity:type_name -> mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity
++	16, // 4: mockgcp.iam.v1.UpdateWorkloadIdentityPoolManagedIdentityRequest.update_mask:type_name -> google.protobuf.FieldMask
++	1,  // 5: mockgcp.iam.v1.ListWorkloadIdentityPoolManagedIdentitiesResponse.workload_identity_pool_managed_identities:type_name -> mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity
++	9,  // 6: mockgcp.iam.v1.SetAttestationRulesRequest.attestation_rules:type_name -> mockgcp.iam.v1.AttestationRule
++	9,  // 7: mockgcp.iam.v1.ListAttestationRulesResponse.attestation_rules:type_name -> mockgcp.iam.v1.AttestationRule
++	9,  // 8: mockgcp.iam.v1.ManagedIdentityAttestationRules.attestation_rules:type_name -> mockgcp.iam.v1.AttestationRule
++	2,  // 9: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.GetWorkloadIdentityPoolManagedIdentity:input_type -> mockgcp.iam.v1.GetWorkloadIdentityPoolManagedIdentityRequest
++	3,  // 10: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.CreateWorkloadIdentityPoolManagedIdentity:input_type -> mockgcp.iam.v1.CreateWorkloadIdentityPoolManagedIdentityRequest
++	4,  // 11: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.UpdateWorkloadIdentityPoolManagedIdentity:input_type -> mockgcp.iam.v1.UpdateWorkloadIdentityPoolManagedIdentityRequest
++	5,  // 12: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.DeleteWorkloadIdentityPoolManagedIdentity:input_type -> mockgcp.iam.v1.DeleteWorkloadIdentityPoolManagedIdentityRequest
++	6,  // 13: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.UndeleteWorkloadIdentityPoolManagedIdentity:input_type -> mockgcp.iam.v1.UndeleteWorkloadIdentityPoolManagedIdentityRequest
++	7,  // 14: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.ListWorkloadIdentityPoolManagedIdentities:input_type -> mockgcp.iam.v1.ListWorkloadIdentityPoolManagedIdentitiesRequest
++	10, // 15: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.SetAttestationRules:input_type -> mockgcp.iam.v1.SetAttestationRulesRequest
++	12, // 16: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.ListAttestationRules:input_type -> mockgcp.iam.v1.ListAttestationRulesRequest
++	1,  // 17: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.GetWorkloadIdentityPoolManagedIdentity:output_type -> mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentity
++	17, // 18: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.CreateWorkloadIdentityPoolManagedIdentity:output_type -> google.longrunning.Operation
++	17, // 19: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.UpdateWorkloadIdentityPoolManagedIdentity:output_type -> google.longrunning.Operation
++	17, // 20: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.DeleteWorkloadIdentityPoolManagedIdentity:output_type -> google.longrunning.Operation
++	17, // 21: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.UndeleteWorkloadIdentityPoolManagedIdentity:output_type -> google.longrunning.Operation
++	8,  // 22: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.ListWorkloadIdentityPoolManagedIdentities:output_type -> mockgcp.iam.v1.ListWorkloadIdentityPoolManagedIdentitiesResponse
++	17, // 23: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.SetAttestationRules:output_type -> google.longrunning.Operation
++	13, // 24: mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities.ListAttestationRules:output_type -> mockgcp.iam.v1.ListAttestationRulesResponse
++	17, // [17:25] is the sub-list for method output_type
++	9,  // [9:17] is the sub-list for method input_type
++	9,  // [9:9] is the sub-list for extension type_name
++	9,  // [9:9] is the sub-list for extension extendee
++	0,  // [0:9] is the sub-list for field type_name
++}
++
++func init() { file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_init() }
++func file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_init() {
++	if File_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto != nil {
++		return
++	}
++	if !protoimpl.UnsafeEnabled {
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*WorkloadIdentityPoolManagedIdentity); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*GetWorkloadIdentityPoolManagedIdentityRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*CreateWorkloadIdentityPoolManagedIdentityRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*UpdateWorkloadIdentityPoolManagedIdentityRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*DeleteWorkloadIdentityPoolManagedIdentityRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*UndeleteWorkloadIdentityPoolManagedIdentityRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*ListWorkloadIdentityPoolManagedIdentitiesRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*ListWorkloadIdentityPoolManagedIdentitiesResponse); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*AttestationRule); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*SetAttestationRulesRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*SetAttestationRulesResponse); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*ListAttestationRulesRequest); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*ListAttestationRulesResponse); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++		file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
++			switch v := v.(*ManagedIdentityAttestationRules); i {
++			case 0:
++				return &v.state
++			case 1:
++				return &v.sizeCache
++			case 2:
++				return &v.unknownFields
++			default:
++				return nil
++			}
++		}
++	}
++	type x struct{}
++	out := protoimpl.TypeBuilder{
++		File: protoimpl.DescBuilder{
++			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
++			RawDescriptor: file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDesc,
++			NumEnums:      1,
++			NumMessages:   14,
++			NumExtensions: 0,
++			NumServices:   1,
++		},
++		GoTypes:           file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_goTypes,
++		DependencyIndexes: file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_depIdxs,
++		EnumInfos:         file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_enumTypes,
++		MessageInfos:      file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_msgTypes,
++	}.Build()
++	File_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto = out.File
++	file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_rawDesc = nil
++	file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_goTypes = nil
++	file_mockgcp_iam_v1_workload_identity_pool_managed_identity_proto_depIdxs = nil
++}
+diff --git a/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity.pb.gw.go b/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity.pb.gw.go
+new file mode 100644
+index 000000000..6eb0433a0
+--- /dev/null
++++ b/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity.pb.gw.go
+@@ -0,0 +1,1060 @@
++// Code generated by protoc-gen-grpc-gateway. DO NOT EDIT.
++// source: mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
++
++/*
++Package iampb is a reverse proxy.
++
++It translates gRPC into RESTful JSON APIs.
++*/
++package iampb
++
++import (
++	"context"
++	"io"
++	"net/http"
++
++	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
++	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
++	"google.golang.org/grpc"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/grpclog"
++	"google.golang.org/grpc/metadata"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++)
++
++// Suppress "imported and not used" errors
++var _ codes.Code
++var _ io.Reader
++var _ status.Status
++var _ = runtime.String
++var _ = utilities.NewDoubleArray
++var _ = metadata.Join
++
++func request_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq GetWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
++	}
++
++	protoReq.Name, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
++	}
++
++	msg, err := client.GetWorkloadIdentityPoolManagedIdentity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq GetWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
++	}
++
++	protoReq.Name, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
++	}
++
++	msg, err := server.GetWorkloadIdentityPoolManagedIdentity(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++var (
++	filter_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0 = &utilities.DoubleArray{Encoding: map[string]int{"workload_identity_pool_managed_identity": 0, "parent": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
++)
++
++func request_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq CreateWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.WorkloadIdentityPoolManagedIdentity); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["parent"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "parent")
++	}
++
++	protoReq.Parent, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "parent", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := client.CreateWorkloadIdentityPoolManagedIdentity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq CreateWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.WorkloadIdentityPoolManagedIdentity); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["parent"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "parent")
++	}
++
++	protoReq.Parent, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "parent", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := server.CreateWorkloadIdentityPoolManagedIdentity(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++var (
++	filter_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0 = &utilities.DoubleArray{Encoding: map[string]int{"workload_identity_pool_managed_identity": 0, "name": 1}, Base: []int{1, 2, 1, 0, 0}, Check: []int{0, 1, 2, 3, 2}}
++)
++
++func request_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq UpdateWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.WorkloadIdentityPoolManagedIdentity); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if protoReq.UpdateMask == nil || len(protoReq.UpdateMask.GetPaths()) == 0 {
++		if fieldMask, err := runtime.FieldMaskFromRequestBody(newReader(), protoReq.WorkloadIdentityPoolManagedIdentity); err != nil {
++			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++		} else {
++			protoReq.UpdateMask = fieldMask
++		}
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["workload_identity_pool_managed_identity.name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workload_identity_pool_managed_identity.name")
++	}
++
++	err = runtime.PopulateFieldFromPath(&protoReq, "workload_identity_pool_managed_identity.name", val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workload_identity_pool_managed_identity.name", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := client.UpdateWorkloadIdentityPoolManagedIdentity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq UpdateWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.WorkloadIdentityPoolManagedIdentity); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if protoReq.UpdateMask == nil || len(protoReq.UpdateMask.GetPaths()) == 0 {
++		if fieldMask, err := runtime.FieldMaskFromRequestBody(newReader(), protoReq.WorkloadIdentityPoolManagedIdentity); err != nil {
++			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++		} else {
++			protoReq.UpdateMask = fieldMask
++		}
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["workload_identity_pool_managed_identity.name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workload_identity_pool_managed_identity.name")
++	}
++
++	err = runtime.PopulateFieldFromPath(&protoReq, "workload_identity_pool_managed_identity.name", val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workload_identity_pool_managed_identity.name", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := server.UpdateWorkloadIdentityPoolManagedIdentity(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++func request_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq DeleteWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
++	}
++
++	protoReq.Name, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
++	}
++
++	msg, err := client.DeleteWorkloadIdentityPoolManagedIdentity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq DeleteWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
++	}
++
++	protoReq.Name, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
++	}
++
++	msg, err := server.DeleteWorkloadIdentityPoolManagedIdentity(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++func request_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq UndeleteWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
++	}
++
++	protoReq.Name, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
++	}
++
++	msg, err := client.UndeleteWorkloadIdentityPoolManagedIdentity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq UndeleteWorkloadIdentityPoolManagedIdentityRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["name"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
++	}
++
++	protoReq.Name, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
++	}
++
++	msg, err := server.UndeleteWorkloadIdentityPoolManagedIdentity(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++var (
++	filter_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0 = &utilities.DoubleArray{Encoding: map[string]int{"parent": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
++)
++
++func request_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq ListWorkloadIdentityPoolManagedIdentitiesRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["parent"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "parent")
++	}
++
++	protoReq.Parent, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "parent", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := client.ListWorkloadIdentityPoolManagedIdentities(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq ListWorkloadIdentityPoolManagedIdentitiesRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["parent"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "parent")
++	}
++
++	protoReq.Parent, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "parent", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := server.ListWorkloadIdentityPoolManagedIdentities(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++func request_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq SetAttestationRulesRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["resource"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "resource")
++	}
++
++	protoReq.Resource, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "resource", err)
++	}
++
++	msg, err := client.SetAttestationRules(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq SetAttestationRulesRequest
++	var metadata runtime.ServerMetadata
++
++	newReader, berr := utilities.IOReaderFactory(req.Body)
++	if berr != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
++	}
++	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["resource"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "resource")
++	}
++
++	protoReq.Resource, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "resource", err)
++	}
++
++	msg, err := server.SetAttestationRules(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++var (
++	filter_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0 = &utilities.DoubleArray{Encoding: map[string]int{"resource": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
++)
++
++func request_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityPoolManagedIdentitiesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq ListAttestationRulesRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["resource"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "resource")
++	}
++
++	protoReq.Resource, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "resource", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := client.ListAttestationRules(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
++	return msg, metadata, err
++
++}
++
++func local_request_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityPoolManagedIdentitiesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
++	var protoReq ListAttestationRulesRequest
++	var metadata runtime.ServerMetadata
++
++	var (
++		val string
++		ok  bool
++		err error
++		_   = err
++	)
++
++	val, ok = pathParams["resource"]
++	if !ok {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "resource")
++	}
++
++	protoReq.Resource, err = runtime.String(val)
++	if err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "resource", err)
++	}
++
++	if err := req.ParseForm(); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0); err != nil {
++		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
++	}
++
++	msg, err := server.ListAttestationRules(ctx, &protoReq)
++	return msg, metadata, err
++
++}
++
++// RegisterWorkloadIdentityPoolManagedIdentitiesHandlerServer registers the http handlers for service WorkloadIdentityPoolManagedIdentities to "mux".
++// UnaryRPC     :call WorkloadIdentityPoolManagedIdentitiesServer directly.
++// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
++// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterWorkloadIdentityPoolManagedIdentitiesHandlerFromEndpoint instead.
++func RegisterWorkloadIdentityPoolManagedIdentitiesHandlerServer(ctx context.Context, mux *runtime.ServeMux, server WorkloadIdentityPoolManagedIdentitiesServer) error {
++
++	mux.Handle("GET", pattern_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/GetWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("POST", pattern_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/CreateWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{parent=projects/*/locations/*/workloadIdentityPools/*/namespaces/*}/managedIdentities"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("PATCH", pattern_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UpdateWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{workload_identity_pool_managed_identity.name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("DELETE", pattern_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/DeleteWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("POST", pattern_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UndeleteWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:undelete"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("GET", pattern_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListWorkloadIdentityPoolManagedIdentities", runtime.WithHTTPPathPattern("/v1/{parent=projects/*/locations/*/workloadIdentityPools/*/namespaces/*}/managedIdentities"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("POST", pattern_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/SetAttestationRules", runtime.WithHTTPPathPattern("/v1/{resource=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:setAttestationRules"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("GET", pattern_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		var stream runtime.ServerTransportStream
++		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListAttestationRules", runtime.WithHTTPPathPattern("/v1/{resource=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:listAttestationRules"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := local_request_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0(annotatedContext, inboundMarshaler, server, req, pathParams)
++		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	return nil
++}
++
++// RegisterWorkloadIdentityPoolManagedIdentitiesHandlerFromEndpoint is same as RegisterWorkloadIdentityPoolManagedIdentitiesHandler but
++// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
++func RegisterWorkloadIdentityPoolManagedIdentitiesHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
++	conn, err := grpc.Dial(endpoint, opts...)
++	if err != nil {
++		return err
++	}
++	defer func() {
++		if err != nil {
++			if cerr := conn.Close(); cerr != nil {
++				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
++			}
++			return
++		}
++		go func() {
++			<-ctx.Done()
++			if cerr := conn.Close(); cerr != nil {
++				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
++			}
++		}()
++	}()
++
++	return RegisterWorkloadIdentityPoolManagedIdentitiesHandler(ctx, mux, conn)
++}
++
++// RegisterWorkloadIdentityPoolManagedIdentitiesHandler registers the http handlers for service WorkloadIdentityPoolManagedIdentities to "mux".
++// The handlers forward requests to the grpc endpoint over "conn".
++func RegisterWorkloadIdentityPoolManagedIdentitiesHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
++	return RegisterWorkloadIdentityPoolManagedIdentitiesHandlerClient(ctx, mux, NewWorkloadIdentityPoolManagedIdentitiesClient(conn))
++}
++
++// RegisterWorkloadIdentityPoolManagedIdentitiesHandlerClient registers the http handlers for service WorkloadIdentityPoolManagedIdentities
++// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "WorkloadIdentityPoolManagedIdentitiesClient".
++// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "WorkloadIdentityPoolManagedIdentitiesClient"
++// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
++// "WorkloadIdentityPoolManagedIdentitiesClient" to call the correct interceptors.
++func RegisterWorkloadIdentityPoolManagedIdentitiesHandlerClient(ctx context.Context, mux *runtime.ServeMux, client WorkloadIdentityPoolManagedIdentitiesClient) error {
++
++	mux.Handle("GET", pattern_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/GetWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("POST", pattern_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/CreateWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{parent=projects/*/locations/*/workloadIdentityPools/*/namespaces/*}/managedIdentities"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("PATCH", pattern_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UpdateWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{workload_identity_pool_managed_identity.name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("DELETE", pattern_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/DeleteWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("POST", pattern_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UndeleteWorkloadIdentityPoolManagedIdentity", runtime.WithHTTPPathPattern("/v1/{name=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:undelete"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("GET", pattern_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListWorkloadIdentityPoolManagedIdentities", runtime.WithHTTPPathPattern("/v1/{parent=projects/*/locations/*/workloadIdentityPools/*/namespaces/*}/managedIdentities"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("POST", pattern_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/SetAttestationRules", runtime.WithHTTPPathPattern("/v1/{resource=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:setAttestationRules"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	mux.Handle("GET", pattern_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
++		ctx, cancel := context.WithCancel(req.Context())
++		defer cancel()
++		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
++		var err error
++		var annotatedContext context.Context
++		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListAttestationRules", runtime.WithHTTPPathPattern("/v1/{resource=projects/*/locations/*/workloadIdentityPools/*/namespaces/*/managedIdentities/*}:listAttestationRules"))
++		if err != nil {
++			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
++			return
++		}
++		resp, md, err := request_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0(annotatedContext, inboundMarshaler, client, req, pathParams)
++		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
++		if err != nil {
++			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
++			return
++		}
++
++		forward_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
++
++	})
++
++	return nil
++}
++
++var (
++	pattern_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 2, 5, 1, 0, 4, 10, 5, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "managedIdentities", "name"}, ""))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 4, 8, 5, 5, 2, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "parent", "managedIdentities"}, ""))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 2, 5, 1, 0, 4, 10, 5, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "managedIdentities", "workload_identity_pool_managed_identity.name"}, ""))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 2, 5, 1, 0, 4, 10, 5, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "managedIdentities", "name"}, ""))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 2, 5, 1, 0, 4, 10, 5, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "managedIdentities", "name"}, "undelete"))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 4, 8, 5, 5, 2, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "parent", "managedIdentities"}, ""))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 2, 5, 1, 0, 4, 10, 5, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "managedIdentities", "resource"}, "setAttestationRules"))
++
++	pattern_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 2, 2, 1, 0, 2, 3, 1, 0, 2, 4, 1, 0, 2, 5, 1, 0, 4, 10, 5, 6}, []string{"v1", "projects", "locations", "workloadIdentityPools", "namespaces", "managedIdentities", "resource"}, "listAttestationRules"))
++)
++
++var (
++	forward_WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_SetAttestationRules_0 = runtime.ForwardResponseMessage
++
++	forward_WorkloadIdentityPoolManagedIdentities_ListAttestationRules_0 = runtime.ForwardResponseMessage
++)
+diff --git a/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity_grpc.pb.go b/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity_grpc.pb.go
+new file mode 100644
+index 000000000..9a1676902
+--- /dev/null
++++ b/mockgcp/generated/mockgcp/iam/v1/workload_identity_pool_managed_identity_grpc.pb.go
+@@ -0,0 +1,375 @@
++// Code generated by protoc-gen-go-grpc. DO NOT EDIT.
++// versions:
++// - protoc-gen-go-grpc v1.2.0
++// - protoc             v3.12.4
++// source: mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
++
++package iampb
++
++import (
++	longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
++	context "context"
++	grpc "google.golang.org/grpc"
++	codes "google.golang.org/grpc/codes"
++	status "google.golang.org/grpc/status"
++)
++
++// This is a compile-time assertion to ensure that this generated file
++// is compatible with the grpc package it is being compiled against.
++// Requires gRPC-Go v1.32.0 or later.
++const _ = grpc.SupportPackageIsVersion7
++
++// WorkloadIdentityPoolManagedIdentitiesClient is the client API for WorkloadIdentityPoolManagedIdentities service.
++//
++// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
++type WorkloadIdentityPoolManagedIdentitiesClient interface {
++	// Gets an individual WorkloadIdentityPoolManagedIdentity.
++	GetWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *GetWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*WorkloadIdentityPoolManagedIdentity, error)
++	// Creates a new WorkloadIdentityPoolManagedIdentity in a WorkloadIdentityPoolNamespace.
++	CreateWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *CreateWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error)
++	// Updates an existing WorkloadIdentityPoolManagedIdentity in a WorkloadIdentityPoolNamespace.
++	UpdateWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *UpdateWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error)
++	// Deletes a WorkloadIdentityPoolManagedIdentity.
++	DeleteWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *DeleteWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error)
++	// Undeletes a WorkloadIdentityPoolManagedIdentity, as long as it was deleted fewer than 30 days ago.
++	UndeleteWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *UndeleteWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error)
++	// Lists all non-deleted WorkloadIdentityPoolManagedIdentities in a workload identity pool namespace.
++	ListWorkloadIdentityPoolManagedIdentities(ctx context.Context, in *ListWorkloadIdentityPoolManagedIdentitiesRequest, opts ...grpc.CallOption) (*ListWorkloadIdentityPoolManagedIdentitiesResponse, error)
++	// Written here: sets a managed identity's attestation rules, replacing any.
++	SetAttestationRules(ctx context.Context, in *SetAttestationRulesRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error)
++	// Written here: lists a managed identity's attestation rules.
++	ListAttestationRules(ctx context.Context, in *ListAttestationRulesRequest, opts ...grpc.CallOption) (*ListAttestationRulesResponse, error)
++}
++
++type workloadIdentityPoolManagedIdentitiesClient struct {
++	cc grpc.ClientConnInterface
++}
++
++func NewWorkloadIdentityPoolManagedIdentitiesClient(cc grpc.ClientConnInterface) WorkloadIdentityPoolManagedIdentitiesClient {
++	return &workloadIdentityPoolManagedIdentitiesClient{cc}
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) GetWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *GetWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*WorkloadIdentityPoolManagedIdentity, error) {
++	out := new(WorkloadIdentityPoolManagedIdentity)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/GetWorkloadIdentityPoolManagedIdentity", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) CreateWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *CreateWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error) {
++	out := new(longrunningpb.Operation)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/CreateWorkloadIdentityPoolManagedIdentity", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) UpdateWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *UpdateWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error) {
++	out := new(longrunningpb.Operation)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UpdateWorkloadIdentityPoolManagedIdentity", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) DeleteWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *DeleteWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error) {
++	out := new(longrunningpb.Operation)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/DeleteWorkloadIdentityPoolManagedIdentity", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) UndeleteWorkloadIdentityPoolManagedIdentity(ctx context.Context, in *UndeleteWorkloadIdentityPoolManagedIdentityRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error) {
++	out := new(longrunningpb.Operation)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UndeleteWorkloadIdentityPoolManagedIdentity", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) ListWorkloadIdentityPoolManagedIdentities(ctx context.Context, in *ListWorkloadIdentityPoolManagedIdentitiesRequest, opts ...grpc.CallOption) (*ListWorkloadIdentityPoolManagedIdentitiesResponse, error) {
++	out := new(ListWorkloadIdentityPoolManagedIdentitiesResponse)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListWorkloadIdentityPoolManagedIdentities", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) SetAttestationRules(ctx context.Context, in *SetAttestationRulesRequest, opts ...grpc.CallOption) (*longrunningpb.Operation, error) {
++	out := new(longrunningpb.Operation)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/SetAttestationRules", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (c *workloadIdentityPoolManagedIdentitiesClient) ListAttestationRules(ctx context.Context, in *ListAttestationRulesRequest, opts ...grpc.CallOption) (*ListAttestationRulesResponse, error) {
++	out := new(ListAttestationRulesResponse)
++	err := c.cc.Invoke(ctx, "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListAttestationRules", in, out, opts...)
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++// WorkloadIdentityPoolManagedIdentitiesServer is the server API for WorkloadIdentityPoolManagedIdentities service.
++// All implementations must embed UnimplementedWorkloadIdentityPoolManagedIdentitiesServer
++// for forward compatibility
++type WorkloadIdentityPoolManagedIdentitiesServer interface {
++	// Gets an individual WorkloadIdentityPoolManagedIdentity.
++	GetWorkloadIdentityPoolManagedIdentity(context.Context, *GetWorkloadIdentityPoolManagedIdentityRequest) (*WorkloadIdentityPoolManagedIdentity, error)
++	// Creates a new WorkloadIdentityPoolManagedIdentity in a WorkloadIdentityPoolNamespace.
++	CreateWorkloadIdentityPoolManagedIdentity(context.Context, *CreateWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error)
++	// Updates an existing WorkloadIdentityPoolManagedIdentity in a WorkloadIdentityPoolNamespace.
++	UpdateWorkloadIdentityPoolManagedIdentity(context.Context, *UpdateWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error)
++	// Deletes a WorkloadIdentityPoolManagedIdentity.
++	DeleteWorkloadIdentityPoolManagedIdentity(context.Context, *DeleteWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error)
++	// Undeletes a WorkloadIdentityPoolManagedIdentity, as long as it was deleted fewer than 30 days ago.
++	UndeleteWorkloadIdentityPoolManagedIdentity(context.Context, *UndeleteWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error)
++	// Lists all non-deleted WorkloadIdentityPoolManagedIdentities in a workload identity pool namespace.
++	ListWorkloadIdentityPoolManagedIdentities(context.Context, *ListWorkloadIdentityPoolManagedIdentitiesRequest) (*ListWorkloadIdentityPoolManagedIdentitiesResponse, error)
++	// Written here: sets a managed identity's attestation rules, replacing any.
++	SetAttestationRules(context.Context, *SetAttestationRulesRequest) (*longrunningpb.Operation, error)
++	// Written here: lists a managed identity's attestation rules.
++	ListAttestationRules(context.Context, *ListAttestationRulesRequest) (*ListAttestationRulesResponse, error)
++	mustEmbedUnimplementedWorkloadIdentityPoolManagedIdentitiesServer()
++}
++
++// UnimplementedWorkloadIdentityPoolManagedIdentitiesServer must be embedded to have forward compatible implementations.
++type UnimplementedWorkloadIdentityPoolManagedIdentitiesServer struct {
++}
++
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) GetWorkloadIdentityPoolManagedIdentity(context.Context, *GetWorkloadIdentityPoolManagedIdentityRequest) (*WorkloadIdentityPoolManagedIdentity, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method GetWorkloadIdentityPoolManagedIdentity not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) CreateWorkloadIdentityPoolManagedIdentity(context.Context, *CreateWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method CreateWorkloadIdentityPoolManagedIdentity not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) UpdateWorkloadIdentityPoolManagedIdentity(context.Context, *UpdateWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkloadIdentityPoolManagedIdentity not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) DeleteWorkloadIdentityPoolManagedIdentity(context.Context, *DeleteWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method DeleteWorkloadIdentityPoolManagedIdentity not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) UndeleteWorkloadIdentityPoolManagedIdentity(context.Context, *UndeleteWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method UndeleteWorkloadIdentityPoolManagedIdentity not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) ListWorkloadIdentityPoolManagedIdentities(context.Context, *ListWorkloadIdentityPoolManagedIdentitiesRequest) (*ListWorkloadIdentityPoolManagedIdentitiesResponse, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method ListWorkloadIdentityPoolManagedIdentities not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) SetAttestationRules(context.Context, *SetAttestationRulesRequest) (*longrunningpb.Operation, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method SetAttestationRules not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) ListAttestationRules(context.Context, *ListAttestationRulesRequest) (*ListAttestationRulesResponse, error) {
++	return nil, status.Errorf(codes.Unimplemented, "method ListAttestationRules not implemented")
++}
++func (UnimplementedWorkloadIdentityPoolManagedIdentitiesServer) mustEmbedUnimplementedWorkloadIdentityPoolManagedIdentitiesServer() {
++}
++
++// UnsafeWorkloadIdentityPoolManagedIdentitiesServer may be embedded to opt out of forward compatibility for this service.
++// Use of this interface is not recommended, as added methods to WorkloadIdentityPoolManagedIdentitiesServer will
++// result in compilation errors.
++type UnsafeWorkloadIdentityPoolManagedIdentitiesServer interface {
++	mustEmbedUnimplementedWorkloadIdentityPoolManagedIdentitiesServer()
++}
++
++func RegisterWorkloadIdentityPoolManagedIdentitiesServer(s grpc.ServiceRegistrar, srv WorkloadIdentityPoolManagedIdentitiesServer) {
++	s.RegisterService(&WorkloadIdentityPoolManagedIdentities_ServiceDesc, srv)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(GetWorkloadIdentityPoolManagedIdentityRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).GetWorkloadIdentityPoolManagedIdentity(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/GetWorkloadIdentityPoolManagedIdentity",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).GetWorkloadIdentityPoolManagedIdentity(ctx, req.(*GetWorkloadIdentityPoolManagedIdentityRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(CreateWorkloadIdentityPoolManagedIdentityRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).CreateWorkloadIdentityPoolManagedIdentity(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/CreateWorkloadIdentityPoolManagedIdentity",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).CreateWorkloadIdentityPoolManagedIdentity(ctx, req.(*CreateWorkloadIdentityPoolManagedIdentityRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(UpdateWorkloadIdentityPoolManagedIdentityRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).UpdateWorkloadIdentityPoolManagedIdentity(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UpdateWorkloadIdentityPoolManagedIdentity",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).UpdateWorkloadIdentityPoolManagedIdentity(ctx, req.(*UpdateWorkloadIdentityPoolManagedIdentityRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(DeleteWorkloadIdentityPoolManagedIdentityRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).DeleteWorkloadIdentityPoolManagedIdentity(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/DeleteWorkloadIdentityPoolManagedIdentity",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).DeleteWorkloadIdentityPoolManagedIdentity(ctx, req.(*DeleteWorkloadIdentityPoolManagedIdentityRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(UndeleteWorkloadIdentityPoolManagedIdentityRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).UndeleteWorkloadIdentityPoolManagedIdentity(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/UndeleteWorkloadIdentityPoolManagedIdentity",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).UndeleteWorkloadIdentityPoolManagedIdentity(ctx, req.(*UndeleteWorkloadIdentityPoolManagedIdentityRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(ListWorkloadIdentityPoolManagedIdentitiesRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).ListWorkloadIdentityPoolManagedIdentities(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListWorkloadIdentityPoolManagedIdentities",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).ListWorkloadIdentityPoolManagedIdentities(ctx, req.(*ListWorkloadIdentityPoolManagedIdentitiesRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_SetAttestationRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(SetAttestationRulesRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).SetAttestationRules(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/SetAttestationRules",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).SetAttestationRules(ctx, req.(*SetAttestationRulesRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++func _WorkloadIdentityPoolManagedIdentities_ListAttestationRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
++	in := new(ListAttestationRulesRequest)
++	if err := dec(in); err != nil {
++		return nil, err
++	}
++	if interceptor == nil {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).ListAttestationRules(ctx, in)
++	}
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities/ListAttestationRules",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(WorkloadIdentityPoolManagedIdentitiesServer).ListAttestationRules(ctx, req.(*ListAttestationRulesRequest))
++	}
++	return interceptor(ctx, in, info, handler)
++}
++
++// WorkloadIdentityPoolManagedIdentities_ServiceDesc is the grpc.ServiceDesc for WorkloadIdentityPoolManagedIdentities service.
++// It's only intended for direct use with grpc.RegisterService,
++// and not to be introspected or modified (even as a copy)
++var WorkloadIdentityPoolManagedIdentities_ServiceDesc = grpc.ServiceDesc{
++	ServiceName: "mockgcp.iam.v1.WorkloadIdentityPoolManagedIdentities",
++	HandlerType: (*WorkloadIdentityPoolManagedIdentitiesServer)(nil),
++	Methods: []grpc.MethodDesc{
++		{
++			MethodName: "GetWorkloadIdentityPoolManagedIdentity",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_GetWorkloadIdentityPoolManagedIdentity_Handler,
++		},
++		{
++			MethodName: "CreateWorkloadIdentityPoolManagedIdentity",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_CreateWorkloadIdentityPoolManagedIdentity_Handler,
++		},
++		{
++			MethodName: "UpdateWorkloadIdentityPoolManagedIdentity",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_UpdateWorkloadIdentityPoolManagedIdentity_Handler,
++		},
++		{
++			MethodName: "DeleteWorkloadIdentityPoolManagedIdentity",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_DeleteWorkloadIdentityPoolManagedIdentity_Handler,
++		},
++		{
++			MethodName: "UndeleteWorkloadIdentityPoolManagedIdentity",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_UndeleteWorkloadIdentityPoolManagedIdentity_Handler,
++		},
++		{
++			MethodName: "ListWorkloadIdentityPoolManagedIdentities",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_ListWorkloadIdentityPoolManagedIdentities_Handler,
++		},
++		{
++			MethodName: "SetAttestationRules",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_SetAttestationRules_Handler,
++		},
++		{
++			MethodName: "ListAttestationRules",
++			Handler:    _WorkloadIdentityPoolManagedIdentities_ListAttestationRules_Handler,
++		},
++	},
++	Streams:  []grpc.StreamDesc{},
++	Metadata: "mockgcp/iam/v1/workload_identity_pool_managed_identity.proto",
++}
+diff --git a/mockgcp/mockiam/service.go b/mockgcp/mockiam/service.go
+index 3ac0bdb35..92555b4e6 100644
+--- a/mockgcp/mockiam/service.go
++++ b/mockgcp/mockiam/service.go
+@@ -70,6 +70,7 @@ func (s *MockService) Register(grpcServer *grpc.Server) {
+ 	pb.RegisterIAMServer(grpcServer, &IAMServer{MockService: s})
+ 	pbv2.RegisterPoliciesServer(grpcServer, &IAMV2PoliciesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolNamespacesServer(grpcServer, &WorkloadIdentityPoolNamespacesServer{MockService: s})
++	pbwip.RegisterWorkloadIdentityPoolManagedIdentitiesServer(grpcServer, &WorkloadIdentityPoolManagedIdentitiesServer{MockService: s})
+ }
+ 
+ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (http.Handler, error) {
+@@ -77,6 +78,7 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 		pb.RegisterIAMHandler,
+ 		pbhttp_v2.RegisterPoliciesHandler,
+ 		pbwip.RegisterWorkloadIdentityPoolNamespacesHandler,
++		pbwip.RegisterWorkloadIdentityPoolManagedIdentitiesHandler,
+ 		s.operations.RegisterOperationsPath("/v1/{prefix=**}/operations/{name}"))
+ 	if err != nil {
+ 		return nil, err
+diff --git a/mockgcp/mockiam/workloadidentitypoolmanagedidentities.go b/mockgcp/mockiam/workloadidentitypoolmanagedidentities.go
+new file mode 100644
+index 000000000..e5d9eacc8
+--- /dev/null
++++ b/mockgcp/mockiam/workloadidentitypoolmanagedidentities.go
+@@ -0,0 +1,231 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// Added by config-connector-extensions (patch 0007): managed identities in a
++// workload identity pool namespace, as the IAM v1 API documents them, with
++// their attestation rules. Like a namespace, a deleted managed identity is
++// soft-deleted (state DELETED) and its ID cannot be reused. A managed
++// identity must be in an existing, active namespace; the pool is not checked.
++
++package mockiam
++
++import (
++	"context"
++	"strings"
++	"time"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/types/known/timestamppb"
++
++	longrunningpb "google.golang.org/genproto/googleapis/longrunning"
++
++	pbwip "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/iam/v1"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++type WorkloadIdentityPoolManagedIdentitiesServer struct {
++	*MockService
++	pbwip.UnimplementedWorkloadIdentityPoolManagedIdentitiesServer
++}
++
++type managedIdentityName struct {
++	namespace namespaceName
++	ID        string
++}
++
++func (n *managedIdentityName) String() string {
++	return n.namespace.String() + "/managedIdentities/" + n.ID
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) parseName(name string) (*managedIdentityName, error) {
++	i := strings.LastIndex(name, "/managedIdentities/")
++	if i < 0 || strings.Contains(name[i+len("/managedIdentities/"):], "/") {
++		return nil, status.Errorf(codes.InvalidArgument, "name %q is not valid", name)
++	}
++	ns, err := (&WorkloadIdentityPoolNamespacesServer{MockService: s.MockService}).parseNamespaceName(name[:i])
++	if err != nil {
++		return nil, err
++	}
++	return &managedIdentityName{namespace: *ns, ID: name[i+len("/managedIdentities/"):]}, nil
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) get(ctx context.Context, name string) (*managedIdentityName, *pbwip.WorkloadIdentityPoolManagedIdentity, error) {
++	n, err := s.parseName(name)
++	if err != nil {
++		return nil, nil, err
++	}
++	obj := &pbwip.WorkloadIdentityPoolManagedIdentity{}
++	if err := s.storage.Get(ctx, n.String(), obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, nil, status.Errorf(codes.NotFound, "Requested entity was not found.")
++		}
++		return nil, nil, err
++	}
++	return n, obj, nil
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) lro(ctx context.Context, n *managedIdentityName, result proto.Message) (*longrunningpb.Operation, error) {
++	result = proto.Clone(result)
++	return s.operations.StartLRO(ctx, n.String(), &pbwip.WorkloadIdentityPoolOperationMetadata{}, func() (proto.Message, error) {
++		return result, nil
++	})
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) GetWorkloadIdentityPoolManagedIdentity(ctx context.Context, req *pbwip.GetWorkloadIdentityPoolManagedIdentityRequest) (*pbwip.WorkloadIdentityPoolManagedIdentity, error) {
++	_, obj, err := s.get(ctx, req.GetName())
++	return obj, err
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) CreateWorkloadIdentityPoolManagedIdentity(ctx context.Context, req *pbwip.CreateWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	n, err := s.parseName(req.GetParent() + "/managedIdentities/" + req.GetWorkloadIdentityPoolManagedIdentityId())
++	if err != nil {
++		return nil, err
++	}
++	ns := &pbwip.WorkloadIdentityPoolNamespace{}
++	if err := s.storage.Get(ctx, n.namespace.String(), ns); err != nil || ns.State == pbwip.WorkloadIdentityPoolNamespace_DELETED {
++		return nil, status.Errorf(codes.NotFound, "Namespace %s was not found.", n.namespace.String())
++	}
++	obj := proto.Clone(req.GetWorkloadIdentityPoolManagedIdentity()).(*pbwip.WorkloadIdentityPoolManagedIdentity)
++	obj.Name = n.String()
++	obj.State = pbwip.WorkloadIdentityPoolManagedIdentity_ACTIVE
++	obj.ExpireTime = nil
++	if err := s.storage.Create(ctx, n.String(), obj); err != nil {
++		if status.Code(err) == codes.AlreadyExists {
++			return nil, status.Errorf(codes.AlreadyExists, "Managed identity %s already exists.", n.String())
++		}
++		return nil, err
++	}
++	return s.lro(ctx, n, obj)
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) UpdateWorkloadIdentityPoolManagedIdentity(ctx context.Context, req *pbwip.UpdateWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	n, obj, err := s.get(ctx, req.GetWorkloadIdentityPoolManagedIdentity().GetName())
++	if err != nil {
++		return nil, err
++	}
++	if obj.State == pbwip.WorkloadIdentityPoolManagedIdentity_DELETED {
++		return nil, status.Errorf(codes.FailedPrecondition, "Managed identity %s is deleted.", n.String())
++	}
++	for _, path := range req.GetUpdateMask().GetPaths() {
++		switch path {
++		case "description":
++			obj.Description = req.GetWorkloadIdentityPoolManagedIdentity().GetDescription()
++		case "disabled":
++			obj.Disabled = req.GetWorkloadIdentityPoolManagedIdentity().GetDisabled()
++		default:
++			return nil, status.Errorf(codes.InvalidArgument, "update_mask path %q not supported by mockgcp", path)
++		}
++	}
++	if err := s.storage.Update(ctx, n.String(), obj); err != nil {
++		return nil, err
++	}
++	return s.lro(ctx, n, obj)
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) DeleteWorkloadIdentityPoolManagedIdentity(ctx context.Context, req *pbwip.DeleteWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	n, obj, err := s.get(ctx, req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	if obj.State == pbwip.WorkloadIdentityPoolManagedIdentity_DELETED {
++		return nil, status.Errorf(codes.NotFound, "Requested entity was not found.")
++	}
++	obj.State = pbwip.WorkloadIdentityPoolManagedIdentity_DELETED
++	obj.ExpireTime = timestamppb.New(time.Now().Add(30 * 24 * time.Hour))
++	if err := s.storage.Update(ctx, n.String(), obj); err != nil {
++		return nil, err
++	}
++	return s.lro(ctx, n, obj)
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) UndeleteWorkloadIdentityPoolManagedIdentity(ctx context.Context, req *pbwip.UndeleteWorkloadIdentityPoolManagedIdentityRequest) (*longrunningpb.Operation, error) {
++	n, obj, err := s.get(ctx, req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	if obj.State != pbwip.WorkloadIdentityPoolManagedIdentity_DELETED {
++		return nil, status.Errorf(codes.FailedPrecondition, "Managed identity %s is not deleted.", n.String())
++	}
++	obj.State = pbwip.WorkloadIdentityPoolManagedIdentity_ACTIVE
++	obj.ExpireTime = nil
++	if err := s.storage.Update(ctx, n.String(), obj); err != nil {
++		return nil, err
++	}
++	return s.lro(ctx, n, obj)
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) ListWorkloadIdentityPoolManagedIdentities(ctx context.Context, req *pbwip.ListWorkloadIdentityPoolManagedIdentitiesRequest) (*pbwip.ListWorkloadIdentityPoolManagedIdentitiesResponse, error) {
++	resp := &pbwip.ListWorkloadIdentityPoolManagedIdentitiesResponse{}
++	kind := (&pbwip.WorkloadIdentityPoolManagedIdentity{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: req.GetParent() + "/managedIdentities/"}, func(obj proto.Message) error {
++		mi := obj.(*pbwip.WorkloadIdentityPoolManagedIdentity)
++		if mi.State != pbwip.WorkloadIdentityPoolManagedIdentity_DELETED || req.GetShowDeleted() {
++			resp.WorkloadIdentityPoolManagedIdentities = append(resp.WorkloadIdentityPoolManagedIdentities, mi)
++		}
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return resp, nil
++}
++
++func rulesKey(n *managedIdentityName) string {
++	return n.String() + "/attestationRules"
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) SetAttestationRules(ctx context.Context, req *pbwip.SetAttestationRulesRequest) (*longrunningpb.Operation, error) {
++	n, obj, err := s.get(ctx, req.GetResource())
++	if err != nil {
++		return nil, err
++	}
++	if obj.State == pbwip.WorkloadIdentityPoolManagedIdentity_DELETED {
++		return nil, status.Errorf(codes.FailedPrecondition, "Managed identity %s is deleted.", n.String())
++	}
++	for _, r := range req.GetAttestationRules() {
++		if r.GetGoogleCloudResource() == "" {
++			return nil, status.Errorf(codes.InvalidArgument, "attestation rule must set google_cloud_resource")
++		}
++	}
++	if len(req.GetAttestationRules()) > 50 {
++		return nil, status.Errorf(codes.InvalidArgument, "at most 50 attestation rules")
++	}
++	rules := &pbwip.ManagedIdentityAttestationRules{Name: rulesKey(n), AttestationRules: req.GetAttestationRules()}
++	if err := s.storage.Update(ctx, rulesKey(n), rules); err != nil {
++		if status.Code(err) != codes.NotFound {
++			return nil, err
++		}
++		if err := s.storage.Create(ctx, rulesKey(n), rules); err != nil {
++			return nil, err
++		}
++	}
++	return s.lro(ctx, n, &pbwip.SetAttestationRulesResponse{})
++}
++
++func (s *WorkloadIdentityPoolManagedIdentitiesServer) ListAttestationRules(ctx context.Context, req *pbwip.ListAttestationRulesRequest) (*pbwip.ListAttestationRulesResponse, error) {
++	n, _, err := s.get(ctx, req.GetResource())
++	if err != nil {
++		return nil, err
++	}
++	rules := &pbwip.ManagedIdentityAttestationRules{}
++	if err := s.storage.Get(ctx, rulesKey(n), rules); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return &pbwip.ListAttestationRulesResponse{}, nil
++		}
++		return nil, err
++	}
++	return &pbwip.ListAttestationRulesResponse{AttestationRules: rules.GetAttestationRules()}, nil
++}
