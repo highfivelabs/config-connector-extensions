@@ -42,12 +42,13 @@ All paths are in Config Connector at the commit above unless noted.
 | `pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go` | the same file | PR #6651: the same endpoint for its versions; ours: an unset `spec.enabled` means true (upstream dereferences it unchecked; there the direct controller is opt-in) |
 | `pkg/controller/direct/secretmanager/mapper.generated.go`, `secret_mapping.go` | the same files | our KRM types |
 | `apis/artifactregistry/v1beta1/groupversion_info.go` | `apis/artifactregistry/v1beta1/groupversion_info.go` | group `artifactregistry.gcp.hfl.dev` |
-| `apis/artifactregistry/v1beta1/artifactregistryrepository_types.go` | the same file, plus PR #13517 (head `eb2774ce`) | group, labels, short names; `customRepository` under `remoteRepositoryConfig.{docker,maven,npm,python}Repository` from the PR |
+| `apis/artifactregistry/v1beta1/artifactregistryrepository_types.go` | the same file, plus PR #13517 (head `eb2774ce`) | group, labels, short names; `customRepository` under `remoteRepositoryConfig.{docker,maven,npm,python}Repository` from the PR; written here: the `upstreamCredentials` and `disableUpstreamValidation` fields (their types are ours, `upstreamcredentials_types.go`) |
 | `apis/artifactregistry/v1beta1/artifactregistryrepository_identity.go` | the same file | no |
 | `apis/artifactregistry/v1beta1/artifactregistryrepository_reference.go` | the same file | the reference names our kind (`ArtifactRegistryRepositoryGVK` is in `artifactregistry.gcp.hfl.dev`) |
 | `apis/artifactregistry/v1beta1/types.generated.go` | the same file, plus PR #13517 | no (the PR changes only comments) |
-| `pkg/controller/direct/artifactregistry/artifactregistryrepository_controller.go`, `mapper.go` | the same files | our KRM types |
-| `pkg/controller/direct/artifactregistry/mapper.generated.go` | the same file, plus PR #13517 | only the `ArtifactRegistryRepository` (v1beta1) functions; our KRM types; the PR's `customRepository` mapping |
+| `pkg/controller/direct/artifactregistry/artifactregistryrepository_controller.go` | the same file | our KRM types; written here: resolve the upstream password's secret version, ignore the input-only `disableUpstreamValidation`, narrow the update mask for credentials (`upstreamcredentials_mapping.go`, ours) |
+| `pkg/controller/direct/artifactregistry/mapper.go` | the same file | our KRM types |
+| `pkg/controller/direct/artifactregistry/mapper.generated.go` | the same file, plus PR #13517 | only the `ArtifactRegistryRepository` (v1beta1) functions; our KRM types; the PR's `customRepository` mapping; written here: the remote config maps `upstreamCredentials` and `disableUpstreamValidation` |
 | `pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer_test.go` | `pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer.go`, plus PR #13517 | a test file, run by its own test function instead of registered with Config Connector's fuzz runner |
 | `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | an SPDX line after Google's header, so generated files carry it |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
@@ -71,6 +72,7 @@ flattening all three, 2026-11-08).
 | `0002-mockgcp-listen-address-env.patch` | `MOCKGCP_LISTEN_ADDRESS` overrides mockgcp's `127.0.0.2:0` (absent on macOS) | yes |
 | `0003-mockgcp-sql-backup-runs.patch` | mockgcp serves Cloud SQL `backupRuns` insert, get and delete: PR #12553's `mocksql/sqlbackup.go` and its registration, unchanged | it is upstream's; drop it when the PR merges and the pin passes it |
 | `0004-mockgcp-secretmanager-regional.patch` | mockgcp serves regional secrets (PR #6651's `secrets.go` and `service.go` change, applied by hand) and, ours, versions under a regional secret | yes, with the PR |
+| `0005-mockgcp-artifactregistry-upstream-credentials.patch` | written here: mockgcp's Artifact Registry accepts the update mask paths for a remote repository's upstream username and password version, and does not store the input-only `disableUpstreamValidation` | yes |
 
 ## Other sources consulted, not copied
 

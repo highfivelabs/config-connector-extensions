@@ -70,7 +70,12 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   only `description`, `labels` and the cleanup policies: changing
   `remoteRepositoryConfig` (for example the custom upstream's URI) is
   refused with "not supported by mockgcp". What the real API does with
-  that change is not known (`docs/design.md` section 7).
+  that change is not known (`docs/design.md` section 7). Patch 0005 lets
+  it change a remote repository's upstream username and password version
+  alone, as the real API and Terraform do; it never reads the secret
+  version, so a password that does not exist or cannot be read by
+  Artifact Registry's service agent passes in the fake and fails in the
+  real cloud.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
   the way to make the fake cloud reachable from inside: `cmd/fakegcp` and

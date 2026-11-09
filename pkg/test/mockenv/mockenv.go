@@ -118,10 +118,15 @@ func New(t *testing.T, namespaces ...string) *Env {
 	t.Cleanup(cancel)
 
 	root := repoRoot()
+	kccCRDs := filepath.Join(root, "third_party", "k8s-config-connector", "config", "crds", "resources")
 	env := &envtest.Environment{
 		CRDDirectoryPaths: []string{
 			filepath.Join(root, "config", "crds"),
 			filepath.Join(root, "third_party", "k8s-config-connector", "operator", "config", "crd", "bases"),
+			// Config Connector kinds a gap kind references by name
+			// (ArtifactRegistryRepository's upstream password version).
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_secretmanagersecrets.secretmanager.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_secretmanagersecretversions.secretmanager.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}

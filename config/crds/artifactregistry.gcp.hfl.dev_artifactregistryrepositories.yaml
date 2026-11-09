@@ -209,6 +209,11 @@ spec:
                   description:
                     description: The description of the remote source.
                     type: string
+                  disableUpstreamValidation:
+                    description: Input only. If true, the remote repository's upstream
+                      and upstream credentials are not validated when the repository
+                      is created or updated. The API does not return it.
+                    type: boolean
                   dockerRepository:
                     description: Specific settings for a Docker remote repository.
                     properties:
@@ -272,6 +277,50 @@ spec:
                         description: One of the publicly available Python repositories
                           supported by Artifact Registry.
                         type: string
+                    type: object
+                  upstreamCredentials:
+                    description: The credentials used to access the remote repository.
+                    properties:
+                      usernamePasswordCredentials:
+                        description: Use username and password to access the remote
+                          repository.
+                        properties:
+                          passwordSecretVersionRef:
+                            description: 'The Secret Manager secret version that holds
+                              the password to access the remote repository: a Config
+                              Connector SecretManagerSecretVersion by name, or external
+                              `projects/{project}/secrets/{secret}/versions/{version}`.'
+                            oneOf:
+                            - not:
+                                required:
+                                - external
+                              required:
+                              - name
+                            - not:
+                                anyOf:
+                                - required:
+                                  - name
+                                - required:
+                                  - namespace
+                              required:
+                              - external
+                            properties:
+                              external:
+                                description: ' If provided must be in the format `projects/*/secrets/*/versions/*`.'
+                                type: string
+                              name:
+                                description: The `name` field of a `SecretManagerSecretVersion`
+                                  resource.
+                                type: string
+                              namespace:
+                                description: The `metadata.namespace` field of a `SecretManagerSecretVersion`
+                                  resource.
+                                type: string
+                            type: object
+                          username:
+                            description: The username to access the remote repository.
+                            type: string
+                        type: object
                     type: object
                 type: object
               resourceID:

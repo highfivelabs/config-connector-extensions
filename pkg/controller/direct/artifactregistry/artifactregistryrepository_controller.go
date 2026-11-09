@@ -17,9 +17,13 @@
 // Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/artifactregistry/artifactregistryrepository_controller.go
 // (UPSTREAM.md): the KRM types are this project's (artifactregistry.gcp.hfl.dev),
-// otherwise unchanged. The customRepository field of upstream pull request
-// #13517 needs no controller change: it travels in remoteRepositoryConfig
-// through the mapper (mapper.generated.go).
+// otherwise unchanged except where marked "Written here". The customRepository
+// field of upstream pull request #13517 needs no controller change: it travels
+// in remoteRepositoryConfig through the mapper (mapper.generated.go).
+// Written here: the upstream credentials' password secret version reference
+// is resolved, disableUpstreamValidation (input only) is never a difference,
+// and a change to the credentials alone is sent with their own mask paths
+// (upstreamcredentials_mapping.go).
 
 package artifactregistry
 
@@ -40,6 +44,8 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/mappers"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/structuredreporting"
 	krm "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
+
+	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/proto"
@@ -86,6 +92,18 @@ func (m *modelArtifactRegistryRepository) AdapterForObject(ctx context.Context, 
 
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
+	}
+
+	// Written here: resolve the upstream password's secret version.
+	if rc := obj.Spec.RemoteRepositoryConfig; rc != nil && rc.UpstreamCredentials != nil && rc.UpstreamCredentials.UsernamePasswordCredentials != nil {
+		upc := rc.UpstreamCredentials.UsernamePasswordCredentials
+		if upc.PasswordSecretVersionRef != nil {
+			resolved, err := refsv1beta1.ResolveSecretManagerSecretVersionRef(ctx, reader, obj, upc.PasswordSecretVersionRef)
+			if err != nil {
+				return nil, err
+			}
+			upc.PasswordSecretVersionRef = resolved
+		}
 	}
 
 	id, err := obj.GetIdentity(ctx, reader)
@@ -313,6 +331,7 @@ func compareRepository(ctx context.Context, actual *pb.Repository, desiredKRM *k
 
 	populateCleanupPolicyDefaults(desiredPb)
 	populateCleanupPolicyDefaults(maskedActual)
+	ignoreInputOnlyRemoteFields(desiredPb, maskedActual) // Written here.
 
 	if desiredKRM.Spec.CleanupPolicyDryRun == nil {
 		desiredPb.CleanupPolicyDryRun = actual.CleanupPolicyDryRun
@@ -333,5 +352,6 @@ func compareRepository(ctx context.Context, actual *pb.Repository, desiredKRM *k
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	narrowRemoteRepositoryConfigMask(desiredPb, maskedActual, updateMask) // Written here.
 	return diffs, updateMask, desiredPb, nil
 }
