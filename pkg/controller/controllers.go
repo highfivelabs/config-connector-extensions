@@ -81,6 +81,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
 	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
 	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
+	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK, crdName: "computeregionnetworkfirewallpolicies.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
