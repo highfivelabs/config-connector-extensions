@@ -41,6 +41,14 @@ All paths are in Config Connector at the commit above unless noted.
 | `pkg/controller/direct/secretmanager/secretmanagersecret_controller.go` | the same file | PR #6651: a regional secret uses `secretmanager.<location>.rep.googleapis.com` |
 | `pkg/controller/direct/secretmanager/secretmanagersecretversion_controller.go` | the same file | PR #6651: the same endpoint for its versions; ours: an unset `spec.enabled` means true (upstream dereferences it unchecked; there the direct controller is opt-in) |
 | `pkg/controller/direct/secretmanager/mapper.generated.go`, `secret_mapping.go` | the same files | our KRM types |
+| `apis/artifactregistry/v1beta1/groupversion_info.go` | `apis/artifactregistry/v1beta1/groupversion_info.go` | group `artifactregistry.gcp.hfl.dev` |
+| `apis/artifactregistry/v1beta1/artifactregistryrepository_types.go` | the same file, plus PR #13517 (head `eb2774ce`) | group, labels, short names; `customRepository` under `remoteRepositoryConfig.{docker,maven,npm,python}Repository` from the PR |
+| `apis/artifactregistry/v1beta1/artifactregistryrepository_identity.go` | the same file | no |
+| `apis/artifactregistry/v1beta1/artifactregistryrepository_reference.go` | the same file | the reference names our kind (`ArtifactRegistryRepositoryGVK` is in `artifactregistry.gcp.hfl.dev`) |
+| `apis/artifactregistry/v1beta1/types.generated.go` | the same file, plus PR #13517 | no (the PR changes only comments) |
+| `pkg/controller/direct/artifactregistry/artifactregistryrepository_controller.go`, `mapper.go` | the same files | our KRM types |
+| `pkg/controller/direct/artifactregistry/mapper.generated.go` | the same file, plus PR #13517 | only the `ArtifactRegistryRepository` (v1beta1) functions; our KRM types; the PR's `customRepository` mapping |
+| `pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer_test.go` | `pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer.go`, plus PR #13517 | a test file, run by its own test function instead of registered with Config Connector's fuzz runner |
 | `hack/boilerplate.go.txt` | `hack/boilerplate.go.txt` | an SPDX line after Google's header, so generated files carry it |
 | `hack/generate.sh` | `dev/tasks/generate-crds` (the controller-gen and crd-tools steps) | our paths; no version annotation, no alpha backport |
 | `hack/regen-mocksql-users.sh` | `mockgcp/Makefile` (`gen-proto`), `mockgcp/apply-proto-patches.sh`, `mockgcp/fixup-third-party.sh` | one proto file only; our extra fields |
@@ -49,6 +57,11 @@ The CRD schema in `config/crds/` has the same property paths as upstream's
 `config/crds/resources/apiextensions.k8s.io_v1_customresourcedefinition_sqlusers.sql.cnrm.cloud.google.com.yaml`
 plus `spec.databaseRoles` and `status.appliedDatabaseRoles` (checked by
 flattening both).
+`config/crds/artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml`
+has the same property paths as PR #13517's
+`apiextensions.k8s.io_v1_customresourcedefinition_artifactregistryrepositories.artifactregistry.cnrm.cloud.google.com.yaml`,
+which is the pin's plus the four `customRepository.uri` fields (checked by
+flattening all three, 2026-11-08).
 
 ## Patches to the checkout
 
@@ -109,3 +122,4 @@ copied files; when it merges and the pin passes it, retire our copy
 | --- | --- | --- | --- |
 | #12553 | `9611a6de02e08aca9a624affaf59bc104d1cb88f` | 2026-11-07 (open, review required, last updated 2026-09-04) | `SQLAdminBackup`, patch 0003 |
 | #6651 | `9aab204dd9d87716863b966c724b7a12664fd85f` | 2026-11-07 (open, review required, last updated 2026-03-17) | regional `SecretManagerSecret` / `SecretManagerSecretVersion`, patch 0004 |
+| #13517 | `eb2774cef2776e8a1dc2f766d6cf491f0931f8b7` | 2026-11-08 (open, review required, no reviews, paused by upstream's bot for inactivity on 2026-10-13) | `ArtifactRegistryRepository` with `customRepository`; no mockgcp patch needed |

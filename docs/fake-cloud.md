@@ -63,6 +63,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   its `SQLInstance` (upstream's ref resolver does not wait on readiness
   either; real Cloud SQL would fail and retry). Services mockgcp does not
   implement fail as they would against an unknown host.
+- **Artifact Registry in mockgcp.** It stores a repository as sent, so a
+  remote repository's `customRepository` round-trips, but it does not
+  reach the upstream (the real API checks a remote upstream with a HEAD or
+  GET unless `disableUpstreamValidation` is set), and its update accepts
+  only `description`, `labels` and the cleanup policies: changing
+  `remoteRepositoryConfig` (for example the custom upstream's URI) is
+  refused with "not supported by mockgcp". What the real API does with
+  that change is not known (`docs/design.md` section 7).
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
   the way to make the fake cloud reachable from inside: `cmd/fakegcp` and
