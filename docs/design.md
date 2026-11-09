@@ -673,3 +673,8 @@ service account by one more `roles/iam.workloadIdentityUser` binding per
 Google service account. Sharing stays as an opt-in for a quick trial where
 nobody can change IAM. With the default, Config Connector's pods gain
 nothing from this project.
+
+## 10. Open questions
+
+None open. A question for the builder goes here, with a recommendation;
+the answer moves to section 8.
