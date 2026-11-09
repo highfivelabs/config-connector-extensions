@@ -80,9 +80,16 @@ func newRemoteRepository(name, format string, remote *arv1beta1.ArtifactRegistry
 	}
 }
 
+// The upstreams here (example.com) do not exist. Real Artifact Registry
+// checks a remote upstream when a repository is made, and refuses one it
+// cannot reach ("Failed to validate remote upstream", seen live,
+// docs/live-runs.md); mockgcp does not check. So every repository here
+// sets disableUpstreamValidation.
+
 func dockerUpstream(uri string) *arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig {
 	return &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{
-		Description: mockenv.Ptr("private Docker registry"),
+		Description:               mockenv.Ptr("private Docker registry"),
+		DisableUpstreamValidation: mockenv.Ptr(true),
 		DockerRepository: &arv1beta1.ArtifactRegistryRepositoryDockerRepository{
 			CustomRepository: &arv1beta1.ArtifactRegistryRepositoryDockerRepositoryCustomRepository{URI: mockenv.Ptr(uri)},
 		},
@@ -206,11 +213,11 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		}
 	})
 
-	t.Run("a changed upstream URI is not applied in the fake cloud", func(t *testing.T) {
+	t.Run("a changed upstream URI is refused", func(t *testing.T) {
 		// Terraform marks custom_repository ForceNew; Config Connector's
 		// direct controller sends remoteRepositoryConfig in an update mask,
-		// which mockgcp refuses.
-		// What the real API does is not known (docs/fake-cloud.md).
+		// which the real API refuses (seen live, docs/live-runs.md), and
+		// mockgcp with it (patch 0007).
 		obj := &arv1beta1.ArtifactRegistryRepository{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
@@ -220,8 +227,8 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 		msg := env.WaitNotReady(gvk, namespace, name)
-		if !strings.Contains(msg, "remoteRepositoryConfig") {
-			t.Errorf("Ready message = %q, want it to name remoteRepositoryConfig", msg)
+		if !strings.Contains(msg, "Remote source configuartion cannot be updated") {
+			t.Errorf("Ready message = %q, want the API's refusal (\"Remote source configuartion cannot be updated\")", msg)
 		}
 		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 		if err != nil {
@@ -289,7 +296,7 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 	}{
 		{
 			name: "maven-upstream", format: "MAVEN", uri: "https://maven.example.com/releases",
-			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{MavenRepository: &arv1beta1.ArtifactRegistryRepositoryMavenRepository{
+			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{DisableUpstreamValidation: mockenv.Ptr(true), MavenRepository: &arv1beta1.ArtifactRegistryRepositoryMavenRepository{
 				CustomRepository: &arv1beta1.ArtifactRegistryRepositoryMavenRepositoryCustomRepository{URI: mockenv.Ptr("https://maven.example.com/releases")},
 			}},
 			read: func(c *pb.RemoteRepositoryConfig) string {
@@ -298,14 +305,14 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 		},
 		{
 			name: "npm-upstream", format: "NPM", uri: "https://npm.example.com",
-			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{NpmRepository: &arv1beta1.ArtifactRegistryRepositoryNpmRepository{
+			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{DisableUpstreamValidation: mockenv.Ptr(true), NpmRepository: &arv1beta1.ArtifactRegistryRepositoryNpmRepository{
 				CustomRepository: &arv1beta1.ArtifactRegistryRepositoryNpmRepositoryCustomRepository{URI: mockenv.Ptr("https://npm.example.com")},
 			}},
 			read: func(c *pb.RemoteRepositoryConfig) string { return c.GetNpmRepository().GetCustomRepository().GetUri() },
 		},
 		{
 			name: "python-upstream", format: "PYTHON", uri: "https://pypi.example.com/simple",
-			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{PythonRepository: &arv1beta1.ArtifactRegistryRepositoryPythonRepository{
+			remote: &arv1beta1.ArtifactRegistryRepositoryRemoteRepositoryConfig{DisableUpstreamValidation: mockenv.Ptr(true), PythonRepository: &arv1beta1.ArtifactRegistryRepositoryPythonRepository{
 				CustomRepository: &arv1beta1.ArtifactRegistryRepositoryPythonRepositoryCustomRepository{URI: mockenv.Ptr("https://pypi.example.com/simple")},
 			}},
 			read: func(c *pb.RemoteRepositoryConfig) string {

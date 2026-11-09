@@ -74,6 +74,7 @@ flattening all three, 2026-11-08).
 | `0004-mockgcp-secretmanager-regional.patch` | mockgcp serves regional secrets (PR #6651's `secrets.go` and `service.go` change, applied by hand) and, ours, versions under a regional secret | yes, with the PR |
 | `0005-mockgcp-artifactregistry-upstream-credentials.patch` | written here: mockgcp's Artifact Registry accepts the update mask paths for a remote repository's upstream username and password version, and does not store the input-only `disableUpstreamValidation` | yes |
 | `0006-mockgcp-sql-backup-runs-deleted.patch` | written here, on 0003: `backupRuns.delete` keeps the run with status `DELETED`, as real Cloud SQL does (a live run, `docs/live-runs.md`) | yes, with PR #12553 |
+| `0007-mockgcp-artifactregistry-remote-source-immutable.patch` | written here, on 0005: an update of `remoteRepositoryConfig` fails with the API's own error, "Remote source configuartion cannot be updated" (a live run, `docs/live-runs.md`), not mockgcp's "not supported" | yes |
 
 ## Other sources consulted, not copied
 
