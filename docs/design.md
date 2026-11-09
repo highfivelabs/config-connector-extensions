@@ -605,6 +605,34 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   - With this, every ranked and unranked candidate in section 6.3 is built,
     watched, waiting for a release, or skipped with its reason.
 
+### 6.5 From the seed catalog (read 2026-11-09)
+
+The catalog agent's inventory of Cloud Foundation Fabric v60.0.0 against
+Config Connector v1.160.0 (`highfivelabs/catalog`, `docs/gcp-inventory.md`
+at `a5a451a`, "Gaps for config-connector-extensions") ranks what fabric
+modules need and no Config Connector kind covers, by how many modules need
+it. Rechecked here read-only on 2026-11-09 against Config Connector
+`v1.160.0`, `master` at `b795cda8` and its open pull requests; rows follow
+this repository's rules (6.1, decision 5, section 10).
+
+| Rank | Gap | Modules | Upstream (2026-11-09) | Here |
+| ---: | --- | ---: | --- | --- |
+| 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | question (section 10, question 1) |
+| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
+| 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | next to build |
+| 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | to build |
+| 5 | `StorageBucketObject` | 4 | no kind or PR | to build; the inventory notes a Bundt hook Job as the alternative |
+| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | to build |
+| 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
+| 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
+| 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
+| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | to build |
+
+Below the top ten, each needed by one module (Looker instances, Endpoints
+services, Cloud Build v2 repositories, regional instance templates, and
+others in the inventory): not ranked here yet. Container Registry is
+deprecated upstream and is not built.
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:
@@ -967,5 +995,20 @@ nothing from this project.
 
 ## 10. Open questions
 
-None open. A question for the builder goes here, with a recommendation;
-the answer moves to section 8.
+A question for the builder goes here, with a recommendation; the answer
+moves to section 8.
+
+1. **What to name role-authoritative IAM (6.5, rank 1)?** (2026-11-09)
+   The seed catalog suggests `IAMPolicyBinding`: a resource, a role and
+   its members (and an optional condition), owning that role on the
+   resource, as Terraform's `google_*_iam_binding` does, which 43 fabric
+   modules use. But Config Connector's open PR #14133 adds an
+   `iam.cnrm.cloud.google.com` `IAMPolicyBinding` for a different
+   resource, IAM v3's `PolicyBinding` (principal access boundary
+   policies). The same kind name in two groups would make `kubectl get
+   iampolicybinding` ambiguous, and our rule of retiring a kind when
+   upstream ships it would point at the wrong thing. Recommendation: name
+   ours `iam.gcp.hfl.dev/v1alpha1` `IAMRoleBinding`, copying the resource
+   reference and the get/set IAM policy flow from Config Connector's
+   `IAMPartialPolicy`, and let rank 2 (IAM on the 32 resource types
+   `IAMPolicyMember` cannot reference) be resource types it accepts.
