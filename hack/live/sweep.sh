@@ -23,8 +23,8 @@
 # name and aged by the run ID in them, and workload identity pools (with
 # what is in them) and Cloud Run services, by name, and Network Security
 # address groups (global and the regions in ADDRESS_GROUP_REGIONS), by
-# label or name, after the firewall policies that may use them. A failed
-# list or delete fails the sweep.
+# label or name, after the firewall policies that may use them, and
+# security profiles, by name. A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -174,6 +174,21 @@ for loc in global ${ADDRESS_GROUP_REGIONS}; do
     act "address group" "${name}" "${G[@]}" network-security address-groups delete "${name##*/}" --location="${loc}"
   done
 done
+
+# Network Security security profiles (a project's; an organization's are
+# never made live), by the run's name: gcloud knows only an organization's,
+# so through the API. Names are projects/P/locations/global/securityProfiles/S.
+ns_api() { # ns_api METHOD NAME
+  curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    "https://networksecurity.googleapis.com/v1/$2"
+}
+rows="$(ns_api GET "projects/${project}/locations/global/securityProfiles?pageSize=1000" \
+  | jq -r '.securityProfiles[]? | "\(.name) \(.createTime)"')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  by_run "${name##*/}" "${made}" || continue
+  act "security profile" "${name}" ns_api DELETE "${name}"
+done <<<"${rows}"
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
