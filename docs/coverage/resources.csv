@@ -1131,6 +1131,7 @@ servicemanagement.googleapis.com,servicemanagement.googleapis.com/ServiceConfig,
 servicemanagement.googleapis.com,servicemanagement.googleapis.com/ServiceRollout,7,,0,,0,7,false,api=v1:services.rollouts
 servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceConnection,2,ServiceNetworkingConnection,2,,0,0,false,api=v1:services.connections; official-spec-fields-unmatched=1/3
 servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceNetworkPeeredDnsDomain,2,ServiceNetworkingPeeredDNSDomain,2,,0,0,false,api=v1:services.projects.global.networks.peeredDnsDomains; official-spec-fields-unmatched=2/3
+serviceusage.googleapis.com,serviceusage.googleapis.com/ServiceIdentity,0,,0,ServiceIdentity,0,0,false,"outside-denominator; a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)"
 spanner.googleapis.com,spanner.googleapis.com/Instance,29,SpannerInstance,13,,0,16,false,api=v1:projects.instances; request-wrapper=CreateInstanceRequest; official-spec-fields-unmatched=2/14
 spanner.googleapis.com,spanner.googleapis.com/InstanceBackup,3,,0,,0,3,false,api=v1:projects.instances.backups
 spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9

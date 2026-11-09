@@ -37,7 +37,8 @@ items:
     build: >-
       `ServiceIdentity` with a folder or organization parent in `serviceusage.gcp.hfl.dev/v1alpha1`
       (`serviceusage.googleapis.com` `services:generateServiceIdentity`, a long-running operation returning the
-      email; Terraform's `google_folder_service_identity` read, not copied). `ProjectDefaultServiceAccounts`
+      email; Terraform's `google_folder_service_identity` read, not copied): built 2026-11-09, generated with
+      `hack/scaffold-kind.sh`; live pending the test folder. `ProjectDefaultServiceAccounts`
       (`resourcemanager.gcp.hfl.dev`): the Compute default account is `{projectNumber}-compute@developer.gserviceaccount.com`,
       the App Engine one `{projectId}@appspot.gserviceaccount.com`; `DELETE` is `serviceAccounts.delete`,
       `DEPRIVILEGE` removes its project role bindings (`projects.setIamPolicy`), `DISABLE` is
