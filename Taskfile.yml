@@ -81,7 +81,7 @@ tasks:
     cmds:
       - hack/coverage/run.sh
 
-  coverage-check:
+  "coverage:check":
     desc: Fail if the committed coverage outputs differ from a regeneration (fetches the pinned inputs).
     cmds:
       - hack/coverage/run.sh --check

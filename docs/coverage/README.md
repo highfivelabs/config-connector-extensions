@@ -10,7 +10,9 @@ the root `README.md` live here.
 | [`services.csv`](services.csv) | service | the rollup: resources and attributes, official, ours beyond official, uncovered, with percentages |
 | [`resources.csv`](resources.csv) | resource | attributes of the resource, the kinds that cover them (official and ours), and notes on the mapping |
 | [`attributes.csv`](attributes.csv) | attribute | the dotted path of a writable field, its type, whether the API requires it, who covers it (`official`, `ours`, `both`, `none`) and the CRD path that does |
-| [`bars/`](bars) | service | `<service>.svg` and `_total.svg`: blue is official, green is ours beyond official, grey is uncovered |
+| [`tiers.csv`](tiers.csv) | tier | the rollup by tier (see "Tiers"), same columns as `services.csv` with `tier` and `services` first |
+| [`priority.csv`](priority.csv) | service | the tier of each service, with the rationale and source; hand-edited, read by the generator |
+| [`bars/`](bars) | service | `<service>.svg`, `_total.svg` and `_tiers.svg` (one bar per tier): blue is official, green is ours beyond official, grey is uncovered |
 | [`sources.yaml`](sources.yaml) | | the pinned inputs: commits, dates, digests |
 
 The schema is the same in `config-connector-extensions`, `ack-extensions`
@@ -66,6 +68,55 @@ files read from each; the generator refuses to run when an input differs.
 "Official at the pin" is `master` at that commit, not a release: it includes
 CRDs of kinds not yet in a release. A CRD existing does not mean a controller
 reconciles it well; the count is of what the schema exposes.
+
+## Tiers
+
+Services do not matter in the same way, and the total is dominated by the
+biggest schemas (here `aiplatform`, `dlp`, `compute`; in the AWS repository
+QuickSight alone is 60% of the attributes). So every service has a tier, and
+the README shows a bar per tier next to the total and sorts its table by tier.
+
+- **Tier 1**: a service used by a foundational module, the first ones people
+  migrate: modules ranked 1 to 19 in the catalog's inventory (project, folder,
+  organization, iam-service-account, net-vpc, net-vpc-firewall, net-cloudnat,
+  dns, kms, gcs, artifact-registry, secret-manager, cloudsql-instance, the GKE
+  modules, pubsub, bigquery-dataset, cloud-run-v2).
+- **Tier 2**: any other service some tracked module uses.
+- **Tier 3**: everything else (the default for a service not in the file).
+
+[`priority.csv`](priority.csv) (`service,tier,rationale,source`) lists tiers 1
+and 2; the generator reads it and never recomputes it, so a tier is changed by
+editing the file (and running `task coverage`). It was first written by
+`hack/coverage/run.sh`'s binary with `-derive-priority <catalog checkout>` from
+`docs/gcp-inventory.md` of the catalog repository (Cloud Foundation Fabric
+v60.0.0 modules, their Terraform resource types, the module ranks): each
+Terraform resource type is mapped to its service by prefix (`tfService` in
+`hack/coverage/priority.go`), and `*_iam_*` resources of another service's
+resource do not count as using that service. The Terraform resource, not the
+create method, is what ties a module to a service.
+
+Limits:
+
+- **Usage by modules is a proxy for what teams need.** A service no module
+  uses may still be what a team needs, and a service a module uses in a corner
+  is not as important as its tier suggests.
+- **Tier 1 is wide.** The project, folder and organization modules are large
+  and touch many services in optional corners (Security Command Center, Model
+  Armor, Assured Workloads), so those services are tier 1. Demote them in the
+  file if that is not what you mean.
+- Tiers say which services matter; they do not weight resources or attributes
+  within a service.
+- The inventory is of Cloud Foundation Fabric only, and of Terraform resource
+  types, so a service reached through a type the prefix table does not know is
+  tier 3 until someone adds it.
+
+**What is counted.** The services are Google Cloud infrastructure APIs. The
+Discovery directory also holds Workspace, advertising, Play, Android, YouTube,
+Maps and other consumer APIs: 116 of its APIs at the pins above (the exact
+names are under Statistics). They are left out by name (`exclude_services` in
+`hack/coverage/overrides.yaml`, plus the directories skipped for protos), so
+they do not inflate the uncovered share. That cut is made by hand, and moving
+a service in or out changes only the totals, not any other service's row.
 
 ## The denominator
 
@@ -301,7 +352,7 @@ hack/coverage/run.sh --check            # fail if the committed outputs differ f
 hack/coverage/run.sh --update-sources   # after changing a pin in sources.yaml: refetch, record the digests
 ```
 
-`task coverage` and `task coverage-check` run the first two. Inputs are cached
+`task coverage` and `task coverage:check` run the first two. Inputs are cached
 in `.cache/coverage/` (gitignored); Config Connector is read from
 `third_party/k8s-config-connector` when that checkout is at the pin, else
 fetched sparsely (about 50 MB). The run takes a few seconds. Output is

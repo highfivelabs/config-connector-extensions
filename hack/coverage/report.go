@@ -70,19 +70,65 @@ func barSVG(name string, c counts, big bool) string {
 	return b.String()
 }
 
-func rootSection(sums []svcSum, total counts, nServices int, src *Sources) string {
-	var covered []svcSum
+var tierNames = [3]string{"Tier 1: foundational", "Tier 2: used by other modules", "Tier 3: everything else"}
+
+// tiersSVG is one bar per tier, in the same card style as barSVG.
+func tiersSVG(cs [3]counts, svcs [3]int) string {
+	const w, rowH, bx, bw, bh = 640, 40, 10, 620, 14
+	h := rowH*3 + 6
+	var b strings.Builder
+	font := "font-family=\"-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif\""
+	label := "Coverage by tier:"
+	for i, c := range cs {
+		label += fmt.Sprintf(" tier %d official %s%%, ours beyond official %s%%, uncovered %s%%;", i+1, pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs))
+	}
+	fmt.Fprintf(&b, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" role=\"img\" aria-label=\"%s\">\n", w, h, w, h, label)
+	fmt.Fprintf(&b, "<title>%s</title>\n", label)
+	fmt.Fprintf(&b, "<rect x=\"0.5\" y=\"0.5\" width=\"%d\" height=\"%d\" rx=\"4\" fill=\"#ffffff\" stroke=\"#d0d7de\"/>\n", w-1, h-1)
+	for i, c := range cs {
+		y := 3 + i*rowH
+		fmt.Fprintf(&b, "<clipPath id=\"c%d\"><rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\" rx=\"3\"/></clipPath>\n", i, bx, y+18, bw, bh)
+		fmt.Fprintf(&b, "<text x=\"%d\" y=\"%d\" %s font-size=\"12\" fill=\"#24292f\">%s (%d services, %d attributes): ", bx, y+13, font, tierNames[i], svcs[i], c.attrs)
+		fmt.Fprintf(&b, "<tspan fill=\"#0969da\">%s%%</tspan> / <tspan fill=\"#1a7f37\">%s%%</tspan> / <tspan fill=\"#57606a\">%s%%</tspan></text>\n", pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs))
+		scale := func(n int) float64 {
+			if c.attrs == 0 {
+				return 0
+			}
+			return float64(n) * float64(bw) / float64(c.attrs)
+		}
+		wo, wb := scale(c.off), scale(c.beyond)
+		fmt.Fprintf(&b, "<g clip-path=\"url(#c%d)\">\n<rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\" fill=\"%s\"/>\n", i, bx, y+18, bw, bh, colNone)
+		if wo > 0 {
+			fmt.Fprintf(&b, "<rect x=\"%d\" y=\"%d\" width=\"%.2f\" height=\"%d\" fill=\"%s\"/>\n", bx, y+18, wo, bh, colOfficial)
+		}
+		if wb > 0 {
+			fmt.Fprintf(&b, "<rect x=\"%.2f\" y=\"%d\" width=\"%.2f\" height=\"%d\" fill=\"%s\"/>\n", float64(bx)+wo, y+18, wb, bh, colOurs)
+		}
+		b.WriteString("</g>\n")
+	}
+	b.WriteString("</svg>\n")
+	return b.String()
+}
+
+func rootSection(sums []svcSum, tierSums [3]counts, tierSvcs [3]int, total counts, nServices, nExcluded int, src *Sources) string {
+	// Tiers 1 and 2 list every service, covered or not (an uncovered
+	// priority service is the point); tier 3 only where something is
+	// covered. Tier first, then covered attributes.
+	var list []svcSum
 	for _, s := range sums {
-		if s.c.off+s.c.beyond > 0 {
-			covered = append(covered, s)
+		if s.tier < 3 || s.c.off+s.c.beyond > 0 {
+			list = append(list, s)
 		}
 	}
-	sort.SliceStable(covered, func(i, j int) bool {
-		a, b := covered[i].c.off+covered[i].c.beyond, covered[j].c.off+covered[j].c.beyond
+	sort.SliceStable(list, func(i, j int) bool {
+		if list[i].tier != list[j].tier {
+			return list[i].tier < list[j].tier
+		}
+		a, b := list[i].c.off+list[i].c.beyond, list[j].c.off+list[j].c.beyond
 		if a != b {
 			return a > b
 		}
-		return covered[i].host < covered[j].host
+		return list[i].host < list[j].host
 	})
 	var b strings.Builder
 	b.WriteString("## Coverage\n\n")
@@ -90,24 +136,36 @@ func rootSection(sums []svcSum, total counts, nServices int, src *Sources) strin
 	b.WriteString("**Official** is what Config Connector's CRDs at the pin (`UPSTREAM.md`) cover; **ours beyond official** is what only this repository's kinds cover; **uncovered** is in the API and in neither. ")
 	b.WriteString("The counts come from matching CRD fields to API fields by name, so they are estimates: see [docs/coverage](docs/coverage/README.md) for the method, its error and how to regenerate.\n\n")
 	b.WriteString("![All services](docs/coverage/bars/_total.svg)\n\n")
-	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered.</sub>\n\n")
-	const top = 15
+	b.WriteString("Services do not matter equally, so the total misleads. They are in three tiers ([`priority.csv`](docs/coverage/priority.csv), editable): **tier 1** the services the foundational modules use, **tier 2** the services other tracked modules use, **tier 3** the rest. ")
+	fmt.Fprintf(&b, "The services counted are Google Cloud infrastructure APIs; %d non-cloud APIs in Discovery (Workspace, Ads, Play, Maps, YouTube, ...) are left out ([how](docs/coverage/README.md#tiers)).\n\n", nExcluded)
+	b.WriteString("![Coverage by tier](docs/coverage/bars/_tiers.svg)\n\n")
+	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Rollup: [`tiers.csv`](docs/coverage/tiers.csv), every service: [`services.csv`](docs/coverage/services.csv).</sub>\n\n")
 	row := func(s svcSum) string {
-		return fmt.Sprintf("| `%s` | ![%s](docs/coverage/bars/%s.svg) | %s%% | %s%% | %s%% |\n", s.host, s.host, s.host, pct(s.c.off, s.c.attrs), pct(s.c.beyond, s.c.attrs), pct(s.c.uncovered, s.c.attrs))
+		return fmt.Sprintf("| %d | `%s` | ![%s](docs/coverage/bars/%s.svg) | %s%% | %s%% | %s%% |\n", s.tier, s.host, s.host, s.host, pct(s.c.off, s.c.attrs), pct(s.c.beyond, s.c.attrs), pct(s.c.uncovered, s.c.attrs))
 	}
-	head := "| Service | Coverage | Official | Ours beyond | Uncovered |\n| --- | --- | ---: | ---: | ---: |\n"
-	fmt.Fprintf(&b, "The %d services where something is covered, most covered attributes first (all %d services are in [`services.csv`](docs/coverage/services.csv)):\n\n", len(covered), nServices)
-	b.WriteString(head)
-	for i, s := range covered {
-		if i == top {
-			break
+	head := "| Tier | Service | Coverage | Official | Ours beyond | Uncovered |\n| ---: | --- | --- | ---: | ---: | ---: |\n"
+	for t := 1; t <= 3; t++ {
+		var rows []svcSum
+		for _, s := range list {
+			if s.tier == t {
+				rows = append(rows, s)
+			}
 		}
-		b.WriteString(row(s))
-	}
-	if len(covered) > top {
-		fmt.Fprintf(&b, "\n<details><summary>The other %d services with coverage</summary>\n\n", len(covered)-top)
+		if t == 1 {
+			fmt.Fprintf(&b, "Tier 1, %d services, most covered attributes first:\n\n", len(rows))
+			b.WriteString(head)
+			for _, s := range rows {
+				b.WriteString(row(s))
+			}
+			continue
+		}
+		what := "services other modules use"
+		if t == 3 {
+			what = "other services where something is covered"
+		}
+		fmt.Fprintf(&b, "\n<details><summary>Tier %d: %d %s</summary>\n\n", t, len(rows), what)
 		b.WriteString(head)
-		for _, s := range covered[top:] {
+		for _, s := range rows {
 			b.WriteString(row(s))
 		}
 		b.WriteString("\n</details>\n")
