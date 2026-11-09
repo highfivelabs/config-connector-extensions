@@ -138,6 +138,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | `08fcc66` | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 2 secrets, 1 version (deleted) |
 | 2026-11-09 | `08fcc66` | SQLUser | PASS | PASS | none | 1 IAM user (deleted with the instance) |
 | 2026-11-09 | `08fcc66` | ArtifactRegistryRepository, ArtifactRegistryTag | PASS | PASS | none | 7 repositories, 2 minimal images, 1 secret (deleted) |
+| 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -156,6 +157,18 @@ need run names and cleanup, and the sweeper needs workload identity
 pools, Cloud Run services and the network resources. The managed identity test's attestation rules name
 made-up Compute Engine instances, and the RunService test asks for an
 NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
+
+`LoggingSettings` (package `logging`) is ready to run live but waits on
+the builder for a test folder and a key; it never changes an
+organization's settings live (that case runs in the fake cloud only). It
+needs: a test folder, passed as `E2E_LOGGING_FOLDER=folders/<id>`, with
+`roles/logging.admin` on it for the live-test service account; and a
+Cloud KMS key, passed as `E2E_LOGGING_KMS_KEY`, on which the folder's
+Log Router service account (`kmsServiceAccountId` in the folder's
+settings) has `roles/cloudkms.cryptoKeyEncrypterDecrypter`. Settings
+cannot be deleted, so the test puts the folder's back as it found them;
+there is nothing for the sweeper. Then:
+`E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... make test-live PROJECT=hfl-dev-514205 KINDS=logging`.
 
 Every run ended with `make live-list` empty (run `cce-11091348-ef59`:
 "0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,

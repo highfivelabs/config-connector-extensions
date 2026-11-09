@@ -35,7 +35,9 @@ source hack/live/projects.sh
 # provider keys), run (RunService) and compute (regional network
 # endpoints, router route policies), and StorageBucketObject. The live-test service account has
 # no role on them, the sweeper does not know their resources, and their
-# tests do not yet take run names (docs/live-runs.md).
+# tests do not yet take run names. logging (LoggingSettings) is ready but
+# needs a test folder and a key, E2E_LOGGING_FOLDER and
+# E2E_LOGGING_KMS_KEY (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 

@@ -16,9 +16,12 @@
 package logging_test
 
 // LoggingSettings end to end on the fake cloud (pkg/test/mockenv, patch
-// 0017). The case: a landing zone's folder and organization keep their
-// logs in Europe, encrypted with their own key, with the _Default sink off
-// because an aggregated sink already collects everything.
+// 0017) or a real project (docs/live-runs.md). The case: a landing zone's
+// folder and organization keep their logs in Europe, encrypted with their
+// own key, with the _Default sink off because an aggregated sink already
+// collects everything. Settings cannot be deleted, so the test puts the
+// folder's back as it found them; against a real project it uses a test
+// folder (mockenv.LoggingFolder) and never changes an organization's.
 
 import (
 	"strings"
@@ -39,9 +42,7 @@ import (
 
 const (
 	namespace = "example"
-	folder    = "folders/123456"
 	org       = "organizations/987654"
-	key       = "projects/" + mockenv.Project + "/locations/europe-west1/keyRings/logs/cryptoKeys/router"
 )
 
 var gvk = loggingv1alpha1.LoggingSettingsGVK
@@ -52,6 +53,7 @@ func TestLoggingSettings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	folder, key := mockenv.LoggingFolder(t), mockenv.LoggingKMSKey(t)
 
 	cloud := func(t *testing.T, parent string) *api.Settings {
 		t.Helper()
@@ -95,8 +97,22 @@ func TestLoggingSettings(t *testing.T) {
 		}
 	}
 
+	// Put the folder's settings back as they were when the test ends.
+	before := cloud(t, folder)
+	t.Cleanup(func() {
+		restore := &api.Settings{
+			KmsKeyName:         before.KmsKeyName,
+			StorageLocation:    before.StorageLocation,
+			DisableDefaultSink: before.DisableDefaultSink,
+			ForceSendFields:    []string{"KmsKeyName", "StorageLocation", "DisableDefaultSink"},
+		}
+		if _, err := svc.Folders.UpdateSettings(folder, restore).UpdateMask("disableDefaultSink,kmsKeyName,storageLocation").Context(env.Ctx).Do(); err != nil {
+			t.Errorf("putting %s/settings back: %v", folder, err)
+		}
+	})
+
 	fs := &loggingv1alpha1.LoggingSettings{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "landing-zone-folder"},
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "landing-zone-folder", Labels: mockenv.Labels()},
 		Spec: loggingv1alpha1.LoggingSettingsSpec{
 			FolderRef:          &refsv1beta1.FolderRefDeprecated{External: folder},
 			KMSKeyRef:          &kmsv1beta1.KMSCryptoKeyRef{External: key},
@@ -172,6 +188,9 @@ func TestLoggingSettings(t *testing.T) {
 	})
 
 	t.Run("the organization's settings", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("a live run never changes an organization's settings (docs/live-runs.md)")
+		}
 		o := &loggingv1alpha1.LoggingSettings{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "organization"},
 			Spec: loggingv1alpha1.LoggingSettingsSpec{

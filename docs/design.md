@@ -703,6 +703,8 @@ Notes on what was built from this table:
   not a field here; `defaultSinkConfig` waits for mockgcp's logging
   protos to have it. Patch 0017: mockgcp serves `getSettings` and
   `updateSettings`.
+  Live: pending, needs a test folder with `roles/logging.admin` and a
+  KMS key (`docs/live-runs.md`).
 
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
