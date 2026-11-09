@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twelve kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirteen kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -8,7 +8,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolManagedIdentity` and
 `IAMWorkloadIdentityPoolProviderKey`, a narrow direct
 `RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint` and `ComputeRouterRoutePolicy` (section 6). Each passes its end-to-end test
+`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` and
+`LoggingSettings` (section 6). Each passes its end-to-end test
 against mockgcp. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
@@ -624,7 +625,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | next to build; the inventory notes a Bundt hook Job as the alternative |
 | 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | to build |
-| 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
+| 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); the rest are field gaps on existing kinds: wait for the release (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
 | 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | to build |
@@ -658,6 +659,20 @@ Notes on what was built from this table:
   `status.externalRef` is the router's name plus `/routePolicies/{name}`,
   ours. Patch 0012: mockgcp serves a router's route policies with a new
   fingerprint on each write.
+- `LoggingSettings` (`logging.gcp.hfl.dev/v1alpha1`, rank 7). **Written
+  here** from the Cloud Logging API's `Settings`: `organizationRef` or
+  `folderRef` (exactly one, checked by the CRD), `kmsKeyRef` (Config
+  Connector's `KMSCryptoKeyRef`), `storageLocation`, `disableDefaultSink`;
+  status carries the Log Router's service accounts. The controller
+  follows Terraform's `google_logging_organization_settings` and
+  `google_logging_folder_settings` (read, not copied): the settings
+  always exist, so create and update are both `settings.patch` with a
+  mask of the fields the spec sets and the cloud does not match; a field
+  left unset (or taken off the spec) is not managed; delete leaves the
+  settings as they are. Project settings are read-only in the API and
+  not a field here; `defaultSinkConfig` waits for mockgcp's logging
+  protos to have it. Patch 0015: mockgcp serves `getSettings` and
+  `updateSettings`.
 
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
@@ -739,6 +754,10 @@ To raise confidence in `ArtifactRegistryRepository`:
 21. `ComputeRouterRoutePolicy` against a real project: the API's checks of
     the CEL expressions and priorities, which mockgcp does not make, and a
     write with a stale fingerprint.
+22. `LoggingSettings` against a real organization and folder: the
+    service accounts' real names, the API's checks of the key (it must
+    exist and the Log Router's account must be able to use it) and of the
+    location, and `defaultSinkConfig` (newer than mockgcp's protos).
 
 ## 8. Decisions
 
