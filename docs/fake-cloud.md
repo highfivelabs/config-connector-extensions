@@ -76,6 +76,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Artifact Registry tags in mockgcp** (patch 0009, ours). A tag must be
+  in an existing repository; the fake holds no packages, so a tag on a
+  version that was never pushed is accepted.
 - **Workload identity pool namespaces in mockgcp** (patch 0006, ours). It
   has no workload identity pools, so a namespace is created whether or not
   its pool exists; the real API refuses one in a missing pool. Delete is a
