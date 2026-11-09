@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has nineteen kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -11,7 +11,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
 `LoggingSettings`, `ComputeProjectMetadataItem`, `IAMRoleBinding`,
-`IAMRoleMember` and `ComputeRegionNetworkFirewallPolicyRule` (section 6). Each
+`IAMRoleMember`, `ComputeRegionNetworkFirewallPolicyRule` and
+`ComputeRegionNetworkFirewallPolicyAssociation` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -640,7 +641,7 @@ this repository's rules (6.1, decision 5, section 10).
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
 | 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
 | 5 | `StorageBucketObject` | 4 | no kind or PR | built (2026-11-09) |
-| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based by default, with an opt-in direct controller; its rule and association kinds are Terraform-only) | the policy and its rules built (2026-11-09); its association next |
+| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based by default, with an opt-in direct controller; its rule and association kinds are Terraform-only) | the policy, its rules and its association built (2026-11-09) |
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | `LoggingSettings` built (2026-11-09; Config Connector's PR #3730, closed, was a scaffold with no fields); the rest are field gaps on existing kinds: wait for the release (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
 | 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
@@ -744,6 +745,34 @@ Notes on what was built from this table:
   ready"), which the reconciler's retry absorbs.
   Patch 0020: mockgcp serves a regional policy's rules, adapted from the
   global ones (its `patchRule` replaces the whole rule).
+  Live: passes (`docs/live-runs.md`).
+- `ComputeRegionNetworkFirewallPolicyAssociation` (`compute.gcp.hfl.dev/v1alpha1`,
+  rank 6, the association). **Written here**: attaches a regional policy
+  to a VPC network. `firewallPolicyRef` (the
+  `ComputeRegionNetworkFirewallPolicyRef` the rule kind added),
+  `networkRef` (Config Connector's `ComputeNetworkRef`: a `ComputeNetwork`
+  by `name` or `external`) and `resourceID` (the association's name in
+  the policy; `metadata.name` by default), all immutable (CEL).
+  `getAssociation`, `addAssociation` and `removeAssociation` address it by
+  name; `status.externalRef` is ours,
+  `projects/{p}/regions/{r}/firewallPolicies/{policy}/associations/{name}`.
+  Nothing about an association changes in place, so Update only checks
+  that the cloud's association is attached to the network the spec
+  names: one that exists with the name but another network is an error,
+  never a silent move. `replaceExistingAssociation` is not sent: a
+  network that already has a policy attached is the API's error on the
+  object. The real API does not return the policy's ID in an association
+  (an earlier draft had a status field for it). A missing association is
+  a 400 ("Invalid value for field 'name': ... An association with that
+  name does not exist."), which Find and Delete take as "gone". The
+  sweeper removes a policy's associations before the policy
+  (`hack/live/sweep.sh`).
+  Patch 0021: mockgcp serves a regional policy's associations (the global
+  mock has none).
+  Generated versus written: all written by hand. Config Connector's
+  controllerbuilder (`hack/scaffold-kind.sh`) generates from a proto
+  resource; an association is a list inside the policy's proto with no
+  resource of its own.
   Live: passes (`docs/live-runs.md`).
 - `LoggingSettings` (`logging.gcp.hfl.dev/v1alpha1`, rank 7). **Written
   here** from the Cloud Logging API's `Settings`: `organizationRef` or

@@ -5,15 +5,17 @@ of patches 0014 and 0020: getAssociation, addAssociation and
 removeAssociation, written here (the global network policies' mock has no
 associations). An association is addressed by its name in the policy; adding
 one whose name or network is taken is refused unless
-replaceExistingAssociation is set; a missing name answers 400, as a missing
-rule priority does. Each change gives the policy a new fingerprint.
+replaceExistingAssociation is set; a missing name answers 400 with the real API's
+"An association with that name does not exist.", as a missing rule priority does;
+the attachment target is answered as a full URL and nothing else is filled in
+(a live run). Each change gives the policy a new fingerprint.
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockcompute/regionnetworkfirewallpolicies.go b/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
 index 874f0f8b..416465c6 100644
 --- a/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
 +++ b/mockgcp/mockcompute/regionnetworkfirewallpolicies.go
-@@ -314,3 +314,69 @@ func (s *RegionNetworkFirewallPoliciesV1) saveRuleChange(ctx context.Context, ob
+@@ -314,3 +314,77 @@ func (s *RegionNetworkFirewallPoliciesV1) saveRuleChange(ctx context.Context, ob
  		return obj, nil
  	})
  }
@@ -31,7 +33,7 @@ index 874f0f8b..416465c6 100644
 +			return a, nil
 +		}
 +	}
-+	return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'name': '%s'. The firewall policy does not contain an association named '%s'.", req.GetName(), req.GetName())
++	return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'name': '%s'. An association with that name does not exist.", req.GetName())
 +}
 +
 +func (s *RegionNetworkFirewallPoliciesV1) AddAssociation(ctx context.Context, req *pb.AddAssociationRegionNetworkFirewallPolicyRequest) (*pb.Operation, error) {
@@ -56,9 +58,9 @@ index 874f0f8b..416465c6 100644
 +		}
 +		associations = append(associations, existing)
 +	}
-+	a.FirewallPolicyId = PtrTo(strconv.FormatUint(obj.GetId(), 10))
-+	a.ShortName = obj.Name
-+	a.DisplayName = obj.Name
++	// The real API answers the attachment target as a full URL, and fills in
++	// nothing else (a live run).
++	a.AttachmentTarget = PtrTo("https://www.googleapis.com/compute/v1/" + computeResourcePathOf(a.GetAttachmentTarget()))
 +	obj.Associations = append(associations, a)
 +	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.addAssociation")
 +}
@@ -78,8 +80,16 @@ index 874f0f8b..416465c6 100644
 +		associations = append(associations, a)
 +	}
 +	if !found {
-+		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'name': '%s'. The firewall policy does not contain an association named '%s'.", req.GetName(), req.GetName())
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'name': '%s'. An association with that name does not exist.", req.GetName())
 +	}
 +	obj.Associations = associations
 +	return s.saveRuleChange(ctx, obj, name, "compute.regionNetworkFirewallPolicies.removeAssociation")
++}
++
++// computeResourcePathOf trims a Compute Engine URL to projects/....
++func computeResourcePathOf(s string) string {
++	if i := strings.Index(s, "projects/"); i >= 0 {
++		return s[i:]
++	}
++	return s
 +}
