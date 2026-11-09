@@ -951,7 +951,7 @@ networkmanagement.googleapis.com,networkmanagement.googleapis.com/ConnectivityTe
 networkmanagement.googleapis.com,networkmanagement.googleapis.com/NetworkMonitoringProvider,1,,0,,0,1,false,api=v1:projects.locations.networkMonitoringProviders
 networkmanagement.googleapis.com,networkmanagement.googleapis.com/VpcFlowLogsConfig,15,,0,,0,15,false,api=v1:organizations.locations.vpcFlowLogsConfigs
 networkmanagement.googleapis.com,networkmanagement.googleapis.com/projects.locations.vpcFlowLogsConfigs,15,NetworkManagementVPCFlowLogsConfig,11,,0,4,false,api=v1:projects.locations.vpcFlowLogsConfigs; official-spec-fields-unmatched=3/13
-networksecurity.googleapis.com,networksecurity.googleapis.com/AddressGroup,7,,0,,0,7,false,api=v1:organizations.locations.addressGroups
+networksecurity.googleapis.com,networksecurity.googleapis.com/AddressGroup,7,,0,NetworkSecurityAddressGroup,7,0,false,api=v1:organizations.locations.addressGroups; ours-spec-fields-unmatched=4/10
 networksecurity.googleapis.com,networksecurity.googleapis.com/AuthorizationPolicy,11,NetworkSecurityAuthorizationPolicy,10,,0,1,false,api=v1:projects.locations.authorizationPolicies; official-spec-fields-unmatched=3/12
 networksecurity.googleapis.com,networksecurity.googleapis.com/AuthzPolicy,183,NetworkSecurityAuthzPolicy,178,,0,5,false,api=v1:projects.locations.authzPolicies; official-spec-fields-unmatched=7/184
 networksecurity.googleapis.com,networksecurity.googleapis.com/BackendAuthenticationConfig,6,NetworkSecurityBackendAuthenticationConfig,6,,0,0,false,api=v1:projects.locations.backendAuthenticationConfigs; official-spec-fields-unmatched=3/8
@@ -977,7 +977,7 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/SecurityProfileGro
 networksecurity.googleapis.com,networksecurity.googleapis.com/ServerTlsPolicy,11,NetworkSecurityServerTLSPolicy,7,,0,4,false,api=v1:projects.locations.serverTlsPolicies; official-spec-fields-unmatched=3/9
 networksecurity.googleapis.com,networksecurity.googleapis.com/TlsInspectionPolicy,9,NetworkSecurityTLSInspectionPolicy,8,,0,1,false,api=v1:projects.locations.tlsInspectionPolicies; official-spec-fields-unmatched=3/10
 networksecurity.googleapis.com,networksecurity.googleapis.com/UrlList,3,NetworkSecurityURLList,3,,0,0,false,api=v1:projects.locations.urlLists; official-spec-fields-unmatched=3/5
-networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.addressGroups,7,NetworkSecurityAddressGroup,7,,0,0,false,api=v1:projects.locations.addressGroups; official-spec-fields-unmatched=3/9
+networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.addressGroups,7,NetworkSecurityAddressGroup,7,NetworkSecurityAddressGroup,0,0,false,api=v1:projects.locations.addressGroups; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=4/10
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.firewallEndpoints,14,NetworkSecurityFirewallEndpoint,5,,0,9,false,api=v1:projects.locations.firewallEndpoints; official-spec-fields-unmatched=4/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.firewallEndpoints.wildfireVerdictChangeRequests,3,,0,,0,3,false,api=v1:projects.locations.firewallEndpoints.wildfireVerdictChangeRequests
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.securityProfileGroups,8,NetworkSecuritySecurityProfileGroup,7,,0,1,false,api=v1:projects.locations.securityProfileGroups; official-spec-fields-unmatched=3/9
