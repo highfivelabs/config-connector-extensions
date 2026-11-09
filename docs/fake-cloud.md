@@ -134,6 +134,17 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   two policies there (one in the real API); the test uses v3, as the
   controller does. Not yet compared with the real API: its live run waits
   for a test project.
+- **Organization address groups in mockgcp** (patch 0025, ours). An
+  organization's address groups are served by the project service's
+  server, which takes any parent: mockgcp does not check that the
+  organization exists or that the caller may use it, nor the API's
+  limits (a capacity it refuses, more items than the capacity, an item
+  that is not a range of the group's type), nor that a group is in use
+  by a firewall rule when it is deleted. It answers a capacity change
+  like any other update; the CRD refuses one first (immutable, as
+  Magic Modules marks it). A project's address group runs live
+  (`docs/live-runs.md`); an organization's is not yet compared with the
+  real API, since a live run never touches the organization.
 - **A project's default network tier in mockgcp** (patch 0023, ours).
   `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
   anything else with a message of our own; what the real API answers for

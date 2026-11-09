@@ -45,6 +45,7 @@ import (
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	networksecurityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1alpha1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
@@ -56,6 +57,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/networksecurity"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/resourcemanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
@@ -96,6 +98,7 @@ var Kinds = []kind{
 	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
+	{gvk: networksecurityv1alpha1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -113,6 +116,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,
 		resourcemanagerv1alpha1.AddToScheme,
+		networksecurityv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

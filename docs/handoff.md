@@ -5,16 +5,17 @@ is done, what is left (in order), and the working conventions that are not
 obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
-organization `ServiceIdentity` and `ProjectDefaultServiceAccounts`. Read
+organization `ServiceIdentity`, `ProjectDefaultServiceAccounts` and
+`NetworkSecurityAddressGroup`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-On `main` after the `ProjectDefaultServiceAccounts` PR: twenty-three
-kinds (`README.md`, design.md's intro), mockgcp patches 0001 to 0024
+On `main` after the `NetworkSecurityAddressGroup` PR: twenty-four
+kinds (`README.md`, design.md's intro), mockgcp patches 0001 to 0025
 (`UPSTREAM.md` and `upstream.yaml`, which must agree: `task
-upstream:yaml-check`; the next free number is **0025**), the
+upstream:yaml-check`; the next free number is **0026**), the
 live-test switch and the
 Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
 `make`). Every built kind passes live but `LoggingSettings`,
@@ -79,10 +80,13 @@ organization-level IAM or touch the organization.
 
 `ProjectDefaultServiceAccounts` (foundation item 1's last part) is
 built (design.md 6.5; patch 0024); live pending a test project under the
-test folder. Next, organization address groups and security profiles
-(item 6), then decisions 13 to 16, then packet mirroring rules.
+test folder. Item 6 is under way: `NetworkSecurityAddressGroup` is
+built (design.md 6.5, patch 0025; a project's passes live, an
+organization's is "live: pending, needs test folder"). Next the
+security profile and security profile group, then decisions 13 to 16,
+then packet mirroring rules.
 
-Item 6, looked at 2026-11-09, not started: Config Connector's
+Item 6, looked at 2026-11-09: Config Connector's
 `NetworkSecurityAddressGroup`, `...SecurityProfile` and
 `...SecurityProfileGroup` are direct controllers at the pin, `v1alpha1`
 only and project-only (`projects/{p}/locations/{l}/...`;
@@ -96,7 +100,39 @@ group, `NetworkSecurityAddressGroup` and its siblings in
 `networksecurity.gcp.hfl.dev`, each taking an organization or a project
 as its parent, as Terraform's `parent` argument does (not
 `NetworkSecurityOrganizationAddressGroup`, which foundation.md first
-suggested). Live: pending, needs the test folder (organization parent).
+suggested). What the address group taught, for the next two:
+mockgcp's HTTP mux finds a client's service by its methods, and the
+organization service's client matches the project service's too, so add
+it with `httptogrpc.WithServiceName(...)` (patch 0025); the
+organization services' Go clients share the project clients' request
+and operation types, so a small interface picks one by parent; Magic
+Modules' `SecurityProfile.yaml` and `SecurityProfileGroup.yaml` mark
+`name`, `location` and `parent` immutable. Upstream's security profile
+controllers dial gRPC (`GRPCClientOptions`), which our manager and
+mockenv do not configure: use the REST clients
+(`NewSecurityProfileGroupRESTClient`,
+`NewOrganizationSecurityProfileGroupRESTClient`), a change to record.
+Their types reference Config Connector's intercept and mirroring
+endpoint group kinds (keep upstream's reference types). mockgcp's
+`securityprofile.go` and `securityprofilegroup.go` (both on
+`SecurityProfileGroupServer`) parse names as `projects/{p}/...` and
+look the project up, so the organization patch needs its own name
+parsing and an `OrganizationSecurityProfileGroupService` server, not
+just delegation as patch 0025 does; upstream's `Update` returns without
+writing status when nothing differs (keep it, or note the change). An address
+group runs live in `hfl-dev-514205` with the project parent
+(`networksecurity.googleapis.com` enabled 2026-11-09; the account's
+`roles/compute.networkAdmin` has `networksecurity.*`), so the security
+profiles can too.
+
+Decision 14, looked at 2026-11-09: PR #13960 ("fix(compute): align
+migration diffs for ComputeRouter", head `9b916158`) changes only
+upstream's direct `ComputeRouter` controller, which is at the pin
+(`pkg/controller/direct/compute/computerouter_controller.go`, opt-in;
+Terraform is the default). Copy the pin's direct controller and types
+with the PR's change, and check which of the decision's fields (BGP
+peer fields, NAT, interfaces, MD5 keys) its types carry before
+writing more.
 
 Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
 (lean on `controllerbuilder`; behaviour from Magic Modules' product YAML

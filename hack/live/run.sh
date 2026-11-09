@@ -36,7 +36,7 @@ source hack/live/projects.sh
 # needs the test folder, E2E_TEST_FOLDER; resourcemanager
 # (ProjectDefaultServiceAccounts) needs a test project under it,
 # E2E_TEST_FOLDER_PROJECT (docs/live-runs.md).
-DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run)
+DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 
 project=""

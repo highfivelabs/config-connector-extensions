@@ -89,7 +89,7 @@ refuses any project but the ones listed.
 | `roles/storage.objectAdmin` | bucket `gs://hfl-dev-514205-offload` | the offload VM (checkout in, log out) |
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
-| `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers) |
+| `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
@@ -101,8 +101,9 @@ refuses any project but the ones listed.
 (run `cce-11091851-bd92`).
 
 APIs enabled for it: `artifactregistry`, `secretmanager`, `sqladmin`,
-`cloudresourcemanager`, `run`; `compute`, `iam` and `storage` were
-already on. A new kind that needs another role or API adds it
+`cloudresourcemanager`, `run`, `networksecurity` (2026-11-09, for
+`NetworkSecurityAddressGroup`; the sweeper lists address groups, so it
+needs the API on); `compute`, `iam` and `storage` were already on. A new kind that needs another role or API adds it
 here, and to the account, in the same change.
 
 ## Adding a kind
@@ -180,6 +181,8 @@ on the same VM, minutes apart.
 | 2026-11-09 | pending | ServiceIdentity | PASS | pending, needs the test folder (`E2E_TEST_FOLDER`) | not run | none |
 | 2026-11-09 | pending | ComputeProjectDefaultNetworkTier | PASS | pending, needs a test project under the test folder (`E2E_TEST_FOLDER_PROJECT`) with `compute.projects.setDefaultNetworkTier` for `cce-live-tests` | not run (a live `compute` run skips it) | none |
 | 2026-11-09 | pending | ProjectDefaultServiceAccounts | PASS | pending, needs a test project under the test folder (`E2E_TEST_FOLDER_PROJECT`) whose Compute Engine API is on | not run (`resourcemanager` is not a default live kind) | none |
+| 2026-11-09 | `a9a2026` | NetworkSecurityAddressGroup (project parent) | PASS | PASS | none for a project's address group: create, a resync with no patch (the API's default `purpose` and item order are no diff), one patch for an item and description change, the CRD refusing a capacity change and a missing or double parent, delete and abandon all match patch 0025 and the fake. Run `cce-11092303-4b16`; the first run (`cce-11092258-c4e8`, `e244bd5`) passed live but not on the fake, which refused to start until patch 0025 named the organization service in mockgcp's HTTP mux | 2 global address groups (deleted, the abandoned one by the test); `task live-list` empty |
+| 2026-11-09 | pending | NetworkSecurityAddressGroup (organization parent) | PASS | pending, needs test folder (an organization's address group needs organization access; a live run never touches the organization) | not run (the subtest skips live) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for

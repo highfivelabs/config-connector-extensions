@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-three kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-four kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -13,8 +13,9 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
 `IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
-organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier` and
-`ProjectDefaultServiceAccounts` (section 6). Each
+organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
+`ProjectDefaultServiceAccounts` and a project's or organization's
+`NetworkSecurityAddressGroup` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -873,6 +874,37 @@ Notes on what was built from this table:
   test project under the test folder (`E2E_TEST_FOLDER_PROJECT`,
   `mockenv.FolderProject`), never `hfl-dev-514205`, whose compute default
   account the offload VMs and `RunService` use.
+
+- `NetworkSecurityAddressGroup` (`networksecurity.gcp.hfl.dev/v1alpha1`,
+  `docs/coverage/foundation.md` item 6). An address group, the ranges
+  that firewall policy rules name as `srcAddressGroups` or
+  `destAddressGroups`, owned by an organization (for its hierarchical
+  firewall policies) or by a project. Named by decision 18: Config
+  Connector's name in our group, with the parent a field, as Terraform's
+  `google_network_security_address_group` takes `parent`
+  (`organizations/{id}` or `projects/{id}`). Upstream (read 2026-11-09,
+  pin `672414b8`): Config Connector's direct `NetworkSecurityAddressGroup`
+  is `v1alpha1` and project-only, and no pull request adds the
+  organization; the API's `OrganizationAddressGroupService` has the same
+  methods and messages as the project's `AddressGroupService`.
+  **Copied**: the types, identity (and its test), controller, fuzzer and
+  the address group's functions of `mapper.generated.go` (which upstream's
+  `controllerbuilder` generated); `hack/scaffold-kind.sh` was not used,
+  since upstream already has the kind and the copy is nearer than a fresh
+  scaffold. Changed: `organizationRef` beside `projectRef`, exactly one
+  (CEL); the identity takes either parent; an organization's group goes
+  through the `OrganizationAddressGroupService` client (its operations
+  are the same Go types); `capacity` is immutable (CEL), as Magic
+  Modules' `AddressGroup.yaml` (`aad42de6`) marks it, where upstream sends
+  the change and lets the API answer. A changed parent is refused (the
+  identity against `status.externalRef`). Share of the 1,238 non-test
+  lines: 42% generated (controller-gen's CRD and deepcopy here, 36%;
+  upstream's `controllerbuilder` mapper, 6%), 49% copied unchanged, 9%
+  written or changed here. Patch 0025: mockgcp serves the organization
+  service. Live: a project's address group passes (run
+`cce-11092303-4b16`, no difference from the fake); an
+  organization's is "live: pending, needs test folder" (it needs
+  organization access, and a live run never touches the organization).
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
