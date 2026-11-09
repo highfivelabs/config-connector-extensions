@@ -21,8 +21,10 @@
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
-# what is in them) and Cloud Run services, by name. A failed list or
-# delete fails the sweep.
+# what is in them) and Cloud Run services, by name, and Network Security
+# address groups (global and the regions in ADDRESS_GROUP_REGIONS), by
+# label or name, after the firewall policies that may use them. A failed
+# list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,6 +33,7 @@ source "${HERE}/projects.sh"
 
 PREFIX="cce-"
 SECRET_REGIONS="${SECRET_REGIONS:-us-central1 europe-west1}"
+ADDRESS_GROUP_REGIONS="${ADDRESS_GROUP_REGIONS:-us-central1}"
 project="" run="" mode="sweep" dry=0 max_age_hours=2
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -161,6 +164,16 @@ while read -r name region; do
   fi
   act "network firewall policy" "${name} ${region:-global}" "${G[@]}" compute network-firewall-policies delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
+
+# Network Security address groups (a project's; an organization's are never
+# made live): names are projects/P/locations/L/addressGroups/A.
+for loc in global ${ADDRESS_GROUP_REGIONS}; do
+  names="$("${G[@]}" network-security address-groups list --location="${loc}" --verbosity=error \
+    --filter="$(filter labels /)" --format='value(name)')"
+  for name in ${names}; do
+    act "address group" "${name}" "${G[@]}" network-security address-groups delete "${name##*/}" --location="${loc}"
+  done
+done
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do

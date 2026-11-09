@@ -68,6 +68,12 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/serviceusage/v1alpha1/serviceidentity_identity.go` | written here, in the shape of `apis/serviceusage/v1beta1/serviceidentity_identity.go` | `folders/{id}/services/{service}` or `organizations/{id}/services/{service}` |
 | `pkg/controller/direct/serviceusage/serviceidentity_controller.go` | `pkg/controller/direct/serviceusage/serviceidentity_controller.go` | a folder or organization parent; status `externalRef` and `observedState` (through the generated mapper); no export |
 | `hack/scaffold/serviceusage/overlay.proto` | written here, in the form of `apis/batch/v1alpha1/overlay.proto` | `ServiceIdentity`'s fields output-only |
+| `apis/networksecurity/v1alpha1/groupversion_info.go`, `doc.go` | the same files | group `networksecurity.gcp.hfl.dev` |
+| `apis/networksecurity/v1alpha1/networksecurityaddressgroup_types.go` | the same file | `organizationRef` beside `projectRef`, exactly one (CEL); `capacity` immutable (CEL, Magic Modules' `AddressGroup.yaml`); group, labels, short names |
+| `apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity.go`, `networksecurityaddressgroup_identity_test.go` | the same files | an organization's address group, `organizations/{organization}/locations/{location}/addressGroups/{addressgroup}`, beside a project's |
+| `pkg/controller/direct/networksecurity/addressgroup_controller.go` | `pkg/controller/direct/networksecurity/networksecurityaddressgroup_controller.go` | the organization service's client for an organization parent; our KRM types; returned to our manager, not registered |
+| `pkg/controller/direct/networksecurity/mapper.generated.go` | the same file (generated upstream by controllerbuilder) | only the `NetworkSecurityAddressGroup` functions; our KRM types |
+| `pkg/controller/direct/networksecurity/addressgroup_fuzzer_test.go` | `pkg/controller/direct/networksecurity/networksecurityaddressgroup_fuzzer.go` | a test file, run by its own test function |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go` | PR #14209 (head `a5e8f5a9`) `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go` | group, labels, short names; written here: `spec.workloadIdentityPoolRef` (the PR has no field for the pool) |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.go` | PR #14209 `iamworkloadidentitypoolnamespace_identity.generated.go` | written here: the pool from `workloadIdentityPoolRef` (the PR's is a stub that always fails) |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_reference.go` | PR #14209 `iamworkloadidentitypoolnamespace_reference.generated.go` | the reference names our kind |
@@ -126,6 +132,7 @@ flattening all three, 2026-11-08).
 | `0021-mockgcp-compute-region-network-firewall-policy-associations.patch` | on top of 0014 and 0020, written here: a regional policy's associations (getAssociation, addAssociation, removeAssociation) | yes |
 | `0022-mockgcp-serviceusage-hierarchy-identity.patch` | written here: `services.generateServiceIdentity` (v1beta1) for `folders/{id}/services/{service}` and `organizations/{id}/services/{service}` | yes |
 | `0023-mockgcp-compute-project-default-network-tier.patch` | written here: `projects.setDefaultNetworkTier` (`PREMIUM` or `STANDARD`) | yes |
+| `0025-mockgcp-networksecurity-organization-address-groups.patch` | written here: mockgcp serves the `OrganizationAddressGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/addressGroups/{a}`) with the project service's server | yes |
 
 ## Other sources consulted, not copied
 
@@ -136,6 +143,7 @@ flattening all three, 2026-11-08).
 | `github.com/googleapis/googleapis` | `1765b559c42386788ff0c6412491277b4791107a` (Config Connector's `apis/git.versions` at the pin) | the protos `hack/scaffold-kind.sh` generates from (`controllerbuilder`'s `generate-proto.sh`) |
 | `github.com/hashicorp/terraform-provider-google-beta` | `42eb358f50f54450f5433a359517c42edf10e63f` (`main`, 2026-11-07), `google-beta/services/sql/resource_sql_user.go` | the behaviour of `database_roles` (MPL-2.0; read, not copied) |
 | `github.com/hashicorp/terraform-provider-google-beta` | `24c6f5fd13ec6b5809877eb7804089dd0d1fe7a4` (`main`, 2026-11-09), `google-beta/services/resourcemanager/resource_folder_service_identity.go`, `resource_organization_service_identity.go` | the request path of a folder's and organization's service identity (MPL-2.0; read, not copied) |
+| `github.com/GoogleCloudPlatform/magic-modules` | `aad42de6b6564e69c864647145979e60c9eaece1` (`main`, 2026-11-09), `mmv1/products/networksecurity/AddressGroup.yaml` | the behaviour of address groups: an organization or project parent, `capacity` and the parent immutable (Apache-2.0; read, not copied) |
 
 ## Watched upstream change
 

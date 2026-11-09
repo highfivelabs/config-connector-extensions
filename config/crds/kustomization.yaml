@@ -17,6 +17,7 @@ resources:
 - iam.gcp.hfl.dev_iamworkloadidentitypoolnamespaces.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolproviderkeys.yaml
 - logging.gcp.hfl.dev_loggingsettings.yaml
+- networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
 - run.gcp.hfl.dev_runservices.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml

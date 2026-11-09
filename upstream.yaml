@@ -84,6 +84,7 @@ patches:
   - {file: patches/k8s-config-connector/0021-mockgcp-compute-region-network-firewall-policy-associations.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0022-mockgcp-serviceusage-hierarchy-identity.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0023-mockgcp-compute-project-default-network-tier.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request
@@ -187,6 +188,19 @@ copied:
     from: {written_here: true}
   - here: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]}
+  - here: [apis/networksecurity/v1alpha1/groupversion_info.go, apis/networksecurity/v1alpha1/doc.go]
+    from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/groupversion_info.go, apis/networksecurity/v1alpha1/doc.go]}
+  - here: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_types.go]}
+  - here: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity.go, apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity.go, apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity_test.go]}
+  - here: [pkg/controller/direct/networksecurity/addressgroup_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecurityaddressgroup_controller.go]}
+  # Generated upstream by controllerbuilder; only the address group's functions.
+  - here: [pkg/controller/direct/networksecurity/mapper.generated.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/mapper.generated.go]}
+  - here: [pkg/controller/direct/networksecurity/addressgroup_fuzzer_test.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecurityaddressgroup_fuzzer.go]}
   - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]}
   - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.go]
@@ -253,3 +267,6 @@ other_sources:
   - repo: hashicorp/terraform-provider-google-beta
     commit: 24c6f5fd13ec6b5809877eb7804089dd0d1fe7a4
     used_for: the request path of a folder's and organization's service identity (MPL-2.0; read, not copied)
+  - repo: GoogleCloudPlatform/magic-modules
+    commit: aad42de6b6564e69c864647145979e60c9eaece1
+    used_for: the behaviour of address groups (mmv1/products/networksecurity/AddressGroup.yaml; capacity and parent immutable, organization or project parent)

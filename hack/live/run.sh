@@ -34,7 +34,7 @@ source hack/live/projects.sh
 # Not by default: logging (LoggingSettings) needs a test folder and a key,
 # E2E_LOGGING_FOLDER and E2E_LOGGING_KMS_KEY; serviceusage (ServiceIdentity)
 # needs the test folder, E2E_TEST_FOLDER (docs/live-runs.md).
-DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run)
+DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 
 project=""
