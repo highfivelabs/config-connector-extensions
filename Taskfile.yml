@@ -70,6 +70,12 @@ tasks:
       - hack/upstream.sh --check
       - hack/check-go-mod.sh
 
+  "upstream:yaml-check":
+    desc: Fail if upstream.yaml (UPSTREAM.md, machine-readable) and UPSTREAM.md disagree; needs no upstream checkout.
+    dir: hack/upstream-yaml
+    cmds:
+      - go run . ../..
+
   generate:
     desc: Regenerate the CRDs and deepcopy code.
     cmds:
@@ -146,6 +152,7 @@ tasks:
     desc: Pin, generated files current, gofmt, vet, SPDX lines, build, tests against the fake cloud.
     cmds:
       - task: upstream-check
+      - task: upstream:yaml-check
       - task: go:fmt-check
         vars: {DIRS: apis cmd pkg}
       - hack/generate.sh
