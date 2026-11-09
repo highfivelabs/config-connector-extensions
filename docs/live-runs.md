@@ -124,10 +124,10 @@ on the same VM, minutes apart.
 | 2026-11-09 | `8a13722`+ | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | as above |
 | 2026-11-09 | `8a13722`+ | SQLUser | PASS | PASS | none | as above |
 | 2026-11-09 | `8a13722`+ | ArtifactRegistryRepository | PASS | FAIL | the API refuses a remote upstream it cannot reach ("Failed to validate remote upstream", `registry.example.com/v2/`); mockgcp never checks. Run stopped by hand | none created |
-| 2026-11-09 | `8a13722`+ | SQLAdminBackup | PASS | PASS | none, with the fix (Find takes `DELETED` as gone) and patch 0010 | instance `cce-11090854-9525-pg` (~25 min), 3 backups (deleted) |
+| 2026-11-09 | `8a13722`+ | SQLAdminBackup | PASS | PASS | none, with the fix (Find takes `DELETED` as gone) and patch 0013 (numbered 0010 then) | instance `cce-11090854-9525-pg` (~25 min), 3 backups (deleted) |
 | 2026-11-09 | `8a13722`+ | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | as above |
 | 2026-11-09 | `8a13722`+ | SQLUser | PASS | PASS | none | as above |
-| 2026-11-09 | `8a13722`+ | ArtifactRegistryRepository | PASS | FAIL | a changed custom upstream URI: the API refuses it with "Remote source configuartion cannot be updated", mockgcp with "not supported by mockgcp" (fixed by patch 0011); the upstreamCredentials test passed live | 6 remote repositories, 1 secret with 2 versions (deleted) |
+| 2026-11-09 | `8a13722`+ | ArtifactRegistryRepository | PASS | FAIL | a changed custom upstream URI: the API refuses it with "Remote source configuartion cannot be updated", mockgcp with "not supported by mockgcp" (fixed by patch 0014, numbered 0011 then); the upstreamCredentials test passed live | 6 remote repositories, 1 secret with 2 versions (deleted) |
 | 2026-11-09 | `f2b89cd` | SQLAdminBackup | PASS | PASS | none | instance `cce-11090920-6dcf-pg` (~25 min), 3 backups (deleted) |
 | 2026-11-09 | `f2b89cd` | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 2 secrets, 1 version (deleted) |
 | 2026-11-09 | `f2b89cd` | SQLUser | PASS | PASS | none | 1 IAM user (deleted with the instance) |
@@ -145,12 +145,15 @@ Cloud SQL; nothing made) and `cce-11090806-613a` (preempted while making
 the instance; swept by hand) reached no test.
 
 Not yet run live: `IAMWorkloadIdentityPoolNamespace`,
-`IAMWorkloadIdentityPoolManagedIdentity` and `RunService`. Granting the
-live-test service account `roles/iam.workloadIdentityPoolAdmin`,
-`roles/run.admin` and `roles/iam.serviceAccountUser` on the runtime
-service account needs the builder's approval; then their tests need run
-names and cleanup, and the sweeper needs workload identity pools and
-Cloud Run services. The managed identity test's attestation rules name
+`IAMWorkloadIdentityPoolManagedIdentity`,
+`IAMWorkloadIdentityPoolProviderKey` and `RunService` (packages `iam`
+and `run`), and `ComputeRegionNetworkEndpoint` and
+`ComputeRouterRoutePolicy` (package `compute`). Granting the live-test
+service account `roles/iam.workloadIdentityPoolAdmin`, `roles/run.admin`
+and `roles/iam.serviceAccountUser` on the runtime service account (and,
+for `compute`, a network role) is with the builder; then their tests
+need run names and cleanup, and the sweeper needs workload identity
+pools, Cloud Run services and the network resources. The managed identity test's attestation rules name
 made-up Compute Engine instances, and the RunService test asks for an
 NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
 

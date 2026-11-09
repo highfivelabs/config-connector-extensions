@@ -1,4 +1,4 @@
-config-connector-extensions patch 0011: mockgcp's Artifact Registry refuses to change a remote repository's source as the API does.
+config-connector-extensions patch 0014: mockgcp's Artifact Registry refuses to change a remote repository's source as the API does.
 
 Written here, on top of patch 0005, for artifactregistry.gcp.hfl.dev
 ArtifactRegistryRepository. A live run against a real project

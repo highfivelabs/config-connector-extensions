@@ -1,14 +1,16 @@
 # config-connector-extensions design
 
-config-connector-extensions has nine kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twelve kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
-`IAMWorkloadIdentityPoolNamespace` and
-`IAMWorkloadIdentityPoolManagedIdentity`, and a narrow direct
-`RunService` with `invokerIamDisabled` and GPUs (section 6). Each passes its end-to-end test
-against mockgcp, and the same test against a real project
-(`docs/live-runs.md`). An operator runs the managers beside Config Connector's,
+`IAMWorkloadIdentityPoolNamespace`,
+`IAMWorkloadIdentityPoolManagedIdentity` and
+`IAMWorkloadIdentityPoolProviderKey`, a narrow direct
+`RunService` with `invokerIamDisabled` and GPUs,
+`ComputeRegionNetworkEndpoint` and `ComputeRouterRoutePolicy` (section 6). Each passes its end-to-end test
+against mockgcp; those in `docs/live-runs.md` also pass it against a real
+project. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
 against an in-cluster fake cloud (section 9). Images are built locally
@@ -253,18 +255,18 @@ here.
   pg_read_all_data], want [pg_read_all_data]").
 - **Live runs** (`docs/live-runs.md`). The same tests run against a real
   project with `E2E_GCP_TARGET=real` (`make test-live`, on an offload VM as
-  a least-privilege service account, never from `make check`). Every
-  built kind has passed live, and the ledger there records each run and
-  what differed from mockgcp. Found live on 2026-11-09:
+  a least-privilege service account, never from `make check`). The ledger
+  there records each run, which kinds have passed live, and what differed
+  from mockgcp. Found live on 2026-11-09:
   - `users.get` does return `databaseRoles`, and inserts, adds and
     revokes (`revokeExistingRoles`) behave as patch 0001 fakes them;
   - a deleted Cloud SQL backup run is still returned, with status
-    `DELETED`: `SQLAdminBackup` now takes that as gone, and patch 0010
+    `DELETED`: `SQLAdminBackup` now takes that as gone, and patch 0013
     fakes it;
   - Artifact Registry refuses a remote upstream it cannot reach unless
     `disableUpstreamValidation` is set, and refuses a change of a remote
     repository's source ("Remote source configuartion cannot be
-    updated"), which patch 0011 fakes.
+    updated"), which patch 0014 fakes.
 - **Next** (section 7): port Config Connector's own `SQLUser` fixtures
   (`pkg/test/resourcefixture/testdata/basic/sql/v1beta1/sqluser/`) to our
   group and run them through its golden harness, which records
@@ -365,7 +367,7 @@ In the Google API, in no Config Connector code or pull request
 | --- | --- |
 | Artifact Registry package tags | built, `ArtifactRegistryTag` (2026-11-09) |
 | a remote repository's `upstreamCredentials` | built (decision 8) |
-| Workload Identity pool provider keys | next |
+| Workload Identity pool provider keys | built, `IAMWorkloadIdentityPoolProviderKey` (2026-11-09) |
 | Cloud SQL `blueGreenDeployments` | skipped: not in the API. Neither `sqladmin/v1` nor `sqladmin/v1beta4` in google-api-go-client v0.287.1 (the pin's) has it; the entry was wrong |
 
 Two entries were dropped from this list on 2026-11-09: Artifact Registry
@@ -595,6 +597,86 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     packages, so neither the package nor the version is checked.
   - The managers' role also reads `artifactregistry.cnrm.cloud.google.com`;
     `pkg/test/mockenv` installs Config Connector's repository CRD.
+- `IAMWorkloadIdentityPoolProviderKey` (`iam.gcp.hfl.dev/v1alpha1`, decision
+  10, the last unranked candidate). **Written here** in full: no Config
+  Connector code or pull request, and no Terraform resource (Terraform has
+  only `google_iam_workforce_pool_provider_key`, the workforce analogue),
+  has workload identity pool provider keys.
+  - `spec.workloadIdentityPoolProviderRef` names Config Connector's
+    (DCL-based) `IAMWorkloadIdentityPoolProvider` by name, reading its pool
+    from its own `workloadIdentityPoolRef`, or a provider as `external`;
+    `spec.use` (`ENCRYPTION`) and `spec.keyData.keySpec` (`RSA_2048`,
+    `RSA_3072`, `RSA_4096`). Every field is immutable, as in Terraform's
+    workforce analogue: a change leaves the object not Ready with the
+    field named, and is not applied.
+  - `status.observedState.keyData` carries the public key (an X.509 PEM)
+    and its validity window, to configure in the identity provider.
+  - A deleted key is soft-deleted (state `DELETED`) and counts as absent,
+    as for namespaces.
+  - Patch 0010: mockgcp serves provider keys. The proto is written here
+    from the API's discovery document (googleapis has none), generated by
+    the same script, and the mock returns a placeholder PEM, not a
+    certificate.
+  - With this, every ranked and unranked candidate in section 6.3 is built,
+    watched, waiting for a release, or skipped with its reason.
+
+### 6.5 From the seed catalog (read 2026-11-09)
+
+The catalog agent's inventory of Cloud Foundation Fabric v60.0.0 against
+Config Connector v1.160.0 (`highfivelabs/catalog`, `docs/gcp-inventory.md`
+at `a5a451a`, "Gaps for config-connector-extensions") ranks what fabric
+modules need and no Config Connector kind covers, by how many modules need
+it. Rechecked here read-only on 2026-11-09 against Config Connector
+`v1.160.0`, `master` at `b795cda8` and its open pull requests; rows follow
+this repository's rules (6.1, decision 5, section 10).
+
+| Rank | Gap | Modules | Upstream (2026-11-09) | Here |
+| ---: | --- | ---: | --- | --- |
+| 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | question (section 10, question 1) |
+| 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
+| 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
+| 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
+| 5 | `StorageBucketObject` | 4 | no kind or PR | next to build; the inventory notes a Bundt hook Job as the alternative |
+| 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | to build |
+| 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
+| 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
+| 9 | Field gaps on foundational kinds: `StorageBucket` `rpo`, `hierarchicalNamespace`, `enableObjectRetention`; `ComputeNetwork` BGP settings and `status.networkId`; `ComputeSubnetwork` `ipCollection`, `allowSubnetCidrRoutesOverlap` | 4 | `rpo` is PR #13713 (open, review required); none found for the rest | wait for the release (decision 5) |
+| 10 | Project settings: default service accounts, default network tier, per-key compute metadata | 1 | no kinds or PRs (`ComputeProjectMetadata`, whole-project, is Terraform-based) | to build |
+
+Notes on what was built from this table:
+
+- `ComputeRegionNetworkEndpoint` (`compute.gcp.hfl.dev/v1alpha1`, rank 3).
+  **Written here**, after Config Connector's zonal `ComputeNetworkEndpoint`
+  (whose types have only the group, `ipAddress` and `instanceRef`), with
+  the fields Terraform's `google_compute_region_network_endpoint` has:
+  `regionNetworkEndpointGroupRef` (Config Connector's
+  `ComputeRegionNetworkEndpointGroup` by name, or `external`), `port`,
+  `ipAddress`, `fqdn`, `clientDestinationPort`, `instance`. The controller
+  follows Terraform (read, not copied): `attachNetworkEndpoints`, found by
+  listing the group's endpoints and matching address and port,
+  `detachNetworkEndpoints`; every field is immutable (a change leaves the
+  object not Ready and attaches nothing). An endpoint has no resource name
+  in the API, so `status.externalRef` is the group's name plus
+  `/networkEndpoints/{address}:{port}`, ours. Patch 0011: mockgcp attaches,
+  detaches and lists a regional group's endpoints, adapted from its zonal
+  ones.
+- `ComputeRouterRoutePolicy` (`compute.gcp.hfl.dev/v1alpha1`, rank 4).
+  **Written here** from the Compute Engine API's `RoutePolicy`:
+  `routerRef` (Config Connector's `ComputeRouter` by name, or `external`),
+  `resourceID`, `type`, `description`, and `terms` (priority, a CEL
+  `match`, CEL `actions`). The controller follows Terraform's
+  `google_compute_router_route_policy` (read, not copied): `getRoutePolicy`
+  reads it, `updateRoutePolicy` creates it and replaces it whole (with the
+  fingerprint it read), `deleteRoutePolicy` deletes it; type, description
+  and terms change in place. A route policy has no API resource name, so
+  `status.externalRef` is the router's name plus `/routePolicies/{name}`,
+  ours. Patch 0012: mockgcp serves a router's route policies with a new
+  fingerprint on each write.
+
+Below the top ten, each needed by one module (Looker instances, Endpoints
+services, Cloud Build v2 repositories, regional instance templates, and
+others in the inventory): not ranked here yet. Container Registry is
+deprecated upstream and is not built.
 
 ## 7. What is left
 
@@ -641,7 +723,7 @@ To raise confidence in `ArtifactRegistryRepository`:
 
 14. Done (2026-11-09, `docs/live-runs.md`): the API refuses a change of a
     custom upstream's URI ("Remote source configuartion cannot be
-    updated"; patch 0011 makes mockgcp answer the same), so the object goes
+    updated"; patch 0014 makes mockgcp answer the same), so the object goes
     not Ready and the repository keeps its URI; Terraform replaces the
     repository instead. Whether ours should replace it too is not decided.
     The API also refuses, at creation, a remote upstream it cannot reach,
@@ -662,6 +744,17 @@ To raise confidence in `ArtifactRegistryRepository`:
 18. `ArtifactRegistryTag` against a real project: a tag on a version that
     exists, the API's error for one that does not, and a package whose ID
     has a "/" (`%2F` in the name), which the fake test leaves out.
+19. `IAMWorkloadIdentityPoolProviderKey` against a real project: the key's
+    real certificate and validity window, its use from a SAML provider, the
+    API's error for a provider that does not exist or is not SAML, and the
+    soft-deleted ID's reuse; then correct mockgcp.
+20. `ComputeRegionNetworkEndpoint` against a real project: the API's checks
+    by group type (an IP address in an `INTERNET_FQDN_PORT` group, a VM in
+    another zone), which mockgcp does not make, and the endpoint's identity
+    when the group holds several with the same address and port.
+21. `ComputeRouterRoutePolicy` against a real project: the API's checks of
+    the CEL expressions and priorities, which mockgcp does not make, and a
+    write with a stale fingerprint.
 
 ## 8. Decisions
 
@@ -959,7 +1052,22 @@ nothing from this project.
 A question for the builder goes here, with a recommendation; the answer
 moves to section 8.
 
-1. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+1. **What to name role-authoritative IAM (6.5, rank 1)?** (2026-11-09)
+   The seed catalog suggests `IAMPolicyBinding`: a resource, a role and
+   its members (and an optional condition), owning that role on the
+   resource, as Terraform's `google_*_iam_binding` does, which 43 fabric
+   modules use. But Config Connector's open PR #14133 adds an
+   `iam.cnrm.cloud.google.com` `IAMPolicyBinding` for a different
+   resource, IAM v3's `PolicyBinding` (principal access boundary
+   policies). The same kind name in two groups would make `kubectl get
+   iampolicybinding` ambiguous, and our rule of retiring a kind when
+   upstream ships it would point at the wrong thing. Recommendation: name
+   ours `iam.gcp.hfl.dev/v1alpha1` `IAMRoleBinding`, copying the resource
+   reference and the get/set IAM policy flow from Config Connector's
+   `IAMPartialPolicy`, and let rank 2 (IAM on the 32 resource types
+   `IAMPolicyMember` cannot reference) be resource types it accepts.
+
+2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows
    whether `users.get` returns roles". It does (`docs/live-runs.md`).
    Upstream PR #7148 compares the spec with the roles `users.get` returns.

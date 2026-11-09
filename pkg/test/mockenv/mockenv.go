@@ -127,10 +127,16 @@ func New(t *testing.T, namespaces ...string) *Env {
 			// (ArtifactRegistryRepository's upstream password version).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_secretmanagersecrets.secretmanager.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_secretmanagersecretversions.secretmanager.cnrm.cloud.google.com.yaml"),
+			// ComputeRegionNetworkEndpoint's group.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computeregionnetworkendpointgroups.compute.cnrm.cloud.google.com.yaml"),
+			// ComputeRouterRoutePolicy's router.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computerouters.compute.cnrm.cloud.google.com.yaml"),
 			// ArtifactRegistryTag's repository.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_artifactregistryrepositories.artifactregistry.cnrm.cloud.google.com.yaml"),
-			// IAMWorkloadIdentityPoolNamespace's pool.
+			// IAMWorkloadIdentityPoolNamespace's pool, and a provider key's
+			// provider.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_iamworkloadidentitypools.iam.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_iamworkloadidentitypoolproviders.iam.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}
