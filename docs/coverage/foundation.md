@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 100 | 3121 | 38.8% | 1.0% | 60.2% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 1.0% | 60.1% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 0.7% | 32.1% |
 
 By service:
@@ -24,7 +24,7 @@ By service:
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 0.0% | 83.5% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 0.0% | 39.9% |
 | foundation | `orgpolicy.googleapis.com` | 4 | 121 | 67.8% | 0.0% | 32.2% |
-| foundation | `iam.googleapis.com` | 16 | 113 | 36.3% | 8.0% | 55.8% |
+| foundation | `iam.googleapis.com` | 16 | 113 | 39.8% | 8.0% | 52.2% |
 | foundation | `cloudresourcemanager.googleapis.com` | 12 | 55 | 40.0% | 0.0% | 60.0% |
 | foundation | `cloudidentity.googleapis.com` | 8 | 47 | 21.3% | 0.0% | 78.7% |
 | foundation | `cloudkms.googleapis.com` | 8 | 42 | 42.9% | 0.0% | 57.1% |
@@ -69,7 +69,7 @@ What these numbers miss, for the foundation:
 | ---: | --- | :-: | --- | ---: | :-: | --- | --- |
 | 1 | [Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)](#1-hierarchy-and-project-settings-service-identity-at-folder-and-organization-default-service-accounts-default-network-tier) | A | whole | 3 | M | n/a (not a create, or not in the API's create requests) | none |
 | 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 111 / 131 (0.0%) | none |
-| 3 | [Organization-level custom IAM roles](#3-organization-level-custom-iam-roles) | A | whole | 1 | S | 10 / 14 (28.6%) | none for organization roles |
+| 3 | [Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)](#3-organization-level-custom-iam-roles-covered-by-config-connectors-iamcustomrole) | A | whole | 1 | S | 6 / 14 (57.1%) | `IAMCustomRole` (Terraform-based, `v1beta1`) has it |
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 20 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 131 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 52 / 52 (0.0%) | none |
@@ -122,18 +122,18 @@ What these numbers miss, for the foundation:
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kind or pull request for the regional policy; the global `ComputeNetworkFirewallPolicyRule` and `...Association` are Terraform-based (the rule is alpha-only, see the stability item), with no packet mirroring rule at all. `docs/design.md` 6.5 row 6 has the same finding.
 - **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row.
 
-### 3. Organization-level custom IAM roles
+### 3. Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
 
 - **Importance** A, **gap** whole, **size** S, **modules** 1 (organization).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `iam.googleapis.com/Role`: 0 / 0 / 7 of 7; no kind
+  - `iam.googleapis.com/Role`: 4 / 0 / 3 of 7; IAMCustomRole
   - `iam.googleapis.com/projects.roles`: 4 / 0 / 3 of 7; IAMCustomRole
-- **Missing, whole resources:** An organization's custom role (`google_organization_iam_custom_role`): Config Connector's `IAMCustomRole` has no organization parent (its spec is `title`, `description`, `permissions`, `stage`; it is project-scoped through the project annotation).
-- **Missing, attributes that matter:** `organizationRef` on the role; `permissions[]`, `title`, `description`, `stage`; `deleted` (undelete).
-  - uncovered in `iam.googleapis.com/Role` (measured): `deleted`, `description`, `includedPermissions[]`, `name`, `roleId`, `stage`, `title`
+- **Missing, whole resources:** Nothing: not a gap. Config Connector's `IAMCustomRole` takes an organization through the `cnrm.cloud.google.com/organization-id` annotation, as it takes a project through `project-id`. Evidence at the pin: `config/servicemappings/iam.yaml` maps `IAMCustomRole` to the Config Connector-only Terraform resource `google_iam_custom_role` with containers `project` and `organization` (`org_id`) and ID template `{{project?}}#{{org_id?}}#{{role_id}}`; that resource (`resource_iam_custom_role.go` in the provider fork) makes `organizations/{org_id}/roles/{role_id}` when the organization is set; and `config/samples/resources/iamcustomrole/organization-role` is an organization role. Found by the Terraform research (catalog `docs/terraform-leverage.md`), confirmed in the code 2026-11-09; not yet run against a real organization (a live run never touches the organization).
+- **Missing, attributes that matter:** The same as a project role's: `deleted` (undelete) is a field of neither.
+  - uncovered in `iam.googleapis.com/Role` (measured): `deleted`, `includedPermissions[]`, `roleId`
   - uncovered in `iam.googleapis.com/projects.roles` (measured): `deleted`, `includedPermissions[]`, `roleId`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for organization roles. Open PR #14425 (2026-11-08) only fixes partitioned project IDs in `IAMCustomRole`.
-- **Build:** `IAMOrganizationCustomRole` in `iam.gcp.hfl.dev/v1alpha1` (a new kind beside, not a fork of, `IAMCustomRole`): `organizationRef`, `roleId` (the resource name), `title`, `description`, `permissions[]`, `stage`. API `organizations.roles.create/patch/delete/undelete/get` (iam v1); identity `organizations/{org}/roles/{role}`. The mapping is Terraform's `google_organization_iam_custom_role` (read); the controller is small, the mockgcp patch is the work (mockgcp has `projects.roles`; add the organization path).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): `IAMCustomRole` (Terraform-based, `v1beta1`) has it. Open PR #14425 (2026-11-08) only fixes partitioned project IDs.
+- **Build:** Nothing. The measured numbers count `IAMCustomRole` against both resources (`overrides.yaml`, `kinds`).
 
 ### 4. Workforce identity (SCIM tenants, provider keys) and OAuth clients
 
@@ -717,7 +717,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `gkehub.googleapis.com/ScopeRbacrolebinding` | GKEHubScopeRBACRoleBinding (alpha) | - | 6 | 6 | 0 | 0 | - |
 | foundation | `iam.googleapis.com/OauthClient` | - | - | 8 | 0 | 0 | 8 | 4 |
 | foundation | `iam.googleapis.com/OauthClientCredential` | - | - | 3 | 0 | 0 | 3 | 4 |
-| foundation | `iam.googleapis.com/Role` | - | - | 7 | 0 | 0 | 7 | 3 |
+| foundation | `iam.googleapis.com/Role` | IAMCustomRole | - | 7 | 4 | 0 | 3 | 3 |
 | foundation | `iam.googleapis.com/ServiceAccount` | IAMServiceAccount | - | 4 | 3 | 0 | 1 | - |
 | foundation | `iam.googleapis.com/ServiceAccountKey` | IAMServiceAccountKey | - | 2 | 2 | 0 | 0 | - |
 | foundation | `iam.googleapis.com/WorkforcePool` | IAMWorkforcePool | - | 8 | 6 | 0 | 2 | - |

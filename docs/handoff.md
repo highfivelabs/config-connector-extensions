@@ -51,7 +51,7 @@ in each PR.
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
-folder): default service accounts, default network tier, organization custom IAM roles,
+folder): default service accounts, default network tier,
 organization address groups and security profiles, and so on down the
 report. The builder answered its four Decision items (design.md
 decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
@@ -64,7 +64,9 @@ kinds with organization, folder and project parents (16). Decision 5
 stands for other field gaps (wait for the release). Whole-resource gaps
 first; any other field gap that needs the builder goes to section 10
 with a recommendation. A deprecation path for our kinds is the builder's
-separate design; do not build it. Org-level live tests wait for the test folder:
+separate design; do not build it. Organization custom IAM roles (foundation item 3) are
+not a gap: Config Connector's `IAMCustomRole` takes the
+`cnrm.cloud.google.com/organization-id` annotation (the item says where). Org-level live tests wait for the test folder:
 "live: pending, needs test folder"; never create folders, grant
 organization-level IAM or touch the organization.
 

@@ -148,7 +148,10 @@ group_hosts:
   vertexai: [aiplatform.googleapis.com]
 
 # Kind to resource ids ("host/Resource"), where the name rule fails.
-kinds: {}
+kinds:
+  # A project's or, with the organization-id annotation, an organization's
+  # custom role (config/servicemappings/iam.yaml containers).
+  IAMCustomRole: [iam.googleapis.com/projects.roles, iam.googleapis.com/Role]
 
 # Kinds that are not an API resource with a create method (IAM policy
 # attachments, associations), with the reason.

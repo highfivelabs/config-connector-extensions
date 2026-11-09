@@ -783,7 +783,7 @@ iam.googleapis.com,iam.googleapis.com/IAMRoleBinding,0,,0,IAMRoleBinding,0,0,fal
 iam.googleapis.com,iam.googleapis.com/IAMRoleMember,0,,0,IAMRoleMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,,0,8,false,api=v1:projects.locations.oauthClients
 iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
-iam.googleapis.com,iam.googleapis.com/Role,7,,0,,0,7,false,api=v1:organizations.roles; request-wrapper=CreateRoleRequest
+iam.googleapis.com,iam.googleapis.com/Role,7,IAMCustomRole,4,,0,3,false,api=v1:organizations.roles; request-wrapper=CreateRoleRequest; official-spec-fields-unmatched=2/5
 iam.googleapis.com,iam.googleapis.com/ServiceAccount,4,IAMServiceAccount,3,,0,1,false,api=v1:projects.serviceAccounts; request-wrapper=CreateServiceAccountRequest; official-spec-fields-unmatched=2/4
 iam.googleapis.com,iam.googleapis.com/ServiceAccountKey,2,IAMServiceAccountKey,2,,0,0,false,api=v1:projects.serviceAccounts.keys; official-spec-fields-unmatched=3/5
 iam.googleapis.com,iam.googleapis.com/WorkforcePool,8,IAMWorkforcePool,6,,0,2,false,api=v1:locations.workforcePools; official-spec-fields-unmatched=2/7
