@@ -18,9 +18,10 @@
 # (their users and backups go with them), and Compute Engine network
 # firewall policies, network endpoint groups (their endpoints go with
 # them), Cloud Routers (their route policies go with them) and VPC
-# networks, which take no labels and are found by name, workload
-# identity pools (with what is in them) and Cloud Run services, by name.
-# A failed list or
+# networks, which take no labels and are found by name, Cloud Storage
+# buckets, by name, keys of the project's common instance metadata, by
+# name and aged by the run ID in them, and workload identity pools (with
+# what is in them) and Cloud Run services, by name. A failed list or
 # delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
@@ -189,9 +190,43 @@ while read -r name region made; do
   act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
 done <<<"${rows}"
 
+# Cloud Storage: buckets by the run's name prefix (bucket names are
+# global), aged by their creation time; rm -r takes their objects too.
+rows="$("${G[@]}" storage buckets list --verbosity=error --format='value(name,creation_time)')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  if [[ -n "${run}" ]]; then
+    [[ "${name}" == "${run}-"* ]] || continue
+  else
+    [[ "${name}" == "${PREFIX}"* ]] || continue
+    if [[ "${mode}" == "sweep" ]]; then
+      [[ "${made:0:19}Z" < "${cutoff}" ]] || continue
+    fi
+  fi
+  act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
+done <<<"${rows}"
+
 names="$("${G[@]}" compute networks list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
 for name in ${names}; do
   act "VPC network" "${name}" "${G[@]}" compute networks delete "${name}"
+done
+
+# Compute Engine project metadata: keys are named <run ID>-<base>; a key
+# has no creation time, so its age is the run ID's (cce-MMDDhhmm-xxxx, UTC,
+# this year).
+keys="$("${G[@]}" compute project-info describe --verbosity=error \
+  --flatten=commonInstanceMetadata.items --format='value(commonInstanceMetadata.items.key)')"
+for key in ${keys}; do
+  if [[ -n "${run}" ]]; then
+    [[ "${key}" == "${run}-"* ]] || continue
+  else
+    [[ "${key}" =~ ^${PREFIX}([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-[0-9a-f]+- ]] || continue
+    if [[ "${mode}" == "sweep" ]]; then
+      made="$(date -u +%Y)-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}T${BASH_REMATCH[3]}:${BASH_REMATCH[4]}:00Z"
+      [[ "${made}" < "${cutoff}" ]] || continue
+    fi
+  fi
+  act "project metadata key" "${key}" "${G[@]}" compute project-info remove-metadata --keys="${key}"
 done
 
 if [[ "${mode}" == "list" ]]; then

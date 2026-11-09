@@ -133,6 +133,40 @@ func ServiceAccount(t *testing.T) string {
 	return sa
 }
 
+// LoggingFolder is the folder whose Log Router settings LoggingSettings'
+// test changes, as folders/{id}: a made-up one in the fake cloud, and
+// against a real project the folder in E2E_LOGGING_FOLDER, which must be a
+// test folder the live-test service account administers logging on. The
+// test puts the folder's settings back as it found them. A live run never
+// changes an organization's settings.
+func LoggingFolder(t *testing.T) string {
+	t.Helper()
+	if !Live() {
+		return "folders/123456"
+	}
+	f := os.Getenv("E2E_LOGGING_FOLDER")
+	if f == "" {
+		t.Fatal("E2E_LOGGING_FOLDER is not set; a live LoggingSettings test needs a test folder (docs/live-runs.md)")
+	}
+	return f
+}
+
+// LoggingKMSKey is a Cloud KMS key for the Log Router of LoggingFolder: a
+// made-up one in the fake cloud, which does not check keys, and against a
+// real project the key in E2E_LOGGING_KMS_KEY, which the folder's Log
+// Router service account must be able to use.
+func LoggingKMSKey(t *testing.T) string {
+	t.Helper()
+	if !Live() {
+		return "projects/" + Project + "/locations/europe-west1/keyRings/logs/cryptoKeys/router"
+	}
+	k := os.Getenv("E2E_LOGGING_KMS_KEY")
+	if k == "" {
+		t.Fatal("E2E_LOGGING_KMS_KEY is not set; a live LoggingSettings test needs a key the folder's Log Router can use (docs/live-runs.md)")
+	}
+	return k
+}
+
 // SQLInstance is a Cloud SQL Postgres instance for the SQL kinds, which
 // are sub-resources of one. In the fake cloud it is created here, once per
 // Env; against a real project it is the run's shared instance

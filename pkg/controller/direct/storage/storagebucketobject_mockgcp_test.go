@@ -16,8 +16,11 @@
 package storage_test
 
 // StorageBucketObject end to end on the fake cloud (pkg/test/mockenv, patch
-// 0013). The case: a function's configuration file and a startup script
-// kept in a bucket, from the spec, a ConfigMap and a Secret.
+// 0013) or a real project (docs/live-runs.md). The case: a function's
+// configuration file and a startup script kept in a bucket, from the spec,
+// a ConfigMap and a Secret. The bucket is the run's own (mockenv.Name, with
+// mockenv.Labels) and the test deletes it at the end with every object in
+// it, the abandoned one included.
 
 import (
 	"io"
@@ -37,10 +40,11 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-const (
-	namespace = "example"
-	bucket    = "app-config-bucket"
-)
+const namespace = "example"
+
+// bucket is the test's bucket; bucket names are global, so a live run's
+// carries its run ID.
+var bucket = mockenv.Name("app-config-bucket")
 
 var gvk = storagev1alpha1.StorageBucketObjectGVK
 
@@ -51,11 +55,26 @@ func TestStorageBucketObject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The bucket, in the fake cloud and as a Config Connector object (not
+	// The bucket, in the cloud and as a Config Connector object (not
 	// reconciled here; read to resolve bucketRef by name).
-	if _, err := gcs.Buckets.Insert(mockenv.Project, &api.Bucket{Name: bucket, Location: "US"}).Context(env.Ctx).Do(); err != nil {
-		t.Fatalf("creating the bucket in the fake cloud: %v", err)
+	if _, err := gcs.Buckets.Insert(mockenv.Project, &api.Bucket{Name: bucket, Location: "US", Labels: mockenv.Labels()}).Context(env.Ctx).Do(); err != nil {
+		t.Fatalf("creating the bucket: %v", err)
 	}
+	t.Cleanup(func() {
+		objs, err := gcs.Objects.List(bucket).Context(env.Ctx).Do()
+		if err != nil {
+			t.Errorf("listing the bucket's objects: %v", err)
+			return
+		}
+		for _, o := range objs.Items {
+			if err := gcs.Objects.Delete(bucket, o.Name).Context(env.Ctx).Do(); err != nil && !strings.Contains(err.Error(), "404") {
+				t.Errorf("deleting %s: %v", o.Name, err)
+			}
+		}
+		if err := gcs.Buckets.Delete(bucket).Context(env.Ctx).Do(); err != nil && !strings.Contains(err.Error(), "404") {
+			t.Errorf("deleting the bucket: %v", err)
+		}
+	})
 	b := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"location": "US"}}}
 	b.SetGroupVersionKind(storagev1beta1.StorageBucketGVK)
 	b.SetNamespace(namespace)
@@ -79,7 +98,7 @@ func TestStorageBucketObject(t *testing.T) {
 
 	newObject := func(name, objectName string) *storagev1alpha1.StorageBucketObject {
 		return &storagev1alpha1.StorageBucketObject{
-			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
 			Spec: storagev1alpha1.StorageBucketObjectSpec{
 				BucketRef:  &storagev1beta1.StorageBucketRef{Name: bucket},
 				ResourceID: mockenv.Ptr(objectName),
@@ -90,11 +109,11 @@ func TestStorageBucketObject(t *testing.T) {
 		t.Helper()
 		o, err := gcs.Objects.Get(bucket, name).Context(env.Ctx).Do()
 		if err != nil {
-			t.Fatalf("reading %s from the fake cloud: %v", name, err)
+			t.Fatalf("reading %s from the cloud: %v", name, err)
 		}
 		resp, err := gcs.Objects.Get(bucket, name).Context(env.Ctx).Download()
 		if err != nil {
-			t.Fatalf("downloading %s from the fake cloud: %v", name, err)
+			t.Fatalf("downloading %s from the cloud: %v", name, err)
 		}
 		defer resp.Body.Close()
 		data, err := io.ReadAll(resp.Body)
