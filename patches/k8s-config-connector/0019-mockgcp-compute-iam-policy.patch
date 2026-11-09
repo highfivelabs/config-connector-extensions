@@ -1,0 +1,56 @@
+config-connector-extensions patch 0019: mockgcp serves Compute Engine's resource IAM policy.
+
+For iam.gcp.hfl.dev IAMRoleBinding and IAMRoleMember on a Compute Engine
+resource (a backend service, a machine image). Compute reads a policy with
+GET {resource}/getIamPolicy and sets it with POST {resource}/setIamPolicy
+(a slash, not the colon of the other services' verbs), so mockgcp's verb
+handling never saw them and its generated compute server answers them
+unimplemented. They are now served from the same per-resource store, on
+top of patch 0018.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockgcp_http.go b/mockgcp/mockgcp_http.go
+index 052a254fe..7a7a639e6 100644
+--- a/mockgcp/mockgcp_http.go
++++ b/mockgcp/mockgcp_http.go
+@@ -334,6 +334,30 @@ func (m *mockRoundTripper) roundTripStorageIAMPolicy(req *http.Request) (*http.R
+ 	}, nil
+ }
+ 
++// computeIAMPath matches Compute Engine's policy paths, which are
++// GET {resource}/getIamPolicy and POST {resource}/setIamPolicy (a slash,
++// not the colon of the other services' verbs).
++var computeIAMPath = regexp.MustCompile(`^/compute/[^/]+/projects/.+/(getIamPolicy|setIamPolicy)$`)
++
++// roundTripComputeIAMPolicy serves those paths from the same store as the
++// verbs. The request body of setIamPolicy is {"policy": {...}}, as
++// Terraform sends it, which is also what the verbs take.
++func (m *mockRoundTripper) roundTripComputeIAMPolicy(req *http.Request) (*http.Response, error) {
++	verb := req.URL.Path[strings.LastIndex(req.URL.Path, "/")+1:]
++	resourcePath := req.URL.Host + strings.TrimSuffix(req.URL.Path, "/"+verb)
++	switch {
++	case verb == "getIamPolicy" && req.Method == "GET":
++		return m.iamPolicies.serveGetIAMPolicy(resourcePath)
++	case verb == "setIamPolicy" && req.Method == "POST":
++		return m.iamPolicies.serveSetIAMPolicy(resourcePath, req)
++	}
++	return &http.Response{
++		StatusCode: http.StatusMethodNotAllowed,
++		Status:     "method not supported",
++		Body:       io.NopCloser(strings.NewReader("{}")),
++	}, nil
++}
++
+ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+ 	klog.Infof("mockgcp request: %v %v", req.Method, req.URL)
+ 
+@@ -344,6 +368,9 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
+ 	if req.URL.Host == "storage.googleapis.com" && storageIAMPath.MatchString(requestPath) {
+ 		return m.roundTripStorageIAMPolicy(req)
+ 	}
++	if req.URL.Host == "compute.googleapis.com" && computeIAMPath.MatchString(requestPath) {
++		return m.roundTripComputeIAMPolicy(req)
++	}
+ 
+ 	var mux http.Handler
+ 	for _, service := range m.services {

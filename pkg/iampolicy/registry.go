@@ -34,6 +34,10 @@ const (
 	IAMv1 Protocol = iota
 	// Storage is Cloud Storage's JSON API: GET and PUT on {resource}/iam.
 	Storage
+	// Compute is Compute Engine's: GET {resource}/getIamPolicy and POST
+	// {resource}/setIamPolicy under /compute/{version}, with the body
+	// {"policy": ...}.
+	Compute
 )
 
 // ResourceType is a kind of Google Cloud resource whose IAM policy can be
@@ -291,6 +295,7 @@ var resourceTypes = func() map[string]*ResourceType {
 			Name: re(`projects/[^/]+/locations/[^/]+/keyRings/[^/]+/cryptoKeys/[^/]+`),
 		},
 	}
+	list = append(list, moreTypes()...)
 	m := map[string]*ResourceType{}
 	for _, t := range list {
 		m[t.Kind] = t
