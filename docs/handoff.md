@@ -37,7 +37,8 @@ the closing `echo "all checks passed"`), exits 0 and ends with that line.
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 association kind: folder and organization `ServiceIdentity`, default
-service accounts, default network tier, organization custom IAM roles,
+service accounts, default network tier (built: `ComputeProjectDefaultNetworkTier`,
+live pending a test project under the test folder), organization custom IAM roles,
 organization address groups and security profiles, and so on down the
 report. The builder answered its four Decision items (design.md
 decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
