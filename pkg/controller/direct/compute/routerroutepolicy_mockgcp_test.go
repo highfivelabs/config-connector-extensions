@@ -16,8 +16,11 @@
 package compute_test
 
 // ComputeRouterRoutePolicy end to end on the fake cloud (pkg/test/mockenv,
-// patch 0012). The case: an HA VPN's Cloud Router that exports only the
-// on-premises prefixes, with a lower MED for one of them.
+// patch 0012) or a real project (docs/live-runs.md). The case: an HA VPN's
+// Cloud Router that exports only the on-premises prefixes, with a lower
+// MED for one of them. The router and its network are the run's own
+// (mockenv.Name) and deleted at the end, with the policies on the router,
+// the abandoned one included.
 
 import (
 	"strings"
@@ -27,6 +30,7 @@ import (
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -40,9 +44,9 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 	const (
 		namespace = "example"
 		region    = "us-central1"
-		router    = "vpn-router"
 		name      = "export-onprem"
 	)
+	router := mockenv.Name("vpn-router")
 	policyGVK := computev1alpha1.ComputeRouterRoutePolicyGVK
 	env := mockenv.New(t, namespace)
 	routers, err := gcp.NewRoutersRESTClient(env.Ctx, env.GCPOptions()...)
@@ -53,8 +57,9 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 
 	// The router, in the fake cloud and as a Config Connector object (not
 	// reconciled here; read to resolve routerRef by name).
+	network := newNetwork(t, env, "vpn-net")
 	op, err := routers.Insert(env.Ctx, &pb.InsertRouterRequest{
-		Project: mockenv.Project, Region: region, RouterResource: &pb.Router{Name: mockenv.Ptr(router)},
+		Project: mockenv.Project, Region: region, RouterResource: &pb.Router{Name: mockenv.Ptr(router), Network: mockenv.Ptr(network)},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -62,8 +67,17 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 	if err := op.Wait(env.Ctx); err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		op, err := routers.Delete(env.Ctx, &pb.DeleteRouterRequest{Project: mockenv.Project, Region: region, Router: router})
+		if err == nil {
+			err = op.Wait(env.Ctx)
+		}
+		if err != nil && !direct.IsNotFound(err) {
+			t.Errorf("deleting router %s: %v", router, err)
+		}
+	})
 	r := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
-		"region": region, "networkRef": map[string]any{"external": "projects/" + mockenv.Project + "/global/networks/default"},
+		"region": region, "networkRef": map[string]any{"external": network},
 	}}}
 	r.SetGroupVersionKind(computev1alpha1.ComputeRouterGVK)
 	r.SetNamespace(namespace)

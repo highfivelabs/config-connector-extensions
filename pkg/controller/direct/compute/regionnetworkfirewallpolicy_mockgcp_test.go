@@ -16,9 +16,10 @@
 package compute_test
 
 // ComputeRegionNetworkFirewallPolicy end to end on the fake cloud
-// (pkg/test/mockenv, patch 0014). The case: a regional firewall policy for
-// a VPC in one region, as fabric's net-firewall-policy module makes with
-// region set.
+// (pkg/test/mockenv, patch 0014) or a real project (docs/live-runs.md).
+// The case: a regional firewall policy for a VPC in one region, as
+// fabric's net-firewall-policy module makes with region set. Policies take
+// no labels; the run's name prefix is how the sweeper finds them.
 
 import (
 	"strings"
@@ -28,6 +29,7 @@ import (
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -37,12 +39,15 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
+// newRegionFirewallPolicy is the object name; the policy's is
+// mockenv.Name(name).
 func newRegionFirewallPolicy(name, description string) *computev1alpha1.ComputeRegionNetworkFirewallPolicy {
 	return &computev1alpha1.ComputeRegionNetworkFirewallPolicy{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
 		Spec: computev1alpha1.ComputeRegionNetworkFirewallPolicySpec{
 			ProjectRef:  &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Region:      region,
+			ResourceID:  mockenv.Ptr(mockenv.Name(name)),
 			Description: mockenv.Ptr(description),
 		},
 	}
@@ -60,13 +65,28 @@ func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
 	cloud := func(t *testing.T, name string) (*pb.FirewallPolicy, error) {
 		t.Helper()
 		return policies.Get(env.Ctx, &pb.GetRegionNetworkFirewallPolicyRequest{
-			Project: mockenv.Project, Region: region, FirewallPolicy: name,
+			Project: mockenv.Project, Region: region, FirewallPolicy: mockenv.Name(name),
 		})
 	}
+	// Delete what the test made, the abandoned policy included, and what a
+	// failed step left.
+	t.Cleanup(func() {
+		for _, name := range []string{"vpc-us-central1", "kept"} {
+			op, err := policies.Delete(env.Ctx, &pb.DeleteRegionNetworkFirewallPolicyRequest{
+				Project: mockenv.Project, Region: region, FirewallPolicy: mockenv.Name(name),
+			})
+			if err == nil {
+				err = op.Wait(env.Ctx)
+			}
+			if err != nil && !direct.IsNotFound(err) {
+				t.Errorf("deleting policy %s: %v", mockenv.Name(name), err)
+			}
+		}
+	})
 	patches := func(name string) int {
 		n := 0
 		for _, r := range env.Requests() {
-			if strings.HasPrefix(r, "PATCH ") && strings.Contains(r, "/regions/"+region+"/firewallPolicies/"+name) {
+			if strings.HasPrefix(r, "PATCH ") && strings.Contains(r, "/regions/"+region+"/firewallPolicies/"+mockenv.Name(name)) {
 				n++
 			}
 		}
@@ -100,7 +120,7 @@ func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
 			t.Errorf("cloud region = %q", got.GetRegion())
 		}
 		selfLink, _, _ := unstructured.NestedString(u.Object, "status", "selfLink")
-		if !strings.HasSuffix(selfLink, "projects/"+mockenv.Project+"/regions/"+region+"/firewallPolicies/vpc-us-central1") {
+		if !strings.HasSuffix(selfLink, "projects/"+mockenv.Project+"/regions/"+region+"/firewallPolicies/"+mockenv.Name("vpc-us-central1")) {
 			t.Errorf("status.selfLink = %q", selfLink)
 		}
 		if id, _, _ := unstructured.NestedString(u.Object, "status", "regionNetworkFirewallPolicyId"); id == "" || !strings.HasSuffix(got.GetSelfLinkWithId(), "/"+id) {
@@ -173,7 +193,7 @@ func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
 			t.Errorf("Ready message = %q, want it to say the identity cannot change", msg)
 		}
 		if _, err := policies.Get(env.Ctx, &pb.GetRegionNetworkFirewallPolicyRequest{
-			Project: mockenv.Project, Region: "europe-west1", FirewallPolicy: "vpc-us-central1",
+			Project: mockenv.Project, Region: "europe-west1", FirewallPolicy: mockenv.Name("vpc-us-central1"),
 		}); err == nil {
 			t.Errorf("a policy was made in europe-west1")
 		}
@@ -210,16 +230,4 @@ func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
 			t.Errorf("the abandoned policy is gone: %v", err)
 		}
 	})
-}
-
-// waitFor polls cond for up to 30 seconds.
-func waitFor(t *testing.T, cond func() bool) {
-	t.Helper()
-	deadline := time.Now().Add(30 * time.Second)
-	for !cond() {
-		if time.Now().After(deadline) {
-			t.Fatal("timed out waiting for the fake cloud")
-		}
-		time.Sleep(200 * time.Millisecond)
-	}
 }

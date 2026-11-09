@@ -16,8 +16,11 @@
 package compute_test
 
 // ComputeRegionNetworkEndpoint end to end on the fake cloud
-// (pkg/test/mockenv, patch 0011). The case: a regional external load
-// balancer whose backend is an internet service, reached by domain name.
+// (pkg/test/mockenv, patch 0011) or a real project (docs/live-runs.md).
+// The case: a regional external load balancer whose backend is an internet
+// service, reached by domain name. The group and its network are the
+// run's own (mockenv.Name) and deleted at the end, with the endpoints in
+// the group, the abandoned one included.
 
 import (
 	"strconv"
@@ -28,6 +31,7 @@ import (
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/iterator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,8 +45,10 @@ import (
 const (
 	namespace = "example"
 	region    = "us-central1"
-	group     = "internet-backends"
 )
+
+// group is the regional network endpoint group the endpoints go in.
+var group = mockenv.Name("internet-backends")
 
 var gvk = computev1alpha1.ComputeRegionNetworkEndpointGVK
 
@@ -69,12 +75,14 @@ func TestComputeRegionNetworkEndpoint(t *testing.T) {
 
 	// The group, in the fake cloud and as a Config Connector object (not
 	// reconciled here; read to resolve regionNetworkEndpointGroupRef by name).
+	network := newNetwork(t, env, "endpoints-net")
 	op, err := negs.Insert(env.Ctx, &pb.InsertRegionNetworkEndpointGroupRequest{
 		Project: mockenv.Project,
 		Region:  region,
 		NetworkEndpointGroupResource: &pb.NetworkEndpointGroup{
 			Name:                mockenv.Ptr(group),
 			NetworkEndpointType: mockenv.Ptr("INTERNET_FQDN_PORT"),
+			Network:             mockenv.Ptr(network),
 		},
 	})
 	if err != nil {
@@ -83,6 +91,17 @@ func TestComputeRegionNetworkEndpoint(t *testing.T) {
 	if err := op.Wait(env.Ctx); err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		op, err := negs.Delete(env.Ctx, &pb.DeleteRegionNetworkEndpointGroupRequest{
+			Project: mockenv.Project, Region: region, NetworkEndpointGroup: group,
+		})
+		if err == nil {
+			err = op.Wait(env.Ctx)
+		}
+		if err != nil && !direct.IsNotFound(err) {
+			t.Errorf("deleting network endpoint group %s: %v", group, err)
+		}
+	})
 	g := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"region": region, "networkEndpointType": "INTERNET_FQDN_PORT"}}}
 	g.SetGroupVersionKind(computev1alpha1.ComputeRegionNetworkEndpointGroupGVK)
 	g.SetNamespace(namespace)

@@ -704,6 +704,7 @@ Notes on what was built from this table:
   is not a field yet: the API has it, Terraform's vendored resource does
   not. Patch 0014: mockgcp serves regional policies, adapted from its
   global ones. The rules and the association are separate kinds, next.
+  Live: pending, needs `roles/compute.securityAdmin` (`docs/live-runs.md`).
 
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
