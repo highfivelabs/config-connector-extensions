@@ -71,6 +71,7 @@ var Kinds = []kind{
 	{gvk: artifactregistryv1alpha1.ArtifactRegistryTagGVK, crdName: "artifactregistrytags.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryTagModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK, crdName: "iamworkloadidentitypoolmanagedidentities.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolManagedIdentityModel},
+	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolProviderKeyGVK, crdName: "iamworkloadidentitypoolproviderkeys.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolProviderKeyModel},
 	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel},
 }
 
