@@ -113,7 +113,13 @@ mockenv do not configure: use the REST clients
 (`NewSecurityProfileGroupRESTClient`,
 `NewOrganizationSecurityProfileGroupRESTClient`), a change to record.
 Their types reference Config Connector's intercept and mirroring
-endpoint group kinds (keep upstream's reference types). An address
+endpoint group kinds (keep upstream's reference types). mockgcp's
+`securityprofile.go` and `securityprofilegroup.go` (both on
+`SecurityProfileGroupServer`) parse names as `projects/{p}/...` and
+look the project up, so the organization patch needs its own name
+parsing and an `OrganizationSecurityProfileGroupService` server, not
+just delegation as patch 0025 does; upstream's `Update` returns without
+writing status when nothing differs (keep it, or note the change). An address
 group runs live in `hfl-dev-514205` with the project parent
 (`networksecurity.googleapis.com` enabled 2026-11-09; the account's
 `roles/compute.networkAdmin` has `networksecurity.*`), so the security
