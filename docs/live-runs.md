@@ -116,3 +116,46 @@ on the same VM, minutes apart.
 
 | Date | Commit | Kind | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-09 | `8a13722`+ | SQLAdminBackup | PASS | FAIL | after `backupRuns.delete` completes, `backupRuns.get` still returns the run, status `DELETED`; mockgcp answered 404 | instance `cce-11090729-0d21-pg` (db-f1-micro, ~30 min; swept by hand after the VM was preempted), 2 on-demand backups (deleted) |
+| 2026-11-09 | `8a13722`+ | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 1 regional and 1 global secret, 1 version (deleted) |
+| 2026-11-09 | `8a13722`+ | SQLUser | PASS | PASS | none: `users.get` returns `databaseRoles`, and insert, add and revoke match patch 0001 | 1 IAM user in the shared instance (deleted) |
+| 2026-11-09 | `8a13722`+ | ArtifactRegistryRepository | PASS | none | the VM was preempted during the live test | none left (checked) |
+| 2026-11-09 | `8a13722`+ | SQLAdminBackup | PASS | FAIL | the same as above, now with the status printed: `DELETED` | instance `cce-11090817-870d-pg` (~40 min; swept by hand), 2 backups |
+| 2026-11-09 | `8a13722`+ | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | as above |
+| 2026-11-09 | `8a13722`+ | SQLUser | PASS | PASS | none | as above |
+| 2026-11-09 | `8a13722`+ | ArtifactRegistryRepository | PASS | FAIL | the API refuses a remote upstream it cannot reach ("Failed to validate remote upstream", `registry.example.com/v2/`); mockgcp never checks. Run stopped by hand | none created |
+| 2026-11-09 | `8a13722`+ | SQLAdminBackup | PASS | PASS | none, with the fix (Find takes `DELETED` as gone) and patch 0010 | instance `cce-11090854-9525-pg` (~25 min), 3 backups (deleted) |
+| 2026-11-09 | `8a13722`+ | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | as above |
+| 2026-11-09 | `8a13722`+ | SQLUser | PASS | PASS | none | as above |
+| 2026-11-09 | `8a13722`+ | ArtifactRegistryRepository | PASS | FAIL | a changed custom upstream URI: the API refuses it with "Remote source configuartion cannot be updated", mockgcp with "not supported by mockgcp" (fixed by patch 0011); the upstreamCredentials test passed live | 6 remote repositories, 1 secret with 2 versions (deleted) |
+| 2026-11-09 | `f2b89cd` | SQLAdminBackup | PASS | PASS | none | instance `cce-11090920-6dcf-pg` (~25 min), 3 backups (deleted) |
+| 2026-11-09 | `f2b89cd` | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 2 secrets, 1 version (deleted) |
+| 2026-11-09 | `f2b89cd` | SQLUser | PASS | PASS | none | 1 IAM user (deleted with the instance) |
+| 2026-11-09 | `f2b89cd` | ArtifactRegistryRepository | PASS | PASS | none | 6 repositories, 1 secret (deleted) |
+| 2026-11-09 | `01afd2d`+ | ArtifactRegistryTag | PASS | PASS | none: tags on two pushed images, moved, deleted, abandoned | 1 Docker repository with 2 minimal images (deleted) |
+| 2026-11-09 | `01afd2d`+ | ArtifactRegistryRepository | PASS | PASS | none | 6 repositories, 1 secret (deleted) |
+| 2026-11-09 | `08fcc66` | SQLAdminBackup | PASS | PASS | none | instance `cce-11091348-ef59-pg` (db-f1-micro, ~25 min), 3 on-demand backups (deleted) |
+| 2026-11-09 | `08fcc66` | SecretManagerSecret, SecretManagerSecretVersion | PASS | PASS | none | 2 secrets, 1 version (deleted) |
+| 2026-11-09 | `08fcc66` | SQLUser | PASS | PASS | none | 1 IAM user (deleted with the instance) |
+| 2026-11-09 | `08fcc66` | ArtifactRegistryRepository, ArtifactRegistryTag | PASS | PASS | none | 7 repositories, 2 minimal images, 1 secret (deleted) |
+
+`+` means the commit plus the uncommitted changes that became the next
+commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
+Cloud SQL; nothing made) and `cce-11090806-613a` (preempted while making
+the instance; swept by hand) reached no test.
+
+Not yet run live: `IAMWorkloadIdentityPoolNamespace`,
+`IAMWorkloadIdentityPoolManagedIdentity` and `RunService`. Granting the
+live-test service account `roles/iam.workloadIdentityPoolAdmin`,
+`roles/run.admin` and `roles/iam.serviceAccountUser` on the runtime
+service account needs the builder's approval; then their tests need run
+names and cleanup, and the sweeper needs workload identity pools and
+Cloud Run services. The managed identity test's attestation rules name
+made-up Compute Engine instances, and the RunService test asks for an
+NVIDIA L4 GPU, which needs Cloud Run GPU quota in the project.
+
+Every run ended with `make live-list` empty (run `cce-11091348-ef59`:
+"0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,
+roughly: five db-f1-micro instances for 25 to 40 minutes each (well under
+$0.50 together), Spot VMs of 4 to 8 vCPUs for about 4 VM-hours (about
+$0.30), and Artifact Registry and Secret Manager use of a few cents.
