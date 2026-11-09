@@ -3,6 +3,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
+- artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
+- iam.gcp.hfl.dev_iamworkloadidentitypoolmanagedidentities.yaml
+- iam.gcp.hfl.dev_iamworkloadidentitypoolnamespaces.yaml
+- run.gcp.hfl.dev_runservices.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml

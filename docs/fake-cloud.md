@@ -76,6 +76,24 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Artifact Registry tags in mockgcp** (patch 0009, ours). A tag must be
+  in an existing repository; the fake holds no packages, so a tag on a
+  version that was never pushed is accepted.
+- **Workload identity pool namespaces in mockgcp** (patch 0006, ours). It
+  has no workload identity pools, so a namespace is created whether or not
+  its pool exists; the real API refuses one in a missing pool. Delete is a
+  soft delete, as documented, and the ID cannot be reused; the fake never
+  purges it. It never sets `ownerService`.
+- **Managed identities in mockgcp** (patch 0007, ours). One must be in an
+  existing, active namespace. An attestation rule's `googleCloudResource`
+  is only checked to be non-empty; the real API checks its form and
+  that the workload exists.
+- **Cloud Run services in mockgcp.** Patch 0008 makes `services.patch`
+  honour an update mask. The fake fills in fewer server defaults than the
+  real API (no ports, startup probe or traffic), does not schedule
+  anything, so a GPU `nodeSelector` is stored but never checked against
+  the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
+  serves.
 - **Not in the cluster.** The manager runs on the host, not as a pod; a
   Target's agent in the cluster cannot reach it. An in-cluster image is
   the way to make the fake cloud reachable from inside: `cmd/fakegcp` and

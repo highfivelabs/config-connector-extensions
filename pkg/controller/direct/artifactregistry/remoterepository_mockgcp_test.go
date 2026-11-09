@@ -217,7 +217,7 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		// Terraform marks custom_repository ForceNew; Config Connector's
 		// direct controller sends remoteRepositoryConfig in an update mask,
 		// which the real API refuses (seen live, docs/live-runs.md), and
-		// mockgcp with it (patch 0007).
+		// mockgcp with it (patch 0011).
 		obj := &arv1beta1.ArtifactRegistryRepository{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)

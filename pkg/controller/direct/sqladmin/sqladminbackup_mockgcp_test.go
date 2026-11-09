@@ -229,7 +229,7 @@ func TestSQLAdminBackup(t *testing.T) {
 		}
 		env.WaitGone(&sqladminv1alpha1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		// Real Cloud SQL keeps a deleted run, with status DELETED
-		// (docs/live-runs.md); mockgcp does the same (patch 0006).
+		// (docs/live-runs.md); mockgcp does the same (patch 0010).
 		if run, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do(); !isNotFound(err) {
 			if err != nil || run.Status != "DELETED" {
 				t.Errorf("reading the deleted backup run: got %v, %v; want 404 or status DELETED", run, err)
