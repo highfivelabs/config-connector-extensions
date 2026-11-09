@@ -41,10 +41,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
+	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
@@ -63,6 +65,7 @@ var Kinds = []kind{
 	{gvk: secretmanagerv1beta1.SecretManagerSecretGVK, crdName: "secretmanagersecrets.secretmanager.gcp.hfl.dev", model: secretmanager.NewModel},
 	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
 	{gvk: artifactregistryv1beta1.ArtifactRegistryRepositoryGVK, crdName: "artifactregistryrepositories.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryRepositoryModel},
+	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -72,6 +75,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		sqladminv1alpha1.AddToScheme,
 		secretmanagerv1beta1.AddToScheme,
 		artifactregistryv1beta1.AddToScheme,
+		iamv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err
