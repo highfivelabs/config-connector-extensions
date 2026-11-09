@@ -80,6 +80,8 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Router route policies in mockgcp** (patch 0012, ours). The CEL in
+  terms is stored, not parsed, and the fingerprint is not checked on write.
 - **Regional network endpoints in mockgcp** (patch 0011, ours). Any
   endpoint is accepted in any group: the group's type (internet IP, domain
   name, VM) is not checked against the endpoint, nor is the VM.

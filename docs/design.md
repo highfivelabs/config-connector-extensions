@@ -1,14 +1,14 @@
 # config-connector-extensions design
 
-config-connector-extensions has eleven kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twelve kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMWorkloadIdentityPoolNamespace`,
 `IAMWorkloadIdentityPoolManagedIdentity` and
 `IAMWorkloadIdentityPoolProviderKey`, a narrow direct
-`RunService` with `invokerIamDisabled` and GPUs, and
-`ComputeRegionNetworkEndpoint` (section 6). Each passes its end-to-end test
+`RunService` with `invokerIamDisabled` and GPUs,
+`ComputeRegionNetworkEndpoint` and `ComputeRouterRoutePolicy` (section 6). Each passes its end-to-end test
 against mockgcp. An operator runs the managers beside Config Connector's,
 each as its own Kubernetes service account carrying Config Connector's
 Google identity, and a kind test proves it in cluster and namespaced mode
@@ -621,8 +621,8 @@ this repository's rules (6.1, decision 5, section 10).
 | 1 | Role-authoritative IAM (`google_*_iam_binding`): the members of one role on one resource, removing any others | 43 | none. PR #14133 (open, review required) adds an `IAMPolicyBinding` that is IAM v3's `PolicyBinding` (principal access boundary), a different resource with the name the catalog suggests | question (section 10, question 1) |
 | 2 | IAM on the 32 resource types `IAMPolicyMember` cannot reference | 24 | none | waits on question 1: these become resource types the rank 1 kind accepts |
 | 3 | `ComputeRegionNetworkEndpoint` | 9 | no kind or PR (the global and zonal endpoint kinds are Terraform-based alphas) | built (2026-11-09) |
-| 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | next to build |
-| 5 | `StorageBucketObject` | 4 | no kind or PR | to build; the inventory notes a Bundt hook Job as the alternative |
+| 4 | `ComputeRouterRoutePolicy` | 5 | no kind or PR | built (2026-11-09) |
+| 5 | `StorageBucketObject` | 4 | no kind or PR | next to build; the inventory notes a Bundt hook Job as the alternative |
 | 6 | Regional network firewall policies: the policy, its rules, its association | 2 | no kind or PR (the global `ComputeNetworkFirewallPolicy` is Terraform-based) | to build |
 | 7 | Hierarchy settings: folder and organization service identities, logging settings, a billing account's log sink | 3 | `ServiceIdentity` exists (Terraform-based) for projects only; `LoggingLogSink` takes project, folder and organization parents, not a billing account; no `LoggingSettings` | to build: `LoggingSettings` first; the parents are field gaps on existing kinds (decision 5) |
 | 8 | Values known only after apply, as references (`TagsTagBinding.parentRef` to an `IAMServiceAccount`, a project's service agents in `memberFrom`, `StorageBucket.encryption.kmsKeyHandleRef`) | 3+ | none found | field gaps on existing kinds: wait for the release (decision 5) |
@@ -646,6 +646,18 @@ Notes on what was built from this table:
   `/networkEndpoints/{address}:{port}`, ours. Patch 0011: mockgcp attaches,
   detaches and lists a regional group's endpoints, adapted from its zonal
   ones.
+- `ComputeRouterRoutePolicy` (`compute.gcp.hfl.dev/v1alpha1`, rank 4).
+  **Written here** from the Compute Engine API's `RoutePolicy`:
+  `routerRef` (Config Connector's `ComputeRouter` by name, or `external`),
+  `resourceID`, `type`, `description`, and `terms` (priority, a CEL
+  `match`, CEL `actions`). The controller follows Terraform's
+  `google_compute_router_route_policy` (read, not copied): `getRoutePolicy`
+  reads it, `updateRoutePolicy` creates it and replaces it whole (with the
+  fingerprint it read), `deleteRoutePolicy` deletes it; type, description
+  and terms change in place. A route policy has no API resource name, so
+  `status.externalRef` is the router's name plus `/routePolicies/{name}`,
+  ours. Patch 0012: mockgcp serves a router's route policies with a new
+  fingerprint on each write.
 
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
@@ -724,6 +736,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     by group type (an IP address in an `INTERNET_FQDN_PORT` group, a VM in
     another zone), which mockgcp does not make, and the endpoint's identity
     when the group holds several with the same address and port.
+21. `ComputeRouterRoutePolicy` against a real project: the API's checks of
+    the CEL expressions and priorities, which mockgcp does not make, and a
+    write with a stale fingerprint.
 
 ## 8. Decisions
 
