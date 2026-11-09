@@ -58,7 +58,20 @@ func coverMatch(r *APIResource, c *CRD) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		switch attrKey(a.Path) {
+		switch attrKey(r.alias(a.Path)) {
+		case "parent":
+			// the parent of a project or folder is its folderRef or
+			// organizationRef
+			for _, ref := range []string{"folderRef", "organizationRef", "projectRef", "parentRef", "billingAccountRef"} {
+				for _, p := range c.Paths {
+					if p.Path == ref {
+						got[i] = ref
+					}
+				}
+				if _, ok := got[i]; ok {
+					break
+				}
+			}
 		case "name":
 			got[i] = "metadata.name"
 		case "label":
@@ -173,6 +186,7 @@ func buildModel(repo, kccDir, discDir, protoDir string) (*model, *Overrides, err
 	for _, rows := range m.byHost {
 		for _, rr := range rows {
 			index[rr.r.ID()] = rr
+			rr.r.Aliases = ov.Aliases[rr.r.ID()]
 		}
 	}
 	apply := func(crds []*CRD, isOurs bool) {
@@ -193,7 +207,13 @@ func buildModel(repo, kccDir, discDir, protoDir string) (*model, *Overrides, err
 			}
 			for _, r := range rs {
 				rr := index[r.ID()]
-				mm := &Match{CRD: c, Res: r, Covered: coverMatch(r, c), Via: via}
+				cov := map[int]string{}
+				if strings.HasPrefix(via, "sub:") {
+					cov = subMatch(r, c, strings.TrimPrefix(via, "sub:"))
+				} else {
+					cov = coverMatch(r, c)
+				}
+				mm := &Match{CRD: c, Res: r, Covered: cov, Via: via}
 				if isOurs {
 					rr.ours = append(rr.ours, mm)
 					if prKinds[c.Kind] {
@@ -201,6 +221,19 @@ func buildModel(repo, kccDir, discDir, protoDir string) (*model, *Overrides, err
 					}
 				} else {
 					rr.off = append(rr.off, mm)
+				}
+			}
+			// A kind that also fills a list of another resource's body
+			// (a node pool is also the cluster's nodePools[]).
+			if also, ok := ov.Also[c.Kind]; ok {
+				id, prefix, _ := strings.Cut(also, ":")
+				if rr := index[id]; rr != nil {
+					mm := &Match{CRD: c, Res: rr.r, Covered: subMatch(rr.r, c, prefix), Via: "sub:" + prefix}
+					if isOurs {
+						rr.ours = append(rr.ours, mm)
+					} else {
+						rr.off = append(rr.off, mm)
+					}
 				}
 			}
 		}
@@ -372,9 +405,15 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	tierOf := func(h string) int {
-		if t, ok := prio[h]; ok {
-			return t
+	tierOf := prio.TierOf
+	var catSums [4]counts
+	svcCat := map[string]map[string]counts{}
+	catSvcs := [4]map[string]bool{{}, {}, {}, {}}
+	catIndex := func(c string) int {
+		for i, n := range categories {
+			if n == c {
+				return i
+			}
 		}
 		return 3
 	}
@@ -385,6 +424,15 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 		for _, rr := range m.byHost[h] {
 			c := rr.counts()
 			sc.add(c)
+			ci := catIndex(prio.Category(h, rr.r.ID()))
+			catSums[ci].add(c)
+			if svcCat[categories[ci]] == nil {
+				svcCat[categories[ci]] = map[string]counts{}
+			}
+			sc2 := svcCat[categories[ci]][h]
+			sc2.add(c)
+			svcCat[categories[ci]][h] = sc2
+			catSvcs[ci][h] = true
 			notes := []string{"api=" + rr.r.Disco}
 			if rr.r.Wrapper != "" {
 				notes = append(notes, "request-wrapper="+rr.r.Wrapper)
@@ -488,14 +536,29 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 		tierRows = append(tierRows, []string{strconv.Itoa(i + 1), strconv.Itoa(tierSvcs[i]), strconv.Itoa(c.resources), strconv.Itoa(c.resOff), strconv.Itoa(c.resBeyond), strconv.Itoa(c.attrs), strconv.Itoa(c.off), strconv.Itoa(c.beyond), strconv.Itoa(c.uncovered), pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs)})
 	}
 	files["docs/coverage/tiers.csv"] = csvBytes(tierRows)
-	files["docs/coverage/bars/_tiers.svg"] = []byte(tiersSVG(tierSums, tierSvcs))
+	files["docs/coverage/bars/_tiers.svg"] = []byte(rollupSVG("Coverage by tier", tierNames[:], tierSums[:], tierSvcs[:]))
+
+	// Categories: the same rollup by what a service is for, per resource.
+	catRows := [][]string{{"category", "services", "resources_total", "resources_official", "resources_ours_beyond", "attributes_total", "attributes_official", "attributes_ours_beyond", "attributes_uncovered", "pct_official", "pct_ours_beyond", "pct_uncovered"}}
+	var catN [4]int
+	for i, c := range catSums {
+		catN[i] = len(catSvcs[i])
+		catRows = append(catRows, []string{categories[i], strconv.Itoa(catN[i]), strconv.Itoa(c.resources), strconv.Itoa(c.resOff), strconv.Itoa(c.resBeyond), strconv.Itoa(c.attrs), strconv.Itoa(c.off), strconv.Itoa(c.beyond), strconv.Itoa(c.uncovered), pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs)})
+	}
+	files["docs/coverage/categories.csv"] = csvBytes(catRows)
+	fr, err := foundationReport(m, prio, catSums, svcCat)
+	if err != nil {
+		return nil, err
+	}
+	files["docs/coverage/foundation.md"] = []byte(fr)
+	files["docs/coverage/bars/_categories.svg"] = []byte(rollupSVG("Coverage by category", categoryNames[:], catSums[:], catN[:]))
 
 	// Root README section and the docs README statistics.
 	root, err := os.ReadFile(filepath.Join(repo, "README.md"))
 	if err != nil {
 		return nil, err
 	}
-	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, tierSums, tierSvcs, total, len(m.hosts), len(uniq(m.excluded)), src))
+	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, prio, tierSums, tierSvcs, catSums, catN, total, len(m.hosts), len(uniq(m.excluded)), src))
 	if err != nil {
 		return nil, fmt.Errorf("README.md: %w", err)
 	}

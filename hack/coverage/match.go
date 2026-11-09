@@ -10,11 +10,14 @@ import (
 
 // Overrides is the hand-kept part of the mapping (overrides.yaml).
 type Overrides struct {
-	ExcludeServices []string            `yaml:"exclude_services"`
-	GroupHosts      map[string][]string `yaml:"group_hosts"`
-	Kinds           map[string][]string `yaml:"kinds"`
-	NoResource      map[string]string   `yaml:"no_resource"`
-	Prefixes        map[string]string   `yaml:"prefixes"`
+	ExcludeServices []string                     `yaml:"exclude_services"`
+	GroupHosts      map[string][]string          `yaml:"group_hosts"`
+	Kinds           map[string][]string          `yaml:"kinds"`
+	NoResource      map[string]string            `yaml:"no_resource"`
+	Prefixes        map[string]string            `yaml:"prefixes"`
+	Subresources    map[string]string            `yaml:"subresources"`
+	Also            map[string]string            `yaml:"also"`
+	Aliases         map[string]map[string]string `yaml:"aliases"`
 }
 
 // Match is how one CRD kind covers one API resource.
@@ -105,6 +108,18 @@ func (m *matcher) mapKind(c *CRD) ([]*APIResource, string, string) {
 	if why, ok := m.ov.NoResource[c.Kind]; ok {
 		return nil, "", why
 	}
+	if sub, ok := m.ov.Subresources[c.Kind]; ok {
+		// "host/Resource:path[]": the kind fills one list of its parent's body
+		id, prefix, _ := strings.Cut(sub, ":")
+		for _, rs := range m.byHost {
+			for _, r := range rs {
+				if r.ID() == id {
+					return []*APIResource{r}, "sub:" + prefix, ""
+				}
+			}
+		}
+		return nil, "", "subresource names no resource: " + id
+	}
 	if ids, ok := m.ov.Kinds[c.Kind]; ok {
 		var out []*APIResource
 		for _, id := range ids {
@@ -187,6 +202,7 @@ func (m *matcher) mapNames(c *CRD, hosts, cands []string) ([]*APIResource, strin
 	// projects.locations.foos). A kind with a location field covers the
 	// location-scoped one as well; any kind covers the one it fills most
 	// (ties: the shorter path).
+	sameName := append([]*APIResource{}, base...)
 	if len(base) > 1 {
 		hasLoc := false
 		for _, p := range c.Paths {
@@ -243,6 +259,32 @@ func (m *matcher) mapNames(c *CRD, hosts, cands []string) ([]*APIResource, strin
 		set2 = nil
 	}
 	out := append(base, set2...)
+	// A kind with folderRef, organizationRef or billingAccountRef covers
+	// the folder, organization and billing account variants of the
+	// resource (Config Connector's LoggingLogSink, OrgPolicyPolicy).
+	have := map[string]bool{}
+	for _, r := range out {
+		have[r.ID()] = true
+	}
+	for _, r := range sameName {
+		if have[r.ID()] {
+			continue
+		}
+		path := r.Disco[strings.Index(r.Disco, ":")+1:]
+		if strings.Contains(path, "locations.") && !hasRef(c, "location") {
+			continue
+		}
+		ref := "projectRef" // projects.* and the unscoped legacy paths
+		for scope, rf := range map[string]string{"folders.": "folderRef", "organizations.": "organizationRef", "billingAccounts.": "billingAccountRef"} {
+			if strings.HasPrefix(path, scope) {
+				ref = rf
+			}
+		}
+		if hasRef(c, ref) {
+			out = append(out, r)
+			have[r.ID()] = true
+		}
+	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ID() < out[j].ID() })
 	return out, ""
 }
@@ -257,7 +299,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 	usedC := map[int]bool{}
 	// 1. the same path, up to case, plurals and array/map markers
 	for i, a := range r.Attrs {
-		if cs, ok := byKey[attrKey(a.Path)]; ok {
+		if cs, ok := byKey[attrKey(r.alias(a.Path))]; ok {
 			got[i] = c.Paths[cs[0]].Path
 			for _, ci := range cs {
 				usedC[ci] = true
@@ -271,7 +313,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		segs := normSegs(a.Path)
+		segs := normSegs(r.alias(a.Path))
 		last := segs[len(segs)-1]
 		for _, suf := range refSuffix {
 			if len(last) > len(suf)+2 && strings.HasSuffix(last, suf) {
@@ -293,7 +335,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		segs := normSegs(a.Path)
+		segs := normSegs(r.alias(a.Path))
 		if len(segs) > 1 && segs[len(segs)-1] == "enabled" {
 			if cs, ok := byKey[strings.Join(segs[:len(segs)-1], ".")]; ok {
 				got[i] = c.Paths[cs[0]].Path
@@ -310,7 +352,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 			if _, ok := got[i]; ok {
 				continue
 			}
-			if strings.HasPrefix(attrKey(a.Path)+".", p.key+".") {
+			if strings.HasPrefix(attrKey(r.alias(a.Path))+".", p.key+".") {
 				got[i] = p.Path
 				usedC[ci] = true
 			}
@@ -321,7 +363,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		k := attrKey(a.Path) + "."
+		k := attrKey(r.alias(a.Path)) + "."
 		for ci, p := range c.Paths {
 			if strings.HasPrefix(p.key, k) {
 				got[i] = p.Path
@@ -337,7 +379,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		as := normSegs(a.Path)
+		as := normSegs(r.alias(a.Path))
 		for ci, p := range c.Paths {
 			if usedC[ci] {
 				continue
@@ -356,7 +398,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		as := dropItems(normSegs(a.Path))
+		as := dropItems(normSegs(r.alias(a.Path)))
 		for ci, p := range c.Paths {
 			if usedC[ci] {
 				continue
@@ -375,7 +417,7 @@ func matchAttrs(r *APIResource, c *CRD, labelsInMeta bool) map[int]string {
 		if _, ok := got[i]; ok {
 			continue
 		}
-		s := normSegs(a.Path)
+		s := normSegs(r.alias(a.Path))
 		l := s[len(s)-1]
 		if l == "enabled" && len(s) > 1 {
 			l = s[len(s)-2]
@@ -464,4 +506,50 @@ func suffixMatch(a, c []string) bool {
 		}
 	}
 	return true
+}
+
+func hasRef(c *CRD, ref string) bool {
+	for _, p := range c.Paths {
+		if p.Path == ref || strings.HasSuffix(p.Path, "."+ref) {
+			return true
+		}
+	}
+	return false
+}
+
+// subMatch matches a CRD against the attributes of r under prefix
+// (nats[]): the paths are compared with the prefix cut off, and the result
+// is keyed by the attributes' indexes in r.
+func subMatch(r *APIResource, c *CRD, prefix string) map[int]string {
+	sub := &APIResource{}
+	var idx []int
+	for i, a := range r.Attrs {
+		if p := r.alias(a.Path); strings.HasPrefix(p, prefix+".") {
+			sub.Attrs = append(sub.Attrs, Attr{Path: strings.TrimPrefix(p, prefix+"."), Type: a.Type})
+			idx = append(idx, i)
+		}
+	}
+	out := map[int]string{}
+	for i, p := range matchAttrs(sub, c, false) {
+		out[idx[i]] = p
+	}
+	return out
+}
+
+// alias rewrites an attribute path to the name the Config Connector kinds
+// give it, by the longest matching prefix of the resource's aliases
+// (overrides.yaml): the API's autoscaling is a cluster's clusterAutoscaling.
+func (r *APIResource) alias(path string) string {
+	best := ""
+	for p := range r.Aliases {
+		if len(p) > len(best) && strings.HasPrefix(path, p) {
+			if rest := path[len(p):]; rest == "" || rest[0] == '.' || rest[0] == '[' || rest[0] == '{' {
+				best = p
+			}
+		}
+	}
+	if best == "" {
+		return path
+	}
+	return r.Aliases[best] + path[len(best):]
 }

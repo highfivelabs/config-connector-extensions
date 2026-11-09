@@ -35,6 +35,7 @@ type CRD struct {
 	Paths   []CPath
 	Labels  bool // labels come from metadata.labels (Terraform service mapping)
 	Protos  []string
+	Alpha   bool // served only as v1alpha1
 }
 
 func asMap(v any) map[string]any {
@@ -81,10 +82,14 @@ func loadCRDs(dir string) ([]*CRD, error) {
 		// The version to read: the storage version, else the last served.
 		var chosen map[string]any
 		vs, _ := spec["versions"].([]any)
+		c.Alpha = len(vs) > 0
 		for _, v := range vs {
 			vm := asMap(v)
 			if vm["storage"] == true {
 				chosen = vm
+			}
+			if n, _ := vm["name"].(string); n != "v1alpha1" {
+				c.Alpha = false
 			}
 		}
 		if chosen == nil && len(vs) > 0 {
