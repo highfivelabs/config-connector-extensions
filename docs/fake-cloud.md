@@ -85,6 +85,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   from its global ones). The fingerprint is not checked on patch, a policy
   is deleted even when associated, and rules and associations are not
   served yet.
+- **Log Router settings in mockgcp** (patch 0017, ours). Any
+  organization or folder ID is accepted, the key is not checked, and the
+  service account IDs only follow the documented form.
 - **Cloud Storage objects in mockgcp** (patch 0013, ours). Before it,
   objects were stubs. Uploads are media or multipart, not resumable; an
   object's ACLs, holds, retention and storage class are not modelled.
