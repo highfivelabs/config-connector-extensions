@@ -432,6 +432,14 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   With the mapper's read-back of the Docker `customRepository` removed,
   the fuzz test and "a resync sends no update" fail (the controller sends
   an update that mockgcp refuses), so the round trip is what they check.
+- `make check` and `make operator-e2e` on a Linux amd64 VM (16 CPUs, Go
+  1.27.3, kind 0.27.0, ko 0.19.1, kustomize 5.7.1), 2026-11-09: both pass.
+  Every package's tests pass, the artifactregistry package's included; the
+  operator installs `artifactregistryrepositories.artifactregistry.gcp.hfl.dev`
+  with the other gap CRDs and its managers' roles cover the new group. The
+  operator test applies no Artifact Registry object; the kind's behaviour
+  is proven by the envtest test above. `tests/operator/run.sh` needs
+  `kustomize` on the path.
 
 ## 7. What is left
 
