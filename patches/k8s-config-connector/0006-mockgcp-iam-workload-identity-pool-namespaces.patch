@@ -6,7 +6,7 @@ For iam.gcp.hfl.dev IAMWorkloadIdentityPoolNamespace.
   mockgcp/apis/google/iam/v1/workload_identity_pool_namespace.proto, with
   the package changed to mockgcp.iam.v1;
 - generated/mockgcp/iam/v1/workload_identity_pool_namespace*.go are
-  generated from it by hack/regen-mockiam-namespaces.sh with mockgcp's
+  generated from it by hack/regen-mockiam-workload-identity.sh with mockgcp's
   toolchain;
 - mockiam/workloadidentitypoolnamespaces.go, written here, serves get,
   create, patch (description, disabled), delete (a soft delete: state

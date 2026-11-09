@@ -66,6 +66,7 @@ var Kinds = []kind{
 	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
 	{gvk: artifactregistryv1beta1.ArtifactRegistryRepositoryGVK, crdName: "artifactregistryrepositories.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryRepositoryModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
+	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK, crdName: "iamworkloadidentitypoolmanagedidentities.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolManagedIdentityModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.

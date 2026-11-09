@@ -2,11 +2,11 @@
 # Copyright 2026 High Five Labs
 # SPDX-License-Identifier: Apache-2.0
 #
-# Regenerates mockgcp's Go for workload identity pool namespaces
-# (patches/k8s-config-connector/0006-*) from the proto the patch adds,
-# mockgcp/apis/mockgcp/iam/v1/workload_identity_pool_namespace.proto (upstream
-# pull request #14209's mockgcp/apis/google/iam/v1/workload_identity_pool_namespace.proto,
-# moved to package mockgcp.iam.v1). Uses mockgcp's own toolchain, as
+# Regenerates mockgcp's Go for workload identity pool namespaces and managed
+# identities (patches/k8s-config-connector/0006-* and 0007-*) from the protos
+# those patches add under mockgcp/apis/mockgcp/iam/v1/ (upstream pull requests
+# #14209's and #14418's mockgcp/apis/google/iam/v1/ protos, moved to package
+# mockgcp.iam.v1). Uses mockgcp's own toolchain, as
 # hack/regen-mocksql-users.sh does: protoc 3.12.4, protoc-gen-go v1.28.1,
 # protoc-gen-go-grpc v1.2.0, grpc-gateway v2.11.3, and googleapis at
 # mockgcp's pin for the imported annotations.
@@ -22,8 +22,13 @@ BIN="${REPO_ROOT}/bin/protoc-3.12.4"
 WORK="$(mktemp -d)"
 trap 'rm -rf "${WORK}"' EXIT
 
-PROTO="mockgcp/iam/v1/workload_identity_pool_namespace.proto"
-[[ -f "${MOCKGCP}/apis/${PROTO}" ]] || { echo "missing ${MOCKGCP}/apis/${PROTO}; apply the patches first (hack/upstream.sh)" >&2; exit 1; }
+PROTOS=(
+  mockgcp/iam/v1/workload_identity_pool_namespace.proto
+  mockgcp/iam/v1/workload_identity_pool_managed_identity.proto
+)
+for proto in "${PROTOS[@]}"; do
+  [[ -f "${MOCKGCP}/apis/${proto}" ]] || { echo "missing ${MOCKGCP}/apis/${proto}; apply the patches first (hack/upstream.sh)" >&2; exit 1; }
+done
 
 GOOGLEAPIS_COMMIT="$(awk '/googleapis\/googleapis/ {print $2}' "${MOCKGCP}/git.versions")"
 
@@ -56,9 +61,9 @@ PATH="${BIN}:${PATH}" "${BIN}/protoc/bin/protoc" \
   --go_out "${OUT}" --go_opt paths=source_relative \
   --go-grpc_out "${OUT}" --go-grpc_opt paths=source_relative \
   --grpc-gateway_out "${OUT}" --grpc-gateway_opt logtostderr=true --grpc-gateway_opt paths=source_relative \
-  "${MOCKGCP}/apis/${PROTO}"
+  "${PROTOS[@]/#/${MOCKGCP}/apis/}"
 
 DEST="${MOCKGCP}/generated/mockgcp/iam/v1"
-cp "${OUT}"/mockgcp/iam/v1/workload_identity_pool_namespace*.go "${DEST}/"
-gofmt -w "${DEST}"/workload_identity_pool_namespace*.go
-echo "regenerated ${DEST}/workload_identity_pool_namespace*.go"
+cp "${OUT}"/mockgcp/iam/v1/workload_identity_pool_*.go "${DEST}/"
+gofmt -w "${DEST}"/workload_identity_pool_*.go
+echo "regenerated ${DEST}/workload_identity_pool_*.go"
