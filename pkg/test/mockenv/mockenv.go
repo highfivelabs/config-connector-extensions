@@ -133,6 +133,8 @@ func New(t *testing.T, namespaces ...string) *Env {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computerouters.compute.cnrm.cloud.google.com.yaml"),
 			// StorageBucketObject's bucket.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
+			// A managed folder, which IAMRoleMember names by name.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagemanagedfolders.storage.cnrm.cloud.google.com.yaml"),
 			// ArtifactRegistryTag's repository.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_artifactregistryrepositories.artifactregistry.cnrm.cloud.google.com.yaml"),
 			// IAMWorkloadIdentityPoolNamespace's pool, and a provider key's

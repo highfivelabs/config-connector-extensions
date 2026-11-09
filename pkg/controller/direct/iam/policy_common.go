@@ -24,10 +24,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"cloud.google.com/go/iam/apiv1/iampb"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"google.golang.org/api/option"
 	htransport "google.golang.org/api/transport/http"
+	"google.golang.org/protobuf/proto"
 
 	krm "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
@@ -72,3 +74,5 @@ func resolveResource(ctx context.Context, op *directbase.AdapterForObjectOperati
 	}
 	return t, name, false, err
 }
+
+func clonePolicy(p *iampb.Policy) *iampb.Policy { return proto.Clone(p).(*iampb.Policy) }

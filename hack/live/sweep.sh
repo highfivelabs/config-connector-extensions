@@ -16,10 +16,10 @@
 # Swept: Artifact Registry repositories (every location), Secret Manager
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
-# firewall policies, network endpoint groups (their endpoints go with
+# firewall policies, backend services and health checks, network endpoint groups (their endpoints go with
 # them), Cloud Routers (their route policies go with them) and VPC
 # networks, which take no labels and are found by name, Cloud Storage
-# buckets, by name, keys of the project's common instance metadata, by
+# buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
 # what is in them) and Cloud Run services, by name. A failed list or
 # delete fails the sweep.
@@ -145,6 +145,18 @@ rows="$("${G[@]}" compute network-firewall-policies list --verbosity=error \
 while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "network firewall policy" "${name} ${region:-global}" "${G[@]}" compute network-firewall-policies delete "${name}" "$(scope "${region}" "")"
+done <<<"${rows}"
+rows="$("${G[@]}" compute backend-services list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "backend service" "${name} ${region:-global}" "${G[@]}" compute backend-services delete "${name}" "$(scope "${region}" "")"
+done <<<"${rows}"
+rows="$("${G[@]}" compute health-checks list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "health check" "${name} ${region:-global}" "${G[@]}" compute health-checks delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute network-endpoint-groups list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename(),zone.basename())')"

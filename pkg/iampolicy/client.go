@@ -47,9 +47,18 @@ func (c *Client) url(t *ResourceType, name string, verb string) (string, error) 
 	case IAMv1:
 		return "https://" + host + "/" + t.Version + "/" + name + ":" + verb, nil
 	case Storage:
-		// projects/_/buckets/{bucket}
-		bucket := strings.TrimPrefix(name, "projects/_/buckets/")
-		return "https://" + host + "/storage/v1/b/" + url.PathEscape(bucket) + "/iam", nil
+		// projects/_/buckets/{bucket}, or
+		// projects/_/buckets/{bucket}/managedFolders/{folder}, whose name
+		// ends with a slash and is escaped whole.
+		rest := strings.TrimPrefix(name, "projects/_/buckets/")
+		bucket, folder, isFolder := strings.Cut(rest, "/managedFolders/")
+		u := "https://" + host + "/storage/v1/b/" + url.PathEscape(bucket)
+		if isFolder {
+			u += "/managedFolders/" + url.PathEscape(strings.TrimSuffix(folder, "/")+"/")
+		}
+		return u + "/iam", nil
+	case Compute:
+		return "https://" + host + "/compute/" + t.Version + "/" + name + "/" + verb, nil
 	}
 	return "", fmt.Errorf("unknown protocol %d for %s", t.Protocol, t.Kind)
 }
@@ -85,7 +94,7 @@ func (c *Client) Get(ctx context.Context, t *ResourceType, name string) (*iampb.
 	}
 	var out []byte
 	switch {
-	case t.Protocol == Storage:
+	case t.Protocol == Storage || t.Protocol == Compute:
 		out, err = c.do(ctx, http.MethodGet, u+"?optionsRequestedPolicyVersion=3", nil)
 	case t.GetWithPost:
 		out, err = c.do(ctx, http.MethodPost, u, []byte(`{"options":{"requestedPolicyVersion":3}}`))
