@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-four kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-five kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -14,8 +14,9 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
-`ProjectDefaultServiceAccounts` and a project's or organization's
-`NetworkSecurityAddressGroup` (section 6). Each
+`ProjectDefaultServiceAccounts`, and a project's or organization's
+`NetworkSecurityAddressGroup` and `NetworkSecuritySecurityProfile`
+(section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -905,6 +906,45 @@ Notes on what was built from this table:
 `cce-11092303-4b16`, no difference from the fake); an
   organization's is "live: pending, needs test folder" (it needs
   organization access, and a live run never touches the organization).
+
+- `NetworkSecuritySecurityProfile` (`networksecurity.gcp.hfl.dev/v1alpha1`,
+  `docs/coverage/foundation.md` item 6). A security profile: what a
+  firewall policy rule with `apply_security_profile_group` does with
+  threats (severity, threat and antivirus overrides), URLs (filters), or
+  where it mirrors or intercepts packets, owned by an organization or a
+  project. Named by decision 18, as the address group is; Terraform's
+  `google_network_security_security_profile` takes `parent`
+  (`organizations/{id}` or `projects/{id}`). Upstream (read 2026-11-09,
+  pin `672414b8`): Config Connector's direct kind is `v1alpha1` and
+  project-only, no pull request adds the organization, and its
+  controller dials gRPC (`GRPCClientOptions`), which our manager does
+  not configure. **Copied**: the types, identity (and its test),
+  reference, controller, fuzzer and the profile's functions of
+  `mapper.generated.go` (upstream's `controllerbuilder` output); the
+  intercept and mirroring endpoint group references stay Config
+  Connector's kinds. Changed: `organizationRef` beside `projectRef`,
+  exactly one (CEL); the REST clients, the organization service's for an
+  organization parent; an unchanged object still gets its status. From
+  Magic Modules' `SecurityProfile.yaml` (`aad42de6`): `type` is
+  required, an enum and immutable (CEL), at most one profile is set
+  (CEL; the proto's `oneof`), the override and filter lists compare as
+  sets, and the URL filter of priority 2147483647 that the API adds is
+  not a difference unless the spec names it (its `url_filters`
+  flattener). Not carried: `wildfireAnalysisProfile` and
+  `customMirroringProfile.mirroringDeploymentGroups`, which the pinned
+  `networksecurity` v1 client (v0.17.0) does not have (decision 5). Share
+  of the 2,009 non-test lines: 55% generated (controller-gen's CRD and
+  deepcopy here, 42%; upstream's `controllerbuilder` mapper, 13%), 33%
+  copied unchanged, 12% written or changed here. Patch 0026: mockgcp
+  serves the organization service for profiles and profile groups with
+  its own server (the project service's parses only project names).
+  Live: a project's profile passes (run `cce-11092339-c43e`, no
+  difference from the fake: create, a resync with no patch for a threat
+  prevention and a URL filtering profile, one patch for an override and
+  description change, delete and abandon; the account's
+  `roles/compute.networkAdmin` was enough); an organization's is "live:
+  pending, needs test folder" (it needs organization access, and a live
+  run never touches the organization).
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
