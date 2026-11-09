@@ -80,6 +80,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   version, so a password that does not exist or cannot be read by
   Artifact Registry's service agent passes in the fake and fails in the
   real cloud.
+- **Cloud Storage objects in mockgcp** (patch 0013, ours). Before it,
+  objects were stubs. Uploads are media or multipart, not resumable; an
+  object's ACLs, holds, retention and storage class are not modelled.
 - **Router route policies in mockgcp** (patch 0012, ours). The CEL in
   terms is stored, not parsed, and the fingerprint is not checked on write.
 - **Regional network endpoints in mockgcp** (patch 0011, ours). Any
