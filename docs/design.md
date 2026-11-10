@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-seven kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-eight kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -16,8 +16,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `ProjectDefaultServiceAccounts`, and a project's or organization's
 `NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
-`NetworkSecuritySecurityProfileGroup`, and a whole `ComputeRouter`
-(section 6). Each
+`NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
+stable `IAMDenyPolicy` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1059,6 +1059,40 @@ Notes on what was built from this table:
   either (the API returns no key values; the test makes no
   attachment).
 
+- `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`, decision 13, the first of
+  the stable kinds for upstream's alpha-only foundation kinds). Upstream,
+  rechecked 2026-11-10 (read-only): `IAMDenyPolicy` is `v1alpha1` with a
+  direct controller on `master` (PR #4717, types, 2025-06; PR #8771,
+  controller, 2026-05) and in `v1.160.0`, the latest release; no pull
+  request promotes it; PR #7303 ("Add IAM deny policies support",
+  Terraform-based, 2026-07-08) is open, review required, untouched since.
+  **Copied** with as little change as possible: the types, identity
+  (`policies/{attachment point}/denypolicies/{id}`, the attachment point
+  the URL-escaped `cloudresourcemanager.googleapis.com/projects/{id}`,
+  `folders/{id}` or `organizations/{id}`), the direct controller on IAM
+  v2's REST client, the hand-written mappers and the fuzzer. Generated:
+  the `DenyRule`, `PolicyRule` and `Expr` types (upstream's
+  controllerbuilder output, unedited), deepcopy and the CRD. Changed: a
+  CEL rule for exactly one of `projectRef`, `folderRef` and
+  `organizationRef` (upstream fails in the controller when none is set,
+  and takes the first of several); `status.externalRef` is written
+  (upstream sets it on a typed copy that never reaches the object, so its
+  objects have none); our group, version (`v1beta1`, which the charts
+  allow; decision 13) and short names. Update is upstream's: a whole-policy
+  `PUT` with the current etag when the spec's display name or rules differ
+  from what was read, nothing otherwise. A changed parent or `resourceID`
+  is refused by the identity check ("cannot change IAMDenyPolicy
+  identity"). mockgcp serves IAM v2 deny policies unpatched (it checks the
+  etag on update and stores a project's under its number, as the API
+  answers). Upstream's own fixture recorded the real API
+  (`pkg/test/resourcefixture/testdata/basic/iam/v1alpha1/iamdenypolicy/`,
+  `_http.log`): create, get, a whole-policy `PUT` and delete, the policy
+  returned as sent, with the project's number in its name.
+  Live: pending, needs `iam.denypolicies.*` for the live-test service
+  account, which only Deny Admin (`roles/iam.denyAdmin`) gives and which
+  is granted on an organization; the test skips live unless
+  `E2E_IAM_DENY_ADMIN=true` (`docs/live-runs.md`). A folder's and an
+  organization's policy run on the fake only.
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1294,6 +1328,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     `ComputeRouterInterface`, `ComputeRouterPeer` and `ComputeRouterNAT`
     on the same router would fight ours, so moving a router means
     abandoning all four official objects.
+
+29. `IAMDenyPolicy`: a live run (it needs Deny Admin, granted on an
+    organization: the test estate); the API's checks of principals and
+    permissions (an unknown permission, a principal type a deny rule does
+    not take), which mockgcp does not make; how long a new policy takes to
+    apply; and a policy's `denialCondition`, which no test sets.
 
 ## 8. Decisions
 

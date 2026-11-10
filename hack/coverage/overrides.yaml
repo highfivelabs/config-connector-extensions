@@ -167,6 +167,7 @@ no_resource:
   ServiceIdentity: a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)
   IAMBinding: one role binding in another resource's IAM policy, written with setIamPolicy
   IAMMember: one member of one role in another resource's IAM policy, written with setIamPolicy
+  IAMDenyPolicy: an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)
   # official (IAM policy attachments)
   IAMPolicy: an IAM policy of another resource, written with setIamPolicy
   IAMPolicyMember: one member in another resource's IAM policy, written with setIamPolicy

@@ -782,6 +782,7 @@ healthcare.googleapis.com,healthcare.googleapis.com/DatasetHl7V2Store,30,Healthc
 healthcare.googleapis.com,healthcare.googleapis.com/DatasetHl7V2StoreMessage,2,,0,,0,2,false,api=v1:projects.locations.datasets.hl7V2Stores.messages; request-wrapper=CreateMessageRequest
 hypercomputecluster.googleapis.com,hypercomputecluster.googleapis.com/Cluster,61,HypercomputeClusterCluster,60,,0,1,false,api=v1:projects.locations.clusters; official-spec-fields-unmatched=8/67
 iam.googleapis.com,iam.googleapis.com/IAMBinding,0,,0,IAMBinding,0,0,false,"outside-denominator; one role binding in another resource's IAM policy, written with setIamPolicy"
+iam.googleapis.com,iam.googleapis.com/IAMDenyPolicy,0,,0,IAMDenyPolicy,0,0,false,"outside-denominator; an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,,0,8,false,api=v1:projects.locations.oauthClients
 iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
