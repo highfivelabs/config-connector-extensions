@@ -1304,8 +1304,10 @@ To raise confidence in the kinds:
 9. Unit tests for `passwordPolicyEqual`, `sortedRoles` and identity
    parsing (Config Connector has an identity conformance helper,
    `apis/common/identity`).
-10. Offer patches 0001 and 0002 upstream; comment on PR #7148 with the
-    revoke semantics and the mockgcp change.
+10. Done 2026-11-10: fifteen mockgcp patches offered upstream, 0001 and
+    0002 among them (UPSTREAM.md, "Pull requests we opened upstream").
+    The comment on PR #7148 with the revoke semantics and the mockgcp
+    change is drafted and waits for the builder's approval.
 
 Housekeeping:
 
