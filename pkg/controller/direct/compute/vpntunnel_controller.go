@@ -186,7 +186,40 @@ func (a *vpnTunnelAdapter) Create(ctx context.Context, createOp *directbase.Crea
 	if err != nil {
 		return fmt.Errorf("getting created ComputeVPNTunnel %s: %w", a.id.String(), err)
 	}
+	// vpnTunnels.insert does not set labels (live run cce-11101009-a46a: the
+	// first resync after a create wrote them; Terraform's tunnel also calls
+	// setLabels after insert), so they are set now.
+	if !maps.Equal(a.obj.Spec.Labels, created.GetLabels()) {
+		if created, err = a.setLabels(ctx, created); err != nil {
+			return err
+		}
+	}
 	return a.updateStatus(ctx, createOp, created)
+}
+
+// setLabels writes spec.labels with the fingerprint of cur and reads the
+// tunnel again.
+func (a *vpnTunnelAdapter) setLabels(ctx context.Context, cur *pb.VpnTunnel) (*pb.VpnTunnel, error) {
+	op, err := a.gcpClient.SetLabels(ctx, &pb.SetLabelsVpnTunnelRequest{
+		Project:  a.id.Project,
+		Region:   a.id.Region,
+		Resource: a.id.Name,
+		RegionSetLabelsRequestResource: &pb.RegionSetLabelsRequest{
+			Labels:           a.obj.Spec.Labels,
+			LabelFingerprint: cur.LabelFingerprint,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("setting ComputeVPNTunnel %s labels: %w", a.id.String(), err)
+	}
+	if err := a.wait(ctx, op, "setLabels"); err != nil {
+		return nil, err
+	}
+	updated, err := a.get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting ComputeVPNTunnel %s: %w", a.id.String(), err)
+	}
+	return updated, nil
 }
 
 // Update changes the labels, the only field the API changes in place. The
@@ -199,24 +232,9 @@ func (a *vpnTunnelAdapter) Update(ctx context.Context, updateOp *directbase.Upda
 		return a.updateStatus(ctx, updateOp, a.actual)
 	}
 	log.V(2).Info("updating ComputeVPNTunnel labels", "name", a.id.String())
-	op, err := a.gcpClient.SetLabels(ctx, &pb.SetLabelsVpnTunnelRequest{
-		Project:  a.id.Project,
-		Region:   a.id.Region,
-		Resource: a.id.Name,
-		RegionSetLabelsRequestResource: &pb.RegionSetLabelsRequest{
-			Labels:           a.obj.Spec.Labels,
-			LabelFingerprint: a.actual.LabelFingerprint,
-		},
-	})
+	updated, err := a.setLabels(ctx, a.actual)
 	if err != nil {
-		return fmt.Errorf("updating ComputeVPNTunnel %s labels: %w", a.id.String(), err)
-	}
-	if err := a.wait(ctx, op, "update"); err != nil {
 		return err
-	}
-	updated, err := a.get(ctx)
-	if err != nil {
-		return fmt.Errorf("getting ComputeVPNTunnel %s: %w", a.id.String(), err)
 	}
 	return a.updateStatus(ctx, updateOp, updated)
 }

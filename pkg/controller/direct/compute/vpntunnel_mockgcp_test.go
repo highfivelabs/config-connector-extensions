@@ -172,6 +172,11 @@ func TestComputeVPNTunnel(t *testing.T) {
 		t.Fatal(err)
 	}
 	gvk := computev1beta1.ComputeVPNTunnelGVK
+	// A label of the test's own beside the run's (which are none on the
+	// fake), so that create always has labels to set: vpnTunnels.insert
+	// leaves them out, and Create sets them after it.
+	tunnelLabels := map[string]string{"purpose": "vpn-tunnel-test"}
+	maps.Copy(tunnelLabels, mockenv.Labels())
 	newTunnel := func(name, resourceID string) *computev1beta1.ComputeVPNTunnel {
 		return &computev1beta1.ComputeVPNTunnel{
 			ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name},
@@ -200,7 +205,7 @@ func TestComputeVPNTunnel(t *testing.T) {
 						Pfs:        []string{"Group-14"},
 					},
 				},
-				Labels: mockenv.Labels(),
+				Labels: tunnelLabels,
 			},
 		}
 	}
@@ -241,6 +246,9 @@ func TestComputeVPNTunnel(t *testing.T) {
 		if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != want {
 			t.Errorf("status.externalRef = %q, want %q", ref, want)
 		}
+		if l := cloudTunnel(t, tunnelName).GetLabels(); !maps.Equal(l, tunnelLabels) {
+			t.Errorf("cloud labels = %v, want %v", l, tunnelLabels)
+		}
 		if h, _, _ := unstructured.NestedString(u.Object, "status", "sharedSecretHash"); h == "" {
 			t.Errorf("status.sharedSecretHash is empty")
 		}
@@ -272,9 +280,8 @@ func TestComputeVPNTunnel(t *testing.T) {
 
 	t.Run("labels change in place", func(t *testing.T) {
 		o := getObj(t, "tunnel")
-		// On the fake, mockenv.Labels() is empty, so the spec may have none.
-		want := map[string]string{"tier": "edge"}
-		maps.Copy(want, o.Spec.Labels)
+		want := maps.Clone(o.Spec.Labels)
+		want["tier"] = "edge"
 		o.Spec.Labels = want
 		if err := env.Kube.Update(ctx, o); err != nil {
 			t.Fatal(err)

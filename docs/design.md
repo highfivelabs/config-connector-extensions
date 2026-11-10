@@ -1218,7 +1218,10 @@ Notes on what was built from this table:
   `external` or by the named object's `status.selfLink`. **Written
   here**: the identity, the controller (insert, get, `setLabels` with the
   label fingerprint, delete; the shared secret read from its Secret on
-  every reconcile, sent only by insert), and the end-to-end test.
+  every reconcile, sent only by insert), and the end-to-end test. Live
+  showed two things the fake did not: `vpnTunnels.insert` leaves the
+  labels out (Create sets them after it, as Terraform's tunnel does), and
+  a peer gateway on a reserved address (RFC 5735) is refused.
   Generated: the CRD and deepcopy (controller-gen);
   `hack/scaffold-kind.sh` was not run, since upstream's direct types and
   mapper already existed to copy. mockgcp patch 0031 (`docs/fake-cloud.md`):

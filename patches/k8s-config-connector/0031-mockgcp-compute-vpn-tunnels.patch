@@ -2,8 +2,8 @@ mockgcp: serve compute vpnTunnels (insert, get, setLabels, delete)
 
 Written here for config-connector-extensions' ComputeVPNTunnel: mockgcp
 had no VPN tunnel service. Every field but the labels is set only by
-insert, as in the real API; the shared secret is not returned, its hash
-is; setLabels checks the label fingerprint. It does not check that the
+insert, as in the real API, and insert leaves the labels out (seen
+live); the shared secret is not returned, its hash is; setLabels checks the label fingerprint. It does not check that the
 gateways, peer or router exist. Writes of VPN tunnels and HA VPN
 gateways answer with a regional operation, as the real API does (the
 gateways answered with a global one, which a regional client's Wait
@@ -60,7 +60,7 @@ cannot find).
  type regionalVpnGatewayName struct {
 --- /dev/null
 +++ b/mockgcp/mockcompute/vpntunnelv1.go
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,170 @@
 +// Copyright 2026 Google LLC
 +//
 +// Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,8 +91,8 @@ cannot find).
 +)
 +
 +// VpnTunnelsV1 serves regional VPN tunnels: insert, get, setLabels and
-+// delete. Every field but the labels is set only by insert. The shared
-+// secret is never returned; its hash is.
++// delete. Every field but the labels is set only by insert, and insert
++// leaves the labels out. The shared secret is never returned; its hash is.
 +type VpnTunnelsV1 struct {
 +	*MockService
 +	pb.UnimplementedVpnTunnelsServer
@@ -136,7 +136,9 @@ cannot find).
 +	obj.CreationTimestamp = PtrTo(s.nowString())
 +	obj.Kind = PtrTo("compute#vpnTunnel")
 +	obj.Region = PtrTo(BuildComputeSelfLink(ctx, "projects/"+name.Project.ID+"/regions/"+name.Region))
-+	obj.LabelFingerprint = PtrTo(labelsFingerprint(obj.GetLabels()))
++	// insert does not set labels; setLabels does (seen live).
++	obj.Labels = nil
++	obj.LabelFingerprint = PtrTo(labelsFingerprint(nil))
 +	obj.Status = PtrTo("FIRST_HANDSHAKE")
 +	obj.DetailedStatus = PtrTo("Waiting for the first handshake.")
 +	if obj.IkeVersion == nil {

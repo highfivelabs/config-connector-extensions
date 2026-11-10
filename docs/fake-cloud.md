@@ -187,7 +187,8 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   to the same organization or folder, and does not default `type`.
 - **VPN tunnels in mockgcp** (patch 0031, ours, for `ComputeVPNTunnel`).
   Insert, get, `setLabels` (refused on a stale label fingerprint) and
-  delete of `projects/{p}/regions/{r}/vpnTunnels/{t}`; a read never
+  delete of `projects/{p}/regions/{r}/vpnTunnels/{t}`; insert leaves
+  the labels out, as the API does (live run `cce-11101009-a46a`); a read never
   returns the shared secret, only a hash of it, and a new tunnel reads as
   `FIRST_HANDSHAKE`. It checks only that the secret is set and that
   exactly one of the HA and Classic gateways is named: not that the
