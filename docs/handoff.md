@@ -115,7 +115,9 @@ mute config did. Next: `SecurityCenterBigQueryExport` (mockgcp already
 serves all three parents), the two custom module kinds, then
 `SecurityCenterNotificationConfig` (Terraform-based upstream). Live
 needs Security Command Center active for the project
-(`E2E_SECURITY_CENTER=true`).
+(`E2E_SECURITY_CENTER=true`). A new API group also goes in the manager's
+ClusterRole (`config/operator/rbac.yaml`, both rules);
+`TestManagerRoleCoversEveryKind` fails without it.
 
 Field gaps (design.md decision 19, the builder's 2026-11-10 reversal of
 decision 5) are not begun. Take them in `docs/coverage/foundation.md`'s
