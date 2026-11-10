@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-two kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty-three kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -10,7 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
+`LoggingSettings`, `LoggingBillingAccountSink`,
+`ComputeProjectMetadataItem`, `IAMBinding`,
 `IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
@@ -1196,6 +1197,36 @@ Notes on what was built from this table:
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
   unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+- `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1alpha1`, decision
+  15, foundation item 17: a billing account's log sink, Terraform's
+  `google_logging_billing_account_sink`). Upstream, rechecked 2026-11-10
+  (read-only): `LoggingLogSink` is `v1beta1` with a direct controller
+  (opt-in; Terraform by default) whose spec takes `projectRef`,
+  `folderRef` or `organizationRef`; its identity already parses
+  `billingAccounts/{billingaccount}/sinks/{sink}`, but no field reaches
+  it, on `master` (`56effb6`, 2026-11-09) either; no open pull request
+  adds one (searched "LogSink", "billing sink"). **Copied** with as
+  little change as possible: the types, identity, the direct controller
+  and the sink's mapper functions; upstream's destination, BigQuery
+  options and exclusion types are imported, not copied. Changed: a
+  required, immutable `billingAccountRef` (Config Connector's
+  `billing/v1alpha1` `BillingAccountRef`: `external` as
+  `billingAccounts/{id}` or the bare ID, or `name` of a `BillingAccount`)
+  in place of the three parents; `includeChildren` dropped (folders and
+  organizations only); `uniqueWriterIdentity` dropped and always sent as
+  true (a billing account's sink always has its own writer identity, and
+  Terraform sends true); `status.externalRef`, checked by the identity
+  so a changed `resourceID` is refused. Update is upstream's: a mask of
+  the top-level fields that differ. Hand-written here: the end-to-end
+  test only. Generated: the CRD and deepcopy (controller-gen);
+  `hack/scaffold-kind.sh` was not run, since upstream's hand-written
+  controller and mapper are the nearer code. Copied: 655 of the kind's
+  1,008 hand-kept lines (65%; the mock patch and the test are the rest).
+  `task coverage` counts 10 of the resource's 13 attributes as ours; the
+  other three are `includeChildren` and `interceptChildren` (folders and
+  organizations only) and the deprecated `outputVersionFormat`.
+  mockgcp patch 0029 (`docs/fake-cloud.md`). Live: pending, needs
+  billing account access (`E2E_BILLING_ACCOUNT`, `docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1457,6 +1488,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
+33. `LoggingBillingAccountSink`: a live run (it needs a billing account
+    the live-test service account administers logging on:
+    `E2E_BILLING_ACCOUNT`); the writer identity's real address (the fake
+    makes one up); whether the API checks the destination at create; and
+    a sink named by a `BillingAccount` object, which no test makes.
 
 ## 8. Decisions
 
@@ -1475,7 +1511,8 @@ To raise confidence in `ArtifactRegistryRepository`:
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
-   release, with the exception in section 6.1. Never a fork. Exceptions
+   release, with the exception in section 6.1. **Reversed by the builder
+   on 2026-11-10: decision 19.** Never a fork. Exceptions
    the builder has made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
    request, owning the whole object, is now the accepted pattern when a
@@ -1600,6 +1637,22 @@ To raise confidence in `ArtifactRegistryRepository`:
     kinds follow the same rule. This generalises decision 12 (the IAM
     kinds) and the folder and organization `ServiceIdentity`, which kept
     upstream's name with new parents.
+19. **Field gaps: build them now, and keep up with upstream mechanically**
+    (the builder, 2026-11-10, reversing decision 5: "don't wait on
+    release ... we need to ship and understand they are going to ship
+    behind us on several resources and new attributes. we just need
+    mechanized ways to keep up with upstream."). Field gaps that
+    `docs/coverage` lists for foundation kinds Config Connector already
+    serves are built here, in `docs/coverage/foundation.md`'s order,
+    without waiting for an upstream release or pull request. They use the
+    accepted pattern (decisions 11, 14, 13): our own kind in our group,
+    copied from upstream's nearest code, owning the whole object, which a
+    workload moves to by acquiring the same resource. Where that pattern
+    does not fit a gap, the first pull request for it proposes another in
+    a short design note. Upstream will ship many of the same fields and
+    resources after us; the means of keeping up are mechanical: the pin
+    and patches (section 3), `task coverage` and `task upstream-pr`, and
+    the retirement path (section 3.4).
 
 ## 9. The operator: Config Connector's identity, per namespace
 

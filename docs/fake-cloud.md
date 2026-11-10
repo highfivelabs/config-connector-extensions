@@ -185,6 +185,16 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   and add, get and remove of an association. It checks no permissions
   on the parent or the attachment, does not refuse a second association
   to the same organization or folder, and does not default `type`.
+- **A billing account's log sinks in mockgcp** (patch 0029, ours, for
+  `LoggingBillingAccountSink`). Sinks under `billingAccounts/{id}`, with
+  a writer identity the fake makes up
+  (`serviceAccount:service-billing-{id}@gcp-sa-logging.iam.gserviceaccount.com`;
+  the real address has not been seen). `UpdateSink` applies the mask's
+  `description`, `filter`, `destination`, `disabled`, `exclusions`,
+  `includeChildren` and `bigqueryOptions`, and refuses any other path. It
+  checks no billing account (any ID is one), no destination (a topic or
+  bucket that does not exist is accepted) and no filter, does not
+  require `uniqueWriterIdentity`, and keeps no exclusion's timestamps.
 - **Organization security policy rules in mockgcp** (patch 0028, ours,
   for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
   `patchRule` and `removeRule` by priority in the policy's rules;
