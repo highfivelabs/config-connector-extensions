@@ -67,8 +67,7 @@ spec:
                     description: VPNTunnelPhase1Algorithms is the API's VpnTunnelPhase1Algorithms.
                     properties:
                       dh:
-                        description: Diffie-Hellman groups, for example MODP_2048
-                          or ECP_256.
+                        description: Diffie-Hellman groups, for example Group-14.
                         items:
                           type: string
                         type: array
@@ -103,7 +102,7 @@ spec:
                           type: string
                         type: array
                       pfs:
-                        description: Perfect forward secrecy groups, for example MODP_2048.
+                        description: Perfect forward secrecy groups, for example Group-14.
                         items:
                           type: string
                         type: array
