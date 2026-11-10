@@ -112,8 +112,10 @@ mirroring rules and on down `docs/coverage/foundation.md`.
 
 What `DNSResponsePolicy` taught: a new group (`dns.gcp.hfl.dev`) is a
 `groupversion_info.go` and `doc.go` copied, the kind added to
-`pkg/controller/controllers.go` (both lists) and nothing else; the
-generator picks it up. Upstream's `NoProto` fuzzers (for kinds on the
+`pkg/controller/controllers.go` (both lists), and the group added to the
+manager's ClusterRole (`config/operator/rbac.yaml`, both rules; without
+it the operator's manager cannot read the kind, which only
+`task operator-e2e` shows); the generator picks up the rest. Upstream's `NoProto` fuzzers (for kinds on the
 `google.golang.org/api` REST types) run as a test the same way as the
 proto ones (`FuzzSpec` and `FuzzStatus`). Upstream's direct DNS kinds
 leave `labels` out; ours takes `metadata.labels`
