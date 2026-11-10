@@ -8,7 +8,8 @@
 #
 # `task` lists the tasks. Install it with `brew install go-task` or
 # `go install github.com/go-task/task/v3/cmd/task@latest`. Variables are
-# given on the command line: `task test-live PROJECT=hfl-dev-514205 KINDS=iam`.
+# given on the command line: `task test-live KINDS=iam` (PROJECT defaults to
+# HFL_GCP_TEST_PROJECT, then hfl-dev-514205).
 version: '3'
 
 set: [errexit, pipefail]
@@ -26,6 +27,11 @@ env:
   MOCKGCP_LISTEN_ADDRESS: '{{.MOCKGCP_LISTEN_ADDRESS | default "127.0.0.1:0"}}'
 
 vars:
+  # The live tests' project: HFL_GCP_TEST_PROJECT from the test estate's env
+  # file (factory/estate/gcp/<gen>.env) when it is loaded, else
+  # hfl-dev-514205; PROJECT=... on the command line overrides both. It must
+  # still pass hack/live/projects.sh.
+  PROJECT: '{{.HFL_GCP_TEST_PROJECT | default "hfl-dev-514205"}}'
   # The project's name, for a rename: the Go module path, the images, the
   # install's object names and pkg/operator.Name carry it too.
   NAME: config-connector-extensions
@@ -116,11 +122,11 @@ tasks:
           CMD: E2E_GCP_TARGET=mock go test ./... -count=1
 
   # The same end-to-end tests, each kind against the fake cloud and then a
-  # real project (docs/live-runs.md): task test-live PROJECT=<project>
+  # real project (docs/live-runs.md): task test-live [PROJECT=<project>]
   # [KINDS="sql artifactregistry"]. Only projects in hack/live/projects.sh;
   # the credentials must be a service account (an offload VM's --sa).
   test-live:
-    desc: 'Each kind against the fake cloud, then a real project: task test-live PROJECT=<project> [KINDS="sql run"] (docs/live-runs.md).'
+    desc: 'Each kind against the fake cloud, then a real project: task test-live [PROJECT=<project>] [KINDS="sql run"] (docs/live-runs.md).'
     requires:
       vars: [PROJECT]
     cmds:
@@ -132,14 +138,14 @@ tasks:
           CMD: hack/live/run.sh --project "{{.PROJECT}}" {{.KINDS}}
 
   live-sweep:
-    desc: 'Delete live-test leftovers older than 2h, or everything of RUN=<id>: task live-sweep PROJECT=<project> [RUN=<id>].'
+    desc: 'Delete live-test leftovers older than 2h, or everything of RUN=<id>: task live-sweep [PROJECT=<project>] [RUN=<id>].'
     requires:
       vars: [PROJECT]
     cmds:
       - hack/live/sweep.sh --project "{{.PROJECT}}"{{if .RUN}} --run "{{.RUN}}"{{end}}
 
   live-list:
-    desc: 'List every live-test resource in PROJECT: task live-list PROJECT=<project>.'
+    desc: 'List every live-test resource in PROJECT: task live-list [PROJECT=<project>].'
     requires:
       vars: [PROJECT]
     cmds:

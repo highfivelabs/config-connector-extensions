@@ -45,6 +45,16 @@ task live-sweep PROJECT=hfl-dev-514205 RUN=cce-11091530-a3f2   # everything of o
 task live-list PROJECT=hfl-dev-514205           # list every live-test resource
 ```
 
+`PROJECT` defaults to `HFL_GCP_TEST_PROJECT`, then `hfl-dev-514205`.
+The persistent test estate (`factory/estate/gcp/README.md`) writes that
+variable, with the folder, the scratch project and the Log Router key
+(`E2E_TEST_FOLDER`, `E2E_LOGGING_FOLDER`, `E2E_LOGGING_KMS_KEY`,
+`E2E_TEST_FOLDER_PROJECT`), to one env file per generation;
+`hack/live/projects.sh` allows its projects (`hfl-test-g<N>` and
+`hfl-test-g<N>-scratch`). Until the run scripts impersonate the
+generation's `cce-live-tests@hfl-test-g<N>` account, runs stay in
+`hfl-dev-514205`: load the env file only after that lands.
+
 Live runs happen on a short-lived Spot VM that runs as a dedicated
 service account, never on a laptop and never with a downloaded key:
 
