@@ -276,8 +276,11 @@ items:
       no pull request for these fields. Open PR #13960 (2026-10-27) "align migration diffs for ComputeRouter":
       `ComputeRouter` is moving to the direct controller, which is where new fields would land.
     build: >-
-      Wait for the `ComputeRouter` direct migration (#13960); if the BGP peer fields block a chart, they are the
-      one critical exception to decision 5.
+      Our `ComputeRouter` (`compute.gcp.hfl.dev/v1alpha1`, built 2026-11-10): upstream's direct `ComputeRouter`
+      copied, owning the whole router, with `bgp.identifierRange`, `md5AuthenticationKeys` (values from Secrets),
+      `interfaces`, `bgpPeers` and `nats` and every field listed above; patch 0027 (`docs/design.md` 6.5). A router
+      moves to it by acquiring the same name and abandoning the official `ComputeRouter`, `ComputeRouterInterface`,
+      `ComputeRouterPeer` and `ComputeRouterNAT` objects.
     decided: >-
       "Copy upstream's PR as our kind." Copy #13960's direct `ComputeRouter` into our group as a complete kind that
       owns the whole router; a workload that needs these fields moves its router to ours (acquire by name, abandon

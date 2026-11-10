@@ -412,7 +412,7 @@ compute.googleapis.com,compute.googleapis.com/Reservation,32,ComputeReservation,
 compute.googleapis.com,compute.googleapis.com/ResourcePolicy,29,ComputeResourcePolicy,23,,0,6,false,api=v1:resourcePolicies; official-spec-fields-unmatched=3/25
 compute.googleapis.com,compute.googleapis.com/RolloutPlan,15,,0,,0,15,false,api=v1:rolloutPlans
 compute.googleapis.com,compute.googleapis.com/Route,13,ComputeRoute,11,,0,2,false,api=v1:routes; official-spec-fields-unmatched=1/11
-compute.googleapis.com,compute.googleapis.com/Router,81,ComputeRouter;ComputeRouterInterface;ComputeRouterNAT;ComputeRouterPeer,57,,0,24,false,api=v1:routers
+compute.googleapis.com,compute.googleapis.com/Router,81,ComputeRouter;ComputeRouterInterface;ComputeRouterNAT;ComputeRouterPeer,57,ComputeRouter,19,5,true,api=v1:routers; ours-spec-fields-unmatched=6/81
 compute.googleapis.com,compute.googleapis.com/SecurityPolicy,86,ComputeSecurityPolicy,36,,0,50,false,api=v1:securityPolicies; official-spec-fields-unmatched=14/49
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,17,ComputeServiceAttachment,9,,0,8,false,api=v1:serviceAttachments; official-spec-fields-unmatched=3/11
 compute.googleapis.com,compute.googleapis.com/Snapshot,27,ComputeSnapshot,12,,0,15,false,api=v1:snapshots; official-spec-fields-unmatched=2/12

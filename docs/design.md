@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-six kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has twenty-seven kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -16,7 +16,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `ProjectDefaultServiceAccounts`, and a project's or organization's
 `NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
-`NetworkSecuritySecurityProfileGroup` (section 6). Each
+`NetworkSecuritySecurityProfileGroup`, and a whole `ComputeRouter`
+(section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -973,6 +974,64 @@ Notes on what was built from this table:
   returns a profile reference as it was sent, so a resync writes
   nothing); an organization's is "live: pending, needs test folder".
 
+- `ComputeRouter` (`compute.gcp.hfl.dev/v1alpha1`, decision 14,
+  `docs/coverage/foundation.md` item 9). A whole Cloud Router in one
+  object: BGP (with `identifierRange`), interfaces, BGP peers (BFD,
+  custom learned ranges, IPv4 and IPv6 next hops, import and export
+  route policies, MD5 key names), Cloud NATs (with `autoNetworkTier` and
+  NAT64) and the MD5 authentication keys. Named by decision 18:
+  Config Connector's name in our group. Upstream (read 2026-11-09, pin
+  `672414b8`): the direct `ComputeRouter` has only the description, the
+  BGP basics, `encryptedInterconnectRouter`, the network and region; PR
+  #13960 (head `9b916158`, open, review required) changes only its
+  migration diff. The interfaces, peers and NATs are upstream's
+  Terraform-based (and, for NAT and interface, direct) sibling kinds,
+  without the fields listed in item 9. **Generated**:
+  `hack/scaffold-kind.sh google.cloud.compute.v1
+  compute.gcp.hfl.dev/v1alpha2 ComputeRouter:Router` (v1alpha2 because
+  upstream has compute v1alpha1; the compute proto has no field
+  behaviour or resource annotations, so no overlay). Kept unedited: the
+  BFD, custom learned range and NAT64 subnetwork types and their mapper
+  functions; the generated `RouterBgpPeer` field set and mapper are the
+  base of ours, renamed to Config Connector's `ComputeRouterPeer` field
+  names. **Copied**: the direct `ComputeRouter` types, identity and
+  controller, and upstream's router, NAT and interface mappers (for our
+  inline NAT and interface types, which reuse upstream's NAT rule, log
+  config, subnetwork and reference types). **Changed or written**:
+  - the router is written with `routers.update` (PUT): the body is the
+    router as read with the owned fields replaced, because
+    `routers.patch` keeps a list the body leaves out and the client
+    leaves an empty list out (the firewall rule's lesson), so a removed
+    peer, NAT, interface or key would stay. Peers and interfaces the API
+    made for an interconnect attachment (`MANAGED_BY_ATTACHMENT`) are
+    kept unless the spec names them;
+  - the comparison is written here: what the spec sets must match, what
+    it leaves out is the API's default (Magic Modules: `keepaliveInterval`
+    20, `identifierRange` from the API; Terraform's peer: BFD, `enable`,
+    `ipAddress` computed), the four lists must have the same members in
+    any order, route policy lists in order, links without their URL
+    prefix;
+  - MD5 key values come only from Secrets (`keyRef`), are sent with
+    every write and never logged or kept; the API never returns them
+    (Terraform's peer flattener; patch 0027 makes the fake do the same),
+    so `status.md5AuthenticationKeysVersion`, a digest of each key's
+    Secret name, key and `resourceVersion` (not of the value), shows when
+    a Secret changed and the keys are written again;
+  - `privateIpAddress` and `redundantInterface` are the API's strings
+    (upstream maps an address reference into a field that takes an IP);
+    VPN tunnel and attachment references by name read the Config
+    Connector object's `status.selfLink`; the network and
+    `encryptedInterconnectRouter` are immutable (an error, not a write).
+  Share of the ~3,450 non-test lines: about 52% generated (controller-gen's
+  CRD and deepcopy, 48%; `controllerbuilder`, 4%), 27% copied unchanged,
+  21% written or changed here. `ComputeRouterRoutePolicy`'s Config
+  Connector router GVK variable is renamed `ConfigConnectorComputeRouterGVK`
+  (the name is now our kind's). Not carried: `nccGateway` (a router for
+  an NCC gateway spoke) and the input-only `params.resourceManagerTags`;
+  `task coverage` counts 76 of the Router's 81 fields covered with ours,
+  the MD5 key's value (ours is `keyRef`) and the NAT subnetworks' names
+  (ours are references) among the five it does not match. Live: LIVE_RESULT
+
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1195,6 +1254,18 @@ To raise confidence in `ArtifactRegistryRepository`:
     direction, the policy's tuple limit), which mockgcp does not make;
     `securityProfileGroup`, `tlsInspect` and `targetResources`, the
     fields this kind lacks; how long a changed rule stays "not ready".
+28. `ComputeRouter`: a rotated MD5 key Secret is noticed at the next
+    reconcile (Config Connector's resync interval), not when the Secret
+    changes (no watch, as item 22); peers and interfaces the API manages
+    for an interconnect attachment are kept on update but no test makes
+    one (mockgcp never does); `ComputeRouterRoutePolicy.routerRef.name`
+    still names Config Connector's `ComputeRouter`, so a policy on a
+    router that moved to ours names it by `external`; no CEL rule yet for
+    "at most one of `vpnTunnelRef`, `interconnectAttachmentRef` and
+    `subnetworkRef`" (the API refuses it); the Terraform-based
+    `ComputeRouterInterface`, `ComputeRouterPeer` and `ComputeRouterNAT`
+    on the same router would fight ours, so moving a router means
+    abandoning all four official objects.
 
 ## 8. Decisions
 

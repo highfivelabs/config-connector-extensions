@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="54" viewBox="0 0 640 54" role="img" aria-label="Google Cloud, all services: official 35.6%, ours beyond official 0.2%, uncovered 64.2% of 43589 attributes">
-<title>Google Cloud, all services: official 35.6%, ours beyond official 0.2%, uncovered 64.2% of 43589 attributes</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="54" viewBox="0 0 640 54" role="img" aria-label="Google Cloud, all services: official 35.6%, ours beyond official 0.3%, uncovered 64.1% of 43589 attributes">
+<title>Google Cloud, all services: official 35.6%, ours beyond official 0.3%, uncovered 64.1% of 43589 attributes</title>
 <rect x="0.5" y="0.5" width="639" height="53" rx="4" fill="#ffffff" stroke="#d0d7de"/>
 <clipPath id="c"><rect x="10" y="8" width="620" height="18" rx="3"/></clipPath>
 <g clip-path="url(#c)">
 <rect x="10" y="8" width="620" height="18" fill="#d0d7de"/>
 <rect x="10.00" y="8" width="220.71" height="18" fill="#2f81f7"/>
-<rect x="230.71" y="8" width="1.54" height="18" fill="#2da44e"/>
+<rect x="230.71" y="8" width="1.81" height="18" fill="#2da44e"/>
 </g>
-<text x="10" y="43" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f"><tspan fill="#2f81f7">&#9632;</tspan> official 35.6%   <tspan fill="#2da44e">&#9632;</tspan> ours beyond 0.2%   <tspan fill="#8c959f">&#9632;</tspan> uncovered 64.2%   43589 attributes, 1244 resources</text>
+<text x="10" y="43" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f"><tspan fill="#2f81f7">&#9632;</tspan> official 35.6%   <tspan fill="#2da44e">&#9632;</tspan> ours beyond 0.3%   <tspan fill="#8c959f">&#9632;</tspan> uncovered 64.1%   43589 attributes, 1244 resources</text>
 </svg>

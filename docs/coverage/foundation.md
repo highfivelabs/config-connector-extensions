@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 1.0% | 60.1% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 1.6% | 59.5% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 2.8% | 30.0% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 3.2% | 56.3% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 6.0% | 53.5% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 0.0% | 76.0% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 0.0% | 70.5% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 0.0% | 83.5% |
@@ -75,7 +75,7 @@ What these numbers miss, for the foundation:
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 57 / 57 (0.0%) | none |
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 171 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
-| 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 24 / 81 (70.4%) | no pull request for these fields |
+| 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 41 / 85 (51.8%) | none for the fields |
 | 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found. |
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 84 / 98 (14.3%) | none for these fields |
@@ -228,12 +228,12 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** S, **modules** 6 (net-cloudnat, net-vpn-ha, net-vpn-dynamic, net-vlan-attachment, net-ipsec-over-interconnect, ncc-spoke-ra).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/Router`: 57 / 0 / 24 of 81; ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer, ComputeRouter
+  - `compute.googleapis.com/Router`: 57 / 19 / 5 of 81; ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer, ComputeRouter, ComputeRouter (ours)
 - **Missing, whole resources:** `md5AuthenticationKeys[]` on `ComputeRouter` (a BGP peer's `md5AuthenticationKeyName` needs it); on `ComputeRouterPeer`: `enableIpv4`, `ipv4NexthopAddress`, `peerIpv4NexthopAddress`, `customLearnedRoutePriority`, `customLearnedIpRanges`, `importPolicies`/`exportPolicies` (these two pair with our `ComputeRouterRoutePolicy`); on `ComputeRouterInterface`: `ipVersion`; on `ComputeRouterNAT`: `autoNetworkTier`, `nat64Subnetworks`, `sourceSubnetworkIpRangesToNat64`; `bgp.identifierRange`. (`name` fields are the object's name, not missing.)
 - **Missing, attributes that matter:** The measured list; the first five matter for HA VPN and Interconnect.
-  - uncovered in `compute.googleapis.com/Router` (measured): `bgp.identifierRange`, `bgpPeers[].customLearnedIpRanges[].range`, `bgpPeers[].customLearnedRoutePriority`, `bgpPeers[].enableIpv4`, `bgpPeers[].exportPolicies[]`, `bgpPeers[].importPolicies[]`, `bgpPeers[].interfaceName`, `bgpPeers[].ipv4NexthopAddress`, `bgpPeers[].md5AuthenticationKeyName`, `bgpPeers[].name` and 14 more
+  - uncovered in `compute.googleapis.com/Router` (measured): `md5AuthenticationKeys[].key`, `nats[].nat64Subnetworks[].name`, `nats[].subnetworks[].name`, `nccGateway`, `params.resourceManagerTags{}`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): no pull request for these fields. Open PR #13960 (2026-10-27) "align migration diffs for ComputeRouter": `ComputeRouter` is moving to the direct controller, which is where new fields would land.
-- **Build:** Wait for the `ComputeRouter` direct migration (#13960); if the BGP peer fields block a chart, they are the one critical exception to decision 5.
+- **Build:** Our `ComputeRouter` (`compute.gcp.hfl.dev/v1alpha1`, built 2026-11-10): upstream's direct `ComputeRouter` copied, owning the whole router, with `bgp.identifierRange`, `md5AuthenticationKeys` (values from Secrets), `interfaces`, `bgpPeers` and `nats` and every field listed above; patch 0027 (`docs/design.md` 6.5). A router moves to it by acquiring the same name and abandoning the official `ComputeRouter`, `ComputeRouterInterface`, `ComputeRouterPeer` and `ComputeRouterNAT` objects.
 - **Decided (builder, 2026-11-09):** "Copy upstream's PR as our kind." Copy #13960's direct `ComputeRouter` into our group as a complete kind that owns the whole router; a workload that needs these fields moves its router to ours (acquire by name, abandon the official object); retire ours when upstream releases (`docs/design.md` decision 14).
 
 ### 10. VPN tunnel and Interconnect attachment fields
@@ -506,6 +506,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeProjectMetadataItem | (not a create) one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method) | n/a | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
 | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
+| ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | IAMBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
@@ -513,10 +514,10 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
@@ -692,7 +693,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | - |
 | security | `compute.googleapis.com/RegionSslPolicy` | ComputeRegionSSLPolicy (alpha) | - | 6 | 5 | 0 | 1 | - |
 | foundation | `compute.googleapis.com/Route` | ComputeRoute | - | 13 | 11 | 0 | 2 | - |
-| foundation | `compute.googleapis.com/Router` | ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer, ComputeRouter | - | 81 | 57 | 0 | 24 | 9 |
+| foundation | `compute.googleapis.com/Router` | ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer, ComputeRouter | ComputeRouter | 81 | 57 | 19 | 5 | 9 |
 | security | `compute.googleapis.com/SecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | 27 |
 | foundation | `compute.googleapis.com/ServiceAttachment` | ComputeServiceAttachment | - | 17 | 9 | 0 | 8 | 11 |
 | security | `compute.googleapis.com/SslPolicy` | ComputeSSLPolicy | - | 6 | 5 | 0 | 1 | - |
