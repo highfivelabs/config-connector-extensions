@@ -86,7 +86,12 @@ items:
       plus `priority` for a rule and `name` for an association; every change goes through the policy's
       fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied).
       Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014`
-      already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row.
+      already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and
+      association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network
+      policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version.
+      `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10
+      (`compute.gcp.hfl.dev/v1alpha1`, written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields;
+      mockgcp patch 0031). Next: the hierarchical policy's, on the beta API, live pending the test folder.
   - title: Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
     importance: A
     gap: whole

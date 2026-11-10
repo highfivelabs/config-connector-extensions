@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-two kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty-three kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -20,7 +20,8 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
 `ComputeOrganizationSecurityPolicyAssociation`,
 `ComputeOrganizationSecurityPolicyRule` and
-`ComputeNetworkFirewallPolicyRule` (section 6). Each
+`ComputeNetworkFirewallPolicyRule`, and
+`ComputeNetworkFirewallPolicyPacketMirroringRule` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1159,6 +1160,48 @@ Notes on what was built from this table:
   rule. Copied: 838 of the kind's 2,059 hand-kept lines (41%, the mock
   patch included); the rest is written here. mockgcp patch 0028
   (`docs/fake-cloud.md`). Live: pending, needs the test folder.
+- `ComputeNetworkFirewallPolicyPacketMirroringRule`
+  (`compute.gcp.hfl.dev/v1alpha1`, foundation item 2: a packet mirroring
+  rule of a global network firewall policy, at its priority). Upstream,
+  checked 2026-11-10 (read-only): no kind, no direct or Terraform code and
+  no pull request (searched `PacketMirroringRule`, `packet mirroring`);
+  only generated types carry the policy's `packetMirroringRules` list.
+  Terraform has `google_compute_network_firewall_policy_packet_mirroring_rule`
+  (beta; Magic Modules' `NetworkFirewallPolicyPacketMirroringRule.yaml`,
+  read). The API: v1 serves `networkFirewallPolicies.addPacketMirroringRule`,
+  `getPacketMirroringRule`, `patchPacketMirroringRule` and
+  `removePacketMirroringRule`; the hierarchical `firewallPolicies` has
+  them in beta and alpha only, and `regionNetworkFirewallPolicies` has
+  none in any version (its policy only lists `packetMirroringRules`), so
+  the regional kind foundation item 2 names cannot be built on rule calls
+  and the hierarchical one is left for its own pull request (live pending
+  the test folder). **Written here**, the types, identity and controller
+  adapted from our `ComputeNetworkFirewallPolicyRule` (same message, the
+  policy's other list), with Terraform's fields: `priority` and
+  `firewallPolicyRef` (Config Connector's `ComputeNetworkFirewallPolicyRef`)
+  immutable, `action` `mirror`, `do_not_mirror` or `goto_next` (a CEL
+  rule: `mirror` needs `securityProfileGroup`), `direction`,
+  `match.srcIPRanges`, `destIPRanges` and `layer4Configs`, `ruleName`,
+  `description`, `disabled`, `securityProfileGroup` (a string, as the
+  API takes it: Terraform has no reference either), `tlsInspect` and
+  `targetSecureTags`; `status.externalRef`
+  (`.../firewallPolicies/{policy}/packetMirroringRules/{priority}`, ours)
+  and `status.ruleTupleCount`. The pinned `google.golang.org/api`
+  compute/v1 client has no packet mirroring calls and the generated
+  `cloud.google.com/go` client leaves an empty list out, so the patch is
+  a plain JSON POST through the same transport, with an emptied list sent
+  as `[]` (as the firewall rule's patch learned live), waiting on the
+  global operation; add, get and remove use the generated client. A
+  missing priority is taken from a 400 that says "does not contain a ...
+  at priority" (assumed from the firewall rules; see the live row). The
+  test runs a `do_not_mirror` and a `goto_next` rule live; a `mirror`
+  rule needs a security profile group with a custom mirroring profile and
+  a mirroring endpoint group, so it runs on the fake only. Generated: the
+  CRD and deepcopy (controller-gen, 511 lines); `hack/scaffold-kind.sh`
+  does not fit a rule inside a policy. Copied: none from upstream; the
+  1,075 hand-kept lines (the mock patch included) are written here, 32% of
+  the kind's lines generated. mockgcp patch 0031 (`docs/fake-cloud.md`).
+  Live: see `docs/live-runs.md`.
 - `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
   decision 13: a rule of a global network firewall policy, at its
   priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
@@ -1459,6 +1502,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
+33. `ComputeNetworkFirewallPolicyPacketMirroringRule`: a live `mirror`
+    rule (a security profile group with a custom mirroring profile and a
+    mirroring endpoint group); the hierarchical policy's packet mirroring
+    rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
+    pending the test folder); a regional kind, which the API has no rule
+    calls for; `targetSecureTags`, which no test sets.
 
 ## 8. Decisions
 

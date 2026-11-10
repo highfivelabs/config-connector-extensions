@@ -7,18 +7,21 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
-`IAMDenyPolicy` and `ComputeOrganizationSecurityPolicyRule`. Read
+`IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
+`ComputeNetworkFirewallPolicyPacketMirroringRule`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the global network firewall policy rule PR (decision 13's
-`ComputeNetworkFirewallPolicyRule`, cut from `main` at `f7f9aec`):
-thirty-two kinds (`README.md`, design.md's intro),
-mockgcp patches 0001 to 0028 (`UPSTREAM.md` and `upstream.yaml`, which
-must agree: `task upstream:yaml-check`; the next free number is
-**0029**), the live-test switch and the Taskfile (`docs/live-runs.md`,
+After the packet mirroring rule PR (foundation item 2's
+`ComputeNetworkFirewallPolicyPacketMirroringRule`, cut from `main` at
+`2827c0f`): thirty-three kinds (`README.md`, design.md's intro),
+mockgcp patches 0001 to 0028 and 0031 (`UPSTREAM.md` and `upstream.yaml`, which
+must agree: `task upstream:yaml-check`; 0029 is taken twice by open pull
+requests, the principal access boundary policy's and the billing account
+sink's, and 0030 by the SCC mute config's, so the next free number is
+**0032**; check the open branches before taking one), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
@@ -103,8 +106,24 @@ mockgcp has no service for it, so patch 0029),
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
 alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
-access), 16 (Security Command Center, three parents), then packet
-mirroring rules and on down `docs/coverage/foundation.md`.
+access), 16 (Security Command Center, three parents). Packet mirroring
+rules: the global network policy's is built
+(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0031); the
+hierarchical policy's has rule calls in the beta API only (live pending
+the test folder) and the regional policy's has none in any API version.
+Then on down `docs/coverage/foundation.md`.
+
+What `ComputeNetworkFirewallPolicyPacketMirroringRule` taught: read the
+Discovery documents for which calls exist where
+(`.cache/coverage/discovery/compute.{v1,beta,alpha}.json`) before taking
+a queue item's list of kinds as buildable. When the pinned
+`google.golang.org/api` client lacks a call and the generated
+`cloud.google.com/go` client cannot send an empty list, a plain JSON
+request through `htransport.NewClient(ctx, opts...)` (the same transport
+and credentials, so mockgcp still answers it) is smaller than moving a
+dependency. A kind with no API resource of its own needs a line in
+`hack/coverage/overrides.yaml` (`subresources`), or the coverage report
+counts it outside the denominator.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our

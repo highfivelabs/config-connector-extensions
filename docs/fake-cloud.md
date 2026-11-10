@@ -178,6 +178,17 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   organization), and none of the rule's contents: any principal or
   permission string and any `denialCondition` is stored. Nothing it
   stores is enforced.
+- **Packet mirroring rules of a global network firewall policy in
+  mockgcp** (patch 0031, ours, for
+  `ComputeNetworkFirewallPolicyPacketMirroringRule`). It serves add, get,
+  patch and remove by priority in the policy's `packetMirroringRules`; a
+  missing priority is a 400 worded after the firewall rules' answer, not
+  seen from this API; a patch replaces the rule whole, where the real API
+  is assumed to keep lists the body leaves out (the controller sends
+  `[]`). It checks nothing in the rule: a `mirror` rule's security
+  profile group need not exist, and the API's rules for which matchers
+  and directions a packet mirroring rule takes are not modelled. It adds
+  no default packet mirroring rules to a new policy.
 - **Organization security policies in mockgcp** (upstream's,
   unpatched, for `ComputeOrganizationSecurityPolicy` and its
   association). It serves insert (a new numeric ID, the parent as sent,
