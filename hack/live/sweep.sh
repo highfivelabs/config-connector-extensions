@@ -255,11 +255,22 @@ while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "HA VPN gateway" "${name} ${region}" "${G[@]}" compute vpn-gateways delete "${name}" --region="${region}"
 done <<<"${rows}"
-names="$("${G[@]}" compute external-vpn-gateways list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
-while read -r name; do
+# externalVpnGateways.list refuses a name~ filter (a 400, "Invalid list
+# filter expression", seen live), so the names and ages are matched here
+# as cfilter would.
+rows="$("${G[@]}" compute external-vpn-gateways list --verbosity=error --format='value(name,creationTimestamp)')"
+while read -r name made; do
   [[ -n "${name}" ]] || continue
+  if [[ -n "${run}" ]]; then
+    [[ "${name}" == "${run}-"* ]] || continue
+  else
+    [[ "${name}" == "${PREFIX}"* ]] || continue
+    if [[ "${mode}" == "sweep" ]]; then
+      [[ "$(date -u -d "${made}" +%s 2>/dev/null || echo 0)" -lt "$(date -u -d "${cutoff}" +%s 2>/dev/null || echo 0)" ]] || continue
+    fi
+  fi
   act "external VPN gateway" "${name}" "${G[@]}" compute external-vpn-gateways delete "${name}"
-done <<<"${names}"
+done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
