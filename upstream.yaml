@@ -87,7 +87,7 @@ patches:
   - {file: patches/k8s-config-connector/0024-mockgcp-iam-service-accounts-list-undelete.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0026-mockgcp-networksecurity-organization-security-profiles.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0027-mockgcp-compute-router-md5-keys-unread.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0027-mockgcp-compute-routers-md5-keys-and-insert.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request

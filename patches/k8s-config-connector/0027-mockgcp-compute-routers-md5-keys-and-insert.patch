@@ -1,0 +1,52 @@
+config-connector-extensions patch 0027: mockgcp's routers as the real API: MD5 key values unread, one feature per insert.
+
+For compute.gcp.hfl.dev ComputeRouter. Written here:
+- a router read with routers.get carries each of its
+  md5AuthenticationKeys by name only, without the key, as the real API
+  does (Terraform's google_compute_router_peer reads it so: "key value
+  is not returned as it is a sensitive field"); the stored router keeps
+  the key;
+- routers.insert refuses a router with more than one of interfaces, BGP
+  peers, NATs and MD5 keys with the API's own 400, "Creating a router
+  with multiple features is currently unsupported." (a live run,
+  docs/live-runs.md); which combinations the API allows is not known.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockcompute/routersv1.go b/mockgcp/mockcompute/routersv1.go
+index 7c11d712..a7319814 100644
+--- a/mockgcp/mockcompute/routersv1.go
++++ b/mockgcp/mockcompute/routersv1.go
+@@ -55,6 +55,12 @@ func (s *RoutersV1) Get(ctx context.Context, req *pb.GetRouterRequest) (*pb.Rout
+ 		obj.EncryptedInterconnectRouter = nil
+ 	}
+ 
++	// The API keeps an MD5 authentication key's value but never returns it:
++	// a read has each key's name only.
++	for _, key := range obj.Md5AuthenticationKeys {
++		key.Key = nil
++	}
++
+ 	return obj, nil
+ }
+ 
+@@ -67,6 +73,20 @@ func (s *RoutersV1) Insert(ctx context.Context, req *pb.InsertRouterRequest) (*p
+ 
+ 	fqn := name.String()
+ 
++	// The API refuses to insert a router with more than one feature (seen
++	// with interfaces, BGP peers, NATs and MD5 keys together; which
++	// combinations it allows is not known, so any two are refused here).
++	r := req.GetRouterResource()
++	features := 0
++	for _, n := range []int{len(r.Interfaces), len(r.BgpPeers), len(r.Nats), len(r.Md5AuthenticationKeys)} {
++		if n > 0 {
++			features++
++		}
++	}
++	if features > 1 {
++		return nil, status.Errorf(codes.InvalidArgument, "Creating a router with multiple features is currently unsupported.")
++	}
++
+ 	id := s.generateID()
+ 
+ 	obj := proto.CloneOf(req.GetRouterResource())

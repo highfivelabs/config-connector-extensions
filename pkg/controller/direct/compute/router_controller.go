@@ -209,9 +209,14 @@ func (a *RouterAdapter) Create(ctx context.Context, createOp *directbase.CreateO
 	log := klog.FromContext(ctx)
 	log.V(2).Info("creating ComputeRouter", "name", a.id)
 
+	// The API refuses to insert a router with more than one of its
+	// features ("Creating a router with multiple features is currently
+	// unsupported", seen live), so the router is inserted without its
+	// interfaces, peers, NATs and keys, and they are written next with
+	// routers.update, as an update writes them.
 	resource := proto.CloneOf(a.desired)
 	resource.Name = proto.String(a.id.Router)
-	a.withKeyValues(resource)
+	resource.Interfaces, resource.BgpPeers, resource.Nats, resource.Md5AuthenticationKeys = nil, nil, nil, nil
 
 	req := &pb.InsertRouterRequest{
 		Project:        a.id.Project,
@@ -233,8 +238,37 @@ func (a *RouterAdapter) Create(ctx context.Context, createOp *directbase.CreateO
 	if err != nil {
 		return fmt.Errorf("getting ComputeRouter %s: %w", a.id, err)
 	}
+	if len(a.desired.Interfaces)+len(a.desired.BgpPeers)+len(a.desired.Nats)+len(a.desired.Md5AuthenticationKeys) > 0 {
+		a.actual = created
+		if created, err = a.write(ctx); err != nil {
+			return err
+		}
+	}
 
 	return a.updateStatus(ctx, createOp, created, a.keysVersion)
+}
+
+// write puts updateBody with routers.update, waits, and reads the router.
+func (a *RouterAdapter) write(ctx context.Context) (*pb.Router, error) {
+	req := &pb.UpdateRouterRequest{
+		Project:        a.id.Project,
+		Region:         a.id.Region,
+		Router:         a.id.Router,
+		RouterResource: a.updateBody(),
+	}
+	op, err := a.gcpClient.Update(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("updating compute ComputeRouter %s: %w", a.id.String(), err)
+	}
+	if err := op.Wait(ctx); err != nil {
+		return nil, fmt.Errorf("compute ComputeRouter %s waiting for update: %w", a.id.String(), err)
+	}
+	klog.FromContext(ctx).V(2).Info("successfully updated compute ComputeRouter", "name", a.id.String())
+	updated, err := a.get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting ComputeRouter %s: %w", a.id, err)
+	}
+	return updated, nil
 }
 
 func (a *RouterAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
@@ -259,24 +293,9 @@ func (a *RouterAdapter) Update(ctx context.Context, updateOp *directbase.UpdateO
 	}
 
 	updateOp.RecordUpdatingEvent()
-	req := &pb.UpdateRouterRequest{
-		Project:        a.id.Project,
-		Region:         a.id.Region,
-		Router:         a.id.Router,
-		RouterResource: a.updateBody(),
-	}
-	op, err := a.gcpClient.Update(ctx, req)
+	updated, err := a.write(ctx)
 	if err != nil {
-		return fmt.Errorf("updating compute ComputeRouter %s: %w", a.id.String(), err)
-	}
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("compute ComputeRouter %s waiting for update: %w", a.id.String(), err)
-	}
-	log.V(2).Info("successfully updated compute ComputeRouter", "name", a.id.String())
-
-	updated, err := a.get(ctx)
-	if err != nil {
-		return fmt.Errorf("getting ComputeRouter %s: %w", a.id, err)
+		return err
 	}
 	return a.updateStatus(ctx, updateOp, updated, a.keysVersion)
 }

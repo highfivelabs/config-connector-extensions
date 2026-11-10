@@ -164,7 +164,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
 - **Cloud Routers in mockgcp** (patch 0027, ours, for `ComputeRouter`).
   `routers.get` returns an MD5 key by name only, as the real API does;
   the fake keeps the value, so a test cannot see what value was sent
-  (the real API cannot be asked either). mockgcp's `routers.update`
+  (the real API cannot be asked either). `routers.insert` refuses a
+  router with more than one of interfaces, BGP peers, NATs and MD5 keys,
+  with the API's own 400 (seen live with all four); which pairs the real
+  API allows is not known, so the fake refuses any two. mockgcp's `routers.update`
   stores the body as sent: it does not check that a peer's interface,
   its MD5 key name, or a key's single use exist; it does not fill in a
   peer's `ipAddress`, BFD, `enable` or `managementType`, a NAT's
