@@ -7,15 +7,16 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
-`IAMDenyPolicy` and `ComputeOrganizationSecurityPolicyRule`. Read
+`IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
+`DNSResponsePolicy`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the global network firewall policy rule PR (decision 13's
-`ComputeNetworkFirewallPolicyRule`, cut from `main` at `f7f9aec`):
-thirty-two kinds (`README.md`, design.md's intro),
+After the DNS response policy PR (decision 13's `DNSResponsePolicy`,
+cut from `main` at `748bff2`, beside the open principal access boundary
+PR, which takes patch 0029): thirty-three kinds (`README.md`, design.md's intro),
 mockgcp patches 0001 to 0028 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
 **0029**), the live-test switch and the Taskfile (`docs/live-runs.md`,
@@ -23,8 +24,10 @@ must agree: `task upstream:yaml-check`; the next free number is
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
 which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
-its association and its rule (organization and folder only), and `IAMDenyPolicy`,
-which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`).
+its association and its rule (organization and folder only), `IAMDenyPolicy`,
+which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
+and `DNSResponsePolicy`, which waits on Cloud DNS in `hfl-dev-514205`
+(`dns.googleapis.com` and `roles/dns.admin`; `E2E_DNS_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -97,14 +100,28 @@ begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
-are built. Next the rest of decision 13:
-`IAMPrincipalAccessBoundaryPolicy` (upstream has a direct controller;
-mockgcp has no service for it, so patch 0029),
-`DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
-alpha types and controllers),
+and `DNSResponsePolicy` (`dns.gcp.hfl.dev/v1beta1`) are built. Next the
+rest of decision 13: `IAMPrincipalAccessBoundaryPolicy` (its own PR,
+patch 0029), then `DNSResponsePolicyRule` (upstream has its types,
+identity, reference and fuzzer but a Terraform-only controller, and
+mockgcp serves no rules: write the controller after the policy's and add
+a mockgcp patch; the sweeper must delete a policy's rules before it),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.
+
+What `DNSResponsePolicy` taught: a new group (`dns.gcp.hfl.dev`) is a
+`groupversion_info.go` and `doc.go` copied, the kind added to
+`pkg/controller/controllers.go` (both lists) and nothing else; the
+generator picks it up. Upstream's `NoProto` fuzzers (for kinds on the
+`google.golang.org/api` REST types) run as a test the same way as the
+proto ones (`FuzzSpec` and `FuzzStatus`). Upstream's direct DNS kinds
+leave `labels` out; ours takes `metadata.labels`
+(`label.NewGCPLabelsFromK8sLabels`), so live objects carry the run's
+labels with no spec field. Check what the live project has before
+writing a live test: `gcloud projects get-iam-policy` and `gcloud
+services list` (both read-only) showed no DNS API or role, so the test
+and sweeper sit behind `E2E_DNS_ADMIN`.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our

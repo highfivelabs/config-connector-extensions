@@ -101,6 +101,7 @@ refuses any project but the ones listed.
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
+| `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
@@ -206,6 +207,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | IAMDenyPolicy | PASS | pending, needs `iam.denypolicies.*` (Deny Admin, `roles/iam.denyAdmin`, granted on an organization) for `cce-live-tests`; then `E2E_IAM_DENY_ADMIN=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation | PASS | pending, needs the test folder (both act on an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
+| 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -262,6 +264,16 @@ KINDS=iam`. The test's policy is on the run's project and denies
 but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
+
+`DNSResponsePolicy` (package `dns`) waits on Cloud DNS in the project:
+`dns.googleapis.com` is not on in `hfl-dev-514205` and `cce-live-tests`
+has no DNS role (checked 2026-11-10). Until both are, a live `dns` run
+skips the test and the sweeper leaves response policies alone (listing
+them needs the API and the role). With them:
+`E2E_DNS_ADMIN=true task test-live PROJECT=hfl-dev-514205 KINDS=dns`.
+The test binds a policy to two networks of its own, unbinds one,
+deletes it (unbinding first) and abandons and then acquires another; the
+sweeper unbinds and deletes policies whose name carries a run ID.
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

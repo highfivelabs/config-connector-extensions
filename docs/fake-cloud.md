@@ -178,6 +178,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   organization), and none of the rule's contents: any principal or
   permission string and any `denialCondition` is stored. Nothing it
   stores is enforced.
+- **DNS response policies in mockgcp** (upstream's, unpatched, for
+  `DNSResponsePolicy`). It serves create (a new numeric ID), get, a
+  whole-policy update and patch (both replace the stored policy with the
+  body: a patch of `networks` alone drops the description and labels,
+  where the real API keeps them), and delete. It does not check that a
+  bound network or GKE cluster exists, does not refuse to delete a
+  policy still bound to a network (upstream's controller unbinds first,
+  as ours does), and its list answers empty. Labels are stored as sent.
 - **Organization security policies in mockgcp** (upstream's,
   unpatched, for `ComputeOrganizationSecurityPolicy` and its
   association). It serves insert (a new numeric ID, the parent as sent,
