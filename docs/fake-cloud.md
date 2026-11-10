@@ -98,6 +98,15 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   and each service's own choice of GET or POST for the read, its API
   version and its etag error (409 or 412), which is why the rows of the
   resource table beyond the three with a live run are unproven.
+- **Global network firewall policy rules in mockgcp** (upstream's,
+  unpatched, for `ComputeNetworkFirewallPolicyRule`). `getRule`,
+  `addRule`, `patchRule` and `removeRule` by priority; a priority with no
+  rule answers the real API's 400 "does not contain a rule at
+  priority N". What it cannot show is what the regional rules' note
+  below says of them: `addRule` does not refuse a priority in use, no
+  rule's fields are checked (including `srcNetworkContext` against
+  `srcNetworks`), `patchRule` replaces the rule whole where the real API
+  keeps a list the body leaves out, and no rule is ever "not ready".
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones; their rules are patch 0020). The fingerprint is
   not checked on patch, a policy is deleted even when associated, and

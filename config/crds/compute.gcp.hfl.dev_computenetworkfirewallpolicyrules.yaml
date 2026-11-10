@@ -1,0 +1,373 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computenetworkfirewallpolicyrules.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeNetworkFirewallPolicyRule
+    listKind: ComputeNetworkFirewallPolicyRuleList
+    plural: computenetworkfirewallpolicyrules
+    shortNames:
+    - hflcomputenetworkfirewallpolicyrule
+    - hflcomputenetworkfirewallpolicyrules
+    singular: computenetworkfirewallpolicyrule
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: ComputeNetworkFirewallPolicyRule is a rule of a global network
+          firewall policy.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ComputeNetworkFirewallPolicyRuleSpec is one rule of a global
+              network firewall policy. A rule is identified by its priority in the
+              policy.
+            properties:
+              action:
+                description: 'What to do when the rule matches: allow, deny, goto_next,
+                  or apply_security_profile_group.'
+                type: string
+              description:
+                description: An optional description of the rule.
+                type: string
+              direction:
+                description: 'The direction the rule applies to: INGRESS or EGRESS.'
+                enum:
+                - INGRESS
+                - EGRESS
+                type: string
+              disabled:
+                description: Whether the rule is switched off. Unset means it is enforced.
+                type: boolean
+              enableLogging:
+                description: Whether matches are logged. Not allowed on a goto_next
+                  rule.
+                type: boolean
+              firewallPolicyRef:
+                description: 'The policy the rule belongs to: a Config Connector ComputeNetworkFirewallPolicy
+                  by name, or projects/{project}/global/firewallPolicies/{policy}.
+                  Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ComputeNetworkFirewallPolicy
+                      resource. Should be in the format "projects/{{projectID}}/global/firewallPolicies/{{firewallPolicyID}}".
+                    type: string
+                  name:
+                    description: The name of a ComputeNetworkFirewallPolicy resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ComputeNetworkFirewallPolicy resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: firewallPolicyRef is immutable
+                  rule: self == oldSelf
+              match:
+                description: What traffic the rule matches.
+                properties:
+                  destAddressGroups:
+                    description: Address groups for the destination (egress rules
+                      only).
+                    items:
+                      type: string
+                    type: array
+                  destFqdns:
+                    description: Domain names for the destination (egress rules only).
+                    items:
+                      type: string
+                    type: array
+                  destIPRanges:
+                    items:
+                      type: string
+                    type: array
+                  destNetworkContext:
+                    description: 'The network context of the destination (egress rules):
+                      INTERNET or NON_INTERNET.'
+                    type: string
+                  destRegionCodes:
+                    description: Country codes for the destination (egress rules only).
+                    items:
+                      type: string
+                    type: array
+                  destThreatIntelligences:
+                    description: Google Cloud Threat Intelligence lists for the destination.
+                    items:
+                      type: string
+                    type: array
+                  layer4Configs:
+                    description: Pairs of IP protocols and ports the rule matches.
+                    items:
+                      description: NetworkFirewallPolicyRuleLayer4Config is an IP
+                        protocol and its ports.
+                      properties:
+                        ipProtocol:
+                          description: tcp, udp, icmp, esp, ah, ipip, sctp, or the
+                            protocol number.
+                          type: string
+                        ports:
+                          description: Ports or port ranges (80, 8000-8080), for tcp
+                            and udp. Unset means every port.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - ipProtocol
+                      type: object
+                    minItems: 1
+                    type: array
+                  srcAddressGroups:
+                    description: Address groups for the source (ingress rules only).
+                    items:
+                      type: string
+                    type: array
+                  srcFqdns:
+                    description: Domain names for the source (ingress rules only).
+                    items:
+                      type: string
+                    type: array
+                  srcIPRanges:
+                    items:
+                      type: string
+                    type: array
+                  srcNetworkContext:
+                    description: 'The network context of the source (ingress rules):
+                      INTERNET, NON_INTERNET, VPC_NETWORKS or INTRA_VPC.'
+                    type: string
+                  srcRegionCodes:
+                    description: Country codes for the source (ingress rules only).
+                    items:
+                      type: string
+                    type: array
+                  srcSecureTags:
+                    description: Secure tags (tagValues/{id}) the source must have.
+                    items:
+                      description: NetworkFirewallPolicyRuleSecureTag is a tag value.
+                      properties:
+                        name:
+                          description: The tag value, as tagValues/{id}.
+                          pattern: ^tagValues/[0-9]+$
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  srcThreatIntelligences:
+                    description: Google Cloud Threat Intelligence lists for the source.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - layer4Configs
+                type: object
+              priority:
+                description: 'The rule''s priority, 0 to 2147483647: rules are evaluated
+                  from the lowest number (the highest priority) to the highest, and
+                  a policy has one rule at each priority. Immutable.'
+                format: int64
+                maximum: 2147483647
+                minimum: 0
+                type: integer
+                x-kubernetes-validations:
+                - message: priority is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: 'The project of the policy. Optional: the policy names
+                  its project. When set, it must be the policy''s project. Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              ruleName:
+                description: An optional name for the rule; it is not an identifier
+                  and can change.
+                type: string
+              targetSecureTags:
+                description: Secure tags (tag values, tagValues/{id}) whose instances
+                  the rule applies to. Not together with targetServiceAccounts.
+                items:
+                  description: NetworkFirewallPolicyRuleSecureTag is a tag value.
+                  properties:
+                    name:
+                      description: The tag value, as tagValues/{id}.
+                      pattern: ^tagValues/[0-9]+$
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+              targetServiceAccounts:
+                description: Service accounts whose instances the rule applies to.
+                  Not together with targetSecureTags. With neither, the rule applies
+                  to every instance on the policy's networks.
+                items:
+                  description: IAMServiceAccountRef is a reference to a GCP IAMServiceAccount.
+                  oneOf:
+                  - not:
+                      required:
+                      - external
+                    required:
+                    - name
+                  - not:
+                      anyOf:
+                      - required:
+                        - name
+                      - required:
+                        - namespace
+                    required:
+                    - external
+                  properties:
+                    external:
+                      description: A reference to an externally managed IAMServiceAccount
+                        resource. Should be in the format "{{serviceAccountID}}@{{projectID}}.iam.gserviceaccount.com".
+                      type: string
+                    name:
+                      description: The name of an IAMServiceAccount resource.
+                      type: string
+                    namespace:
+                      description: The namespace of an IAMServiceAccount resource.
+                      type: string
+                  type: object
+                type: array
+            required:
+            - action
+            - direction
+            - firewallPolicyRef
+            - match
+            - priority
+            type: object
+          status:
+            description: ComputeNetworkFirewallPolicyRuleStatus defines the observed
+              state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: 'The rule, as projects/{project}/global/firewallPolicies/{policy}/rules/{priority}
+                  (not an API resource name: the API addresses a rule by its priority).'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              ruleTupleCount:
+                description: How complex the rule is, counted by the API against the
+                  policy's limit.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -13,9 +13,9 @@ this file only adds to them.
 
 ## Where things stand
 
-After the hierarchical security policy rule PR (decision 13's
-`ComputeOrganizationSecurityPolicyRule`, cut from `main` at `e5e15ba`):
-thirty-one kinds (`README.md`, design.md's intro),
+After the global network firewall policy rule PR (decision 13's
+`ComputeNetworkFirewallPolicyRule`, cut from `main` at `f7f9aec`):
+thirty-two kinds (`README.md`, design.md's intro),
 mockgcp patches 0001 to 0028 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
 **0029**), the live-test switch and the Taskfile (`docs/live-runs.md`,
@@ -95,14 +95,23 @@ refused; a CEL rule allows one link per interface). Decision 13 has
 begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 `v1beta1`, which the charts allow), `ComputeOrganizationSecurityPolicy`
 and `ComputeOrganizationSecurityPolicyAssociation` and
-`ComputeOrganizationSecurityPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
+`ComputeOrganizationSecurityPolicyRule` and
+`ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
 are built. Next the rest of decision 13:
-`ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
+`IAMPrincipalAccessBoundaryPolicy` (upstream has a direct controller;
+mockgcp has no service for it, so patch 0029),
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
 alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.
+
+What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
+was Terraform-only (no `apis/` types), so it was adapted from our
+regional rule; a kind that references a Config Connector kind our
+manager does not run (here `ComputeNetworkFirewallPolicy`) adds that CRD
+to `pkg/test/mockenv` and the test writes the object's
+`status.selfLink` as Config Connector would.
 
 What `ComputeOrganizationSecurityPolicyRule` taught: check upstream's
 `apis/` and `static_config.go`, not only the handoff: a kind called

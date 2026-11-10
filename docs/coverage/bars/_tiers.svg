@@ -6,7 +6,7 @@
 <g clip-path="url(#c0)">
 <rect x="10" y="21" width="620" height="14" fill="#d0d7de"/>
 <rect x="10" y="21" width="282.48" height="14" fill="#2f81f7"/>
-<rect x="292.48" y="21" width="5.27" height="14" fill="#2da44e"/>
+<rect x="292.48" y="21" width="5.38" height="14" fill="#2da44e"/>
 </g>
 <clipPath id="c1"><rect x="10" y="61" width="620" height="14" rx="3"/></clipPath>
 <text x="10" y="56" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 2: security-adjacent and application (68 services, 23615 attributes): <tspan fill="#0969da">39.2%</tspan> / <tspan fill="#1a7f37">0.3%</tspan> / <tspan fill="#57606a">60.5%</tspan></text>
