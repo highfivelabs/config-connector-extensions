@@ -1,0 +1,365 @@
+config-connector-extensions patch 0029: mockgcp serves IAM v3 principal access boundary policies.
+
+For iam.gcp.hfl.dev IAMPrincipalAccessBoundaryPolicy. Written here:
+mockiam/principalaccessboundarypolicies.go registers the
+PrincipalAccessBoundaryPolicies gRPC server and, since mockgcp has no
+generated HTTP gateway for google.iam.v3, adds the REST paths
+(/v3/organizations/*/locations/*/principalAccessBoundaryPolicies, and
+/v3/.../operations/*) to the mux by hand, calling the server's methods.
+Create, get, list, update (with an update mask) and delete; create,
+update and delete answer a finished operation. The etag is computed;
+an update with a stale etag is refused. Not served:
+searchPolicyBindings. Upstream candidate: yes.
+
+diff --git a/mockgcp/mockiam/service.go b/mockgcp/mockiam/service.go
+--- a/mockgcp/mockiam/service.go
++++ b/mockgcp/mockiam/service.go
+@@ -26,6 +26,7 @@
+ 	"google.golang.org/protobuf/proto"
+ 
+ 	pbv2 "cloud.google.com/go/iam/apiv2/iampb"
++	pbv3 "cloud.google.com/go/iam/apiv3/iampb"
+ 	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common"
+ 	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/httpmux"
+ 	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/operations"
+@@ -69,6 +70,7 @@
+ func (s *MockService) Register(grpcServer *grpc.Server) {
+ 	pb.RegisterIAMServer(grpcServer, &IAMServer{MockService: s})
+ 	pbv2.RegisterPoliciesServer(grpcServer, &IAMV2PoliciesServer{MockService: s})
++	pbv3.RegisterPrincipalAccessBoundaryPoliciesServer(grpcServer, &IAMV3PrincipalAccessBoundaryPoliciesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolNamespacesServer(grpcServer, &WorkloadIdentityPoolNamespacesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolManagedIdentitiesServer(grpcServer, &WorkloadIdentityPoolManagedIdentitiesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolProviderKeysServer(grpcServer, &WorkloadIdentityPoolProviderKeysServer{MockService: s})
+@@ -81,6 +83,8 @@
+ 		pbwip.RegisterWorkloadIdentityPoolNamespacesHandler,
+ 		pbwip.RegisterWorkloadIdentityPoolManagedIdentitiesHandler,
+ 		pbwip.RegisterWorkloadIdentityPoolProviderKeysHandler,
++		s.registerPrincipalAccessBoundaryPoliciesHTTP,
++		s.operations.RegisterOperationsPath("/v3/{prefix=**}/operations/{name}"),
+ 		s.operations.RegisterOperationsPath("/v1/{prefix=**}/operations/{name}"))
+ 	if err != nil {
+ 		return nil, err
+diff --git a/mockgcp/mockiam/principalaccessboundarypolicies.go b/mockgcp/mockiam/principalaccessboundarypolicies.go
+new file mode 100644
+index 00000000..db7cae17
+--- /dev/null
++++ b/mockgcp/mockiam/principalaccessboundarypolicies.go
+@@ -0,0 +1,318 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockiam
++
++// Written by High Five Labs (config-connector-extensions patch 0029): IAM v3
++// principal access boundary policies, which mockgcp did not serve. mockgcp
++// has no generated HTTP gateway for google.iam.v3, so the REST paths are
++// added to the mux by hand (registerPrincipalAccessBoundaryPoliciesHTTP) and
++// call the gRPC server's methods directly. Create, update and delete answer
++// a finished operation, as the IAM v2 deny policies do here.
++
++import (
++	"context"
++	"crypto/md5"
++	"encoding/base64"
++	"fmt"
++	"io"
++	"net/http"
++	"strings"
++	"time"
++
++	pb "cloud.google.com/go/iam/apiv3/iampb"
++	"github.com/google/uuid"
++	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
++	longrunningpb "google.golang.org/genproto/googleapis/longrunning"
++	"google.golang.org/grpc"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/encoding/protojson"
++	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/types/known/emptypb"
++	"google.golang.org/protobuf/types/known/fieldmaskpb"
++	"google.golang.org/protobuf/types/known/timestamppb"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/httpmux"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++type IAMV3PrincipalAccessBoundaryPoliciesServer struct {
++	*MockService
++	pb.UnimplementedPrincipalAccessBoundaryPoliciesServer
++}
++
++// pabParent is organizations/{org}/locations/{location}.
++func parsePABParent(parent string) (string, error) {
++	tokens := strings.Split(parent, "/")
++	if len(tokens) == 4 && tokens[0] == "organizations" && tokens[2] == "locations" {
++		return parent, nil
++	}
++	return "", status.Errorf(codes.InvalidArgument, "parent %q is not organizations/{organization}/locations/{location}", parent)
++}
++
++func parsePABName(name string) (string, error) {
++	tokens := strings.Split(name, "/")
++	if len(tokens) == 6 && tokens[0] == "organizations" && tokens[2] == "locations" && tokens[4] == "principalAccessBoundaryPolicies" {
++		return name, nil
++	}
++	return "", status.Errorf(codes.InvalidArgument, "name %q is not a principal access boundary policy name", name)
++}
++
++func pabEtag(obj *pb.PrincipalAccessBoundaryPolicy) string {
++	c := proto.CloneOf(obj)
++	c.Etag = ""
++	b, _ := proto.MarshalOptions{Deterministic: true}.Marshal(c)
++	sum := md5.Sum(b)
++	return "W/\"" + base64.StdEncoding.EncodeToString(sum[:]) + "\""
++}
++
++func (s *IAMV3PrincipalAccessBoundaryPoliciesServer) GetPrincipalAccessBoundaryPolicy(ctx context.Context, req *pb.GetPrincipalAccessBoundaryPolicyRequest) (*pb.PrincipalAccessBoundaryPolicy, error) {
++	fqn, err := parsePABName(req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	obj := &pb.PrincipalAccessBoundaryPolicy{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "Requested entity was not found.")
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++func (s *IAMV3PrincipalAccessBoundaryPoliciesServer) ListPrincipalAccessBoundaryPolicies(ctx context.Context, req *pb.ListPrincipalAccessBoundaryPoliciesRequest) (*pb.ListPrincipalAccessBoundaryPoliciesResponse, error) {
++	parent, err := parsePABParent(req.GetParent())
++	if err != nil {
++		return nil, err
++	}
++	response := &pb.ListPrincipalAccessBoundaryPoliciesResponse{}
++	kind := (&pb.PrincipalAccessBoundaryPolicy{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: parent + "/principalAccessBoundaryPolicies/"}, func(obj proto.Message) error {
++		response.PrincipalAccessBoundaryPolicies = append(response.PrincipalAccessBoundaryPolicies, obj.(*pb.PrincipalAccessBoundaryPolicy))
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return response, nil
++}
++
++func (s *IAMV3PrincipalAccessBoundaryPoliciesServer) CreatePrincipalAccessBoundaryPolicy(ctx context.Context, req *pb.CreatePrincipalAccessBoundaryPolicyRequest) (*longrunningpb.Operation, error) {
++	parent, err := parsePABParent(req.GetParent())
++	if err != nil {
++		return nil, err
++	}
++	if req.GetPrincipalAccessBoundaryPolicyId() == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "principal_access_boundary_policy_id is required")
++	}
++	fqn := parent + "/principalAccessBoundaryPolicies/" + req.GetPrincipalAccessBoundaryPolicyId()
++	now := time.Now()
++	obj := proto.CloneOf(req.GetPrincipalAccessBoundaryPolicy())
++	if obj == nil {
++		obj = &pb.PrincipalAccessBoundaryPolicy{}
++	}
++	obj.Name = fqn
++	obj.Uid = uuid.NewString()
++	obj.CreateTime = timestamppb.New(now)
++	obj.UpdateTime = timestamppb.New(now)
++	if obj.Details == nil {
++		obj.Details = &pb.PrincipalAccessBoundaryPolicyDetails{}
++	}
++	if obj.Details.EnforcementVersion == "" {
++		obj.Details.EnforcementVersion = "1"
++	}
++	obj.Etag = pabEtag(obj)
++	if err := s.storage.Create(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.AlreadyExists {
++			return nil, status.Errorf(codes.AlreadyExists, "Principal access boundary policy %q already exists.", fqn)
++		}
++		return nil, err
++	}
++	md := &pb.OperationMetadata{CreateTime: timestamppb.New(now), EndTime: timestamppb.New(now), Target: fqn, Verb: "create", ApiVersion: "v3"}
++	return s.operations.DoneLRO(ctx, parent, md, obj)
++}
++
++func (s *IAMV3PrincipalAccessBoundaryPoliciesServer) UpdatePrincipalAccessBoundaryPolicy(ctx context.Context, req *pb.UpdatePrincipalAccessBoundaryPolicyRequest) (*longrunningpb.Operation, error) {
++	fqn, err := parsePABName(req.GetPrincipalAccessBoundaryPolicy().GetName())
++	if err != nil {
++		return nil, err
++	}
++	obj := &pb.PrincipalAccessBoundaryPolicy{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	in := req.GetPrincipalAccessBoundaryPolicy()
++	if in.GetEtag() != "" && in.GetEtag() != obj.GetEtag() {
++		return nil, status.Errorf(codes.Aborted, "The etag does not match the policy's.")
++	}
++	paths := req.GetUpdateMask().GetPaths()
++	if len(paths) == 0 {
++		paths = []string{"display_name", "annotations", "details"}
++	}
++	for _, p := range paths {
++		switch p {
++		case "display_name", "displayName":
++			obj.DisplayName = in.GetDisplayName()
++		case "annotations":
++			obj.Annotations = in.GetAnnotations()
++		case "details":
++			obj.Details = in.GetDetails()
++		case "details.rules":
++			if obj.Details == nil {
++				obj.Details = &pb.PrincipalAccessBoundaryPolicyDetails{}
++			}
++			obj.Details.Rules = in.GetDetails().GetRules()
++		case "details.enforcement_version", "details.enforcementVersion":
++			if obj.Details == nil {
++				obj.Details = &pb.PrincipalAccessBoundaryPolicyDetails{}
++			}
++			obj.Details.EnforcementVersion = in.GetDetails().GetEnforcementVersion()
++		default:
++			return nil, status.Errorf(codes.InvalidArgument, "update_mask path %q is not supported", p)
++		}
++	}
++	now := time.Now()
++	obj.UpdateTime = timestamppb.New(now)
++	obj.Etag = pabEtag(obj)
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	parent := fqn[:strings.Index(fqn, "/principalAccessBoundaryPolicies/")]
++	md := &pb.OperationMetadata{CreateTime: timestamppb.New(now), EndTime: timestamppb.New(now), Target: fqn, Verb: "update", ApiVersion: "v3"}
++	return s.operations.DoneLRO(ctx, parent, md, obj)
++}
++
++func (s *IAMV3PrincipalAccessBoundaryPoliciesServer) DeletePrincipalAccessBoundaryPolicy(ctx context.Context, req *pb.DeletePrincipalAccessBoundaryPolicyRequest) (*longrunningpb.Operation, error) {
++	fqn, err := parsePABName(req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	deleted := &pb.PrincipalAccessBoundaryPolicy{}
++	if err := s.storage.Delete(ctx, fqn, deleted); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "Requested entity was not found.")
++		}
++		return nil, err
++	}
++	now := time.Now()
++	parent := fqn[:strings.Index(fqn, "/principalAccessBoundaryPolicies/")]
++	md := &pb.OperationMetadata{CreateTime: timestamppb.New(now), EndTime: timestamppb.New(now), Target: fqn, Verb: "delete", ApiVersion: "v3"}
++	return s.operations.DoneLRO(ctx, parent, md, &emptypb.Empty{})
++}
++
++// registerPrincipalAccessBoundaryPoliciesHTTP adds the v3 REST paths.
++func (s *MockService) registerPrincipalAccessBoundaryPoliciesHTTP(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
++	srv := &IAMV3PrincipalAccessBoundaryPoliciesServer{MockService: s}
++	const coll = "/v3/organizations/{org}/locations/{loc}/principalAccessBoundaryPolicies"
++	parentOf := func(p map[string]string) string {
++		return fmt.Sprintf("organizations/%s/locations/%s", p["org"], p["loc"])
++	}
++	nameOf := func(p map[string]string) string {
++		return parentOf(p) + "/principalAccessBoundaryPolicies/" + p["id"]
++	}
++	write := func(w http.ResponseWriter, r *http.Request, msg proto.Message, err error) {
++		if err != nil {
++			runtime.HTTPError(r.Context(), mux, &runtime.JSONPb{}, w, r, err)
++			return
++		}
++		b, err := httpmux.MarshalAsJSON(msg)
++		if err != nil {
++			runtime.HTTPError(r.Context(), mux, &runtime.JSONPb{}, w, r, err)
++			return
++		}
++		w.Header().Set("Content-Type", "application/json")
++		w.WriteHeader(http.StatusOK)
++		w.Write(b)
++	}
++	body := func(r *http.Request) (*pb.PrincipalAccessBoundaryPolicy, error) {
++		b, err := io.ReadAll(r.Body)
++		if err != nil {
++			return nil, status.Errorf(codes.InvalidArgument, "reading body: %v", err)
++		}
++		obj := &pb.PrincipalAccessBoundaryPolicy{}
++		if len(b) > 0 {
++			if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(b, obj); err != nil {
++				return nil, status.Errorf(codes.InvalidArgument, "parsing body: %v", err)
++			}
++		}
++		return obj, nil
++	}
++	for _, h := range []struct {
++		method, path string
++		fn           func(w http.ResponseWriter, r *http.Request, p map[string]string)
++	}{
++		{"POST", coll, func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++			obj, err := body(r)
++			if err != nil {
++				write(w, r, nil, err)
++				return
++			}
++			op, err := srv.CreatePrincipalAccessBoundaryPolicy(r.Context(), &pb.CreatePrincipalAccessBoundaryPolicyRequest{
++				Parent: parentOf(p), PrincipalAccessBoundaryPolicyId: r.URL.Query().Get("principalAccessBoundaryPolicyId"), PrincipalAccessBoundaryPolicy: obj,
++			})
++			write(w, r, op, err)
++		}},
++		{"GET", coll, func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++			resp, err := srv.ListPrincipalAccessBoundaryPolicies(r.Context(), &pb.ListPrincipalAccessBoundaryPoliciesRequest{Parent: parentOf(p)})
++			write(w, r, resp, err)
++		}},
++		{"GET", coll + "/{id}", func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++			obj, err := srv.GetPrincipalAccessBoundaryPolicy(r.Context(), &pb.GetPrincipalAccessBoundaryPolicyRequest{Name: nameOf(p)})
++			write(w, r, obj, err)
++		}},
++		{"PATCH", coll + "/{id}", func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++			obj, err := body(r)
++			if err != nil {
++				write(w, r, nil, err)
++				return
++			}
++			obj.Name = nameOf(p)
++			req := &pb.UpdatePrincipalAccessBoundaryPolicyRequest{PrincipalAccessBoundaryPolicy: obj}
++			if m := r.URL.Query().Get("updateMask"); m != "" {
++				req.UpdateMask = fieldMask(m)
++			}
++			op, err := srv.UpdatePrincipalAccessBoundaryPolicy(r.Context(), req)
++			write(w, r, op, err)
++		}},
++		{"DELETE", coll + "/{id}", func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++			op, err := srv.DeletePrincipalAccessBoundaryPolicy(r.Context(), &pb.DeletePrincipalAccessBoundaryPolicyRequest{Name: nameOf(p)})
++			write(w, r, op, err)
++		}},
++	} {
++		if err := mux.HandlePath(h.method, h.path, h.fn); err != nil {
++			return err
++		}
++	}
++	return nil
++}
++
++// fieldMask parses an updateMask query value (camelCase paths, comma
++// separated) into snake_case paths.
++func fieldMask(v string) *fieldmaskpb.FieldMask {
++	m := &fieldmaskpb.FieldMask{}
++	for _, p := range strings.Split(v, ",") {
++		var b strings.Builder
++		for _, c := range p {
++			if c >= 'A' && c <= 'Z' {
++				b.WriteByte('_')
++				c += 'a' - 'A'
++			}
++			b.WriteRune(c)
++		}
++		m.Paths = append(m.Paths, b.String())
++	}
++	return m
++}

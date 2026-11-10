@@ -99,10 +99,15 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/iam/v1beta1/doc.go` | `apis/iam/v1alpha1/doc.go` | the package |
 | `apis/iam/v1beta1/iamdenypolicy_types.go` | `apis/iam/v1alpha1/iamdenypolicy_types.go` | a stable kind (decision 13); exactly one of `projectRef`, `folderRef`, `organizationRef` (CEL); upstream's commented-out fields dropped; `folderRef` typed without its alias; group, labels, short names |
 | `apis/iam/v1beta1/iamdenypolicy_identity.go`, `iamdenypolicy_identity_test.go` | the same files in `apis/iam/v1alpha1/` | the package |
-| `apis/iam/v1beta1/types.generated.go` | `apis/iam/v1alpha1/types.generated.go` (generated upstream by controllerbuilder) | only `DenyRule`, `PolicyRule` and `Expr`, unedited; the package |
+| `apis/iam/v1beta1/types.generated.go` | `apis/iam/v1alpha1/types.generated.go` (generated upstream by controllerbuilder) | only `DenyRule`, `PolicyRule`, `Expr`, `PrincipalAccessBoundaryPolicyDetails` and `PrincipalAccessBoundaryPolicyRule`, unedited; the package |
 | `pkg/controller/direct/iam/denypolicy_controller.go` | `pkg/controller/direct/iam/iamdenypolicy/iamdenypolicy_controller.go` | `status.externalRef` written (upstream's never reaches the object), also when nothing changed; our KRM types; returned to our manager, not registered |
 | `pkg/controller/direct/iam/denypolicy_mapper.go` | `pkg/controller/direct/iam/mappers.go` | only the `IAMDenyPolicy` functions and `Expr`'s, named for the kind; our KRM types |
 | `pkg/controller/direct/iam/denypolicy_fuzzer_test.go` | `pkg/controller/direct/iam/iamdenypolicy_fuzzer.go` | a test file, run by its own test function |
+| `apis/iam/v1beta1/iamprincipalaccessboundarypolicy_types.go` | `apis/iam/v1alpha1/iamprincipalaccessboundarypolicy_types.go` | a stable kind (decision 13); `organizationRef`, `location` and `resourceID` immutable (CEL, decision 20); group, labels, short names |
+| `apis/iam/v1beta1/iamprincipalaccessboundarypolicy_identity.go`, `iamprincipalaccessboundarypolicy_reference.go`, `iamprincipalaccessboundarypolicy_identity_test.go` | `apis/iam/v1alpha1/iamprincipalaccessboundarypolicy_identity.generated.go`, `..._reference.generated.go`, `..._identity_generated_test.go` (generated upstream by controllerbuilder) | the package; the generated-code marker dropped |
+| `pkg/controller/direct/iam/principalaccessboundarypolicy_controller.go` | `pkg/controller/direct/iam/iamprincipalaccessboundarypolicy_controller.go` | our KRM types |
+| `pkg/controller/direct/iam/principalaccessboundarypolicy_mapper.go` | `pkg/controller/direct/iam/iamprincipalaccessboundarypolicy_mapper.go` | our KRM types |
+| `pkg/controller/direct/iam/principalaccessboundarypolicy_fuzzer_test.go` | `pkg/controller/direct/iam/iamprincipalaccessboundarypolicy_fuzzer.generated.go` | a test file, run by its own test function |
 | `apis/compute/v1beta1/groupversion_info.go` | `apis/compute/v1beta1/groupversion_info.go` | group `compute.gcp.hfl.dev`: our stable compute kinds (decision 13) |
 | `apis/compute/v1beta1/doc.go` | `apis/compute/v1alpha1/doc.go` | the package |
 | `apis/compute/v1beta1/computeorganizationsecuritypolicy_types.go` | `apis/compute/v1alpha1/computeorganizationsecuritypolicy_types.go` | a stable kind (decision 13); `displayName`, `parent` and `type` immutable (CEL); group, labels, short names |
@@ -169,6 +174,7 @@ flattening all three, 2026-11-08).
 | `0026-mockgcp-networksecurity-organization-security-profiles.patch` | written here: mockgcp serves the `OrganizationSecurityProfileGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/securityProfiles/{p}` and `.../securityProfileGroups/{g}`) with its own server, since the project service's parses only project names | offered: GoogleCloudPlatform/k8s-config-connector#15289 |
 | `0027-mockgcp-compute-routers-as-the-api.patch` | written here: `routers.get` returns each MD5 authentication key by name, without its value, and `routers.insert` and `routers.update` refuse more than one feature (interfaces, peers with keys, NATs) at a time, as the real API does | offered: GoogleCloudPlatform/k8s-config-connector#15286 |
 | `0028-mockgcp-compute-organization-security-policy-rules.patch` | written here: `organizationSecurityPolicies.addRule`, `getRule`, `patchRule` and `removeRule` (rules by priority in the policy), and the beta-only fields of a FIREWALL rule (direction, logging, targets, destination ranges, layer 4 configs), which the v1 messages drop, kept beside the rule by the HTTP layer | the rule methods yes; the beta fields a stopgap |
+| `0029-mockgcp-iam-principal-access-boundary-policies.patch` | written here, for `IAMPrincipalAccessBoundaryPolicy`: IAM v3 principal access boundary policies (create, get, list, update with a mask, delete; finished operations; etag), on REST paths added to the mux by hand since mockgcp has no v3 gateway | yes |
 
 ## Pull requests we opened upstream
 
