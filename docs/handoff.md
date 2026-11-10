@@ -6,24 +6,24 @@ obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
-`NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`
-and `IAMDenyPolicy`. Read
+`NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
+`IAMDenyPolicy` and `ComputeOrganizationSecurityPolicyRule`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the hierarchical security policy PR (decision 13's
-`ComputeOrganizationSecurityPolicy` and its association, cut from `main`
-at `ed859ac`): thirty kinds (`README.md`, design.md's intro),
-mockgcp patches 0001 to 0027 (`UPSTREAM.md` and `upstream.yaml`, which
+After the hierarchical security policy rule PR (decision 13's
+`ComputeOrganizationSecurityPolicyRule`, cut from `main` at `e5e15ba`):
+thirty-one kinds (`README.md`, design.md's intro),
+mockgcp patches 0001 to 0028 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
-**0028**), the live-test switch and the Taskfile (`docs/live-runs.md`,
+**0029**), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
-which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`
-and its association (organization and folder only), and `IAMDenyPolicy`,
+which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
+its association and its rule (organization and folder only), and `IAMDenyPolicy`,
 which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
@@ -94,17 +94,28 @@ item 28; a name both our and Config Connector's `ComputeRouter` have is
 refused; a CEL rule allows one link per interface). Decision 13 has
 begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 `v1beta1`, which the charts allow), `ComputeOrganizationSecurityPolicy`
-and `ComputeOrganizationSecurityPolicyAssociation`
-(`compute.gcp.hfl.dev/v1beta1`) are built. Next the rest of decision 13:
-`ComputeOrganizationSecurityPolicyRule` (Terraform-only upstream, so
-written here, with a mockgcp patch for `addRule`, `getRule`,
-`patchRule` and `removeRule`, which the fake lacks),
+and `ComputeOrganizationSecurityPolicyAssociation` and
+`ComputeOrganizationSecurityPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
+are built. Next the rest of decision 13:
 `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
 alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.
+
+What `ComputeOrganizationSecurityPolicyRule` taught: check upstream's
+`apis/` and `static_config.go`, not only the handoff: a kind called
+"Terraform-only" may still have direct types, identity, reference and
+mapper upstream (only the controller missing); copy those. Upstream's
+mapper there maps to the wrong message (`FirewallPolicyRule`), so read
+a hand-written mapper before copying it. A FIREWALL rule's fields are
+only in the compute beta API, which mockgcp serves as v1 with v1 protos
+and `DiscardUnknown`: fields beta has and v1 lacks vanish in the fake.
+Patch 0028 keeps them beside the rule in the HTTP layer
+(`organizationsecuritypolicyrules.go`); a later beta-only field can use
+the same approach. `google.golang.org/api/compute/v0.beta` is already a
+dependency.
 
 What `IAMDenyPolicy` taught: an upstream alpha kind with a direct
 controller copies in an hour. Copy the hand-written mappers when the

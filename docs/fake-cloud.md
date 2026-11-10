@@ -176,6 +176,20 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   and add, get and remove of an association. It checks no permissions
   on the parent or the attachment, does not refuse a second association
   to the same organization or folder, and does not default `type`.
+- **Organization security policy rules in mockgcp** (patch 0028, ours,
+  for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
+  `patchRule` and `removeRule` by priority in the policy's rules;
+  `addRule` refuses a missing priority or action and a priority in use;
+  a priority with no rule answers 400 "The security policy does not
+  contain a rule at priority N" (the firewall policies' wording, assumed
+  here); `patchRule` replaces the rule whole. The beta-only fields of a
+  FIREWALL rule (direction, logging, targets, destination ranges, layer
+  4 configs), which the fake's v1 messages drop, are kept beside the
+  rule by the HTTP layer and put back into `getRule` and the policy's
+  rules. It does not refuse a FIREWALL rule on a Cloud Armor policy or
+  the reverse, checks no field's values (a protocol, a range, a target
+  network), computes no `ruleTupleCount`, and adds Cloud Armor's default
+  rule (priority 2147483647) to every new policy, whatever its type.
 - **Cloud Routers in mockgcp** (patch 0027, ours, for `ComputeRouter`).
   `routers.get` returns an MD5 key by name only, as the real API does;
   the fake keeps the value, so a test cannot see what value was sent
