@@ -123,7 +123,12 @@ pull_requests:
     head: 112e5e3a3d398374ee139a71d85a06f5579bb3b6
     read_on: "2026-11-10"
     role: watched
-    for: "offered by us: 0025 (mockgcp-networksecurity-organization-address-groups)"
+    for: "offered by us: 0025 (mockgcp-networksecurity-organization-address-groups); closed 2026-11-10 as a duplicate of #4711, which we follow instead"
+  - ref: GoogleCloudPlatform/k8s-config-connector#4711
+    head: efd3714a62b5264a530d98073ea6255a820ac971
+    read_on: "2026-11-10"
+    role: watched
+    for: "upstream's mockgcp organization address groups (draft, last updated 2025-06-22); when it merges and the pin passes it, drop 0025"
   - ref: GoogleCloudPlatform/k8s-config-connector#15289
     head: 6e0ae4e4a0867e56f870fc8c4ec0c5ffdc499701
     read_on: "2026-11-10"
@@ -160,7 +165,7 @@ patches:
   - {file: patches/k8s-config-connector/0022-mockgcp-serviceusage-hierarchy-identity.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15284"}
   - {file: patches/k8s-config-connector/0023-mockgcp-compute-project-default-network-tier.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15288"}
   - {file: patches/k8s-config-connector/0024-mockgcp-iam-service-accounts-list-undelete.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15283"}
-  - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15285"}
+  - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "follow GoogleCloudPlatform/k8s-config-connector#4711 (our #15285 closed as its duplicate)"}
   - {file: patches/k8s-config-connector/0026-mockgcp-networksecurity-organization-security-profiles.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15289"}
   - {file: patches/k8s-config-connector/0027-mockgcp-compute-routers-as-the-api.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15286"}
   - {file: patches/k8s-config-connector/0028-mockgcp-compute-organization-security-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "the rule methods yes; the beta fields a stopgap"}
