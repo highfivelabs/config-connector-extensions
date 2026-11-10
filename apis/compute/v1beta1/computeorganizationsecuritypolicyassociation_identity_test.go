@@ -267,7 +267,7 @@ func TestComputeOrganizationSecurityPolicyAssociationRef_Normalize(t *testing.T)
 
 	targetObj := &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "compute.cnrm.cloud.google.com/v1alpha1",
+			"apiVersion": "compute.gcp.hfl.dev/v1beta1",
 			"kind":       "ComputeOrganizationSecurityPolicyAssociation",
 			"metadata": map[string]interface{}{
 				"name":      "assoc-target",
@@ -291,7 +291,7 @@ func TestComputeOrganizationSecurityPolicyAssociationRef_Normalize(t *testing.T)
 
 	unreadyObj := &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "compute.cnrm.cloud.google.com/v1alpha1",
+			"apiVersion": "compute.gcp.hfl.dev/v1beta1",
 			"kind":       "ComputeOrganizationSecurityPolicyAssociation",
 			"metadata": map[string]interface{}{
 				"name":      "assoc-unready",
@@ -315,7 +315,7 @@ func TestComputeOrganizationSecurityPolicyAssociationRef_Normalize(t *testing.T)
 
 	noConditionsObj := &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "compute.cnrm.cloud.google.com/v1alpha1",
+			"apiVersion": "compute.gcp.hfl.dev/v1beta1",
 			"kind":       "ComputeOrganizationSecurityPolicyAssociation",
 			"metadata": map[string]interface{}{
 				"name":      "assoc-no-conditions",

@@ -248,7 +248,7 @@ func TestComputeOrganizationSecurityPolicyRef_Normalize(t *testing.T) {
 
 	uReady := &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "compute.cnrm.cloud.google.com/v1alpha1",
+			"apiVersion": "compute.gcp.hfl.dev/v1beta1",
 			"kind":       "ComputeOrganizationSecurityPolicy",
 			"metadata": map[string]interface{}{
 				"name":      "k8s-policy",
