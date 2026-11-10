@@ -1349,9 +1349,10 @@ To raise confidence in `ArtifactRegistryRepository`:
     for an interconnect attachment are kept on update but no test makes
     one (mockgcp never does); done (2026-11-10):
     `ComputeRouterRoutePolicy.routerRef.name` names ours as well as Config
-    Connector's `ComputeRouter`, and refuses a name both have; no CEL rule yet for
-    "at most one of `vpnTunnelRef`, `interconnectAttachmentRef` and
-    `subnetworkRef`" (the API refuses it); the Terraform-based
+    Connector's `ComputeRouter`, and refuses a name both have; done
+    (2026-11-10): a CEL rule refuses an interface with more than one of
+    `vpnTunnelRef`, `interconnectAttachmentRef` and `subnetworkRef`, as
+    the API does; the Terraform-based
     `ComputeRouterInterface`, `ComputeRouterPeer` and `ComputeRouterNAT`
     on the same router would fight ours, so moving a router means
     abandoning all four official objects.
