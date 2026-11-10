@@ -202,6 +202,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | `86ca6c8` | ComputeRouter | PASS | FAIL | the interfaces, peer and key steps passed; the NAT-only update carrying the unchanged MD5 key values was refused as two features (fixed: keys by name outside the key steps; patch 0027) | a router with an interface, peer and key (swept) |
 | 2026-11-10 | `d171981` | ComputeRouter | PASS | FAIL | create, a resync with no write, the peer and NAT change, delete and abandon pass; two subtests read the cloud before the sequential live writes landed (test fixed to wait on the cloud and status) | 2 routers, a NAT (deleted) |
 | 2026-11-10 | `1ff3750` | ComputeRouter | PASS | PASS | none left: run `cce-11100336-0ecc` (the first attempt, `cce-11100319-ed80`, was preempted and swept by ID); the API's defaults (BFD, peer IP, NAT timeouts, `identifierRange`) leave a resync without a write | 2 routers with an interface, a BGP peer, an MD5 key and a Cloud NAT (deleted) |
+| 2026-11-10 | `afe91be` | ComputeRouterRoutePolicy (and the rest of `compute`) | PASS | PASS | none: a policy on our `ComputeRouter` named by `routerRef.name`, and the name refused while a Config Connector `ComputeRouter` of the same name exists, as on the fake (design.md section 7 item 28). Run `cce-11100428-c1fb` | the compute package's networks, routers (one of ours), NEG and firewall policies (deleted); `task live-list` empty |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for

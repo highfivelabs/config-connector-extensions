@@ -29,6 +29,7 @@ import (
 
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
+	computerefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/refs"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
@@ -220,5 +221,90 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		}
 		env.WaitGone(k)
 		get(t, "kept")
+	})
+
+	// Item 28 (docs/design.md section 7): routerRef.name finds this
+	// project's ComputeRouter as well as Config Connector's, and refuses a
+	// name both have.
+	t.Run("routerRef names this project's ComputeRouter by object", func(t *testing.T) {
+		ours := mockenv.Name("ours-router")
+		routerObj := &computev1alpha1.ComputeRouter{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   namespace,
+				Name:        "ours-router",
+				Labels:      mockenv.Labels(),
+				Annotations: map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project},
+			},
+			Spec: computev1alpha1.ComputeRouterSpec{
+				ResourceID: mockenv.Ptr(ours),
+				Region:     region,
+				NetworkRef: computerefs.ComputeNetworkRef{External: network},
+			},
+		}
+		if err := env.Kube.Create(env.Ctx, routerObj); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			op, err := routers.Delete(env.Ctx, &pb.DeleteRouterRequest{Project: mockenv.Project, Region: region, Router: ours})
+			if err == nil {
+				err = op.Wait(env.Ctx)
+			}
+			if err != nil && !direct.IsNotFound(err) {
+				t.Errorf("deleting router %s: %v", ours, err)
+			}
+		})
+		env.WaitReady(computev1alpha1.ComputeRouterGVK, namespace, "ours-router")
+
+		onOurs := newPolicy("on-ours")
+		onOurs.Spec.RouterRef = &computev1alpha1.ComputeRouterRef{Name: "ours-router"}
+		if err := env.Kube.Create(env.Ctx, onOurs); err != nil {
+			t.Fatal(err)
+		}
+		u := env.WaitReady(policyGVK, namespace, "on-ours")
+		want := "projects/" + mockenv.Project + "/regions/" + region + "/routers/" + ours + "/routePolicies/on-ours"
+		if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != want {
+			t.Errorf("status.externalRef = %q, want %q", ref, want)
+		}
+		if _, err := routers.GetRoutePolicy(env.Ctx, &pb.GetRoutePolicyRouterRequest{
+			Project: mockenv.Project, Region: region, Router: ours, Policy: mockenv.Ptr("on-ours"),
+		}); err != nil {
+			t.Errorf("reading the policy on this project's router: %v", err)
+		}
+
+		// A Config Connector ComputeRouter of the same name, as while a
+		// router moves to ours: a policy naming it is refused until one goes.
+		dup := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+			"region": region, "networkRef": map[string]any{"external": network},
+		}}}
+		dup.SetGroupVersionKind(computev1alpha1.ConfigConnectorComputeRouterGVK)
+		dup.SetNamespace(namespace)
+		dup.SetName("ours-router")
+		dup.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
+		if err := env.Kube.Create(env.Ctx, dup); err != nil {
+			t.Fatal(err)
+		}
+		both := newPolicy("both")
+		both.Spec.RouterRef = &computev1alpha1.ComputeRouterRef{Name: "ours-router"}
+		if err := env.Kube.Create(env.Ctx, both); err != nil {
+			t.Fatal(err)
+		}
+		if msg := env.WaitNotReady(policyGVK, namespace, "both"); !strings.Contains(msg, "is both a compute.gcp.hfl.dev and a compute.cnrm.cloud.google.com object") {
+			t.Errorf("Ready message = %q, want the ambiguous name refused", msg)
+		}
+		if err := env.Kube.Delete(env.Ctx, dup); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitReady(policyGVK, namespace, "both")
+
+		for _, p := range []*computev1alpha1.ComputeRouterRoutePolicy{onOurs, both} {
+			if err := env.Kube.Delete(env.Ctx, p); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(p)
+		}
+		if err := env.Kube.Delete(env.Ctx, routerObj); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(routerObj)
 	})
 }

@@ -84,7 +84,10 @@ test folder. Item 6 is built: `NetworkSecurityAddressGroup`,
 `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup`
 (design.md 6.5, patches 0025 and 0026; a project's of each passes live,
 an organization's is "live: pending, needs test folder"). Decision 14
-is built: `ComputeRouter` (design.md 6.5, patch 0027). Next decision 13
+is built: `ComputeRouter` (design.md 6.5, patch 0027), and
+`ComputeRouterRoutePolicy.routerRef.name` finds it (design.md section 7
+item 28; a name both our and Config Connector's `ComputeRouter` have is
+refused). Next decision 13
 (`IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`,
 `ComputeOrganizationSecurityPolicyAssociation`,
 `ComputeNetworkFirewallPolicyRule`, `DNSResponsePolicy` and its rule:
