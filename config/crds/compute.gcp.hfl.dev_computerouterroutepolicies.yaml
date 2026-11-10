@@ -123,7 +123,10 @@ spec:
                     description: An existing router, as "projects/{{projectID}}/regions/{{region}}/routers/{{name}}".
                     type: string
                   name:
-                    description: The name of a Config Connector ComputeRouter.
+                    description: 'The name of a ComputeRouter: this project''s (compute.gcp.hfl.dev)
+                      or Config Connector''s (compute.cnrm.cloud.google.com), whichever
+                      exists in the namespace; with both, the reference is refused
+                      (use external).'
                     type: string
                   namespace:
                     description: The namespace of that ComputeRouter; the referring
