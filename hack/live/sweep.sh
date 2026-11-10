@@ -17,7 +17,7 @@
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
 # firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
-# them), VPN tunnels, HA and external VPN gateways, Cloud Routers
+# them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
 # (their route policies go with them) and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
@@ -270,6 +270,13 @@ while read -r name made; do
     fi
   fi
   act "external VPN gateway" "${name}" "${G[@]}" compute external-vpn-gateways delete "${name}"
+done <<<"${rows}"
+# Regional addresses (the VPN tunnel test's peer address), by name.
+rows="$("${G[@]}" compute addresses list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "address" "${name} ${region:-global}" "${G[@]}" compute addresses delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"

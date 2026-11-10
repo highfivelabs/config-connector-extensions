@@ -266,10 +266,12 @@ policies whose ID carries a run ID.
 `ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
 `roles/compute.networkAdmin` has `compute.vpnTunnels.*`,
 `compute.vpnGateways.*` and `compute.externalVpnGateways.*`. The test
-makes a network, an HA VPN gateway, an external peer gateway (one
-interface, 203.0.113.10, a documentation address, so the tunnel never
-comes up) and a Cloud Router through the API, then two tunnels; the
-sweeper deletes tunnels, then HA and external VPN gateways, by name. A
+makes a network, an HA VPN gateway, an external address of its own, an
+external peer gateway on that address (the API refuses a reserved
+address such as 203.0.113.10 for a peer, run `cce-11100852-72bb`; nothing
+answers on ours, so the tunnel never comes up) and a Cloud Router through
+the API, then two tunnels; the sweeper deletes tunnels, then HA and
+external VPN gateways and addresses, by name. A
 tunnel bills by the hour while it exists; the test keeps each for a few
 minutes.
 

@@ -19,7 +19,8 @@ package compute_test
 // 0031) or a real project (docs/live-runs.md). The case: an HA VPN tunnel
 // to an external peer gateway with a chosen cipher suite, the field Config
 // Connector's ComputeVPNTunnel lacks. The network, HA VPN gateway, external
-// peer gateway and Cloud Router are the run's own (mockenv.Name), made
+// peer gateway (on an external address the test reserves) and Cloud Router
+// are the run's own (mockenv.Name), made
 // through the API and referenced by external, and deleted at the end after
 // the tunnels.
 
@@ -95,10 +96,36 @@ func TestComputeVPNTunnel(t *testing.T) {
 			t.Errorf("deleting HA VPN gateway %s: %v", gw, err)
 		}
 	})
+	// The peer's address: the real API refuses a reserved one (RFC 5735)
+	// for a peer, so the test reserves an external address of its own
+	// project rather than name someone else's.
+	addresses, err := gcp.NewAddressesRESTClient(ctx, opts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { addresses.Close() })
+	peerAddress := mockenv.Name("vpn-peer-ip")
+	op, err = addresses.Insert(ctx, &pb.InsertAddressRequest{Project: mockenv.Project, Region: region, AddressResource: &pb.Address{
+		Name: mockenv.Ptr(peerAddress), AddressType: mockenv.Ptr("EXTERNAL"), Labels: mockenv.Labels(),
+	}})
+	wait(t, op, err, "reserving the peer's address")
+	t.Cleanup(func() {
+		op, err := addresses.Delete(ctx, &pb.DeleteAddressRequest{Project: mockenv.Project, Region: region, Address: peerAddress})
+		if err == nil {
+			err = op.Wait(ctx)
+		}
+		if err != nil && !direct.IsNotFound(err) {
+			t.Errorf("deleting address %s: %v", peerAddress, err)
+		}
+	})
+	reserved, err := addresses.Get(ctx, &pb.GetAddressRequest{Project: mockenv.Project, Region: region, Address: peerAddress})
+	if err != nil || reserved.GetAddress() == "" {
+		t.Fatalf("reading the peer's address %s: %v (address %q)", peerAddress, err, reserved.GetAddress())
+	}
 	op, err = peers.Insert(ctx, &pb.InsertExternalVpnGatewayRequest{Project: mockenv.Project, ExternalVpnGatewayResource: &pb.ExternalVpnGateway{
 		Name:           mockenv.Ptr(peer),
 		RedundancyType: mockenv.Ptr("SINGLE_IP_INTERNALLY_REDUNDANT"),
-		Interfaces:     []*pb.ExternalVpnGatewayInterface{{Id: mockenv.Ptr(uint32(0)), IpAddress: mockenv.Ptr("203.0.113.10")}},
+		Interfaces:     []*pb.ExternalVpnGatewayInterface{{Id: mockenv.Ptr(uint32(0)), IpAddress: mockenv.Ptr(reserved.GetAddress())}},
 		Labels:         mockenv.Labels(),
 	}})
 	wait(t, op, err, "making the external peer gateway")
