@@ -59,35 +59,110 @@ pull_requests:
     read_on: "2026-11-08"
     role: copied
     for: ArtifactRegistryRepository with customRepository
+  - ref: GoogleCloudPlatform/k8s-config-connector#15278
+    head: 8dc3b755721a756d8f46e50c089abde88a980879
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0001 (mockgcp-sql-users-database-roles)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15277
+    head: d84c63596d331e8d10ae25edac6aa216f84ce5d2
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0002 (mockgcp-listen-address-env)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15281
+    head: 946eabfc2b5ec96113e9d964bb8e0baa4c7bd1d5
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0005 (mockgcp-artifactregistry-upstream-credentials)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15282
+    head: d053028c6d38c65730a875d2346d36e492b4afee
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0009 (mockgcp-artifactregistry-tags)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15279
+    head: 5544aa3e36b931890dc9895adcf7d35fc7b33ec0
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0011 (mockgcp-compute-region-network-endpoints)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15280
+    head: 08965b0ddad48adf70e8223f0ae718db7ad5e790
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0012 (mockgcp-compute-router-route-policies)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15290
+    head: eefae9c1d14657014b7080f71e248dd1a2b6e1b6
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0013 (mockgcp-storage-object-media)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15287
+    head: a8bf5103781a728e9dff228090647d6441902bb4
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0014 (mockgcp-compute-region-network-firewall-policies)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15291
+    head: 406951b32259b57daa025b0c9fc86c3d4dceaf97
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0017 (mockgcp-logging-settings)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15284
+    head: b3b495d95c4ea1a3155b39d9d458434096db8d2b
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0022 (mockgcp-serviceusage-hierarchy-identity)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15288
+    head: b0d0a02291055fdbcf25b81c816b9f496ecabea5
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0023 (mockgcp-compute-project-default-network-tier)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15283
+    head: 368552c18fa348abccf27062d2d99dae3f8d969d
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0024 (mockgcp-iam-service-accounts-list-undelete)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15285
+    head: 112e5e3a3d398374ee139a71d85a06f5579bb3b6
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0025 (mockgcp-networksecurity-organization-address-groups)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15289
+    head: 6e0ae4e4a0867e56f870fc8c4ec0c5ffdc499701
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0026 (mockgcp-networksecurity-organization-security-profiles)"
+  - ref: GoogleCloudPlatform/k8s-config-connector#15286
+    head: 0d5ce7b4364aac969c716b084524f8764a0fced5
+    read_on: "2026-11-10"
+    role: watched
+    for: "offered by us: 0027 (mockgcp-compute-routers-as-the-api)"
 
 patches:
-  - {file: patches/k8s-config-connector/0001-mockgcp-sql-users-database-roles.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0002-mockgcp-listen-address-env.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0001-mockgcp-sql-users-database-roles.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15278"}
+  - {file: patches/k8s-config-connector/0002-mockgcp-listen-address-env.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15277"}
   - {file: patches/k8s-config-connector/0003-mockgcp-sql-backup-runs.patch, pin: k8s-config-connector, upstream_candidate: "it is upstream's (PR #12553)"}
   - {file: patches/k8s-config-connector/0004-mockgcp-secretmanager-regional.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #6651"}
-  - {file: patches/k8s-config-connector/0005-mockgcp-artifactregistry-upstream-credentials.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0005-mockgcp-artifactregistry-upstream-credentials.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15281"}
   - {file: patches/k8s-config-connector/0006-mockgcp-iam-workload-identity-pool-namespaces.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #14209"}
   - {file: patches/k8s-config-connector/0007-mockgcp-iam-workload-identity-pool-managed-identities.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #14418"}
-  - {file: patches/k8s-config-connector/0008-mockgcp-run-service-update-mask.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0009-mockgcp-artifactregistry-tags.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0008-mockgcp-run-service-update-mask.patch, pin: k8s-config-connector, upstream_candidate: "not offered (2026-11-10): with it, eight of upstream's RunService fixtures fail against mockgcp (their golden logs lack the container defaults); needs golden updates and the update-mask part split out"}
+  - {file: patches/k8s-config-connector/0009-mockgcp-artifactregistry-tags.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15282"}
   - {file: patches/k8s-config-connector/0010-mockgcp-iam-workload-identity-pool-provider-keys.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0011-mockgcp-compute-region-network-endpoints.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0012-mockgcp-compute-router-route-policies.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0013-mockgcp-storage-object-media.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0014-mockgcp-compute-region-network-firewall-policies.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0011-mockgcp-compute-region-network-endpoints.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15279"}
+  - {file: patches/k8s-config-connector/0012-mockgcp-compute-router-route-policies.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15280"}
+  - {file: patches/k8s-config-connector/0013-mockgcp-storage-object-media.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15290"}
+  - {file: patches/k8s-config-connector/0014-mockgcp-compute-region-network-firewall-policies.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15287"}
   - {file: patches/k8s-config-connector/0015-mockgcp-sql-backup-runs-deleted.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #12553"}
   - {file: patches/k8s-config-connector/0016-mockgcp-artifactregistry-remote-source-immutable.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0017-mockgcp-logging-settings.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0018-mockgcp-storage-iam-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0017-mockgcp-logging-settings.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15291"}
+  - {file: patches/k8s-config-connector/0018-mockgcp-storage-iam-policy.patch, pin: k8s-config-connector, upstream_candidate: "not offered (2026-11-10): with it, upstream's storageinsightsreportconfig-parquet fixture fails against mockgcp (its golden log records the old bucket IAM path); needs a golden update"}
   - {file: patches/k8s-config-connector/0019-mockgcp-compute-iam-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0020-mockgcp-compute-region-network-firewall-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0021-mockgcp-compute-region-network-firewall-policy-associations.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0022-mockgcp-serviceusage-hierarchy-identity.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0023-mockgcp-compute-project-default-network-tier.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0024-mockgcp-iam-service-accounts-list-undelete.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0026-mockgcp-networksecurity-organization-security-profiles.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
-  - {file: patches/k8s-config-connector/0027-mockgcp-compute-routers-as-the-api.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0022-mockgcp-serviceusage-hierarchy-identity.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15284"}
+  - {file: patches/k8s-config-connector/0023-mockgcp-compute-project-default-network-tier.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15288"}
+  - {file: patches/k8s-config-connector/0024-mockgcp-iam-service-accounts-list-undelete.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15283"}
+  - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15285"}
+  - {file: patches/k8s-config-connector/0026-mockgcp-networksecurity-organization-security-profiles.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15289"}
+  - {file: patches/k8s-config-connector/0027-mockgcp-compute-routers-as-the-api.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15286"}
   - {file: patches/k8s-config-connector/0028-mockgcp-compute-organization-security-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "the rule methods yes; the beta fields a stopgap"}
   - {file: patches/k8s-config-connector/0029-mockgcp-logging-billing-account-sinks.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
