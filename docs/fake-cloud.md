@@ -185,6 +185,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   and add, get and remove of an association. It checks no permissions
   on the parent or the attachment, does not refuse a second association
   to the same organization or folder, and does not default `type`.
+- **Security Command Center mute configs in mockgcp** (patch 0030, ours,
+  for `SecurityCenterMuteConfig`). A folder's and a project's beside an
+  organization's, each stored and named under its parent as given (a
+  project by the ID it was named with; whether the real API answers
+  with its number is not known). It checks no parent (any folder or
+  organization ID is one), no filter syntax, and no expiry of a dynamic
+  mute config.
 - **Organization security policy rules in mockgcp** (patch 0028, ours,
   for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
   `patchRule` and `removeRule` by priority in the policy's rules;

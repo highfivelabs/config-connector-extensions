@@ -206,6 +206,8 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | IAMDenyPolicy | PASS | pending, needs `iam.denypolicies.*` (Deny Admin, `roles/iam.denyAdmin`, granted on an organization) for `cce-live-tests`; then `E2E_IAM_DENY_ADMIN=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation | PASS | pending, needs the test folder (both act on an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -262,6 +264,16 @@ KINDS=iam`. The test's policy is on the run's project and denies
 but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
+
+`SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
+Command Center for the run's project: it must be active for the project
+(or its organization), and the live-test service account needs
+`securitycenter.muteconfigs.*` there (`roles/securitycenter.muteConfigsEditor`;
+assumed from the Security Command Center reference, not yet seen). Until
+then a live run skips the test and the sweeper leaves mute configs
+alone. With it: `E2E_SECURITY_CENTER=true task test-live
+PROJECT=hfl-dev-514205 KINDS=securitycenter`. A folder's and an
+organization's mute configs run on the fake only (the test folder).
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

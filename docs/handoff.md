@@ -106,6 +106,17 @@ then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.
 
+Decision 16 has begun: `SecurityCenterMuteConfig` (design.md 6.5, patch
+0030) takes an organization, folder or project. Upstream PR #7673 has
+the three parents for mute configs, BigQuery exports and custom modules
+but predates `master`'s kinds: copy `master`'s kind and #7673's parent
+(`apis/securitycenter/v1alpha1/parent.go`, `ResolveParent`), as the
+mute config did. Next: `SecurityCenterBigQueryExport` (mockgcp already
+serves all three parents), the two custom module kinds, then
+`SecurityCenterNotificationConfig` (Terraform-based upstream). Live
+needs Security Command Center active for the project
+(`E2E_SECURITY_CENTER=true`).
+
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
 regional rule; a kind that references a Config Connector kind our

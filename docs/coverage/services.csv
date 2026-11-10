@@ -171,7 +171,7 @@ run.googleapis.com,6,3,0,599,228,20,351,38.1,3.3,58.6
 saasservicemgmt.googleapis.com,8,6,0,92,48,0,44,52.2,0.0,47.8
 secretmanager.googleapis.com,2,1,1,30,10,10,10,33.3,33.3,33.3
 securesourcemanager.googleapis.com,8,4,0,48,28,0,20,58.3,0.0,41.7
-securitycenter.googleapis.com,17,11,0,503,73,0,430,14.5,0.0,85.5
+securitycenter.googleapis.com,17,11,1,503,73,5,425,14.5,1.0,84.5
 securitycentermanagement.googleapis.com,2,2,0,22,22,0,0,100.0,0.0,0.0
 securityposture.googleapis.com,2,2,0,63,59,0,4,93.7,0.0,6.3
 serviceconsumermanagement.googleapis.com,1,0,0,1,0,0,1,0.0,0.0,100.0
