@@ -161,6 +161,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   is under the same parent. A project's profile and group run live
   (`docs/live-runs.md`); an organization's are not yet compared with the
   real API.
+- **IAM deny policies in mockgcp** (upstream's, unpatched, for
+  `IAMDenyPolicy`). It serves create, get, list, a whole-policy update
+  that must carry the current etag, and delete, under a project's number
+  as the API answers, and a folder's or organization's under any ID. It
+  checks nobody's permissions (the API needs Deny Admin, granted on an
+  organization), and none of the rule's contents: any principal or
+  permission string and any `denialCondition` is stored. Nothing it
+  stores is enforced.
 - **Cloud Routers in mockgcp** (patch 0027, ours, for `ComputeRouter`).
   `routers.get` returns an MD5 key by name only, as the real API does;
   the fake keeps the value, so a test cannot see what value was sent

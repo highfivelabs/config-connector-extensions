@@ -6,21 +6,23 @@ obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
-`NetworkSecurityAddressGroup`, the security profile kinds and `ComputeRouter`. Read
+`NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`
+and `IAMDenyPolicy`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the `ComputeRouter` PR (decision 14, cut from `main` at
-`4b9cd3f`): twenty-seven kinds (`README.md`, design.md's intro),
+After the `IAMDenyPolicy` PR (decision 13's first kind, cut from `main`
+at `c6ac231`): twenty-eight kinds (`README.md`, design.md's intro),
 mockgcp patches 0001 to 0027 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
 **0028**), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
-which wait on the test folder.
+which wait on the test folder, and `IAMDenyPolicy`, which waits on Deny
+Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -87,14 +89,28 @@ an organization's is "live: pending, needs test folder"). Decision 14
 is built: `ComputeRouter` (design.md 6.5, patch 0027), and
 `ComputeRouterRoutePolicy.routerRef.name` finds it (design.md section 7
 item 28; a name both our and Config Connector's `ComputeRouter` have is
-refused). Next decision 13
-(`IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`,
-`ComputeOrganizationSecurityPolicyAssociation`,
-`ComputeNetworkFirewallPolicyRule`, `DNSResponsePolicy` and its rule:
-one PR per kind, copied from upstream's alpha types and controllers),
+refused). Decision 13 has begun: `IAMDenyPolicy` is built
+(`iam.gcp.hfl.dev/v1beta1`; stable kinds go in `v1beta1`, which the
+charts allow). Next the rest of decision 13
+(`ComputeOrganizationSecurityPolicyAssociation`,
+`ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
+`DNSResponsePolicy` and its rule: one PR per kind, copied from upstream's
+alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.
+
+What `IAMDenyPolicy` taught: an upstream alpha kind with a direct
+controller copies in an hour. Copy the hand-written mappers when the
+controller calls them (upstream's `mapper.generated.go` comments out the
+generated ones it shadows), rename the mapper functions when the package
+already has kinds, and check that the controller writes status through
+`op.UpdateStatus`: upstream's deny policy set `externalRef` on a typed
+copy only. A kind whose live test needs a role the live-test account
+cannot get in `hfl-dev-514205` skips live behind an `E2E_...` switch,
+and so does its sweeper section, since a failed list fails the sweep.
+`hack/live/sweep.sh` defined `by_run` after the security profile loop
+that calls it, so profiles were never swept; fixed in this PR.
 
 What the security profiles taught: upstream's controllers dial gRPC,
 which our manager does not set up; the `cloud.google.com/go` REST

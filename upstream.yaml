@@ -248,6 +248,22 @@ copied:
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_reference.generated.go]}
   - here: [apis/iam/v1alpha1/types.generated.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/types.generated.go]}
+  - here: [apis/iam/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/iam/v1beta1/groupversion_info.go]}
+  - here: [apis/iam/v1beta1/doc.go]
+    from: {pin: k8s-config-connector, paths: [apis/iam/v1alpha1/doc.go]}
+  - here: [apis/iam/v1beta1/iamdenypolicy_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/iam/v1alpha1/iamdenypolicy_types.go]}
+  - here: [apis/iam/v1beta1/iamdenypolicy_identity.go, apis/iam/v1beta1/iamdenypolicy_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/iam/v1alpha1/iamdenypolicy_identity.go, apis/iam/v1alpha1/iamdenypolicy_identity_test.go]}
+  - here: [apis/iam/v1beta1/types.generated.go]
+    from: {pin: k8s-config-connector, paths: [apis/iam/v1alpha1/types.generated.go]}
+  - here: [pkg/controller/direct/iam/denypolicy_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/iam/iamdenypolicy/iamdenypolicy_controller.go]}
+  - here: [pkg/controller/direct/iam/denypolicy_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/iam/mappers.go]}
+  - here: [pkg/controller/direct/iam/denypolicy_fuzzer_test.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/iam/iamdenypolicy_fuzzer.go]}
   - here: [apis/run/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/groupversion_info.go]}
   - here: [apis/run/v1alpha1/runservice_types.go]
