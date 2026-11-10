@@ -4,7 +4,10 @@ Written here for config-connector-extensions' ComputeVPNTunnel: mockgcp
 had no VPN tunnel service. Every field but the labels is set only by
 insert, as in the real API; the shared secret is not returned, its hash
 is; setLabels checks the label fingerprint. It does not check that the
-gateways, peer or router exist.
+gateways, peer or router exist. Writes of VPN tunnels and HA VPN
+gateways answer with a regional operation, as the real API does (the
+gateways answered with a global one, which a regional client's Wait
+cannot find).
 
 --- a/mockgcp/mockcompute/service.go
 +++ b/mockgcp/mockcompute/service.go
@@ -26,9 +29,38 @@ gateways, peer or router exist.
  		return nil, err
  	}
  
+--- a/mockgcp/mockcompute/vpngatewayv1.go
++++ b/mockgcp/mockcompute/vpngatewayv1.go
+@@ -68,7 +68,7 @@
+ 		return nil, err
+ 	}
+ 
+-	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "insert", obj)
+ }
+ 
+ func (s *VPNGatewaysV1) Delete(ctx context.Context, req *pb.DeleteVpnGatewayRequest) (*pb.Operation, error) {
+@@ -85,7 +85,7 @@
+ 		return nil, err
+ 	}
+ 
+-	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "delete", deleted)
+ }
+ 
+ func (s *VPNGatewaysV1) SetLabels(ctx context.Context, req *pb.SetLabelsVpnGatewayRequest) (*pb.Operation, error) {
+@@ -107,7 +107,7 @@
+ 		return nil, err
+ 	}
+ 
+-	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "setLabels", obj)
+ }
+ 
+ type regionalVpnGatewayName struct {
 --- /dev/null
 +++ b/mockgcp/mockcompute/vpntunnelv1.go
-@@ -0,0 +1,149 @@
+@@ -0,0 +1,168 @@
 +// Copyright 2026 Google LLC
 +//
 +// Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,7 +147,7 @@ gateways, peer or router exist.
 +		return nil, err
 +	}
 +
-+	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "insert", obj)
 +}
 +
 +func (s *VpnTunnelsV1) SetLabels(ctx context.Context, req *pb.SetLabelsVpnTunnelRequest) (*pb.Operation, error) {
@@ -139,7 +171,7 @@ gateways, peer or router exist.
 +		return nil, err
 +	}
 +
-+	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "setLabels", obj)
 +}
 +
 +func (s *VpnTunnelsV1) Delete(ctx context.Context, req *pb.DeleteVpnTunnelRequest) (*pb.Operation, error) {
@@ -153,7 +185,26 @@ gateways, peer or router exist.
 +		return nil, err
 +	}
 +
-+	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "delete", deleted)
++}
++
++// regionalOperation is a done regional operation on target, as the real
++// API answers a regional resource's write (newLRO makes a global one,
++// which a regional client cannot wait on).
++func (s *MockService) regionalOperation(ctx context.Context, projectID, region, opType string, target interface {
++	proto.Message
++	GetId() uint64
++	GetSelfLink() string
++}) (*pb.Operation, error) {
++	op := &pb.Operation{
++		TargetId:      PtrTo(target.GetId()),
++		TargetLink:    PtrTo(target.GetSelfLink()),
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, projectID, region, op, func() (proto.Message, error) {
++		return target, nil
++	})
 +}
 +
 +type vpnTunnelName struct {

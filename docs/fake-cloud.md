@@ -185,6 +185,19 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   and add, get and remove of an association. It checks no permissions
   on the parent or the attachment, does not refuse a second association
   to the same organization or folder, and does not default `type`.
+- **VPN tunnels in mockgcp** (patch 0031, ours, for `ComputeVPNTunnel`).
+  Insert, get, `setLabels` (refused on a stale label fingerprint) and
+  delete of `projects/{p}/regions/{r}/vpnTunnels/{t}`; a read never
+  returns the shared secret, only a hash of it, and a new tunnel reads as
+  `FIRST_HANDSHAKE`. It checks only that the secret is set and that
+  exactly one of the HA and Classic gateways is named: not that the
+  gateways, the peer or the router exist, are in the tunnel's region or
+  network, or that the interfaces match; not the cipher suite's
+  algorithm names or combinations; and it keeps the references as sent
+  (the real API answers with full URLs). The patch also makes HA VPN
+  gateway writes answer with a regional operation, as the API does:
+  upstream's mock answered with a global one, which the regional client's
+  `Wait` could not find (the test's gateway failed with a 404 on it).
 - **Organization security policy rules in mockgcp** (patch 0028, ours,
   for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
   `patchRule` and `removeRule` by priority in the policy's rules;
