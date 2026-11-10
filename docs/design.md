@@ -671,7 +671,8 @@ Notes on what was built from this table:
   ones.
 - `ComputeRouterRoutePolicy` (`compute.gcp.hfl.dev/v1alpha1`, rank 4).
   **Written here** from the Compute Engine API's `RoutePolicy`:
-  `routerRef` (Config Connector's `ComputeRouter` by name, or `external`),
+  `routerRef` (a `ComputeRouter` by name, ours or Config Connector's, or
+  `external`),
   `resourceID`, `type`, `description`, and `terms` (priority, a CEL
   `match`, CEL `actions`). The controller follows Terraform's
   `google_compute_router_route_policy` (read, not copied): `getRoutePolicy`
@@ -681,6 +682,15 @@ Notes on what was built from this table:
   `status.externalRef` is the router's name plus `/routePolicies/{name}`,
   ours. Patch 0012: mockgcp serves a router's route policies with a new
   fingerprint on each write.
+  `routerRef.name` finds this project's `ComputeRouter`
+  (`compute.gcp.hfl.dev`, decision 14) as well as Config Connector's
+  (section 7 item 28, 2026-11-10): the controller reads both kinds in the
+  namespace and takes the one that exists. A name both kinds have, as
+  while a router moves to ours (ours acquired, the official object not
+  yet abandoned), is refused ("is both a compute.gcp.hfl.dev and a
+  compute.cnrm.cloud.google.com object; name the router by
+  routerRef.external") rather than picked silently. The field's shape is
+  unchanged, so existing objects keep working.
 - `StorageBucketObject` (`storage.gcp.hfl.dev/v1alpha1`, rank 5). **Written
   here**: `bucketRef` (Config Connector's `StorageBucketRef`), `resourceID`
   (the object name; "/" allowed), the content inline or `contentFrom` a
@@ -1309,9 +1319,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     reconcile (Config Connector's resync interval), not when the Secret
     changes (no watch, as item 22); peers and interfaces the API manages
     for an interconnect attachment are kept on update but no test makes
-    one (mockgcp never does); `ComputeRouterRoutePolicy.routerRef.name`
-    still names Config Connector's `ComputeRouter`, so a policy on a
-    router that moved to ours names it by `external`; no CEL rule yet for
+    one (mockgcp never does); done (2026-11-10):
+    `ComputeRouterRoutePolicy.routerRef.name` names ours as well as Config
+    Connector's `ComputeRouter`, and refuses a name both have; no CEL rule yet for
     "at most one of `vpnTunnelRef`, `interconnectAttachmentRef` and
     `subnetworkRef`" (the API refuses it); the Terraform-based
     `ComputeRouterInterface`, `ComputeRouterPeer` and `ComputeRouterNAT`

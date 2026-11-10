@@ -86,14 +86,16 @@ test folder. Item 6 is built: `NetworkSecurityAddressGroup`,
 `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup`
 (design.md 6.5, patches 0025 and 0026; a project's of each passes live,
 an organization's is "live: pending, needs test folder"). Decision 14
-is built: `ComputeRouter` (design.md 6.5, patch 0027). Decision 13 has
-begun: `IAMDenyPolicy` is built (`iam.gcp.hfl.dev/v1beta1`; stable kinds
-go in `v1beta1`, which the charts allow). Next the rest of decision 13
+is built: `ComputeRouter` (design.md 6.5, patch 0027), and
+`ComputeRouterRoutePolicy.routerRef.name` finds it (design.md section 7
+item 28; a name both our and Config Connector's `ComputeRouter` have is
+refused). Decision 13 has begun: `IAMDenyPolicy` is built
+(`iam.gcp.hfl.dev/v1beta1`; stable kinds go in `v1beta1`, which the
+charts allow). Next the rest of decision 13
 (`ComputeOrganizationSecurityPolicyAssociation`,
 `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
 `DNSResponsePolicy` and its rule: one PR per kind, copied from upstream's
-alpha types and controllers), then design.md section 7 item 28 (let
-`ComputeRouterRoutePolicy.routerRef` name our `ComputeRouter`),
+alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.

@@ -45,6 +45,16 @@ task live-sweep PROJECT=hfl-dev-514205 RUN=cce-11091530-a3f2   # everything of o
 task live-list PROJECT=hfl-dev-514205           # list every live-test resource
 ```
 
+`PROJECT` defaults to `HFL_GCP_TEST_PROJECT`, then `hfl-dev-514205`.
+The persistent test estate (`factory/estate/gcp/README.md`) writes that
+variable, with the folder, the scratch project and the Log Router key
+(`E2E_TEST_FOLDER`, `E2E_LOGGING_FOLDER`, `E2E_LOGGING_KMS_KEY`,
+`E2E_TEST_FOLDER_PROJECT`), to one env file per generation;
+`hack/live/projects.sh` allows its projects (`hfl-test-g<N>` and
+`hfl-test-g<N>-scratch`). Until the run scripts impersonate the
+generation's `cce-live-tests@hfl-test-g<N>` account, runs stay in
+`hfl-dev-514205`: load the env file only after that lands.
+
 Live runs happen on a short-lived Spot VM that runs as a dedicated
 service account, never on a laptop and never with a downloaded key:
 
@@ -192,6 +202,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | `86ca6c8` | ComputeRouter | PASS | FAIL | the interfaces, peer and key steps passed; the NAT-only update carrying the unchanged MD5 key values was refused as two features (fixed: keys by name outside the key steps; patch 0027) | a router with an interface, peer and key (swept) |
 | 2026-11-10 | `d171981` | ComputeRouter | PASS | FAIL | create, a resync with no write, the peer and NAT change, delete and abandon pass; two subtests read the cloud before the sequential live writes landed (test fixed to wait on the cloud and status) | 2 routers, a NAT (deleted) |
 | 2026-11-10 | `1ff3750` | ComputeRouter | PASS | PASS | none left: run `cce-11100336-0ecc` (the first attempt, `cce-11100319-ed80`, was preempted and swept by ID); the API's defaults (BFD, peer IP, NAT timeouts, `identifierRange`) leave a resync without a write | 2 routers with an interface, a BGP peer, an MD5 key and a Cloud NAT (deleted) |
+| 2026-11-10 | `afe91be` | ComputeRouterRoutePolicy (and the rest of `compute`) | PASS | PASS | none: a policy on our `ComputeRouter` named by `routerRef.name`, and the name refused while a Config Connector `ComputeRouter` of the same name exists, as on the fake (design.md section 7 item 28). Run `cce-11100428-c1fb` | the compute package's networks, routers (one of ours), NEG and firewall policies (deleted); `task live-list` empty |
 | 2026-11-10 | pending | IAMDenyPolicy | PASS | pending, needs `iam.denypolicies.*` (Deny Admin, `roles/iam.denyAdmin`, granted on an organization) for `cce-live-tests`; then `E2E_IAM_DENY_ADMIN=true` | not run (the test skips live without it) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
