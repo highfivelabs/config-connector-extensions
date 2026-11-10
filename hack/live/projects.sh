@@ -5,7 +5,7 @@
 # The only Google Cloud projects live tests may touch (docs/live-runs.md).
 # Sourced by hack/live/run.sh and hack/live/sweep.sh; a project is added
 # here by a reviewed change, never from the command line.
-LIVE_PROJECTS=(hfl-dev-514205)
+LIVE_PROJECTS=(our-chassis-514316-r0)
 # And the test estate's generations (factory/estate/gcp): hfl-test-g1,
 # hfl-test-g2, ... and their scratch projects, in the live-tests folder.
 # The live-test account of a generation has roles only there.

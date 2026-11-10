@@ -854,7 +854,7 @@ Notes on what was built from this table:
   Terraform family into our manager (decision 2.1). Patch 0023: mockgcp
   serves `setDefaultNetworkTier`. Live: pending, needs a test project
   under the test folder (`E2E_TEST_FOLDER_PROJECT`,
-  `mockenv.FolderProject`; never `hfl-dev-514205`, whose tier the offload
+  `mockenv.FolderProject`; never `our-chassis-514316-r0`, whose tier the offload
   VMs rely on) and `compute.projects.setDefaultNetworkTier` there, which
   `cce-live-tests` lacks (the spike's 403).
 
@@ -887,7 +887,7 @@ Notes on what was built from this table:
   deepcopy; the group file is copied). Patch 0024: mockgcp lists and
   undeletes service accounts and takes unique IDs. Live: pending, needs a
   test project under the test folder (`E2E_TEST_FOLDER_PROJECT`,
-  `mockenv.FolderProject`), never `hfl-dev-514205`, whose compute default
+  `mockenv.FolderProject`), never `our-chassis-514316-r0`, whose compute default
   account the offload VMs and `RunService` use.
 
 - `NetworkSecurityAddressGroup` (`networksecurity.gcp.hfl.dev/v1alpha1`,
