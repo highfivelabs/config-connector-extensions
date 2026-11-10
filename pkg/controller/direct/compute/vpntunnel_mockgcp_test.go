@@ -245,8 +245,9 @@ func TestComputeVPNTunnel(t *testing.T) {
 
 	t.Run("labels change in place", func(t *testing.T) {
 		o := getObj(t, "tunnel")
-		want := maps.Clone(o.Spec.Labels)
-		want["tier"] = "edge"
+		// On the fake, mockenv.Labels() is empty, so the spec may have none.
+		want := map[string]string{"tier": "edge"}
+		maps.Copy(want, o.Spec.Labels)
 		o.Spec.Labels = want
 		if err := env.Kube.Update(ctx, o); err != nil {
 			t.Fatal(err)
