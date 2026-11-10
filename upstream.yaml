@@ -88,6 +88,7 @@ patches:
   - {file: patches/k8s-config-connector/0025-mockgcp-networksecurity-organization-address-groups.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0026-mockgcp-networksecurity-organization-security-profiles.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0027-mockgcp-compute-routers-as-the-api.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0028-mockgcp-compute-organization-security-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "the rule methods yes; the beta fields a stopgap"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request
@@ -274,6 +275,10 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_types.go]}
   - here: [apis/compute/v1beta1/computeorganizationsecuritypolicy_identity.go, apis/compute/v1beta1/computeorganizationsecuritypolicy_identity_test.go, apis/compute/v1beta1/computeorganizationsecuritypolicy_reference.go, apis/compute/v1beta1/computeorganizationsecuritypolicyassociation_identity.go, apis/compute/v1beta1/computeorganizationsecuritypolicyassociation_identity_test.go, apis/compute/v1beta1/computeorganizationsecuritypolicyassociation_reference.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicy_identity.go, apis/compute/v1alpha1/computeorganizationsecuritypolicy_identity_test.go, apis/compute/v1alpha1/computeorganizationsecuritypolicy_reference.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_identity.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_identity_test.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_reference.go]}
+  - here: [apis/compute/v1beta1/computeorganizationsecuritypolicyrule_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_types.go]}
+  - here: [apis/compute/v1beta1/computeorganizationsecuritypolicyrule_identity.go, apis/compute/v1beta1/computeorganizationsecuritypolicyrule_identity_test.go, apis/compute/v1beta1/computeorganizationsecuritypolicyrule_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_identity.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_identity_test.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_reference.go]}
   - here: [pkg/controller/direct/compute/organizationsecuritypolicy_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeorganizationsecuritypolicy_controller.go]}
   - here: [pkg/controller/direct/compute/organizationsecuritypolicyassociation_controller.go]
