@@ -109,6 +109,7 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyAssociationGVK, crdName: "computeorganizationsecuritypolicyassociations.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyAssociationModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyRuleGVK, crdName: "computeorganizationsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewOrganizationSecurityPolicyRuleModel},
 	{gvk: computev1beta1.ComputeNetworkFirewallPolicyRuleGVK, crdName: "computenetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyRuleModel},
+	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
