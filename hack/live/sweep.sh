@@ -26,7 +26,9 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true). A failed list or delete fails the sweep.
+# (E2E_IAM_DENY_ADMIN=true), and Cloud DNS response policies, by name,
+# where the project has Cloud DNS (E2E_DNS_ADMIN=true). A failed list or
+# delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -268,6 +270,25 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
   done <<<"${rows}"
+fi
+
+# Cloud DNS response policies, by the run's name, before the networks they
+# are bound to (a bound network cannot be deleted), only where the project
+# has Cloud DNS for the live-test service account (E2E_DNS_ADMIN=true:
+# dns.googleapis.com on and roles/dns.admin); without it the
+# DNSResponsePolicy test does not run live and there is nothing to sweep.
+# A policy is unbound from its networks before it is deleted, as the
+# controller does.
+dns_rp_delete() { # dns_rp_delete NAME
+  "${G[@]}" dns response-policies update "$1" --networks="" &&
+    "${G[@]}" dns response-policies delete "$1"
+}
+if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
+  rows="$("${G[@]}" dns response-policies list --verbosity=error --format='value(responsePolicyName)')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    act "DNS response policy" "${name}" dns_rp_delete "${name}"
+  done
 fi
 
 # Cloud Run services, every region.
