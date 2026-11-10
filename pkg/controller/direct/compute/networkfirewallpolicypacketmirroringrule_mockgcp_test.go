@@ -185,12 +185,23 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 			o.Spec.Match.DestIPRanges = []string{"10.10.0.0/16"}
 			o.Spec.RuleName = mockenv.Ptr("no-web")
 		})
-		waitFor(t, func() bool {
+		deadline := time.Now().Add(mockenv.Timeout())
+		for {
 			got, err := cloudRule(1000)
-			return err == nil && got.GetDescription() == "web traffic to the frontends is not mirrored" &&
+			if err == nil && got.GetDescription() == "web traffic to the frontends is not mirrored" &&
 				len(got.GetMatch().GetSrcIpRanges()) == 0 && slices.Equal(got.GetMatch().GetDestIpRanges(), []string{"10.10.0.0/16"}) &&
-				got.GetRuleName() == "no-web"
-		})
+				got.GetRuleName() == "no-web" {
+				break
+			}
+			if time.Now().After(deadline) {
+				u := &unstructured.Unstructured{}
+				u.SetGroupVersionKind(gvk)
+				_ = env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: web}, u)
+				_, msg := mockenv.Ready(u)
+				t.Fatalf("the cloud rule did not change: %v, %v; the object's Ready message: %q", got, err, msg)
+			}
+			time.Sleep(time.Second)
+		}
 		env.WaitReady(gvk, namespace, web)
 		if n := writes("patchPacketMirroringRule") - before; n != 1 {
 			t.Errorf("the change patched the rule %d times, want 1", n)

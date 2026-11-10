@@ -108,7 +108,10 @@ alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents). Packet mirroring
 rules: the global network policy's is built
-(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0031); the
+(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0031; live
+passes but for the patch, design.md section 7 item 33: rerun
+`task test-live PROJECT=hfl-dev-514205 KINDS=compute` and read the
+patch subtest's timeout message first); the
 hierarchical policy's has rule calls in the beta API only (live pending
 the test folder) and the regional policy's has none in any API version.
 Then on down `docs/coverage/foundation.md`.

@@ -1204,7 +1204,8 @@ Notes on what was built from this table:
   does not fit a rule inside a policy. Copied: none from upstream; the
   1,075 hand-kept lines (the mock patch included) are written here, 32% of
   the kind's lines generated. mockgcp patch 0031 (`docs/fake-cloud.md`).
-  Live: see `docs/live-runs.md`.
+  Live: create, resync, a second rule, delete and abandon pass; the
+  patch does not yet (`docs/live-runs.md`, section 7 item 33).
 - `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
   decision 13: a rule of a global network firewall policy, at its
   priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
@@ -1505,7 +1506,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
-33. `ComputeNetworkFirewallPolicyPacketMirroringRule`: a live `mirror`
+33. `ComputeNetworkFirewallPolicyPacketMirroringRule`: the live patch
+    (run `cce-11100936-3a4c`: the rule did not change in 15 minutes;
+    rerun with the test's new timeout message, which prints the cloud
+    rule and the Ready message, and fix what it shows: the JSON POST,
+    the emptied `srcIpRanges`, or an INGRESS rule with only
+    `destIpRanges`); a live `mirror`
     rule (a security profile group with a custom mirroring profile and a
     mirroring endpoint group); the hierarchical policy's packet mirroring
     rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
