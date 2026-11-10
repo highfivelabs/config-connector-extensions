@@ -315,6 +315,20 @@ func TestComputeRouter(t *testing.T) {
 		}
 	})
 
+	t.Run("an interface linked to two things is refused", func(t *testing.T) {
+		tunnel := &computev1beta1.ComputeVPNTunnelRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/vpnTunnels/onprem-tunnel"}
+		subnet := &computev1beta1.ComputeSubnetworkRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/subnetworks/appliance"}
+		r := newRouter("two-links", mockenv.Name("two-links"))
+		r.Spec.Interfaces = []computev1alpha1.RouterInterface{{Name: "linked-if", VPNTunnelRef: tunnel, SubnetworkRef: subnet}}
+		err := env.Kube.Create(env.Ctx, r)
+		if err == nil || !strings.Contains(err.Error(), "at most one of vpnTunnelRef, interconnectAttachmentRef and subnetworkRef") {
+			if err == nil {
+				_ = env.Kube.Delete(env.Ctx, r)
+			}
+			t.Errorf("creating an interface with a VPN tunnel and a subnetwork: got %v, want the API server to refuse it", err)
+		}
+	})
+
 	t.Run("delete removes the router", func(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t)); err != nil {
 			t.Fatal(err)
