@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="380" height="24" viewBox="0 0 380 24" role="img" aria-label="run.googleapis.com: official 38.1%, ours beyond official 3.3%, uncovered 58.6% of 599 attributes">
-<title>run.googleapis.com: official 38.1%, ours beyond official 3.3%, uncovered 58.6% of 599 attributes</title>
-<rect x="0.5" y="0.5" width="379" height="23" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="40" viewBox="0 0 380 40" role="img" aria-label="run.googleapis.com: official 38.1%, ours beyond official 3.3%, uncovered 58.6% of 599 attributes; Terraform google-beta 71.0% (L1 61.6%), an estimate">
+<title>run.googleapis.com: official 38.1%, ours beyond official 3.3%, uncovered 58.6% of 599 attributes; Terraform google-beta 71.0% (L1 61.6%), an estimate</title>
+<rect x="0.5" y="0.5" width="379" height="39" rx="4" fill="#ffffff" stroke="#d0d7de"/>
 <clipPath id="c"><rect x="6" y="6" width="190" height="12" rx="3"/></clipPath>
 <g clip-path="url(#c)">
 <rect x="6" y="6" width="190" height="12" fill="#d0d7de"/>
@@ -8,4 +8,11 @@
 <rect x="78.32" y="6" width="6.34" height="12" fill="#2da44e"/>
 </g>
 <text x="204" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="#24292f"><tspan fill="#0969da">38.1%</tspan> / <tspan fill="#1a7f37">3.3%</tspan> / <tspan fill="#57606a">58.6%</tspan></text>
+<clipPath id="t"><rect x="6" y="22" width="190" height="12" rx="3"/></clipPath>
+<g clip-path="url(#t)">
+<rect x="6" y="22" width="190" height="12" fill="#d0d7de"/>
+<rect x="6" y="22" width="134.81" height="12" fill="#7b42bc"/>
+<rect x="122.05" y="22" width="2" height="12" fill="#24292f"/>
+</g>
+<text x="204" y="32" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="#7b42bc">Terraform 71.0%</text>
 </svg>
