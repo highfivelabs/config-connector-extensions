@@ -1,0 +1,111 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# What must hold before a merge, on every pull request and on main:
+# `task check` (pin, generated files, gofmt, vet, SPDX lines, build, the
+# tests against the fake cloud) and `task operator-e2e` (the operator on a
+# fresh kind cluster with the in-cluster fake cloud), as two parallel jobs.
+#
+# Nothing here reaches a real Google Cloud project: no credentials, no
+# `task test-live`. `task check` runs the tests with E2E_GCP_TARGET=mock
+# whatever the environment says.
+#
+# Tool versions are the ones the offload VM image pins
+# (highfivelabs/offload, vm-startup.sh): kind, ko and kustomize. Go comes
+# from go.mod; setup-envtest and Config Connector from the Taskfile and
+# UPSTREAM.md.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KIND_VERSION: v0.33.0
+  KO_VERSION: v0.19.1
+  KUSTOMIZE_VERSION: v5.7.1
+  TASK_VERSION: v3.54.0
+
+jobs:
+  check:
+    name: ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [check, operator-e2e]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Config Connector's module graph and build cache need more room than
+      # the runner leaves free; drop the preinstalled SDKs nothing here uses.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Tools cache
+        id: tools-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/ci-tools
+          key: tools-${{ runner.os }}-kind-${{ env.KIND_VERSION }}-ko-${{ env.KO_VERSION }}-kustomize-${{ env.KUSTOMIZE_VERSION }}-task-${{ env.TASK_VERSION }}
+
+      - name: Install task, kind, ko and kustomize
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          export GOBIN="${HOME}/.local/ci-tools"
+          go install "github.com/go-task/task/v3/cmd/task@${TASK_VERSION}"
+          go install "sigs.k8s.io/kind@${KIND_VERSION}"
+          go install "github.com/google/ko@${KO_VERSION}"
+          go install "sigs.k8s.io/kustomize/kustomize/v5@${KUSTOMIZE_VERSION}"
+
+      - name: Put the tools on PATH
+        run: |
+          echo "${HOME}/.local/ci-tools" >> "${GITHUB_PATH}"
+
+      # Config Connector at the pin (about 650 MB, not committed).
+      # hack/upstream.sh resets a restored checkout to the pin and applies
+      # patches/ again, so a stale cache cannot leak in.
+      - name: Config Connector checkout cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: third_party/k8s-config-connector
+          key: kcc-${{ hashFiles('UPSTREAM.md') }}
+
+      # setup-envtest and the envtest binaries (bin/ is not committed).
+      - name: envtest cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            bin/setup-envtest
+            bin/envtest
+          key: envtest-${{ runner.os }}-${{ hashFiles('Taskfile.yml') }}
+
+      - name: task upstream
+        run: task upstream
+
+      - name: task ${{ matrix.task }}
+        env:
+          TASK: ${{ matrix.task }}
+        run: |
+          go version; kind version; ko version; kustomize version; task --version
+          task "${TASK}"
