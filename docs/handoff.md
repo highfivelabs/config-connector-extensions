@@ -117,6 +117,20 @@ serves all three parents), the two custom module kinds, then
 needs Security Command Center active for the project
 (`E2E_SECURITY_CENTER=true`).
 
+Field gaps (design.md decision 19, the builder's 2026-11-10 reversal of
+decision 5) are not begun. Take them in `docs/coverage/foundation.md`'s
+order (items 9 to 19 and 21 to 27 that say "field"), with the attribute
+lists in `docs/coverage/attributes.csv`. The accepted pattern is a
+parallel kind of ours that owns the whole object (decisions 11, 13 and 14).
+It suits small kinds like the log bucket and the sink fields (item 12) or
+the DNS policy fields (item 15). It is costly for the big Terraform-based
+kinds (`ContainerCluster`, `ComputeVPNTunnel`, `KMSCryptoKey`). The first
+field-gap PR that hits one of those should propose another pattern in a
+short design note, as the builder asked, for example a field kind that
+patches only its fields with an update mask beside Config Connector's
+object, and why. Decision 11 rejected that for `RunService`, because
+Terraform's whole-object update resets the fields.
+
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
 regional rule; a kind that references a Config Connector kind our
