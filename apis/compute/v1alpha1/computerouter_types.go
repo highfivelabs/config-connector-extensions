@@ -129,6 +129,7 @@ type RouterMD5AuthenticationKey struct {
 }
 
 // +kcc:proto=google.cloud.compute.v1.RouterInterface
+// +kubebuilder:validation:XValidation:rule="(has(self.vpnTunnelRef) ? 1 : 0) + (has(self.interconnectAttachmentRef) ? 1 : 0) + (has(self.subnetworkRef) ? 1 : 0) <= 1",message="at most one of vpnTunnelRef, interconnectAttachmentRef and subnetworkRef can be set"
 type RouterInterface struct {
 	/* Name of this interface entry. The name must be 1-63 characters long
 	and comply with RFC1035. Immutable. */

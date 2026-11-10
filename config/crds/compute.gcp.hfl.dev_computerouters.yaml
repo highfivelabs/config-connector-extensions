@@ -463,6 +463,11 @@ spec:
                   required:
                   - name
                   type: object
+                  x-kubernetes-validations:
+                  - message: at most one of vpnTunnelRef, interconnectAttachmentRef
+                      and subnetworkRef can be set
+                    rule: '(has(self.vpnTunnelRef) ? 1 : 0) + (has(self.interconnectAttachmentRef)
+                      ? 1 : 0) + (has(self.subnetworkRef) ? 1 : 0) <= 1'
                 type: array
               md5AuthenticationKeys:
                 description: 'Keys used for MD5 authentication of BGP peers: the whole
