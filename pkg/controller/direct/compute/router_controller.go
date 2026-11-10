@@ -261,14 +261,19 @@ func (a *RouterAdapter) Create(ctx context.Context, createOp *directbase.CreateO
 // NATs. A step with nothing to change is skipped.
 func (a *RouterAdapter) write(ctx context.Context, cur *pb.Router) (*pb.Router, error) {
 	steps := []struct {
-		name  string
+		name string
+		// keys says whether the step sends the MD5 key values. The API
+		// takes a key sent with its value as a change of the keys, so the
+		// other steps send the keys as read, by name, which keeps their
+		// values (as Terraform's resources send them back).
+		keys  bool
 		apply func(body, cur *pb.Router) bool
 	}{
-		{"key values", func(body, cur *pb.Router) bool {
+		{"key values", true, func(body, cur *pb.Router) bool {
 			// The keys the router already has, with the Secrets' values.
 			return len(a.keys) > 0 && a.keysVersion != a.appliedVersion && len(body.Md5AuthenticationKeys) > 0
 		}},
-		{"base", func(body, cur *pb.Router) bool {
+		{"base", false, func(body, cur *pb.Router) bool {
 			changed := a.desired.GetDescription() != cur.GetDescription() ||
 				(a.desired.Bgp != nil && !protoSubset(a.desired.Bgp.ProtoReflect(), cur.GetBgp().ProtoReflect()))
 			body.Description = proto.String(a.desired.GetDescription())
@@ -277,7 +282,7 @@ func (a *RouterAdapter) write(ctx context.Context, cur *pb.Router) (*pb.Router, 
 			}
 			return changed
 		}},
-		{"interfaces kept for peers", func(body, cur *pb.Router) bool {
+		{"interfaces kept for peers", false, func(body, cur *pb.Router) bool {
 			want := slices.Clone(a.desired.Interfaces)
 			for _, in := range cur.Interfaces {
 				named := slices.ContainsFunc(want, func(d *pb.RouterInterface) bool { return d.GetName() == in.GetName() })
@@ -288,7 +293,7 @@ func (a *RouterAdapter) write(ctx context.Context, cur *pb.Router) (*pb.Router, 
 			}
 			return a.setInterfaces(body, cur, want)
 		}},
-		{"peers and keys", func(body, cur *pb.Router) bool {
+		{"peers and keys", true, func(body, cur *pb.Router) bool {
 			var have []*pb.RouterBgpPeer
 			for _, p := range cur.BgpPeers {
 				if userManaged(p.GetManagementType()) {
@@ -305,10 +310,10 @@ func (a *RouterAdapter) write(ctx context.Context, cur *pb.Router) (*pb.Router, 
 			body.Md5AuthenticationKeys = a.desired.Md5AuthenticationKeys
 			return changed
 		}},
-		{"interfaces", func(body, cur *pb.Router) bool {
+		{"interfaces", false, func(body, cur *pb.Router) bool {
 			return a.setInterfaces(body, cur, a.desired.Interfaces)
 		}},
-		{"nats", func(body, cur *pb.Router) bool {
+		{"nats", false, func(body, cur *pb.Router) bool {
 			body.Nats = a.desired.Nats
 			return !messagesMatch(a.desired.Nats, cur.Nats)
 		}},
@@ -320,7 +325,9 @@ func (a *RouterAdapter) write(ctx context.Context, cur *pb.Router) (*pb.Router, 
 			continue
 		}
 		body = proto.CloneOf(body)
-		a.withKeyValues(body)
+		if step.keys {
+			a.withKeyValues(body)
+		}
 		op, err := a.gcpClient.Update(ctx, &pb.UpdateRouterRequest{
 			Project:        a.id.Project,
 			Region:         a.id.Region,

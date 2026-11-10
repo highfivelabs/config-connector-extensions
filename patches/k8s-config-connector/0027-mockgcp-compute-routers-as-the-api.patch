@@ -14,10 +14,14 @@ For compute.gcp.hfl.dev ComputeRouter. Written here:
   the BGP peers with the MD5 keys, and the NATs, with the API's own 400,
   "Updating multiple Router features is currently unsupported." (a live
   run); peers and keys count as one, as Terraform writes them together.
+  A key sent without its value keeps the stored value (Terraform's peer
+  resource sends the keys back as read); a key sent with a value is a
+  change of the keys, whatever the value (a live run: a NAT-only update
+  that carried the unchanged key values was refused).
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockcompute/routersv1.go b/mockgcp/mockcompute/routersv1.go
-index 7c11d712..becf6cf5 100644
+index 7c11d712..96002909 100644
 --- a/mockgcp/mockcompute/routersv1.go
 +++ b/mockgcp/mockcompute/routersv1.go
 @@ -27,6 +27,7 @@ import (
@@ -62,20 +66,39 @@ index 7c11d712..becf6cf5 100644
  	id := s.generateID()
  
  	obj := proto.CloneOf(req.GetRouterResource())
-@@ -191,6 +212,26 @@ func (s *RoutersV1) Update(ctx context.Context, req *pb.UpdateRouterRequest) (*p
+@@ -191,7 +212,45 @@ func (s *RoutersV1) Update(ctx context.Context, req *pb.UpdateRouterRequest) (*p
  		return nil, err
  	}
  
+-	updated := proto.Clone(req.GetRouterResource()).(*pb.Router)
 +	// The API refuses an update of more than one feature (seen live). Here
 +	// the features are the interfaces, the BGP peers with the MD5 keys (as
 +	// Terraform's google_compute_router_peer writes them together), and the
 +	// NATs; which others count is not known.
-+	r := req.GetRouterResource()
++	r := proto.CloneOf(req.GetRouterResource())
++	// A key sent without its value keeps the stored one; a key sent with a
++	// value is a change of the keys, whatever the value.
++	keysChanged := len(r.Md5AuthenticationKeys) != len(existing.Md5AuthenticationKeys)
++	for _, k := range r.Md5AuthenticationKeys {
++		if k.Key != nil {
++			keysChanged = true
++			continue
++		}
++		found := false
++		for _, e := range existing.Md5AuthenticationKeys {
++			if e.GetName() == k.GetName() {
++				k.Key, found = e.Key, true
++			}
++		}
++		if !found {
++			keysChanged = true
++		}
++	}
 +	var changed []string
 +	if !sameFeature(&pb.Router{Interfaces: existing.Interfaces}, &pb.Router{Interfaces: r.Interfaces}) {
 +		changed = append(changed, "interfaces")
 +	}
-+	if !sameFeature(&pb.Router{BgpPeers: existing.BgpPeers, Md5AuthenticationKeys: existing.Md5AuthenticationKeys}, &pb.Router{BgpPeers: r.BgpPeers, Md5AuthenticationKeys: r.Md5AuthenticationKeys}) {
++	if keysChanged || !sameFeature(&pb.Router{BgpPeers: existing.BgpPeers}, &pb.Router{BgpPeers: r.BgpPeers}) {
 +		changed = append(changed, "bgpPeers")
 +	}
 +	if !sameFeature(&pb.Router{Nats: withNatDefaults(existing.Nats)}, &pb.Router{Nats: withNatDefaults(r.Nats)}) {
@@ -86,10 +109,11 @@ index 7c11d712..becf6cf5 100644
 +		return nil, status.Errorf(codes.InvalidArgument, "Updating multiple Router features is currently unsupported. (mockgcp: %s changed)", strings.Join(changed, ", "))
 +	}
 +
- 	updated := proto.Clone(req.GetRouterResource()).(*pb.Router)
++	updated := proto.Clone(r).(*pb.Router)
  	updated.SelfLink = existing.SelfLink
  	updated.CreationTimestamp = existing.CreationTimestamp
-@@ -239,6 +280,57 @@ func (s *RoutersV1) Delete(ctx context.Context, req *pb.DeleteRouterRequest) (*p
+ 	updated.Id = existing.Id
+@@ -239,6 +298,57 @@ func (s *RoutersV1) Delete(ctx context.Context, req *pb.DeleteRouterRequest) (*p
  	})
  }
  
