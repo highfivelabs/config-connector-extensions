@@ -32,8 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ComputeRouterGVK is Config Connector's Cloud Router.
-var ComputeRouterGVK = schema.GroupVersionKind{Group: "compute.cnrm.cloud.google.com", Version: "v1beta1", Kind: "ComputeRouter"}
+// ConfigConnectorComputeRouterGVK is Config Connector's Cloud Router.
+var ConfigConnectorComputeRouterGVK = schema.GroupVersionKind{Group: "compute.cnrm.cloud.google.com", Version: "v1beta1", Kind: "ComputeRouter"}
 
 // ComputeRouterRef names a Cloud Router.
 type ComputeRouterRef struct {
@@ -94,7 +94,7 @@ func (obj *ComputeRouterRoutePolicy) GetIdentity(ctx context.Context, reader cli
 			key.Namespace = obj.GetNamespace()
 		}
 		u := &unstructured.Unstructured{}
-		u.SetGroupVersionKind(ComputeRouterGVK)
+		u.SetGroupVersionKind(ConfigConnectorComputeRouterGVK)
 		if err := reader.Get(ctx, key, u); err != nil {
 			if apierrors.IsNotFound(err) {
 				return nil, fmt.Errorf("referenced ComputeRouter %v not found", key)

@@ -161,6 +161,30 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   is under the same parent. A project's profile and group run live
   (`docs/live-runs.md`); an organization's are not yet compared with the
   real API.
+- **Cloud Routers in mockgcp** (patch 0027, ours, for `ComputeRouter`).
+  `routers.get` returns an MD5 key by name only, as the real API does;
+  the fake keeps the value, so a test cannot see what value was sent
+  (the real API cannot be asked either). `routers.insert` refuses a
+  router with more than one of interfaces, BGP peers, NATs and MD5 keys,
+  with the API's own 400 (seen live with all four); which pairs the real
+  API allows is not known, so the fake refuses any two; `routers.update`
+  likewise refuses a change of more than one of the interfaces, the
+  peers with the keys, and the NATs (the API's "Updating multiple Router
+  features is currently unsupported"; whether the base fields or the
+  keys alone count as features is not known, and a live `routers.patch`
+  that added an interface and a peer together was accepted, so the real
+  rule is narrower than the fake's; the controller never sends two). Otherwise `routers.update`
+  stores the body as sent: it does not check that a peer's interface,
+  its MD5 key name, or a key's single use exist; it does not fill in a
+  peer's `ipAddress`, BFD, `enable` or `managementType`, a NAT's
+  timeouts, port counts or `endpointTypes`, or `bgp.identifierRange`, so
+  the comparison that leaves such API defaults alone is exercised only
+  live; it never makes a peer or interface `MANAGED_BY_ATTACHMENT`, so
+  keeping those on update is not exercised at all; and it does not check
+  that one network and region has at most one NAT for all subnetworks.
+  Its `routers.patch` appends to `bgp.advertisedIpRanges` and the MD5
+  keys rather than replacing them (proto merge); the controller writes
+  with `routers.update`, so only a test's own patch meets that.
 - **A project's default network tier in mockgcp** (patch 0023, ours).
   `setDefaultNetworkTier` takes `PREMIUM` or `STANDARD` and refuses
   anything else with a message of our own; what the real API answers for

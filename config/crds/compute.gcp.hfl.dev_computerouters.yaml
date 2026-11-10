@@ -1,0 +1,1045 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computerouters.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeRouter
+    listKind: ComputeRouterList
+    plural: computerouters
+    shortNames:
+    - hflcomputerouter
+    - hflcomputerouters
+    singular: computerouter
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeRouter is the Schema for the compute API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ComputeRouterSpec defines the desired state of ComputeRouter
+            properties:
+              bgp:
+                description: BGP information specific to this router.
+                properties:
+                  advertiseMode:
+                    description: 'User-specified flag to indicate which mode to use
+                      for advertisement. Default value: "DEFAULT" Possible values:
+                      ["DEFAULT", "CUSTOM"].'
+                    type: string
+                  advertisedGroups:
+                    description: |-
+                      User-specified list of prefix groups to advertise in custom mode.
+                      This field can only be populated if advertiseMode is CUSTOM and
+                      is advertised to all peers of the router. These groups will be
+                      advertised in addition to any specified prefixes. Leave this field
+                      blank to advertise no custom groups.
+
+                      This enum field has the one valid value: ALL_SUBNETS.
+                    items:
+                      type: string
+                    type: array
+                  advertisedIpRanges:
+                    description: User-specified list of individual IP ranges to advertise
+                      in custom mode. This field can only be populated if advertiseMode
+                      is CUSTOM and is advertised to all peers of the router. These
+                      IP ranges will be advertised in addition to any specified groups.
+                      Leave this field blank to advertise no custom IP ranges.
+                    items:
+                      properties:
+                        description:
+                          description: User-specified description for the IP range.
+                          type: string
+                        range:
+                          description: The IP range to advertise. The value must be
+                            a CIDR-formatted string.
+                          type: string
+                      required:
+                      - range
+                      type: object
+                    type: array
+                  asn:
+                    description: Local BGP Autonomous System Number (ASN). Must be
+                      an RFC6996 private ASN, either 16-bit or 32-bit. The value will
+                      be fixed for this router resource. All VPN tunnels that link
+                      to this router will have the same local ASN.
+                    format: int64
+                    type: integer
+                  identifierRange:
+                    description: Explicitly specifies a range of valid BGP Identifiers
+                      for this Router. It is provided as a link-local IPv4 range (from
+                      169.254.0.0/16), of size at least /30, even if the BGP sessions
+                      are over IPv6. It must not overlap with any IPv4 BGP session
+                      ranges. Other vendors commonly call this router ID. The API
+                      chooses one when it is not set.
+                    type: string
+                  keepaliveInterval:
+                    description: |-
+                      The interval in seconds between BGP keepalive messages that are sent
+                      to the peer. Hold time is three times the interval at which keepalive
+                      messages are sent, and the hold time is the maximum number of seconds
+                      allowed to elapse between successive keepalive messages that BGP
+                      receives from a peer.
+
+                      BGP will use the smaller of either the local hold time value or the
+                      peer's hold time value as the hold time for the BGP connection
+                      between the two peers. If set, this value must be between 20 and 60.
+                      The default is 20.
+                    format: int64
+                    type: integer
+                required:
+                - asn
+                type: object
+              bgpPeers:
+                description: 'BGP peers of this router: the whole list. A peer the
+                  spec leaves out is removed, but for one the API manages for an interconnect
+                  attachment (managementType MANAGED_BY_ATTACHMENT).'
+                items:
+                  properties:
+                    advertiseMode:
+                      description: 'User-specified flag to indicate which mode to
+                        use for advertisement: DEFAULT or CUSTOM.'
+                      type: string
+                    advertisedGroups:
+                      description: User-specified list of prefix groups to advertise
+                        in custom mode, which currently supports ALL_SUBNETS. This
+                        field can only be set if advertiseMode is CUSTOM; it overrides
+                        the router's list.
+                      items:
+                        type: string
+                      type: array
+                    advertisedIpRanges:
+                      description: User-specified list of individual IP ranges to
+                        advertise in custom mode. This field can only be set if advertiseMode
+                        is CUSTOM; it overrides the router's list.
+                      items:
+                        properties:
+                          description:
+                            description: User-specified description for the IP range.
+                            type: string
+                          range:
+                            description: The IP range to advertise. The value must
+                              be a CIDR-formatted string.
+                            type: string
+                        required:
+                        - range
+                        type: object
+                      type: array
+                    advertisedRoutePriority:
+                      description: The priority of routes advertised to this BGP peer.
+                        Where there is more than one matching route of maximum length,
+                        the routes with the lowest priority value win.
+                      format: int64
+                      type: integer
+                    bfd:
+                      description: BFD configuration for the BGP peering.
+                      properties:
+                        minReceiveInterval:
+                          description: The minimum interval, in milliseconds, between
+                            BFD control packets received from the peer router. The
+                            actual value is negotiated between the two routers and
+                            is equal to the greater of this value and the transmit
+                            interval of the other router. If set, this value must
+                            be between 1000 and 30000. The default is 1000.
+                          format: int32
+                          type: integer
+                        minTransmitInterval:
+                          description: The minimum interval, in milliseconds, between
+                            BFD control packets transmitted to the peer router. The
+                            actual value is negotiated between the two routers and
+                            is equal to the greater of this value and the corresponding
+                            receive interval of the other router. If set, this value
+                            must be between 1000 and 30000. The default is 1000.
+                          format: int32
+                          type: integer
+                        multiplier:
+                          description: The number of consecutive BFD packets that
+                            must be missed before BFD declares that a peer is unavailable.
+                            If set, the value must be a value between 5 and 16. The
+                            default is 5.
+                          format: int32
+                          type: integer
+                        sessionInitializationMode:
+                          description: The BFD session initialization mode for this
+                            BGP peer. If set to ACTIVE, the Cloud Router will initiate
+                            the BFD session for this BGP peer. If set to PASSIVE,
+                            the Cloud Router will wait for the peer router to initiate
+                            the BFD session for this BGP peer. If set to DISABLED,
+                            BFD is disabled for this BGP peer. The default is DISABLED.
+                            Check the SessionInitializationMode enum for the list
+                            of possible values.
+                          type: string
+                      type: object
+                    customLearnedIpRanges:
+                      description: The custom learned route IP address ranges for
+                        this BGP session.
+                      items:
+                        properties:
+                          range:
+                            description: The custom learned route IP address range.
+                              Must be a valid CIDR-formatted prefix. If an IP address
+                              is provided without a subnet mask, it is interpreted
+                              as, for IPv4, a `/32` singular IP address range, and,
+                              for IPv6, `/128`.
+                            type: string
+                        type: object
+                      type: array
+                    customLearnedRoutePriority:
+                      description: The priority of the custom learned routes, 0 to
+                        65335. The API uses 100 when it is not given.
+                      format: int64
+                      type: integer
+                    enable:
+                      description: The status of the BGP peer connection. If false,
+                        any active session with the peer is terminated and all associated
+                        routing information is removed. If true, the peer connection
+                        can be established with routing information. The default is
+                        true.
+                      type: boolean
+                    enableIpv4:
+                      description: Enable IPv4 traffic over BGP Peer. It is enabled
+                        by default if the peerIpAddress is version 4.
+                      type: boolean
+                    enableIpv6:
+                      description: Enable IPv6 traffic over BGP Peer. If not specified,
+                        it is disabled by default.
+                      type: boolean
+                    exportPolicies:
+                      description: Names of the export route policies of this router
+                        applied to this peer, in the order they are evaluated.
+                      items:
+                        type: string
+                      type: array
+                    importPolicies:
+                      description: Names of the import route policies of this router
+                        applied to this peer, in the order they are evaluated.
+                      items:
+                        type: string
+                      type: array
+                    interfaceName:
+                      description: Name of the interface the BGP peer is associated
+                        with. Immutable.
+                      type: string
+                    ipAddress:
+                      description: IP address of the interface inside Google Cloud
+                        Platform. Only IPv4 is supported. The API chooses it from
+                        the interface's range when it is not given.
+                      type: string
+                    ipv4NexthopAddress:
+                      description: IPv4 address of the interface inside Google Cloud
+                        Platform.
+                      type: string
+                    ipv6NexthopAddress:
+                      description: IPv6 address of the interface inside Google Cloud
+                        Platform. The address must be in the range 2600:2d00:0:2::/64
+                        or 2600:2d00:0:3::/64.
+                      type: string
+                    md5AuthenticationKeyName:
+                      description: The name of one of this router's md5AuthenticationKeys;
+                        present if MD5 authentication is enabled for the peering.
+                      type: string
+                    name:
+                      description: Name of this BGP peer. The name must be 1-63 characters
+                        long and comply with RFC1035. Immutable.
+                      type: string
+                    peerAsn:
+                      description: Peer BGP Autonomous System Number (ASN). Each BGP
+                        interface may use a different value.
+                      format: int64
+                      type: integer
+                    peerIpAddress:
+                      description: IP address of the BGP interface outside Google
+                        Cloud Platform. Only IPv4 is supported.
+                      type: string
+                    peerIpv4NexthopAddress:
+                      description: IPv4 address of the BGP interface outside Google
+                        Cloud Platform.
+                      type: string
+                    peerIpv6NexthopAddress:
+                      description: IPv6 address of the BGP interface outside Google
+                        Cloud Platform.
+                      type: string
+                    routerApplianceInstanceRef:
+                      description: The VM instance that is the BGP peer, for a Router
+                        Appliance; its subnetwork must be the one of the interface
+                        this peer is on.
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: A reference to an externally managed ComputeInstance
+                            resource. Should be in the format "projects/{{projectID}}/zones/{{zone}}/instances/{{instanceID}}".
+                          type: string
+                        name:
+                          description: The name of a ComputeInstance resource.
+                          type: string
+                        namespace:
+                          description: The namespace of a ComputeInstance resource.
+                          type: string
+                      type: object
+                  required:
+                  - interfaceName
+                  - name
+                  - peerAsn
+                  type: object
+                type: array
+              description:
+                description: An optional description of this resource.
+                type: string
+              encryptedInterconnectRouter:
+                description: Immutable. Indicates if a router is dedicated for use
+                  with encrypted VLAN attachments (interconnectAttachments).
+                type: boolean
+              interfaces:
+                description: 'Router interfaces: the whole list. An interface the
+                  spec leaves out is removed, but for one the API manages for an interconnect
+                  attachment (managementType MANAGED_BY_ATTACHMENT).'
+                items:
+                  properties:
+                    interconnectAttachmentRef:
+                      description: The interconnect attachment (VLAN attachment) this
+                        interface is linked to. Only one of vpnTunnelRef, interconnectAttachmentRef
+                        and subnetworkRef can be set. Immutable.
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: 'Allowed value: The `name` field of a `ComputeInterconnectAttachment`
+                            resource.'
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                          type: string
+                      type: object
+                    ipRange:
+                      description: IP address and range of the interface. The IP range
+                        must be in the RFC3927 link-local IP space. Changing this
+                        forces a new interface to be created. Immutable.
+                      type: string
+                    ipVersion:
+                      description: 'IP version of this interface: IPV4 or IPV6. The
+                        API sets IPV4 when it is not given. Immutable.'
+                      type: string
+                    name:
+                      description: Name of this interface entry. The name must be
+                        1-63 characters long and comply with RFC1035. Immutable.
+                      type: string
+                    privateIpAddress:
+                      description: The regional private internal IP address that is
+                        used to establish BGP sessions to a VM instance acting as
+                        a third-party Router Appliance. Immutable.
+                      type: string
+                    redundantInterface:
+                      description: The name of another interface on this router that
+                        is redundant with this one (a Router Appliance interface pair).
+                        Immutable.
+                      type: string
+                    subnetworkRef:
+                      description: The subnetwork of a Router Appliance this interface
+                        is in. Only one of vpnTunnelRef, interconnectAttachmentRef
+                        and subnetworkRef can be set. Immutable.
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: A reference to an externally managed ComputeSubnetwork
+                            resource. Should be in the format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+                          type: string
+                        name:
+                          description: The name of a ComputeSubnetwork resource.
+                          type: string
+                        namespace:
+                          description: The namespace of a ComputeSubnetwork resource.
+                          type: string
+                      type: object
+                    vpnTunnelRef:
+                      description: The VPN tunnel this interface is linked to. Only
+                        one of vpnTunnelRef, interconnectAttachmentRef and subnetworkRef
+                        can be set. Immutable.
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: 'Allowed value: The `selfLink` field of a `ComputeVPNTunnel`
+                            resource.'
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                          type: string
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
+              md5AuthenticationKeys:
+                description: 'Keys used for MD5 authentication of BGP peers: the whole
+                  list.'
+                items:
+                  description: RouterMD5AuthenticationKey is a key a BGP peer authenticates
+                    with. Its value is read from a Secret in the router's namespace
+                    and never kept in the spec or the status; the API does not return
+                    it.
+                  properties:
+                    keyRef:
+                      description: The Secret key that holds the value of the key
+                        used for MD5 authentication.
+                      properties:
+                        key:
+                          description: Key that identifies the value to be extracted.
+                          type: string
+                        name:
+                          description: Name of the Secret to extract a value from.
+                          type: string
+                      required:
+                      - key
+                      - name
+                      type: object
+                    name:
+                      description: Name used to identify the key. Must be unique within
+                        a router. Must be referenced by exactly one bgpPeer (its md5AuthenticationKeyName).
+                        Must comply with RFC1035.
+                      type: string
+                  required:
+                  - keyRef
+                  - name
+                  type: object
+                type: array
+              nats:
+                description: 'Cloud NAT gateways on this router: the whole list.'
+                items:
+                  description: RouterNAT is a Cloud NAT gateway on the router. The
+                    fields are those of upstream's ComputeRouterNATSpec, with the
+                    NAT's name in place of its resource ID, and the router and region
+                    the router's own.
+                  properties:
+                    autoNetworkTier:
+                      description: 'The network tier to use when automatically reserving
+                        NAT IP addresses: PREMIUM or STANDARD. Must be one of the
+                        network tiers the project allows (the project''s default by
+                        default).'
+                      type: string
+                    drainNatIps:
+                      description: A list of URLs of the IP resources to be drained.
+                        These IPs must be valid static external IPs that have been
+                        assigned to the NAT.
+                      items:
+                        description: ComputeAddressRef is a reference to a GCP ComputeAddress.
+                        oneOf:
+                        - not:
+                            required:
+                            - external
+                          required:
+                          - name
+                        - not:
+                            anyOf:
+                            - required:
+                              - name
+                            - required:
+                              - namespace
+                          required:
+                          - external
+                        properties:
+                          external:
+                            description: A reference to an externally managed ComputeAddress
+                              resource. Should be in the format "projects/{{projectID}}/global/addresses/{{addressID}}"
+                              or "projects/{{projectID}}/regions/{{region}}/addresses/{{addressID}}".
+                            type: string
+                          name:
+                            description: The name of a ComputeAddress resource.
+                            type: string
+                          namespace:
+                            description: The namespace of a ComputeAddress resource.
+                            type: string
+                        type: object
+                      type: array
+                    enableDynamicPortAllocation:
+                      description: Enable Dynamic Port Allocation. If minPortsPerVm
+                        is set, it must be a power of two between 32 and 32768 (default
+                        32). If maxPortsPerVm is set, it must be a power of two greater
+                        than minPortsPerVm (default 65536). Mutually exclusive with
+                        enableEndpointIndependentMapping.
+                      type: boolean
+                    enableEndpointIndependentMapping:
+                      description: Enable endpoint independent mapping. For more information
+                        see the [official documentation](https://cloud.google.com/nat/docs/overview#specs-rfcs).
+                      type: boolean
+                    endpointTypes:
+                      description: 'Specifies the endpoint types supported by the
+                        NAT gateway: ENDPOINT_TYPE_VM, ENDPOINT_TYPE_SWG, ENDPOINT_TYPE_MANAGED_PROXY_LB.
+                        The API uses ENDPOINT_TYPE_VM when it is not given. Immutable.'
+                      items:
+                        type: string
+                      type: array
+                    icmpIdleTimeoutSec:
+                      description: Timeout (in seconds) for ICMP connections. Defaults
+                        to 30s if not set.
+                      format: int64
+                      type: integer
+                    logConfig:
+                      description: Configuration for logging on NAT.
+                      properties:
+                        enable:
+                          description: Indicates whether or not to export logs.
+                          type: boolean
+                        filter:
+                          description: 'Specifies the desired filtering of logs on
+                            this NAT. Possible values: ["ERRORS_ONLY", "TRANSLATIONS_ONLY",
+                            "ALL"].'
+                          type: string
+                      required:
+                      - enable
+                      - filter
+                      type: object
+                    maxPortsPerVm:
+                      description: Maximum number of ports allocated to a VM from
+                        this NAT. This is only valid if enableDynamicPortAllocation
+                        is true.
+                      format: int64
+                      type: integer
+                    minPortsPerVm:
+                      description: Minimum number of ports allocated to a VM from
+                        this NAT. Defaults to 64 for static port allocation and 32
+                        for dynamic port allocation if not set.
+                      format: int64
+                      type: integer
+                    name:
+                      description: Name of the NAT service. The name must be 1-63
+                        characters long and comply with RFC1035. Immutable.
+                      type: string
+                    nat64Subnetworks:
+                      description: List of subnetworks to which NAT64 is applied,
+                        when sourceSubnetworkIpRangesToNat64 is LIST_OF_IPV6_SUBNETWORKS.
+                      items:
+                        properties:
+                          name:
+                            description: URL for the subnetwork resource that will
+                              use NAT64.
+                            type: string
+                        type: object
+                      type: array
+                    natIpAllocateOption:
+                      description: 'How external IPs should be allocated for this
+                        NAT. Valid values are ''AUTO_ONLY'' for only allowing NAT
+                        IPs allocated by Google Cloud Platform, or ''MANUAL_ONLY''
+                        for only user-allocated NAT IP addresses. Possible values:
+                        ["MANUAL_ONLY", "AUTO_ONLY"].'
+                      type: string
+                    natIps:
+                      description: Self-links of NAT IPs. Only valid if natIpAllocateOption
+                        is set to MANUAL_ONLY.
+                      items:
+                        description: ComputeAddressRef is a reference to a GCP ComputeAddress.
+                        oneOf:
+                        - not:
+                            required:
+                            - external
+                          required:
+                          - name
+                        - not:
+                            anyOf:
+                            - required:
+                              - name
+                            - required:
+                              - namespace
+                          required:
+                          - external
+                        properties:
+                          external:
+                            description: A reference to an externally managed ComputeAddress
+                              resource. Should be in the format "projects/{{projectID}}/global/addresses/{{addressID}}"
+                              or "projects/{{projectID}}/regions/{{region}}/addresses/{{addressID}}".
+                            type: string
+                          name:
+                            description: The name of a ComputeAddress resource.
+                            type: string
+                          namespace:
+                            description: The namespace of a ComputeAddress resource.
+                            type: string
+                        type: object
+                      type: array
+                    rules:
+                      description: A list of rules associated with this NAT.
+                      items:
+                        properties:
+                          action:
+                            description: The action to be enforced for traffic that
+                              matches this rule.
+                            properties:
+                              sourceNatActiveIpsRefs:
+                                description: A list of URLs of the IP resources used
+                                  for this NAT rule. These IP addresses must be valid
+                                  static external IP addresses assigned to the project.
+                                  This field is used for public NAT.
+                                items:
+                                  description: ComputeAddressRef is a reference to
+                                    a GCP ComputeAddress.
+                                  oneOf:
+                                  - not:
+                                      required:
+                                      - external
+                                    required:
+                                    - name
+                                  - not:
+                                      anyOf:
+                                      - required:
+                                        - name
+                                      - required:
+                                        - namespace
+                                    required:
+                                    - external
+                                  properties:
+                                    external:
+                                      description: A reference to an externally managed
+                                        ComputeAddress resource. Should be in the
+                                        format "projects/{{projectID}}/global/addresses/{{addressID}}"
+                                        or "projects/{{projectID}}/regions/{{region}}/addresses/{{addressID}}".
+                                      type: string
+                                    name:
+                                      description: The name of a ComputeAddress resource.
+                                      type: string
+                                    namespace:
+                                      description: The namespace of a ComputeAddress
+                                        resource.
+                                      type: string
+                                  type: object
+                                type: array
+                              sourceNatActiveRangesRefs:
+                                description: A list of references to ComputeSubnetwork
+                                  resources. Rules configured with these rules translate
+                                  source IPs to the IP ranges of these subnetworks.
+                                  This field is used for private NAT.
+                                items:
+                                  description: ComputeSubnetworkRef is a reference
+                                    to a GCP ComputeSubnetwork.
+                                  oneOf:
+                                  - not:
+                                      required:
+                                      - external
+                                    required:
+                                    - name
+                                  - not:
+                                      anyOf:
+                                      - required:
+                                        - name
+                                      - required:
+                                        - namespace
+                                    required:
+                                    - external
+                                  properties:
+                                    external:
+                                      description: A reference to an externally managed
+                                        ComputeSubnetwork resource. Should be in the
+                                        format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+                                      type: string
+                                    name:
+                                      description: The name of a ComputeSubnetwork
+                                        resource.
+                                      type: string
+                                    namespace:
+                                      description: The namespace of a ComputeSubnetwork
+                                        resource.
+                                      type: string
+                                  type: object
+                                type: array
+                              sourceNatDrainIpsRefs:
+                                description: A list of URLs of the IP resources to
+                                  be drained. These IPs must be valid static external
+                                  IPs that have been assigned to the NAT. These IPs
+                                  should be used for updating/patching a NAT rule
+                                  only. This field is used for public NAT.
+                                items:
+                                  description: ComputeAddressRef is a reference to
+                                    a GCP ComputeAddress.
+                                  oneOf:
+                                  - not:
+                                      required:
+                                      - external
+                                    required:
+                                    - name
+                                  - not:
+                                      anyOf:
+                                      - required:
+                                        - name
+                                      - required:
+                                        - namespace
+                                    required:
+                                    - external
+                                  properties:
+                                    external:
+                                      description: A reference to an externally managed
+                                        ComputeAddress resource. Should be in the
+                                        format "projects/{{projectID}}/global/addresses/{{addressID}}"
+                                        or "projects/{{projectID}}/regions/{{region}}/addresses/{{addressID}}".
+                                      type: string
+                                    name:
+                                      description: The name of a ComputeAddress resource.
+                                      type: string
+                                    namespace:
+                                      description: The namespace of a ComputeAddress
+                                        resource.
+                                      type: string
+                                  type: object
+                                type: array
+                              sourceNatDrainRangesRefs:
+                                description: A list of references to ComputeSubnetwork
+                                  resources. These IP ranges will be drained. This
+                                  field is used for private NAT.
+                                items:
+                                  description: ComputeSubnetworkRef is a reference
+                                    to a GCP ComputeSubnetwork.
+                                  oneOf:
+                                  - not:
+                                      required:
+                                      - external
+                                    required:
+                                    - name
+                                  - not:
+                                      anyOf:
+                                      - required:
+                                        - name
+                                      - required:
+                                        - namespace
+                                    required:
+                                    - external
+                                  properties:
+                                    external:
+                                      description: A reference to an externally managed
+                                        ComputeSubnetwork resource. Should be in the
+                                        format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+                                      type: string
+                                    name:
+                                      description: The name of a ComputeSubnetwork
+                                        resource.
+                                      type: string
+                                    namespace:
+                                      description: The namespace of a ComputeSubnetwork
+                                        resource.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          description:
+                            description: An optional description of this rule.
+                            type: string
+                          match:
+                            description: |-
+                              CEL expression that specifies the match condition that egress traffic from a VM is evaluated against.
+                              If it evaluates to true, the corresponding action is enforced.
+
+                              The following examples are valid match expressions for public NAT:
+
+                              "inIpRange(destination.ip, '1.1.0.0/16') || inIpRange(destination.ip, '2.2.0.0/16')"
+
+                              "destination.ip == '1.1.0.1' || destination.ip == '8.8.8.8'"
+
+                              The following example is a valid match expression for private NAT:
+
+                              "nexthop.hub == 'https://networkconnectivity.googleapis.com/v1alpha1/projects/my-project/global/hub/hub-1'".
+                            type: string
+                          ruleNumber:
+                            description: An integer uniquely identifying a rule in
+                              the list. The rule number must be a positive value between
+                              0 and 65000, and must be unique among rules within a
+                              NAT.
+                            format: int64
+                            type: integer
+                        required:
+                        - match
+                        - ruleNumber
+                        type: object
+                      type: array
+                    sourceSubnetworkIpRangesToNat:
+                      description: 'How NAT should be configured per Subnetwork. If
+                        ''ALL_SUBNETWORKS_ALL_IP_RANGES'', all of the IP ranges in
+                        every Subnetwork are allowed to Nat. If ''ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES'',
+                        all of the primary IP ranges in every Subnetwork are allowed
+                        to Nat. ''LIST_OF_SUBNETWORKS'': A list of Subnetworks are
+                        allowed to Nat (specified in the field subnetwork below).
+                        Note that if this field contains ALL_SUBNETWORKS_ALL_IP_RANGES
+                        or ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES, then there should
+                        not be any other RouterNat section in any Router for this
+                        network in this region. Possible values: ["ALL_SUBNETWORKS_ALL_IP_RANGES",
+                        "ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES", "LIST_OF_SUBNETWORKS"].'
+                      type: string
+                    sourceSubnetworkIpRangesToNat64:
+                      description: 'How NAT64 should be configured: ALL_IPV6_SUBNETWORKS
+                        or LIST_OF_IPV6_SUBNETWORKS (the subnetworks in nat64Subnetworks).'
+                      type: string
+                    subnetwork:
+                      description: One or more subnetwork NAT configurations. Only
+                        used if 'source_subnetwork_ip_ranges_to_nat' is set to 'LIST_OF_SUBNETWORKS'.
+                      items:
+                        properties:
+                          secondaryIpRangeNames:
+                            description: List of the secondary ranges of the subnetwork
+                              that are allowed to use NAT. This can be populated only
+                              if 'LIST_OF_SECONDARY_IP_RANGES' is one of the values
+                              in sourceIpRangesToNat.
+                            items:
+                              type: string
+                            type: array
+                          sourceIpRangesToNat:
+                            description: 'List of options for which source IPs in
+                              the subnetwork should have NAT enabled. Supported values
+                              include: ''ALL_IP_RANGES'', ''LIST_OF_SECONDARY_IP_RANGES'',
+                              ''PRIMARY_IP_RANGE''.'
+                            items:
+                              type: string
+                            type: array
+                          subnetworkRef:
+                            description: The subnetwork to NAT.
+                            oneOf:
+                            - not:
+                                required:
+                                - external
+                              required:
+                              - name
+                            - not:
+                                anyOf:
+                                - required:
+                                  - name
+                                - required:
+                                  - namespace
+                              required:
+                              - external
+                            properties:
+                              external:
+                                description: A reference to an externally managed
+                                  ComputeSubnetwork resource. Should be in the format
+                                  "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+                                type: string
+                              name:
+                                description: The name of a ComputeSubnetwork resource.
+                                type: string
+                              namespace:
+                                description: The namespace of a ComputeSubnetwork
+                                  resource.
+                                type: string
+                            type: object
+                        required:
+                        - sourceIpRangesToNat
+                        - subnetworkRef
+                        type: object
+                      type: array
+                    tcpEstablishedIdleTimeoutSec:
+                      description: Timeout (in seconds) for TCP established connections.
+                        Defaults to 1200s if not set.
+                      format: int64
+                      type: integer
+                    tcpTimeWaitTimeoutSec:
+                      description: Timeout (in seconds) for TCP connections that are
+                        in TIME_WAIT state. Defaults to 120s if not set.
+                      format: int64
+                      type: integer
+                    tcpTransitoryIdleTimeoutSec:
+                      description: Timeout (in seconds) for TCP transitory connections.
+                        Defaults to 30s if not set.
+                      format: int64
+                      type: integer
+                    type:
+                      description: 'Indicates whether this NAT is used for public
+                        or private IP translation. If unspecified, it defaults to
+                        PUBLIC. If ''PUBLIC'' NAT used for public IP translation.
+                        If ''PRIVATE'' NAT used for private IP translation. Default
+                        value: "PUBLIC" Possible values: ["PUBLIC", "PRIVATE"]. Immutable.'
+                      type: string
+                    udpIdleTimeoutSec:
+                      description: Timeout (in seconds) for UDP connections. Defaults
+                        to 30s if not set.
+                      format: int64
+                      type: integer
+                  required:
+                  - name
+                  - sourceSubnetworkIpRangesToNat
+                  type: object
+                type: array
+              networkRef:
+                description: A reference to the network to which this router belongs.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ComputeNetwork
+                      resource. Should be in the format "projects/{{projectID}}/global/networks/{{networkID}}".
+                    type: string
+                  name:
+                    description: The name of a ComputeNetwork resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ComputeNetwork resource.
+                    type: string
+                type: object
+              region:
+                description: Immutable. Region where the router resides.
+                type: string
+              resourceID:
+                description: Immutable. Optional. The name of the resource. Used for
+                  creation and acquisition. When unset, the value of `metadata.name`
+                  is used as the default.
+                type: string
+            required:
+            - networkRef
+            - region
+            type: object
+          status:
+            description: ComputeRouterStatus defines the config connector machine
+              state of ComputeRouter
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the ComputeRouter's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              creationTimestamp:
+                description: Creation timestamp in RFC3339 text format.
+                type: string
+              md5AuthenticationKeysVersion:
+                description: 'Which Secret versions the MD5 authentication keys were
+                  last written from: a digest of each key''s name and its Secret''s
+                  name, key and resourceVersion, never of the key itself. The API
+                  does not return key values, so a changed Secret is noticed by this.'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              selfLink:
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -11,6 +11,7 @@ resources:
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
+- compute.gcp.hfl.dev_computerouters.yaml
 - iam.gcp.hfl.dev_iambindings.yaml
 - iam.gcp.hfl.dev_iammembers.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolmanagedidentities.yaml

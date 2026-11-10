@@ -79,7 +79,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 	r := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
 		"region": region, "networkRef": map[string]any{"external": network},
 	}}}
-	r.SetGroupVersionKind(computev1alpha1.ComputeRouterGVK)
+	r.SetGroupVersionKind(computev1alpha1.ConfigConnectorComputeRouterGVK)
 	r.SetNamespace(namespace)
 	r.SetName(router)
 	r.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
