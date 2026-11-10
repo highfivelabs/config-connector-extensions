@@ -1041,7 +1041,13 @@ Notes on what was built from this table:
   an NCC gateway spoke) and the input-only `params.resourceManagerTags`;
   `task coverage` counts 76 of the Router's 81 fields covered with ours,
   the MD5 key's value (ours is `keyRef`) and the NAT subnetworks' names
-  (ours are references) among the five it does not match. Live: LIVE_RESULT
+  (ours are references) among the five it does not match. Live: passes (run
+  `cce-11100336-0ecc`) after four live runs that each found what the fake
+  did not show: the one-feature rules for insert and update, and the
+  key value counted as a change; each is now in patch 0027. The rotated
+  key's value and the `MANAGED_BY_ATTACHMENT` path cannot be seen live
+  either (the API returns no key values; the test makes no
+  attachment).
 
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's

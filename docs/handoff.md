@@ -123,6 +123,19 @@ What `ComputeRouter` taught (decision 14, design.md 6.5):
   the body leaves out. Compare with a subset rule (what the spec sets
   must match; what it leaves out is the API's default) or every resync
   writes: `protoSubset` in `router_controller.go` is reusable.
+- **Cloud Router takes one feature per write**, found only live (three
+  runs): insert refuses a router with interfaces, peers, NATs and keys
+  ("Creating a router with multiple features..."), update refuses more
+  than one ("Updating multiple Router features..."), and a key sent
+  with its value counts as a key change even when unchanged. So the
+  router is inserted bare and written in ordered single-feature steps;
+  keys go by name (no value) outside the key and peer steps. The exact
+  rule is unknown: a live patch of an interface and a peer together was
+  accepted. Patch 0027 models a stricter version.
+- **Live tests after a forced resync** must wait on the cloud or the
+  status, not on Ready: the object is already Ready, and live writes of
+  several sequential operations take longer than the 3 s the resync
+  helper sleeps.
 - **Secrets the API never returns** (MD5 keys): read them every
   reconcile, send them with every write, and keep a digest of the
   Secrets' `resourceVersion`s in status (not of the values) to notice a
