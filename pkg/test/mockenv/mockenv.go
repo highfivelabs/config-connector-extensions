@@ -131,6 +131,8 @@ func New(t *testing.T, namespaces ...string) *Env {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computeregionnetworkendpointgroups.compute.cnrm.cloud.google.com.yaml"),
 			// ComputeRouterRoutePolicy's router.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computerouters.compute.cnrm.cloud.google.com.yaml"),
+			// ComputeNetworkFirewallPolicyRule's policy.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computenetworkfirewallpolicies.compute.cnrm.cloud.google.com.yaml"),
 			// StorageBucketObject's bucket.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
 			// A managed folder, which IAMMember names by name.

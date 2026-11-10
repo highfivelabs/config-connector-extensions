@@ -146,7 +146,7 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) Find(ctx context.Context) (bool
 	klog.FromContext(ctx).V(2).Info("getting ComputeRegionNetworkFirewallPolicyRule", "name", a.id.String())
 	actual, err := a.get(ctx)
 	if err != nil {
-		if regionFirewallPolicyRuleMissing(err) {
+		if firewallPolicyRuleMissing(err) {
 			return false, nil
 		}
 		return false, fmt.Errorf("getting ComputeRegionNetworkFirewallPolicyRule %q: %w", a.id.String(), err)
@@ -289,13 +289,13 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) Delete(ctx context.Context, del
 		Priority:       direct.PtrTo(int32(a.id.Priority)),
 	})
 	if err != nil {
-		if regionFirewallPolicyRuleMissing(err) {
+		if firewallPolicyRuleMissing(err) {
 			return true, nil
 		}
 		return false, fmt.Errorf("deleting ComputeRegionNetworkFirewallPolicyRule %s: %w", a.id.String(), err)
 	}
 	if err := a.wait(ctx, op, "delete"); err != nil {
-		if regionFirewallPolicyRuleMissing(err) {
+		if firewallPolicyRuleMissing(err) {
 			return true, nil
 		}
 		return false, err
@@ -311,12 +311,12 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) updateStatus(ctx context.Contex
 	return op.UpdateStatus(ctx, status, nil)
 }
 
-// regionFirewallPolicyRuleMissing reports whether err says the rule (or its
+// firewallPolicyRuleMissing reports whether err says the rule (or its
 // policy) does not exist. A policy that has no rule at a priority answers
 // 400, "The firewall policy does not contain a rule at priority N", not 404
 // (as for a router's route policy, docs/live-runs.md); a missing policy is a
 // 404.
-func regionFirewallPolicyRuleMissing(err error) bool {
+func firewallPolicyRuleMissing(err error) bool {
 	if direct.IsNotFound(err) {
 		return true
 	}
