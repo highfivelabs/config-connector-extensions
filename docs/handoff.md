@@ -6,22 +6,21 @@ obvious from the code. Written 2026-11-09 by the agent that built the
 seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
-`NetworkSecurityAddressGroup` and the security profile kinds. Read
+`NetworkSecurityAddressGroup`, the security profile kinds and `ComputeRouter`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After PRs #35 (`NetworkSecuritySecurityProfile`) and the security
-profile group PR (cut from #35's branch: merge #35 first): twenty-six
-kinds (`README.md`, design.md's intro), mockgcp patches 0001 to 0026
-(`UPSTREAM.md` and `upstream.yaml`, which must agree: `task
-upstream:yaml-check`; the next free number is **0027**), the
-live-test switch and the
-Taskfile (`docs/live-runs.md`, `taskfiles/README.md`; use `task`, not
-`make`). Every built kind passes live but `LoggingSettings`,
-`ServiceIdentity`, `ComputeProjectDefaultNetworkTier` and
-`ProjectDefaultServiceAccounts`, which wait on the test folder.
+After the `ComputeRouter` PR (decision 14, cut from `main` at
+`4b9cd3f`): twenty-seven kinds (`README.md`, design.md's intro),
+mockgcp patches 0001 to 0027 (`UPSTREAM.md` and `upstream.yaml`, which
+must agree: `task upstream:yaml-check`; the next free number is
+**0028**), the live-test switch and the Taskfile (`docs/live-runs.md`,
+`taskfiles/README.md`; use `task`, not `make`). Every built kind passes
+live but `LoggingSettings`, `ServiceIdentity`,
+`ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
+which wait on the test folder.
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -84,8 +83,15 @@ built (design.md 6.5; patch 0024); live pending a test project under the
 test folder. Item 6 is built: `NetworkSecurityAddressGroup`,
 `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup`
 (design.md 6.5, patches 0025 and 0026; a project's of each passes live,
-an organization's is "live: pending, needs test folder"). Next decision
-14, then 13, 15 and 16, then packet mirroring rules.
+an organization's is "live: pending, needs test folder"). Decision 14
+is built: `ComputeRouter` (design.md 6.5, patch 0027). Next decision 13
+(`IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`,
+`ComputeOrganizationSecurityPolicyAssociation`,
+`ComputeNetworkFirewallPolicyRule`, `DNSResponsePolicy` and its rule:
+one PR per kind, copied from upstream's alpha types and controllers),
+then 15 (`LoggingBillingAccountSink`, live pending billing-account
+access), 16 (Security Command Center, three parents), then packet
+mirroring rules and on down `docs/coverage/foundation.md`.
 
 What the security profiles taught: upstream's controllers dial gRPC,
 which our manager does not set up; the `cloud.google.com/go` REST
@@ -101,27 +107,32 @@ referenced kind's identity function to read unstructured too
 (`networksecuritysecurityprofile_identity.go`), since the reference
 normalizer reads the object unstructured.
 
-Decision 14, looked at 2026-11-09 (twice): PR #13960 ("fix(compute):
-align migration diffs for ComputeRouter", head `9b916158`, open)
-changes only upstream's direct `ComputeRouter` controller (+17 lines,
-the migration diff) and adds tests. The pin's direct kind
-(`apis/compute/v1beta1/computerouter_types.go`,
-`pkg/controller/direct/compute/computerouter_{controller,mapper}.go`)
-carries only `description`, `bgp` (`asn`, `advertiseMode`,
-`advertisedGroups`, `advertisedIpRanges`, `keepaliveInterval`),
-`encryptedInterconnectRouter`, `networkRef`, `region`. None of the
-decision's fields is there: `bgpPeers` (with their MD5 key names, BFD,
-custom learned ranges), `nats`, `interfaces` and
-`md5AuthenticationKeys` must be written here, from Magic Modules'
-`Router.yaml`, `RouterNat.yaml` and `RouterBgpPeer.yaml` as the
-behaviour layer (`RouterInterface` is hand-written in Terraform: read
-its Go as data). Upstream's direct `ComputeRouterNAT` and
-`ComputeRouterInterface` controllers (same package) have mappers for
-those sub-messages to reuse. The Compute REST client patches the whole
-router (one `routers.patch`), so the kind owns all four lists; mind
-lists the body leaves out, as the regional firewall rule taught. The
-MD5 key value is a secret: take it from a Secret reference as
-`SQLUser.spec.password` does.
+What `ComputeRouter` taught (decision 14, design.md 6.5):
+
+- **Scaffolding a compute kind.** `hack/scaffold-kind.sh
+  google.cloud.compute.v1 compute.gcp.hfl.dev/v1alpha2
+  ComputeRouter:Router offload-artifacts/scaffold` works (v1alpha2
+  because upstream has compute v1alpha1; rename to ours). The compute
+  proto has no field behaviour and no resource annotations, so the
+  output puts every field in the spec with the generator's JSON names
+  (`enableIPV4`, `advertisedIPRanges`); keep the leaf types that fit
+  unedited and name the rest after Config Connector's existing kinds.
+  About a 15-minute n2d-standard-8 run.
+- **A whole-object compute kind writes with `update` (PUT)**, the read
+  object with the owned fields replaced, not `patch`, which keeps lists
+  the body leaves out. Compare with a subset rule (what the spec sets
+  must match; what it leaves out is the API's default) or every resync
+  writes: `protoSubset` in `router_controller.go` is reusable.
+- **Secrets the API never returns** (MD5 keys): read them every
+  reconcile, send them with every write, and keep a digest of the
+  Secrets' `resourceVersion`s in status (not of the values) to notice a
+  rotation.
+- **`go:test-envtest` and `setup-envtest` are internal tasks.** To run
+  one package's tests on offload:
+  `--step 'export KUBEBUILDER_ASSETS="$(go run sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250517180713-32e5e9e948a5 use 1.33.x --bin-dir "$PWD/bin/envtest" -p path)" && E2E_GCP_TARGET=mock go test -count=1 -v -run TestX ./pkg/controller/direct/<pkg>/'`
+  (the bin dir must be absolute).
+- **`task coverage` needs ~225 MB of inputs**: copy `.cache/coverage`
+  from another clone at the same pins rather than fetching.
 
 Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
 (lean on `controllerbuilder`; behaviour from Magic Modules' product YAML
