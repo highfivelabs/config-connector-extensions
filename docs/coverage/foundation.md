@@ -221,7 +221,7 @@ What these numbers miss, for the foundation:
   - uncovered in `dns.googleapis.com/ResponsePolicy` (measured): `id`, `labels{}`, `responsePolicyName`
   - uncovered in `dns.googleapis.com/ResponsePolicyRule` (measured): `localData.localDatas[].routingPolicy.geo.enableFencing`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[]`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipProtocol`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].loadBalancerType`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].networkUrl`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].port`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].project`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].region`, `localData.localDatas[].routingPolicy.geo.items[].location` and 37 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the release notes before building.
-- **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule.
+- **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule. `IAMDenyPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp unpatched); live pending Deny Admin, which is granted on an organization.
 - **Decided (builder, 2026-11-09):** "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with `RunService`, decision 11).
 
 ### 9. Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)
@@ -509,15 +509,16 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | IAMBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
+| IAMDenyPolicy | (not a create) an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted) | n/a | false |
 | IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |

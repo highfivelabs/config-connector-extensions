@@ -95,6 +95,14 @@ All paths are in Config Connector at the commit above unless noted.
 | `apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_identity.go` | PR #14418 `iamworkloadidentitypoolmanagedidentity_identity.generated.go` | written here: the pool and namespace from `workloadIdentityPoolNamespaceRef` (the PR's are stubs that always fail) |
 | `apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_reference.go` | PR #14418 `iamworkloadidentitypoolmanagedidentity_reference.generated.go` | the reference names our kind |
 | `apis/iam/v1alpha1/types.generated.go` | PR #14209 `apis/iam/v1alpha1/types.generated.go` | only `OwnerServiceObservedState`, the type the PR adds for this kind |
+| `apis/iam/v1beta1/groupversion_info.go` | `apis/iam/v1beta1/groupversion_info.go` | group `iam.gcp.hfl.dev`: our stable IAM kinds (decision 13) |
+| `apis/iam/v1beta1/doc.go` | `apis/iam/v1alpha1/doc.go` | the package |
+| `apis/iam/v1beta1/iamdenypolicy_types.go` | `apis/iam/v1alpha1/iamdenypolicy_types.go` | a stable kind (decision 13); exactly one of `projectRef`, `folderRef`, `organizationRef` (CEL); upstream's commented-out fields dropped; `folderRef` typed without its alias; group, labels, short names |
+| `apis/iam/v1beta1/iamdenypolicy_identity.go`, `iamdenypolicy_identity_test.go` | the same files in `apis/iam/v1alpha1/` | the package |
+| `apis/iam/v1beta1/types.generated.go` | `apis/iam/v1alpha1/types.generated.go` (generated upstream by controllerbuilder) | only `DenyRule`, `PolicyRule` and `Expr`, unedited; the package |
+| `pkg/controller/direct/iam/denypolicy_controller.go` | `pkg/controller/direct/iam/iamdenypolicy/iamdenypolicy_controller.go` | `status.externalRef` written (upstream's never reaches the object), also when nothing changed; our KRM types; returned to our manager, not registered |
+| `pkg/controller/direct/iam/denypolicy_mapper.go` | `pkg/controller/direct/iam/mappers.go` | only the `IAMDenyPolicy` functions and `Expr`'s, named for the kind; our KRM types |
+| `pkg/controller/direct/iam/denypolicy_fuzzer_test.go` | `pkg/controller/direct/iam/iamdenypolicy_fuzzer.go` | a test file, run by its own test function |
 | `apis/run/v1alpha1/groupversion_info.go` | `apis/run/v1alpha1/groupversion_info.go` | group `run.gcp.hfl.dev` |
 | `apis/run/v1alpha1/runservice_types.go` | `apis/run/v1alpha1/runworkerpool_types.go` | `RunWorkerPool` becomes `RunService` (Cloud Run v2 `Service`), its template `RevisionTemplate`; no instance splits; group, labels, short names; secret references typed without their aliases; written here: the service's `ingress`, `invokerIamDisabled`, `defaultUriDisabled`, `scaling`, the template's scaling, timeout, concurrency, execution environment, session affinity, health check and GPU zonal redundancy fields, the URIs in status |
 | `apis/run/v1alpha1/servicescaling_types.go` | written here | `ServiceScaling`, `RevisionScaling` from the Cloud Run v2 API |

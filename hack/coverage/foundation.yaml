@@ -250,7 +250,9 @@ items:
       organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`,
       which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`,
       `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`,
-      `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule.
+      `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule. `IAMDenyPolicy` built 2026-11-10
+      (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp unpatched); live
+      pending Deny Admin, which is granted on an organization.
     decided: >-
       "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when
       upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with
