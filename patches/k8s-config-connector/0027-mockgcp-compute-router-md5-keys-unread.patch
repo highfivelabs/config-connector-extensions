@@ -1,0 +1,25 @@
+config-connector-extensions patch 0027: mockgcp's routers.get leaves out MD5 key values.
+
+For compute.gcp.hfl.dev ComputeRouter. Written here: a router read with
+routers.get carries each of its md5AuthenticationKeys by name only, without
+the key, as the real API does (Terraform's google_compute_router_peer
+reads it so: "key value is not returned as it is a sensitive field"). The
+stored router keeps the key. Upstream candidate: yes.
+
+diff --git a/mockgcp/mockcompute/routersv1.go b/mockgcp/mockcompute/routersv1.go
+index 7c11d712..758004fa 100644
+--- a/mockgcp/mockcompute/routersv1.go
++++ b/mockgcp/mockcompute/routersv1.go
+@@ -55,6 +55,12 @@ func (s *RoutersV1) Get(ctx context.Context, req *pb.GetRouterRequest) (*pb.Rout
+ 		obj.EncryptedInterconnectRouter = nil
+ 	}
+ 
++	// The API keeps an MD5 authentication key's value but never returns it:
++	// a read has each key's name only.
++	for _, key := range obj.Md5AuthenticationKeys {
++		key.Key = nil
++	}
++
+ 	return obj, nil
+ }
+ 
