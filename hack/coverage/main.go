@@ -45,6 +45,17 @@ type Sources struct {
 		Fetched        string `yaml:"fetched"`
 		Digest         string `yaml:"digest"`
 	} `yaml:"config_connector"`
+	// Terraform is the catalog repository's Terraform comparison, vendored
+	// under docs/coverage/inputs/terraform/ (terraform.go).
+	Terraform struct {
+		Repo                    string `yaml:"repo"`
+		Commit                  string `yaml:"commit"`
+		CommitDate              string `yaml:"commit_date"`
+		Fetched                 string `yaml:"fetched"`
+		Path                    string `yaml:"path"`
+		SHA256TerraformCSV      string `yaml:"sha256_terraform_csv"`
+		SHA256TerraformResource string `yaml:"sha256_terraform_resources_csv"`
+	} `yaml:"terraform"`
 }
 
 func main() {
@@ -151,11 +162,20 @@ func run(repo, cache, kccDir, discDir, protoDir string, check, updateSources boo
 	if err != nil {
 		return fmt.Errorf("googleapis inputs: %w (run hack/coverage/run.sh to fetch them)", err)
 	}
+	tfSums, err := tfDigests(repo)
+	if err != nil {
+		return err
+	}
 	if updateSources {
 		src.ConfigConnector.Digest = kccDigest
 		src.Discovery.Digest = discDigest
 		src.Googleapis.Digest = protoDigest
+		src.Terraform.SHA256TerraformCSV = tfSums[0]
+		src.Terraform.SHA256TerraformResource = tfSums[1]
 		return writeSources(srcPath, sb, &src)
+	}
+	if tfSums[0] != src.Terraform.SHA256TerraformCSV || tfSums[1] != src.Terraform.SHA256TerraformResource {
+		return fmt.Errorf("Terraform inputs (%s) differ from the pin: sha256 %s, %s; sources.yaml has %s, %s", tfDir, tfSums[0], tfSums[1], src.Terraform.SHA256TerraformCSV, src.Terraform.SHA256TerraformResource)
 	}
 	if kccDigest != src.ConfigConnector.Digest {
 		return fmt.Errorf("Config Connector inputs differ from the pin: digest %s, sources.yaml has %s", kccDigest, src.ConfigConnector.Digest)
@@ -189,6 +209,12 @@ func writeSources(path string, old []byte, s *Sources) error {
 			section = "g"
 		case strings.HasPrefix(l, "config_connector:"):
 			section = "k"
+		case strings.HasPrefix(l, "terraform:"):
+			section = "t"
+		case section == "t" && strings.HasPrefix(strings.TrimSpace(l), "sha256_terraform_csv:"):
+			lines[i] = "  sha256_terraform_csv: " + s.Terraform.SHA256TerraformCSV
+		case section == "t" && strings.HasPrefix(strings.TrimSpace(l), "sha256_terraform_resources_csv:"):
+			lines[i] = "  sha256_terraform_resources_csv: " + s.Terraform.SHA256TerraformResource
 		case strings.HasPrefix(strings.TrimSpace(l), "digest:"):
 			d := s.Discovery.Digest
 			if section == "k" {

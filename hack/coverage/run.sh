@@ -98,9 +98,27 @@ fetch_kcc() {
   git -C "${KCC_DIR}" checkout -q FETCH_HEAD
 }
 
+# The Terraform comparison comes from the private catalog repository, so it
+# is vendored (docs/coverage/inputs/terraform/); --update-sources copies it
+# again from a local catalog checkout at the pinned commit.
+fetch_terraform() {
+  [[ "${MODE}" == "update-sources" ]] || return 0
+  local commit path catalog f
+  commit="$(yaml_get terraform commit)"
+  path="$(yaml_get terraform path)"
+  catalog="${CATALOG_DIR:-${ROOT}/../catalog}"
+  echo "copying the Terraform comparison from ${catalog} at ${commit}" >&2
+  mkdir -p docs/coverage/inputs/terraform
+  for f in terraform.csv terraform-resources.csv; do
+    git -C "${catalog}" show "${commit}:${path}/${f}" > "docs/coverage/inputs/terraform/${f}" \
+      || { echo "cannot read ${path}/${f} at ${commit} in ${catalog} (set CATALOG_DIR, git fetch there)" >&2; exit 1; }
+  done
+}
+
 fetch_discovery
 fetch_protos
 fetch_kcc
+fetch_terraform
 
 mkdir -p "${CACHE}/bin"
 (cd hack/coverage && go build -o "${CACHE}/bin/coverage" .)
