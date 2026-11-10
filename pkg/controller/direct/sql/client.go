@@ -58,3 +58,5 @@ func (m *gcpClient) sqlOperationsClient() *api.OperationsService {
 func (m *gcpClient) sqlUsersClient() *api.UsersService {
 	return api.NewUsersService(m.service)
 }
+
+// ci-selective-demo: a throwaway change to show the selective path (not to merge).
