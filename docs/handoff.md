@@ -58,6 +58,13 @@ in each PR.
 
 ## What is left, in order
 
+**Split between two GCP agents (the coordinator, 2026-11-10).** This
+queue: `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
+`DNSResponsePolicy` and its rule, then packet mirroring rules. The other
+GCP agent: `LoggingBillingAccountSink` (15), Security Command Center (16)
+and field gaps (decision 19). Coordinate through `main`: merge `main`
+before each check run.
+
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
