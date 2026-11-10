@@ -28,3 +28,17 @@ config_connector:
   fetched: "2026-11-09"
   # sha256 over config/crds/resources/*, config/servicemappings/* and apis/*/*/*_types.go
   digest: 1aca77e2fdc159c3f859927ac5e46d344b544a3de50c0abfee24a42ff278a3ba
+terraform:
+  # The Terraform comparison (google, google-beta) of the catalog repository,
+  # a private repository: the two files of path/ are vendored byte for byte
+  # under docs/coverage/inputs/terraform/. To move the pin: change commit,
+  # commit_date and fetched, then run with CATALOG_DIR set to a catalog
+  # checkout that has the commit (default ../catalog):
+  # `hack/coverage/run.sh --update-sources`, then `hack/coverage/run.sh`.
+  repo: https://github.com/highfivelabs/catalog
+  commit: 13064af34996c47f1a5498bb17aca16194c4574e
+  commit_date: "2026-11-09T22:36:38-06:00"
+  fetched: "2026-11-10"
+  path: docs/terraform/config-connector-extensions
+  sha256_terraform_csv: d93d7cd70b90edc08f207b8caaea804a2467ca47b44a88ca09569ace46801dfc
+  sha256_terraform_resources_csv: c8c5b6032b1914d7436daf9c21b3cc5c55bd8acc14f762155aeef78ec2eaf0f2

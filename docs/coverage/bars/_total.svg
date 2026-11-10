@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="54" viewBox="0 0 640 54" role="img" aria-label="Google Cloud, all services: official 35.6%, ours beyond official 0.3%, uncovered 64.1% of 43589 attributes">
-<title>Google Cloud, all services: official 35.6%, ours beyond official 0.3%, uncovered 64.1% of 43589 attributes</title>
-<rect x="0.5" y="0.5" width="639" height="53" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="92" viewBox="0 0 640 92" role="img" aria-label="Google Cloud, all services: official 35.6%, ours beyond official 0.3%, uncovered 64.1% of 43589 attributes; Terraform google-beta 40.5% (L1 36.2%), an estimate">
+<title>Google Cloud, all services: official 35.6%, ours beyond official 0.3%, uncovered 64.1% of 43589 attributes; Terraform google-beta 40.5% (L1 36.2%), an estimate</title>
+<rect x="0.5" y="0.5" width="639" height="91" rx="4" fill="#ffffff" stroke="#d0d7de"/>
 <clipPath id="c"><rect x="10" y="8" width="620" height="18" rx="3"/></clipPath>
 <g clip-path="url(#c)">
 <rect x="10" y="8" width="620" height="18" fill="#d0d7de"/>
@@ -8,4 +8,11 @@
 <rect x="230.71" y="8" width="1.96" height="18" fill="#2da44e"/>
 </g>
 <text x="10" y="43" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f"><tspan fill="#2f81f7">&#9632;</tspan> official 35.6%   <tspan fill="#2da44e">&#9632;</tspan> ours beyond 0.3%   <tspan fill="#8c959f">&#9632;</tspan> uncovered 64.1%   43589 attributes, 1244 resources</text>
+<clipPath id="t"><rect x="10" y="53" width="620" height="12" rx="3"/></clipPath>
+<g clip-path="url(#t)">
+<rect x="10" y="53" width="620" height="12" fill="#d0d7de"/>
+<rect x="10" y="53" width="251.15" height="12" fill="#7b42bc"/>
+<rect x="233.59" y="53" width="2" height="12" fill="#24292f"/>
+</g>
+<text x="10" y="81" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f"><tspan fill="#7b42bc">&#9632;</tspan> Terraform google-beta 40.5% (tick: L1 36.2%; google 39.6%)   an estimate, see docs/coverage</text>
 </svg>
