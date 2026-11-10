@@ -106,7 +106,8 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   below says of them: `addRule` does not refuse a priority in use, no
   rule's fields are checked (including `srcNetworkContext` against
   `srcNetworks`), `patchRule` replaces the rule whole where the real API
-  keeps a list the body leaves out, and no rule is ever "not ready".
+  keeps a list the body leaves out (and a network context sent as `""`;
+  the controller sends `UNSPECIFIED`), and no rule is ever "not ready".
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones; their rules are patch 0020). The fingerprint is
   not checked on patch, a policy is deleted even when associated, and
