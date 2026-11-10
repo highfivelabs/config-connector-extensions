@@ -263,6 +263,16 @@ but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
 
+`ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
+`roles/compute.networkAdmin` has `compute.vpnTunnels.*`,
+`compute.vpnGateways.*` and `compute.externalVpnGateways.*`. The test
+makes a network, an HA VPN gateway, an external peer gateway (one
+interface, 203.0.113.10, a documentation address, so the tunnel never
+comes up) and a Cloud Router through the API, then two tunnels; the
+sweeper deletes tunnels, then HA and external VPN gateways, by name. A
+tunnel bills by the hour while it exists; the test keeps each for a few
+minutes.
+
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as
 `E2E_TEST_FOLDER_PROJECT=<project ID>`; without it a live `compute` run

@@ -307,7 +307,13 @@ items:
     upstream: >-
       none for the fields. Open PR #11260 (2026-08-21) moves `ComputeInterconnectAttachment` to the identity and
       refs pattern (a step to direct).
-    build: Wait (decision 5); track #11260.
+    build: >-
+      `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`,
+      built 2026-11-10): Config Connector's direct types and mapper copied,
+      a whole tunnel made by insert with every field but labels immutable
+      (`docs/design.md` 6.6, the create-only pattern; patch 0031). The
+      interconnect attachment and interconnect fields are next (decision
+      19); track #11260.
   - title: Service attachment fields (Private Service Connect producers)
     importance: A
     gap: field
