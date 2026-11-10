@@ -1189,13 +1189,16 @@ Notes on what was built from this table:
   Compute Engine REST client with emptied lists sent as `[]`, and
   `removeRule`; the patch waits on a global operation), sharing its
   missing-rule check (renamed `firewallPolicyRuleMissing`) and its
-  comparison, to which the network contexts are added. Not here yet, as
+  comparison, to which the network contexts are added. Live showed that
+  `patchRule` ignores a network context sent as `""` (it kept
+  `INTERNET`); one is cleared by sending `UNSPECIFIED`, and `""` and
+  `UNSPECIFIED` compare as unset. Not here yet, as
   in the regional kind: `securityProfileGroup`, `tlsInspect` and
   `targetResources`. Generated: the CRD and deepcopy only
   (controller-gen); `hack/scaffold-kind.sh` does not fit a rule inside a
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
-  unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+  unpatched (`docs/fake-cloud.md`). Live: passes (`docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
