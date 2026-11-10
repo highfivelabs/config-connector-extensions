@@ -169,6 +169,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   organization), and none of the rule's contents: any principal or
   permission string and any `denialCondition` is stored. Nothing it
   stores is enforced.
+- **Organization security policies in mockgcp** (upstream's,
+  unpatched, for `ComputeOrganizationSecurityPolicy` and its
+  association). It serves insert (a new numeric ID, the parent as sent,
+  a default rule), get, list, a patch of the description only, delete,
+  and add, get and remove of an association. It checks no permissions
+  on the parent or the attachment, does not refuse a second association
+  to the same organization or folder, and does not default `type`.
 - **Cloud Routers in mockgcp** (patch 0027, ours, for `ComputeRouter`).
   `routers.get` returns an MD5 key by name only, as the real API does;
   the fake keeps the value, so a test cannot see what value was sent

@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
+- compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
+- compute.gcp.hfl.dev_computeorganizationsecuritypolicyassociations.yaml
 - compute.gcp.hfl.dev_computeprojectdefaultnetworktiers.yaml
 - compute.gcp.hfl.dev_computeprojectmetadataitems.yaml
 - compute.gcp.hfl.dev_computeregionnetworkendpoints.yaml

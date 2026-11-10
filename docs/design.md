@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has twenty-eight kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -17,7 +17,8 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `ProjectDefaultServiceAccounts`, and a project's or organization's
 `NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
 `NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
-stable `IAMDenyPolicy` (section 6). Each
+stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy` and
+`ComputeOrganizationSecurityPolicyAssociation` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1093,6 +1094,33 @@ Notes on what was built from this table:
   is granted on an organization; the test skips live unless
   `E2E_IAM_DENY_ADMIN=true` (`docs/live-runs.md`). A folder's and an
   organization's policy run on the fake only.
+- `ComputeOrganizationSecurityPolicy` and
+  `ComputeOrganizationSecurityPolicyAssociation`
+  (`compute.gcp.hfl.dev/v1beta1`, decision 13: a hierarchical firewall
+  policy under an organization or folder, and its attachment to an
+  organization or folder). Upstream, rechecked 2026-11-10 (read-only):
+  both are `v1alpha1` on `master` at the pin (`672414b`) and in
+  `v1.160.0`, Terraform-based by default with an opt-in direct
+  controller; `ComputeOrganizationSecurityPolicyRule` is Terraform-only
+  (a closed PR, #9950, began its direct types); no open pull request
+  promotes any of the three. **Copied** with as little change as
+  possible: the types, identities and references, the direct
+  controllers on the Compute Engine REST client, the hand-written
+  mappers (upstream's `mappers.go`), the fuzzers and the association's
+  mapper test. Changed: `displayName`, `parent` and `type` are immutable
+  by CEL (upstream says so, but its update patches only the description,
+  so a changed name would have been reported and never applied); the
+  association takes exactly one of `policyId` and `securityPolicyRef`
+  and its spec is immutable, both by CEL (upstream refuses these in the
+  identity and the update); the reference names our policy kind; our
+  group, version (`v1beta1`, as `IAMDenyPolicy`) and short names. The
+  policy's ID is the server's: `resourceID` only acquires an existing
+  policy; otherwise the first reconcile inserts one and keeps its ID in
+  `status.policyId`, which later reconciles use (a status write lost
+  after the insert would insert a second policy, as upstream). mockgcp
+  serves both unpatched (`docs/fake-cloud.md`). Hand-written here: the
+  end-to-end test only. Live: pending, needs the test folder (both act
+  on an organization or folder; `docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1334,6 +1362,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     permissions (an unknown permission, a principal type a deny rule does
     not take), which mockgcp does not make; how long a new policy takes to
     apply; and a policy's `denialCondition`, which no test sets.
+30. `ComputeOrganizationSecurityPolicy` and its association: a live run
+    (the test folder: a policy under it, attached to it); what the real
+    API defaults (`type`, rules it adds) and whether a resync then writes
+    nothing; the API's checks of a parent or attachment the caller cannot
+    use, which mockgcp does not make; the rule kind, which is next
+    (written here, as upstream's is Terraform-only).
 
 ## 8. Decisions
 
