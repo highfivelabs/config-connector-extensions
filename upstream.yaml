@@ -385,8 +385,9 @@ copied:
   - here: [pkg/controller/direct/run/resolverefs.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/resolverefs.go]}
   - here:
-      - apis/iam/v1alpha1/iambinding_types.go
-      - apis/iam/v1alpha1/iambinding_identity.go
+      - apis/iam/v1beta1/iambinding_types.go
+      - apis/iam/v1beta1/iambinding_identity.go
+      - apis/iam/v1beta1/iamresourceref_types.go
       - apis/iam/v1alpha1/iammember_types.go
       - apis/iam/v1alpha1/iammember_identity.go
       - apis/iam/v1alpha1/iamresourceref_types.go

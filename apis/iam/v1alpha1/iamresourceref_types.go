@@ -3,7 +3,10 @@
 
 package v1alpha1
 
-// Written here: what the IAM kinds that bind members to roles share. The
+import "github.com/GoogleCloudPlatform/k8s-config-connector/apis/iam/iamrefs"
+
+// Written here: what IAMMember takes to name a resource, a condition and a
+// member from an object. IAMBinding, in v1beta1, has its own copy. The
 // resourceRef is shaped like Config Connector's IAMPolicyMember's, so a
 // manifest moves between them with the kind and the members changed.
 
@@ -47,4 +50,12 @@ type IAMCondition struct {
 	// The Common Expression Language expression, for example
 	// request.time < timestamp('2030-01-01T00:00:00Z').
 	Expression string `json:"expression"`
+}
+
+// IAMBindingMemberFrom is a member taken from an object. The name is kept
+// from when IAMBinding was in this version (it is not in the CRD).
+type IAMBindingMemberFrom struct {
+	// The IAMServiceAccount (or an external service account email) to
+	// bind: serviceAccount:{its email}.
+	ServiceAccountRef iamrefs.IAMServiceAccountRef `json:"serviceAccountRef"`
 }

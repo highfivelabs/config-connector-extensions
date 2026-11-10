@@ -1,7 +1,7 @@
 // Copyright 2026 High Five Labs
 // SPDX-License-Identifier: Apache-2.0
 
-package v1alpha1
+package v1beta1
 
 // Written here. One role on one resource, with its members, authoritative
 // for that role: members added out of band are removed. It is Terraform's
@@ -11,6 +11,10 @@ package v1alpha1
 // IAMPolicyBinding that is IAM v3's principal access boundary
 // PolicyBinding, a different resource, which is why this kind is not named
 // that (docs/design.md section 10, question 1).
+//
+// v1beta1 since 2026-11-10 (docs/design.md decision 24): the kind moved
+// from v1alpha1 unchanged, and v1alpha1 is no longer served. Nothing had
+// been released at v1alpha1.
 
 import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/iam/iamrefs"
