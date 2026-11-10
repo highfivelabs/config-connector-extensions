@@ -13,6 +13,7 @@ resources:
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
 - iam.gcp.hfl.dev_iambindings.yaml
+- iam.gcp.hfl.dev_iamdenypolicies.yaml
 - iam.gcp.hfl.dev_iammembers.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolmanagedidentities.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolnamespaces.yaml
