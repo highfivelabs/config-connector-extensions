@@ -205,6 +205,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | `afe91be` | ComputeRouterRoutePolicy (and the rest of `compute`) | PASS | PASS | none: a policy on our `ComputeRouter` named by `routerRef.name`, and the name refused while a Config Connector `ComputeRouter` of the same name exists, as on the fake (design.md section 7 item 28). Run `cce-11100428-c1fb` | the compute package's networks, routers (one of ours), NEG and firewall policies (deleted); `task live-list` empty |
 | 2026-11-10 | pending | IAMDenyPolicy | PASS | pending, needs `iam.denypolicies.*` (Deny Admin, `roles/iam.denyAdmin`, granted on an organization) for `cce-live-tests`; then `E2E_IAM_DENY_ADMIN=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation | PASS | pending, needs the test folder (both act on an organization or folder) | not run (the test skips live) | none |
+| 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -246,8 +247,8 @@ sweeper; the run leaves the folder's service agent in place, as
 Terraform does. Then:
 `E2E_TEST_FOLDER=... task test-live PROJECT=hfl-dev-514205 KINDS=serviceusage`.
 
-`ComputeOrganizationSecurityPolicy` and its association (package
-`compute`) wait on the test folder: a live run skips them, and the
+`ComputeOrganizationSecurityPolicy`, its association and its rule
+(package `compute`) wait on the test folder: a live run skips them, and the
 sweeper has nothing of theirs to find in a project.
 
 `IAMDenyPolicy` (package `iam`) waits on Deny Admin for the live-test

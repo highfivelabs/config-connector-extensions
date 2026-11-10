@@ -1,0 +1,396 @@
+config-connector-extensions patch 0028: mockgcp's organization security policy rules: addRule, getRule, patchRule, removeRule, with a FIREWALL rule's beta-only fields.
+
+For compute.gcp.hfl.dev ComputeOrganizationSecurityPolicyRule. Written here:
+- organizationSecurityPolicies.addRule, getRule, patchRule and
+  removeRule (upstream's mock answers Unimplemented), after the regional
+  network firewall policy's rules: a rule is addressed by its priority in
+  the policy's list of rules; addRule refuses a rule without a priority
+  or an action, or at a priority the policy has; getRule, patchRule and
+  removeRule answer 400 "The security policy does not contain a rule at
+  priority N" for a priority it has not (the wording of the firewall
+  policies' answer, not seen from this API); patchRule replaces the rule
+  whole (the real API's handling of fields a patch leaves out is not
+  known); each change gives the policy a new fingerprint;
+- a FIREWALL policy's rule has fields only the compute beta API has
+  (direction, enableLogging, targetResources, targetServiceAccounts,
+  match.config.destIpRanges and layer4Configs), and the v1 messages this
+  mock is built on drop them. The HTTP layer keeps them by policy and
+  priority from each addRule and patchRule that succeeds, puts them back
+  into getRule and the policy's rules, and forgets them on removeRule and
+  on the policy's delete (organizationsecuritypolicyrules.go).
+Upstream candidate: the rule methods yes; the beta fields only as a
+stopgap until the mock has the beta protos.
+
+diff --git a/mockgcp/mockcompute/organizationsecuritypoliciesv1.go b/mockgcp/mockcompute/organizationsecuritypoliciesv1.go
+index fdc81af9..9986c94d 100644
+--- a/mockgcp/mockcompute/organizationsecuritypoliciesv1.go
++++ b/mockgcp/mockcompute/organizationsecuritypoliciesv1.go
+@@ -370,3 +370,128 @@ func (s *OrganizationSecurityPoliciesV1) ListAssociations(ctx context.Context, r
+ 
+ 	return response, nil
+ }
++
++// The rules of an organization security policy, written for
++// config-connector-extensions (patch 0028), after the regional network
++// firewall policy's (regionnetworkfirewallpolicies.go): addressed by
++// priority, in the policy's list of rules; each change gives the policy a
++// new fingerprint. A FIREWALL policy's rules have fields only the beta API
++// has (direction, layer4Configs, targets); the v1 messages here drop them,
++// and organizationsecuritypolicyrules.go keeps them beside the rule.
++
++func (s *OrganizationSecurityPoliciesV1) getPolicy(ctx context.Context, policy string) (*pb.SecurityPolicy, string, error) {
++	name, err := s.parseOrganizationSecurityPolicyName("locations/global/securityPolicies/" + policy)
++	if err != nil {
++		return nil, "", err
++	}
++	fqn := name.String()
++	obj := &pb.SecurityPolicy{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, "", status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, "", err
++	}
++	return obj, fqn, nil
++}
++
++func noOrganizationSecurityPolicyRule(priority int32) error {
++	return status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The security policy does not contain a rule at priority %d.", priority, priority)
++}
++
++func (s *OrganizationSecurityPoliciesV1) GetRule(ctx context.Context, req *pb.GetRuleOrganizationSecurityPolicyRequest) (*pb.SecurityPolicyRule, error) {
++	obj, _, err := s.getPolicy(ctx, req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	for _, r := range obj.GetRules() {
++		if r.GetPriority() == req.GetPriority() {
++			return r, nil
++		}
++	}
++	return nil, noOrganizationSecurityPolicyRule(req.GetPriority())
++}
++
++func (s *OrganizationSecurityPoliciesV1) AddRule(ctx context.Context, req *pb.AddRuleOrganizationSecurityPolicyRequest) (*pb.Operation, error) {
++	obj, fqn, err := s.getPolicy(ctx, req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	r := proto.Clone(req.GetSecurityPolicyRuleResource()).(*pb.SecurityPolicyRule)
++	if r.Priority == nil {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': ''. Priority is required.")
++	}
++	if r.GetAction() == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.action': ''. Action is required.")
++	}
++	for _, existing := range obj.GetRules() {
++		if existing.GetPriority() == r.GetPriority() {
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '%d'. The security policy already has a rule at priority %d.", r.GetPriority(), r.GetPriority())
++		}
++	}
++	r.Kind = PtrTo("compute#securityPolicyRule")
++	obj.Rules = append(obj.Rules, r)
++	return s.saveRuleChange(ctx, obj, fqn, "addRuleToOrganizationSecurityPolicy")
++}
++
++// PatchRule replaces the rule at the priority with the one sent (the real
++// API's handling of fields a patch leaves out is not known; the controller
++// sends every field).
++func (s *OrganizationSecurityPoliciesV1) PatchRule(ctx context.Context, req *pb.PatchRuleOrganizationSecurityPolicyRequest) (*pb.Operation, error) {
++	obj, fqn, err := s.getPolicy(ctx, req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	found := false
++	for i, rule := range obj.GetRules() {
++		if rule.GetPriority() == req.GetPriority() {
++			found = true
++			r := proto.Clone(req.GetSecurityPolicyRuleResource()).(*pb.SecurityPolicyRule)
++			r.Priority = PtrTo(rule.GetPriority())
++			r.Kind = PtrTo("compute#securityPolicyRule")
++			obj.Rules[i] = r
++		}
++	}
++	if !found {
++		return nil, noOrganizationSecurityPolicyRule(req.GetPriority())
++	}
++	return s.saveRuleChange(ctx, obj, fqn, "patchRuleInOrganizationSecurityPolicy")
++}
++
++func (s *OrganizationSecurityPoliciesV1) RemoveRule(ctx context.Context, req *pb.RemoveRuleOrganizationSecurityPolicyRequest) (*pb.Operation, error) {
++	obj, fqn, err := s.getPolicy(ctx, req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	found := false
++	var rules []*pb.SecurityPolicyRule
++	for _, rule := range obj.GetRules() {
++		if rule.GetPriority() == req.GetPriority() {
++			found = true
++			continue
++		}
++		rules = append(rules, rule)
++	}
++	if !found {
++		return nil, noOrganizationSecurityPolicyRule(req.GetPriority())
++	}
++	obj.Rules = rules
++	return s.saveRuleChange(ctx, obj, fqn, "removeRuleFromOrganizationSecurityPolicy")
++}
++
++func (s *OrganizationSecurityPoliciesV1) saveRuleChange(ctx context.Context, obj *pb.SecurityPolicy, fqn string, operationType string) (*pb.Operation, error) {
++	obj.Fingerprint = nil
++	obj.Fingerprint = PtrTo(computeFingerprint(obj))
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo(operationType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startGlobalOrganizationLRO(ctx, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
+diff --git a/mockgcp/mockcompute/organizationsecuritypolicyrules.go b/mockgcp/mockcompute/organizationsecuritypolicyrules.go
+new file mode 100644
+index 00000000..23a787a6
+--- /dev/null
++++ b/mockgcp/mockcompute/organizationsecuritypolicyrules.go
+@@ -0,0 +1,182 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockcompute
++
++// Written for config-connector-extensions (patch 0028). A FIREWALL
++// organization security policy's rule has fields only the compute beta API
++// has: direction, enableLogging, targetResources, targetServiceAccounts, and
++// match.config's destIpRanges and layer4Configs. This mock serves beta as v1
++// (service.go), and the v1 messages drop those fields. So the HTTP layer
++// keeps them here, by policy and priority, from each addRule and patchRule
++// that succeeds, puts them back into getRule and the policy's rules, and
++// forgets them on removeRule and on the policy's delete.
++
++import (
++	"bytes"
++	"encoding/json"
++	"io"
++	"net/http"
++	"strconv"
++	"strings"
++	"sync"
++)
++
++const orgSecurityPoliciesPath = "/compute/v1/locations/global/securityPolicies/"
++
++var (
++	orgSecurityPolicyRuleBetaFields       = []string{"direction", "enableLogging", "targetResources", "targetServiceAccounts"}
++	orgSecurityPolicyRuleBetaConfigFields = []string{"destIpRanges", "layer4Configs"}
++)
++
++type orgSecurityPolicyRuleExtras struct {
++	mu sync.Mutex
++	// policy ID -> priority -> {"rule": {...}, "config": {...}}
++	rules map[string]map[int64]map[string]map[string]any
++}
++
++func newOrgSecurityPolicyRuleExtras() *orgSecurityPolicyRuleExtras {
++	return &orgSecurityPolicyRuleExtras{rules: map[string]map[int64]map[string]map[string]any{}}
++}
++
++// orgSecurityPolicyRequest is a request to an organization security policy
++// or one of its rule methods, read before it is served.
++type orgSecurityPolicyRequest struct {
++	policy   string
++	method   string // "", getRule, addRule, patchRule, removeRule, ...
++	priority *int64
++	extras   map[string]map[string]any
++}
++
++// readOrgSecurityPolicyRequest returns nil for any other request. It reads
++// (and restores) the body of addRule and patchRule.
++func readOrgSecurityPolicyRequest(r *http.Request) *orgSecurityPolicyRequest {
++	rest, ok := strings.CutPrefix(r.URL.Path, orgSecurityPoliciesPath)
++	if !ok || rest == "" {
++		return nil
++	}
++	policy, method, _ := strings.Cut(rest, "/")
++	req := &orgSecurityPolicyRequest{policy: policy, method: method}
++	if p := r.URL.Query().Get("priority"); p != "" {
++		if n, err := strconv.ParseInt(p, 10, 64); err == nil {
++			req.priority = &n
++		}
++	}
++	if r.Method == http.MethodPost && (method == "addRule" || method == "patchRule") && r.Body != nil {
++		body, err := io.ReadAll(r.Body)
++		if err != nil {
++			return req
++		}
++		r.Body = io.NopCloser(bytes.NewBuffer(body))
++		var rule map[string]any
++		if err := json.Unmarshal(body, &rule); err != nil {
++			return req
++		}
++		if method == "addRule" {
++			if p, ok := rule["priority"].(float64); ok {
++				n := int64(p)
++				req.priority = &n
++			} else {
++				req.priority = nil
++			}
++		}
++		req.extras = map[string]map[string]any{"rule": {}, "config": {}}
++		for _, f := range orgSecurityPolicyRuleBetaFields {
++			if v, ok := rule[f]; ok {
++				req.extras["rule"][f] = v
++			}
++		}
++		if match, ok := rule["match"].(map[string]any); ok {
++			if config, ok := match["config"].(map[string]any); ok {
++				for _, f := range orgSecurityPolicyRuleBetaConfigFields {
++					if v, ok := config[f]; ok {
++						req.extras["config"][f] = v
++					}
++				}
++			}
++		}
++	}
++	return req
++}
++
++// served records what a successful request changed, and returns the
++// response body with the kept fields put back.
++func (e *orgSecurityPolicyRuleExtras) served(r *http.Request, req *orgSecurityPolicyRequest, body []byte) []byte {
++	e.mu.Lock()
++	defer e.mu.Unlock()
++	switch {
++	case req.method == "" && r.Method == http.MethodDelete:
++		delete(e.rules, req.policy)
++	case (req.method == "addRule" || req.method == "patchRule") && req.priority != nil && req.extras != nil:
++		if e.rules[req.policy] == nil {
++			e.rules[req.policy] = map[int64]map[string]map[string]any{}
++		}
++		e.rules[req.policy][*req.priority] = req.extras
++	case req.method == "removeRule" && req.priority != nil:
++		delete(e.rules[req.policy], *req.priority)
++	case req.method == "getRule" && req.priority != nil && r.Method == http.MethodGet:
++		var rule map[string]any
++		if err := json.Unmarshal(body, &rule); err != nil {
++			return body
++		}
++		e.restore(req.policy, *req.priority, rule)
++		if out, err := json.Marshal(rule); err == nil {
++			return out
++		}
++	case req.method == "" && r.Method == http.MethodGet:
++		var policy map[string]any
++		if err := json.Unmarshal(body, &policy); err != nil {
++			return body
++		}
++		rules, _ := policy["rules"].([]any)
++		for _, x := range rules {
++			if rule, ok := x.(map[string]any); ok {
++				if p, ok := rule["priority"].(float64); ok {
++					e.restore(req.policy, int64(p), rule)
++				}
++			}
++		}
++		if out, err := json.Marshal(policy); err == nil {
++			return out
++		}
++	}
++	return body
++}
++
++func (e *orgSecurityPolicyRuleExtras) restore(policy string, priority int64, rule map[string]any) {
++	extras := e.rules[policy][priority]
++	if extras == nil {
++		return
++	}
++	for k, v := range extras["rule"] {
++		rule[k] = v
++	}
++	if len(extras["config"]) == 0 {
++		return
++	}
++	match, _ := rule["match"].(map[string]any)
++	if match == nil {
++		match = map[string]any{}
++		rule["match"] = match
++	}
++	config, _ := match["config"].(map[string]any)
++	if config == nil {
++		config = map[string]any{}
++		match["config"] = config
++	}
++	for k, v := range extras["config"] {
++		config[k] = v
++	}
++}
+diff --git a/mockgcp/mockcompute/service.go b/mockgcp/mockcompute/service.go
+index ea3ab023..1ca8bd4f 100644
+--- a/mockgcp/mockcompute/service.go
++++ b/mockgcp/mockcompute/service.go
+@@ -44,6 +44,10 @@ type MockService struct {
+ 	storage storage.Storage
+ 
+ 	*computeOperations
++
++	// orgSecurityPolicyRules keeps the beta-only fields of organization
++	// security policy rules (organizationsecuritypolicyrules.go).
++	orgSecurityPolicyRules *orgSecurityPolicyRuleExtras
+ }
+ 
+ // New creates a MockService.
+@@ -52,6 +56,8 @@ func New(env *common.MockEnvironment, storage storage.Storage) mockgcpregistry.M
+ 		MockEnvironment:   env,
+ 		storage:           storage,
+ 		computeOperations: newComputeOperationsService(storage),
++
++		orgSecurityPolicyRules: newOrgSecurityPolicyRuleExtras(),
+ 	}
+ 	return s
+ }
+@@ -541,13 +547,15 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 			}
+ 		}
+ 
++		orgSecurityPolicy := readOrgSecurityPolicyRequest(r)
++
+ 		isRouter := strings.Contains(r.URL.Path, "/routers")
+ 		isNetworkFirewallPolicy := strings.Contains(r.URL.Path, "/global/firewallPolicies") && !strings.Contains(r.URL.Path, "/locations/")
+ 		isGET := r.Method == http.MethodGet
+ 
+ 		var captured *responseCapture
+ 		var originalWriter http.ResponseWriter = w
+-		if isLegacyHealthCheck || isRouter || (isNetworkFirewallPolicy && isGET) {
++		if isLegacyHealthCheck || isRouter || (isNetworkFirewallPolicy && isGET) || orgSecurityPolicy != nil {
+ 			captured = &responseCapture{ResponseWriter: w}
+ 			w = captured
+ 		}
+@@ -588,6 +596,10 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 				}
+ 			}
+ 
++			if orgSecurityPolicy != nil && captured.code < 400 {
++				bodyBytes = s.orgSecurityPolicyRules.served(r, orgSecurityPolicy, bodyBytes)
++			}
++
+ 			originalWriter.Header().Set("Content-Length", strconv.Itoa(len(bodyBytes)))
+ 			if captured.code != 0 {
+ 				originalWriter.WriteHeader(captured.code)

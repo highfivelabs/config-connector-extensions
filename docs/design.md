@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty-one kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -17,8 +17,9 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `ProjectDefaultServiceAccounts`, and a project's or organization's
 `NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
 `NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
-stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy` and
-`ComputeOrganizationSecurityPolicyAssociation` (section 6). Each
+stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
+`ComputeOrganizationSecurityPolicyAssociation` and
+`ComputeOrganizationSecurityPolicyRule` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1121,6 +1122,42 @@ Notes on what was built from this table:
   serves both unpatched (`docs/fake-cloud.md`). Hand-written here: the
   end-to-end test only. Live: pending, needs the test folder (both act
   on an organization or folder; `docs/live-runs.md`).
+- `ComputeOrganizationSecurityPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
+  decision 13: a rule of a hierarchical firewall policy, at its
+  priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
+  the pin with direct types, identity, reference, a mapper and a fuzzer,
+  but reconciled only through Terraform (`static_config.go`); no open
+  pull request adds a controller. **Copied:** the types, identity,
+  reference and identity test. **Not copied:** upstream's mapper and
+  fuzzer, which map the rule to `FirewallPolicyRule`, the message of
+  `firewallPolicies`, not of this API. **Written here:** the controller,
+  after Magic Modules' `OrganizationSecurityPolicyRule.yaml` (read, not
+  copied) and our regional firewall policy rule: `getRule`, `addRule`,
+  `patchRule` with every field (unset ones as their defaults: direction
+  `INGRESS`, `versionedExpr` `FIREWALL`, `""`, `false`, `[]`) and
+  `removeRule`, by priority; a rule the API answers 404 or 400 "does not
+  contain a rule at priority" for is gone. A FIREWALL rule's
+  `direction`, `enableLogging`, `targetResources`,
+  `targetServiceAccounts`, `destIpRanges` and `layer4Configs` are only in
+  the compute **beta** API (Magic Modules: `min_version: beta`; v1's
+  `SecurityPolicyRule` is Cloud Armor's), so the controller uses the
+  beta REST client (`google.golang.org/api/compute/v0.beta`, already a
+  dependency), as Terraform does. Changed from upstream's schema:
+  `securityPolicyRef` beside `policyId`, exactly one (the policy's ID is
+  the server's, so `policyId` alone cannot name a policy made in the same
+  apply; the association has the same pair); `policyId`,
+  `securityPolicyRef` and `resourceID` (the priority, `metadata.name`
+  when unset) immutable and the priority a number; `direction` and
+  `versionedExpr` enums; at least one `layer4Config`; `match.description`
+  refused, since the API's matcher has none (Magic Modules still lists
+  it); `status.externalRef`
+  (`locations/global/securityPolicies/{policy}/rules/{priority}`, ours)
+  and `status.ruleTupleCount`. Generated: the CRD and deepcopy only
+  (controller-gen); `hack/scaffold-kind.sh` does not fit a rule inside a
+  policy (its header says so), and its types would be v1's Cloud Armor
+  rule. Copied: 838 of the kind's 2,059 hand-kept lines (41%, the mock
+  patch included); the rest is written here. mockgcp patch 0028
+  (`docs/fake-cloud.md`). Live: pending, needs the test folder.
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1366,8 +1403,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     (the test folder: a policy under it, attached to it); what the real
     API defaults (`type`, rules it adds) and whether a resync then writes
     nothing; the API's checks of a parent or attachment the caller cannot
-    use, which mockgcp does not make; the rule kind, which is next
-    (written here, as upstream's is Terraform-only).
+    use, which mockgcp does not make.
+31. `ComputeOrganizationSecurityPolicyRule`: a live run (the test folder:
+    a FIREWALL policy under it and its rules); whether the beta API still
+    takes FIREWALL policies and rules (v1 has only Cloud Armor's); what
+    `getRule` answers for a missing priority (assumed 400 "does not
+    contain a rule at priority", as for firewall policies); whether
+    `patchRule` keeps fields the body leaves out (the controller sends
+    every field, so either way it converges); the default rules the API
+    adds to a FIREWALL policy, and whether `targetResources` comes back
+    as full URLs (compared either way).
 
 ## 8. Decisions
 

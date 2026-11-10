@@ -378,7 +378,7 @@ compute.googleapis.com,compute.googleapis.com/NetworkEndpointGroup,17,ComputeNet
 compute.googleapis.com,compute.googleapis.com/NetworkFirewallPolicy,73,ComputeNetworkFirewallPolicy;ComputeNetworkFirewallPolicyAssociation;ComputeNetworkFirewallPolicyRule,26,,0,47,false,api=v1:networkFirewallPolicies
 compute.googleapis.com,compute.googleapis.com/NodeGroup,12,ComputeNodeGroup,10,,0,2,false,api=v1:nodeGroups; official-spec-fields-unmatched=5/14
 compute.googleapis.com,compute.googleapis.com/NodeTemplate,14,ComputeNodeTemplate,8,,0,6,false,api=v1:nodeTemplates; official-spec-fields-unmatched=2/9
-compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation,0,74,false,api=v1:organizationSecurityPolicies
+compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,0,74,false,api=v1:organizationSecurityPolicies
 compute.googleapis.com,compute.googleapis.com/PacketMirroring,12,ComputePacketMirroring,12,,0,0,false,api=v1:packetMirrorings; official-spec-fields-unmatched=5/16
 compute.googleapis.com,compute.googleapis.com/PublicAdvertisedPrefix,7,,0,,0,7,false,api=v1:publicAdvertisedPrefixes
 compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,,0,15,false,api=v1:publicDelegatedPrefixes
