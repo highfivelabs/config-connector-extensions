@@ -171,7 +171,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   likewise refuses a change of more than one of the interfaces, the
   peers with the keys, and the NATs (the API's "Updating multiple Router
   features is currently unsupported"; whether the base fields or the
-  keys alone count as features is not known). Otherwise `routers.update`
+  keys alone count as features is not known, and a live `routers.patch`
+  that added an interface and a peer together was accepted, so the real
+  rule is narrower than the fake's; the controller never sends two). Otherwise `routers.update`
   stores the body as sent: it does not check that a peer's interface,
   its MD5 key name, or a key's single use exist; it does not fill in a
   peer's `ipAddress`, BFD, `enable` or `managementType`, a NAT's

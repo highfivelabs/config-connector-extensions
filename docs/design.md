@@ -1019,8 +1019,11 @@ Notes on what was built from this table:
     `ipAddress` computed), the four lists must have the same members in
     any order, route policy lists in order, links without their URL
     prefix;
-  - MD5 key values come only from Secrets (`keyRef`), are sent with
-    every write and never logged or kept; the API never returns them
+  - MD5 key values come only from Secrets (`keyRef`) and are never
+    logged or kept; they are sent only in the steps that write the keys
+    (a live run: the API takes a key sent with its value as a change of
+    the keys, so a NAT-only update carrying them was refused), and the
+    other steps send the keys as read, by name, which keeps their values; the API never returns them
     (Terraform's peer flattener; patch 0027 makes the fake do the same),
     so `status.md5AuthenticationKeysVersion`, a digest of each key's
     Secret name, key and `resourceVersion` (not of the value), shows when

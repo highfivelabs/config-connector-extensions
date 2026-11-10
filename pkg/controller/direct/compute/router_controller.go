@@ -32,8 +32,9 @@
 //     cloud's, a field it leaves out is the API's to default (the API fills
 //     in BFD, timeouts, IP versions and the like), the four lists must have
 //     the same members, and links compare without their URL prefix;
-//   - MD5 key values are read from Secrets and sent with every write; the API
-//     does not return them, so status.md5AuthenticationKeysVersion (a digest
+//   - MD5 key values are read from Secrets and sent only by the steps that
+//     write the keys (the API takes a key sent with a value as a change of
+//     the keys); the others send keys by name. The API does not return them, so status.md5AuthenticationKeysVersion (a digest
 //     of the Secrets' names, keys and resourceVersions, not of the values)
 //     says when a Secret changed and the keys must be written again;
 //   - the network and encryptedInterconnectRouter are immutable: a change is

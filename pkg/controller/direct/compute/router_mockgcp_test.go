@@ -268,6 +268,13 @@ func TestComputeRouter(t *testing.T) {
 			t.Fatalf("the hand-made peer is not there: %d peers", n)
 		}
 		resync(t)
+		// Live, taking them off is two updates (the peers, then the
+		// interfaces); wait for the cloud rather than for Ready, which the
+		// object already had.
+		waitFor(t, func() bool {
+			got := get(t, router)
+			return len(got.BgpPeers) == 1 && len(got.Interfaces) == 1
+		})
 		got = get(t, router)
 		if p := names(len(got.BgpPeers), func(i int) string { return got.BgpPeers[i].GetName() }); len(p) != 1 || p[0] != "onprem-peer" {
 			t.Errorf("cloud BGP peers = %v, want [onprem-peer]", p)
@@ -288,7 +295,14 @@ func TestComputeRouter(t *testing.T) {
 			t.Fatal(err)
 		}
 		resync(t)
-		u := env.WaitReady(routerGVK, namespace, name)
+		// Wait for the status to change rather than for Ready, which the
+		// object already had.
+		var u *unstructured.Unstructured
+		waitFor(t, func() bool {
+			u = env.WaitReady(routerGVK, namespace, name)
+			v, _, _ := unstructured.NestedString(u.Object, "status", "md5AuthenticationKeysVersion")
+			return v != keysVersion
+		})
 		v, _, _ := unstructured.NestedString(u.Object, "status", "md5AuthenticationKeysVersion")
 		if v == "" || v == keysVersion {
 			t.Errorf("status.md5AuthenticationKeysVersion = %q, was %q; want a new one", v, keysVersion)
