@@ -107,3 +107,36 @@ func TestFlattenDiscovery(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTerraform(t *testing.T) {
+	in := "service,provider,category,resources_total,attributes_total,attributes_terraform_l1,attributes_terraform_l2,pct_terraform_l2\n" +
+		"compute.googleapis.com,google-beta,platform-foundation,3,100,40,60,60.0\n" +
+		"compute.googleapis.com,google-beta,application,5,300,90,120,40.0\n" +
+		"run.googleapis.com,google-beta,application,2,100,50,50,50.0\n" +
+		"run.googleapis.com,google,application,2,100,45,49,49.0\n"
+	d, err := parseTerraform(strings.NewReader(in))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := d.service("google-beta", "compute.googleapis.com"); got != (tfCounts{400, 130, 180}) {
+		t.Errorf("compute summed over categories = %+v", got)
+	}
+	if got := d.cat["google-beta"]["application"]; got != (tfCounts{400, 140, 170}) {
+		t.Errorf("application = %+v", got)
+	}
+	if got := d.all["google-beta"]; got != (tfCounts{500, 180, 230}) || pct(got.l2, got.attrs) != "46.0" {
+		t.Errorf("all = %+v", got)
+	}
+	if got := d.all["google"]; got != (tfCounts{100, 45, 49}) {
+		t.Errorf("google = %+v", got)
+	}
+	if _, ok := d.service("google-beta", "absent.googleapis.com"); ok {
+		t.Errorf("an absent service has no figure")
+	}
+	if tfPct(tfCounts{}, false) != "—" {
+		t.Errorf("no figure should read —")
+	}
+	if _, err := parseTerraform(strings.NewReader("service,provider\nx,y\n")); err == nil {
+		t.Errorf("missing columns should fail")
+	}
+}
