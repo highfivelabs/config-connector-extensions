@@ -17,7 +17,7 @@ For compute.gcp.hfl.dev ComputeRouter. Written here:
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockcompute/routersv1.go b/mockgcp/mockcompute/routersv1.go
-index 7c11d712..872616a7 100644
+index 7c11d712..f1c459a1 100644
 --- a/mockgcp/mockcompute/routersv1.go
 +++ b/mockgcp/mockcompute/routersv1.go
 @@ -55,6 +55,12 @@ func (s *RoutersV1) Get(ctx context.Context, req *pb.GetRouterRequest) (*pb.Rout
@@ -54,7 +54,7 @@ index 7c11d712..872616a7 100644
  	id := s.generateID()
  
  	obj := proto.CloneOf(req.GetRouterResource())
-@@ -191,6 +211,25 @@ func (s *RoutersV1) Update(ctx context.Context, req *pb.UpdateRouterRequest) (*p
+@@ -191,6 +211,26 @@ func (s *RoutersV1) Update(ctx context.Context, req *pb.UpdateRouterRequest) (*p
  		return nil, err
  	}
  
@@ -63,18 +63,19 @@ index 7c11d712..872616a7 100644
 +	// Terraform's google_compute_router_peer writes them together), and the
 +	// NATs; which others count is not known.
 +	r := req.GetRouterResource()
-+	changed := 0
++	var changed []string
 +	if !proto.Equal(&pb.Router{Interfaces: existing.Interfaces}, &pb.Router{Interfaces: r.Interfaces}) {
-+		changed++
++		changed = append(changed, "interfaces")
 +	}
 +	if !proto.Equal(&pb.Router{BgpPeers: existing.BgpPeers, Md5AuthenticationKeys: existing.Md5AuthenticationKeys}, &pb.Router{BgpPeers: r.BgpPeers, Md5AuthenticationKeys: r.Md5AuthenticationKeys}) {
-+		changed++
++		changed = append(changed, "bgpPeers")
 +	}
 +	if !proto.Equal(&pb.Router{Nats: existing.Nats}, &pb.Router{Nats: r.Nats}) {
-+		changed++
++		changed = append(changed, "nats")
 +	}
-+	if changed > 1 {
-+		return nil, status.Errorf(codes.InvalidArgument, "Updating multiple Router features is currently unsupported.")
++	if len(changed) > 1 {
++		// The API's message, and (ours) the features that changed.
++		return nil, status.Errorf(codes.InvalidArgument, "Updating multiple Router features is currently unsupported. (mockgcp: %s changed)", strings.Join(changed, ", "))
 +	}
 +
  	updated := proto.Clone(req.GetRouterResource()).(*pb.Router)
