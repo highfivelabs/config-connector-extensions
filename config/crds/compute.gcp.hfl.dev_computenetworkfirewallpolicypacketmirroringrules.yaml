@@ -227,10 +227,6 @@ spec:
                   - name
                   type: object
                 type: array
-              tlsInspect:
-                description: Whether the traffic is TLS-decrypted before it is mirrored.
-                  Only for action mirror.
-                type: boolean
             required:
             - action
             - direction

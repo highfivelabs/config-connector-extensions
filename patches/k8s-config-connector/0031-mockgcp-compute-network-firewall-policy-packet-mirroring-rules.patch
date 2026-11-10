@@ -8,16 +8,17 @@ policy's packetMirroringRules; add refuses a rule without a priority or
 at a priority the policy has; get, patch and remove answer 400 "The
 firewall policy does not contain a packet mirroring rule at priority N"
 for a priority it has not (modelled on the firewall rules' answer); a
-patch replaces the rule whole; kind compute#packetMirroringRule. No
-default rules are added and nothing in the rule is checked. A new file,
+patch replaces the rule whole; kind compute#packetMirroringRule;
+tlsInspect is refused, even false, as the real API refused it in a live
+run. No default rules are added and nothing else in the rule is
+checked. A new file,
 so it touches no file another patch edits.
-
 diff --git a/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go b/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go
 new file mode 100644
-index 00000000..dd7c8bd2
+index 00000000..e9f3669e
 --- /dev/null
 +++ b/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go
-@@ -0,0 +1,154 @@
+@@ -0,0 +1,168 @@
 +// Copyright 2026 High Five Labs
 +// SPDX-License-Identifier: Apache-2.0
 +//
@@ -43,9 +44,10 @@ index 00000000..dd7c8bd2
 +// priority in the policy's packetMirroringRules. A missing priority is a
 +// 400, as for firewall rules; a priority already taken is refused on add.
 +// A patch replaces the rule (the real API keeps lists the body leaves out;
-+// a client that sends every field converges either way). No default rules
-+// are added and nothing is checked of the match, the action or the
-+// security profile group.
++// a client that sends every field converges either way). tlsInspect is
++// refused, even false, as the real API refuses it (seen live). No default
++// rules are added and nothing else is checked of the match, the action or
++// the security profile group.
 +
 +import (
 +	"context"
@@ -59,6 +61,13 @@ index 00000000..dd7c8bd2
 +
 +func packetMirroringRuleMissing(priority int32) error {
 +	return status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The firewall policy does not contain a packet mirroring rule at priority %d.", priority, priority)
++}
++
++func checkPacketMirroringRule(r *pb.FirewallPolicyRule) error {
++	if r.TlsInspect != nil {
++		return status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.tlsInspect': '%t'. TLS Inspection cannot be set for packet mirroring rule.", r.GetTlsInspect())
++	}
++	return nil
 +}
 +
 +func mockFieldValuesForPacketMirroringRule(r *pb.FirewallPolicyRule) {
@@ -88,6 +97,9 @@ index 00000000..dd7c8bd2
 +		return nil, err
 +	}
 +	r := proto.CloneOf(req.GetFirewallPolicyRuleResource())
++	if err := checkPacketMirroringRule(r); err != nil {
++		return nil, err
++	}
 +	if r.Priority == nil {
 +		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '0'. A priority is required.")
 +	}
@@ -115,6 +127,9 @@ index 00000000..dd7c8bd2
 +func (s *NetworkFirewallPoliciesV1) PatchPacketMirroringRule(ctx context.Context, req *pb.PatchPacketMirroringRuleNetworkFirewallPolicyRequest) (*pb.Operation, error) {
 +	obj, fqn, projectID, err := s.resolvePolicy(ctx, req.GetProject(), req.GetFirewallPolicy())
 +	if err != nil {
++		return nil, err
++	}
++	if err := checkPacketMirroringRule(req.GetFirewallPolicyRuleResource()); err != nil {
 +		return nil, err
 +	}
 +	found := false

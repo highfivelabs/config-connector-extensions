@@ -1183,8 +1183,11 @@ Notes on what was built from this table:
   rule: `mirror` needs `securityProfileGroup`), `direction`,
   `match.srcIPRanges`, `destIPRanges` and `layer4Configs`, `ruleName`,
   `description`, `disabled`, `securityProfileGroup` (a string, as the
-  API takes it: Terraform has no reference either), `tlsInspect` and
-  `targetSecureTags`; `status.externalRef`
+  API takes it: Terraform has no reference either) and
+  `targetSecureTags`, but not Terraform's `tlsInspect`: the first live
+  run's create was refused with 400 "TLS Inspection cannot be set for
+  packet mirroring rule" for `tlsInspect: false`, so the field is gone and
+  never sent (patch 0031 refuses it too); `status.externalRef`
   (`.../firewallPolicies/{policy}/packetMirroringRules/{priority}`, ours)
   and `status.ruleTupleCount`. The pinned `google.golang.org/api`
   compute/v1 client has no packet mirroring calls and the generated

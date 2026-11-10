@@ -7,7 +7,9 @@ package v1alpha1
 // pin and no pull request for one; Terraform's
 // google_compute_network_firewall_policy_packet_mirroring_rule (Magic
 // Modules' NetworkFirewallPolicyPacketMirroringRule.yaml, read, not copied)
-// has these fields. The shape follows our ComputeNetworkFirewallPolicyRule
+// has these fields, but for tlsInspect, which the API refuses on a packet
+// mirroring rule even as false (a live run, 2026-11-10: "TLS Inspection
+// cannot be set for packet mirroring rule"). The shape follows our ComputeNetworkFirewallPolicyRule
 // (compute.gcp.hfl.dev/v1beta1): a packet mirroring rule is the same
 // FirewallPolicyRule message in the policy's packetMirroringRules, addressed
 // by its priority, with Config Connector's ComputeNetworkFirewallPolicyRef
@@ -81,11 +83,6 @@ type ComputeNetworkFirewallPolicyPacketMirroringRuleSpec struct {
 	// Only for action mirror, which needs it.
 	// +optional
 	SecurityProfileGroup *string `json:"securityProfileGroup,omitempty"`
-
-	// Whether the traffic is TLS-decrypted before it is mirrored. Only for
-	// action mirror.
-	// +optional
-	TLSInspect *bool `json:"tlsInspect,omitempty"`
 
 	// Secure tags (tag values, tagValues/{id}) whose instances the rule
 	// applies to. With none, the rule applies to every instance on the

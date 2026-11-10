@@ -313,7 +313,8 @@ func (a *networkFirewallPolicyPacketMirroringRuleAdapter) updateStatus(ctx conte
 // packetMirroringRuleSpecToProto is the spec's fields as the API's
 // FirewallPolicyRule. The optional strings and booleans the spec leaves
 // unset are sent as "" and false, so that taking one off the spec puts the
-// default back; the security profile group only when set.
+// default back; the security profile group only when set. tlsInspect is
+// never sent: the API refuses it on a packet mirroring rule, even false.
 func packetMirroringRuleSpecToProto(in *krm.ComputeNetworkFirewallPolicyPacketMirroringRuleSpec) *pb.FirewallPolicyRule {
 	out := &pb.FirewallPolicyRule{
 		Priority:             direct.PtrTo(int32(in.Priority)),
@@ -322,7 +323,6 @@ func packetMirroringRuleSpecToProto(in *krm.ComputeNetworkFirewallPolicyPacketMi
 		RuleName:             direct.PtrTo(direct.ValueOf(in.RuleName)),
 		Description:          direct.PtrTo(direct.ValueOf(in.Description)),
 		Disabled:             direct.PtrTo(direct.ValueOf(in.Disabled)),
-		TlsInspect:           direct.PtrTo(direct.ValueOf(in.TLSInspect)),
 		SecurityProfileGroup: in.SecurityProfileGroup,
 		Match: &pb.FirewallPolicyRuleMatcher{
 			SrcIpRanges:  in.Match.SrcIPRanges,
@@ -353,7 +353,6 @@ func comparablePacketMirroringRule(in *pb.FirewallPolicyRule) *pb.FirewallPolicy
 		RuleName:             direct.PtrTo(in.GetRuleName()),
 		Description:          direct.PtrTo(in.GetDescription()),
 		Disabled:             direct.PtrTo(in.GetDisabled()),
-		TlsInspect:           direct.PtrTo(in.GetTlsInspect()),
 		SecurityProfileGroup: direct.PtrTo(strings.TrimPrefix(in.GetSecurityProfileGroup(), "//networksecurity.googleapis.com/")),
 		TargetSecureTags:     secureTagNames(in.TargetSecureTags),
 	}

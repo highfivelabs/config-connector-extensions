@@ -117,11 +117,6 @@ func (in *ComputeNetworkFirewallPolicyPacketMirroringRuleSpec) DeepCopyInto(out 
 		*out = new(string)
 		**out = **in
 	}
-	if in.TLSInspect != nil {
-		in, out := &in.TLSInspect, &out.TLSInspect
-		*out = new(bool)
-		**out = **in
-	}
 	if in.TargetSecureTags != nil {
 		in, out := &in.TargetSecureTags, &out.TargetSecureTags
 		*out = make([]NetworkFirewallPolicyPacketMirroringRuleSecureTag, len(*in))
