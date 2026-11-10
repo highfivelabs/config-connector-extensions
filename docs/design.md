@@ -1476,7 +1476,8 @@ To raise confidence in `ArtifactRegistryRepository`:
    watches the whole cluster, because Config Connector has one Google
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
-5. **Field gaps on large existing kinds** wait for Config Connector's
+5. **Reversed by decision 19 (2026-11-10).** Was: field gaps on large
+   existing kinds wait for Config Connector's
    release, with the exception in section 6.1. Never a fork. Exceptions
    the builder has made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
@@ -1602,6 +1603,33 @@ To raise confidence in `ArtifactRegistryRepository`:
     kinds follow the same rule. This generalises decision 12 (the IAM
     kinds) and the folder and organization `ServiceIdentity`, which kept
     upstream's name with new parents.
+19. **Do not wait for upstream's release; keep up mechanically** (the
+    builder, 2026-11-10, reversing decision 5: "don't wait on release for
+    either - we need to ship and understand they are going to ship behind
+    us on several resources and new attributes. we just need mechanized
+    ways to keep up with upstream."). Field gaps in our kinds are filled
+    now, like whole-resource gaps, rather than waiting for a Config
+    Connector release or a pull request to merge. Upstream will ship
+    behind us on several resources and attributes; the factory's watcher
+    (`highfivelabs/factory`, reading `upstream.yaml`) is how we track it
+    and decide when to move to upstream's kind. Section 6.1's "wait for
+    the release unless a field is critical" no longer holds.
+20. **Immutability is enforced by CEL rules in the CRD, not a webhook**
+    (the builder, 2026-11-10, G4): `self == oldSelf` transition rules on
+    the immutable fields, as the kinds already do; no admission webhook
+    is added for it.
+21. **A remote `ArtifactRegistryRepository` whose upstream URI changes is
+    deleted and made again** (the builder, 2026-11-10, G3: confirmed).
+22. **`status.appliedDatabaseRoles` stays until upstream PR #7148** (the
+    builder, 2026-11-10, G5: confirmed; section 10 item 2's
+    recommendation): the field and the comparison with what was applied
+    are kept until `SQLUser` switches to the PR (section 2), then follow
+    the PR.
+23. **Organization custom roles are checked at the organization level**
+    (the builder, 2026-11-10, G8: confirmed): Config Connector's
+    `IAMCustomRole` with the `cnrm.cloud.google.com/organization-id`
+    annotation covers them (foundation item 3), proven against an
+    organization once the test folder exists.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -1838,7 +1866,8 @@ moves to section 8.
 1. Answered 2026-11-09: the kind is `IAMBinding`, first built as
    `IAMRoleBinding` (decision 12).
 
-2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+2. Answered 2026-11-10 (decision 22): keep the field until PR #7148.
+   The question was: **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows
    whether `users.get` returns roles". It does (`docs/live-runs.md`).
    Upstream PR #7148 compares the spec with the roles `users.get` returns.

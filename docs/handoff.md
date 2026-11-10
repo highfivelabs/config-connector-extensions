@@ -72,10 +72,14 @@ stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation
 `DNSResponsePolicy` and its rule); Cloud Router is a copy of upstream's
 PR #13960 as a complete kind of ours (14); `LoggingBillingAccountSink`
 now, live pending billing-account access (15); Security Command Center
-kinds with organization, folder and project parents (16). Decision 5
-stands for other field gaps (wait for the release). Whole-resource gaps
+kinds with organization, folder and project parents (16). Whole-resource gaps
 first; any other field gap that needs the builder goes to section 10
-with a recommendation. A deprecation path for our kinds is the builder's
+with a recommendation. **Decision 5 is reversed** (decision 19, 2026-11-10):
+fill field gaps in our kinds now; the factory watcher tracks upstream.
+Immutability is CEL in the CRD, never a webhook (decision 20). The
+builder has folderAdmin and another agent is making the `live-tests`
+folder and project `hfl-test-g1`; keep folder-level kinds "live:
+pending" until that agent reports. A deprecation path for our kinds is the builder's
 separate design; do not build it. Organization custom IAM roles (foundation item 3) are
 not a gap: Config Connector's `IAMCustomRole` takes the
 `cnrm.cloud.google.com/organization-id` annotation (the item says where). Org-level live tests wait for the test folder:
