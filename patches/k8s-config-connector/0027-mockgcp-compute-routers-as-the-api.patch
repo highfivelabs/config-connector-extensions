@@ -17,7 +17,7 @@ For compute.gcp.hfl.dev ComputeRouter. Written here:
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockcompute/routersv1.go b/mockgcp/mockcompute/routersv1.go
-index 7c11d712..4b4e68c7 100644
+index 7c11d712..becf6cf5 100644
 --- a/mockgcp/mockcompute/routersv1.go
 +++ b/mockgcp/mockcompute/routersv1.go
 @@ -27,6 +27,7 @@ import (
@@ -78,7 +78,7 @@ index 7c11d712..4b4e68c7 100644
 +	if !sameFeature(&pb.Router{BgpPeers: existing.BgpPeers, Md5AuthenticationKeys: existing.Md5AuthenticationKeys}, &pb.Router{BgpPeers: r.BgpPeers, Md5AuthenticationKeys: r.Md5AuthenticationKeys}) {
 +		changed = append(changed, "bgpPeers")
 +	}
-+	if !sameFeature(&pb.Router{Nats: existing.Nats}, &pb.Router{Nats: r.Nats}) {
++	if !sameFeature(&pb.Router{Nats: withNatDefaults(existing.Nats)}, &pb.Router{Nats: withNatDefaults(r.Nats)}) {
 +		changed = append(changed, "nats")
 +	}
 +	if len(changed) > 1 {
@@ -89,7 +89,7 @@ index 7c11d712..4b4e68c7 100644
  	updated := proto.Clone(req.GetRouterResource()).(*pb.Router)
  	updated.SelfLink = existing.SelfLink
  	updated.CreationTimestamp = existing.CreationTimestamp
-@@ -239,6 +280,37 @@ func (s *RoutersV1) Delete(ctx context.Context, req *pb.DeleteRouterRequest) (*p
+@@ -239,6 +280,57 @@ func (s *RoutersV1) Delete(ctx context.Context, req *pb.DeleteRouterRequest) (*p
  	})
  }
  
@@ -101,6 +101,26 @@ index 7c11d712..4b4e68c7 100644
 +	clearZeros(a.ProtoReflect())
 +	clearZeros(b.ProtoReflect())
 +	return proto.Equal(a, b)
++}
++
++// withNatDefaults fills in what rewriteRouterResponse adds to a read NAT,
++// so that a NAT sent back as read compares equal to the stored one.
++func withNatDefaults(nats []*pb.RouterNat) []*pb.RouterNat {
++	var out []*pb.RouterNat
++	for _, n := range nats {
++		n = proto.CloneOf(n)
++		if n.AutoNetworkTier == nil {
++			n.AutoNetworkTier = PtrTo("PREMIUM")
++		}
++		if len(n.EndpointTypes) == 0 {
++			n.EndpointTypes = []string{"ENDPOINT_TYPE_VM"}
++		}
++		if n.Type == nil {
++			n.Type = PtrTo("PUBLIC")
++		}
++		out = append(out, n)
++	}
++	return out
 +}
 +
 +func clearZeros(m protoreflect.Message) {
