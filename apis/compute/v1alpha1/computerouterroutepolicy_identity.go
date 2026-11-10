@@ -76,6 +76,39 @@ func referencedRouter(ctx context.Context, reader client.Reader, key types.Names
 	}
 }
 
+// Resolve is the project, region and name of the router the reference
+// names: from external, or from the ComputeRouter object (ours or Config
+// Connector's, see referencedRouter) in defaultNamespace unless the
+// reference names a namespace.
+func (ref *ComputeRouterRef) Resolve(ctx context.Context, reader client.Reader, defaultNamespace string) (project, region, router string, err error) {
+	if ref.External != "" {
+		t := strings.Split(strings.TrimPrefix(ref.External, "/"), "/")
+		if len(t) != 6 || t[0] != "projects" || t[2] != "regions" || t[4] != "routers" {
+			return "", "", "", fmt.Errorf("format of routerRef external=%q was not known (use projects/{{projectID}}/regions/{{region}}/routers/{{name}})", ref.External)
+		}
+		return t[1], t[3], t[5], nil
+	}
+	if ref.Name == "" {
+		return "", "", "", fmt.Errorf("routerRef needs external or name")
+	}
+	key := types.NamespacedName{Namespace: ref.Namespace, Name: ref.Name}
+	if key.Namespace == "" {
+		key.Namespace = defaultNamespace
+	}
+	u, err := referencedRouter(ctx, reader, key)
+	if err != nil {
+		return "", "", "", err
+	}
+	if router, err = refs.GetResourceID(u); err != nil {
+		return "", "", "", err
+	}
+	if project, err = refs.ResolveProjectID(ctx, reader, u); err != nil {
+		return "", "", "", err
+	}
+	region, _, _ = unstructured.NestedString(u.Object, "spec", "region")
+	return project, region, router, nil
+}
+
 var _ identity.Identity = &ComputeRouterRoutePolicyIdentity{}
 
 // ComputeRouterRoutePolicyIdentity is
@@ -110,29 +143,9 @@ func (obj *ComputeRouterRoutePolicy) GetIdentity(ctx context.Context, reader cli
 	if ref == nil || (ref.External == "" && ref.Name == "") {
 		return nil, fmt.Errorf("spec.routerRef is required")
 	}
-	var project, region, router string
-	if ref.External != "" {
-		t := strings.Split(strings.TrimPrefix(ref.External, "/"), "/")
-		if len(t) != 6 || t[0] != "projects" || t[2] != "regions" || t[4] != "routers" {
-			return nil, fmt.Errorf("format of routerRef external=%q was not known (use projects/{{projectID}}/regions/{{region}}/routers/{{name}})", ref.External)
-		}
-		project, region, router = t[1], t[3], t[5]
-	} else {
-		key := types.NamespacedName{Namespace: ref.Namespace, Name: ref.Name}
-		if key.Namespace == "" {
-			key.Namespace = obj.GetNamespace()
-		}
-		u, err := referencedRouter(ctx, reader, key)
-		if err != nil {
-			return nil, err
-		}
-		if router, err = refs.GetResourceID(u); err != nil {
-			return nil, err
-		}
-		if project, err = refs.ResolveProjectID(ctx, reader, u); err != nil {
-			return nil, err
-		}
-		region, _, _ = unstructured.NestedString(u.Object, "spec", "region")
+	project, region, router, err := ref.Resolve(ctx, reader, obj.GetNamespace())
+	if err != nil {
+		return nil, err
 	}
 	if project != projectID || region != obj.Spec.Region {
 		return nil, fmt.Errorf("routerRef is in projects/%s/regions/%s, but the policy is in projects/%s/regions/%s", project, region, projectID, obj.Spec.Region)

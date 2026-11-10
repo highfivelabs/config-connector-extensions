@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-two kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty-three kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -20,7 +20,8 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
 `ComputeOrganizationSecurityPolicyAssociation`,
 `ComputeOrganizationSecurityPolicyRule` and
-`ComputeNetworkFirewallPolicyRule` (section 6). Each
+`ComputeNetworkFirewallPolicyRule`, and a `ComputeVPNTunnel` with a
+cipher suite (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1196,6 +1197,35 @@ Notes on what was built from this table:
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
   unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+- `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, foundation item
+  10, the first field-gap kind under decision 19 and the first to apply
+  section 6.6's create-only pattern: an HA or Classic VPN tunnel with
+  `cipherSuite`, the IKE phase 1 and 2 algorithms, which Config
+  Connector's lacks). Upstream, rechecked 2026-11-10 (read-only):
+  `ComputeVPNTunnel` is `v1beta1` and Terraform-only at the pin and on
+  `master` (`static_config.go`), with direct types and a mapper (PR
+  #10151, merged 2026-07-06) but no controller or identity; no pull
+  request adds `cipherSuite` or a controller. **Copied**: the types and
+  the mapper, changed for our group, with `cipherSuite`, `labels` (the
+  one field `vpnTunnels.setLabels` changes in place) and
+  `status.externalRef` added, `projectRef` optional beside the
+  namespace's project annotation, every other field immutable by CEL
+  (decision 20; exactly one of `vpnGatewayRef` and `targetVPNGatewayRef`,
+  also CEL), and `routerRef` ours (our `ComputeRouter` or Config
+  Connector's, by name, refused when both exist, as for
+  `ComputeRouterRoutePolicy`; its resolution is now `ComputeRouterRef.Resolve`).
+  The gateway references are Config Connector's types, resolved by
+  `external` or by the named object's `status.selfLink`. **Written
+  here**: the identity, the controller (insert, get, `setLabels` with the
+  label fingerprint, delete; the shared secret read from its Secret on
+  every reconcile, sent only by insert), and the end-to-end test.
+  Generated: the CRD and deepcopy (controller-gen);
+  `hack/scaffold-kind.sh` was not run, since upstream's direct types and
+  mapper already existed to copy. mockgcp patch 0031 (`docs/fake-cloud.md`):
+  mockgcp had no VPN tunnel service. A tunnel moves to ours by acquiring
+  the same name (`resourceID`) and abandoning Config Connector's object;
+  ours cannot change an acquired tunnel's immutable fields, so a tunnel
+  that needs `cipherSuite` is made new. Live: see `docs/live-runs.md`.
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1311,6 +1341,49 @@ Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
 deprecated upstream and is not built.
+
+### 6.6 Field gaps on large Terraform-based kinds (proposed 2026-11-10)
+
+Decision 19 fills field gaps now instead of waiting for Config Connector.
+The accepted pattern so far is a parallel kind of ours that owns the whole
+object (decisions 11, 13 and 14). For a large Terraform-based kind
+(`ContainerCluster`, `KMSCryptoKey`, `ComputeVPNTunnel`) most of that cost
+is the update path: comparing and writing every field of the object, as
+`ComputeRouter` does. How the API changes the missing field decides which
+lighter pattern fits; check it per field before building.
+
+1. **The API takes the field only at create: a create-only whole-object
+   kind.** Nothing beside Config Connector's object can add such a field
+   later, so the resource has to be made by our kind. But that kind is
+   small: create, read, delete and labels, with every other field
+   immutable by CEL (decision 20) and nothing compared or written after
+   create. Upstream's direct types and mapper are copied where they
+   exist. Examples: every field of a VPN tunnel but its labels
+   (`cipherSuite`), a KMS key's `cryptoKeyBackend`, an interconnect
+   attachment's IPv6 candidates. **Applied first in `ComputeVPNTunnel`**
+   (section 6.5).
+2. **The API changes the field by an update mask: a field kind beside
+   Config Connector's object.** A small kind of ours names Config
+   Connector's object (or the resource), reads the resource, and patches
+   only its own fields with a mask that names them; Config Connector
+   keeps owning the rest. It is safe only when Config Connector's update
+   never sends the field: decision 11 rejected it for `RunService`
+   because Terraform's Cloud Run update sends the whole service with no
+   mask and resets the fields. So the kind's live test changes Config
+   Connector's object after ours has set the field and checks that the
+   field survives. Candidates: `KMSCryptoKey`'s
+   `keyAccessJustificationsPolicy` (Terraform's update of a key names the
+   changed fields in its mask; to be confirmed live), GKE cluster fields
+   (`clusters.update` takes one `desired*` change at a time) and node pool
+   `kubeletConfig` (`nodePools.update`). Not built yet: the first
+   field-gap PR that needs it builds it; its name is section 10 question 4.
+3. **Otherwise** (the field is mutable and Config Connector's update would
+   reset it), a whole-object kind as before.
+
+One pattern does not fit all: a create-only field rules out the field
+kind, a mask-less upstream update rules it out too, and a create-only
+whole-object kind would take a mutable resource from Config Connector for
+no reason.
 
 ## 7. What is left
 
@@ -1459,6 +1532,14 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
+
+33. `ComputeVPNTunnel`: a rotated shared secret is not applied (the API
+    takes it only at insert; make a new tunnel); the API's checks of a
+    cipher suite (which algorithm names and combinations it takes) and
+    whether `vpnTunnels.get` returns the suite as sent; the other fields
+    of foundation item 10 (`ComputeInterconnectAttachment`'s IPv6
+    candidates and `l2Forwarding`, `ComputeInterconnect`'s
+    `applicationAwareInterconnect`), the next field-gap PRs.
 
 ## 8. Decisions
 
@@ -1850,3 +1931,11 @@ moves to section 8.
    authoritative one is renamed with it to `IAMBinding`. Both mirror
    Terraform's `google_<resource>_iam_member` and `_iam_binding`
    (decision 12). The question had recommended keeping `IAMRoleMember`.
+
+4. **The name of a field kind** (section 6.6, pattern 2; 2026-11-10).
+   A kind of ours that owns a few fields of a resource Config Connector's
+   kind owns has no name in Config Connector or Terraform (decision 18).
+   Recommendation: `<Config Connector kind>Fields` in our group, with a
+   `resourceRef` to Config Connector's object, for example
+   `KMSCryptoKeyFields` for `keyAccessJustificationsPolicy`; the fields
+   keep the API's names. Not needed until the first such PR.
