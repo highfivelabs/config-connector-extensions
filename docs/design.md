@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-one kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty-two kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -18,8 +18,9 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
 `NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
 stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
-`ComputeOrganizationSecurityPolicyAssociation` and
-`ComputeOrganizationSecurityPolicyRule` (section 6). Each
+`ComputeOrganizationSecurityPolicyAssociation`,
+`ComputeOrganizationSecurityPolicyRule` and
+`ComputeNetworkFirewallPolicyRule` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1158,6 +1159,43 @@ Notes on what was built from this table:
   rule. Copied: 838 of the kind's 2,059 hand-kept lines (41%, the mock
   patch included); the rest is written here. mockgcp patch 0028
   (`docs/fake-cloud.md`). Live: pending, needs the test folder.
+- `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
+  decision 13: a rule of a global network firewall policy, at its
+  priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
+  the pin, Terraform-only (`static_config.go`), with no direct types,
+  identity, mapper or controller in `apis/` or `pkg/controller/direct`;
+  its schema is the Terraform-generated CRD (`projectRef`,
+  `firewallPolicyRef`, the priority as `resourceID`, a string that
+  defaults to `metadata.name`, `targetServiceAccountRefs`). No open pull
+  request adds one. So nothing is copied: **written here**, the types,
+  identity and controller adapted from our
+  `ComputeRegionNetworkFirewallPolicyRule` (whose shape follows Config
+  Connector's direct `ComputeFirewallPolicyRule`, the rule of an
+  organization or folder policy, which upstream will most likely mirror
+  when it promotes this kind), with upstream's
+  `computefirewallpolicyrule_controller.go` read for the same four calls.
+  Fields: the regional kind's, plus `match.srcNetworkContext` and
+  `match.destNetworkContext` (upstream's alpha CRD has them), and an
+  optional `projectRef`, refused when it is not the policy's project
+  (upstream's alpha requires it; the policy already names its project).
+  `firewallPolicyRef` is Config Connector's own
+  `ComputeNetworkFirewallPolicyRef` (a `ComputeNetworkFirewallPolicy` by
+  `name`, read from its `status.externalRef` or `status.selfLink`, or
+  `external`, `projects/{p}/global/firewallPolicies/{policy}`), imported,
+  not copied. `priority` (a number, as the regional kind and
+  `ComputeFirewallPolicyRule` have it) and the policy are immutable.
+  The controller is the regional one on the global calls
+  (`networkFirewallPolicies.getRule`, `addRule`, `patchRule` through the
+  Compute Engine REST client with emptied lists sent as `[]`, and
+  `removeRule`; the patch waits on a global operation), sharing its
+  missing-rule check (renamed `firewallPolicyRuleMissing`) and its
+  comparison, to which the network contexts are added. Not here yet, as
+  in the regional kind: `securityProfileGroup`, `tlsInspect` and
+  `targetResources`. Generated: the CRD and deepcopy only
+  (controller-gen); `hack/scaffold-kind.sh` does not fit a rule inside a
+  policy (the proto has no rule resource), so the generated share of the
+  hand-kept lines is 0%. mockgcp serves a global policy's rules
+  unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1413,6 +1451,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     every field, so either way it converges); the default rules the API
     adds to a FIREWALL policy, and whether `targetResources` comes back
     as full URLs (compared either way).
+32. `ComputeNetworkFirewallPolicyRule`: the API's checks of a rule that
+    mockgcp does not make (as item 27 for the regional rule), whether
+    `srcNetworkContext` is accepted for every value it lists
+    (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
+    fields it lacks (`securityProfileGroup`, `tlsInspect`,
+    `targetResources`, `srcNetworks`, the network types).
 
 ## 8. Decisions
 
