@@ -223,7 +223,7 @@ func TestComputeRouter(t *testing.T) {
 		}
 	})
 
-	t.Run("a changed peer and a removed NAT are one write", func(t *testing.T) {
+	t.Run("a changed peer and a removed NAT are a write each", func(t *testing.T) {
 		before := writes()
 		o := getObj(t)
 		o.Spec.BGPPeers[0].AdvertisedRoutePriority = mockenv.Ptr(int64(200))
@@ -244,8 +244,9 @@ func TestComputeRouter(t *testing.T) {
 		if len(got.Interfaces) != 1 || len(got.Md5AuthenticationKeys) != 1 {
 			t.Errorf("the update lost an interface or a key: %v", got)
 		}
-		if n := writes() - before; n != 1 {
-			t.Errorf("wrote the router %d times, want once", n)
+		// The API takes one feature per update: the peers, then the NATs.
+		if n := writes() - before; n != 2 {
+			t.Errorf("wrote the router %d times, want twice", n)
 		}
 	})
 

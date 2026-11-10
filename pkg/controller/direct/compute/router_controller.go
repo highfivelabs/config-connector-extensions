@@ -25,7 +25,9 @@
 //     interface or key would stay. The body is the router as read, with the
 //     owned fields replaced, so what the kind does not model is sent back as
 //     it was; peers and interfaces the API manages for an interconnect
-//     attachment (managementType MANAGED_BY_ATTACHMENT) are kept;
+//     attachment (managementType MANAGED_BY_ATTACHMENT) are kept. The API
+//     takes one feature per insert and per update (seen live), so the
+//     router is inserted bare and written one feature at a time (write);
 //   - the comparison is written here: a field the spec sets must match the
 //     cloud's, a field it leaves out is the API's to default (the API fills
 //     in BFD, timeouts, IP versions and the like), the four lists must have
@@ -212,8 +214,8 @@ func (a *RouterAdapter) Create(ctx context.Context, createOp *directbase.CreateO
 	// The API refuses to insert a router with more than one of its
 	// features ("Creating a router with multiple features is currently
 	// unsupported", seen live), so the router is inserted without its
-	// interfaces, peers, NATs and keys, and they are written next with
-	// routers.update, as an update writes them.
+	// interfaces, peers, NATs and keys, and they are written next, as an
+	// update writes them.
 	resource := proto.CloneOf(a.desired)
 	resource.Name = proto.String(a.id.Router)
 	resource.Interfaces, resource.BgpPeers, resource.Nats, resource.Md5AuthenticationKeys = nil, nil, nil, nil
@@ -239,8 +241,7 @@ func (a *RouterAdapter) Create(ctx context.Context, createOp *directbase.CreateO
 		return fmt.Errorf("getting ComputeRouter %s: %w", a.id, err)
 	}
 	if len(a.desired.Interfaces)+len(a.desired.BgpPeers)+len(a.desired.Nats)+len(a.desired.Md5AuthenticationKeys) > 0 {
-		a.actual = created
-		if created, err = a.write(ctx); err != nil {
+		if created, err = a.write(ctx, created); err != nil {
 			return err
 		}
 	}
@@ -248,27 +249,114 @@ func (a *RouterAdapter) Create(ctx context.Context, createOp *directbase.CreateO
 	return a.updateStatus(ctx, createOp, created, a.keysVersion)
 }
 
-// write puts updateBody with routers.update, waits, and reads the router.
-func (a *RouterAdapter) write(ctx context.Context) (*pb.Router, error) {
-	req := &pb.UpdateRouterRequest{
-		Project:        a.id.Project,
-		Region:         a.id.Region,
-		Router:         a.id.Router,
-		RouterResource: a.updateBody(),
+// write brings the router to the spec one feature at a time, each a
+// routers.update (PUT) of the router as last read with one feature
+// replaced: the API refuses an update of more than one ("Updating multiple
+// Router features is currently unsupported", seen live), as Terraform's
+// router, interface, peer and NAT resources each patch only their own. The
+// order keeps references whole: MD5 key values that changed in their
+// Secrets (the keys the router has, so that no later step changes them);
+// the base fields; the interfaces, keeping those a remaining peer
+// is on; the peers with the keys; the interfaces as the spec has them; the
+// NATs. A step with nothing to change is skipped.
+func (a *RouterAdapter) write(ctx context.Context, cur *pb.Router) (*pb.Router, error) {
+	steps := []struct {
+		name  string
+		apply func(body, cur *pb.Router) bool
+	}{
+		{"key values", func(body, cur *pb.Router) bool {
+			// The keys the router already has, with the Secrets' values.
+			return len(a.keys) > 0 && a.keysVersion != a.appliedVersion && len(body.Md5AuthenticationKeys) > 0
+		}},
+		{"base", func(body, cur *pb.Router) bool {
+			changed := a.desired.GetDescription() != cur.GetDescription() ||
+				(a.desired.Bgp != nil && !protoSubset(a.desired.Bgp.ProtoReflect(), cur.GetBgp().ProtoReflect()))
+			body.Description = proto.String(a.desired.GetDescription())
+			if a.desired.Bgp != nil {
+				body.Bgp = a.desired.Bgp
+			}
+			return changed
+		}},
+		{"interfaces kept for peers", func(body, cur *pb.Router) bool {
+			want := slices.Clone(a.desired.Interfaces)
+			for _, in := range cur.Interfaces {
+				named := slices.ContainsFunc(want, func(d *pb.RouterInterface) bool { return d.GetName() == in.GetName() })
+				used := slices.ContainsFunc(cur.BgpPeers, func(p *pb.RouterBgpPeer) bool { return p.GetInterfaceName() == in.GetName() })
+				if !named && used && userManaged(in.GetManagementType()) {
+					want = append(want, in)
+				}
+			}
+			return a.setInterfaces(body, cur, want)
+		}},
+		{"peers and keys", func(body, cur *pb.Router) bool {
+			var have []*pb.RouterBgpPeer
+			for _, p := range cur.BgpPeers {
+				if userManaged(p.GetManagementType()) {
+					have = append(have, p)
+				}
+			}
+			changed := !messagesMatch(a.desired.BgpPeers, have) || !keyNamesMatch(a.desired, cur)
+			body.BgpPeers = slices.Clone(a.desired.BgpPeers)
+			for _, p := range cur.BgpPeers {
+				if !userManaged(p.GetManagementType()) && !slices.ContainsFunc(a.desired.BgpPeers, func(d *pb.RouterBgpPeer) bool { return d.GetName() == p.GetName() }) {
+					body.BgpPeers = append(body.BgpPeers, p)
+				}
+			}
+			body.Md5AuthenticationKeys = a.desired.Md5AuthenticationKeys
+			return changed
+		}},
+		{"interfaces", func(body, cur *pb.Router) bool {
+			return a.setInterfaces(body, cur, a.desired.Interfaces)
+		}},
+		{"nats", func(body, cur *pb.Router) bool {
+			body.Nats = a.desired.Nats
+			return !messagesMatch(a.desired.Nats, cur.Nats)
+		}},
 	}
-	op, err := a.gcpClient.Update(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("updating compute ComputeRouter %s: %w", a.id.String(), err)
+	log := klog.FromContext(ctx)
+	for _, step := range steps {
+		body := proto.CloneOf(cur)
+		if !step.apply(body, cur) {
+			continue
+		}
+		body = proto.CloneOf(body)
+		a.withKeyValues(body)
+		op, err := a.gcpClient.Update(ctx, &pb.UpdateRouterRequest{
+			Project:        a.id.Project,
+			Region:         a.id.Region,
+			Router:         a.id.Router,
+			RouterResource: body,
+		})
+		if err == nil {
+			err = op.Wait(ctx)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("updating ComputeRouter %s (%s): %w", a.id.String(), step.name, err)
+		}
+		log.V(2).Info("updated ComputeRouter", "name", a.id.String(), "step", step.name)
+		if cur, err = a.get(ctx); err != nil {
+			return nil, fmt.Errorf("getting ComputeRouter %s: %w", a.id, err)
+		}
 	}
-	if err := op.Wait(ctx); err != nil {
-		return nil, fmt.Errorf("compute ComputeRouter %s waiting for update: %w", a.id.String(), err)
+	return cur, nil
+}
+
+// setInterfaces puts want, and the interfaces the API manages that want
+// does not name, in body, and says whether that changes cur's.
+func (a *RouterAdapter) setInterfaces(body, cur *pb.Router, want []*pb.RouterInterface) bool {
+	var have []*pb.RouterInterface
+	for _, in := range cur.Interfaces {
+		if userManaged(in.GetManagementType()) {
+			have = append(have, in)
+		}
 	}
-	klog.FromContext(ctx).V(2).Info("successfully updated compute ComputeRouter", "name", a.id.String())
-	updated, err := a.get(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("getting ComputeRouter %s: %w", a.id, err)
+	body.Interfaces = slices.Clone(want)
+	for _, in := range cur.Interfaces {
+		if !userManaged(in.GetManagementType()) && !slices.ContainsFunc(want, func(d *pb.RouterInterface) bool { return d.GetName() == in.GetName() }) {
+			body.Interfaces = append(body.Interfaces, in)
+		}
 	}
-	return updated, nil
+	return !messagesMatch(want, have)
 }
 
 func (a *RouterAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
@@ -293,39 +381,11 @@ func (a *RouterAdapter) Update(ctx context.Context, updateOp *directbase.UpdateO
 	}
 
 	updateOp.RecordUpdatingEvent()
-	updated, err := a.write(ctx)
+	updated, err := a.write(ctx, a.actual)
 	if err != nil {
 		return err
 	}
 	return a.updateStatus(ctx, updateOp, updated, a.keysVersion)
-}
-
-// updateBody is the router to PUT: the router as read, with the fields this
-// kind owns replaced by the spec's. A peer or interface the API manages for
-// an interconnect attachment stays unless the spec names it.
-func (a *RouterAdapter) updateBody() *pb.Router {
-	body := proto.CloneOf(a.actual)
-	body.Description = proto.String(a.desired.GetDescription())
-	if a.desired.Bgp != nil {
-		body.Bgp = a.desired.Bgp
-	}
-	body.BgpPeers = slices.Clone(a.desired.BgpPeers)
-	for _, p := range a.actual.BgpPeers {
-		if !userManaged(p.GetManagementType()) && !slices.ContainsFunc(a.desired.BgpPeers, func(d *pb.RouterBgpPeer) bool { return d.GetName() == p.GetName() }) {
-			body.BgpPeers = append(body.BgpPeers, p)
-		}
-	}
-	body.Interfaces = slices.Clone(a.desired.Interfaces)
-	for _, in := range a.actual.Interfaces {
-		if !userManaged(in.GetManagementType()) && !slices.ContainsFunc(a.desired.Interfaces, func(d *pb.RouterInterface) bool { return d.GetName() == in.GetName() }) {
-			body.Interfaces = append(body.Interfaces, in)
-		}
-	}
-	body.Nats = a.desired.Nats
-	body.Md5AuthenticationKeys = a.desired.Md5AuthenticationKeys
-	body = proto.CloneOf(body)
-	a.withKeyValues(body)
-	return body
 }
 
 // withKeyValues fills in the MD5 key values read from the Secrets.
@@ -509,6 +569,12 @@ func routerMatches(desired, actual *pb.Router) bool {
 	if !messagesMatch(desired.BgpPeers, peers) || !messagesMatch(desired.Interfaces, interfaces) || !messagesMatch(desired.Nats, actual.Nats) {
 		return false
 	}
+	return keyNamesMatch(desired, actual)
+}
+
+// keyNamesMatch says whether the two routers have MD5 keys of the same
+// names (the API returns no values).
+func keyNamesMatch(desired, actual *pb.Router) bool {
 	var want, have []string
 	for _, k := range desired.Md5AuthenticationKeys {
 		want = append(want, k.GetName())

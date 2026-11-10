@@ -149,7 +149,7 @@ flattening all three, 2026-11-08).
 | `0024-mockgcp-iam-service-accounts-list-undelete.patch` | written here: `serviceAccounts.list` and `undelete`; delete, disable and enable by unique ID as well as email; a deleted account kept for undelete | yes |
 | `0025-mockgcp-networksecurity-organization-address-groups.patch` | written here: mockgcp serves the `OrganizationAddressGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/addressGroups/{a}`) with the project service's server | yes |
 | `0026-mockgcp-networksecurity-organization-security-profiles.patch` | written here: mockgcp serves the `OrganizationSecurityProfileGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/securityProfiles/{p}` and `.../securityProfileGroups/{g}`) with its own server, since the project service's parses only project names | yes |
-| `0027-mockgcp-compute-routers-md5-keys-and-insert.patch` | written here: `routers.get` returns each MD5 authentication key by name, without its value, and `routers.insert` refuses a router with more than one of interfaces, peers, NATs and keys, as the real API does | yes |
+| `0027-mockgcp-compute-routers-as-the-api.patch` | written here: `routers.get` returns each MD5 authentication key by name, without its value, and `routers.insert` and `routers.update` refuse more than one feature (interfaces, peers with keys, NATs) at a time, as the real API does | yes |
 
 ## Other sources consulted, not copied
 

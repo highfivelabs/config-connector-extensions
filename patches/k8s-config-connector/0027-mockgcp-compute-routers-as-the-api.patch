@@ -1,4 +1,4 @@
-config-connector-extensions patch 0027: mockgcp's routers as the real API: MD5 key values unread, one feature per insert.
+config-connector-extensions patch 0027: mockgcp's routers as the real API: MD5 key values unread, one feature per insert and update.
 
 For compute.gcp.hfl.dev ComputeRouter. Written here:
 - a router read with routers.get carries each of its
@@ -9,11 +9,15 @@ For compute.gcp.hfl.dev ComputeRouter. Written here:
 - routers.insert refuses a router with more than one of interfaces, BGP
   peers, NATs and MD5 keys with the API's own 400, "Creating a router
   with multiple features is currently unsupported." (a live run,
-  docs/live-runs.md); which combinations the API allows is not known.
+  docs/live-runs.md); which combinations the API allows is not known;
+- routers.update refuses a change of more than one of the interfaces,
+  the BGP peers with the MD5 keys, and the NATs, with the API's own 400,
+  "Updating multiple Router features is currently unsupported." (a live
+  run); peers and keys count as one, as Terraform writes them together.
 Upstream candidate: yes.
 
 diff --git a/mockgcp/mockcompute/routersv1.go b/mockgcp/mockcompute/routersv1.go
-index 7c11d712..a7319814 100644
+index 7c11d712..872616a7 100644
 --- a/mockgcp/mockcompute/routersv1.go
 +++ b/mockgcp/mockcompute/routersv1.go
 @@ -55,6 +55,12 @@ func (s *RoutersV1) Get(ctx context.Context, req *pb.GetRouterRequest) (*pb.Rout
@@ -50,3 +54,29 @@ index 7c11d712..a7319814 100644
  	id := s.generateID()
  
  	obj := proto.CloneOf(req.GetRouterResource())
+@@ -191,6 +211,25 @@ func (s *RoutersV1) Update(ctx context.Context, req *pb.UpdateRouterRequest) (*p
+ 		return nil, err
+ 	}
+ 
++	// The API refuses an update of more than one feature (seen live). Here
++	// the features are the interfaces, the BGP peers with the MD5 keys (as
++	// Terraform's google_compute_router_peer writes them together), and the
++	// NATs; which others count is not known.
++	r := req.GetRouterResource()
++	changed := 0
++	if !proto.Equal(&pb.Router{Interfaces: existing.Interfaces}, &pb.Router{Interfaces: r.Interfaces}) {
++		changed++
++	}
++	if !proto.Equal(&pb.Router{BgpPeers: existing.BgpPeers, Md5AuthenticationKeys: existing.Md5AuthenticationKeys}, &pb.Router{BgpPeers: r.BgpPeers, Md5AuthenticationKeys: r.Md5AuthenticationKeys}) {
++		changed++
++	}
++	if !proto.Equal(&pb.Router{Nats: existing.Nats}, &pb.Router{Nats: r.Nats}) {
++		changed++
++	}
++	if changed > 1 {
++		return nil, status.Errorf(codes.InvalidArgument, "Updating multiple Router features is currently unsupported.")
++	}
++
+ 	updated := proto.Clone(req.GetRouterResource()).(*pb.Router)
+ 	updated.SelfLink = existing.SelfLink
+ 	updated.CreationTimestamp = existing.CreationTimestamp

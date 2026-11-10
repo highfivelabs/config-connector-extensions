@@ -1004,7 +1004,15 @@ Notes on what was built from this table:
     leaves an empty list out (the firewall rule's lesson), so a removed
     peer, NAT, interface or key would stay. Peers and interfaces the API
     made for an interconnect attachment (`MANAGED_BY_ATTACHMENT`) are
-    kept unless the spec names them;
+    kept unless the spec names them. Live runs showed the API takes one
+    feature per write ("Creating a router with multiple features is
+    currently unsupported", then "Updating multiple Router features is
+    currently unsupported"), so the router is inserted bare and then
+    written one feature at a time, as Terraform's router, interface,
+    peer and NAT resources each patch only their own: changed key
+    values, the base fields, the interfaces (keeping those a remaining
+    peer is on), the peers with their keys, the interfaces as the spec
+    has them, the NATs; a step with nothing to change is skipped;
   - the comparison is written here: what the spec sets must match, what
     it leaves out is the API's default (Magic Modules: `keepaliveInterval`
     20, `identifierRange` from the API; Terraform's peer: BFD, `enable`,

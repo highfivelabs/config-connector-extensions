@@ -167,7 +167,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   (the real API cannot be asked either). `routers.insert` refuses a
   router with more than one of interfaces, BGP peers, NATs and MD5 keys,
   with the API's own 400 (seen live with all four); which pairs the real
-  API allows is not known, so the fake refuses any two. mockgcp's `routers.update`
+  API allows is not known, so the fake refuses any two; `routers.update`
+  likewise refuses a change of more than one of the interfaces, the
+  peers with the keys, and the NATs (the API's "Updating multiple Router
+  features is currently unsupported"; whether the base fields or the
+  keys alone count as features is not known). Otherwise `routers.update`
   stores the body as sent: it does not check that a peer's interface,
   its MD5 key name, or a key's single use exist; it does not fill in a
   peer's `ipAddress`, BFD, `enable` or `managementType`, a NAT's
