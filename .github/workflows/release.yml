@@ -52,7 +52,11 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
+      # GOTOOLCHAIN=auto for these installs only (task v3.54.0 needs Go
+      # 1.26.4); the images build with go.mod's Go.
       - name: Install task, ko and kustomize
+        env:
+          GOTOOLCHAIN: auto
         run: |
           set -euo pipefail
           export GOBIN="${HOME}/.local/ci-tools"

@@ -70,6 +70,11 @@ jobs:
 
       - name: Install task, kind, ko and kustomize
         if: steps.tools-cache.outputs.cache-hit != 'true'
+        # GOTOOLCHAIN=auto for these installs only: a tool may need a newer
+        # Go than go.mod's (task v3.54.0 needs 1.26.4); the repository
+        # itself still builds with go.mod's Go and GOTOOLCHAIN=local.
+        env:
+          GOTOOLCHAIN: auto
         run: |
           set -euo pipefail
           export GOBIN="${HOME}/.local/ci-tools"
