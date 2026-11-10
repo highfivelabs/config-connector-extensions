@@ -13,12 +13,12 @@ this file only adds to them.
 
 ## Where things stand
 
-After the global network firewall policy rule PR (decision 13's
-`ComputeNetworkFirewallPolicyRule`, cut from `main` at `f7f9aec`):
-thirty-two kinds (`README.md`, design.md's intro),
-mockgcp patches 0001 to 0028 (`UPSTREAM.md` and `upstream.yaml`, which
+After the principal access boundary policy PR (decision 13's
+`IAMPrincipalAccessBoundaryPolicy`, cut from `main` at `748bff2`):
+thirty-three kinds (`README.md`, design.md's intro),
+mockgcp patches 0001 to 0029 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
-**0029**), the live-test switch and the Taskfile (`docs/live-runs.md`,
+**0030**), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
@@ -97,14 +97,22 @@ begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
-are built. Next the rest of decision 13:
-`IAMPrincipalAccessBoundaryPolicy` (upstream has a direct controller;
-mockgcp has no service for it, so patch 0029),
+and `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`, patch
+0029; live pending organization-level access) are built. Next the rest
+of decision 13:
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
 alpha types and controllers),
 then 15 (`LoggingBillingAccountSink`, live pending billing-account
 access), 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`.
+
+What `IAMPrincipalAccessBoundaryPolicy` taught: a service mockgcp has
+no generated HTTP gateway for (IAM v3) can still be served: register the
+`cloud.google.com/go` gRPC server and add its REST paths to the mux with
+`mux.HandlePath`, calling the server's methods (patch 0029,
+`mockiam/principalaccessboundarypolicies.go`). A patch that edits a file
+earlier patches edit (`mockiam/service.go`: 0006, 0007, 0010) must be
+diffed against the file with those applied, not against the pin.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
