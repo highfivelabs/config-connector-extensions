@@ -209,6 +209,8 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | LoggingBillingAccountSink | PASS | pending, needs billing account access: a billing account on which `cce-live-tests` has `roles/logging.configWriter`, passed as `E2E_BILLING_ACCOUNT=billingAccounts/{id}` (design.md decision 15) | not run (the test skips live without it) | none |
 | 2026-11-10 | `18addd0` | ComputeNetworkFirewallPolicyRule (and the rest of `compute`) | PASS | PASS | after one run (`cce-11100614-922f`) that found: `patchRule` does not clear `srcNetworkContext` when sent `""` (it kept INTERNET, and the reconciler patched on every resync); fixed by sending `UNSPECIFIED`, with `""` and `UNSPECIFIED` compared as unset. The missing-priority answer is the regional one, 400 "The firewall policy does not contain a rule at priority 1000." Run `cce-11100702-7115` | 2 global network firewall policies and their rules, and the compute package's other resources (deleted); `task live-list` empty |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -277,6 +279,15 @@ sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
 project that need not exist (assumed: the API does not check the
 destination at create); their names carry the run ID, and the sweeper
 deletes them from that billing account.
+`SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
+Command Center for the run's project: it must be active for the project
+(or its organization), and the live-test service account needs
+`securitycenter.muteconfigs.*` there (`roles/securitycenter.muteConfigsEditor`;
+assumed from the Security Command Center reference, not yet seen). Until
+then a live run skips the test and the sweeper leaves mute configs
+alone. With it: `E2E_SECURITY_CENTER=true task test-live
+PROJECT=hfl-dev-514205 KINDS=securitycenter`. A folder's and an
+organization's mute configs run on the fake only (the test folder).
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

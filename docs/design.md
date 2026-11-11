@@ -21,8 +21,9 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
 `ComputeOrganizationSecurityPolicyAssociation`,
 `ComputeOrganizationSecurityPolicyRule`,
-`ComputeNetworkFirewallPolicyRule` and
-`IAMPrincipalAccessBoundaryPolicy` (section 6). Each
+`ComputeNetworkFirewallPolicyRule`,
+`IAMPrincipalAccessBoundaryPolicy`, and an organization's, folder's or
+project's `SecurityCenterMuteConfig` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1250,6 +1251,38 @@ Notes on what was built from this table:
   patch 0030 (IAM v3 principal access boundary policies, which mockgcp
   lacked; `docs/fake-cloud.md`). Live: pending, needs organization-level
   access (a policy lives under an organization; `docs/live-runs.md`).
+- `SecurityCenterMuteConfig` (`securitycenter.gcp.hfl.dev/v1alpha1`,
+  decision 16, foundation item 20, the first of its Security Command
+  Center kinds: a mute config of an organization, folder or project).
+  Upstream, rechecked 2026-11-10 (read-only): on `master` at the pin
+  (`672414b`) `SecurityCenterMuteConfig` is `v1alpha1` with a direct
+  controller on the v1 API and takes `organizationRef` only, as do
+  `SecurityCenterBigQueryExport` and the two custom module kinds;
+  `SecurityCenterNotificationConfig` is Terraform-based. Open PR #7673
+  ("direct SCC resources", one commit, last updated 2026-05-05, review
+  required) does give mute configs, BigQuery exports and custom modules
+  `organizationRef`, `folderRef` and `projectRef` (foundation.md said
+  neither PR was known to; #7673 does), but it predates `master`'s own
+  kinds, whose schemas and controllers differ, and has not moved since.
+  #14181 (the health analytics custom module's controller) and #14206
+  keep the organization only. **Copied** with as little change as
+  possible: `master`'s types, identity, direct controller and mapper
+  functions, and #7673's parent resolution
+  (`apis/securitycenter/v1alpha1/parent.go`), so the schema is
+  `master`'s plus #7673's two parent fields: exactly one of the three,
+  each immutable (CEL). Changed: the identity is
+  `{parent}/muteConfigs/{id}`; the update compares with the name the
+  API returned (in case it names a project by number); export sets the
+  parent it came from; delete of a missing mute config is done (upstream
+  reports it not deleted). Hand-written here: the end-to-end test.
+  Generated: the CRD and deepcopy (controller-gen); upstream's mapper is
+  itself generated. Version `v1alpha1`, as foundation.md's build line
+  says (decision 16 does not ask for a stable kind). mockgcp patch 0031
+  (`docs/fake-cloud.md`). Live: the organization's and folder's are
+  "live: pending, needs test folder"; a project's needs Security Command
+  Center active for the project and `securitycenter.muteconfigs.*` for
+  the live-test service account (`E2E_SECURITY_CENTER=true`,
+  `docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1525,6 +1558,14 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`enforcementVersion`), whether a resync then writes nothing, and
     the checks mockgcp does not make (resource names in rules, the 500
     resource limit, an `effect` other than `ALLOW`).
+35. `SecurityCenterMuteConfig`: a live run (a project's needs Security
+    Command Center active and `securitycenter.muteconfigs.*`; a folder's
+    and an organization's the test folder); whether the API names a
+    project's mute config by its number; the API's checks of a filter;
+    and a dynamic mute config's `expiryTime`, which no test sets. The
+    other Security Command Center kinds of decision 16 (BigQuery
+    exports, notification configs, the two custom module kinds) are
+    next, on the same parent.
 
 ## 8. Decisions
 

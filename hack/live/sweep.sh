@@ -26,9 +26,10 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true), and log sinks of the billing account in
-# E2E_BILLING_ACCOUNT, by name, where it is set. A failed list or delete
-# fails the sweep.
+# (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
+# E2E_BILLING_ACCOUNT, by name, where it is set, and Security Command
+# Center mute configs of the project, by name, where it is active
+# (E2E_SECURITY_CENTER=true). A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -284,6 +285,20 @@ if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "billing account log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --billing-account="${billing}"
+  done <<<"${rows}"
+fi
+
+# Security Command Center mute configs of the project, by the run's name,
+# only where Security Command Center is active for the project and the
+# live-test service account may list them (E2E_SECURITY_CENTER=true);
+# without it the SecurityCenterMuteConfig test does not run live.
+if [[ "${E2E_SECURITY_CENTER:-}" == true ]]; then
+  rows="$("${G[@]}" scc muteconfigs list --project="${project}" --verbosity=error \
+    --format='value(name.basename(),createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "mute config" "${id}" "${G[@]}" scc muteconfigs delete "${id}" --project="${project}"
   done <<<"${rows}"
 fi
 

@@ -204,6 +204,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   checks no billing account (any ID is one), no destination (a topic or
   bucket that does not exist is accepted) and no filter, does not
   require `uniqueWriterIdentity`, and keeps no exclusion's timestamps.
+- **Security Command Center mute configs in mockgcp** (patch 0031, ours,
+  for `SecurityCenterMuteConfig`). A folder's and a project's beside an
+  organization's, each stored and named under its parent as given (a
+  project by the ID it was named with; whether the real API answers
+  with its number is not known). It checks no parent (any folder or
+  organization ID is one), no filter syntax, and no expiry of a dynamic
+  mute config.
 - **Organization security policy rules in mockgcp** (patch 0028, ours,
   for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
   `patchRule` and `removeRule` by priority in the policy's rules;
