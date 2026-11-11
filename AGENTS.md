@@ -59,6 +59,9 @@ itself lives in its own repository and is never changed from here.
 ## Always
 
 - Sign off every commit (`git commit -s`, DCO).
+- Merge only when the `offload/ci` status on the PR head is success
+  (`task ci`, which the pre-push hook runs; README.md, "The merge
+  gate").
 - Commit as this repository's configured author (a GitHub no-reply
   address). Never change `user.email`.
 - Keep one change per commit, described plainly.
@@ -66,6 +69,15 @@ itself lives in its own repository and is never changed from here.
   a recommendation, and stop. Direction calls are the builder's: licence,
   names, API groups, identity defaults, a new upstream dependency,
   anything that makes the repository public.
+- Test against real Google Cloud (a live run, under the rule in "Never") in
+  two cases (builder, 2026-11-11):
+  1. where mockgcp cannot give the signal: the service or behaviour is not
+     faked, or the case depends on real permissions, quotas, defaults or
+     eventual consistency; and
+  2. on a regular basis, to check that mockgcp still agrees with real
+     Google Cloud, starting with kinds that cost nothing to create.
+  Mockgcp stays the test of record for `task check`. Record each live
+  result in `docs/live-runs.md`.
 
 ## Never
 

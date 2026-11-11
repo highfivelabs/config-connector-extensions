@@ -35,9 +35,9 @@ Tier 1, 16 services, most covered attributes first:
 
 | Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered | Terraform `google-beta` | Terraform `google` |
 | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 1.2% | 48.2% | 56.0% | 53.2% |
+| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 1.7% | 47.7% | 56.0% | 53.2% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
-| 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 0.0% | 76.0% | 37.6% | 37.6% |
+| 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 2.1% | 74.0% | 37.6% | 37.6% |
 | 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 0.0% | 39.9% | 74.5% | 73.2% |
 | 1 | foundation | `orgpolicy.googleapis.com` | ![orgpolicy.googleapis.com](docs/coverage/bars/orgpolicy.googleapis.com.svg) | 67.8% | 0.0% | 32.2% | 92.6% | 92.6% |
 | 1 | foundation | `dns.googleapis.com` | ![dns.googleapis.com](docs/coverage/bars/dns.googleapis.com.svg) | 29.5% | 0.0% | 70.5% | 33.3% | 32.6% |
@@ -76,8 +76,8 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `gkebackup.googleapis.com` | ![gkebackup.googleapis.com](docs/coverage/bars/gkebackup.googleapis.com.svg) | 90.8% | 0.0% | 9.2% | 73.5% | 73.5% |
 | 2 | application | `composer.googleapis.com` | ![composer.googleapis.com](docs/coverage/bars/composer.googleapis.com.svg) | 95.3% | 0.0% | 4.7% | 88.4% | 88.4% |
 | 2 | application | `apigee.googleapis.com` | ![apigee.googleapis.com](docs/coverage/bars/apigee.googleapis.com.svg) | 16.9% | 0.0% | 83.1% | 42.7% | 42.7% |
+| 2 | security | `securitycenter.googleapis.com` | ![securitycenter.googleapis.com](docs/coverage/bars/securitycenter.googleapis.com.svg) | 14.5% | 1.0% | 84.5% | 19.5% | 19.5% |
 | 2 | application | `chronicle.googleapis.com` | ![chronicle.googleapis.com](docs/coverage/bars/chronicle.googleapis.com.svg) | 15.6% | 0.0% | 84.4% | 83.5% | 83.5% |
-| 2 | security | `securitycenter.googleapis.com` | ![securitycenter.googleapis.com](docs/coverage/bars/securitycenter.googleapis.com.svg) | 14.5% | 0.0% | 85.5% | 19.5% | 19.5% |
 | 2 | application | `eventarc.googleapis.com` | ![eventarc.googleapis.com](docs/coverage/bars/eventarc.googleapis.com.svg) | 88.5% | 0.0% | 11.5% | 79.5% | 79.5% |
 | 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 0.0% | 48.1% | 99.2% | 99.2% |
 | 2 | application | `vmwareengine.googleapis.com` | ![vmwareengine.googleapis.com](docs/coverage/bars/vmwareengine.googleapis.com.svg) | 79.8% | 0.0% | 20.2% | 65.5% | 65.5% |
@@ -219,39 +219,9 @@ Tier 1, 16 services, most covered attributes first:
 
 The kinds:
 
-| Kind | Gap it fills | Source |
-| --- | --- | --- |
-| `sql.gcp.hfl.dev/v1beta1` `SQLUser` | `spec.databaseRoles`: Config Connector's `SQLUser` cannot grant a Cloud SQL user its database roles (`User.databaseRoles`, Terraform's `google_sql_user.database_roles`) | ours, on upstream's `SQLSSLCert` controller; upstream PR #7148 is watched |
-| `sqladmin.gcp.hfl.dev/v1alpha1` `SQLAdminBackup` | an on-demand Cloud SQL backup (`backupRuns`); upstream master has the types but no controller | upstream PR #12553 |
-| `secretmanager.gcp.hfl.dev/v1beta1` `SecretManagerSecret`, `SecretManagerSecretVersion` | `spec.location`: a regional secret (Terraform's `google_secret_manager_regional_secret`), in no Config Connector release or on master | master's direct controllers plus upstream PR #6651 |
-| `artifactregistry.gcp.hfl.dev/v1beta1` `ArtifactRegistryRepository` | `remoteRepositoryConfig.<format>Repository.customRepository.uri`: a remote repository that pulls through an upstream of your choosing (Docker, Maven, npm, Python), not only the public ones Artifact Registry names, with `upstreamCredentials` (username and Secret Manager password version) for one that needs a login; in no Config Connector release or on master | master's direct controller plus upstream PR #13517; `upstreamCredentials` written here |
-| `iam.gcp.hfl.dev/v1alpha1` `IAMWorkloadIdentityPoolNamespace` | a namespace in a workload identity pool (managed workload identities, Terraform's `google_iam_workload_identity_pool_namespace`); Config Connector has types for it only in a pull request, and no controller | upstream PR #14209's types; controller and the pool reference written here |
-| `iam.gcp.hfl.dev/v1alpha1` `IAMWorkloadIdentityPoolManagedIdentity` | a managed identity in a pool namespace, with the attestation rules that say which workloads may receive it (Terraform's `google_iam_workload_identity_pool_managed_identity`); types only in a Config Connector pull request, no controller | upstream PR #14418's types; controller, the namespace reference and `attestationRules` written here |
-| `run.gcp.hfl.dev/v1alpha1` `RunService` | a Cloud Run service with `invokerIamDisabled` (public without IAM, where an organization policy refuses `allUsers`) and GPUs (`template.nodeSelector`, `gpuZonalRedundancyDisabled`), which Config Connector's Terraform-based `RunService` cannot express; a narrow direct kind that owns the whole service | Config Connector's direct `RunWorkerPool`, for a service; the service fields written here |
-| `iam.gcp.hfl.dev/v1alpha1` `IAMWorkloadIdentityPoolProviderKey` | a key for a workload identity pool provider, whose public half (in status) encrypts the provider's SAML assertions; in no Config Connector code, pull request or Terraform resource | written here from the IAM v1 API |
-| `storage.gcp.hfl.dev/v1alpha1` `StorageBucketObject` | a small object in a bucket (a configuration file, a script), its content inline or from a Secret or ConfigMap; in no Config Connector code or pull request | written here from the Cloud Storage JSON API |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeRouterRoutePolicy` | a Cloud Router route policy (import or export terms, as CEL), as HA VPN and interconnect setups use; in no Config Connector code or pull request | written here from the Compute Engine API |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionNetworkEndpoint` | an endpoint (internet address, domain name or VM port) in a regional network endpoint group, such as a regional load balancer's backend; Config Connector has zonal and global endpoints only | written here after Config Connector's zonal `ComputeNetworkEndpoint` |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionNetworkFirewallPolicy` | a regional network firewall policy, for firewall rules that apply to a VPC in one region; Config Connector has only the global policy | Config Connector's opt-in direct `ComputeNetworkFirewallPolicy`, for a region |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionNetworkFirewallPolicyRule` | one rule of a regional network firewall policy, addressed by its priority (action, direction, match on ranges, protocols and ports, address groups, FQDNs, region codes, threat intelligence and secure tags, targets); Config Connector's `ComputeFirewallPolicyRule` is for organization and folder policies | written here from the Compute Engine API, with the match fields of `ComputeFirewallPolicyRule` |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionNetworkFirewallPolicyAssociation` | attaches a regional network firewall policy to a VPC network; Config Connector has no association for it | written here from the Compute Engine API |
-| `networksecurity.gcp.hfl.dev/v1alpha1` `NetworkSecurityAddressGroup` | an address group (IP ranges that firewall policy rules name as `srcAddressGroups` or `destAddressGroups`) owned by an organization, for its hierarchical firewall policies, or by a project (Terraform's `google_network_security_address_group`, whose `parent` is either); Config Connector's `NetworkSecurityAddressGroup` (alpha) takes a project only | Config Connector's direct `NetworkSecurityAddressGroup`, with an organization parent |
-| `networksecurity.gcp.hfl.dev/v1alpha1` `NetworkSecuritySecurityProfile` | a security profile (threat prevention overrides, URL filters, or a mirroring or intercept endpoint group) owned by an organization, for its hierarchical firewall policies, or by a project (Terraform's `google_network_security_security_profile`, whose `parent` is either); Config Connector's `NetworkSecuritySecurityProfile` (alpha) takes a project only | Config Connector's direct `NetworkSecuritySecurityProfile`, with an organization parent and its REST clients |
-| `networksecurity.gcp.hfl.dev/v1alpha1` `NetworkSecuritySecurityProfileGroup` | a security profile group (the threat prevention, URL filtering, mirroring and intercept profiles a firewall policy rule applies) owned by an organization or a project (Terraform's `google_network_security_security_profile_group`, whose `parent` is either); Config Connector's `NetworkSecuritySecurityProfileGroup` (alpha) takes a project only | Config Connector's direct `NetworkSecuritySecurityProfileGroup`, with an organization parent and its REST clients |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeRouter` | a whole Cloud Router: BGP (with `identifierRange`), interfaces, BGP peers (BFD, custom learned ranges, IPv4 and IPv6 next hops, route policies), Cloud NATs and MD5 authentication keys whose values come from Secrets; Config Connector's direct `ComputeRouter` has only the BGP basics and leaves the rest to Terraform-based kinds without these fields (`docs/design.md` decision 14) | copied from Config Connector's direct `ComputeRouter`, NAT and interface mappers; the peers and keys written here |
-| `iam.gcp.hfl.dev/v1beta1` `IAMDenyPolicy` | an IAM deny policy on a project, folder or organization (who may not use which permissions, with exceptions and a tag condition), as a stable kind the charts allow; Config Connector's `IAMDenyPolicy` is alpha only (`docs/design.md` decision 13) | Config Connector's direct `IAMDenyPolicy`, its status written |
-| `compute.gcp.hfl.dev/v1beta1` `ComputeOrganizationSecurityPolicy` | a hierarchical firewall policy under an organization or folder, as a stable kind the charts allow; Config Connector's is alpha only (`docs/design.md` decision 13) | Config Connector's direct `ComputeOrganizationSecurityPolicy` |
-| `compute.gcp.hfl.dev/v1beta1` `ComputeOrganizationSecurityPolicyAssociation` | attaches a hierarchical firewall policy to an organization or folder, as a stable kind; Config Connector's is alpha only (decision 13) | Config Connector's direct `ComputeOrganizationSecurityPolicyAssociation` |
-| `compute.gcp.hfl.dev/v1beta1` `ComputeOrganizationSecurityPolicyRule` | a rule of a hierarchical firewall policy (direction, ranges, protocols and ports, targets, logging), as a stable kind; the policy by reference or by ID; Config Connector's is alpha and Terraform-based only (decision 13) | Config Connector's alpha types, identity and reference; the controller written here on the compute beta API |
-| `compute.gcp.hfl.dev/v1beta1` `ComputeNetworkFirewallPolicyRule` | a rule of a global network firewall policy (direction, ranges, address groups, FQDNs, region codes, threat lists, network contexts, protocols and ports, service account and secure tag targets, logging), as a stable kind; the policy by Config Connector's `ComputeNetworkFirewallPolicy` or by path; Config Connector's is alpha and Terraform-based only (decision 13) | written here after our regional rule kind; Config Connector's `ComputeNetworkFirewallPolicyRef` |
-| `serviceusage.gcp.hfl.dev/v1alpha1` `ServiceIdentity` | a folder's or an organization's service agent (Terraform's `google_folder_service_identity`, `google_organization_service_identity`), its email in status for IAM grants; Config Connector's `ServiceIdentity` takes a project only | Config Connector's direct `ServiceIdentity`; types and mapper generated by `hack/scaffold-kind.sh` |
-| `logging.gcp.hfl.dev/v1alpha1` `LoggingSettings` | an organization's or folder's Log Router settings: the CMEK key, the default log bucket location, the `_Default` sink off for new projects; in no Config Connector code (one closed scaffold PR) | written here from the Cloud Logging API |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeProjectDefaultNetworkTier` | a project's default network tier (`PREMIUM` or `STANDARD`), the tier new instances and forwarding rules get when they name none; in no Config Connector code or pull request | written here after Terraform's `google_compute_project_default_network_tier` |
-| `resourcemanager.gcp.hfl.dev/v1alpha1` `ProjectDefaultServiceAccounts` | what a project does to its default Compute Engine and App Engine service accounts: `DELETE`, `DISABLE` or `DEPRIVILEGE` (out of every project role binding), kept on every reconcile, and undone on delete unless `restorePolicy: NONE`; in no Config Connector code or pull request | written here after Terraform's `google_project_default_service_accounts` |
-| `compute.gcp.hfl.dev/v1alpha1` `ComputeProjectMetadataItem` | one key of a project's common instance metadata (for example `enable-oslogin`), leaving the other keys alone; Config Connector's `ComputeProjectMetadata` owns the whole metadata | written here after Terraform's `google_compute_project_metadata_item` |
-| `artifactregistry.gcp.hfl.dev/v1alpha1` `ArtifactRegistryTag` | a tag on a package's version (for example `prod` on an image digest), moved by changing `spec.version`; in no Config Connector code, pull request or Terraform resource | written here from the Artifact Registry API |
-| `iam.gcp.hfl.dev/v1alpha1` `IAMBinding` | one role on one resource with its members, authoritative for that role (Terraform's `google_*_iam_binding`): members added out of band are removed; Config Connector's `IAMPolicyMember` is additive and `IAMPartialPolicy` keeps what it lists | written here (`pkg/iampolicy`), reading and writing the policy over HTTP |
-| `iam.gcp.hfl.dev/v1alpha1` `IAMMember` | one member of one role on one resource, additive (Terraform's `google_*_iam_member`), for the resource types Config Connector's `IAMPolicyMember` cannot reference: regional secrets, managed folders, log views, Cloud Run worker pools, backend services and about two dozen more; the name is a working one (`docs/design.md` section 10) | written here, over the same `pkg/iampolicy` as `IAMBinding` |
+One file per kind in [`docs/kinds/`](docs/kinds): the gap it fills, where its
+code comes from, its notes and its live runs. `task kinds` prints them as a
+table (kind, API version, the last live result).
 
 ## Where it sits
 
@@ -399,6 +369,35 @@ calls `users.update` with `revokeExistingRoles`, so the user ends with
 exactly the listed roles, whoever granted the others. Roles granted out of
 band while the list is unchanged are not detected (the controller compares
 against what it last applied, `status.appliedDatabaseRoles`).
+
+### The merge gate
+
+GitHub Actions is off in the organization (the builder, 2026-11-11); the
+workflows in `.github/workflows/` stay, disabled. Their pull-request jobs
+run before the push instead, on an offload Spot VM:
+
+```sh
+task hooks          # once per clone: core.hooksPath=hack/hooks
+task ci             # by hand: HEAD (or SHA=..., CI_BASE=<base branch>)
+```
+
+`task ci` (`hack/ci/gate.sh`) checks the commit out into a temporary
+worktree, makes `ci.yml`'s plan (`hack/ci/select.sh plan`, against the
+merge base with `origin/main`), and runs on one VM what the plan
+selects: `task tools`, then `task check` (mode full) or
+`hack/ci/select.sh run GROUPS` (mode groups), then `task operator-e2e`
+when the plan says `e2e=true`. A docs-only change runs nothing. The VM is
+16 vCPUs and 64 GB (8 and 32 GB on a quota error, never smaller: `go vet`
+needs the memory). Only mockgcp, the fake Google Cloud: no credentials reach a test.
+
+It then posts the commit status `offload/ci` (success or failure, the
+machine and the minutes, a link to the run's log in the offload bucket)
+on the commit. The pre-push hook (`hack/hooks/pre-push`) runs it for
+every branch commit pushed and refuses the push on a failure; a commit
+that already has `offload/ci` success is not run again.
+
+**Merge only when the `offload/ci` status on the pull request's head is
+success.** A new commit on the branch needs its own run.
 
 ## Layout
 

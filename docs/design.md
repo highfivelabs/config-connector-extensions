@@ -1,26 +1,9 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-two kinds: `SQLUser` with `spec.databaseRoles`,
-`SQLAdminBackup`, regional `SecretManagerSecret` and
-`SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
-remote upstream and its credentials, `ArtifactRegistryTag`,
-`IAMWorkloadIdentityPoolNamespace`,
-`IAMWorkloadIdentityPoolManagedIdentity` and
-`IAMWorkloadIdentityPoolProviderKey`, a narrow direct
-`RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
-`StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
-`IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
-`ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
-organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
-`ProjectDefaultServiceAccounts`, and a project's or organization's
-`NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
-`NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
-stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
-`ComputeOrganizationSecurityPolicyAssociation`,
-`ComputeOrganizationSecurityPolicyRule` and
-`ComputeNetworkFirewallPolicyRule` (section 6). Each
+config-connector-extensions has the kinds in `docs/kinds/`, one file
+each (`task kinds` lists them): gap kinds copied from Config Connector's
+nearest code (section 2.3) and kinds generated from the APIs' Discovery
+documents (section 2.4). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -160,6 +143,29 @@ verified that the API returns them); and its CRD will be in
 `sql.cnrm.cloud.google.com`, so moving means re-creating objects in the
 other group with `cnrm.cloud.google.com/deletion-policy: abandon` and
 acquiring by `resourceID`.
+
+### 2.4 Generated kinds: standard collections from Discovery (`discokind`)
+
+Where the API resource is a standard collection (create with an ID query
+parameter, get and delete by name, optionally patch with an update mask)
+and Config Connector has no code for it, the kind is generated, not
+copied: `hack/discokind` reads `hack/discokind/kinds.yaml` and the
+Discovery document pinned in `docs/coverage/sources.yaml`, and writes the
+kind's types and descriptor; `pkg/discokind` reconciles every such kind
+with one controller (the spec is the request body; read-only fields go to
+`status.observedState`), `pkg/discokind/fake` serves every such collection
+in front of mockgcp, and `pkg/discokind/kindtest` is every such kind's
+end-to-end test, on the fake or live. Nothing is copied from upstream,
+since upstream has nothing for these kinds; when upstream adds a kind for
+one, it retires as any other (section 3.4). Why, and what it reaches:
+`docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
+references beyond the parent (the other parts of a name are IDs), no
+secrets in status, no Compute Engine insert-style resources yet. The
+first kinds: `LoggingSavedQuery`, `IAMOauthClient`,
+`IAMWorkforcePoolProviderKey` (2026-11-11); then
+`IAMWorkforcePoolProviderScimTenant`, `GKEHubMembershipRBACRoleBinding`,
+`GKEHubRolloutSequence` (foundation item 5) and `LoggingLink` with
+folder, organization and billing account parents.
 
 ### Switching to PR #7148
 
@@ -1159,6 +1165,52 @@ Notes on what was built from this table:
   rule. Copied: 838 of the kind's 2,059 hand-kept lines (41%, the mock
   patch included); the rest is written here. mockgcp patch 0028
   (`docs/fake-cloud.md`). Live: pending, needs the test folder.
+- `ComputeNetworkFirewallPolicyPacketMirroringRule`
+  (`compute.gcp.hfl.dev/v1alpha1`, foundation item 2: a packet mirroring
+  rule of a global network firewall policy, at its priority). Upstream,
+  checked 2026-11-10 (read-only): no kind, no direct or Terraform code and
+  no pull request (searched `PacketMirroringRule`, `packet mirroring`);
+  only generated types carry the policy's `packetMirroringRules` list.
+  Terraform has `google_compute_network_firewall_policy_packet_mirroring_rule`
+  (beta; Magic Modules' `NetworkFirewallPolicyPacketMirroringRule.yaml`,
+  read). The API: v1 serves `networkFirewallPolicies.addPacketMirroringRule`,
+  `getPacketMirroringRule`, `patchPacketMirroringRule` and
+  `removePacketMirroringRule`; the hierarchical `firewallPolicies` has
+  them in beta and alpha only, and `regionNetworkFirewallPolicies` has
+  none in any version (its policy only lists `packetMirroringRules`), so
+  the regional kind foundation item 2 names cannot be built on rule calls
+  and the hierarchical one is left for its own pull request (live pending
+  the test folder). **Written here**, the types, identity and controller
+  adapted from our `ComputeNetworkFirewallPolicyRule` (same message, the
+  policy's other list), with Terraform's fields: `priority` and
+  `firewallPolicyRef` (Config Connector's `ComputeNetworkFirewallPolicyRef`)
+  immutable, `action` `mirror`, `do_not_mirror` or `goto_next` (a CEL
+  rule: `mirror` needs `securityProfileGroup`), `direction`,
+  `match.srcIPRanges`, `destIPRanges` and `layer4Configs`, `ruleName`,
+  `description`, `disabled`, `securityProfileGroup` (a string, as the
+  API takes it: Terraform has no reference either) and
+  `targetSecureTags`, but not Terraform's `tlsInspect`: the first live
+  run's create was refused with 400 "TLS Inspection cannot be set for
+  packet mirroring rule" for `tlsInspect: false`, so the field is gone and
+  never sent (patch 0032 refuses it too); `status.externalRef`
+  (`.../firewallPolicies/{policy}/packetMirroringRules/{priority}`, ours)
+  and `status.ruleTupleCount`. The pinned `google.golang.org/api`
+  compute/v1 client has no packet mirroring calls and the generated
+  `cloud.google.com/go` client leaves an empty list out, so the patch is
+  a plain JSON POST through the same transport, with an emptied list sent
+  as `[]` (as the firewall rule's patch learned live), waiting on the
+  global operation; add, get and remove use the generated client. A
+  missing priority is taken from a 400 that says "does not contain a ...
+  at priority" (assumed from the firewall rules; see the live row). The
+  test runs a `do_not_mirror` and a `goto_next` rule live; a `mirror`
+  rule needs a security profile group with a custom mirroring profile and
+  a mirroring endpoint group, so it runs on the fake only. Generated: the
+  CRD and deepcopy (controller-gen, 511 lines); `hack/scaffold-kind.sh`
+  does not fit a rule inside a policy. Copied: none from upstream; the
+  1,075 hand-kept lines (the mock patch included) are written here, 32% of
+  the kind's lines generated. mockgcp patch 0032 (`docs/fake-cloud.md`).
+  Live: create, resync, a second rule, delete and abandon pass; the
+  patch does not yet (`docs/live-runs.md`, section 7 item 37).
 - `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
   decision 13: a rule of a global network firewall policy, at its
   priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
@@ -1189,13 +1241,165 @@ Notes on what was built from this table:
   Compute Engine REST client with emptied lists sent as `[]`, and
   `removeRule`; the patch waits on a global operation), sharing its
   missing-rule check (renamed `firewallPolicyRuleMissing`) and its
-  comparison, to which the network contexts are added. Not here yet, as
+  comparison, to which the network contexts are added. Live showed that
+  `patchRule` ignores a network context sent as `""` (it kept
+  `INTERNET`); one is cleared by sending `UNSPECIFIED`, and `""` and
+  `UNSPECIFIED` compare as unset. Not here yet, as
   in the regional kind: `securityProfileGroup`, `tlsInspect` and
   `targetResources`. Generated: the CRD and deepcopy only
   (controller-gen); `hack/scaffold-kind.sh` does not fit a rule inside a
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
-  unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+  unpatched (`docs/fake-cloud.md`). Live: passes (`docs/live-runs.md`).
+- `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1alpha1`, decision
+  15, foundation item 17: a billing account's log sink, Terraform's
+  `google_logging_billing_account_sink`). Upstream, rechecked 2026-11-10
+  (read-only): `LoggingLogSink` is `v1beta1` with a direct controller
+  (opt-in; Terraform by default) whose spec takes `projectRef`,
+  `folderRef` or `organizationRef`; its identity already parses
+  `billingAccounts/{billingaccount}/sinks/{sink}`, but no field reaches
+  it, on `master` (`56effb6`, 2026-11-09) either; no open pull request
+  adds one (searched "LogSink", "billing sink"). **Copied** with as
+  little change as possible: the types, identity, the direct controller
+  and the sink's mapper functions; upstream's destination, BigQuery
+  options and exclusion types are imported, not copied. Changed: a
+  required, immutable `billingAccountRef` (Config Connector's
+  `billing/v1alpha1` `BillingAccountRef`: `external` as
+  `billingAccounts/{id}` or the bare ID, or `name` of a `BillingAccount`)
+  in place of the three parents; `includeChildren` dropped (folders and
+  organizations only); `uniqueWriterIdentity` dropped and always sent as
+  true (a billing account's sink always has its own writer identity, and
+  Terraform sends true); `status.externalRef`, checked by the identity
+  so a changed `resourceID` is refused. Update is upstream's: a mask of
+  the top-level fields that differ. Hand-written here: the end-to-end
+  test only. Generated: the CRD and deepcopy (controller-gen);
+  `hack/scaffold-kind.sh` was not run, since upstream's hand-written
+  controller and mapper are the nearer code. Copied: 655 of the kind's
+  1,008 hand-kept lines (65%; the mock patch and the test are the rest).
+  `task coverage` counts 10 of the resource's 13 attributes as ours; the
+  other three are `includeChildren` and `interceptChildren` (folders and
+  organizations only) and the deprecated `outputVersionFormat`.
+  mockgcp patch 0029 (`docs/fake-cloud.md`). Live: pending, needs
+  billing account access (`E2E_BILLING_ACCOUNT`, `docs/live-runs.md`).
+- `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`,
+  decision 13: an organization's principal access boundary policy, the
+  resources its principals may use). Upstream, rechecked 2026-11-10
+  (read-only): `v1alpha1` at the pin with a direct controller (the
+  default in `static_config.go`), generated identity, reference, types,
+  mapper and fuzzer; no open pull request promotes it. **Copied:** all
+  of those, unchanged but for the package, our group, labels and short
+  names, and CEL rules making `organizationRef`, `location` and
+  `resourceID` immutable (decision 20; upstream only checks the identity
+  against `status.externalRef`). The controller already writes status
+  through `op.UpdateStatus` (the deny policy's did not). Generated: the
+  CRD and deepcopy (controller-gen); upstream's identity, reference,
+  types, mapper and fuzzer were themselves generated by controllerbuilder,
+  so `hack/scaffold-kind.sh` was not run again. Copied: 941 of the
+  kind's 1,528 hand-kept lines (62%, with our headers); written here (587):
+  the end-to-end test and mockgcp
+  patch 0030 (IAM v3 principal access boundary policies, which mockgcp
+  lacked; `docs/fake-cloud.md`). Live: pending, needs organization-level
+  access (a policy lives under an organization; `docs/live-runs.md`).
+- `SecurityCenterMuteConfig` (`securitycenter.gcp.hfl.dev/v1alpha1`,
+  decision 16, foundation item 20, the first of its Security Command
+  Center kinds: a mute config of an organization, folder or project).
+  Upstream, rechecked 2026-11-10 (read-only): on `master` at the pin
+  (`672414b`) `SecurityCenterMuteConfig` is `v1alpha1` with a direct
+  controller on the v1 API and takes `organizationRef` only, as do
+  `SecurityCenterBigQueryExport` and the two custom module kinds;
+  `SecurityCenterNotificationConfig` is Terraform-based. Open PR #7673
+  ("direct SCC resources", one commit, last updated 2026-05-05, review
+  required) does give mute configs, BigQuery exports and custom modules
+  `organizationRef`, `folderRef` and `projectRef` (foundation.md said
+  neither PR was known to; #7673 does), but it predates `master`'s own
+  kinds, whose schemas and controllers differ, and has not moved since.
+  #14181 (the health analytics custom module's controller) and #14206
+  keep the organization only. **Copied** with as little change as
+  possible: `master`'s types, identity, direct controller and mapper
+  functions, and #7673's parent resolution
+  (`apis/securitycenter/v1alpha1/parent.go`), so the schema is
+  `master`'s plus #7673's two parent fields: exactly one of the three,
+  each immutable (CEL). Changed: the identity is
+  `{parent}/muteConfigs/{id}`; the update compares with the name the
+  API returned (in case it names a project by number); export sets the
+  parent it came from; delete of a missing mute config is done (upstream
+  reports it not deleted). Hand-written here: the end-to-end test.
+  Generated: the CRD and deepcopy (controller-gen); upstream's mapper is
+  itself generated. Version `v1alpha1`, as foundation.md's build line
+  says (decision 16 does not ask for a stable kind). mockgcp patch 0031
+  (`docs/fake-cloud.md`). Live: the organization's and folder's are
+  "live: pending, needs test folder"; a project's needs Security Command
+  Center active for the project and `securitycenter.muteconfigs.*` for
+  the live-test service account (`E2E_SECURITY_CENTER=true`,
+  `docs/live-runs.md`).
+- `DNSResponsePolicy` (`dns.gcp.hfl.dev/v1beta1`, decision 13: a Cloud
+  DNS response policy, the DNS firewall a VPC network or GKE cluster
+  consults before Cloud DNS; its rules are `DNSResponsePolicyRule`,
+  next). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at the
+  pin with a **direct** controller, the default (`static_config.go`:
+  direct, Terraform also supported), types, identity, reference, a
+  generated mapper (`zz_generated.v1alpha1.mappers.go`, from
+  `dev/tools/openapi-to-krm`) and a fuzzer. Merged #14530 (zero-diff
+  takeover from the Terraform controller) and #14712 (direct the default,
+  slated for 1.161) keep it `v1alpha1`; no open pull request promotes it
+  (searched `DNSResponsePolicy`, `ResponsePolicyRule`). So it is
+  **copied**, as `IAMDenyPolicy` was, into a new group
+  `dns.gcp.hfl.dev` (version `v1beta1`). Changed: `projectRef` and
+  `resourceID` are immutable by CEL rules (decision 20); the controller
+  writes `status.externalRef`
+  (`projects/{p}/locations/global/responsePolicies/{id}`, the identity's
+  own form; upstream's status has no such field); and the object's
+  `metadata.labels` are the policy's `labels`, sent on create and update
+  and compared (upstream leaves `labels` out, the one field the coverage
+  report counted uncovered besides output and name fields; decision 19).
+  `networks[].networkUrl` stays a string, as upstream has it: a short
+  path (`projects/{p}/global/networks/{n}`) or a full URL, which the
+  controller normalizes to the full URL both ways; there is no
+  `ComputeNetwork` reference. Delete unbinds the networks (a `patch` with
+  an empty list) and then deletes, as upstream does (upstream unbinds
+  first, which says the real API refuses to delete a bound policy;
+  mockgcp does not refuse).
+  Generated: the CRD and deepcopy (controller-gen, 376 lines); the mapper
+  was generated upstream (`openapi-to-krm`) and is copied unedited.
+  `hack/scaffold-kind.sh` was not run: upstream's direct code exists, and
+  copying it keeps us on upstream's shape for the move back. Copied: 887
+  of the kind's 1,359 hand-kept lines (65%); written here: the
+  end-to-end test and its helpers (360) and the changes above. mockgcp
+  serves response policies unpatched (`docs/fake-cloud.md`). Live:
+  pending `roles/dns.admin` and `dns.googleapis.com` in
+  `hfl-dev-514205` (`docs/live-runs.md`).
+- `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, foundation item
+  10, the first field-gap kind under decision 19 and the first to apply
+  section 6.6's create-only pattern: an HA or Classic VPN tunnel with
+  `cipherSuite`, the IKE phase 1 and 2 algorithms, which Config
+  Connector's lacks). Upstream, rechecked 2026-11-10 (read-only):
+  `ComputeVPNTunnel` is `v1beta1` and Terraform-only at the pin and on
+  `master` (`static_config.go`), with direct types and a mapper (PR
+  #10151, merged 2026-07-06) but no controller or identity; no pull
+  request adds `cipherSuite` or a controller. **Copied**: the types and
+  the mapper, changed for our group, with `cipherSuite`, `labels` (the
+  one field `vpnTunnels.setLabels` changes in place) and
+  `status.externalRef` added, `projectRef` optional beside the
+  namespace's project annotation, every other field immutable by CEL
+  (decision 20; exactly one of `vpnGatewayRef` and `targetVPNGatewayRef`,
+  also CEL), and `routerRef` ours (our `ComputeRouter` or Config
+  Connector's, by name, refused when both exist, as for
+  `ComputeRouterRoutePolicy`; its resolution is now `ComputeRouterRef.Resolve`).
+  The gateway references are Config Connector's types, resolved by
+  `external` or by the named object's `status.selfLink`. **Written
+  here**: the identity, the controller (insert, get, `setLabels` with the
+  label fingerprint, delete; the shared secret read from its Secret on
+  every reconcile, sent only by insert), and the end-to-end test. Live
+  showed two things the fake did not: `vpnTunnels.insert` leaves the
+  labels out (Create sets them after it, as Terraform's tunnel does), and
+  a peer gateway on a reserved address (RFC 5735) is refused.
+  Generated: the CRD and deepcopy (controller-gen);
+  `hack/scaffold-kind.sh` was not run, since upstream's direct types and
+  mapper already existed to copy. mockgcp patch 0033 (`docs/fake-cloud.md`):
+  mockgcp had no VPN tunnel service. A tunnel moves to ours by acquiring
+  the same name (`resourceID`) and abandoning Config Connector's object;
+  ours cannot change an acquired tunnel's immutable fields, so a tunnel
+  that needs `cipherSuite` is made new. Live: see `docs/live-runs.md`.
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1211,8 +1415,9 @@ Notes on what was built from this table:
   no patch.
   Live: passes, with `roles/iam.serviceAccountUser` on the project
   (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
-- `IAMBinding` (`iam.gcp.hfl.dev/v1alpha1`, rank 1; built as
-  `IAMRoleBinding`, renamed by decision 12). **Written here**:
+- `IAMBinding` (`iam.gcp.hfl.dev/v1beta1`, rank 1; built as
+  `IAMRoleBinding`, renamed by decision 12, moved from `v1alpha1` to
+  `v1beta1` unchanged by decision 24). **Written here**:
   `resourceRef` (`kind`, `name` or `external`, shaped like
   `IAMPolicyMember`'s), `role`, `condition` (title, description,
   expression), `members` (strings as the API writes them) and
@@ -1311,6 +1516,49 @@ Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
 deprecated upstream and is not built.
+
+### 6.6 Field gaps on large Terraform-based kinds (proposed 2026-11-10)
+
+Decision 19 fills field gaps now instead of waiting for Config Connector.
+The accepted pattern so far is a parallel kind of ours that owns the whole
+object (decisions 11, 13 and 14). For a large Terraform-based kind
+(`ContainerCluster`, `KMSCryptoKey`, `ComputeVPNTunnel`) most of that cost
+is the update path: comparing and writing every field of the object, as
+`ComputeRouter` does. How the API changes the missing field decides which
+lighter pattern fits; check it per field before building.
+
+1. **The API takes the field only at create: a create-only whole-object
+   kind.** Nothing beside Config Connector's object can add such a field
+   later, so the resource has to be made by our kind. But that kind is
+   small: create, read, delete and labels, with every other field
+   immutable by CEL (decision 20) and nothing compared or written after
+   create. Upstream's direct types and mapper are copied where they
+   exist. Examples: every field of a VPN tunnel but its labels
+   (`cipherSuite`), a KMS key's `cryptoKeyBackend`, an interconnect
+   attachment's IPv6 candidates. **Applied first in `ComputeVPNTunnel`**
+   (section 6.5).
+2. **The API changes the field by an update mask: a field kind beside
+   Config Connector's object.** A small kind of ours names Config
+   Connector's object (or the resource), reads the resource, and patches
+   only its own fields with a mask that names them; Config Connector
+   keeps owning the rest. It is safe only when Config Connector's update
+   never sends the field: decision 11 rejected it for `RunService`
+   because Terraform's Cloud Run update sends the whole service with no
+   mask and resets the fields. So the kind's live test changes Config
+   Connector's object after ours has set the field and checks that the
+   field survives. Candidates: `KMSCryptoKey`'s
+   `keyAccessJustificationsPolicy` (Terraform's update of a key names the
+   changed fields in its mask; to be confirmed live), GKE cluster fields
+   (`clusters.update` takes one `desired*` change at a time) and node pool
+   `kubeletConfig` (`nodePools.update`). Not built yet: the first
+   field-gap PR that needs it builds it; its name is section 10 question 5.
+3. **Otherwise** (the field is mutable and Config Connector's update would
+   reset it), a whole-object kind as before.
+
+One pattern does not fit all: a create-only field rules out the field
+kind, a mask-less upstream update rules it out too, and a create-only
+whole-object kind would take a mutable resource from Config Connector for
+no reason.
 
 ## 7. What is left
 
@@ -1459,6 +1707,50 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
+33. `LoggingBillingAccountSink`: a live run (it needs a billing account
+    the live-test service account administers logging on:
+    `E2E_BILLING_ACCOUNT`); the writer identity's real address (the fake
+    makes one up); whether the API checks the destination at create; and
+    a sink named by a `BillingAccount` object, which no test makes.
+34. `IAMPrincipalAccessBoundaryPolicy`: a live run (it needs
+    `iam.principalaccessboundarypolicies.*` on an organization, which a
+    live run never touches); what the API defaults
+    (`enforcementVersion`), whether a resync then writes nothing, and
+    the checks mockgcp does not make (resource names in rules, the 500
+    resource limit, an `effect` other than `ALLOW`).
+35. `SecurityCenterMuteConfig`: a live run (a project's needs Security
+    Command Center active and `securitycenter.muteconfigs.*`; a folder's
+    and an organization's the test folder); whether the API names a
+    project's mute config by its number; the API's checks of a filter;
+    and a dynamic mute config's `expiryTime`, which no test sets. The
+    other Security Command Center kinds of decision 16 (BigQuery
+    exports, notification configs, the two custom module kinds) are
+    next, on the same parent.
+36. `DNSResponsePolicy`: a live run (needs `dns.googleapis.com` on in
+    `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`); whether
+    the API returns `networkUrl` with the project ID or its number (the
+    comparison normalizes the form, not the project); the API's refusal
+    to delete a bound policy, which mockgcp does not make; `gkeClusters`,
+    which no test sets (it needs a GKE cluster).
+37. `ComputeNetworkFirewallPolicyPacketMirroringRule`: the live patch
+    (run `cce-11100936-3a4c`: the rule did not change in 15 minutes;
+    rerun with the test's new timeout message, which prints the cloud
+    rule and the Ready message, and fix what it shows: the JSON POST,
+    the emptied `srcIpRanges`, or an INGRESS rule with only
+    `destIpRanges`); a live `mirror`
+    rule (a security profile group with a custom mirroring profile and a
+    mirroring endpoint group); the hierarchical policy's packet mirroring
+    rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
+    pending the test folder); a regional kind, which the API has no rule
+    calls for; `targetSecureTags`, which no test sets.
+
+33. `ComputeVPNTunnel`: a rotated shared secret is not applied (the API
+    takes it only at insert; make a new tunnel); the API's checks of a
+    cipher suite (which algorithm names and combinations it takes) and
+    whether `vpnTunnels.get` returns the suite as sent; the other fields
+    of foundation item 10 (`ComputeInterconnectAttachment`'s IPv6
+    candidates and `l2Forwarding`, `ComputeInterconnect`'s
+    `applicationAwareInterconnect`), the next field-gap PRs.
 
 ## 8. Decisions
 
@@ -1477,7 +1769,8 @@ To raise confidence in `ArtifactRegistryRepository`:
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
-   release, with the exception in section 6.1. Never a fork. Exceptions
+   release, with the exception in section 6.1. **Reversed by the builder
+   on 2026-11-10: decision 19.** Never a fork. Exceptions
    the builder has made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
    request, owning the whole object, is now the accepted pattern when a
@@ -1536,7 +1829,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     `google_<resource>_iam_binding` is authoritative for one role and
     `google_<resource>_iam_member` is additive, and ours follow that.
     Each is one generic kind in `iam.gcp.hfl.dev/v1alpha1` with a resource
-    reference. `IAMBinding` is one role, an optional condition and a list
+    reference (`IAMBinding` is `v1beta1` since decision 24). `IAMBinding` is one role, an optional condition and a list
     of members on one resource, authoritative for that role and
     condition. `IAMMember` is one member of one role on one resource,
     additive. The two were first built as `IAMRoleBinding` (the builder
@@ -1602,6 +1895,57 @@ To raise confidence in `ArtifactRegistryRepository`:
     kinds follow the same rule. This generalises decision 12 (the IAM
     kinds) and the folder and organization `ServiceIdentity`, which kept
     upstream's name with new parents.
+19. **Field gaps: build them now, and keep up with upstream mechanically**
+    (the builder, 2026-11-10, reversing decision 5: "don't wait on
+    release ... we need to ship and understand they are going to ship
+    behind us on several resources and new attributes. we just need
+    mechanized ways to keep up with upstream."). Field gaps that
+    `docs/coverage` lists for foundation kinds Config Connector already
+    serves are built here, in `docs/coverage/foundation.md`'s order,
+    without waiting for an upstream release or pull request. They use the
+    accepted pattern (decisions 11, 14, 13): our own kind in our group,
+    copied from upstream's nearest code, owning the whole object, which a
+    workload moves to by acquiring the same resource. Where that pattern
+    does not fit a gap, the first pull request for it proposes another in
+    a short design note. Upstream will ship many of the same fields and
+    resources after us; the means of keeping up are mechanical: the pin
+    and patches (section 3), `task coverage` and `task upstream-pr`, and
+    the retirement path (section 3.4).
+
+20. **Immutability is enforced by CEL rules in the CRD, not a webhook**
+    (the builder, 2026-11-10, G4): `self == oldSelf` transition rules on
+    the immutable fields, as the kinds already do; no admission webhook
+    is added for it.
+21. **A remote `ArtifactRegistryRepository` whose upstream URI changes is
+    deleted and made again** (the builder, 2026-11-10, G3: confirmed).
+22. **`status.appliedDatabaseRoles` stays until upstream PR #7148** (the
+    builder, 2026-11-10, G5: confirmed; section 10 item 2's
+    recommendation): the field and the comparison with what was applied
+    are kept until `SQLUser` switches to the PR (section 2), then follow
+    the PR.
+23. **Organization custom roles are checked at the organization level**
+    (the builder, 2026-11-10, G8: confirmed): Config Connector's
+    `IAMCustomRole` with the `cnrm.cloud.google.com/organization-id`
+    annotation covers them (foundation item 3), proven against an
+    organization once the test folder exists.
+
+24. **`IAMBinding` is `v1beta1`** (the builder, 2026-11-10, K12:
+    "Promote IAMBinding to v1beta1 first, then switch by default in
+    0.4.0", so that the catalog's charts, which refuse alpha kinds, can
+    render it by default). The kind moved from `iam.gcp.hfl.dev/v1alpha1`
+    to `v1beta1` with its schema unchanged, and `v1alpha1` is no longer
+    served: the CRD has one version, as every kind here does. Nothing
+    was released at `v1alpha1` (the repository has no release or tag) and
+    the catalog had not shipped it, so no stored object needs converting.
+    No conversion webhook (the builder prefers a kind per version to a
+    second API version with conversion, and decision 20 keeps webhooks
+    out). The Go types are in `apis/iam/v1beta1` with their own copy of
+    the resource reference and condition types; `IAMMember` stays
+    `v1alpha1`. An install that has `v1alpha1` objects abandons them
+    (`deletion-policy: abandon`), deletes the CRD, and re-creates them at
+    `v1beta1`, which takes over the same binding (`CHANGELOG.md`).
+    Whether `v1alpha1` should instead have stayed served, deprecated, for
+    a window is section 10, question 4.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -1838,7 +2182,8 @@ moves to section 8.
 1. Answered 2026-11-09: the kind is `IAMBinding`, first built as
    `IAMRoleBinding` (decision 12).
 
-2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+2. Answered 2026-11-10 (decision 22): keep the field until PR #7148.
+   The question was: **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows
    whether `users.get` returns roles". It does (`docs/live-runs.md`).
    Upstream PR #7148 compares the spec with the roles `users.get` returns.
@@ -1850,3 +2195,23 @@ moves to section 8.
    authoritative one is renamed with it to `IAMBinding`. Both mirror
    Terraform's `google_<resource>_iam_member` and `_iam_binding`
    (decision 12). The question had recommended keeping `IAMRoleMember`.
+
+4. **Should `IAMBinding` `v1alpha1` stay served, deprecated, beside
+   `v1beta1`?** (2026-11-10, after decision 24). Decision 24 moved the
+   kind and stopped serving `v1alpha1`. The alternative is a CRD with
+   both versions (identical schemas, `conversion: None`, `v1beta1`
+   stored, `v1alpha1` marked `deprecated` with a warning) for a support
+   window, so an object created at `v1alpha1` keeps working. That is a
+   second API version of the same kind, which the builder has said to
+   avoid, and nothing outside test clusters holds a `v1alpha1` object.
+   Recommendation: keep decision 24 as built (one served version); serve
+   both only if a cluster turns up with `v1alpha1` objects that cannot be
+   abandoned and re-created. Reversing is cheap: add the version back to
+   the CRD with `served: true`, `storage: false`, `deprecated: true`.
+5. **The name of a field kind** (section 6.6, pattern 2; 2026-11-10).
+   A kind of ours that owns a few fields of a resource Config Connector's
+   kind owns has no name in Config Connector or Terraform (decision 18).
+   Recommendation: `<Config Connector kind>Fields` in our group, with a
+   `resourceRef` to Config Connector's object, for example
+   `KMSCryptoKeyFields` for `keyAccessJustificationsPolicy`; the fields
+   keep the API's names. Not needed until the first such PR.

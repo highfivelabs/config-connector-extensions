@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
+- compute.gcp.hfl.dev_computenetworkfirewallpolicypacketmirroringrules.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyassociations.yaml
@@ -16,12 +17,23 @@ resources:
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
+- compute.gcp.hfl.dev_computevpntunnels.yaml
+- dns.gcp.hfl.dev_dnsresponsepolicies.yaml
+- gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
+- gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
 - iam.gcp.hfl.dev_iambindings.yaml
 - iam.gcp.hfl.dev_iamdenypolicies.yaml
 - iam.gcp.hfl.dev_iammembers.yaml
+- iam.gcp.hfl.dev_iamoauthclients.yaml
+- iam.gcp.hfl.dev_iamprincipalaccessboundarypolicies.yaml
+- iam.gcp.hfl.dev_iamworkforcepoolproviderkeys.yaml
+- iam.gcp.hfl.dev_iamworkforcepoolproviderscimtenants.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolmanagedidentities.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolnamespaces.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolproviderkeys.yaml
+- logging.gcp.hfl.dev_loggingbillingaccountsinks.yaml
+- logging.gcp.hfl.dev_logginglinks.yaml
+- logging.gcp.hfl.dev_loggingsavedqueries.yaml
 - logging.gcp.hfl.dev_loggingsettings.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofilegroups.yaml
@@ -30,6 +42,7 @@ resources:
 - run.gcp.hfl.dev_runservices.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
+- securitycenter.gcp.hfl.dev_securitycentermuteconfigs.yaml
 - serviceusage.gcp.hfl.dev_serviceidentities.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
 - sqladmin.gcp.hfl.dev_sqladminbackups.yaml

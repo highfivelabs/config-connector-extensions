@@ -17,7 +17,8 @@
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
 # firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
-# them), Cloud Routers (their route policies go with them) and VPC
+# them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
+# (their route policies go with them) and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
@@ -26,7 +27,14 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true). A failed list or delete fails the sweep.
+# (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
+# E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
+# Center mute configs of the project, by name, where it is active
+# (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
+# where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
+# kinds in hack/live/discokinds.tsv (their global collection in the
+# project), by name, through the API. A failed list or delete fails the
+# sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -223,6 +231,41 @@ for kind in securityProfileGroups securityProfiles; do
     act "${kind%s}" "${name}" ns_delete "${name}"
   done <<<"${rows}"
 done
+# The discokind kinds (hack/live/discokinds.tsv, generated): each
+# collection under the project, by the run's name; an ID that takes no
+# dashes (cce11091530a3f2...) is read as the run's name with them. A
+# soft-deleted resource is already gone.
+disco_api() { # disco_api METHOD URL
+  curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" "$2"
+}
+disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an operation
+  local op name fin
+  op="$(disco_api DELETE "$1$2")" || return 1
+  name="$(jq -r 'if (.done == false and (.name // "" | test("/operations/|^operations/"))) then .name else "" end' <<<"${op}")"
+  [[ -n "${name}" ]] || return 0
+  for _ in $(seq 1 60); do
+    fin="$(disco_api GET "$1${name}" | jq -r '.done // false')" || return 1
+    [[ "${fin}" == true ]] && return 0
+    sleep 5
+  done
+  return 1
+}
+while IFS=$'\t' read -r dkind base coll soft; do
+  [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
+  coll="${coll//\{project\}/${project}}"
+  field="${coll##*/}"
+  softf="${soft%%=*}" softv="${soft#*=}"
+  rows="$(disco_api GET "${base}${coll}?pageSize=1000" \
+    | jq -r --arg f "${field}" --arg s "${softf}" '.[$f][]? | "\(.name) \(.createTime // "-") \(if $s == "-" then "-" else (.[$s] // "-") end)"')"
+  while read -r name made state; do
+    [[ -n "${name}" ]] || continue
+    [[ "${soft}" == "-" || "${state}" != "${softv}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    id="$(sed -E 's/^cce([0-9]{8})([0-9a-f]{4})/cce-\1-\2-/' <<<"${name##*/}")"
+    by_run "${id}" "${made}" || continue
+    act "${dkind}" "${name}" disco_delete "${base}" "${name}"
+  done <<<"${rows}"
+done <"${HERE}/discokinds.tsv"
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
@@ -240,6 +283,42 @@ rows="$("${G[@]}" compute network-endpoint-groups list --verbosity=error \
 while read -r name region zone; do
   [[ -n "${name}" ]] || continue
   act "network endpoint group" "${name} ${region:-${zone:-global}}" "${G[@]}" compute network-endpoint-groups delete "${name}" "$(scope "${region}" "${zone}")"
+done <<<"${rows}"
+# VPN tunnels before the gateways and routers they use.
+rows="$("${G[@]}" compute vpn-tunnels list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "VPN tunnel" "${name} ${region}" "${G[@]}" compute vpn-tunnels delete "${name}" --region="${region}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute vpn-gateways list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "HA VPN gateway" "${name} ${region}" "${G[@]}" compute vpn-gateways delete "${name}" --region="${region}"
+done <<<"${rows}"
+# externalVpnGateways.list refuses a name~ filter (a 400, "Invalid list
+# filter expression", seen live), so the names and ages are matched here
+# as cfilter would.
+rows="$("${G[@]}" compute external-vpn-gateways list --verbosity=error --format='value(name,creationTimestamp)')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  if [[ -n "${run}" ]]; then
+    [[ "${name}" == "${run}-"* ]] || continue
+  else
+    [[ "${name}" == "${PREFIX}"* ]] || continue
+    if [[ "${mode}" == "sweep" ]]; then
+      [[ "$(date -u -d "${made}" +%s 2>/dev/null || echo 0)" -lt "$(date -u -d "${cutoff}" +%s 2>/dev/null || echo 0)" ]] || continue
+    fi
+  fi
+  act "external VPN gateway" "${name}" "${G[@]}" compute external-vpn-gateways delete "${name}"
+done <<<"${rows}"
+# Regional addresses (the VPN tunnel test's peer address), by name.
+rows="$("${G[@]}" compute addresses list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "address" "${name} ${region:-global}" "${G[@]}" compute addresses delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
@@ -268,6 +347,54 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
   done <<<"${rows}"
+fi
+
+# Log sinks of the billing account in E2E_BILLING_ACCOUNT
+# (billingAccounts/{id}), by the run's name, only where the live-test
+# service account administers logging on it; without it the
+# LoggingBillingAccountSink test does not run live and there is nothing to
+# sweep.
+if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
+  billing="${E2E_BILLING_ACCOUNT#billingAccounts/}"
+  rows="$("${G[@]}" logging sinks list --billing-account="${billing}" --verbosity=error --format='value(name,createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "billing account log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --billing-account="${billing}"
+  done <<<"${rows}"
+fi
+
+# Security Command Center mute configs of the project, by the run's name,
+# only where Security Command Center is active for the project and the
+# live-test service account may list them (E2E_SECURITY_CENTER=true);
+# without it the SecurityCenterMuteConfig test does not run live.
+if [[ "${E2E_SECURITY_CENTER:-}" == true ]]; then
+  rows="$("${G[@]}" scc muteconfigs list --project="${project}" --verbosity=error \
+    --format='value(name.basename(),createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "mute config" "${id}" "${G[@]}" scc muteconfigs delete "${id}" --project="${project}"
+  done <<<"${rows}"
+fi
+
+# Cloud DNS response policies, by the run's name, before the networks they
+# are bound to (a bound network cannot be deleted), only where the project
+# has Cloud DNS for the live-test service account (E2E_DNS_ADMIN=true:
+# dns.googleapis.com on and roles/dns.admin); without it the
+# DNSResponsePolicy test does not run live and there is nothing to sweep.
+# A policy is unbound from its networks before it is deleted, as the
+# controller does.
+dns_rp_delete() { # dns_rp_delete NAME
+  "${G[@]}" dns response-policies update "$1" --networks="" &&
+    "${G[@]}" dns response-policies delete "$1"
+}
+if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
+  rows="$("${G[@]}" dns response-policies list --verbosity=error --format='value(responsePolicyName)')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    act "DNS response policy" "${name}" dns_rp_delete "${name}"
+  done
 fi
 
 # Cloud Run services, every region.

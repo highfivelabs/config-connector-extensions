@@ -243,8 +243,15 @@ func (a *networkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolic
 	emptied("SrcThreatIntelligences", len(have.GetSrcThreatIntelligences()), len(want.GetSrcThreatIntelligences()), m)
 	emptied("DestThreatIntelligences", len(have.GetDestThreatIntelligences()), len(want.GetDestThreatIntelligences()), m)
 	emptied("SrcSecureTags", len(have.GetSrcSecureTags()), len(want.GetSrcSecureTags()), m)
-	emptied("SrcNetworkContext", len(have.GetSrcNetworkContext()), len(want.GetSrcNetworkContext()), m)
-	emptied("DestNetworkContext", len(have.GetDestNetworkContext()), len(want.GetDestNetworkContext()), m)
+	// A network context is not cleared by "" (a live run: patchRule kept
+	// INTERNET when sent ""); it is cleared by UNSPECIFIED, one of the
+	// API's values.
+	if networkContextSet(have.GetSrcNetworkContext()) && !networkContextSet(want.GetSrcNetworkContext()) {
+		body.Match.SrcNetworkContext = "UNSPECIFIED"
+	}
+	if networkContextSet(have.GetDestNetworkContext()) && !networkContextSet(want.GetDestNetworkContext()) {
+		body.Match.DestNetworkContext = "UNSPECIFIED"
+	}
 	r := &body.ForceSendFields
 	// The optional strings and booleans are sent as "" and false when the
 	// spec leaves them unset (the generated client did this for the proto's
@@ -357,14 +364,20 @@ func networkFirewallPolicyRuleSpecToProto(in *krm.ComputeNetworkFirewallPolicyRu
 
 // comparableNetworkRule is comparableRule (the regional rule's) with the
 // network contexts, which this kind manages and the regional kind does not.
-// An unset context and an empty one are the same.
+// An unset context, an empty one and UNSPECIFIED are the same.
 func comparableNetworkRule(in *pb.FirewallPolicyRule) *pb.FirewallPolicyRule {
 	out := comparableRule(in)
-	if c := in.GetMatch().GetSrcNetworkContext(); c != "" {
+	if c := in.GetMatch().GetSrcNetworkContext(); networkContextSet(c) {
 		out.Match.SrcNetworkContext = direct.PtrTo(c)
 	}
-	if c := in.GetMatch().GetDestNetworkContext(); c != "" {
+	if c := in.GetMatch().GetDestNetworkContext(); networkContextSet(c) {
 		out.Match.DestNetworkContext = direct.PtrTo(c)
 	}
 	return out
+}
+
+// networkContextSet reports whether a network context names one: "" and
+// UNSPECIFIED do not.
+func networkContextSet(c string) bool {
+	return c != "" && c != "UNSPECIFIED"
 }

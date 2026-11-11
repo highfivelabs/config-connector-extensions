@@ -1,0 +1,1 @@
+a link needs a log bucket with Log Analytics on, which this test does not make; live: pending, needs a test bucket
