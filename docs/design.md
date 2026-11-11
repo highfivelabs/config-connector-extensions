@@ -1,6 +1,6 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-two kinds: `SQLUser` with `spec.databaseRoles`,
+config-connector-extensions has thirty-three kinds: `SQLUser` with `spec.databaseRoles`,
 `SQLAdminBackup`, regional `SecretManagerSecret` and
 `SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
 remote upstream and its credentials, `ArtifactRegistryTag`,
@@ -10,7 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
+`LoggingSettings`, `LoggingBillingAccountSink`,
+`ComputeProjectMetadataItem`, `IAMBinding`,
 `IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
@@ -19,8 +20,10 @@ organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
 `NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
 stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
 `ComputeOrganizationSecurityPolicyAssociation`,
-`ComputeOrganizationSecurityPolicyRule` and
-`ComputeNetworkFirewallPolicyRule` (section 6). Each
+`ComputeOrganizationSecurityPolicyRule`,
+`ComputeNetworkFirewallPolicyRule`,
+`IAMPrincipalAccessBoundaryPolicy`, and an organization's, folder's or
+project's `SecurityCenterMuteConfig` (section 6). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -1189,13 +1192,97 @@ Notes on what was built from this table:
   Compute Engine REST client with emptied lists sent as `[]`, and
   `removeRule`; the patch waits on a global operation), sharing its
   missing-rule check (renamed `firewallPolicyRuleMissing`) and its
-  comparison, to which the network contexts are added. Not here yet, as
+  comparison, to which the network contexts are added. Live showed that
+  `patchRule` ignores a network context sent as `""` (it kept
+  `INTERNET`); one is cleared by sending `UNSPECIFIED`, and `""` and
+  `UNSPECIFIED` compare as unset. Not here yet, as
   in the regional kind: `securityProfileGroup`, `tlsInspect` and
   `targetResources`. Generated: the CRD and deepcopy only
   (controller-gen); `hack/scaffold-kind.sh` does not fit a rule inside a
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
-  unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+  unpatched (`docs/fake-cloud.md`). Live: passes (`docs/live-runs.md`).
+- `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1alpha1`, decision
+  15, foundation item 17: a billing account's log sink, Terraform's
+  `google_logging_billing_account_sink`). Upstream, rechecked 2026-11-10
+  (read-only): `LoggingLogSink` is `v1beta1` with a direct controller
+  (opt-in; Terraform by default) whose spec takes `projectRef`,
+  `folderRef` or `organizationRef`; its identity already parses
+  `billingAccounts/{billingaccount}/sinks/{sink}`, but no field reaches
+  it, on `master` (`56effb6`, 2026-11-09) either; no open pull request
+  adds one (searched "LogSink", "billing sink"). **Copied** with as
+  little change as possible: the types, identity, the direct controller
+  and the sink's mapper functions; upstream's destination, BigQuery
+  options and exclusion types are imported, not copied. Changed: a
+  required, immutable `billingAccountRef` (Config Connector's
+  `billing/v1alpha1` `BillingAccountRef`: `external` as
+  `billingAccounts/{id}` or the bare ID, or `name` of a `BillingAccount`)
+  in place of the three parents; `includeChildren` dropped (folders and
+  organizations only); `uniqueWriterIdentity` dropped and always sent as
+  true (a billing account's sink always has its own writer identity, and
+  Terraform sends true); `status.externalRef`, checked by the identity
+  so a changed `resourceID` is refused. Update is upstream's: a mask of
+  the top-level fields that differ. Hand-written here: the end-to-end
+  test only. Generated: the CRD and deepcopy (controller-gen);
+  `hack/scaffold-kind.sh` was not run, since upstream's hand-written
+  controller and mapper are the nearer code. Copied: 655 of the kind's
+  1,008 hand-kept lines (65%; the mock patch and the test are the rest).
+  `task coverage` counts 10 of the resource's 13 attributes as ours; the
+  other three are `includeChildren` and `interceptChildren` (folders and
+  organizations only) and the deprecated `outputVersionFormat`.
+  mockgcp patch 0029 (`docs/fake-cloud.md`). Live: pending, needs
+  billing account access (`E2E_BILLING_ACCOUNT`, `docs/live-runs.md`).
+- `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`,
+  decision 13: an organization's principal access boundary policy, the
+  resources its principals may use). Upstream, rechecked 2026-11-10
+  (read-only): `v1alpha1` at the pin with a direct controller (the
+  default in `static_config.go`), generated identity, reference, types,
+  mapper and fuzzer; no open pull request promotes it. **Copied:** all
+  of those, unchanged but for the package, our group, labels and short
+  names, and CEL rules making `organizationRef`, `location` and
+  `resourceID` immutable (decision 20; upstream only checks the identity
+  against `status.externalRef`). The controller already writes status
+  through `op.UpdateStatus` (the deny policy's did not). Generated: the
+  CRD and deepcopy (controller-gen); upstream's identity, reference,
+  types, mapper and fuzzer were themselves generated by controllerbuilder,
+  so `hack/scaffold-kind.sh` was not run again. Copied: 941 of the
+  kind's 1,528 hand-kept lines (62%, with our headers); written here (587):
+  the end-to-end test and mockgcp
+  patch 0030 (IAM v3 principal access boundary policies, which mockgcp
+  lacked; `docs/fake-cloud.md`). Live: pending, needs organization-level
+  access (a policy lives under an organization; `docs/live-runs.md`).
+- `SecurityCenterMuteConfig` (`securitycenter.gcp.hfl.dev/v1alpha1`,
+  decision 16, foundation item 20, the first of its Security Command
+  Center kinds: a mute config of an organization, folder or project).
+  Upstream, rechecked 2026-11-10 (read-only): on `master` at the pin
+  (`672414b`) `SecurityCenterMuteConfig` is `v1alpha1` with a direct
+  controller on the v1 API and takes `organizationRef` only, as do
+  `SecurityCenterBigQueryExport` and the two custom module kinds;
+  `SecurityCenterNotificationConfig` is Terraform-based. Open PR #7673
+  ("direct SCC resources", one commit, last updated 2026-05-05, review
+  required) does give mute configs, BigQuery exports and custom modules
+  `organizationRef`, `folderRef` and `projectRef` (foundation.md said
+  neither PR was known to; #7673 does), but it predates `master`'s own
+  kinds, whose schemas and controllers differ, and has not moved since.
+  #14181 (the health analytics custom module's controller) and #14206
+  keep the organization only. **Copied** with as little change as
+  possible: `master`'s types, identity, direct controller and mapper
+  functions, and #7673's parent resolution
+  (`apis/securitycenter/v1alpha1/parent.go`), so the schema is
+  `master`'s plus #7673's two parent fields: exactly one of the three,
+  each immutable (CEL). Changed: the identity is
+  `{parent}/muteConfigs/{id}`; the update compares with the name the
+  API returned (in case it names a project by number); export sets the
+  parent it came from; delete of a missing mute config is done (upstream
+  reports it not deleted). Hand-written here: the end-to-end test.
+  Generated: the CRD and deepcopy (controller-gen); upstream's mapper is
+  itself generated. Version `v1alpha1`, as foundation.md's build line
+  says (decision 16 does not ask for a stable kind). mockgcp patch 0031
+  (`docs/fake-cloud.md`). Live: the organization's and folder's are
+  "live: pending, needs test folder"; a project's needs Security Command
+  Center active for the project and `securitycenter.muteconfigs.*` for
+  the live-test service account (`E2E_SECURITY_CENTER=true`,
+  `docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1460,6 +1547,25 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
+33. `LoggingBillingAccountSink`: a live run (it needs a billing account
+    the live-test service account administers logging on:
+    `E2E_BILLING_ACCOUNT`); the writer identity's real address (the fake
+    makes one up); whether the API checks the destination at create; and
+    a sink named by a `BillingAccount` object, which no test makes.
+34. `IAMPrincipalAccessBoundaryPolicy`: a live run (it needs
+    `iam.principalaccessboundarypolicies.*` on an organization, which a
+    live run never touches); what the API defaults
+    (`enforcementVersion`), whether a resync then writes nothing, and
+    the checks mockgcp does not make (resource names in rules, the 500
+    resource limit, an `effect` other than `ALLOW`).
+35. `SecurityCenterMuteConfig`: a live run (a project's needs Security
+    Command Center active and `securitycenter.muteconfigs.*`; a folder's
+    and an organization's the test folder); whether the API names a
+    project's mute config by its number; the API's checks of a filter;
+    and a dynamic mute config's `expiryTime`, which no test sets. The
+    other Security Command Center kinds of decision 16 (BigQuery
+    exports, notification configs, the two custom module kinds) are
+    next, on the same parent.
 
 ## 8. Decisions
 
@@ -1478,7 +1584,8 @@ To raise confidence in `ArtifactRegistryRepository`:
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
-   release, with the exception in section 6.1. Never a fork. Exceptions
+   release, with the exception in section 6.1. **Reversed by the builder
+   on 2026-11-10: decision 19.** Never a fork. Exceptions
    the builder has made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
    request, owning the whole object, is now the accepted pattern when a
@@ -1603,6 +1710,39 @@ To raise confidence in `ArtifactRegistryRepository`:
     kinds follow the same rule. This generalises decision 12 (the IAM
     kinds) and the folder and organization `ServiceIdentity`, which kept
     upstream's name with new parents.
+19. **Field gaps: build them now, and keep up with upstream mechanically**
+    (the builder, 2026-11-10, reversing decision 5: "don't wait on
+    release ... we need to ship and understand they are going to ship
+    behind us on several resources and new attributes. we just need
+    mechanized ways to keep up with upstream."). Field gaps that
+    `docs/coverage` lists for foundation kinds Config Connector already
+    serves are built here, in `docs/coverage/foundation.md`'s order,
+    without waiting for an upstream release or pull request. They use the
+    accepted pattern (decisions 11, 14, 13): our own kind in our group,
+    copied from upstream's nearest code, owning the whole object, which a
+    workload moves to by acquiring the same resource. Where that pattern
+    does not fit a gap, the first pull request for it proposes another in
+    a short design note. Upstream will ship many of the same fields and
+    resources after us; the means of keeping up are mechanical: the pin
+    and patches (section 3), `task coverage` and `task upstream-pr`, and
+    the retirement path (section 3.4).
+
+20. **Immutability is enforced by CEL rules in the CRD, not a webhook**
+    (the builder, 2026-11-10, G4): `self == oldSelf` transition rules on
+    the immutable fields, as the kinds already do; no admission webhook
+    is added for it.
+21. **A remote `ArtifactRegistryRepository` whose upstream URI changes is
+    deleted and made again** (the builder, 2026-11-10, G3: confirmed).
+22. **`status.appliedDatabaseRoles` stays until upstream PR #7148** (the
+    builder, 2026-11-10, G5: confirmed; section 10 item 2's
+    recommendation): the field and the comparison with what was applied
+    are kept until `SQLUser` switches to the PR (section 2), then follow
+    the PR.
+23. **Organization custom roles are checked at the organization level**
+    (the builder, 2026-11-10, G8: confirmed): Config Connector's
+    `IAMCustomRole` with the `cnrm.cloud.google.com/organization-id`
+    annotation covers them (foundation item 3), proven against an
+    organization once the test folder exists.
 
 24. **`IAMBinding` is `v1beta1`** (the builder, 2026-11-10, K12:
     "Promote IAMBinding to v1beta1 first, then switch by default in
@@ -1857,7 +1997,8 @@ moves to section 8.
 1. Answered 2026-11-09: the kind is `IAMBinding`, first built as
    `IAMRoleBinding` (decision 12).
 
-2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+2. Answered 2026-11-10 (decision 22): keep the field until PR #7148.
+   The question was: **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows
    whether `users.get` returns roles". It does (`docs/live-runs.md`).
    Upstream PR #7148 compares the spec with the roles `users.get` returns.
