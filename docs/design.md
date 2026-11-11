@@ -10,7 +10,8 @@ remote upstream and its credentials, `ArtifactRegistryTag`,
 `RunService` with `invokerIamDisabled` and GPUs,
 `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
 `StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `ComputeProjectMetadataItem`, `IAMBinding`,
+`LoggingSettings`, `LoggingBillingAccountSink`,
+`ComputeProjectMetadataItem`, `IAMBinding`,
 `IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
 `ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
 organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
@@ -1197,6 +1198,36 @@ Notes on what was built from this table:
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
   unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+- `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1alpha1`, decision
+  15, foundation item 17: a billing account's log sink, Terraform's
+  `google_logging_billing_account_sink`). Upstream, rechecked 2026-11-10
+  (read-only): `LoggingLogSink` is `v1beta1` with a direct controller
+  (opt-in; Terraform by default) whose spec takes `projectRef`,
+  `folderRef` or `organizationRef`; its identity already parses
+  `billingAccounts/{billingaccount}/sinks/{sink}`, but no field reaches
+  it, on `master` (`56effb6`, 2026-11-09) either; no open pull request
+  adds one (searched "LogSink", "billing sink"). **Copied** with as
+  little change as possible: the types, identity, the direct controller
+  and the sink's mapper functions; upstream's destination, BigQuery
+  options and exclusion types are imported, not copied. Changed: a
+  required, immutable `billingAccountRef` (Config Connector's
+  `billing/v1alpha1` `BillingAccountRef`: `external` as
+  `billingAccounts/{id}` or the bare ID, or `name` of a `BillingAccount`)
+  in place of the three parents; `includeChildren` dropped (folders and
+  organizations only); `uniqueWriterIdentity` dropped and always sent as
+  true (a billing account's sink always has its own writer identity, and
+  Terraform sends true); `status.externalRef`, checked by the identity
+  so a changed `resourceID` is refused. Update is upstream's: a mask of
+  the top-level fields that differ. Hand-written here: the end-to-end
+  test only. Generated: the CRD and deepcopy (controller-gen);
+  `hack/scaffold-kind.sh` was not run, since upstream's hand-written
+  controller and mapper are the nearer code. Copied: 655 of the kind's
+  1,008 hand-kept lines (65%; the mock patch and the test are the rest).
+  `task coverage` counts 10 of the resource's 13 attributes as ours; the
+  other three are `includeChildren` and `interceptChildren` (folders and
+  organizations only) and the deprecated `outputVersionFormat`.
+  mockgcp patch 0029 (`docs/fake-cloud.md`). Live: pending, needs
+  billing account access (`E2E_BILLING_ACCOUNT`, `docs/live-runs.md`).
 - `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`,
   decision 13: an organization's principal access boundary policy, the
   resources its principals may use). Upstream, rechecked 2026-11-10
@@ -1213,7 +1244,7 @@ Notes on what was built from this table:
   so `hack/scaffold-kind.sh` was not run again. Copied: 941 of the
   kind's 1,528 hand-kept lines (62%, with our headers); written here (587):
   the end-to-end test and mockgcp
-  patch 0029 (IAM v3 principal access boundary policies, which mockgcp
+  patch 0030 (IAM v3 principal access boundary policies, which mockgcp
   lacked; `docs/fake-cloud.md`). Live: pending, needs organization-level
   access (a policy lives under an organization; `docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
@@ -1231,8 +1262,9 @@ Notes on what was built from this table:
   no patch.
   Live: passes, with `roles/iam.serviceAccountUser` on the project
   (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
-- `IAMBinding` (`iam.gcp.hfl.dev/v1alpha1`, rank 1; built as
-  `IAMRoleBinding`, renamed by decision 12). **Written here**:
+- `IAMBinding` (`iam.gcp.hfl.dev/v1beta1`, rank 1; built as
+  `IAMRoleBinding`, renamed by decision 12, moved from `v1alpha1` to
+  `v1beta1` unchanged by decision 24). **Written here**:
   `resourceRef` (`kind`, `name` or `external`, shaped like
   `IAMPolicyMember`'s), `role`, `condition` (title, description,
   expression), `members` (strings as the API writes them) and
@@ -1479,7 +1511,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
     fields it lacks (`securityProfileGroup`, `tlsInspect`,
     `targetResources`, `srcNetworks`, the network types).
-33. `IAMPrincipalAccessBoundaryPolicy`: a live run (it needs
+33. `LoggingBillingAccountSink`: a live run (it needs a billing account
+    the live-test service account administers logging on:
+    `E2E_BILLING_ACCOUNT`); the writer identity's real address (the fake
+    makes one up); whether the API checks the destination at create; and
+    a sink named by a `BillingAccount` object, which no test makes.
+34. `IAMPrincipalAccessBoundaryPolicy`: a live run (it needs
     `iam.principalaccessboundarypolicies.*` on an organization, which a
     live run never touches); what the API defaults
     (`enforcementVersion`), whether a resync then writes nothing, and
@@ -1503,7 +1540,8 @@ To raise confidence in `ArtifactRegistryRepository`:
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
-   release, with the exception in section 6.1. Never a fork. Exceptions
+   release, with the exception in section 6.1. **Reversed by the builder
+   on 2026-11-10: decision 19.** Never a fork. Exceptions
    the builder has made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
    request, owning the whole object, is now the accepted pattern when a
@@ -1562,7 +1600,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     `google_<resource>_iam_binding` is authoritative for one role and
     `google_<resource>_iam_member` is additive, and ours follow that.
     Each is one generic kind in `iam.gcp.hfl.dev/v1alpha1` with a resource
-    reference. `IAMBinding` is one role, an optional condition and a list
+    reference (`IAMBinding` is `v1beta1` since decision 24). `IAMBinding` is one role, an optional condition and a list
     of members on one resource, authoritative for that role and
     condition. `IAMMember` is one member of one role on one resource,
     additive. The two were first built as `IAMRoleBinding` (the builder
@@ -1628,6 +1666,40 @@ To raise confidence in `ArtifactRegistryRepository`:
     kinds follow the same rule. This generalises decision 12 (the IAM
     kinds) and the folder and organization `ServiceIdentity`, which kept
     upstream's name with new parents.
+19. **Field gaps: build them now, and keep up with upstream mechanically**
+    (the builder, 2026-11-10, reversing decision 5: "don't wait on
+    release ... we need to ship and understand they are going to ship
+    behind us on several resources and new attributes. we just need
+    mechanized ways to keep up with upstream."). Field gaps that
+    `docs/coverage` lists for foundation kinds Config Connector already
+    serves are built here, in `docs/coverage/foundation.md`'s order,
+    without waiting for an upstream release or pull request. They use the
+    accepted pattern (decisions 11, 14, 13): our own kind in our group,
+    copied from upstream's nearest code, owning the whole object, which a
+    workload moves to by acquiring the same resource. Where that pattern
+    does not fit a gap, the first pull request for it proposes another in
+    a short design note. Upstream will ship many of the same fields and
+    resources after us; the means of keeping up are mechanical: the pin
+    and patches (section 3), `task coverage` and `task upstream-pr`, and
+    the retirement path (section 3.4).
+
+24. **`IAMBinding` is `v1beta1`** (the builder, 2026-11-10, K12:
+    "Promote IAMBinding to v1beta1 first, then switch by default in
+    0.4.0", so that the catalog's charts, which refuse alpha kinds, can
+    render it by default). The kind moved from `iam.gcp.hfl.dev/v1alpha1`
+    to `v1beta1` with its schema unchanged, and `v1alpha1` is no longer
+    served: the CRD has one version, as every kind here does. Nothing
+    was released at `v1alpha1` (the repository has no release or tag) and
+    the catalog had not shipped it, so no stored object needs converting.
+    No conversion webhook (the builder prefers a kind per version to a
+    second API version with conversion, and decision 20 keeps webhooks
+    out). The Go types are in `apis/iam/v1beta1` with their own copy of
+    the resource reference and condition types; `IAMMember` stays
+    `v1alpha1`. An install that has `v1alpha1` objects abandons them
+    (`deletion-policy: abandon`), deletes the CRD, and re-creates them at
+    `v1beta1`, which takes over the same binding (`CHANGELOG.md`).
+    Whether `v1alpha1` should instead have stayed served, deprecated, for
+    a window is section 10, question 4.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -1876,3 +1948,16 @@ moves to section 8.
    authoritative one is renamed with it to `IAMBinding`. Both mirror
    Terraform's `google_<resource>_iam_member` and `_iam_binding`
    (decision 12). The question had recommended keeping `IAMRoleMember`.
+
+4. **Should `IAMBinding` `v1alpha1` stay served, deprecated, beside
+   `v1beta1`?** (2026-11-10, after decision 24). Decision 24 moved the
+   kind and stopped serving `v1alpha1`. The alternative is a CRD with
+   both versions (identical schemas, `conversion: None`, `v1beta1`
+   stored, `v1alpha1` marked `deprecated` with a warning) for a support
+   window, so an object created at `v1alpha1` keeps working. That is a
+   second API version of the same kind, which the builder has said to
+   avoid, and nothing outside test clusters holds a `v1alpha1` object.
+   Recommendation: keep decision 24 as built (one served version); serve
+   both only if a cluster turns up with `v1alpha1` objects that cannot be
+   abandoned and re-created. Reversing is cheap: add the version back to
+   the CRD with `served: true`, `storage: false`, `deprecated: true`.

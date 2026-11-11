@@ -207,6 +207,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | IAMPrincipalAccessBoundaryPolicy | PASS | pending, needs organization-level access (a policy lives under an organization) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation | PASS | pending, needs the test folder (both act on an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
+| 2026-11-10 | pending | LoggingBillingAccountSink | PASS | pending, needs billing account access: a billing account on which `cce-live-tests` has `roles/logging.configWriter`, passed as `E2E_BILLING_ACCOUNT=billingAccounts/{id}` (design.md decision 15) | not run (the test skips live without it) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -263,6 +264,18 @@ KINDS=iam`. The test's policy is on the run's project and denies
 but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
+
+`LoggingBillingAccountSink` (package `logging`) waits on billing account
+access: the live-test service account needs `roles/logging.configWriter`
+(or `logging.sinks.*`) on a billing account, which only the builder can
+grant; until then a live `logging` run skips the test and the sweeper
+leaves billing account sinks alone. With it:
+`E2E_BILLING_ACCOUNT=billingAccounts/<id> task test-live
+PROJECT=hfl-dev-514205 KINDS=logging` (the variable must reach the
+sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
+project that need not exist (assumed: the API does not check the
+destination at create); their names carry the run ID, and the sweeper
+deletes them from that billing account.
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

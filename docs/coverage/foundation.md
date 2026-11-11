@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 1.6% | 59.4% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 2.0% | 59.1% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 2.8% | 30.0% |
 
 By service:
@@ -19,7 +19,7 @@ By service:
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
 | foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 6.2% | 53.4% |
-| foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 0.0% | 76.0% |
+| foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 2.1% | 74.0% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 0.0% | 70.5% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 0.0% | 83.5% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 0.0% | 39.9% |
@@ -83,7 +83,7 @@ What these numbers miss, for the foundation:
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
 | 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 20 / 87 (77.0%) | none found. |
 | 16 | [Network and subnetwork fields (BGP best path, IP collection, subnet overlap)](#16-network-and-subnetwork-fields-bgp-best-path-ip-collection-subnet-overlap) | A | field | 1 | S | 15 / 44 (65.9%) | none for the fields |
-| 17 | [Billing account log sink](#17-billing-account-log-sink) | A | field | 1 | S | 13 / 13 (0.0%) | none found. |
+| 17 | [Billing account log sink](#17-billing-account-log-sink) | A | field | 1 | S | 3 / 13 (0.0%) | none found. |
 | 18 | [KMS fields (key access justifications, key backend)](#18-kms-fields-key-access-justifications-key-backend) | A | field | 1 | S | 7 / 15 (53.3%) | open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would land |
 | 19 | [Hierarchical firewall policy rule fields](#19-hierarchical-firewall-policy-rule-fields) | A | field | 1 | M | 62 / 114 (44.7%) | none found (`ComputeFirewall` has |
 | 20 | [Security Command Center at folder and project level](#20-security-command-center-at-folder-and-project-level) | B | whole | 3 | M | 40 / 40 (0.0%) | in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCusto... |
@@ -221,7 +221,7 @@ What these numbers miss, for the foundation:
   - uncovered in `dns.googleapis.com/ResponsePolicy` (measured): `id`, `labels{}`, `responsePolicyName`
   - uncovered in `dns.googleapis.com/ResponsePolicyRule` (measured): `localData.localDatas[].routingPolicy.geo.enableFencing`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[]`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipProtocol`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].loadBalancerType`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].networkUrl`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].port`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].project`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].region`, `localData.localDatas[].routingPolicy.geo.items[].location` and 37 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the release notes before building.
-- **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule. `IAMDenyPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp unpatched); live pending Deny Admin, which is granted on an organization. `ComputeOrganizationSecurityPolicy` and its association built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controllers copied; mockgcp unpatched); live pending the test folder. `ComputeOrganizationSecurityPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types copied; the controller written here on the compute beta API, as upstream's is Terraform-only; mockgcp patch 0028); live pending the test folder. `ComputeNetworkFirewallPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`; upstream has only the Terraform-based alpha CRD, so the types, identity and controller are adapted from our regional rule kind, with upstream's `ComputeNetworkFirewallPolicyRef`; mockgcp unpatched). `IAMPrincipalAccessBoundaryPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp patch 0029); live pending organization-level access. Next: `DNSResponsePolicy` and its rule.
+- **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule. `IAMDenyPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp unpatched); live pending Deny Admin, which is granted on an organization. `ComputeOrganizationSecurityPolicy` and its association built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controllers copied; mockgcp unpatched); live pending the test folder. `ComputeOrganizationSecurityPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types copied; the controller written here on the compute beta API, as upstream's is Terraform-only; mockgcp patch 0028); live pending the test folder. `ComputeNetworkFirewallPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`; upstream has only the Terraform-based alpha CRD, so the types, identity and controller are adapted from our regional rule kind, with upstream's `ComputeNetworkFirewallPolicyRef`; mockgcp unpatched). `IAMPrincipalAccessBoundaryPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp patch 0030); live pending organization-level access. Next: `DNSResponsePolicy` and its rule.
 - **Decided (builder, 2026-11-09):** "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with `RunService`, decision 11).
 
 ### 9. Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)
@@ -333,10 +333,10 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** S, **modules** 1 (billing-account).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `logging.googleapis.com/BillingAccountSink`: 0 / 0 / 13 of 13; no kind
+  - `logging.googleapis.com/BillingAccountSink`: 0 / 10 / 3 of 13; LoggingBillingAccountSink (ours)
 - **Missing, whole resources:** A billing account parent on `LoggingLogSink` (`google_logging_billing_account_sink`): Config Connector's sink takes project, folder and organization only.
 - **Missing, attributes that matter:** `billingAccountRef` plus the sink's own fields (all present on the other parents).
-  - uncovered in `logging.googleapis.com/BillingAccountSink` (measured): `bigqueryOptions.usePartitionedTables`, `description`, `destination`, `disabled`, `exclusions[].description`, `exclusions[].disabled`, `exclusions[].filter`, `exclusions[].name`, `filter`, `includeChildren` and 3 more
+  - uncovered in `logging.googleapis.com/BillingAccountSink` (measured): `includeChildren`, `interceptChildren`, `outputVersionFormat`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
 - **Build:** `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with `billingAccountRef` (API `billingAccounts.sinks`).
 - **Decided (builder, 2026-11-09):** Build `LoggingBillingAccountSink` now (`docs/design.md` decision 15). Its live test needs billing-account access the builder has not granted: "live: pending, needs billing account access"; prove it on the fake.
@@ -517,13 +517,15 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
+| LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
+| LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
@@ -747,7 +749,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `logging.googleapis.com/BillingAccountLocationBucket` | LoggingLogBucket | - | 8 | 3 | 0 | 5 | - |
 | foundation | `logging.googleapis.com/BillingAccountLocationBucketLink` | - | - | 1 | 0 | 0 | 1 | - |
 | foundation | `logging.googleapis.com/BillingAccountLocationBucketView` | LoggingLogView | - | 2 | 2 | 0 | 0 | - |
-| foundation | `logging.googleapis.com/BillingAccountSink` | - | - | 13 | 0 | 0 | 13 | 17 |
+| foundation | `logging.googleapis.com/BillingAccountSink` | - | LoggingBillingAccountSink | 13 | 0 | 10 | 3 | 17 |
 | foundation | `logging.googleapis.com/Bucket` | LoggingLogBucket | - | 8 | 3 | 0 | 5 | 12 |
 | foundation | `logging.googleapis.com/BucketLink` | LoggingLink | - | 1 | 1 | 0 | 0 | - |
 | foundation | `logging.googleapis.com/BucketView` | LoggingLogView | - | 2 | 2 | 0 | 0 | - |
@@ -775,7 +777,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `logging.googleapis.com/projects.exclusions` | LoggingLogExclusion | - | 4 | 4 | 0 | 0 | - |
 | foundation | `logging.googleapis.com/projects.locations.logScopes` | LoggingLogScope (alpha) | - | 2 | 1 | 0 | 1 | - |
 | foundation | `logging.googleapis.com/projects.locations.savedQueries` | - | - | 77 | 0 | 0 | 77 | - |
-| foundation | `logging.googleapis.com/sinks` | LoggingLogSink | - | 13 | 11 | 0 | 2 | - |
+| foundation | `logging.googleapis.com/sinks` | LoggingLogSink | LoggingBillingAccountSink | 13 | 11 | 0 | 2 | - |
 | foundation | `networkconnectivity.googleapis.com/AutomatedDnsRecord` | - | - | 11 | 0 | 0 | 11 | - |
 | foundation | `networkconnectivity.googleapis.com/Hub` | NetworkConnectivityHub | - | 8 | 2 | 0 | 6 | - |
 | foundation | `networkconnectivity.googleapis.com/InternalRange` | NetworkConnectivityInternalRange (alpha) | - | 17 | 14 | 0 | 3 | - |

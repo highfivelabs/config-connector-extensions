@@ -1,0 +1,86 @@
+config-connector-extensions patch 0029: mockgcp serves a billing account's log sinks.
+
+For logging.gcp.hfl.dev LoggingBillingAccountSink. mocklogging/logsink.go
+takes billingAccounts/{id} as a sink's parent (it knew projects, folders
+and organizations), gives such a sink a writer identity of its own
+(serviceAccount:service-billing-{id}@gcp-sa-logging.iam.gserviceaccount.com;
+the real address has not been seen, live is pending billing account
+access), and updates destination, disabled, exclusions, includeChildren
+and bigqueryOptions as well as description and filter (it refused every
+other update mask path). It also fixes a folder parent's name, which
+printed the organization field (folders/ with an empty ID).
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mocklogging/logsink.go b/mockgcp/mocklogging/logsink.go
+index e03c1633..22beff13 100644
+--- a/mockgcp/mocklogging/logsink.go
++++ b/mockgcp/mocklogging/logsink.go
+@@ -76,6 +76,10 @@ func (s *configServiceV2) CreateSink(ctx context.Context, req *pb.CreateSinkRequ
+ 		obj.WriterIdentity = fmt.Sprintf("serviceAccount:service-org-%s@gcp-sa-logging.iam.gserviceaccount.com", name.Parent.Organization)
+ 	}
+ 
++	if name.Parent.BillingAccount != "" {
++		obj.WriterIdentity = fmt.Sprintf("serviceAccount:service-billing-%s@gcp-sa-logging.iam.gserviceaccount.com", name.Parent.BillingAccount)
++	}
++
+ 	if err := s.storage.Create(ctx, fqn, obj); err != nil {
+ 		return nil, err
+ 	}
+@@ -111,6 +115,16 @@ func (s *configServiceV2) UpdateSink(ctx context.Context, req *pb.UpdateSinkRequ
+ 			updated.Description = req.GetSink().GetDescription()
+ 		case "filter":
+ 			updated.Filter = req.GetSink().GetFilter()
++		case "destination":
++			updated.Destination = req.GetSink().GetDestination()
++		case "disabled":
++			updated.Disabled = req.GetSink().GetDisabled()
++		case "exclusions":
++			updated.Exclusions = req.GetSink().GetExclusions()
++		case "include_children", "includeChildren":
++			updated.IncludeChildren = req.GetSink().GetIncludeChildren()
++		case "bigquery_options", "bigqueryOptions":
++			updated.Options = req.GetSink().GetOptions()
+ 		default:
+ 			return nil, status.Errorf(codes.InvalidArgument, "update_mask path %q not valid", path)
+ 		}
+@@ -137,9 +151,10 @@ func (s *configServiceV2) DeleteSink(ctx context.Context, req *pb.DeleteSinkRequ
+ }
+ 
+ type FolderOrgOrProject struct {
+-	Folder       string
+-	Organization string
+-	Project      *projects.ProjectData
++	Folder         string
++	Organization   string
++	BillingAccount string
++	Project        *projects.ProjectData
+ }
+ 
+ func (s *configServiceV2) PopFolderOrgOrProject(tokens []string) (*FolderOrgOrProject, []string, error) {
+@@ -172,6 +187,14 @@ func (s *configServiceV2) PopFolderOrgOrProject(tokens []string) (*FolderOrgOrPr
+ 		return name, tokens[2:], nil
+ 	}
+ 
++	if len(tokens) >= 2 && tokens[0] == "billingAccounts" {
++		name := &FolderOrgOrProject{
++			BillingAccount: tokens[1],
++		}
++
++		return name, tokens[2:], nil
++	}
++
+ 	return nil, nil, status.Errorf(codes.InvalidArgument, "name %q is not valid", strings.Join(tokens, "/"))
+ }
+ 
+@@ -185,7 +208,10 @@ func (n *FolderOrgOrProject) String() string {
+ 		return fmt.Sprintf("organizations/%s", n.Organization)
+ 	}
+ 	if n.Folder != "" {
+-		return fmt.Sprintf("folders/%s", n.Organization)
++		return fmt.Sprintf("folders/%s", n.Folder)
++	}
++	if n.BillingAccount != "" {
++		return fmt.Sprintf("billingAccounts/%s", n.BillingAccount)
+ 	}
+ 	return fmt.Sprintf("projects/%s", n.Project.ID)
+ }

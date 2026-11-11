@@ -16,7 +16,7 @@
 package iam_test
 
 // IAMPrincipalAccessBoundaryPolicy end to end on the fake cloud
-// (pkg/test/mockenv, mockgcp patch 0029). The case: an organization's
+// (pkg/test/mockenv, mockgcp patch 0030). The case: an organization's
 // boundary that lets its principals use resources only in the
 // organization. A policy lives under an organization, which a live run
 // never touches (docs/live-runs.md): live is pending the test folder and

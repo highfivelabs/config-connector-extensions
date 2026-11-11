@@ -129,7 +129,7 @@ jobs.googleapis.com,4,2,0,63,13,0,50,20.6,0.0,79.4
 library-example.googleapis.com,2,0,0,6,0,0,6,0.0,0.0,100.0
 licensemanager.googleapis.com,1,1,0,7,7,0,0,100.0,0.0,0.0
 livestream.googleapis.com,6,4,0,141,93,0,48,66.0,0.0,34.0
-logging.googleapis.com,33,24,0,484,116,0,368,24.0,0.0,76.0
+logging.googleapis.com,33,24,1,484,116,10,358,24.0,2.1,74.0
 looker.googleapis.com,2,0,0,57,0,0,57,0.0,0.0,100.0
 lustre.googleapis.com,3,0,0,32,0,0,32,0.0,0.0,100.0
 managedidentities.googleapis.com,3,0,0,11,0,0,11,0.0,0.0,100.0

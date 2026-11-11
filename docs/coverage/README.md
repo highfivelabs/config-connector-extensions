@@ -14,7 +14,8 @@ the root `README.md` live here.
 | [`categories.csv`](categories.csv) | category | the rollup by category, per resource: `category`, `services`, then the columns of `services.csv` |
 | [`priority.csv`](priority.csv) | service (or resource) | `service,tier,category,rationale,source`; hand-edited, read by the generator |
 | [`foundation.md`](foundation.md) | | the ranked foundation gap report: the work queue for the kind agents |
-| [`bars/`](bars) | service | `<service>.svg`, `_total.svg`, `_tiers.svg` and `_categories.svg` (one bar per tier or category): blue is official, green is ours beyond official, grey is uncovered |
+| [`bars/`](bars) | service | `<service>.svg`, `_total.svg`, `_tiers.svg` and `_categories.svg` (one bar per tier or category): blue is official, green is ours beyond official, grey is uncovered; under it, purple is Terraform `google-beta` with a dark tick at its strict figure (see "Terraform") |
+| [`inputs/terraform/`](inputs/terraform) | service, resource | `terraform.csv` and `terraform-resources.csv`, the Terraform comparison copied from the catalog repository at the pin (see "Terraform"); an input, not generated here |
 | [`sources.yaml`](sources.yaml) | | the pinned inputs: commits, dates, digests |
 
 The schema is the same in `config-connector-extensions`, `ack-extensions`
@@ -66,6 +67,7 @@ files read from each; the generator refuses to run when an input differs.
 | [googleapis protos](https://github.com/googleapis/googleapis) (`google/**/*.proto`) | `855217a6b3054992d6d0cb58370312bda024af04`, committed 2026-11-09T18:22:51Z | the denominator for gRPC-only APIs Discovery does not describe |
 | [Config Connector](https://github.com/GoogleCloudPlatform/k8s-config-connector) `config/crds/resources/`, `config/servicemappings/`, `apis/*/*/*_types.go` | `672414b8191fc2d2c12fff53f6faccf5ae291eef` (a `master` commit, committed 2026-11-07T03:04:32Z; nearest release `v1.160.0`), the pin of `UPSTREAM.md` | official |
 | this repository's `config/crds/` | the working tree | ours |
+| [catalog](https://github.com/highfivelabs/catalog) `docs/terraform/config-connector-extensions/` (`terraform.csv`, `terraform-resources.csv`), vendored in `inputs/terraform/` | `13064af34996c47f1a5498bb17aca16194c4574e`, committed 2026-11-09T22:36:38-06:00, copied 2026-11-10; a sha256 per file | the Terraform bar (see "Terraform") |
 
 "Official at the pin" is `master` at that commit, not a release: it includes
 CRDs of kinds not yet in a release. A CRD existing does not mean a controller
@@ -398,6 +400,49 @@ a parameter, not a body field); the
 credentials) show as 7 beyond; the IAM workload identity kinds and the Artifact
 Registry tag, which have no official kind, show as whole resources.
 
+## Terraform
+
+Each bar has a purple bar under it: how much of the same denominator the
+Terraform provider [`google-beta`](https://registry.terraform.io/providers/hashicorp/google-beta)
+covers, so that official (blue) and ours (green) can be read against what a
+Terraform user gets. It is the K9 decision and follows the Recommendation of
+the catalog repository's `docs/terraform-leverage.md` ("Dashboard integration,
+without changing the shared CSV schemas").
+
+- **The figure** is `pct_terraform_l2` of the catalog's `terraform.csv`: the
+  attributes that a writable attribute of a mapped Terraform resource
+  matches, by the lenient rule (L2), over `attributes_total`. The dark tick is
+  `pct_terraform_l1`, the strict rule and the floor. Totals, tiers and
+  categories are sums of `attributes_terraform_l1`, `attributes_terraform_l2`
+  and `attributes_total` over the rows (`terraform.csv` has a row per service,
+  provider and category; Compute Engine has one per category its resources
+  fall in), so the category bars count per resource like the blue and green
+  ones.
+- **`google-beta` is the bar; `google`** is the last column of the README's
+  tables and the total's caption. They differ by under a point overall.
+- **It is an estimate**, with its own error: a resource mapping (Magic
+  Modules' base URLs, a hand list, name tokens) and a name match of attributes.
+  How far to trust it is under "Method and error" in the catalog's
+  `docs/terraform-leverage.md`. It is not the same method as official and
+  ours (CRD fields matched to API fields), so compare the bars, not single
+  attributes.
+- **It is as of the catalog pin**, computed against this dashboard at the
+  time; its denominator is the catalog's `attributes_total`, which moves with
+  the Discovery and googleapis pins here only when the catalog is rerun. A
+  service with no row in `terraform.csv` has no purple bar and `—` in the
+  tables. `terraform-resources.csv` (one row per resource and provider) lists
+  the Terraform resources each figure relied on; the generator does not read
+  it, it is kept for the reader.
+- **Source and pin.** The catalog repository is private, so the two files are
+  vendored byte for byte in `inputs/terraform/`; the `terraform` section of
+  `sources.yaml` names the catalog commit and path and holds a sha256 per
+  file, and the generator refuses to run when a file differs from it. To
+  move the pin: change `commit`, `commit_date` and `fetched` there, run
+  `CATALOG_DIR=<catalog checkout with that commit> hack/coverage/run.sh --update-sources`
+  (it copies the two files with `git show` and records their digests;
+  `CATALOG_DIR` defaults to `../catalog`), then `hack/coverage/run.sh`, and
+  commit the result.
+
 ## Regenerating
 
 ```sh
@@ -415,7 +460,7 @@ ones in `sources.yaml`.
 
 Regenerate and commit when `config/crds/` changes (a new or changed kind),
 when `UPSTREAM.md` moves the Config Connector pin, or when a pin in
-`sources.yaml` moves. `--check` is the test that you did.
+`sources.yaml` moves (the Terraform comparison included, see "Terraform"). `--check` is the test that you did.
 
 To move a pin: change `commit`, `commit_date` and `fetched` in `sources.yaml`
 (Config Connector's commit must equal `UPSTREAM.md`'s), run
@@ -436,13 +481,13 @@ Generated by `hack/coverage`; do not edit between the markers.
 | Resources (REST resources with an insert or create method) | 1244 |
 | Attributes (writable fields) | 43589 |
 | Resources with an official kind | 739 |
-| Resources covered only by our kinds | 10 |
-| Attributes: official / ours beyond official / uncovered | 15517 / 128 / 27944 |
+| Resources covered only by our kinds | 11 |
+| Attributes: official / ours beyond official / uncovered | 15517 / 138 / 27934 |
 | Official kinds (Config Connector CRDs in `*.cnrm.cloud.google.com`) | 801 |
 | Official kinds mapped to at least one resource | 704 |
 | Official kinds **unmapped** | 97 |
-| Our kinds | 33 |
-| Our kinds mapped to at least one resource | 21 |
+| Our kinds | 34 |
+| Our kinds mapped to at least one resource | 22 |
 | Our kinds outside the denominator | 12 |
 | Discovery APIs excluded as not Google Cloud | 116 |
 | Cloud services with no creatable resource (not rows) | 56 |

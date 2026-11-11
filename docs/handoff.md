@@ -15,16 +15,20 @@ this file only adds to them.
 
 After the principal access boundary policy PR (decision 13's
 `IAMPrincipalAccessBoundaryPolicy`, cut from `main` at `748bff2`):
-thirty-three kinds (`README.md`, design.md's intro),
-mockgcp patches 0001 to 0029 (`UPSTREAM.md` and `upstream.yaml`, which
+thirty-four kinds (`README.md`, design.md's intro; the latest,
+`IAMPrincipalAccessBoundaryPolicy`, decision 13),
+mockgcp patches 0001 to 0030 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
-**0030**), the live-test switch and the Taskfile (`docs/live-runs.md`,
+**0031**, but take it from `main` when you need it: two agents add
+patches), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
 which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
 its association and its rule (organization and folder only), and `IAMDenyPolicy`,
-which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`).
+which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
+and `LoggingBillingAccountSink`, which waits on billing account access
+(`E2E_BILLING_ACCOUNT`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -73,8 +77,10 @@ stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation
 PR #13960 as a complete kind of ours (14); `LoggingBillingAccountSink`
 now, live pending billing-account access (15); Security Command Center
 kinds with organization, folder and project parents (16). Decision 5
-stands for other field gaps (wait for the release). Whole-resource gaps
-first; any other field gap that needs the builder goes to section 10
+(field gaps wait for the release) was reversed by the builder on
+2026-11-10: decision 19, build foundation field gaps now in
+`docs/coverage/foundation.md`'s order and keep up with upstream
+mechanically. Whole-resource gaps first; any other field gap that needs the builder goes to section 10
 with a recommendation. A deprecation path for our kinds is the builder's
 separate design; do not build it. Organization custom IAM roles (foundation item 3) are
 not a gap: Config Connector's `IAMCustomRole` takes the
@@ -98,18 +104,29 @@ and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
 and `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`, patch
-0029; live pending organization-level access) are built. Next the rest
-of decision 13:
+0030; live pending organization-level access) are built. `IAMBinding`
+moved to `v1beta1` (decision 24, the builder's K12, for the catalog's
+0.4.0 charts); `v1alpha1` is no longer served (section 10, question 4)
+and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
 alpha types and controllers),
-then 15 (`LoggingBillingAccountSink`, live pending billing-account
-access), 16 (Security Command Center, three parents), then packet
-mirroring rules and on down `docs/coverage/foundation.md`.
+then 16 (Security Command Center, three parents), then packet
+mirroring rules and on down `docs/coverage/foundation.md`, with the
+field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
+(design.md 6.5, patch 0029), live pending billing account access.
+
+What `LoggingBillingAccountSink` taught: upstream's direct kinds often
+already carry the identity format for a parent their spec lacks (the
+log sink's identity parses `billingAccounts/...`); copy the kind and add
+the reference rather than writing one. Reuse upstream's leaf types
+(destination, exclusions) by import, so a later upstream fix reaches
+ours. mockgcp's log sink update took `description` and `filter` only;
+patch 0029 adds the rest.
 
 What `IAMPrincipalAccessBoundaryPolicy` taught: a service mockgcp has
 no generated HTTP gateway for (IAM v3) can still be served: register the
 `cloud.google.com/go` gRPC server and add its REST paths to the mux with
-`mux.HandlePath`, calling the server's methods (patch 0029,
+`mux.HandlePath`, calling the server's methods (patch 0030,
 `mockiam/principalaccessboundarypolicies.go`). A patch that edits a file
 earlier patches edit (`mockiam/service.go`: 0006, 0007, 0010) must be
 diffed against the file with those applied, not against the pin.
