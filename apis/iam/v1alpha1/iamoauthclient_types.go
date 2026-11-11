@@ -23,9 +23,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var IAMOAuthClientGVK = GroupVersion.WithKind("IAMOAuthClient")
+var IAMOauthClientGVK = GroupVersion.WithKind("IAMOauthClient")
 
-type IAMOAuthClientSpec struct {
+type IAMOauthClientSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="projectRef is immutable"
@@ -84,8 +84,8 @@ type IAMOAuthClientSpec struct {
 	DisplayName *string `json:"displayName,omitempty"`
 }
 
-// IAMOAuthClientObservedState is the API's read-only fields.
-type IAMOAuthClientObservedState struct {
+// IAMOauthClientObservedState is the API's read-only fields.
+type IAMOauthClientObservedState struct {
 	// Output only. The system-generated OauthClient id.
 	ClientID *string `json:"clientId,omitempty"`
 
@@ -97,7 +97,7 @@ type IAMOAuthClientObservedState struct {
 	State *string `json:"state,omitempty"`
 }
 
-type IAMOAuthClientStatus struct {
+type IAMOauthClientStatus struct {
 	// Conditions represent the latest available observations of the
 	// object's current state.
 	Conditions []v1alpha1.Condition `json:"conditions,omitempty"`
@@ -113,7 +113,7 @@ type IAMOAuthClientStatus struct {
 
 	// The API's read-only fields.
 	// +optional
-	ObservedState *IAMOAuthClientObservedState `json:"observedState,omitempty"`
+	ObservedState *IAMOauthClientObservedState `json:"observedState,omitempty"`
 }
 
 // +genclient
@@ -126,29 +126,29 @@ type IAMOAuthClientStatus struct {
 // +kubebuilder:printcolumn:name="Status",JSONPath=".status.conditions[?(@.type=='Ready')].reason",type="string",description="The reason for the value in 'Ready'"
 // +kubebuilder:printcolumn:name="Status Age",JSONPath=".status.conditions[?(@.type=='Ready')].lastTransitionTime",type="date",description="The last transition time for the value in 'Status'"
 
-// IAMOAuthClient is a iam.v1 resource
+// IAMOauthClient is a iam.v1 resource
 // (https://iam.googleapis.com/v1/{parent}/locations/{location}/oauthClients/{id}),
 // from its Discovery document iam.v1 (hack/discokind). Terraform's
 // google_iam_oauth_client. A deleted client is kept for 30 days and its ID
 // cannot be reused in that time.
 // +k8s:openapi-gen=true
-type IAMOAuthClient struct {
+type IAMOauthClient struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// +required
-	Spec   IAMOAuthClientSpec   `json:"spec,omitempty"`
-	Status IAMOAuthClientStatus `json:"status,omitempty"`
+	Spec   IAMOauthClientSpec   `json:"spec,omitempty"`
+	Status IAMOauthClientStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// IAMOAuthClientList contains a list of IAMOAuthClient
-type IAMOAuthClientList struct {
+// IAMOauthClientList contains a list of IAMOauthClient
+type IAMOauthClientList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []IAMOAuthClient `json:"items"`
+	Items           []IAMOauthClient `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&IAMOAuthClient{}, &IAMOAuthClientList{})
+	SchemeBuilder.Register(&IAMOauthClient{}, &IAMOauthClientList{})
 }

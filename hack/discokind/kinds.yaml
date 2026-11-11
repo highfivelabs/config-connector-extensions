@@ -20,7 +20,7 @@
   parents: [project, folder, organization, billingAccount]
   terraform: google_logging_saved_query
 
-- kind: IAMOAuthClient
+- kind: IAMOauthClient
   group: iam.gcp.hfl.dev
   version: v1alpha1
   discovery: iam.v1

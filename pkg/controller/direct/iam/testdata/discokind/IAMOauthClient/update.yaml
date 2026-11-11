@@ -1,5 +1,5 @@
 apiVersion: iam.gcp.hfl.dev/v1alpha1
-kind: IAMOAuthClient
+kind: IAMOauthClient
 metadata:
   name: ${NAME}
 spec:

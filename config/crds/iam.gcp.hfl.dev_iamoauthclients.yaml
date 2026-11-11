@@ -12,8 +12,8 @@ spec:
     categories:
     - gcp
     - hfl
-    kind: IAMOAuthClient
-    listKind: IAMOAuthClientList
+    kind: IAMOauthClient
+    listKind: IAMOauthClientList
     plural: iamoauthclients
     shortNames:
     - hfliamoauthclient
@@ -41,7 +41,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: IAMOAuthClient is a iam.v1 resource (https://iam.googleapis.com/v1/{parent}/locations/{location}/oauthClients/{id}),
+        description: IAMOauthClient is a iam.v1 resource (https://iam.googleapis.com/v1/{parent}/locations/{location}/oauthClients/{id}),
           from its Discovery document iam.v1 (hack/discokind). Terraform's google_iam_oauth_client.
           A deleted client is kept for 30 days and its ID cannot be reused in that
           time.

@@ -21,7 +21,7 @@
 // body as it is (the CRD's field names are the API's), and the API's
 // read-only fields go to status.observedState. hack/discokind generates a
 // kind's Go types and its Kind descriptor from the Discovery document;
-// docs/throughput.md says why and docs/design.md decision 26 what it covers.
+// docs/throughput.md says why and docs/design.md section 2.4 what it covers.
 package discokind
 
 import (

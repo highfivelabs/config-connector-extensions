@@ -23,8 +23,8 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind/kindtest"
 )
 
-// TestIAMOAuthClient runs testdata/discokind/IAMOAuthClient/ on the fake cloud, or live.
-func TestIAMOAuthClient(t *testing.T) { kindtest.Run(t, "IAMOAuthClient") }
+// TestIAMOauthClient runs testdata/discokind/IAMOauthClient/ on the fake cloud, or live.
+func TestIAMOauthClient(t *testing.T) { kindtest.Run(t, "IAMOauthClient") }
 
 // TestIAMWorkforcePoolProviderKey runs testdata/discokind/IAMWorkforcePoolProviderKey/ on the fake cloud, or live.
 func TestIAMWorkforcePoolProviderKey(t *testing.T) { kindtest.Run(t, "IAMWorkforcePoolProviderKey") }

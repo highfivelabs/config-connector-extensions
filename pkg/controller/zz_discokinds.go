@@ -39,7 +39,7 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "name", "updateTime"},
 	},
 	{
-		GVK:       iamv1alpha1.IAMOAuthClientGVK,
+		GVK:       iamv1alpha1.IAMOauthClientGVK,
 		CRDName:   "iamoauthclients.iam.gcp.hfl.dev",
 		BaseURL:   "https://iam.googleapis.com/v1/",
 		Name:      "{parent}/locations/{location}/oauthClients/{id}",
