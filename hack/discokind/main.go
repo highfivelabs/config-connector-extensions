@@ -32,7 +32,8 @@
 //   - pkg/controller/direct/<service>/zz_discokind_test.go: each kind's
 //     end-to-end test (pkg/discokind/kindtest), which reads the fixtures in
 //     testdata/discokind/<Kind>/ beside it;
-//   - hack/live/discokinds.tsv: what the live sweeper lists.
+//   - hack/live/discokinds.tsv: what the live sweeper lists;
+//   - docs/kinds/<Kind>.md, when it is missing (docs/kinds/README.md).
 //
 // Then hack/generate.sh makes the CRDs and deepcopy code. -check fails if
 // any output would change.
@@ -160,6 +161,10 @@ func main() {
 		kinds = append(kinds, k)
 		path := filepath.Join("apis", k.svc, c.Version, strings.ToLower(c.Kind)+"_types.go")
 		outputs[path] = gofmt(path, k.typesFile())
+		kd := filepath.Join("docs/kinds", c.Kind+".md")
+		if _, err := os.Stat(filepath.Join(root, kd)); err != nil {
+			outputs[kd] = kindDoc(k)
+		}
 		gv := filepath.Join("apis", k.svc, c.Version, "groupversion_info.go")
 		if _, err := os.Stat(filepath.Join(root, gv)); err != nil {
 			outputs[gv] = gofmt(gv, groupVersionFile(c))
