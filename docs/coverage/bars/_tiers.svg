@@ -1,24 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="126" viewBox="0 0 640 126" role="img" aria-label="Coverage by tier: Tier 1: platform foundation official 45.6%, ours beyond official 0.9%, uncovered 53.6%; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.3%, uncovered 60.5%; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%;">
-<title>Coverage by tier: Tier 1: platform foundation official 45.6%, ours beyond official 0.9%, uncovered 53.6%; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.3%, uncovered 60.5%; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%;</title>
-<rect x="0.5" y="0.5" width="639" height="125" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="174" viewBox="0 0 640 174" role="img" aria-label="Coverage by tier: Tier 1: platform foundation official 45.6%, ours beyond official 1.0%, uncovered 53.4%, Terraform google-beta 57.1% (L1 48.9%), an estimate; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.3%, uncovered 60.5%, Terraform google-beta 42.7% (L1 37.6%), an estimate; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%, Terraform google-beta 30.0% (L1 28.7%), an estimate;">
+<title>Coverage by tier: Tier 1: platform foundation official 45.6%, ours beyond official 1.0%, uncovered 53.4%, Terraform google-beta 57.1% (L1 48.9%), an estimate; Tier 2: security-adjacent and application official 39.2%, ours beyond official 0.3%, uncovered 60.5%, Terraform google-beta 42.7% (L1 37.6%), an estimate; Tier 3: everything else official 25.4%, ours beyond official 0.0%, uncovered 74.6%, Terraform google-beta 30.0% (L1 28.7%), an estimate;</title>
+<rect x="0.5" y="0.5" width="639" height="173" rx="4" fill="#ffffff" stroke="#d0d7de"/>
 <clipPath id="c0"><rect x="10" y="21" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 1: platform foundation (16 services, 5880 attributes): <tspan fill="#0969da">45.6%</tspan> / <tspan fill="#1a7f37">0.9%</tspan> / <tspan fill="#57606a">53.6%</tspan></text>
+<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 1: platform foundation (16 services, 5880 attributes): <tspan fill="#0969da">45.6%</tspan> / <tspan fill="#1a7f37">1.0%</tspan> / <tspan fill="#57606a">53.4%</tspan>   <tspan fill="#7b42bc">Terraform 57.1% (L1 48.9%)</tspan></text>
+<clipPath id="t0"><rect x="10" y="39" width="620" height="10" rx="3"/></clipPath>
+<g clip-path="url(#t0)">
+<rect x="10" y="39" width="620" height="10" fill="#d0d7de"/>
+<rect x="10" y="39" width="354.07" height="10" fill="#7b42bc"/>
+<rect x="312.46" y="39" width="2" height="10" fill="#24292f"/>
+</g>
 <g clip-path="url(#c0)">
 <rect x="10" y="21" width="620" height="14" fill="#d0d7de"/>
 <rect x="10" y="21" width="282.48" height="14" fill="#2f81f7"/>
-<rect x="292.48" y="21" width="5.38" height="14" fill="#2da44e"/>
+<rect x="292.48" y="21" width="6.43" height="14" fill="#2da44e"/>
 </g>
-<clipPath id="c1"><rect x="10" y="61" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="56" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 2: security-adjacent and application (68 services, 23615 attributes): <tspan fill="#0969da">39.2%</tspan> / <tspan fill="#1a7f37">0.3%</tspan> / <tspan fill="#57606a">60.5%</tspan></text>
+<clipPath id="c1"><rect x="10" y="77" width="620" height="14" rx="3"/></clipPath>
+<text x="10" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 2: security-adjacent and application (68 services, 23615 attributes): <tspan fill="#0969da">39.2%</tspan> / <tspan fill="#1a7f37">0.3%</tspan> / <tspan fill="#57606a">60.5%</tspan>   <tspan fill="#7b42bc">Terraform 42.7% (L1 37.6%)</tspan></text>
+<clipPath id="t1"><rect x="10" y="95" width="620" height="10" rx="3"/></clipPath>
+<g clip-path="url(#t1)">
+<rect x="10" y="95" width="620" height="10" fill="#d0d7de"/>
+<rect x="10" y="95" width="264.57" height="10" fill="#7b42bc"/>
+<rect x="241.98" y="95" width="2" height="10" fill="#24292f"/>
+</g>
 <g clip-path="url(#c1)">
-<rect x="10" y="61" width="620" height="14" fill="#d0d7de"/>
-<rect x="10" y="61" width="243.14" height="14" fill="#2f81f7"/>
-<rect x="253.14" y="61" width="2.02" height="14" fill="#2da44e"/>
+<rect x="10" y="77" width="620" height="14" fill="#d0d7de"/>
+<rect x="10" y="77" width="243.14" height="14" fill="#2f81f7"/>
+<rect x="253.14" y="77" width="2.02" height="14" fill="#2da44e"/>
 </g>
-<clipPath id="c2"><rect x="10" y="101" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="96" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 3: everything else (123 services, 14094 attributes): <tspan fill="#0969da">25.4%</tspan> / <tspan fill="#1a7f37">0.0%</tspan> / <tspan fill="#57606a">74.6%</tspan></text>
+<clipPath id="c2"><rect x="10" y="133" width="620" height="14" rx="3"/></clipPath>
+<text x="10" y="128" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 3: everything else (123 services, 14094 attributes): <tspan fill="#0969da">25.4%</tspan> / <tspan fill="#1a7f37">0.0%</tspan> / <tspan fill="#57606a">74.6%</tspan>   <tspan fill="#7b42bc">Terraform 30.0% (L1 28.7%)</tspan></text>
+<clipPath id="t2"><rect x="10" y="151" width="620" height="10" rx="3"/></clipPath>
+<g clip-path="url(#t2)">
+<rect x="10" y="151" width="620" height="10" fill="#d0d7de"/>
+<rect x="10" y="151" width="185.73" height="10" fill="#7b42bc"/>
+<rect x="186.63" y="151" width="2" height="10" fill="#24292f"/>
+</g>
 <g clip-path="url(#c2)">
-<rect x="10" y="101" width="620" height="14" fill="#d0d7de"/>
-<rect x="10" y="101" width="157.35" height="14" fill="#2f81f7"/>
+<rect x="10" y="133" width="620" height="14" fill="#d0d7de"/>
+<rect x="10" y="133" width="157.35" height="14" fill="#2f81f7"/>
 </g>
 </svg>

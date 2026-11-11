@@ -26,7 +26,9 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true). A failed list or delete fails the sweep.
+# (E2E_IAM_DENY_ADMIN=true), and log sinks of the billing account in
+# E2E_BILLING_ACCOUNT, by name, where it is set. A failed list or delete
+# fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -267,6 +269,21 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
+  done <<<"${rows}"
+fi
+
+# Log sinks of the billing account in E2E_BILLING_ACCOUNT
+# (billingAccounts/{id}), by the run's name, only where the live-test
+# service account administers logging on it; without it the
+# LoggingBillingAccountSink test does not run live and there is nothing to
+# sweep.
+if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
+  billing="${E2E_BILLING_ACCOUNT#billingAccounts/}"
+  rows="$("${G[@]}" logging sinks list --billing-account="${billing}" --verbosity=error --format='value(name,createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "billing account log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --billing-account="${billing}"
   done <<<"${rows}"
 fi
 

@@ -51,6 +51,8 @@ func policyClient(ctx context.Context, cfg config.ControllerConfig) (*iampolicy.
 	return &iampolicy.Client{HTTP: h}, nil
 }
 
+// policyRef and conditionOf take IAMMember's v1alpha1 types; IAMBinding's
+// v1beta1 ones have their own (binding_controller.go).
 func policyRef(r krm.IAMResourceReference) iampolicy.Ref {
 	return iampolicy.Ref{APIVersion: r.APIVersion, Kind: r.Kind, Name: r.Name, Namespace: r.Namespace, External: r.External}
 }
@@ -65,8 +67,8 @@ func conditionOf(c *krm.IAMCondition) *iampolicy.Condition {
 // resolveResource finds the resource a binding is on. While the binding is
 // being deleted, a resource that is gone leaves nothing to remove: gone is
 // true and the error nil.
-func resolveResource(ctx context.Context, op *directbase.AdapterForObjectOperation, ref krm.IAMResourceReference) (t *iampolicy.ResourceType, name string, gone bool, err error) {
-	t, name, err = iampolicy.Resolve(ctx, op.Reader, op.GetUnstructured().GetNamespace(), policyRef(ref))
+func resolveResource(ctx context.Context, op *directbase.AdapterForObjectOperation, ref iampolicy.Ref) (t *iampolicy.ResourceType, name string, gone bool, err error) {
+	t, name, err = iampolicy.Resolve(ctx, op.Reader, op.GetUnstructured().GetNamespace(), ref)
 	if err != nil && op.IsDeleting() {
 		if _, ok := err.(*iampolicy.ErrGone); ok {
 			return nil, "", true, nil

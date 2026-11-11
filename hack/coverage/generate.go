@@ -518,25 +518,57 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 		files["docs/coverage/attributes.csv"] = csvBytes(all)
 	}
 
+	// Terraform (terraform.go): the per-service, per-tier, per-category and
+	// total figures beside official and ours.
+	tf, err := loadTerraform(repo)
+	if err != nil {
+		return nil, err
+	}
+	fig := func(c tfCounts, ok bool, other tfCounts, okOther bool) *tfFig {
+		if !ok || c.attrs == 0 {
+			return nil
+		}
+		return &tfFig{c: c, other: other, hasOther: okOther && other.attrs > 0}
+	}
+	svcFig := func(h string) *tfFig {
+		c, ok := tf.service(tfBarProvider, h)
+		o, okO := tf.service(tfOtherProvider, h)
+		return fig(c, ok, o, okO)
+	}
+
 	// Bars.
 	for _, s := range sums {
-		files["docs/coverage/bars/"+s.host+".svg"] = []byte(barSVG(s.host, s.c, false))
+		files["docs/coverage/bars/"+s.host+".svg"] = []byte(barSVG(s.host, s.c, false, svcFig(s.host)))
 	}
-	files["docs/coverage/bars/_total.svg"] = []byte(barSVG("Google Cloud, all services", total, true))
+	_, okAll := tf.all[tfBarProvider]
+	_, okAllO := tf.all[tfOtherProvider]
+	totalFig := fig(tf.all[tfBarProvider], okAll, tf.all[tfOtherProvider], okAllO)
+	files["docs/coverage/bars/_total.svg"] = []byte(barSVG("Google Cloud, all services", total, true, totalFig))
 
 	// Tiers: the rollup by how much a service matters (priority.csv).
 	var tierSums [3]counts
 	var tierSvcs [3]int
+	var tierTF, tierTFO [3]tfCounts
 	for _, s := range sums {
 		tierSums[s.tier-1].add(s.c)
 		tierSvcs[s.tier-1]++
+		if c, ok := tf.service(tfBarProvider, s.host); ok {
+			tierTF[s.tier-1].add(c)
+		}
+		if c, ok := tf.service(tfOtherProvider, s.host); ok {
+			tierTFO[s.tier-1].add(c)
+		}
+	}
+	tierFigs := make([]*tfFig, 3)
+	for i := range tierFigs {
+		tierFigs[i] = fig(tierTF[i], true, tierTFO[i], true)
 	}
 	tierRows := [][]string{{"tier", "services", "resources_total", "resources_official", "resources_ours_beyond", "attributes_total", "attributes_official", "attributes_ours_beyond", "attributes_uncovered", "pct_official", "pct_ours_beyond", "pct_uncovered"}}
 	for i, c := range tierSums {
 		tierRows = append(tierRows, []string{strconv.Itoa(i + 1), strconv.Itoa(tierSvcs[i]), strconv.Itoa(c.resources), strconv.Itoa(c.resOff), strconv.Itoa(c.resBeyond), strconv.Itoa(c.attrs), strconv.Itoa(c.off), strconv.Itoa(c.beyond), strconv.Itoa(c.uncovered), pct(c.off, c.attrs), pct(c.beyond, c.attrs), pct(c.uncovered, c.attrs)})
 	}
 	files["docs/coverage/tiers.csv"] = csvBytes(tierRows)
-	files["docs/coverage/bars/_tiers.svg"] = []byte(rollupSVG("Coverage by tier", tierNames[:], tierSums[:], tierSvcs[:]))
+	files["docs/coverage/bars/_tiers.svg"] = []byte(rollupSVG("Coverage by tier", tierNames[:], tierSums[:], tierSvcs[:], tierFigs))
 
 	// Categories: the same rollup by what a service is for, per resource.
 	catRows := [][]string{{"category", "services", "resources_total", "resources_official", "resources_ours_beyond", "attributes_total", "attributes_official", "attributes_ours_beyond", "attributes_uncovered", "pct_official", "pct_ours_beyond", "pct_uncovered"}}
@@ -551,14 +583,20 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 		return nil, err
 	}
 	files["docs/coverage/foundation.md"] = []byte(fr)
-	files["docs/coverage/bars/_categories.svg"] = []byte(rollupSVG("Coverage by category", categoryNames[:], catSums[:], catN[:]))
+	catFigs := make([]*tfFig, len(categories))
+	for i, k := range categories {
+		c, ok := tf.cat[tfBarProvider][k]
+		o, okO := tf.cat[tfOtherProvider][k]
+		catFigs[i] = fig(c, ok, o, okO)
+	}
+	files["docs/coverage/bars/_categories.svg"] = []byte(rollupSVG("Coverage by category", categoryNames[:], catSums[:], catN[:], catFigs))
 
 	// Root README section and the docs README statistics.
 	root, err := os.ReadFile(filepath.Join(repo, "README.md"))
 	if err != nil {
 		return nil, err
 	}
-	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, prio, tierSums, tierSvcs, catSums, catN, total, len(m.hosts), len(uniq(m.excluded)), src))
+	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, prio, tierSums, tierSvcs, catSums, catN, total, len(m.hosts), len(uniq(m.excluded)), src, tf))
 	if err != nil {
 		return nil, fmt.Errorf("README.md: %w", err)
 	}

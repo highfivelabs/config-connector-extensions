@@ -1,7 +1,7 @@
 // Copyright 2026 High Five Labs
 // SPDX-License-Identifier: Apache-2.0
 
-package v1alpha1
+package v1beta1
 
 // Written here, in the shape of Config Connector's identities.
 

@@ -15,16 +15,20 @@ this file only adds to them.
 
 After the global network firewall policy rule PR (decision 13's
 `ComputeNetworkFirewallPolicyRule`, cut from `main` at `f7f9aec`):
-thirty-two kinds (`README.md`, design.md's intro),
-mockgcp patches 0001 to 0028 (`UPSTREAM.md` and `upstream.yaml`, which
+thirty-three kinds (`README.md`, design.md's intro; the latest,
+`LoggingBillingAccountSink`, decision 15),
+mockgcp patches 0001 to 0029 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
-**0029**), the live-test switch and the Taskfile (`docs/live-runs.md`,
+**0030**, but take it from `main` when you need it: two agents add
+patches), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
 which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
 its association and its rule (organization and folder only), and `IAMDenyPolicy`,
-which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`).
+which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
+and `LoggingBillingAccountSink`, which waits on billing account access
+(`E2E_BILLING_ACCOUNT`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -79,11 +83,12 @@ stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation
 `DNSResponsePolicy` and its rule); Cloud Router is a copy of upstream's
 PR #13960 as a complete kind of ours (14); `LoggingBillingAccountSink`
 now, live pending billing-account access (15); Security Command Center
-kinds with organization, folder and project parents (16). Whole-resource gaps
-first; any other field gap that needs the builder goes to section 10
-with a recommendation. **Decision 5 is reversed** (decision 19, 2026-11-10):
-fill field gaps in our kinds now; the factory watcher tracks upstream.
-Immutability is CEL in the CRD, never a webhook (decision 20). The
+kinds with organization, folder and project parents (16). Decision 5
+(field gaps wait for the release) was reversed by the builder on
+2026-11-10: decision 19, build foundation field gaps now in
+`docs/coverage/foundation.md`'s order and keep up with upstream
+mechanically. Whole-resource gaps first; any other field gap that needs the builder goes to section 10
+with a recommendation. Immutability is CEL in the CRD, never a webhook (decision 20). The
 builder has folderAdmin and another agent is making the `live-tests`
 folder and project `hfl-test-g1`; keep folder-level kinds "live:
 pending" until that agent reports. A deprecation path for our kinds is the builder's
@@ -108,14 +113,25 @@ begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
-are built. Next the rest of decision 13:
+are built. `IAMBinding` moved to `v1beta1` (decision 24, the builder's
+K12, for the catalog's 0.4.0 charts); `v1alpha1` is no longer served
+(section 10, question 4) and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
 `IAMPrincipalAccessBoundaryPolicy` (upstream has a direct controller;
 mockgcp has no service for it, so patch 0029),
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
 alpha types and controllers),
-then 15 (`LoggingBillingAccountSink`, live pending billing-account
-access), 16 (Security Command Center, three parents), then packet
-mirroring rules and on down `docs/coverage/foundation.md`.
+then 16 (Security Command Center, three parents), then packet
+mirroring rules and on down `docs/coverage/foundation.md`, with the
+field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
+(design.md 6.5, patch 0029), live pending billing account access.
+
+What `LoggingBillingAccountSink` taught: upstream's direct kinds often
+already carry the identity format for a parent their spec lacks (the
+log sink's identity parses `billingAccounts/...`); copy the kind and add
+the reference rather than writing one. Reuse upstream's leaf types
+(destination, exclusions) by import, so a later upstream fix reaches
+ours. mockgcp's log sink update took `description` and `filter` only;
+patch 0029 adds the rest.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
