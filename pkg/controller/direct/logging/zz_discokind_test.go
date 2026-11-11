@@ -23,5 +23,8 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind/kindtest"
 )
 
+// TestLoggingLink runs testdata/discokind/LoggingLink/ on the fake cloud, or live.
+func TestLoggingLink(t *testing.T) { kindtest.Run(t, "LoggingLink") }
+
 // TestLoggingSavedQuery runs testdata/discokind/LoggingSavedQuery/ on the fake cloud, or live.
 func TestLoggingSavedQuery(t *testing.T) { kindtest.Run(t, "LoggingSavedQuery") }

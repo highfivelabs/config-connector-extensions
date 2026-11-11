@@ -20,6 +20,7 @@ package controller
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
@@ -63,11 +64,57 @@ var discoKinds = []*discokind.Kind{
 		SoftDelete:   &discokind.FieldValue{Field: "state", Value: "DELETED"},
 		FakeDefaults: map[string]any{"state": "ACTIVE"},
 	},
+	{
+		GVK:       iamv1alpha1.IAMWorkforcePoolProviderScimTenantGVK,
+		CRDName:   "iamworkforcepoolproviderscimtenants.iam.gcp.hfl.dev",
+		BaseURL:   "https://iam.googleapis.com/v1/",
+		Name:      "locations/{location}/workforcePools/{workforcePool}/providers/{provider}/scimTenants/{id}",
+		IDParam:   "workforcePoolProviderScimTenantId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable:    true,
+		Output:       []string{"baseUri", "purgeTime", "serviceAgent", "state"},
+		SoftDelete:   &discokind.FieldValue{Field: "state", Value: "DELETED"},
+		FakeDefaults: map[string]any{"state": "ACTIVE"},
+	},
+	{
+		GVK:       gkehubv1alpha1.GKEHubMembershipRBACRoleBindingGVK,
+		CRDName:   "gkehubmembershiprbacrolebindings.gkehub.gcp.hfl.dev",
+		BaseURL:   "https://gkehub.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/memberships/{membership}/rbacrolebindings/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "rbacrolebindingId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "deleteTime", "state", "uid", "updateTime"},
+	},
+	{
+		GVK:       gkehubv1alpha1.GKEHubRolloutSequenceGVK,
+		CRDName:   "gkehubrolloutsequences.gkehub.gcp.hfl.dev",
+		BaseURL:   "https://gkehub.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/rolloutSequences/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "rolloutSequenceId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"computedReleaseChannel", "createTime", "deleteTime", "effectiveAutoUpgradeConfig", "etag", "lastQualifiedControlPlaneVersion", "lastQualifiedNodeVersion", "operationalState", "targetControlPlaneVersion", "targetNodeVersion", "uid", "updateTime"},
+	},
+	{
+		GVK:       loggingv1alpha1.LoggingLinkGVK,
+		CRDName:   "logginglinks.logging.gcp.hfl.dev",
+		BaseURL:   "https://logging.googleapis.com/v2/",
+		Name:      "{parent}/locations/{location}/buckets/{bucket}/links/{id}",
+		Parents:   []string{"project", "folder", "organization", "billingAccount"},
+		IDParam:   "linkId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"createTime", "lifecycleState", "name"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
 	loggingv1alpha1.AddToScheme,
 	iamv1alpha1.AddToScheme,
+	gkehubv1alpha1.AddToScheme,
 }
 
 func init() {
