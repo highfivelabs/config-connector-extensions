@@ -9,8 +9,11 @@
 # `task` lists the tasks. Install it with `brew install go-task` or
 # `go install github.com/go-task/task/v3/cmd/task@latest`. Variables are
 # given on the command line: `task test-live KINDS=iam` (PROJECT defaults to
-# HFL_GCP_TEST_PROJECT, then our-chassis-514316-r0).
+# HFL_GCP_TEST_PROJECT, then GCP_PROJECT). Environment identifiers come
+# from the environment or a git-ignored .env (.env.example names them).
 version: '3'
+
+dotenv: ['.env']
 
 set: [errexit, pipefail]
 
@@ -35,9 +38,9 @@ env:
 vars:
   # The live tests' project: HFL_GCP_TEST_PROJECT from the test estate's env
   # file (factory/estate/gcp/<gen>.env) when it is loaded, else
-  # our-chassis-514316-r0; PROJECT=... on the command line overrides both. It must
-  # still pass hack/live/projects.sh.
-  PROJECT: '{{.HFL_GCP_TEST_PROJECT | default "our-chassis-514316-r0"}}'
+  # GCP_PROJECT (.env); PROJECT=... on the command line overrides both. It
+  # must still pass hack/live/projects.sh.
+  PROJECT: '{{.HFL_GCP_TEST_PROJECT | default .GCP_PROJECT}}'
   # The project's name, for a rename: the Go module path, the images, the
   # install's object names and pkg/operator.Name carry it too.
   NAME: config-connector-extensions
