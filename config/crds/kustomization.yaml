@@ -35,6 +35,7 @@ resources:
 - run.gcp.hfl.dev_runservices.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
+- securitycenter.gcp.hfl.dev_securitycentermuteconfigs.yaml
 - serviceusage.gcp.hfl.dev_serviceidentities.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
 - sqladmin.gcp.hfl.dev_sqladminbackups.yaml

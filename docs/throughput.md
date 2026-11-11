@@ -5,9 +5,9 @@ Measured 2026-11-11 from `git log`, the pull requests, CI runs and
 
 ## Where it stands
 
-- **Kinds on `main`: 34** (35 with this change's 3: 37). Four more wait in
-  open pull requests since 2026-11-10 (#53 `SecurityCenterMuteConfig`, #54
-  `DNSResponsePolicy`, #55 a packet mirroring rule, #56 `ComputeVPNTunnel`).
+- **Kinds on `main`: 35** (this change adds 3: 38). Three more wait in
+  open pull requests since 2026-11-10 (#54 `DNSResponsePolicy`, #55 a
+  packet mirroring rule, #56 `ComputeVPNTunnel`).
 - **Remaining whole-resource gaps** (a create in the API, no Config
   Connector kind, none of ours), from `docs/coverage/resources.csv`:
   tier 1 (the foundation) 62, tier 2 198, tier 3 234: 494 in all.
@@ -17,7 +17,7 @@ Measured 2026-11-11 from `git log`, the pull requests, CI runs and
   is field gaps and a few whole resources (saved queries, OAuth clients,
   log bucket links, Cloud Run domain mappings, monitoring snoozes).
 - **Kinds per day**, by merged pull request: 2026-11-09 about 21,
-  2026-11-10 6, 2026-11-11 2 (and 4 queued). The first day ran several
+  2026-11-10 6, 2026-11-11 3 by midday (and 3 queued). The first day ran several
   agents in parallel on easy gaps; then it fell off.
 
 ## Where the time goes, per kind

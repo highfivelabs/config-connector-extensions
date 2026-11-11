@@ -13,13 +13,12 @@ this file only adds to them.
 
 ## Where things stand
 
-After the principal access boundary policy PR (decision 13's
-`IAMPrincipalAccessBoundaryPolicy`, cut from `main` at `748bff2`):
-thirty-four kinds (`README.md`, design.md's intro; the latest,
-`IAMPrincipalAccessBoundaryPolicy`, decision 13),
-mockgcp patches 0001 to 0030 (`UPSTREAM.md` and `upstream.yaml`, which
+After the Security Command Center mute config PR (decision 16's
+`SecurityCenterMuteConfig`): thirty-five kinds (`README.md`, design.md's
+intro; the latest, `SecurityCenterMuteConfig`, decision 16),
+mockgcp patches 0001 to 0031 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; the next free number is
-**0031**, but take it from `main` when you need it: two agents add
+**0032**, but take it from `main` when you need it: two agents add
 patches), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
@@ -153,6 +152,33 @@ no generated HTTP gateway for (IAM v3) can still be served: register the
 `mockiam/principalaccessboundarypolicies.go`). A patch that edits a file
 earlier patches edit (`mockiam/service.go`: 0006, 0007, 0010) must be
 diffed against the file with those applied, not against the pin.
+
+Decision 16 has begun: `SecurityCenterMuteConfig` (design.md 6.5, patch
+0031) takes an organization, folder or project. Upstream PR #7673 has
+the three parents for mute configs, BigQuery exports and custom modules
+but predates `master`'s kinds: copy `master`'s kind and #7673's parent
+(`apis/securitycenter/v1alpha1/parent.go`, `ResolveParent`), as the
+mute config did. Next: `SecurityCenterBigQueryExport` (mockgcp already
+serves all three parents), the two custom module kinds, then
+`SecurityCenterNotificationConfig` (Terraform-based upstream). Live
+needs Security Command Center active for the project
+(`E2E_SECURITY_CENTER=true`). A new API group also goes in the manager's
+ClusterRole (`config/operator/rbac.yaml`, both rules);
+`TestManagerRoleCoversEveryKind` fails without it.
+
+Field gaps (design.md decision 19, the builder's 2026-11-10 reversal of
+decision 5) are not begun. Take them in `docs/coverage/foundation.md`'s
+order (items 9 to 19 and 21 to 27 that say "field"), with the attribute
+lists in `docs/coverage/attributes.csv`. The accepted pattern is a
+parallel kind of ours that owns the whole object (decisions 11, 13 and 14).
+It suits small kinds like the log bucket and the sink fields (item 12) or
+the DNS policy fields (item 15). It is costly for the big Terraform-based
+kinds (`ContainerCluster`, `ComputeVPNTunnel`, `KMSCryptoKey`). The first
+field-gap PR that hits one of those should propose another pattern in a
+short design note, as the builder asked, for example a field kind that
+patches only its fields with an update mask beside Config Connector's
+object, and why. Decision 11 rejected that for `RunService`, because
+Terraform's whole-object update resets the fields.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our

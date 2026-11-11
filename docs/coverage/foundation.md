@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 38.9% | 2.0% | 59.1% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 2.8% | 30.0% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.1% | 29.7% |
 
 By service:
 
@@ -37,7 +37,7 @@ By service:
 | security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 0.0% | 28.7% |
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 0.0% | 51.3% |
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 0.0% | 48.1% |
-| security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 0.0% | 41.1% |
+| security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 4.0% | 37.1% |
 | security | `securityposture.googleapis.com` | 2 | 63 | 93.7% | 0.0% | 6.3% |
 | security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 0.0% | 25.0% |
 | security | `binaryauthorization.googleapis.com` | 2 | 37 | 75.7% | 0.0% | 24.3% |
@@ -86,7 +86,7 @@ What these numbers miss, for the foundation:
 | 17 | [Billing account log sink](#17-billing-account-log-sink) | A | field | 1 | S | 3 / 13 (0.0%) | none found. |
 | 18 | [KMS fields (key access justifications, key backend)](#18-kms-fields-key-access-justifications-key-backend) | A | field | 1 | S | 7 / 15 (53.3%) | open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would land |
 | 19 | [Hierarchical firewall policy rule fields](#19-hierarchical-firewall-policy-rule-fields) | A | field | 1 | M | 62 / 114 (44.7%) | none found (`ComputeFirewall` has |
-| 20 | [Security Command Center at folder and project level](#20-security-command-center-at-folder-and-project-level) | B | whole | 3 | M | 40 / 40 (0.0%) | in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCusto... |
+| 20 | [Security Command Center at folder and project level](#20-security-command-center-at-folder-and-project-level) | B | whole | 3 | M | 35 / 40 (0.0%) | in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCusto... |
 | 21 | [VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)](#21-vpc-service-controls-authorized-orgs-descriptions-dry-run-spec-user-access-bindings) | B | whole | 3 | M | 59 / 105 (43.8%) | partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08) |
 | 22 | [Privileged Access Manager grants](#22-privileged-access-manager-grants) | B | whole | 0 | S | 7 / 18 (61.1%) | none found. |
 | 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 12 / 12 (0.0%) | none. |
@@ -373,14 +373,14 @@ What these numbers miss, for the foundation:
 
 - **Importance** B, **gap** whole, **size** M, **modules** 3 (organization, folder, project).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `securitycenter.googleapis.com/projects.muteConfigs`: 0 / 0 / 6 of 6; no kind
+  - `securitycenter.googleapis.com/projects.muteConfigs`: 0 / 5 / 1 of 6; SecurityCenterMuteConfig (ours)
   - `securitycenter.googleapis.com/projects.notificationConfigs`: 0 / 0 / 5 of 5; no kind
   - `securitycenter.googleapis.com/projects.bigQueryExports`: 0 / 0 / 5 of 5; no kind
   - `securitycenter.googleapis.com/projects.eventThreatDetectionSettings.customModules`: 0 / 0 / 7 of 7; no kind
   - `securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules`: 0 / 0 / 17 of 17; no kind
 - **Missing, whole resources:** The folder and project parents of `SecurityCenterMuteConfig`, `...NotificationConfig`, `...BigQueryExport`, `SecuritycenterEventThreatDetectionCustomModule` and `SecuritycenterSecurityHealthAnalyticsCustomModule`: Config Connector's CRDs take `organizationRef` only. `SecurityCenterManagement*CustomModule` take any parent, but are alpha-only, and so is `SecurityCenterMuteConfig`.
 - **Missing, attributes that matter:** A `folderRef` and `projectRef` beside `organizationRef` on each; the fields are the organization kinds' (`filter`, `description`, `expiryTime`, `type`; `pubsubTopic`, `streamingConfig`; `dataset`).
-  - uncovered in `securitycenter.googleapis.com/projects.muteConfigs` (measured): `description`, `displayName`, `expiryTime`, `filter`, `name`, `type`
+  - uncovered in `securitycenter.googleapis.com/projects.muteConfigs` (measured): `displayName`
   - uncovered in `securitycenter.googleapis.com/projects.notificationConfigs` (measured): `deletionNotificationsEnabled`, `description`, `name`, `pubsubTopic`, `streamingConfig.filter`
   - uncovered in `securitycenter.googleapis.com/projects.bigQueryExports` (measured): `dataset`, `deletionNotificationsEnabled`, `description`, `filter`, `name`
   - uncovered in `securitycenter.googleapis.com/projects.eventThreatDetectionSettings.customModules` (measured): `cloudProvider`, `config{}`, `description`, `displayName`, `enablementState`, `name`, `type`
@@ -517,8 +517,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
-| LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
+| LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
@@ -530,6 +530,9 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only
@@ -837,18 +840,18 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `secretmanager.googleapis.com/Secret` | SecretManagerSecret | SecretManagerSecret | 15 | 10 | 0 | 5 | 26 |
 | security | `securitycenter.googleapis.com/BigQueryExport` | SecurityCenterBigQueryExport (alpha) | - | 5 | 4 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/EventThreatDetectionSettingCustomModule` | SecuritycenterEventThreatDetectionCustomModule (alpha) | - | 7 | 6 | 0 | 1 | - |
-| security | `securitycenter.googleapis.com/MuteConfig` | SecurityCenterMuteConfig (alpha) | - | 6 | 5 | 0 | 1 | - |
+| security | `securitycenter.googleapis.com/MuteConfig` | SecurityCenterMuteConfig (alpha) | SecurityCenterMuteConfig | 6 | 5 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/NotificationConfig` | SecurityCenterNotificationConfig (alpha) | - | 5 | 4 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/SecurityHealthAnalyticsSettingCustomModule` | SecuritycenterSecurityHealthAnalyticsCustomModule (alpha) | - | 17 | 16 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/Source` | SecurityCenterSource (alpha) | - | 4 | 3 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/organizations.bigQueryExports` | SecurityCenterBigQueryExport (alpha) | - | 5 | 4 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/organizations.eventThreatDetectionSettings.customModules` | SecuritycenterEventThreatDetectionCustomModule (alpha), SecuritycenterSecurityHealthAnalyticsCustomModule (alpha) | - | 7 | 6 | 0 | 1 | - |
-| security | `securitycenter.googleapis.com/organizations.muteConfigs` | SecurityCenterMuteConfig (alpha) | - | 6 | 5 | 0 | 1 | - |
+| security | `securitycenter.googleapis.com/organizations.muteConfigs` | SecurityCenterMuteConfig (alpha) | SecurityCenterMuteConfig | 6 | 5 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/organizations.notificationConfigs` | SecurityCenterNotificationConfig (alpha) | - | 5 | 4 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/organizations.securityHealthAnalyticsSettings.customModules` | SecuritycenterEventThreatDetectionCustomModule (alpha), SecuritycenterSecurityHealthAnalyticsCustomModule (alpha) | - | 17 | 16 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/projects.bigQueryExports` | - | - | 5 | 0 | 0 | 5 | 20 |
 | security | `securitycenter.googleapis.com/projects.eventThreatDetectionSettings.customModules` | - | - | 7 | 0 | 0 | 7 | 20 |
-| security | `securitycenter.googleapis.com/projects.muteConfigs` | - | - | 6 | 0 | 0 | 6 | 20 |
+| security | `securitycenter.googleapis.com/projects.muteConfigs` | - | SecurityCenterMuteConfig | 6 | 0 | 5 | 1 | 20 |
 | security | `securitycenter.googleapis.com/projects.notificationConfigs` | - | - | 5 | 0 | 0 | 5 | 20 |
 | security | `securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules` | - | - | 17 | 0 | 0 | 17 | 20 |
 | security | `securitycentermanagement.googleapis.com/EventThreatDetectionCustomModule` | SecurityCenterManagementEventThreatDetectionCustomModule (alpha) | - | 6 | 6 | 0 | 0 | - |
