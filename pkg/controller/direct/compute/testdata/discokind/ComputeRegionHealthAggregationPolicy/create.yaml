@@ -1,0 +1,12 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionHealthAggregationPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  policyType: BACKEND_SERVICE_POLICY
+  healthyPercentThreshold: 60
+  minHealthyThreshold: 1
+  description: made by a config-connector-extensions test

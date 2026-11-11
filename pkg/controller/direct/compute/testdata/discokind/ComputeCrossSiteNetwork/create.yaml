@@ -1,0 +1,8 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeCrossSiteNetwork
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  description: made by a config-connector-extensions test

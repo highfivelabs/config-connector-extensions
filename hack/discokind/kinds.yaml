@@ -76,3 +76,130 @@
   parents: [project, folder, organization, billingAccount]
   terraform: google_logging_linked_dataset
   note: A BigQuery linked dataset of a Log Analytics bucket; Config Connector's LoggingLink takes a project's bucket only.
+
+# Compute Engine (insert style: the name in the body, compute operations).
+
+- kind: ComputeRegionNotificationEndpoint
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionNotificationEndpoints
+  parents: [project]
+  terraform: google_compute_region_notification_endpoint
+  note: "A gRPC endpoint a regional health check service sends health changes to."
+
+- kind: ComputeRegionHealthCheckService
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionHealthCheckServices
+  parents: [project]
+  terraform: google_compute_region_health_check_service
+  note: "Aggregates regional health checks of network endpoint groups and notifies endpoints."
+
+- kind: ComputeRegionHealthAggregationPolicy
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionHealthAggregationPolicies
+  parents: [project]
+  note: "How a regional health source aggregates the health of its backends."
+
+- kind: ComputeRegionHealthSource
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionHealthSources
+  parents: [project]
+  note: "The backends a composite health check reads health from."
+
+- kind: ComputeRegionCompositeHealthCheck
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionCompositeHealthChecks
+  parents: [project]
+  note: "Health from several sources for a regional forwarding rule."
+
+- kind: ComputeRegionBackendBucket
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionBackendBuckets
+  parents: [project]
+  note: "A Cloud Storage bucket as a backend of a regional load balancer."
+
+- kind: ComputeGlobalVmExtensionPolicy
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: globalVmExtensionPolicies
+  parents: [project]
+  note: "Which VM extensions run on the VMs of a project, everywhere."
+
+- kind: ComputeZoneVmExtensionPolicy
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: zoneVmExtensionPolicies
+  parents: [project]
+  note: "Which VM extensions run on the VMs of a zone."
+
+- kind: ComputeRolloutPlan
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: rolloutPlans
+  parents: [project]
+  note: "The waves in which a change rolls out across locations."
+
+- kind: ComputePublicAdvertisedPrefix
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: publicAdvertisedPrefixes
+  parents: [project]
+  terraform: google_compute_public_advertised_prefix
+  note: "A bring-your-own-IP range announced from Google (BYOIP)."
+
+- kind: ComputePublicDelegatedPrefix
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: publicDelegatedPrefixes
+  parents: [project]
+  terraform: google_compute_public_delegated_prefix
+  note: "A regional part of a BYOIP range, delegated for use."
+
+- kind: ComputeGlobalPublicDelegatedPrefix
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: globalPublicDelegatedPrefixes
+  parents: [project]
+  terraform: google_compute_public_delegated_prefix
+  note: "A global part of a BYOIP range, delegated for use."
+
+- kind: ComputeCrossSiteNetwork
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: crossSiteNetworks
+  parents: [project]
+  note: "A Cross-Site Interconnect network between on-premises sites."
+
+- kind: ComputeWireGroup
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: wireGroups
+  parents: [project]
+  note: "A group of wires of a Cross-Site Interconnect network."
+
+- kind: ComputeInterconnectGroup
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: interconnectGroups
+  parents: [project]
+  note: "A group of Interconnects for a topology Google checks."

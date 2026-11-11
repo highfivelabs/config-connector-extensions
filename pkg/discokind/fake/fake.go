@@ -60,6 +60,14 @@ const opPrefix = "operations/discokind-"
 
 func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 	full := req.URL.Scheme + "://" + req.URL.Host + req.URL.Path
+	if req.Method == http.MethodGet {
+		c.mu.Lock()
+		_, isOp := c.ops[full]
+		c.mu.Unlock()
+		if isOp {
+			return c.getOp(req, full)
+		}
+	}
 	for _, k := range c.Kinds {
 		if !strings.HasPrefix(full, k.BaseURL) {
 			continue
@@ -82,16 +90,19 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http.Response, error) {
-	id := ""
-	if k.IDParam != "" {
-		id = req.URL.Query().Get(k.IDParam)
-	}
-	if id == "" {
-		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("%s is required", k.IDParam))
-	}
 	body, err := readBody(req)
 	if err != nil {
 		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
+	}
+	id := ""
+	switch {
+	case k.InsertStyle:
+		id, _ = body["name"].(string)
+	case k.IDParam != "":
+		id = req.URL.Query().Get(k.IDParam)
+	}
+	if id == "" {
+		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", "the resource's ID is required")
 	}
 	name := coll + "/" + id
 	key := k.BaseURL + name
@@ -111,19 +122,29 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 		body[f] = v
 	}
 	body["name"] = name
+	if k.InsertStyle {
+		// Compute Engine: name is the ID; the URL is selfLink.
+		body["name"] = id
+	}
 	for _, f := range k.Output {
 		switch f {
 		case "createTime", "updateTime":
 			body[f] = now
+		case "creationTimestamp":
+			body[f] = now
 		case "uid":
 			body[f] = uuid.NewString()
-		case "etag":
+		case "id":
+			body[f] = fmt.Sprintf("%d", uuid.New().ID())
+		case "selfLink":
+			body[f] = k.BaseURL + name
+		case "etag", "fingerprint":
 			body[f] = etag(body)
 		}
 	}
 	c.objects[key] = body
 	if k.CreateLRO {
-		return c.doneOp(req, k, body)
+		return c.doneOp(req, k, name, body)
 	}
 	return jsonResponse(req, http.StatusOK, body)
 }
@@ -140,8 +161,8 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 	switch req.Method {
 	case http.MethodGet:
 		return jsonResponse(req, http.StatusOK, obj)
-	case http.MethodPatch:
-		if !k.Updatable {
+	case http.MethodPatch, http.MethodPut:
+		if !k.Updatable || (req.Method == http.MethodPut) != k.UpdatePUT {
 			return errorResponse(req, http.StatusMethodNotAllowed, "UNIMPLEMENTED", "no patch method")
 		}
 		if deleted {
@@ -150,6 +171,18 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		body, err := readBody(req)
 		if err != nil {
 			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
+		}
+		if k.InsertStyle {
+			// name and fingerprint come back as read; a stale
+			// fingerprint is refused, as Compute Engine does.
+			if fp, ok := obj["fingerprint"]; ok && body["fingerprint"] != nil && body["fingerprint"] != fp {
+				return errorResponse(req, http.StatusPreconditionFailed, "FAILED_PRECONDITION", "the fingerprint is stale")
+			}
+			delete(body, "fingerprint")
+			delete(body, "name")
+			for _, f := range k.Output {
+				delete(body, f)
+			}
 		}
 		var mask []string
 		if m := req.URL.Query().Get("updateMask"); m != "" {
@@ -161,6 +194,10 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		}
 		updated := map[string]any{}
 		for f, v := range obj {
+			// update (PUT) replaces every writable field.
+			if req.Method == http.MethodPut && !contains(k.Output, f) && f != "name" {
+				continue
+			}
 			updated[f] = v
 		}
 		for _, f := range mask {
@@ -177,12 +214,14 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		if contains(k.Output, "updateTime") {
 			updated["updateTime"] = time.Now().UTC().Format(time.RFC3339Nano)
 		}
-		if contains(k.Output, "etag") {
-			updated["etag"] = etag(updated)
+		for _, f := range []string{"etag", "fingerprint"} {
+			if contains(k.Output, f) {
+				updated[f] = etag(updated)
+			}
 		}
 		c.objects[key] = updated
 		if k.UpdateLRO {
-			return c.doneOp(req, k, updated)
+			return c.doneOp(req, k, name, updated)
 		}
 		return jsonResponse(req, http.StatusOK, updated)
 	case http.MethodDelete:
@@ -197,7 +236,7 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 			delete(c.objects, key)
 		}
 		if k.DeleteLRO {
-			return c.doneOp(req, k, map[string]any{})
+			return c.doneOp(req, k, name, map[string]any{})
 		}
 		return jsonResponse(req, http.StatusOK, answer)
 	}
@@ -219,6 +258,9 @@ func (c *Cloud) list(req *http.Request, k *discokind.Kind, coll string) (*http.R
 		items = append(items, c.objects[key])
 	}
 	field := coll[strings.LastIndex(coll, "/")+1:]
+	if k.InsertStyle {
+		field = "items"
+	}
 	out := map[string]any{}
 	if len(items) > 0 {
 		out[field] = items
@@ -226,11 +268,21 @@ func (c *Cloud) list(req *http.Request, k *discokind.Kind, coll string) (*http.R
 	return jsonResponse(req, http.StatusOK, out)
 }
 
-// doneOp answers a finished operation (c.mu held).
-func (c *Cloud) doneOp(req *http.Request, k *discokind.Kind, response map[string]any) (*http.Response, error) {
-	name := opPrefix + uuid.NewString()
-	op := map[string]any{"name": name, "done": true, "response": response}
-	c.ops[k.BaseURL+name] = op
+// doneOp answers a finished operation on the resource name (c.mu held):
+// a google.longrunning one, or for an InsertStyle kind a Compute Engine
+// one in the resource's scope (projects/p/regions/r/operations/...).
+func (c *Cloud) doneOp(req *http.Request, k *discokind.Kind, name string, response map[string]any) (*http.Response, error) {
+	if k.InsertStyle {
+		opName := "operation-discokind-" + uuid.NewString()
+		self := k.BaseURL + discokind.ParentOf(name) + "/operations/" + opName
+		op := map[string]any{"kind": "compute#operation", "name": opName, "status": "DONE", "progress": 100,
+			"selfLink": self, "targetLink": k.BaseURL + name}
+		c.ops[self] = op
+		return jsonResponse(req, http.StatusOK, op)
+	}
+	opName := opPrefix + uuid.NewString()
+	op := map[string]any{"name": opName, "done": true, "response": response}
+	c.ops[k.BaseURL+opName] = op
 	return jsonResponse(req, http.StatusOK, op)
 }
 

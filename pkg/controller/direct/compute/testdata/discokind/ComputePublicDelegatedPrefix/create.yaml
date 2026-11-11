@@ -1,0 +1,11 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputePublicDelegatedPrefix
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  ipCidrRange: 203.0.113.0/28
+  parentPrefix: projects/${PROJECT}/global/publicAdvertisedPrefixes/${NAME}-pap
+  description: made by a config-connector-extensions test

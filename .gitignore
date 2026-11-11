@@ -2,4 +2,5 @@ third_party/
 bin/
 offload-artifacts/
 .cache/
+/.task/
 .env

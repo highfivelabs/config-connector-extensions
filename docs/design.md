@@ -160,12 +160,21 @@ since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
 `docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
 references beyond the parent (the other parts of a name are IDs), no
-secrets in status, no Compute Engine insert-style resources yet. The
+secrets in status. Compute Engine's shape is covered too
+(`InsertStyle`, 2026-11-11): insert with the ID as the body's name, a
+patch that merges the fields sent with the read fingerprint (or an update
+that replaces the resource), and compute operations polled at their
+`selfLink`. The
 first kinds: `LoggingSavedQuery`, `IAMOauthClient`,
 `IAMWorkforcePoolProviderKey` (2026-11-11); then
 `IAMWorkforcePoolProviderScimTenant`, `GKEHubMembershipRBACRoleBinding`,
 `GKEHubRolloutSequence` (foundation item 5) and `LoggingLink` with
-folder, organization and billing account parents.
+folder, organization and billing account parents. Then fifteen Compute
+Engine kinds: regional notification endpoints, health check services,
+health aggregation policies, health sources, composite health checks and
+backend buckets; global and zonal VM extension policies; rollout plans;
+BYOIP public advertised and delegated prefixes (foundation item 7);
+Cross-Site networks and wire groups and Interconnect groups.
 
 ### Switching to PR #7148
 

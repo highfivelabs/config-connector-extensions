@@ -1,0 +1,13 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeZoneVmExtensionPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  zone: us-central1-a
+  description: changed
+  priority: 900
+  extensionPolicies:
+    ops-agent:
+      stringConfig: "{}"

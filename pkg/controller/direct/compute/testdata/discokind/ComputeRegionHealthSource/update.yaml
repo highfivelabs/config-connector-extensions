@@ -1,0 +1,12 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionHealthSource
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  sourceType: BACKEND_SERVICE
+  sources: ["projects/${PROJECT}/regions/us-central1/backendServices/${NAME}-bs"]
+  healthAggregationPolicy: projects/${PROJECT}/regions/us-central1/healthAggregationPolicies/${NAME}-hap
+  description: changed
