@@ -1,0 +1,10 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeWireGroup
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  crossSiteNetwork: ${NAME}-network
+  adminEnabled: true
+  description: made by a config-connector-extensions test

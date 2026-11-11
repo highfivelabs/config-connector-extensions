@@ -109,13 +109,15 @@ what a live run is for; `docs/testing.md`).
 
 ## Still to fix
 
-- **Done 2026-11-11 (#62 to #65):** the generator and its fake and test
+- **Done 2026-11-11 (#62 to #66):** the generator and its fake and test
   (above); docs per kind (`docs/kinds/<Kind>.md`, checked by
   `hack/kinddocs`, no committed list of kinds); patches that touch no
-  other patch's files named, not numbered.
-- **The compute insert shape** (`insert`, `get`, `patch`, `delete` with
-  the name in the body and global or regional operations) in the same
-  generator: 25 of the 62 tier 1 gaps are Compute Engine's.
+  other patch's files named, not numbered; the compute insert shape
+  (`insert`, `get`, `patch` or `update`, `delete`, the name in the body,
+  compute operations), with 15 of the 25 Compute Engine tier 1 gaps
+  generated. Left out on purpose: commitments (they cannot be deleted),
+  storage pools and instant snapshots (billed, need disks), resize
+  requests (make VMs), licenses.
 - **What still conflicts**: UPSTREAM.md's patch table and `upstream.yaml`,
   `hack/live/sweep.sh` and `pkg/controller/controllers.go` for
   hand-written kinds (generated kinds touch none of them).

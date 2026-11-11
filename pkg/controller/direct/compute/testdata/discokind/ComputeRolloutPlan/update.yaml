@@ -1,0 +1,16 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRolloutPlan
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  locationScope: REGIONAL
+  waves:
+  - displayName: first
+    selectors:
+    - locationSelector:
+        includedLocations: [us-central1]
+    validation:
+      type: manual
+  description: changed

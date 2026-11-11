@@ -1,0 +1,15 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeGlobalVmExtensionPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  description: changed
+  priority: 900
+  extensionPolicies:
+    ops-agent:
+      stringConfig: "{}"
+  rolloutOperation:
+    rolloutInput:
+      predefinedRolloutPlan: SLOW_ROLLOUT
