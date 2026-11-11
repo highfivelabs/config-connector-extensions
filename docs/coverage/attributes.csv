@@ -27641,11 +27641,11 @@ dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,rrdatas[],string,false,o
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,signatureRrdatas[],string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,ttl,integer,false,official,spec.ttl,
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,type,string,false,official,spec.type,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,description,string,false,official,spec.description,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,gkeClusters[].gkeClusterName,string,false,official,spec.gkeClusters[].gkeClusterName,
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,description,string,false,both,spec.description,spec.description
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,gkeClusters[].gkeClusterName,string,false,both,spec.gkeClusters[].gkeClusterName,spec.gkeClusters[].gkeClusterName
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,id,string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,labels{},string,false,none,,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,networks[].networkUrl,string,false,official,spec.networks[].networkUrl,
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,networks[].networkUrl,string,false,both,spec.networks[].networkUrl,spec.networks[].networkUrl
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,responsePolicyName,string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,behavior,string,false,official,spec.behavior,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,dnsName,string,false,official,spec.dnsName,
