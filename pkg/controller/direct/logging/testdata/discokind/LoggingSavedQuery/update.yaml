@@ -1,0 +1,16 @@
+apiVersion: logging.gcp.hfl.dev/v1alpha1
+kind: LoggingSavedQuery
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  resourceID: ${ID}
+  displayName: Warnings and errors (${NAME})
+  description: A saved query made by a config-connector-extensions test, changed.
+  visibility: SHARED
+  loggingQuery:
+    filter: severity>=WARNING
+    summaryFields:
+    - field: resource.type

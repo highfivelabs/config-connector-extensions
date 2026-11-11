@@ -1,0 +1,294 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeNetworkFirewallPolicyPacketMirroringRule
+    listKind: ComputeNetworkFirewallPolicyPacketMirroringRuleList
+    plural: computenetworkfirewallpolicypacketmirroringrules
+    shortNames:
+    - hflcomputenetworkfirewallpolicypacketmirroringrule
+    - hflcomputenetworkfirewallpolicypacketmirroringrules
+    singular: computenetworkfirewallpolicypacketmirroringrule
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeNetworkFirewallPolicyPacketMirroringRule is a packet mirroring
+          rule of a global network firewall policy.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ComputeNetworkFirewallPolicyPacketMirroringRuleSpec is one
+              packet mirroring rule of a global network firewall policy: which traffic
+              of the policy''s networks is copied to a mirroring endpoint group. A
+              rule is identified by its priority in the policy.'
+            properties:
+              action:
+                description: 'What to do with matching traffic: mirror (to the mirroring
+                  endpoint group of securityProfileGroup''s custom mirroring profile),
+                  do_not_mirror, or goto_next.'
+                enum:
+                - mirror
+                - do_not_mirror
+                - goto_next
+                type: string
+              description:
+                description: An optional description of the rule.
+                type: string
+              direction:
+                description: 'The direction the rule applies to: INGRESS or EGRESS.'
+                enum:
+                - INGRESS
+                - EGRESS
+                type: string
+              disabled:
+                description: Whether the rule is switched off. Unset means it is enforced.
+                type: boolean
+              firewallPolicyRef:
+                description: 'The policy the rule belongs to: a Config Connector ComputeNetworkFirewallPolicy
+                  by name, or projects/{project}/global/firewallPolicies/{policy}.
+                  Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ComputeNetworkFirewallPolicy
+                      resource. Should be in the format "projects/{{projectID}}/global/firewallPolicies/{{firewallPolicyID}}".
+                    type: string
+                  name:
+                    description: The name of a ComputeNetworkFirewallPolicy resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ComputeNetworkFirewallPolicy resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: firewallPolicyRef is immutable
+                  rule: self == oldSelf
+              match:
+                description: What traffic the rule matches.
+                properties:
+                  destIPRanges:
+                    description: Destination CIDR ranges.
+                    items:
+                      type: string
+                    type: array
+                  layer4Configs:
+                    description: Pairs of IP protocols and ports the rule matches.
+                    items:
+                      description: NetworkFirewallPolicyPacketMirroringRuleLayer4Config
+                        is an IP protocol and its ports.
+                      properties:
+                        ipProtocol:
+                          description: tcp, udp, icmp, esp, ah, ipip, sctp, all, or
+                            the protocol number.
+                          type: string
+                        ports:
+                          description: Ports or port ranges (80, 8000-8080), for tcp
+                            and udp. Unset means every port.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - ipProtocol
+                      type: object
+                    minItems: 1
+                    type: array
+                  srcIPRanges:
+                    description: Source CIDR ranges.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - layer4Configs
+                type: object
+              priority:
+                description: 'The rule''s priority, 0 to 2147483647: rules are evaluated
+                  from the lowest number (the highest priority) to the highest, and
+                  a policy has one packet mirroring rule at each priority. Immutable.'
+                format: int64
+                maximum: 2147483647
+                minimum: 0
+                type: integer
+                x-kubernetes-validations:
+                - message: priority is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: 'The project of the policy. Optional: the policy names
+                  its project. When set, it must be the policy''s project. Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              ruleName:
+                description: An optional name for the rule; it is not an identifier
+                  and can change.
+                type: string
+              securityProfileGroup:
+                description: The security profile group whose custom mirroring profile
+                  names where mirrored packets go, as //networksecurity.googleapis.com/{group's
+                  name} or the group's name (organizations/{org}/locations/global/securityProfileGroups/{group}
+                  or projects/{project}/locations/global/securityProfileGroups/{group}).
+                  Only for action mirror, which needs it.
+                type: string
+              targetSecureTags:
+                description: Secure tags (tag values, tagValues/{id}) whose instances
+                  the rule applies to. With none, the rule applies to every instance
+                  on the policy's networks.
+                items:
+                  description: NetworkFirewallPolicyPacketMirroringRuleSecureTag is
+                    a tag value.
+                  properties:
+                    name:
+                      description: The tag value, as tagValues/{id}.
+                      pattern: ^tagValues/[0-9]+$
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+            required:
+            - action
+            - direction
+            - firewallPolicyRef
+            - match
+            - priority
+            type: object
+            x-kubernetes-validations:
+            - message: a mirror rule needs securityProfileGroup
+              rule: self.action != 'mirror' || has(self.securityProfileGroup)
+          status:
+            description: ComputeNetworkFirewallPolicyPacketMirroringRuleStatus defines
+              the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: 'The rule, as projects/{project}/global/firewallPolicies/{policy}/packetMirroringRules/{priority}
+                  (not an API resource name: the API addresses a rule by its priority).'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              ruleTupleCount:
+                description: How complex the rule is, counted by the API against the
+                  policy's limit.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
