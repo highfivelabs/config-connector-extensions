@@ -221,10 +221,14 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 	coll := CollectionOf(a.name)
 	id := a.name[len(coll)+1:]
 	query := map[string]string{}
-	if a.kind.IDParam != "" {
+	body := a.desired
+	if a.kind.InsertStyle {
+		body = runtime.DeepCopyJSON(a.desired)
+		body["name"] = id
+	} else if a.kind.IDParam != "" {
 		query[a.kind.IDParam] = id
 	}
-	resp, err := a.api.Do(ctx, http.MethodPost, coll, query, a.desired)
+	resp, err := a.api.Do(ctx, http.MethodPost, coll, query, body)
 	if err != nil {
 		return fmt.Errorf("creating %s %s: %w", a.kind.GVK.Kind, a.name, err)
 	}
@@ -256,7 +260,25 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 				body[f] = v
 			}
 		}
-		resp, err := a.api.Do(ctx, http.MethodPatch, a.name, map[string]string{"updateMask": strings.Join(mask, ",")}, body)
+		method, query := http.MethodPatch, map[string]string{"updateMask": strings.Join(mask, ",")}
+		if a.kind.InsertStyle {
+			query = nil
+			if a.kind.UpdatePUT {
+				// update replaces the resource: the read one with ours over it.
+				body = runtime.DeepCopyJSON(a.actual)
+				for f, v := range a.desired {
+					body[f] = v
+				}
+			}
+			if fp, ok := a.actual["fingerprint"]; ok {
+				body["fingerprint"] = fp
+			}
+			body["name"] = a.actual["name"]
+		}
+		if a.kind.UpdatePUT {
+			method = http.MethodPut
+		}
+		resp, err := a.api.Do(ctx, method, a.name, query, body)
 		if err != nil {
 			return fmt.Errorf("updating %s %s: %w", a.kind.GVK.Kind, a.name, err)
 		}

@@ -1,0 +1,263 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computeglobalvmextensionpolicies.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeGlobalVmExtensionPolicy
+    listKind: ComputeGlobalVmExtensionPolicyList
+    plural: computeglobalvmextensionpolicies
+    shortNames:
+    - hflcomputeglobalvmextensionpolicy
+    - hflcomputeglobalvmextensionpolicys
+    singular: computeglobalvmextensionpolicy
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeGlobalVmExtensionPolicy is a compute.v1 resource (https://compute.googleapis.com/compute/v1/{parent}/global/vmExtensionPolicies/{id}),
+          from its Discovery document compute.v1 (hack/discokind). Which VM extensions
+          run on the VMs of a project, everywhere.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              description:
+                description: An optional description of this resource. Provide this
+                  property when you create the resource.
+                type: string
+              extensionPolicies:
+                description: 'Required. Map from extension (eg: "cloudops") to its
+                  policy configuration. The key is the name of the extension.'
+                x-kubernetes-preserve-unknown-fields: true
+              instanceSelectors:
+                description: Optional. Selector to target VMs for a policy. There
+                  is a logical "AND" between instance_selectors.
+                items:
+                  properties:
+                    labelSelector:
+                      description: Optional. Labels within the LabelSelector are OR'd.
+                      properties:
+                        inclusionLabels:
+                          additionalProperties:
+                            type: string
+                          description: Optional. Labels as key value pairs. A VM should
+                            contain all the pairs specified in this map to be selected;
+                            Labels within the LabelSelector are OR'ed.
+                          type: object
+                      type: object
+                  type: object
+                type: array
+              priority:
+                description: Optional. Used to resolve conflicts when multiple policies
+                  are active for the same extension. Defaults to 0. Larger the number,
+                  higher the priority. When the priority is the same, the policy with
+                  the newer create time has higher priority.
+                format: int32
+                type: integer
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              rolloutOperation:
+                description: Required. The rollout strategy and status.
+                properties:
+                  rolloutInput:
+                    description: Required. The rollout input which defines the rollout
+                      plan.
+                    properties:
+                      conflictBehavior:
+                        description: 'Optional. Specifies the behavior of the rollout
+                          if a conflict is detected in a project during a rollout.
+                          This only applies to `insert` and `update` methods. A conflict
+                          occurs in the following cases: * `insert` method: If the
+                          zonal policy already exists when the insert happens. * `update`
+                          method: If the zonal policy was modified by a zonal API
+                          call outside of this rollout. Possible values are the following:
+                          * `""` (empty string): If a conflict occurs, the local value
+                          is not overwritten. This is the default behavior. * `"overwrite"`:
+                          If a conflict occurs, the local value is overwritten with
+                          the rollout value.'
+                        type: string
+                      predefinedRolloutPlan:
+                        description: |-
+                          Optional. Specifies the predefined rollout plan for the policy. Valid
+                          values
+                          are `SLOW_ROLLOUT` and `FAST_ROLLOUT`. The recommended value is
+                          `SLOW_ROLLOUT` for progressive rollout. For more information, see Rollout
+                          plans for global policies.
+
+                          One of FAST_ROLLOUT, ROLLOUT_PLAN_UNSPECIFIED, SLOW_ROLLOUT.
+                        type: string
+                      retryUuid:
+                        description: 'Optional. The UUID that identifies a policy
+                          rollout retry attempt for update and delete operations.
+                          Set this field only when retrying a rollout for an existing
+                          extension policy. * `update` method: Lets you retry policy
+                          rollout without changes. An error occurs if you set retry_uuid
+                          but the policy is modified. * `delete` method: Lets you
+                          retry policy deletion rollout if the previous deletion rollout
+                          is not finished and the policy is in the DELETING state.
+                          If you set this field when the policy is not in the DELETING
+                          state, an error occurs.'
+                        type: string
+                    type: object
+                required:
+                - rolloutInput
+                type: object
+            required:
+            - extensionPolicies
+            - projectRef
+            - rolloutOperation
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/global/vmExtensionPolicies/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  creationTimestamp:
+                    description: Output only. [Output Only] Creation timestamp inRFC3339
+                      text format.
+                    type: string
+                  id:
+                    description: Output only. [Output Only] The unique identifier
+                      for the resource. This identifier is defined by the server.
+                    type: string
+                  kind:
+                    description: Output only. [Output Only] Type of the resource.
+                      Alwayscompute#globalVmExtensionPolicy for globalVmExtensionPolicies.
+                    type: string
+                  scopedResourceStatus:
+                    description: Output only. [Output Only] The scoped resource status.
+                      It's only for tracking the purging status of the policy.
+                    type: string
+                  selfLink:
+                    description: Output only. [Output Only] Server-defined fully-qualified
+                      URL for this resource.
+                    type: string
+                  selfLinkWithId:
+                    description: Output only. [Output Only] Server-defined URL for
+                      this resource's resource id.
+                    type: string
+                  updateTimestamp:
+                    description: Output only. [Output Only] Update timestamp inRFC3339
+                      text format.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

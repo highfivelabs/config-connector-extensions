@@ -22,7 +22,8 @@ mockgcp patches 0001 to 0034 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
 number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
-`taskfiles/README.md`; use `task`, not `make`). Every built kind passes
+factory's `taskfiles/README.md` for the shared `go:*` tasks; use `task`,
+not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
 which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,

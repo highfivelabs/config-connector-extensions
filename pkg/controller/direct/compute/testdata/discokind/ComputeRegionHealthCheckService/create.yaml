@@ -1,0 +1,11 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionHealthCheckService
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  healthStatusAggregationPolicy: AND
+  healthChecks: ["projects/${PROJECT}/regions/us-central1/healthChecks/${NAME}-hc"]
+  description: made by a config-connector-extensions test

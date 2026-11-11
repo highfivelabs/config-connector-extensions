@@ -56,9 +56,17 @@ type Kind struct {
 	// CreateLRO, UpdateLRO and DeleteLRO say which methods answer a
 	// long-running operation rather than the resource.
 	CreateLRO, UpdateLRO, DeleteLRO bool
-	// Updatable is whether the API has a patch method; without one every
-	// field is immutable.
+	// Updatable is whether the API has a patch (or, with UpdatePUT, an
+	// update) method; without one every field is immutable.
 	Updatable bool
+	// InsertStyle is Compute Engine's shape: create (insert) takes the ID as
+	// the body's name, not a query parameter; a patch is a merge of the
+	// fields sent (no update mask) with the resource's fingerprint; and
+	// operations are compute operations, polled at their selfLink.
+	InsertStyle bool
+	// UpdatePUT: the API changes a resource with update (PUT, the whole
+	// resource) rather than patch.
+	UpdatePUT bool
 	// Output are the API's read-only top-level fields that go to
 	// status.observedState (name goes to status.externalRef instead).
 	Output []string

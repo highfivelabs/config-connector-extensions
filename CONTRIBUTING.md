@@ -27,7 +27,9 @@ maintainer, in a project set aside for it (`docs/live-runs.md`).
 
 Install [Task](https://taskfile.dev) (`brew install go-task`, or
 `go install github.com/go-task/task/v3/cmd/task@latest`); `task` lists the
-tasks. The shared ones are in `taskfiles/` (`taskfiles/README.md`).
+tasks. The shared ones (`go:*`) are factory's `taskfiles/go.yml`, included
+remotely at a tag and checksum; Task 3.54 or later fetches it with your git
+credentials on the first run (factory `taskfiles/README.md`).
 
 ```sh
 task upstream      # once: Config Connector at the pin (~650 MB) plus patches/

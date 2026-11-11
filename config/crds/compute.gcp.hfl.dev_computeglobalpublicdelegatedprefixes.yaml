@@ -1,0 +1,295 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computeglobalpublicdelegatedprefixes.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeGlobalPublicDelegatedPrefix
+    listKind: ComputeGlobalPublicDelegatedPrefixList
+    plural: computeglobalpublicdelegatedprefixes
+    shortNames:
+    - hflcomputeglobalpublicdelegatedprefix
+    - hflcomputeglobalpublicdelegatedprefixs
+    singular: computeglobalpublicdelegatedprefix
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeGlobalPublicDelegatedPrefix is a compute.v1 resource (https://compute.googleapis.com/compute/v1/{parent}/global/publicDelegatedPrefixes/{id}),
+          from its Discovery document compute.v1 (hack/discokind). Terraform's google_compute_public_delegated_prefix.
+          A global part of a BYOIP range, delegated for use.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              allocatablePrefixLength:
+                description: The allocatable prefix length supported by this public
+                  delegated prefix. This field is optional and cannot be set for prefixes
+                  in DELEGATION mode. It cannot be set for IPv4 prefixes either, and
+                  it always defaults to 32.
+                format: int32
+                type: integer
+              description:
+                description: An optional description of this resource. Provide this
+                  property when you create the resource.
+                type: string
+              ipCidrRange:
+                description: The IP address range, in CIDR format, represented by
+                  this public delegated prefix.
+                type: string
+              isLiveMigration:
+                description: If true, the prefix will be live migrated.
+                type: boolean
+              mode:
+                description: |-
+                  The public delegated prefix mode for IPv6 only.
+
+                  One of DELEGATION, EXTERNAL_IPV6_FORWARDING_RULE_CREATION, EXTERNAL_IPV6_SUBNETWORK_CREATION, INTERNAL_IPV6_SUBNETWORK_CREATION.
+                type: string
+              parentPrefix:
+                description: The URL of parent prefix. Either PublicAdvertisedPrefix
+                  or PublicDelegatedPrefix.
+                type: string
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              publicDelegatedSubPrefixs:
+                description: The list of sub public delegated prefixes that exist
+                  for this public delegated prefix.
+                items:
+                  properties:
+                    allocatablePrefixLength:
+                      description: The allocatable prefix length supported by this
+                        PublicDelegatedSubPrefix.
+                      format: int32
+                      type: integer
+                    delegateeProject:
+                      description: Name of the project scoping this PublicDelegatedSubPrefix.
+                      type: string
+                    description:
+                      description: An optional description of this resource. Provide
+                        this property when you create the resource.
+                      type: string
+                    ipCidrRange:
+                      description: The IP address range, in CIDR format, represented
+                        by this sub public delegated prefix.
+                      type: string
+                    isAddress:
+                      description: Whether the sub prefix is delegated to create Address
+                        resources in the delegatee project.
+                      type: boolean
+                    mode:
+                      description: |-
+                        The PublicDelegatedSubPrefix mode for IPv6 only.
+
+                        One of DELEGATION, EXTERNAL_IPV6_FORWARDING_RULE_CREATION, EXTERNAL_IPV6_SUBNETWORK_CREATION, INTERNAL_IPV6_SUBNETWORK_CREATION.
+                      type: string
+                  type: object
+                type: array
+              purpose:
+                description: |-
+                  Immutable. The purpose of the public delegated prefix.
+                  This field can only be set for the top-level global public delegated
+                  prefix. It is an output-only field for the sub-delegates that inherit the
+                  value from the top-level global public delegated prefix. Once the value is
+                  set, it cannot be changed.
+                  The field cannot be set for regional public delegated prefixes.
+                  The supported values are:
+                  - APPLICATION_AND_PROXY_LOAD_BALANCERS: The global public
+                  delegated prefix can only be used by Global External Application and
+                  Proxy Load Balancers to allocate addresses for forwarding rules. This is
+                  the default value.
+                  - PASSTHROUGH_LOAD_BALANCER_AVAILABILITY_GROUP0: The
+                  global public delegated prefix can only be used by Global External
+                  Passthrough Network Load Balancers to allocate Availability Group 0
+                  addresses for forwarding rules.
+                  - PASSTHROUGH_LOAD_BALANCER_AVAILABILITY_GROUP1: The
+                  global public delegated prefix can only be used by Global External
+                  Passthrough Network Load Balancers to allocate Availability Group 1
+                  addresses for forwarding rules.
+
+                  One of APPLICATION_AND_PROXY_LOAD_BALANCERS, PASSTHROUGH_LOAD_BALANCER_AVAILABILITY_GROUP0, PASSTHROUGH_LOAD_BALANCER_AVAILABILITY_GROUP1.
+                type: string
+                x-kubernetes-validations:
+                - message: purpose is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            required:
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/global/publicDelegatedPrefixes/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  byoipApiVersion:
+                    description: Output only. [Output Only] The version of BYOIP API.
+                    type: string
+                  creationTimestamp:
+                    description: Output only. [Output Only] Creation timestamp inRFC3339
+                      text format.
+                    type: string
+                  enableEnhancedIpv4Allocation:
+                    description: Output only. [Output Only] Whether this PDP supports
+                      enhanced IPv4 allocations. Applicable for IPv4 PDPs only.
+                    type: boolean
+                  fingerprint:
+                    description: Fingerprint of this resource. A hash of the contents
+                      stored in this object. This field is used in optimistic locking.
+                      This field will be ignored when inserting a new PublicDelegatedPrefix.
+                      An up-to-date fingerprint must be provided in order to update
+                      thePublicDelegatedPrefix, otherwise the request will fail with
+                      error 412 conditionNotMet. To see the latest fingerprint, make
+                      a get() request to retrieve a PublicDelegatedPrefix.
+                    type: string
+                  id:
+                    description: Output only. [Output Only] The unique identifier
+                      for the resource type. The server generates this identifier.
+                    type: string
+                  ipv6AccessType:
+                    description: Output only. [Output Only] The internet access type
+                      for IPv6 Public Delegated Prefixes. Inherited from parent prefix.
+                    type: string
+                  kind:
+                    description: Output only. [Output Only] Type of the resource.
+                      Alwayscompute#publicDelegatedPrefix for public delegated prefixes.
+                    type: string
+                  region:
+                    description: Output only. [Output Only] URL of the region where
+                      the public delegated prefix resides. This field applies only
+                      to the region resource. You must specify this field as part
+                      of the HTTP request URL. It is not settable as a field in the
+                      request body.
+                    type: string
+                  selfLink:
+                    description: Output only. [Output Only] Server-defined URL for
+                      the resource.
+                    type: string
+                  status:
+                    description: '[Output Only] The status of the public delegated
+                      prefix, which can be one of following values: - `INITIALIZING`
+                      The public delegated prefix is being initialized and addresses
+                      cannot be created yet. - `READY_TO_ANNOUNCE` The public delegated
+                      prefix is a live migration prefix and is active. - `ANNOUNCED`
+                      The public delegated prefix is announced and ready to use. -
+                      `DELETING` The public delegated prefix is being deprovsioned.
+                      - `ACTIVE` The public delegated prefix is ready to use.'
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

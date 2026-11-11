@@ -4,6 +4,10 @@ kind: Kustomization
 resources:
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
+- compute.gcp.hfl.dev_computecrosssitenetworks.yaml
+- compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
+- compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
+- compute.gcp.hfl.dev_computeinterconnectgroups.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicypacketmirroringrules.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
@@ -11,13 +15,24 @@ resources:
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyrules.yaml
 - compute.gcp.hfl.dev_computeprojectdefaultnetworktiers.yaml
 - compute.gcp.hfl.dev_computeprojectmetadataitems.yaml
+- compute.gcp.hfl.dev_computepublicadvertisedprefixes.yaml
+- compute.gcp.hfl.dev_computepublicdelegatedprefixes.yaml
+- compute.gcp.hfl.dev_computeregionbackendbuckets.yaml
+- compute.gcp.hfl.dev_computeregioncompositehealthchecks.yaml
+- compute.gcp.hfl.dev_computeregionhealthaggregationpolicies.yaml
+- compute.gcp.hfl.dev_computeregionhealthcheckservices.yaml
+- compute.gcp.hfl.dev_computeregionhealthsources.yaml
 - compute.gcp.hfl.dev_computeregionnetworkendpoints.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicies.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
+- compute.gcp.hfl.dev_computeregionnotificationendpoints.yaml
+- compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
 - compute.gcp.hfl.dev_computevpntunnels.yaml
+- compute.gcp.hfl.dev_computewiregroups.yaml
+- compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicies.yaml
 - gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
 - gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
