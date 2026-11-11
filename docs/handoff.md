@@ -8,16 +8,17 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
 `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
-`DNSResponsePolicy`. Read
+`DNSResponsePolicy`,
+`ComputeNetworkFirewallPolicyPacketMirroringRule` and `ComputeVPNTunnel`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the DNS response policy PR (decision 13's `DNSResponsePolicy`):
-thirty-six kinds (`README.md`, design.md's intro; the latest,
-`DNSResponsePolicy`, decision 13),
-mockgcp patches 0001 to 0031 (`UPSTREAM.md` and `upstream.yaml`, which
+After the VPN tunnel PR (foundation item 10's `ComputeVPNTunnel`, the
+first field gap under decision 19): thirty-eight kinds (`docs/kinds/`,
+`task kinds`),
+mockgcp patches 0001 to 0034 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
 number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
@@ -59,13 +60,13 @@ mockgcp patch, test code or `controllers.go` edit; several kinds per pull
 request. `docs/throughput.md` says why and what it reaches (178 of the
 494 whole-resource gaps), `docs/testing.md` how such a kind is tested.
 Run one kind live with `LIVE_RUN=TestLoggingSavedQuery task test-live
-PROJECT=hfl-dev-514205 KINDS=logging`.
+PROJECT=our-chassis-514316-r0 KINDS=logging`.
 
 **Generating a kind.** `hack/scaffold-kind.sh` runs Config Connector's
 `controllerbuilder` (types, mapper, controller) on an offload VM and brings
 the files back as the run's artifacts (`gcloud storage cp -r
-gs://hfl-dev-514205-offload/runs/<run>/offload-artifacts/scaffold <dir>
---project hfl-dev-514205`); its header says how. It was first used for
+gs://our-chassis-514316-r0-offload/runs/<run>/offload-artifacts/scaffold <dir>
+--project our-chassis-514316-r0`); its header says how. It was first used for
 `ServiceIdentity`. What it taught: a proto without `field_behavior` puts
 output fields in the spec, so field behaviour goes in
 `hack/scaffold/<service>/overlay.proto` (from Magic Modules' product YAML
@@ -138,8 +139,15 @@ and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
 identity, reference and fuzzer but a Terraform-only controller, and
 mockgcp serves no rules: write the controller after the policy's and add
 a mockgcp patch; the sweeper must delete a policy's rules before it),
-then 16 (Security Command Center, three parents), then packet
-mirroring rules and on down `docs/coverage/foundation.md`, with the
+then 16 (Security Command Center, three parents). Packet mirroring
+rules: the global network policy's is built
+(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0032; live
+passes but for the patch, design.md section 7 item 37: rerun
+`task test-live PROJECT=our-chassis-514316-r0 KINDS=compute` and read the
+patch subtest's timeout message first); the
+hierarchical policy's has rule calls in the beta API only (live pending
+the test folder) and the regional policy's has none in any API version.
+Then on down `docs/coverage/foundation.md`, with the
 field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
 (design.md 6.5, patch 0029), live pending billing account access.
 
@@ -201,6 +209,50 @@ writing a live test: `gcloud projects get-iam-policy` and `gcloud
 services list` (both read-only) showed no DNS API or role, so the test
 and sweeper sit behind `E2E_DNS_ADMIN`.
 
+What `ComputeNetworkFirewallPolicyPacketMirroringRule` taught: read the
+Discovery documents for which calls exist where
+(`.cache/coverage/discovery/compute.{v1,beta,alpha}.json`) before taking
+a queue item's list of kinds as buildable. When the pinned
+`google.golang.org/api` client lacks a call and the generated
+`cloud.google.com/go` client cannot send an empty list, a plain JSON
+request through `htransport.NewClient(ctx, opts...)` (the same transport
+and credentials, so mockgcp still answers it) is smaller than moving a
+dependency. A kind with no API resource of its own needs a line in
+`hack/coverage/overrides.yaml` (`subresources`), or the coverage report
+counts it outside the denominator.
+
+Field gaps (the builder's 2026-11-10 reversal of decision 5, recorded
+as design.md decision 19 in PRs #49 and #51) have begun. Take them in
+`docs/coverage/foundation.md`'s order (items 9 to 19 and 21 to 27 that
+say "field"), with the attribute lists in `docs/coverage/attributes.csv`.
+Before building one, read design.md 6.6 ("Field gaps on large
+Terraform-based kinds"), which the first field-gap PR proposed as the
+builder asked, and check how the API changes each missing field. A field
+the API takes only at create gets a create-only whole-object kind
+(insert, get, labels, delete; the rest immutable by CEL), as
+`ComputeVPNTunnel` (item 10's `cipherSuite`) did. A field the API
+changes by mask, where Config Connector's update never sends it, gets a
+field kind beside Config Connector's object (not built yet; its name is
+design.md section 10 question 5, so it waits on the builder). Otherwise
+a whole-object kind, as decisions 11, 13 and 14. Item 10's other fields
+(`ComputeInterconnectAttachment`'s IPv6 candidates and `l2Forwarding`,
+`ComputeInterconnect`'s `applicationAwareInterconnect`) need a Dedicated
+Interconnect to prove live, which `hfl-dev-514205` has not; item 11
+(`ComputeServiceAttachment`: DCL-based upstream, with direct types, a
+mapper and a mockgcp service at the pin) is the next that can run live.
+Upstream's `KMSCryptoKey` supports a direct controller
+(`static_config.go`); read it before item 18.
+
+What `ComputeVPNTunnel` taught: upstream's direct types and mapper for a
+Terraform-based kind (here from PR #10151) copy cleanly into a
+create-only kind; mockgcp had no VPN tunnel service (patch 0033). A
+Config Connector reference whose `Normalize` wants its registered kind is
+easier resolved with `configConnectorSelfLink` (`router_controller.go`):
+`external` as given, or the named object's `status.selfLink`.
+`ComputeRouterRef.Resolve` (v1alpha1) finds our router or Config
+Connector's for any kind that names a router. Patch numbers: 0029 to
+0032 went to #49, #52, #53 and #55, merged first, so this PR's is 0033.
+
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
 regional rule; a kind that references a Config Connector kind our
@@ -228,7 +280,7 @@ generated ones it shadows), rename the mapper functions when the package
 already has kinds, and check that the controller writes status through
 `op.UpdateStatus`: upstream's deny policy set `externalRef` on a typed
 copy only. A kind whose live test needs a role the live-test account
-cannot get in `hfl-dev-514205` skips live behind an `E2E_...` switch,
+cannot get in `our-chassis-514316-r0` skips live behind an `E2E_...` switch,
 and so does its sweeper section, since a failed list fails the sweep.
 `hack/live/sweep.sh` defined `by_run` after the security profile loop
 that calls it, so profiles were never swept; fixed in this PR.
@@ -302,7 +354,7 @@ Still true from before:
   organization policies.
 - The default network tier and default service accounts change a whole
   project: live, they run only in a test project under the test folder,
-  never in `hfl-dev-514205` (disabling or deleting its compute default
+  never in `our-chassis-514316-r0` (disabling or deleting its compute default
   service account would break the offload VMs and `RunService`).
 - **Live runs for the other 27 `pkg/iampolicy` rows** (design.md section
   7, item 26).
@@ -318,9 +370,9 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 
 ```sh
 ../offload/offload run --hours 3 --prep 'task upstream' --step-skippable 'task check' --step 'task operator-e2e'
-../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 \
+../offload/offload run --sa cce-live-tests@our-chassis-514316-r0.iam.gserviceaccount.com --hours 3 \
   --prep 'task upstream' --step-skippable 'task check' \
-  --step 'task test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
+  --step 'task test-live PROJECT=our-chassis-514316-r0 KINDS="compute iam run"'
 ```
 
 - **Put `task upstream` in a `--prep`.** `third_party` is gitignored and
@@ -331,7 +383,7 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 - **After a preempted live run, sweep it.** The live run's own sweep only
   takes leftovers older than 2h. Sweep the interrupted run by ID before
   the next run:
-  `--step 'task live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
+  `--step 'task live-sweep PROJECT=our-chassis-514316-r0 RUN=<run ID>'`.
 - **Start offload with the tool's background mode**, never with a shell
   `&`: a shell-backgrounded offload dies with the shell and orphans its
   VM. If that happens, `../offload/offload ls`, then
