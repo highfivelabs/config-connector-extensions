@@ -22,6 +22,10 @@ includes:
 
 env:
   GOTOOLCHAIN: '{{.GOTOOLCHAIN | default "local"}}'
+  # The pinned command-line tools (hack/ci/tools.sh, task ci:tools) come
+  # first on PATH, so every task runs the versions CI runs.
+  PATH:
+    sh: echo "$(hack/ci/tools.sh --dir):$PATH"
   # mockgcp listens on 127.0.0.2 by default, which macOS lacks
   # (patches/k8s-config-connector/0002-*).
   MOCKGCP_LISTEN_ADDRESS: '{{.MOCKGCP_LISTEN_ADDRESS | default "127.0.0.1:0"}}'
@@ -54,8 +58,9 @@ tasks:
         vars: {NAME: setup-envtest, PKG: '{{.SETUP_ENVTEST}}'}
 
   tools:
-    desc: Config Connector at the pin plus patches/, and the tools the other tasks need.
+    desc: The pinned command-line tools (ci:tools), Config Connector at the pin plus patches/, and the tools the other tasks need.
     cmds:
+      - task: ci:tools
       - task: upstream
       - task: setup-envtest
 
@@ -87,6 +92,25 @@ tasks:
     cmds:
       - task: upstream-check
       - hack/generate.sh
+
+  "operator-e2e:debug":
+    desc: The kind cluster's pods and recent events, after a failed operator-e2e (ci.yml and nightly.yml run it on failure).
+    cmds:
+      # Diagnostics only: the job has failed already; a missing cluster
+      # must not hide that failure behind this step's own.
+      - kubectl get pods -A -o wide || true
+      - kubectl get events -A --sort-by=.lastTimestamp | tail -n 100 || true
+
+  release:
+    desc: 'release.yml''s images job: ko-build the images (production builds), push them to KO_DOCKER_REPO tagged TAG, write dist/install.yaml. task release TAG=v0.1.0 (after task upstream; needs registry write access).'
+    requires:
+      vars: [TAG]
+    env:
+      TAG: '{{.TAG}}'
+      REGISTRY: '{{.REGISTRY | default "us-central1-docker.pkg.dev"}}'
+      KO_DOCKER_REPO: '{{.KO_DOCKER_REPO | default "us-central1-docker.pkg.dev/hfl-dev-514205/hfl-oci/config-connector-extensions"}}'
+    cmds:
+      - hack/release.sh
 
   coverage:
     desc: Regenerate the README's Coverage section and docs/coverage/ from the pinned inputs (hack/coverage).
@@ -244,6 +268,25 @@ tasks:
       CI_BASE: '{{.CI_BASE}}'
     cmds:
       - hack/ci/gate.sh {{.SHA | default "HEAD"}}
+
+  "ci:tools":
+    desc: task, kind, ko, crane, kubectl, helm and kustomize at CI's pins into bin/ci (hack/ci/tools.sh; CI_TOOLS_DIR), first on every task's PATH.
+    cmds:
+      - hack/ci/tools.sh
+
+  # ci.yml's check job: what the plan (hack/ci/select.sh plan) selects.
+  "ci:check":
+    desc: 'ci.yml''s check job for a plan: task ci:check MODE=full|groups|none [GROUPS="..."].'
+    requires:
+      vars: [MODE]
+    cmds:
+      - |
+        case "{{.MODE}}" in
+          full) "{{.TASK_EXE}}" check ;;
+          groups) hack/ci/select.sh run {{.GROUPS}} ;;
+          none) echo "ci:check: docs only, nothing to run" ;;
+          *) echo "ci:check: MODE is full, groups or none, not '{{.MODE}}'"; exit 2 ;;
+        esac
 
   hooks:
     desc: Install the pre-push hook (hack/hooks/pre-push, which runs task ci) with core.hooksPath.
