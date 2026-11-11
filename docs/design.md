@@ -1190,13 +1190,16 @@ Notes on what was built from this table:
   Compute Engine REST client with emptied lists sent as `[]`, and
   `removeRule`; the patch waits on a global operation), sharing its
   missing-rule check (renamed `firewallPolicyRuleMissing`) and its
-  comparison, to which the network contexts are added. Not here yet, as
+  comparison, to which the network contexts are added. Live showed that
+  `patchRule` ignores a network context sent as `""` (it kept
+  `INTERNET`); one is cleared by sending `UNSPECIFIED`, and `""` and
+  `UNSPECIFIED` compare as unset. Not here yet, as
   in the regional kind: `securityProfileGroup`, `tlsInspect` and
   `targetResources`. Generated: the CRD and deepcopy only
   (controller-gen); `hack/scaffold-kind.sh` does not fit a rule inside a
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
-  unpatched (`docs/fake-cloud.md`). Live: see `docs/live-runs.md`.
+  unpatched (`docs/fake-cloud.md`). Live: passes (`docs/live-runs.md`).
 - `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1alpha1`, decision
   15, foundation item 17: a billing account's log sink, Terraform's
   `google_logging_billing_account_sink`). Upstream, rechecked 2026-11-10
@@ -1657,6 +1660,23 @@ To raise confidence in `ArtifactRegistryRepository`:
     and patches (section 3), `task coverage` and `task upstream-pr`, and
     the retirement path (section 3.4).
 
+20. **Immutability is enforced by CEL rules in the CRD, not a webhook**
+    (the builder, 2026-11-10, G4): `self == oldSelf` transition rules on
+    the immutable fields, as the kinds already do; no admission webhook
+    is added for it.
+21. **A remote `ArtifactRegistryRepository` whose upstream URI changes is
+    deleted and made again** (the builder, 2026-11-10, G3: confirmed).
+22. **`status.appliedDatabaseRoles` stays until upstream PR #7148** (the
+    builder, 2026-11-10, G5: confirmed; section 10 item 2's
+    recommendation): the field and the comparison with what was applied
+    are kept until `SQLUser` switches to the PR (section 2), then follow
+    the PR.
+23. **Organization custom roles are checked at the organization level**
+    (the builder, 2026-11-10, G8: confirmed): Config Connector's
+    `IAMCustomRole` with the `cnrm.cloud.google.com/organization-id`
+    annotation covers them (foundation item 3), proven against an
+    organization once the test folder exists.
+
 24. **`IAMBinding` is `v1beta1`** (the builder, 2026-11-10, K12:
     "Promote IAMBinding to v1beta1 first, then switch by default in
     0.4.0", so that the catalog's charts, which refuse alpha kinds, can
@@ -1910,7 +1930,8 @@ moves to section 8.
 1. Answered 2026-11-09: the kind is `IAMBinding`, first built as
    `IAMRoleBinding` (decision 12).
 
-2. **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
+2. Answered 2026-11-10 (decision 22): keep the field until PR #7148.
+   The question was: **`status.appliedDatabaseRoles` after the live run** (2026-11-09).
    Decision 3 kept the field "until a run against real Cloud SQL shows
    whether `users.get` returns roles". It does (`docs/live-runs.md`).
    Upstream PR #7148 compares the spec with the roles `users.get` returns.

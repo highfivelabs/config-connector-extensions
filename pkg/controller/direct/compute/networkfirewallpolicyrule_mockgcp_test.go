@@ -270,8 +270,17 @@ func TestComputeNetworkFirewallPolicyRule(t *testing.T) {
 			o.Spec.Match.SrcNetworkContext = nil
 		})
 		settle(t, health, func(got *pb.FirewallPolicyRule) bool {
-			return got.GetMatch().GetSrcNetworkContext() == ""
+			// Cleared with UNSPECIFIED; the API may answer either.
+			c := got.GetMatch().GetSrcNetworkContext()
+			return c == "" || c == "UNSPECIFIED"
 		}, 1000)
+		before = writes()
+		resync(t, health)
+		time.Sleep(3 * time.Second)
+		env.WaitReady(ruleGVK, namespace, health)
+		if n := writes() - before; n != 0 {
+			t.Errorf("a resync after clearing wrote %d times", n)
+		}
 	})
 
 	t.Run("a rule changed out of band is put back", func(t *testing.T) {
