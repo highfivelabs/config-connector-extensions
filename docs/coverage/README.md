@@ -79,7 +79,7 @@ Services do not matter in the same way, and the total is dominated by the
 biggest schemas (here `aiplatform`, `dlp`, `compute`; in the AWS repository
 QuickSight alone is 60% of the attributes). So every service has a **category**
 and a **tier**, the README shows a bar for each next to the total, and its table
-is sorted by tier. The builder's rule: everything up through a managed
+is sorted by tier. The rule: everything up through a managed
 Kubernetes cluster is table stakes for a platform team establishing a target;
 security teams need what sits next to it; the rest is application primitives.
 
