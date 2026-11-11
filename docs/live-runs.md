@@ -38,29 +38,34 @@ Requests are recorded in both modes, so checks on what the controller sent
 
 ```sh
 task test-mock                                  # the default; what task check runs
-task test-live PROJECT=hfl-dev-514205           # every built kind, mock then live
-task test-live PROJECT=hfl-dev-514205 KINDS=sql # one kind (a package under pkg/controller/direct)
-task live-sweep PROJECT=hfl-dev-514205          # delete leftovers older than 2h
-task live-sweep PROJECT=hfl-dev-514205 RUN=cce-11091530-a3f2   # everything of one run
-task live-list PROJECT=hfl-dev-514205           # list every live-test resource
+task test-live PROJECT=$GCP_PROJECT           # every built kind, mock then live
+task test-live PROJECT=$GCP_PROJECT KINDS=sql # one kind (a package under pkg/controller/direct)
+task live-sweep PROJECT=$GCP_PROJECT          # delete leftovers older than 2h
+task live-sweep PROJECT=$GCP_PROJECT RUN=cce-11091530-a3f2   # everything of one run
+task live-list PROJECT=$GCP_PROJECT           # list every live-test resource
 ```
 
-`PROJECT` defaults to `HFL_GCP_TEST_PROJECT`, then `hfl-dev-514205`.
+`PROJECT` defaults to `HFL_GCP_TEST_PROJECT`, then `GCP_PROJECT`, the
+live-test project; neither has a default in the tree. Set them in the
+environment or in a git-ignored `.env` (`.env.example` names every
+variable; `task` loads `.env`). On an offload VM they reach the run only
+through `env NAME=...` on the command line, as below.
 The persistent test estate (`factory/estate/gcp/README.md`) writes that
 variable, with the folder, the scratch project and the Log Router key
 (`E2E_TEST_FOLDER`, `E2E_LOGGING_FOLDER`, `E2E_LOGGING_KMS_KEY`,
 `E2E_TEST_FOLDER_PROJECT`), to one env file per generation;
-`hack/live/projects.sh` allows its projects (`hfl-test-g<N>` and
-`hfl-test-g<N>-scratch`). Until the run scripts impersonate the
-generation's `cce-live-tests@hfl-test-g<N>` account, runs stay in
-`hfl-dev-514205`: load the env file only after that lands.
+`hack/live/projects.sh` allows its projects when
+`GCP_LIVE_PROJECT_PATTERN` matches them (each generation's project and
+its scratch project). Until the run scripts impersonate the
+generation's own live-test account, runs stay in
+`$GCP_PROJECT`: load the env file only after that lands.
 
 Live runs happen on a short-lived Spot VM that runs as a dedicated
 service account, never on a laptop and never with a downloaded key:
 
 ```sh
-../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 -- \
-  bash -c 'task upstream && task test-live PROJECT=hfl-dev-514205'
+../offload/offload run --sa "$GCP_LIVE_SA" --hours 3 -- \
+  env GCP_PROJECT="$GCP_PROJECT" bash -c 'task upstream && task test-live'
 ```
 
 `hack/live/run.sh` (what `task test-live` runs):
@@ -87,7 +92,7 @@ refuses any project but the ones listed.
 
 ### The service account
 
-`cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com`, made 2026-11-09:
+`$GCP_LIVE_SA`, made 2026-11-09:
 
 | Role | On | For |
 | --- | --- | --- |
@@ -96,7 +101,7 @@ refuses any project but the ones listed.
 | `roles/cloudsql.admin` | project | `SQLUser`, `SQLAdminBackup`, the run's instance |
 | `roles/compute.instanceAdmin.v1` | project | the offload VM (deletes itself) |
 | `roles/logging.logWriter` | project | the offload VM |
-| `roles/storage.objectAdmin` | bucket `gs://hfl-dev-514205-offload` | the offload VM (checkout in, log out) |
+| `roles/storage.objectAdmin` | bucket `$OFFLOAD_BUCKET` | the offload VM (checkout in, log out) |
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
@@ -130,7 +135,7 @@ runs before then.
    resources included.
 2. The sweeper knows its resource type (`hack/live/sweep.sh`), and the
    service account has the role it needs.
-3. `task test-live PROJECT=hfl-dev-514205 KINDS=<package>` on an offload VM.
+3. `task test-live PROJECT=$GCP_PROJECT KINDS=<package>` on an offload VM.
 4. A row in the kind's `docs/kinds` file. A difference between mock and live is fixed where
    it belongs: in our controller (with a test), or in mockgcp (a patch in
    `patches/k8s-config-connector/`), or written down in `docs/fake-cloud.md`
@@ -170,7 +175,7 @@ on the same VM, minutes apart.
 | 2026-11-09 | pending | ComputeRegionNetworkFirewallPolicy | PASS | pending, needs `roles/compute.securityAdmin` | not run | none |
 | 2026-11-09 | pending | LoggingSettings | PASS | pending, needs a test folder with `roles/logging.admin` and a KMS key its Log Router can use | not run | none |
 | 2026-11-09 | `756c69f` | StorageBucketObject | PASS | PASS | none: media and multipart uploads, a new generation for new content, content from a ConfigMap and a Secret, delete and abandon all match patch 0013 | 1 bucket (US) with 4 small objects (deleted with the bucket) |
-| 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/hfl-dev-514205'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
+| 2026-11-09 | `117f4ee` | ComputeProjectMetadataItem | PASS | FAIL | `projects.setCommonInstanceMetadata` needs `iam.serviceAccounts.actAs` on the project ("Required 'iam.serviceAccounts.actAs' permission for 'projects/$GCP_PROJECT'"); the service account has actAs only on the compute default service account. mockgcp checks no permissions. Pending `roles/iam.serviceAccountUser` on the project | none (the first write was refused; the sweep matched 0, `make live-list` empty) |
 | 2026-11-09 | `2b9fc73` | ComputeRegionNetworkEndpoint | PASS | PASS | none | 1 network, 1 regional internet NEG with 3 endpoints (deleted) |
 | 2026-11-09 | `2b9fc73` | ComputeRegionNetworkFirewallPolicy | PASS | PASS | none | 2 regional firewall policies (deleted) |
 | 2026-11-09 | `2b9fc73` | ComputeRouterRoutePolicy | PASS | FAIL | `routers.getRoutePolicy` answers a missing policy with 400 "Invalid value for field 'policy': ... The policy does not exist", not 404, so Find took it for an error and the policy was never made; mockgcp answered 404. Fixed in the controller and in patch 0012 | 1 network, 1 Cloud Router (deleted) |
@@ -213,9 +218,9 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | LoggingBillingAccountSink | PASS | pending, needs billing account access: a billing account on which `cce-live-tests` has `roles/logging.configWriter`, passed as `E2E_BILLING_ACCOUNT=billingAccounts/{id}` (design.md decision 15) | not run (the test skips live without it) | none |
 | 2026-11-10 | `18addd0` | ComputeNetworkFirewallPolicyRule (and the rest of `compute`) | PASS | PASS | after one run (`cce-11100614-922f`) that found: `patchRule` does not clear `srcNetworkContext` when sent `""` (it kept INTERNET, and the reconciler patched on every resync); fixed by sending `UNSPECIFIED`, with `""` and `UNSPECIFIED` compared as unset. The missing-priority answer is the regional one, 400 "The firewall policy does not contain a rule at priority 1000." Run `cce-11100702-7115` | 2 global network firewall policies and their rules, and the compute package's other resources (deleted); `task live-list` empty |
-| 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `$GCP_PROJECT` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
-| 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `$GCP_PROJECT` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -245,7 +250,7 @@ Log Router service account (`kmsServiceAccountId` in the folder's
 settings) has `roles/cloudkms.cryptoKeyEncrypterDecrypter`. Settings
 cannot be deleted, so the test puts the folder's back as it found them;
 there is nothing for the sweeper. Then:
-`E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... task test-live PROJECT=hfl-dev-514205 KINDS=logging`.
+`E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... task test-live PROJECT=$GCP_PROJECT KINDS=logging`.
 
 `ServiceIdentity` (package `serviceusage`) also waits on the test folder,
 passed as `E2E_TEST_FOLDER=folders/<id>`; it never uses the
@@ -255,7 +260,7 @@ quota project (assumed from the Service Usage reference, not yet seen).
 A service identity cannot be deleted, so there is nothing for the
 sweeper; the run leaves the folder's service agent in place, as
 Terraform does. Then:
-`E2E_TEST_FOLDER=... task test-live PROJECT=hfl-dev-514205 KINDS=serviceusage`.
+`E2E_TEST_FOLDER=... task test-live PROJECT=$GCP_PROJECT KINDS=serviceusage`.
 
 `ComputeOrganizationSecurityPolicy`, its association and its rule
 (package `compute`) wait on the test folder: a live run skips them, and the
@@ -266,7 +271,7 @@ service account: deny policies need `iam.denypolicies.*`, which only
 `roles/iam.denyAdmin` has, and it is granted on an organization (the
 test estate). Until then a live `iam` run skips the test, and the
 sweeper leaves deny policies alone (listing them needs the same role).
-With it: `E2E_IAM_DENY_ADMIN=true task test-live PROJECT=hfl-dev-514205
+With it: `E2E_IAM_DENY_ADMIN=true task test-live PROJECT=$GCP_PROJECT
 KINDS=iam`. The test's policy is on the run's project and denies
 `iam.googleapis.com/roles.delete` (and then `roles.undelete`) to everyone
 but the run's own service account for a minute or two; folder and
@@ -279,7 +284,7 @@ access: the live-test service account needs `roles/logging.configWriter`
 grant; until then a live `logging` run skips the test and the sweeper
 leaves billing account sinks alone. With it:
 `E2E_BILLING_ACCOUNT=billingAccounts/<id> task test-live
-PROJECT=hfl-dev-514205 KINDS=logging` (the variable must reach the
+PROJECT=$GCP_PROJECT KINDS=logging` (the variable must reach the
 sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
 project that need not exist (assumed: the API does not check the
 destination at create); their names carry the run ID, and the sweeper
@@ -292,15 +297,15 @@ Command Center for the run's project: it must be active for the project
 assumed from the Security Command Center reference, not yet seen). Until
 then a live run skips the test and the sweeper leaves mute configs
 alone. With it: `E2E_SECURITY_CENTER=true task test-live
-PROJECT=hfl-dev-514205 KINDS=securitycenter`. A folder's and an
+PROJECT=$GCP_PROJECT KINDS=securitycenter`. A folder's and an
 organization's mute configs run on the fake only (the test folder).
 
 `DNSResponsePolicy` (package `dns`) waits on Cloud DNS in the project:
-`dns.googleapis.com` is not on in `hfl-dev-514205` and `cce-live-tests`
+`dns.googleapis.com` is not on in `$GCP_PROJECT` and `cce-live-tests`
 has no DNS role (checked 2026-11-10). Until both are, a live `dns` run
 skips the test and the sweeper leaves response policies alone (listing
 them needs the API and the role). With them:
-`E2E_DNS_ADMIN=true task test-live PROJECT=hfl-dev-514205 KINDS=dns`.
+`E2E_DNS_ADMIN=true task test-live PROJECT=$GCP_PROJECT KINDS=dns`.
 The test binds a policy to two networks of its own, unbinds one,
 deletes it (unbinding first) and abandons and then acquires another; the
 sweeper unbinds and deletes policies whose name carries a run ID.
@@ -308,18 +313,18 @@ sweeper unbinds and deletes policies whose name carries a run ID.
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as
 `E2E_TEST_FOLDER_PROJECT=<project ID>`; without it a live `compute` run
-skips the test, and the test refuses `hfl-dev-514205` itself. It needs
+skips the test, and the test refuses `$GCP_PROJECT` itself. It needs
 `compute.projects.setDefaultNetworkTier` on that project for the
 live-test service account (no role it has includes it; the Terraform
 spike in catalog `docs/terraform-leverage.md` got a 403 in
-`hfl-dev-514205`), and the test project in `hack/live/projects.sh`. The
+`$GCP_PROJECT`), and the test project in `hack/live/projects.sh`. The
 test puts the project's tier back as it found it; there is nothing for
 the sweeper.
 
 `ProjectDefaultServiceAccounts` (package `resourcemanager`) disables,
 deletes and deprivileges a project's default service accounts, so it too
 runs live only in a test project under the test folder
-(`E2E_TEST_FOLDER_PROJECT`), never in `hfl-dev-514205`, whose compute
+(`E2E_TEST_FOLDER_PROJECT`), never in `$GCP_PROJECT`, whose compute
 default account the offload VMs and `RunService` run as. The project's
 Compute Engine API must be on (so its default account exists). The
 live-test service account needs `iam.serviceAccounts.list`, `disable`,
@@ -329,10 +334,10 @@ test leaves the accounts enabled and present; it does not give back the
 roles `DEPRIVILEGE` removed (never reverted, as Terraform's), so the test
 project's default accounts end without their project roles. Nothing for
 the sweeper. Then:
-`E2E_TEST_FOLDER_PROJECT=... task test-live PROJECT=hfl-dev-514205 KINDS=resourcemanager`.
+`E2E_TEST_FOLDER_PROJECT=... task test-live PROJECT=$GCP_PROJECT KINDS=resourcemanager`.
 
 Every run ended with `task live-list` empty (run `cce-11091348-ef59`:
-"0 live-test resource(s) in hfl-dev-514205"). Cost of all the runs above,
+"0 live-test resource(s) in $GCP_PROJECT"). Cost of all the runs above,
 roughly: five db-f1-micro instances for 25 to 40 minutes each (well under
 $0.50 together), Spot VMs of 4 to 8 vCPUs for about 4 VM-hours (about
 $0.30), and Artifact Registry and Secret Manager use of a few cents.

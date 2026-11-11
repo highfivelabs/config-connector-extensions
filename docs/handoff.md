@@ -29,7 +29,7 @@ its association and its rule (organization and folder only), and `IAMDenyPolicy`
 which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
 and `LoggingBillingAccountSink`, which waits on billing account access
 (`E2E_BILLING_ACCOUNT`),
-and `DNSResponsePolicy`, which waits on Cloud DNS in `hfl-dev-514205`
+and `DNSResponsePolicy`, which waits on Cloud DNS in `$GCP_PROJECT`
 (`dns.googleapis.com` and `roles/dns.admin`; `E2E_DNS_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
@@ -59,13 +59,13 @@ mockgcp patch, test code or `controllers.go` edit; several kinds per pull
 request. `docs/throughput.md` says why and what it reaches (178 of the
 494 whole-resource gaps), `docs/testing.md` how such a kind is tested.
 Run one kind live with `LIVE_RUN=TestLoggingSavedQuery task test-live
-PROJECT=hfl-dev-514205 KINDS=logging`.
+PROJECT=$GCP_PROJECT KINDS=logging`.
 
 **Generating a kind.** `hack/scaffold-kind.sh` runs Config Connector's
 `controllerbuilder` (types, mapper, controller) on an offload VM and brings
 the files back as the run's artifacts (`gcloud storage cp -r
-gs://hfl-dev-514205-offload/runs/<run>/offload-artifacts/scaffold <dir>
---project hfl-dev-514205`); its header says how. It was first used for
+$OFFLOAD_BUCKET/runs/<run>/offload-artifacts/scaffold <dir>
+--project $OFFLOAD_PROJECT`); its header says how. It was first used for
 `ServiceIdentity`. What it taught: a proto without `field_behavior` puts
 output fields in the spec, so field behaviour goes in
 `hack/scaffold/<service>/overlay.proto` (from Magic Modules' product YAML
@@ -84,14 +84,14 @@ GCP agent: `LoggingBillingAccountSink` (15), Security Command Center (16)
 and field gaps (decision 19). Coordinate through `main`: merge `main`
 before each check run.
 
-The queue is `docs/coverage/foundation.md` (the builder's priority:
+The queue is `docs/coverage/foundation.md` (the priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
 folder), the default network tier and the default service accounts
 (built: `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`;
 live pending a test project under the test folder):
 organization address groups and security profiles, and so on down the
-report. The builder answered its four Decision items (design.md
+report. Its four Decision items are answered (design.md
 decisions 13 to 16, 2026-11-09): alpha-only foundation kinds get our own
 stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`,
 `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
@@ -99,14 +99,14 @@ stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation
 PR #13960 as a complete kind of ours (14); `LoggingBillingAccountSink`
 now, live pending billing-account access (15); Security Command Center
 kinds with organization, folder and project parents (16). Decision 5
-(field gaps wait for the release) was reversed by the builder on
+(field gaps wait for the release) was reversed on
 2026-11-10: decision 19, build foundation field gaps now in
 `docs/coverage/foundation.md`'s order and keep up with upstream
 mechanically. Whole-resource gaps first; any other field gap that needs the builder goes to section 10
 with a recommendation. Immutability is CEL in the CRD, never a webhook (decision 20). The
 builder has folderAdmin and another agent is making the `live-tests`
-folder and project `hfl-test-g1`; keep folder-level kinds "live:
-pending" until that agent reports. A deprecation path for our kinds is the builder's
+folder and the test estate's first generation project; keep folder-level kinds "live:
+pending" until that agent reports. A deprecation path for our kinds is a
 separate design; do not build it. Organization custom IAM roles (foundation item 3) are
 not a gap: Config Connector's `IAMCustomRole` takes the
 `cnrm.cloud.google.com/organization-id` annotation (the item says where). Org-level live tests wait for the test folder:
@@ -131,7 +131,7 @@ and `ComputeOrganizationSecurityPolicyAssociation` and
 and `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`, patch
 0030; live pending organization-level access) and `DNSResponsePolicy`
 (`dns.gcp.hfl.dev/v1beta1`) are built. `IAMBinding`
-moved to `v1beta1` (decision 24, the builder's K12, for the catalog's
+moved to `v1beta1` (decision 24, K12, for the catalog's
 0.4.0 charts); `v1alpha1` is no longer served (section 10, question 4)
 and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
 `DNSResponsePolicyRule` (upstream has its types,
@@ -172,7 +172,7 @@ needs Security Command Center active for the project
 ClusterRole (`config/operator/rbac.yaml`, both rules);
 `TestManagerRoleCoversEveryKind` fails without it.
 
-Field gaps (design.md decision 19, the builder's 2026-11-10 reversal of
+Field gaps (design.md decision 19, the 2026-11-10 reversal of
 decision 5) are not begun. Take them in `docs/coverage/foundation.md`'s
 order (items 9 to 19 and 21 to 27 that say "field"), with the attribute
 lists in `docs/coverage/attributes.csv`. The accepted pattern is a
@@ -181,7 +181,7 @@ It suits small kinds like the log bucket and the sink fields (item 12) or
 the DNS policy fields (item 15). It is costly for the big Terraform-based
 kinds (`ContainerCluster`, `ComputeVPNTunnel`, `KMSCryptoKey`). The first
 field-gap PR that hits one of those should propose another pattern in a
-short design note, as the builder asked, for example a field kind that
+short design note, as decided, for example a field kind that
 patches only its fields with an update mask beside Config Connector's
 object, and why. Decision 11 rejected that for `RunService`, because
 Terraform's whole-object update resets the fields.
@@ -228,7 +228,7 @@ generated ones it shadows), rename the mapper functions when the package
 already has kinds, and check that the controller writes status through
 `op.UpdateStatus`: upstream's deny policy set `externalRef` on a typed
 copy only. A kind whose live test needs a role the live-test account
-cannot get in `hfl-dev-514205` skips live behind an `E2E_...` switch,
+cannot get in `$GCP_PROJECT` skips live behind an `E2E_...` switch,
 and so does its sweeper section, since a failed list fails the sweep.
 `hack/live/sweep.sh` defined `by_run` after the security profile loop
 that calls it, so profiles were never swept; fixed in this PR.
@@ -302,7 +302,7 @@ Still true from before:
   organization policies.
 - The default network tier and default service accounts change a whole
   project: live, they run only in a test project under the test folder,
-  never in `hfl-dev-514205` (disabling or deleting its compute default
+  never in `$GCP_PROJECT` (disabling or deleting its compute default
   service account would break the offload VMs and `RunService`).
 - **Live runs for the other 27 `pkg/iampolicy` rows** (design.md section
   7, item 26).
@@ -318,9 +318,9 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 
 ```sh
 ../offload/offload run --hours 3 --prep 'task upstream' --step-skippable 'task check' --step 'task operator-e2e'
-../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 \
+../offload/offload run --sa "$GCP_LIVE_SA" --hours 3 \
   --prep 'task upstream' --step-skippable 'task check' \
-  --step 'task test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
+  --step "env GCP_PROJECT=$GCP_PROJECT task test-live KINDS='compute iam run'"
 ```
 
 - **Put `task upstream` in a `--prep`.** `third_party` is gitignored and
@@ -331,7 +331,7 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 - **After a preempted live run, sweep it.** The live run's own sweep only
   takes leftovers older than 2h. Sweep the interrupted run by ID before
   the next run:
-  `--step 'task live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
+  `--step "env GCP_PROJECT=$GCP_PROJECT task live-sweep RUN=<run ID>"`.
 - **Start offload with the tool's background mode**, never with a shell
   `&`: a shell-backgrounded offload dies with the shell and orphans its
   VM. If that happens, `../offload/offload ls`, then

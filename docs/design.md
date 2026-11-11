@@ -860,7 +860,7 @@ Notes on what was built from this table:
   Terraform family into our manager (decision 2.1). Patch 0023: mockgcp
   serves `setDefaultNetworkTier`. Live: pending, needs a test project
   under the test folder (`E2E_TEST_FOLDER_PROJECT`,
-  `mockenv.FolderProject`; never `hfl-dev-514205`, whose tier the offload
+  `mockenv.FolderProject`; never `$GCP_PROJECT`, whose tier the offload
   VMs rely on) and `compute.projects.setDefaultNetworkTier` there, which
   `cce-live-tests` lacks (the spike's 403).
 
@@ -893,7 +893,7 @@ Notes on what was built from this table:
   deepcopy; the group file is copied). Patch 0024: mockgcp lists and
   undeletes service accounts and takes unique IDs. Live: pending, needs a
   test project under the test folder (`E2E_TEST_FOLDER_PROJECT`,
-  `mockenv.FolderProject`), never `hfl-dev-514205`, whose compute default
+  `mockenv.FolderProject`), never `$GCP_PROJECT`, whose compute default
   account the offload VMs and `RunService` use.
 
 - `NetworkSecurityAddressGroup` (`networksecurity.gcp.hfl.dev/v1alpha1`,
@@ -1321,7 +1321,7 @@ Notes on what was built from this table:
   end-to-end test and its helpers (360) and the changes above. mockgcp
   serves response policies unpatched (`docs/fake-cloud.md`). Live:
   pending `roles/dns.admin` and `dns.googleapis.com` in
-  `hfl-dev-514205` (`docs/live-runs.md`).
+  `$GCP_PROJECT` (`docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1606,7 +1606,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     exports, notification configs, the two custom module kinds) are
     next, on the same parent.
 36. `DNSResponsePolicy`: a live run (needs `dns.googleapis.com` on in
-    `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`); whether
+    `$GCP_PROJECT` and `roles/dns.admin` for `cce-live-tests`); whether
     the API returns `networkUrl` with the project ID or its number (the
     comparison normalizes the form, not the project); the API's refusal
     to delete a bound policy, which mockgcp does not make; `gkeClusters`,
@@ -1629,14 +1629,14 @@ To raise confidence in `ArtifactRegistryRepository`:
    identity there. In namespaced mode there is one manager per
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
-   release, with the exception in section 6.1. **Reversed by the builder
-   on 2026-11-10: decision 19.** Never a fork. Exceptions
-   the builder has made: decisions 11 and 14 (and 13, 16 for whole
+   release, with the exception in section 6.1. **Reversed on
+   2026-11-10: decision 19.** Never a fork. Exceptions
+   made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
    request, owning the whole object, is now the accepted pattern when a
    foundation chart is blocked; a deprecation path for our kinds, for
-   when upstream ships theirs, will be designed separately (the builder's
-   sidebar, 2026-11-09) and is not built.
+   when upstream ships theirs, will be designed separately (decided
+   2026-11-09) and is not built.
 6. **The fake-cloud switch exists only in test builds.**
    - `--fake-cloud-url` and `pkg/fakecloud` are compiled into the manager
      only with `-tags fakecloud` (`cmd/manager/fakecloud.go`).
@@ -1646,25 +1646,24 @@ To raise confidence in `ArtifactRegistryRepository`:
      default build links `pkg/fakecloud` or shows the flag.
    - The kind test builds its images with `GOFLAGS=-tags=fakecloud`.
 7. **Licence**: Apache-2.0 (`LICENSE`, `NOTICE`).
-8. **`upstreamCredentials`: build it now** (the builder, 2026-11-09,
+8. **`upstreamCredentials`: build it now** (decided 2026-11-09,
    answering section 10's question 1 of 2026-11-08). The remote
    repository's `upstreamCredentials` and `disableUpstreamValidation` are
    written here from the API and Terraform's behaviour (section 6.4).
-9. **Rank 9: build it now** (the builder, 2026-11-09, answering section
+9. **Rank 9: build it now** (decided 2026-11-09, answering section
    10's question 2): `IAMWorkloadIdentityPoolNamespace` first, copying PR
    #14209's types, a direct controller written here on
    `google.golang.org/api/iam/v1`, and a minimal mockgcp patch; then
    managed identities (#14418) if they follow cleanly.
-10. **Then rank 8, and on down the list** (the builder, 2026-11-09:
-    "carry it on in rank order as far as you can go … Chew through as
-    many as you can do and try to get some confidence that we've built a
-    working operator"). This overrides decision 5's "wait for the release"
+10. **Then rank 8, and on down the list** (decided 2026-11-09): build in
+    rank order as far as possible, as many kinds as can be done, with the
+    aim of confidence in a working operator. This overrides decision 5's "wait for the release"
     for rank 8 (`RunService` `invokerIamDisabled` and GPUs), to be built
     the smallest workable way rather than as all of `RunService`; then the
     unranked candidates in section 6.3, top to bottom, skipping any that
     Config Connector already has.
 11. **Rank 8 as a narrow direct `RunService` that owns the whole service**
-    (2026-11-09; the builder's coordinator agreed). Two ways were weighed:
+    (2026-11-09; agreed through the coordinator). Two ways were weighed:
     - a field patch beside Config Connector's `RunService`, re-applying
       `invokerIamDisabled` (and the GPU fields) after Config Connector's
       updates. Rejected: Config Connector's `RunService` is Terraform-based,
@@ -1683,48 +1682,45 @@ To raise confidence in `ArtifactRegistryRepository`:
       kind (acquire by `resourceID`, delete the Config Connector object with
       `deletion-policy: abandon`); others stay on Config Connector's.
 12. **IAM kinds are named as Terraform's Google provider names them:
-    `IAMBinding` and `IAMMember`** (the builder, 2026-11-09, through the
-    coordinator: "can we use Terraform as an example of how this should be
-    named? I think it does rather well in the GCP providers"). Terraform's
+    `IAMBinding` and `IAMMember`** (decided 2026-11-09, through the
+    coordinator: Terraform's Google provider is the model for naming).
+    Terraform's
     `google_<resource>_iam_binding` is authoritative for one role and
     `google_<resource>_iam_member` is additive, and ours follow that.
     Each is one generic kind in `iam.gcp.hfl.dev/v1alpha1` with a resource
     reference (`IAMBinding` is `v1beta1` since decision 24). `IAMBinding` is one role, an optional condition and a list
     of members on one resource, authoritative for that role and
     condition. `IAMMember` is one member of one role on one resource,
-    additive. The two were first built as `IAMRoleBinding` (the builder
-    first said it "sounds like the right name") and `IAMRoleMember` (a
+    additive. The two were first built as `IAMRoleBinding` (first accepted
+    as the right name) and `IAMRoleMember` (a
     working name, section 10 question 3). They were renamed before
     anything used them, so nothing needed migrating.
     `IAMPolicyBinding`, the catalog's suggestion, is not used: Config
     Connector's open PR #14133 gives that name to IAM v3's principal
-    access boundary `PolicyBinding`. The builder prefers the
-    non-authoritative form ("I think I would prefer the non-authoritative,
-    but that's fine if authoritative is what you've built"), so Config
+    access boundary `PolicyBinding`. The non-authoritative form is
+    preferred, with authoritative accepted where it is already built, so Config
     Connector's `IAMPolicyMember` stays the default in everything written
     here, and rank 2 is built additive (section 6.5).
-13. **Alpha-only foundation kinds: ship our own stable kinds** (the
-    builder, 2026-11-09, answering `docs/coverage/foundation.md`: "Ship
-    our own stable kinds."). IAM deny policies, principal access
+13. **Alpha-only foundation kinds: ship our own stable kinds** (decided
+    2026-11-09, answering `docs/coverage/foundation.md`). IAM deny policies, principal access
     boundary, hierarchical security policy, network firewall rules and
     DNS response policies: copy upstream's alpha types and controllers
     into our group as stable kinds. When upstream promotes, users move
     over by acquiring the same resource (as with `RunService`, decision
     11).
-14. **Cloud Router: copy upstream's PR as our kind** (the builder,
-    2026-11-09: "Copy upstream's PR as our kind."). Copy PR #13960's
+14. **Cloud Router: copy upstream's PR as our kind** (decided
+    2026-11-09). Copy PR #13960's
     direct `ComputeRouter` into our group as a complete kind that owns
     the whole router (BGP peer fields, NAT, interfaces, MD5 keys). A
     workload that needs these fields moves its router to ours (acquire by
     name, abandon the official object); ours is retired when upstream
     releases.
 15. **Billing account log sink: build `LoggingBillingAccountSink` now**
-    (the builder, 2026-11-09). Its live test needs billing-account
+    (decided 2026-11-09). Its live test needs billing-account
     access the builder has not granted: mark it "live: pending, needs
     billing account access" and prove it on the fake.
 16. **Security Command Center at folder and project level: build ours
-    with all three parents** (the builder, 2026-11-09: "Build ours with
-    all three parents"), organization, folder and project, accepting that
+    with all three parents** (decided 2026-11-09): organization, folder and project, accepting that
     it duplicates what upstream is building and widens the kinds to
     retire later.
 17. **`ProjectDefaultServiceAccounts` acts on every reconcile and keeps
@@ -1740,9 +1736,8 @@ To raise confidence in `ArtifactRegistryRepository`:
     version 1; a version 1 read drops the conditions of conditional
     bindings, and writing that back would lose them, so ours keeps them.
 18. **A new kind is named as Config Connector names it, else as
-    Terraform's Google provider does** (the builder, 2026-11-09, on
-    naming: "can we use Terraform as an example of how this should be
-    named? I think it does rather well in the GCP providers"). A new kind
+    Terraform's Google provider does** (decided 2026-11-09: Terraform's
+    Google provider is the model for naming). A new kind
     takes Config Connector's name for the resource where Config Connector
     has one, otherwise the Terraform google provider's resource name in
     CamelCase, in our group. Parents (organization, folder, project) are
@@ -1756,10 +1751,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     kinds) and the folder and organization `ServiceIdentity`, which kept
     upstream's name with new parents.
 19. **Field gaps: build them now, and keep up with upstream mechanically**
-    (the builder, 2026-11-10, reversing decision 5: "don't wait on
-    release ... we need to ship and understand they are going to ship
-    behind us on several resources and new attributes. we just need
-    mechanized ways to keep up with upstream."). Field gaps that
+    (decided 2026-11-10, reversing decision 5: do not wait on a release;
+    ship now, expect upstream to ship many of the same resources and
+    attributes later, and keep up with upstream mechanically). Field gaps that
     `docs/coverage` lists for foundation kinds Config Connector already
     serves are built here, in `docs/coverage/foundation.md`'s order,
     without waiting for an upstream release or pull request. They use the
@@ -1773,31 +1767,30 @@ To raise confidence in `ArtifactRegistryRepository`:
     the retirement path (section 3.4).
 
 20. **Immutability is enforced by CEL rules in the CRD, not a webhook**
-    (the builder, 2026-11-10, G4): `self == oldSelf` transition rules on
+    (decided 2026-11-10, G4): `self == oldSelf` transition rules on
     the immutable fields, as the kinds already do; no admission webhook
     is added for it.
 21. **A remote `ArtifactRegistryRepository` whose upstream URI changes is
-    deleted and made again** (the builder, 2026-11-10, G3: confirmed).
-22. **`status.appliedDatabaseRoles` stays until upstream PR #7148** (the
-    builder, 2026-11-10, G5: confirmed; section 10 item 2's
+    deleted and made again** (confirmed 2026-11-10, G3).
+22. **`status.appliedDatabaseRoles` stays until upstream PR #7148**
+    (confirmed 2026-11-10, G5; section 10 item 2's
     recommendation): the field and the comparison with what was applied
     are kept until `SQLUser` switches to the PR (section 2), then follow
     the PR.
 23. **Organization custom roles are checked at the organization level**
-    (the builder, 2026-11-10, G8: confirmed): Config Connector's
+    (confirmed 2026-11-10, G8): Config Connector's
     `IAMCustomRole` with the `cnrm.cloud.google.com/organization-id`
     annotation covers them (foundation item 3), proven against an
     organization once the test folder exists.
 
-24. **`IAMBinding` is `v1beta1`** (the builder, 2026-11-10, K12:
-    "Promote IAMBinding to v1beta1 first, then switch by default in
-    0.4.0", so that the catalog's charts, which refuse alpha kinds, can
+24. **`IAMBinding` is `v1beta1`** (decided 2026-11-10, K12: promote
+    `IAMBinding` to `v1beta1` first, then make it the default in 0.4.0, so that the catalog's charts, which refuse alpha kinds, can
     render it by default). The kind moved from `iam.gcp.hfl.dev/v1alpha1`
     to `v1beta1` with its schema unchanged, and `v1alpha1` is no longer
     served: the CRD has one version, as every kind here does. Nothing
     was released at `v1alpha1` (the repository has no release or tag) and
     the catalog had not shipped it, so no stored object needs converting.
-    No conversion webhook (the builder prefers a kind per version to a
+    No conversion webhook (a kind per version is preferred to a
     second API version with conversion, and decision 20 keeps webhooks
     out). The Go types are in `apis/iam/v1beta1` with their own copy of
     the resource reference and condition types; `IAMMember` stays
@@ -2062,8 +2055,8 @@ moves to section 8.
    both versions (identical schemas, `conversion: None`, `v1beta1`
    stored, `v1alpha1` marked `deprecated` with a warning) for a support
    window, so an object created at `v1alpha1` keeps working. That is a
-   second API version of the same kind, which the builder has said to
-   avoid, and nothing outside test clusters holds a `v1alpha1` object.
+   second API version of the same kind, which is to be
+   avoided, and nothing outside test clusters holds a `v1alpha1` object.
    Recommendation: keep decision 24 as built (one served version); serve
    both only if a cluster turns up with `v1alpha1` objects that cannot be
    abandoned and re-created. Reversing is cheap: add the version back to

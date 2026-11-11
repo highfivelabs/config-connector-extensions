@@ -256,7 +256,7 @@ items:
       built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controllers copied; mockgcp
       unpatched); live pending the test folder. `ComputeOrganizationSecurityPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types copied; the controller written here on the compute beta API, as upstream's is Terraform-only; mockgcp patch 0028); live pending the test folder. `ComputeNetworkFirewallPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`; upstream has only the Terraform-based alpha CRD, so the types, identity and controller are adapted from our regional rule kind, with upstream's `ComputeNetworkFirewallPolicyRef`; mockgcp unpatched). `IAMPrincipalAccessBoundaryPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp patch 0030); live pending organization-level access. `DNSResponsePolicy` built 2026-11-10 (`dns.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied, with the object's labels; mockgcp unpatched); live pending Cloud DNS (`dns.googleapis.com` and `roles/dns.admin`) in the live project. Next: `DNSResponsePolicyRule`.
     decided: >-
-      "Ship our own stable kinds." Copy upstream's alpha types and controllers into our group as stable kinds; when
+      Ship our own stable kinds: copy upstream's alpha types and controllers into our group as stable kinds; when
       upstream promotes, users move over by acquiring the same resource (`docs/design.md` decision 13, as with
       `RunService`, decision 11).
   # ---- A, fields ----
@@ -286,7 +286,7 @@ items:
       moves to it by acquiring the same name and abandoning the official `ComputeRouter`, `ComputeRouterInterface`,
       `ComputeRouterPeer` and `ComputeRouterNAT` objects.
     decided: >-
-      "Copy upstream's PR as our kind." Copy #13960's direct `ComputeRouter` into our group as a complete kind that
+      Copy upstream's PR as our kind: copy #13960's direct `ComputeRouter` into our group as a complete kind that
       owns the whole router; a workload that needs these fields moves its router to ours (acquire by name, abandon
       the official object); retire ours when upstream releases (`docs/design.md` decision 14).
   - title: VPN tunnel and Interconnect attachment fields
@@ -512,7 +512,7 @@ items:
       `securitycenter.gcp.hfl.dev/v1alpha1` (`SecurityCenterMuteConfig` with `parentRef`: organization, folder or
       project; API `securitycenter` v2 `muteConfigs`), copied from the organization kind, one controller family.
     decided: >-
-      "Build ours with all three parents" (organization, folder, project), accepting that it duplicates what
+      Build ours with all three parents (organization, folder, project), accepting that it duplicates what
       upstream is building and widens the kinds to retire later (`docs/design.md` decision 16).
   - title: VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)
     importance: B

@@ -36,7 +36,7 @@ const namespace = "example"
 
 // skipLiveWithoutDNS skips a live run unless E2E_DNS_ADMIN=true: the
 // project must have dns.googleapis.com on and the live-test service account
-// roles/dns.admin there (docs/live-runs.md), which hfl-dev-514205 did not
+// roles/dns.admin there (docs/live-runs.md), which $GCP_PROJECT did not
 // have on 2026-11-10.
 func skipLiveWithoutDNS(t *testing.T) {
 	t.Helper()
