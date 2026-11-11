@@ -24,3 +24,4 @@ One row per run.
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-11 | pending | PASS (CI, `task check`) | pending: free, ready to run (`LIVE_RUN=TestGKEHubRolloutSequence KINDS=gkehub`); needs `gkehub.rolloutsequences.*` (`roles/gkehub.admin`) and the GKE Hub API on | not run | none |
+| 2026-11-11 | `e8a920c` | PASS | FAIL | `rolloutSequences.create`: 404 "fleet not found": a rollout sequence's stages name fleet host projects, and the run's project has no fleet; the fake accepts it. Needs a fleet in the project (the GKE Hub API on and a fleet created), or a `live-skip` until there is one (run `cce-11112128-d3db`, the fallback project) | none made; `task live-list` empty |

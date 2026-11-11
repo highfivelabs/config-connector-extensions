@@ -22,3 +22,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | `e8a920c` | PASS | PASS | none for a project's address group (run `cce-11112128-d3db`, the fallback project; the organization subtest skips live) | 2 global address groups (deleted); `task live-list` empty |

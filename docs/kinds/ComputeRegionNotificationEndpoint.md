@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | `e8a920c` | PASS | FAIL | `regionNotificationEndpoints.insert`: 400 `invalidResourceUsage` "HealthCheck as a Service feature is not available for this project."; the fake accepts it. Needs the project allowlisted for Health Check as a Service, or a `live-skip` until it is (run `cce-11112128-d3db`, the fallback project) | none made; `task live-list` empty |

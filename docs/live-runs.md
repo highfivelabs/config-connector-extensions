@@ -51,6 +51,14 @@ environment or in a git-ignored `.env` (`.env.example` names every
 variable; `task` loads `.env`). On an offload VM they reach the run only
 through `env NAME=...` on the command line, as below.
 `GCP_LIVE_FALLBACK_PROJECT` (optional, never the default) allows the previous dev project as a fallback until the live-test project's quota matches it.
+On 2026-11-11 the first sampled run after the grants (GC1) ran there
+(run `cce-11112128-d3db`, rows in the kinds' files): an offload VM cannot
+yet run as `$GCP_LIVE_SA`, because the person who starts offload lacks
+`iam.serviceAccounts.actAs` on it ("The user does not have access to
+service account"). The builder's fix:
+`gcloud iam service-accounts add-iam-policy-binding "$GCP_LIVE_SA" --project "$GCP_PROJECT" --member "user:<the offload user>" --role roles/iam.serviceAccountUser`
+(and, while the VMs live in `$OFFLOAD_PROJECT`, cross-project service
+account use allowed for `$GCP_PROJECT`).
 The persistent test estate (`factory/estate/gcp/README.md`) writes that
 variable, with the folder, the scratch project and the Log Router key
 (`E2E_TEST_FOLDER`, `E2E_LOGGING_FOLDER`, `E2E_LOGGING_KMS_KEY`,

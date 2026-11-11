@@ -262,6 +262,13 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
 }
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
+  # A kind whose test never runs live (its fixtures' live-skip) makes
+  # nothing to sweep, and listing its collection may need a permission the
+  # live-test account is not given (a preview API's, BYOIP's): left alone,
+  # as the deny policies and mute configs are.
+  if compgen -G "${HERE}/../../pkg/controller/direct/*/testdata/discokind/${dkind}/live-skip" >/dev/null; then
+    continue
+  fi
   coll="${coll//\{project\}/${project}}"
   softf="${soft%%=*}" softv="${soft#*=}"
   rows="$(disco_api GET "${base}${coll}?pageSize=1000" \
