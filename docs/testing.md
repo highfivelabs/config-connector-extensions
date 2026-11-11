@@ -26,9 +26,9 @@ collection.
 
 ## 2. Live where the fake gives no signal, sampled over time
 
-`task test-live PROJECT=hfl-dev-514205 KINDS=<package>` runs the same
+`task test-live PROJECT=$GCP_PROJECT KINDS=<package>` runs the same
 tests against the real project, only on an offload VM as
-`cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com`, never from a
+`$GCP_LIVE_SA`, never from a
 laptop or `task check`. `LIVE_RUN=<regexp>` narrows a package to some
 kinds. Every name carries the run's ID, the test deletes what it makes,
 and the run ends with the sweeper and an empty `task live-list`.

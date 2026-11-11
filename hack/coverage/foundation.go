@@ -35,7 +35,7 @@ type fItem struct {
 	Upstream    string   `yaml:"upstream"`
 	Build       string   `yaml:"build"`
 	Decision    string   `yaml:"decision"`
-	// Decided is the builder's answer to Decision, with the design.md
+	// Decided is the answer to Decision, with the design.md
 	// decision that records it; it replaces the question.
 	Decided string `yaml:"decided"`
 }
@@ -255,7 +255,7 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 		w("- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): %s\n", strings.TrimSpace(it.Upstream))
 		w("- **Build:** %s\n", strings.TrimSpace(it.Build))
 		if it.Decided != "" {
-			w("- **Decided (builder, 2026-11-09):** %s\n", strings.TrimSpace(it.Decided))
+			w("- **Decided (2026-11-09):** %s\n", strings.TrimSpace(it.Decided))
 		} else if it.Decision != "" {
 			w("- **Decision (builder):** %s\n", strings.TrimSpace(it.Decision))
 		}

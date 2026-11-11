@@ -4,16 +4,18 @@
 # On a v* tag: build the operator and manager images with ko (production
 # builds, no -tags fakecloud), push them to the High Five Labs registry,
 #
-#   us-central1-docker.pkg.dev/hfl-dev-514205/hfl-oci/config-connector-extensions/operator:<tag>
-#   us-central1-docker.pkg.dev/hfl-dev-514205/hfl-oci/config-connector-extensions/manager:<tag>
+#   us-central1-docker.pkg.dev/<GCP_PROJECT>/hfl-oci/config-connector-extensions/operator:<tag>
+#   us-central1-docker.pkg.dev/<GCP_PROJECT>/hfl-oci/config-connector-extensions/manager:<tag>
 #
 # and keep config/default resolved to those digests as the run's
 # `install` artifact.
 #
 # It authenticates by Workload Identity Federation as
-# hfl-release@hfl-dev-514205 (only artifactregistry.writer on hfl-oci; it cannot create VMs), which may write to the registry. It runs
+# the release account, repository variable RELEASE_SERVICE_ACCOUNT (only artifactregistry.writer on hfl-oci; it cannot create VMs), which may write to the registry. It runs
 # only when the repository variable RELEASE_ENABLED is 'true', which is set
-# once the WIF provider admits this repository's tags.
+# once the WIF provider admits this repository's tags. Repository
+# variables GCP_PROJECT, GCP_WORKLOAD_IDENTITY_PROVIDER and
+# RELEASE_SERVICE_ACCOUNT name the registry's project and the identity.
 name: release
 
 on:
@@ -32,7 +34,7 @@ env:
   KUSTOMIZE_VERSION: v5.7.1
   TASK_VERSION: v3.54.0
   REGISTRY: us-central1-docker.pkg.dev
-  KO_DOCKER_REPO: us-central1-docker.pkg.dev/hfl-dev-514205/hfl-oci/config-connector-extensions
+  KO_DOCKER_REPO: us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT }}/hfl-oci/config-connector-extensions
 
 jobs:
   images:
@@ -72,8 +74,8 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
-          workload_identity_provider: projects/361760340954/locations/global/workloadIdentityPools/github/providers/factory
-          service_account: hfl-release@hfl-dev-514205.iam.gserviceaccount.com
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.RELEASE_SERVICE_ACCOUNT }}
           token_format: access_token
 
       - name: Log ko in to the registry

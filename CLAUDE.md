@@ -46,7 +46,7 @@ itself lives in its own repository and is never changed from here.
    written down in the fake cloud's doc. Build the end-to-end test on
    `pkg/test/mockenv` so the same test runs live (`docs/live-runs.md`,
    "Adding a kind").
-5. Run it live once: `task test-live PROJECT=our-chassis-514316-r0 KINDS=<package>`
+5. Run it live once: `task test-live PROJECT=$GCP_PROJECT KINDS=<package>`
    on an offload VM as the live-tests service account, and add a row per
    kind to the ledger in `docs/live-runs.md`. Fix what live shows: a bug
    in our controller is a fix plus a test; a gap in the fake is a mockgcp
@@ -70,7 +70,7 @@ itself lives in its own repository and is never changed from here.
   names, API groups, identity defaults, a new upstream dependency,
   anything that makes the repository public.
 - Test against real Google Cloud (a live run, under the rule in "Never") in
-  two cases (builder, 2026-11-11):
+  two cases (decided 2026-11-11):
   1. where mockgcp cannot give the signal: the service or behaviour is not
      faked, or the case depends on real permissions, quotas, defaults or
      eventual consistency; and
@@ -84,7 +84,7 @@ itself lives in its own repository and is never changed from here.
 - Never reach a real cloud except through `task test-live`: on an
   offload Spot VM running as the live-tests service account
   (`docs/live-runs.md`), in a project listed in `hack/live/projects.sh`
-  (only `our-chassis-514316-r0`). Never on a laptop, never with a downloaded
+  (only `$GCP_PROJECT`). Never on a laptop, never with a downloaded
   service account key, never in any other project, account or
   subscription, and never from `task check`. Every live resource carries
   the run's name prefix and labels, the test deletes it, and the run ends
