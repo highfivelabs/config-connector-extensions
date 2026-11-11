@@ -196,6 +196,7 @@ flattening all three, 2026-11-08).
 | `0030-mockgcp-iam-principal-access-boundary-policies.patch` | written here, for `IAMPrincipalAccessBoundaryPolicy`: IAM v3 principal access boundary policies (create, get, list, update with a mask, delete; finished operations; etag), on REST paths added to the mux by hand since mockgcp has no v3 gateway | yes |
 | `0031-mockgcp-securitycenter-mute-config-parents.patch` | written here: mute configs under `folders/{id}` and `projects/{id}` as well as `organizations/{id}` | yes |
 | `0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch` | written here: `networkFirewallPolicies.addPacketMirroringRule`, `getPacketMirroringRule`, `patchPacketMirroringRule` and `removePacketMirroringRule` (rules by priority in the policy's `packetMirroringRules`), in a new file; 0029 and 0030 are taken by open sibling pull requests | yes |
+| `0034-mockgcp-serviceusage-public-services.patch` | written here: Service Usage knows every public Google API (the services of the pinned Discovery documents), so enabling iam, logging, monitoring, artifactregistry and the rest works in the fake; numbered after the patches open in #55 and #56 | yes |
 
 ## Pull requests we opened upstream
 

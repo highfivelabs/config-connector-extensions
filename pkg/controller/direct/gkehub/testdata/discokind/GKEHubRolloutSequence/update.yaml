@@ -1,0 +1,15 @@
+apiVersion: gkehub.gcp.hfl.dev/v1alpha1
+kind: GKEHubRolloutSequence
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  labels:
+    cce-e2e: "true"
+    cce-run: "${RUN_ID}"
+  displayName: config-connector-extensions test, changed
+  stages:
+  - fleetProjects: ["projects/${PROJECT}"]
+    soakDuration: 7200s

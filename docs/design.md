@@ -1,30 +1,9 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-three kinds: `SQLUser` with `spec.databaseRoles`,
-`SQLAdminBackup`, regional `SecretManagerSecret` and
-`SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
-remote upstream and its credentials, `ArtifactRegistryTag`,
-`IAMWorkloadIdentityPoolNamespace`,
-`IAMWorkloadIdentityPoolManagedIdentity` and
-`IAMWorkloadIdentityPoolProviderKey`, a narrow direct
-`RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
-`StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `LoggingBillingAccountSink`,
-`ComputeProjectMetadataItem`, `IAMBinding`,
-`IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
-`ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
-organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
-`ProjectDefaultServiceAccounts`, and a project's or organization's
-`NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
-`NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
-stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
-`ComputeOrganizationSecurityPolicyAssociation`,
-`ComputeOrganizationSecurityPolicyRule`,
-`ComputeNetworkFirewallPolicyRule`,
-`IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy`, and an
-organization's, folder's or project's `SecurityCenterMuteConfig`, and
-`ComputeNetworkFirewallPolicyPacketMirroringRule` (section 6). Each
+config-connector-extensions has the kinds in `docs/kinds/`, one file
+each (`task kinds` lists them): gap kinds copied from Config Connector's
+nearest code (section 2.3) and kinds generated from the APIs' Discovery
+documents (section 2.4). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying
@@ -164,6 +143,29 @@ verified that the API returns them); and its CRD will be in
 `sql.cnrm.cloud.google.com`, so moving means re-creating objects in the
 other group with `cnrm.cloud.google.com/deletion-policy: abandon` and
 acquiring by `resourceID`.
+
+### 2.4 Generated kinds: standard collections from Discovery (`discokind`)
+
+Where the API resource is a standard collection (create with an ID query
+parameter, get and delete by name, optionally patch with an update mask)
+and Config Connector has no code for it, the kind is generated, not
+copied: `hack/discokind` reads `hack/discokind/kinds.yaml` and the
+Discovery document pinned in `docs/coverage/sources.yaml`, and writes the
+kind's types and descriptor; `pkg/discokind` reconciles every such kind
+with one controller (the spec is the request body; read-only fields go to
+`status.observedState`), `pkg/discokind/fake` serves every such collection
+in front of mockgcp, and `pkg/discokind/kindtest` is every such kind's
+end-to-end test, on the fake or live. Nothing is copied from upstream,
+since upstream has nothing for these kinds; when upstream adds a kind for
+one, it retires as any other (section 3.4). Why, and what it reaches:
+`docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
+references beyond the parent (the other parts of a name are IDs), no
+secrets in status, no Compute Engine insert-style resources yet. The
+first kinds: `LoggingSavedQuery`, `IAMOauthClient`,
+`IAMWorkforcePoolProviderKey` (2026-11-11); then
+`IAMWorkforcePoolProviderScimTenant`, `GKEHubMembershipRBACRoleBinding`,
+`GKEHubRolloutSequence` (foundation item 5) and `LoggingLink` with
+folder, organization and billing account parents.
 
 ### Switching to PR #7148
 
