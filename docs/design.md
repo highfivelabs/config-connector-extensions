@@ -1242,8 +1242,9 @@ Notes on what was built from this table:
   no patch.
   Live: passes, with `roles/iam.serviceAccountUser` on the project
   (`setCommonInstanceMetadata` checks `actAs` there; `docs/live-runs.md`).
-- `IAMBinding` (`iam.gcp.hfl.dev/v1alpha1`, rank 1; built as
-  `IAMRoleBinding`, renamed by decision 12). **Written here**:
+- `IAMBinding` (`iam.gcp.hfl.dev/v1beta1`, rank 1; built as
+  `IAMRoleBinding`, renamed by decision 12, moved from `v1alpha1` to
+  `v1beta1` unchanged by decision 24). **Written here**:
   `resourceRef` (`kind`, `name` or `external`, shaped like
   `IAMPolicyMember`'s), `role`, `condition` (title, description,
   expression), `members` (strings as the API writes them) and
@@ -1573,7 +1574,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     `google_<resource>_iam_binding` is authoritative for one role and
     `google_<resource>_iam_member` is additive, and ours follow that.
     Each is one generic kind in `iam.gcp.hfl.dev/v1alpha1` with a resource
-    reference. `IAMBinding` is one role, an optional condition and a list
+    reference (`IAMBinding` is `v1beta1` since decision 24). `IAMBinding` is one role, an optional condition and a list
     of members on one resource, authoritative for that role and
     condition. `IAMMember` is one member of one role on one resource,
     additive. The two were first built as `IAMRoleBinding` (the builder
@@ -1655,6 +1656,24 @@ To raise confidence in `ArtifactRegistryRepository`:
     resources after us; the means of keeping up are mechanical: the pin
     and patches (section 3), `task coverage` and `task upstream-pr`, and
     the retirement path (section 3.4).
+
+24. **`IAMBinding` is `v1beta1`** (the builder, 2026-11-10, K12:
+    "Promote IAMBinding to v1beta1 first, then switch by default in
+    0.4.0", so that the catalog's charts, which refuse alpha kinds, can
+    render it by default). The kind moved from `iam.gcp.hfl.dev/v1alpha1`
+    to `v1beta1` with its schema unchanged, and `v1alpha1` is no longer
+    served: the CRD has one version, as every kind here does. Nothing
+    was released at `v1alpha1` (the repository has no release or tag) and
+    the catalog had not shipped it, so no stored object needs converting.
+    No conversion webhook (the builder prefers a kind per version to a
+    second API version with conversion, and decision 20 keeps webhooks
+    out). The Go types are in `apis/iam/v1beta1` with their own copy of
+    the resource reference and condition types; `IAMMember` stays
+    `v1alpha1`. An install that has `v1alpha1` objects abandons them
+    (`deletion-policy: abandon`), deletes the CRD, and re-creates them at
+    `v1beta1`, which takes over the same binding (`CHANGELOG.md`).
+    Whether `v1alpha1` should instead have stayed served, deprecated, for
+    a window is section 10, question 4.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -1903,3 +1922,16 @@ moves to section 8.
    authoritative one is renamed with it to `IAMBinding`. Both mirror
    Terraform's `google_<resource>_iam_member` and `_iam_binding`
    (decision 12). The question had recommended keeping `IAMRoleMember`.
+
+4. **Should `IAMBinding` `v1alpha1` stay served, deprecated, beside
+   `v1beta1`?** (2026-11-10, after decision 24). Decision 24 moved the
+   kind and stopped serving `v1alpha1`. The alternative is a CRD with
+   both versions (identical schemas, `conversion: None`, `v1beta1`
+   stored, `v1alpha1` marked `deprecated` with a warning) for a support
+   window, so an object created at `v1alpha1` keeps working. That is a
+   second API version of the same kind, which the builder has said to
+   avoid, and nothing outside test clusters holds a `v1alpha1` object.
+   Recommendation: keep decision 24 as built (one served version); serve
+   both only if a cluster turns up with `v1alpha1` objects that cannot be
+   abandoned and re-created. Reversing is cheap: add the version back to
+   the CRD with `served: true`, `storage: false`, `deprecated: true`.

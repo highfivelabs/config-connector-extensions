@@ -32,16 +32,18 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	secretmanager "google.golang.org/api/secretmanager/v1"
 	storageapi "google.golang.org/api/storage/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
-	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-var bindingGVK = iamv1alpha1.IAMBindingGVK
+var bindingGVK = iamv1beta1.IAMBindingGVK
 
 const (
 	accessor = "roles/secretmanager.secretAccessor"
@@ -137,7 +139,7 @@ func TestIAMBinding(t *testing.T) {
 	}
 	resync := func(t *testing.T, name string) {
 		t.Helper()
-		o := &iamv1alpha1.IAMBinding{}
+		o := &iamv1beta1.IAMBinding{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, o); err != nil {
 			t.Fatal(err)
 		}
@@ -146,19 +148,19 @@ func TestIAMBinding(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	newBinding := func(name, role string, members ...string) *iamv1alpha1.IAMBinding {
-		return &iamv1alpha1.IAMBinding{
+	newBinding := func(name, role string, members ...string) *iamv1beta1.IAMBinding {
+		return &iamv1beta1.IAMBinding{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: iamv1alpha1.IAMBindingSpec{
-				ResourceRef: iamv1alpha1.IAMResourceReference{Kind: "SecretManagerSecret", APIVersion: "secretmanager.cnrm.cloud.google.com/v1beta1", Name: "db-password"},
+			Spec: iamv1beta1.IAMBindingSpec{
+				ResourceRef: iamv1beta1.IAMResourceReference{Kind: "SecretManagerSecret", APIVersion: "secretmanager.cnrm.cloud.google.com/v1beta1", Name: "db-password"},
 				Role:        role,
 				Members:     members,
 			},
 		}
 	}
-	update := func(t *testing.T, name string, change func(*iamv1alpha1.IAMBinding)) {
+	update := func(t *testing.T, name string, change func(*iamv1beta1.IAMBinding)) {
 		t.Helper()
-		o := &iamv1alpha1.IAMBinding{}
+		o := &iamv1beta1.IAMBinding{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, o); err != nil {
 			t.Fatal(err)
 		}
@@ -168,6 +170,25 @@ func TestIAMBinding(t *testing.T) {
 		}
 	}
 	sorted := func(s ...string) []string { slices.Sort(s); return s }
+
+	// The kind moved to v1beta1 (docs/design.md decision 24): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		o := newBinding("alpha", accessor, viewers)
+		u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(o)
+		if err != nil {
+			t.Fatal(err)
+		}
+		alpha := &unstructured.Unstructured{Object: u}
+		alpha.SetGroupVersionKind(bindingGVK.GroupKind().WithVersion("v1alpha1"))
+		err = env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating an iam.gcp.hfl.dev/v1alpha1 IAMBinding: err = %v, want no match for the kind", err)
+		}
+		if bindingGVK.Version != "v1beta1" {
+			t.Errorf("IAMBinding's version = %q, want v1beta1", bindingGVK.Version)
+		}
+	})
 
 	// Another role, bound by hand, that no binding below owns.
 	outOfBand(t, func(p *iampb.Policy) bool {
@@ -230,7 +251,7 @@ func TestIAMBinding(t *testing.T) {
 	})
 
 	t.Run("changing the members changes the role", func(t *testing.T) {
-		update(t, accessors, func(o *iamv1alpha1.IAMBinding) { o.Spec.Members = []string{saMember} })
+		update(t, accessors, func(o *iamv1beta1.IAMBinding) { o.Spec.Members = []string{saMember} })
 		waitFor(t, "the member to be taken off", func() bool { return slices.Equal(members(t, accessor), []string{saMember}) })
 		env.WaitReady(bindingGVK, namespace, accessors)
 	})
@@ -238,7 +259,7 @@ func TestIAMBinding(t *testing.T) {
 	t.Run("the same role under a condition is a binding of its own", func(t *testing.T) {
 		const timed = "timed"
 		b := newBinding(timed, accessor, viewers)
-		b.Spec.Condition = &iamv1alpha1.IAMCondition{
+		b.Spec.Condition = &iamv1beta1.IAMCondition{
 			Title:      "until 2099",
 			Expression: `request.time < timestamp("2099-01-01T00:00:00Z")`,
 		}
@@ -327,7 +348,7 @@ func TestIAMBinding(t *testing.T) {
 		})
 		const role = "roles/storage.objectViewer"
 		b := newBinding("bucket-readers", role, saMember)
-		b.Spec.ResourceRef = iamv1alpha1.IAMResourceReference{Kind: "StorageBucket", External: bucket}
+		b.Spec.ResourceRef = iamv1beta1.IAMResourceReference{Kind: "StorageBucket", External: bucket}
 		if err := env.Kube.Create(env.Ctx, b); err != nil {
 			t.Fatal(err)
 		}
@@ -357,7 +378,7 @@ func TestIAMBinding(t *testing.T) {
 	})
 
 	t.Run("delete removes the role's binding and no other", func(t *testing.T) {
-		b := &iamv1alpha1.IAMBinding{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: accessors}}
+		b := &iamv1beta1.IAMBinding{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: accessors}}
 		if err := env.Kube.Delete(env.Ctx, b); err != nil {
 			t.Fatal(err)
 		}

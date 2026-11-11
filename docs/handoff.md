@@ -103,7 +103,9 @@ begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
-are built. Next the rest of decision 13:
+are built. `IAMBinding` moved to `v1beta1` (decision 24, the builder's
+K12, for the catalog's 0.4.0 charts); `v1alpha1` is no longer served
+(section 10, question 4) and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
 `IAMPrincipalAccessBoundaryPolicy` (upstream has a direct controller;
 mockgcp has no service for it, so patch 0029),
 `DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
