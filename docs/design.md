@@ -1286,6 +1286,42 @@ Notes on what was built from this table:
   Center active for the project and `securitycenter.muteconfigs.*` for
   the live-test service account (`E2E_SECURITY_CENTER=true`,
   `docs/live-runs.md`).
+- `DNSResponsePolicy` (`dns.gcp.hfl.dev/v1beta1`, decision 13: a Cloud
+  DNS response policy, the DNS firewall a VPC network or GKE cluster
+  consults before Cloud DNS; its rules are `DNSResponsePolicyRule`,
+  next). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at the
+  pin with a **direct** controller, the default (`static_config.go`:
+  direct, Terraform also supported), types, identity, reference, a
+  generated mapper (`zz_generated.v1alpha1.mappers.go`, from
+  `dev/tools/openapi-to-krm`) and a fuzzer. Merged #14530 (zero-diff
+  takeover from the Terraform controller) and #14712 (direct the default,
+  slated for 1.161) keep it `v1alpha1`; no open pull request promotes it
+  (searched `DNSResponsePolicy`, `ResponsePolicyRule`). So it is
+  **copied**, as `IAMDenyPolicy` was, into a new group
+  `dns.gcp.hfl.dev` (version `v1beta1`). Changed: `projectRef` and
+  `resourceID` are immutable by CEL rules (decision 20); the controller
+  writes `status.externalRef`
+  (`projects/{p}/locations/global/responsePolicies/{id}`, the identity's
+  own form; upstream's status has no such field); and the object's
+  `metadata.labels` are the policy's `labels`, sent on create and update
+  and compared (upstream leaves `labels` out, the one field the coverage
+  report counted uncovered besides output and name fields; decision 19).
+  `networks[].networkUrl` stays a string, as upstream has it: a short
+  path (`projects/{p}/global/networks/{n}`) or a full URL, which the
+  controller normalizes to the full URL both ways; there is no
+  `ComputeNetwork` reference. Delete unbinds the networks (a `patch` with
+  an empty list) and then deletes, as upstream does (upstream unbinds
+  first, which says the real API refuses to delete a bound policy;
+  mockgcp does not refuse).
+  Generated: the CRD and deepcopy (controller-gen, 376 lines); the mapper
+  was generated upstream (`openapi-to-krm`) and is copied unedited.
+  `hack/scaffold-kind.sh` was not run: upstream's direct code exists, and
+  copying it keeps us on upstream's shape for the move back. Copied: 887
+  of the kind's 1,359 hand-kept lines (65%); written here: the
+  end-to-end test and its helpers (360) and the changes above. mockgcp
+  serves response policies unpatched (`docs/fake-cloud.md`). Live:
+  pending `roles/dns.admin` and `dns.googleapis.com` in
+  `hfl-dev-514205` (`docs/live-runs.md`).
 - `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
@@ -1569,6 +1605,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     other Security Command Center kinds of decision 16 (BigQuery
     exports, notification configs, the two custom module kinds) are
     next, on the same parent.
+36. `DNSResponsePolicy`: a live run (needs `dns.googleapis.com` on in
+    `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`); whether
+    the API returns `networkUrl` with the project ID or its number (the
+    comparison normalizes the form, not the project); the API's refusal
+    to delete a bound policy, which mockgcp does not make; `gkeClusters`,
+    which no test sets (it needs a GKE cluster).
 
 ## 8. Decisions
 

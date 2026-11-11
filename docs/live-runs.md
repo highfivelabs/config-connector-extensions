@@ -101,6 +101,7 @@ refuses any project but the ones listed.
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
+| `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
@@ -214,6 +215,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | `18addd0` | ComputeNetworkFirewallPolicyRule (and the rest of `compute`) | PASS | PASS | after one run (`cce-11100614-922f`) that found: `patchRule` does not clear `srcNetworkContext` when sent `""` (it kept INTERNET, and the reconciler patched on every resync); fixed by sending `UNSPECIFIED`, with `""` and `UNSPECIFIED` compared as unset. The missing-priority answer is the regional one, 400 "The firewall policy does not contain a rule at priority 1000." Run `cce-11100702-7115` | 2 global network firewall policies and their rules, and the compute package's other resources (deleted); `task live-list` empty |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
+| 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -282,6 +284,7 @@ sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
 project that need not exist (assumed: the API does not check the
 destination at create); their names carry the run ID, and the sweeper
 deletes them from that billing account.
+
 `SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
 Command Center for the run's project: it must be active for the project
 (or its organization), and the live-test service account needs
@@ -291,6 +294,16 @@ then a live run skips the test and the sweeper leaves mute configs
 alone. With it: `E2E_SECURITY_CENTER=true task test-live
 PROJECT=hfl-dev-514205 KINDS=securitycenter`. A folder's and an
 organization's mute configs run on the fake only (the test folder).
+
+`DNSResponsePolicy` (package `dns`) waits on Cloud DNS in the project:
+`dns.googleapis.com` is not on in `hfl-dev-514205` and `cce-live-tests`
+has no DNS role (checked 2026-11-10). Until both are, a live `dns` run
+skips the test and the sweeper leaves response policies alone (listing
+them needs the API and the role). With them:
+`E2E_DNS_ADMIN=true task test-live PROJECT=hfl-dev-514205 KINDS=dns`.
+The test binds a policy to two networks of its own, unbinds one,
+deletes it (unbinding first) and abandons and then acquires another; the
+sweeper unbinds and deletes policies whose name carries a run ID.
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

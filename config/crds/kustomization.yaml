@@ -16,6 +16,7 @@ resources:
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
+- dns.gcp.hfl.dev_dnsresponsepolicies.yaml
 - gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
 - gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
 - iam.gcp.hfl.dev_iambindings.yaml

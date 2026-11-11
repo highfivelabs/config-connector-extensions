@@ -7,15 +7,16 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
-`IAMDenyPolicy` and `ComputeOrganizationSecurityPolicyRule`. Read
+`IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
+`DNSResponsePolicy`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the Security Command Center mute config PR (decision 16's
-`SecurityCenterMuteConfig`): thirty-five kinds (`README.md`, design.md's
-intro; the latest, `SecurityCenterMuteConfig`, decision 16),
+After the DNS response policy PR (decision 13's `DNSResponsePolicy`):
+thirty-six kinds (`README.md`, design.md's intro; the latest,
+`DNSResponsePolicy`, decision 13),
 mockgcp patches 0001 to 0031 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
@@ -27,7 +28,9 @@ which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
 its association and its rule (organization and folder only), and `IAMDenyPolicy`,
 which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
 and `LoggingBillingAccountSink`, which waits on billing account access
-(`E2E_BILLING_ACCOUNT`).
+(`E2E_BILLING_ACCOUNT`),
+and `DNSResponsePolicy`, which waits on Cloud DNS in `hfl-dev-514205`
+(`dns.googleapis.com` and `roles/dns.admin`; `E2E_DNS_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -126,12 +129,15 @@ and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
 and `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`, patch
-0030; live pending organization-level access) are built. `IAMBinding`
+0030; live pending organization-level access) and `DNSResponsePolicy`
+(`dns.gcp.hfl.dev/v1beta1`) are built. `IAMBinding`
 moved to `v1beta1` (decision 24, the builder's K12, for the catalog's
 0.4.0 charts); `v1alpha1` is no longer served (section 10, question 4)
 and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
-`DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
-alpha types and controllers),
+`DNSResponsePolicyRule` (upstream has its types,
+identity, reference and fuzzer but a Terraform-only controller, and
+mockgcp serves no rules: write the controller after the policy's and add
+a mockgcp patch; the sweeper must delete a policy's rules before it),
 then 16 (Security Command Center, three parents), then packet
 mirroring rules and on down `docs/coverage/foundation.md`, with the
 field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
@@ -179,6 +185,21 @@ short design note, as the builder asked, for example a field kind that
 patches only its fields with an update mask beside Config Connector's
 object, and why. Decision 11 rejected that for `RunService`, because
 Terraform's whole-object update resets the fields.
+
+What `DNSResponsePolicy` taught: a new group (`dns.gcp.hfl.dev`) is a
+`groupversion_info.go` and `doc.go` copied, the kind added to
+`pkg/controller/controllers.go` (both lists), and the group added to the
+manager's ClusterRole (`config/operator/rbac.yaml`, both rules; without
+it the operator's manager cannot read the kind, which only
+`task operator-e2e` shows); the generator picks up the rest. Upstream's `NoProto` fuzzers (for kinds on the
+`google.golang.org/api` REST types) run as a test the same way as the
+proto ones (`FuzzSpec` and `FuzzStatus`). Upstream's direct DNS kinds
+leave `labels` out; ours takes `metadata.labels`
+(`label.NewGCPLabelsFromK8sLabels`), so live objects carry the run's
+labels with no spec field. Check what the live project has before
+writing a live test: `gcloud projects get-iam-policy` and `gcloud
+services list` (both read-only) showed no DNS API or role, so the test
+and sweeper sit behind `E2E_DNS_ADMIN`.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our

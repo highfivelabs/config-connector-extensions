@@ -27,11 +27,13 @@
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
 # (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
-# E2E_BILLING_ACCOUNT, by name, where it is set, and Security Command
+# E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
 # Center mute configs of the project, by name, where it is active
-# (E2E_SECURITY_CENTER=true), and the discokind kinds in
-# hack/live/discokinds.tsv (their global collection in the project), by
-# name, through the API. A failed list or delete fails the sweep.
+# (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
+# where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
+# kinds in hack/live/discokinds.tsv (their global collection in the
+# project), by name, through the API. A failed list or delete fails the
+# sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -337,6 +339,25 @@ if [[ "${E2E_SECURITY_CENTER:-}" == true ]]; then
     by_run "${id}" "${made}" || continue
     act "mute config" "${id}" "${G[@]}" scc muteconfigs delete "${id}" --project="${project}"
   done <<<"${rows}"
+fi
+
+# Cloud DNS response policies, by the run's name, before the networks they
+# are bound to (a bound network cannot be deleted), only where the project
+# has Cloud DNS for the live-test service account (E2E_DNS_ADMIN=true:
+# dns.googleapis.com on and roles/dns.admin); without it the
+# DNSResponsePolicy test does not run live and there is nothing to sweep.
+# A policy is unbound from its networks before it is deleted, as the
+# controller does.
+dns_rp_delete() { # dns_rp_delete NAME
+  "${G[@]}" dns response-policies update "$1" --networks="" &&
+    "${G[@]}" dns response-policies delete "$1"
+}
+if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
+  rows="$("${G[@]}" dns response-policies list --verbosity=error --format='value(responsePolicyName)')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    act "DNS response policy" "${name}" dns_rp_delete "${name}"
+  done
 fi
 
 # Cloud Run services, every region.
