@@ -172,6 +172,7 @@ patches:
   - {file: patches/k8s-config-connector/0029-mockgcp-logging-billing-account-sinks.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0030-mockgcp-iam-principal-access-boundary-policies.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0031-mockgcp-securitycenter-mute-config-parents.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
@@ -489,3 +490,6 @@ other_sources:
   - repo: GoogleCloudPlatform/magic-modules
     commit: aad42de6b6564e69c864647145979e60c9eaece1
     used_for: the behaviour of ComputeRouter (mmv1/products/compute/Router.yaml, RouterNat.yaml; resource_compute_router_peer.go.tmpl and resource_compute_router_interface.go.tmpl read as data; the MD5 key value is never read back, a peer's enable is "TRUE" or "FALSE", an interface needs only an IP range)
+  - repo: GoogleCloudPlatform/magic-modules
+    commit: aad42de6b6564e69c864647145979e60c9eaece1
+    used_for: the fields and calls of ComputeNetworkFirewallPolicyPacketMirroringRule (mmv1/products/compute/NetworkFirewallPolicyPacketMirroringRule.yaml; Apache-2.0; read, not copied)

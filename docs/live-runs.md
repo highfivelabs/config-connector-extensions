@@ -102,6 +102,7 @@ refuses any project but the ones listed.
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
+| `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
@@ -216,6 +217,8 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
 | 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | `e24d9c6` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | `addPacketMirroringRule` refused `tlsInspect: false`: 400 "TLS Inspection cannot be set for packet mirroring rule" (mockgcp accepted it; fixed: the field is gone from the kind and patch 0032 refuses it). Run `cce-11100835-60b4` | 1 policy (swept by run ID in the next run) |
+| 2026-11-10 | `64c9c42` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | create, a resync with no write, a second rule, delete and abandon pass; the patch (new description, rule name, `destIpRanges`, `srcIpRanges` emptied) did not reach the cloud in 15 minutes, cause not logged (the test now prints the cloud rule and the object's Ready message on timeout). `ComputeNetworkFirewallPolicyRule` failed its network-context subtest, as on `main` (#51 fixes it). Run `cce-11100936-3a4c` | the compute package's resources (swept by run ID) |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for

@@ -195,6 +195,18 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   bound network or GKE cluster exists, does not refuse to delete a
   policy still bound to a network (upstream's controller unbinds first,
   as ours does), and its list answers empty. Labels are stored as sent.
+- **Packet mirroring rules of a global network firewall policy in
+  mockgcp** (patch 0032, ours, for
+  `ComputeNetworkFirewallPolicyPacketMirroringRule`). It serves add, get,
+  patch and remove by priority in the policy's `packetMirroringRules`; a
+  missing priority is a 400 worded after the firewall rules' answer, not
+  seen from this API; a patch replaces the rule whole, where the real API
+  is assumed to keep lists the body leaves out (the controller sends
+  `[]`). It refuses `tlsInspect`, even `false`, as the real API did in a
+  live run. Otherwise it checks nothing in the rule: a `mirror` rule's security
+  profile group need not exist, and the API's rules for which matchers
+  and directions a packet mirroring rule takes are not modelled. It adds
+  no default packet mirroring rules to a new policy.
 - **Organization security policies in mockgcp** (upstream's,
   unpatched, for `ComputeOrganizationSecurityPolicy` and its
   association). It serves insert (a new numeric ID, the parent as sent,

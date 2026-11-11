@@ -8,16 +8,17 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
 `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
-`DNSResponsePolicy`. Read
+`DNSResponsePolicy` and
+`ComputeNetworkFirewallPolicyPacketMirroringRule`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the DNS response policy PR (decision 13's `DNSResponsePolicy`):
-thirty-six kinds (`README.md`, design.md's intro; the latest,
-`DNSResponsePolicy`, decision 13),
-mockgcp patches 0001 to 0031 (`UPSTREAM.md` and `upstream.yaml`, which
+After the packet mirroring rule PR (foundation item 2's
+`ComputeNetworkFirewallPolicyPacketMirroringRule`): thirty-seven kinds
+(`docs/kinds/`, `task kinds`),
+mockgcp patches 0001 to 0032 and 0034 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
 number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
@@ -138,8 +139,15 @@ and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
 identity, reference and fuzzer but a Terraform-only controller, and
 mockgcp serves no rules: write the controller after the policy's and add
 a mockgcp patch; the sweeper must delete a policy's rules before it),
-then 16 (Security Command Center, three parents), then packet
-mirroring rules and on down `docs/coverage/foundation.md`, with the
+then 16 (Security Command Center, three parents). Packet mirroring
+rules: the global network policy's is built
+(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0032; live
+passes but for the patch, design.md section 7 item 37: rerun
+`task test-live PROJECT=hfl-dev-514205 KINDS=compute` and read the
+patch subtest's timeout message first); the
+hierarchical policy's has rule calls in the beta API only (live pending
+the test folder) and the regional policy's has none in any API version.
+Then on down `docs/coverage/foundation.md`, with the
 field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
 (design.md 6.5, patch 0029), live pending billing account access.
 
@@ -200,6 +208,18 @@ labels with no spec field. Check what the live project has before
 writing a live test: `gcloud projects get-iam-policy` and `gcloud
 services list` (both read-only) showed no DNS API or role, so the test
 and sweeper sit behind `E2E_DNS_ADMIN`.
+
+What `ComputeNetworkFirewallPolicyPacketMirroringRule` taught: read the
+Discovery documents for which calls exist where
+(`.cache/coverage/discovery/compute.{v1,beta,alpha}.json`) before taking
+a queue item's list of kinds as buildable. When the pinned
+`google.golang.org/api` client lacks a call and the generated
+`cloud.google.com/go` client cannot send an empty list, a plain JSON
+request through `htransport.NewClient(ctx, opts...)` (the same transport
+and credentials, so mockgcp still answers it) is smaller than moving a
+dependency. A kind with no API resource of its own needs a line in
+`hack/coverage/overrides.yaml` (`subresources`), or the coverage report
+counts it outside the denominator.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
