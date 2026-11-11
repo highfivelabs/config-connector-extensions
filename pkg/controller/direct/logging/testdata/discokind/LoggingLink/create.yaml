@@ -1,0 +1,11 @@
+apiVersion: logging.gcp.hfl.dev/v1alpha1
+kind: LoggingLink
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  bucket: ${NAME}-bucket
+  resourceID: ${ID}
+  description: A linked dataset made by a config-connector-extensions test.

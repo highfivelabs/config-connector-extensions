@@ -1,0 +1,324 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: gkehubrolloutsequences.gkehub.gcp.hfl.dev
+spec:
+  group: gkehub.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: GKEHubRolloutSequence
+    listKind: GKEHubRolloutSequenceList
+    plural: gkehubrolloutsequences
+    shortNames:
+    - hflgkehubrolloutsequence
+    - hflgkehubrolloutsequences
+    singular: gkehubrolloutsequence
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: GKEHubRolloutSequence is a gkehub.v1 resource (https://gkehub.googleapis.com/v1/{parent}/locations/{location}/rolloutSequences/{id}),
+          from its Discovery document gkehub.v1 (hack/discokind). The order in which
+          a fleet's clusters take GKE upgrades.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              autoUpgradeConfig:
+                description: Optional. Configuration for automatic upgrades. If this
+                  message is `unset`, the system applies default behavior.
+                properties:
+                  rolloutCreationScope:
+                    description: Optional. Specifies the scope of automation for the
+                      creation of rollouts. Represents the types of rollouts (version
+                      upgrades) the sequence should initiate automatically. If this
+                      field is `unset`, it defaults to all types. If this field is
+                      `set` but the internal `upgrade_types` list is `empty`, most
+                      automatic rollouts are disabled for this sequence. Exceptions
+                      are rollouts enforcing our security policies (e.g. such as end-of-support
+                      and outdated control plane patch enforcements). These policy
+                      enforcements cannot be disabled.
+                    properties:
+                      upgradeTypes:
+                        description: Optional. The list of enabled upgrade types.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              displayName:
+                description: Optional. Human readable display name of the Rollout
+                  Sequence.
+                type: string
+              ignoredClustersSelector:
+                description: Optional. Selector for clusters to exclude from the Rollout
+                  Sequence.
+                properties:
+                  labelSelector:
+                    description: Required. A valid CEL (Common Expression Language)
+                      expression which evaluates `resource.labels`.
+                    type: string
+                required:
+                - labelSelector
+                type: object
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Labels for this Rollout Sequence.
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/rolloutSequences/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              stages:
+                description: Required. Ordered list of stages that constitutes this
+                  Rollout.
+                items:
+                  properties:
+                    clusterSelector:
+                      description: Optional. Filter members of fleets (above) to a
+                        subset of clusters. If not specified, all clusters in the
+                        fleets are selected.
+                      properties:
+                        labelSelector:
+                          description: Required. A valid CEL (Common Expression Language)
+                            expression which evaluates `resource.labels`.
+                          type: string
+                      required:
+                      - labelSelector
+                      type: object
+                    fleetProjects:
+                      description: 'Required. List of Fleet projects to select the
+                        clusters from. Expected format: projects/{project}'
+                      items:
+                        type: string
+                      type: array
+                    soakDuration:
+                      description: Optional. Soak time after upgrading all the clusters
+                        in the stage.
+                      type: string
+                  required:
+                  - fleetProjects
+                  type: object
+                type: array
+            required:
+            - location
+            - projectRef
+            - stages
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/rolloutSequences/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  computedReleaseChannel:
+                    description: Output only. The computed release channel used for
+                      the Rollout Sequence.
+                    type: string
+                  createTime:
+                    description: Output only. The timestamp at which the Rollout Sequence
+                      was created.
+                    type: string
+                  deleteTime:
+                    description: Output only. The timestamp at the Rollout Sequence
+                      was deleted.
+                    type: string
+                  effectiveAutoUpgradeConfig:
+                    description: Output only. The resolved auto-upgrade options which
+                      are in effect.
+                    properties:
+                      enforcedRollouts:
+                        additionalProperties:
+                          type: string
+                        description: Output only. Mandatory Safety Policies (Always
+                          active) which cannot be disabled. The key is the policy
+                          ID (e.g., "ENFORCED_CONTROL_PLANE_PATCH") and the value
+                          is a human-readable description.
+                        type: object
+                      rolloutCreationScope:
+                        description: Optional. Specifies the scope of automation for
+                          the creation of rollouts. Represents the types of rollouts
+                          (version upgrades) the sequence should initiate automatically.
+                          If this field is `unset`, it defaults to all types. If this
+                          field is `set` but the internal `upgrade_types` list is
+                          `empty`, most automatic rollouts are disabled for this sequence.
+                          Exceptions are rollouts enforcing our security policies
+                          (e.g. such as end-of-support and outdated control plane
+                          patch enforcements). These policy enforcements cannot be
+                          disabled.
+                        properties:
+                          upgradeTypes:
+                            description: Optional. The list of enabled upgrade types.
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  etag:
+                    description: Output only. etag of the Rollout Sequence Ex. abc1234
+                    type: string
+                  lastQualifiedControlPlaneVersion:
+                    description: Output only. The last qualified control plane version.
+                    type: string
+                  lastQualifiedNodeVersion:
+                    description: Output only. The last qualified node version.
+                    type: string
+                  operationalState:
+                    description: Output only. Operational state of the Rollout Sequence.
+                    properties:
+                      reasons:
+                        description: Output only. Reasons for the Rollout Sequence
+                          state.
+                        items:
+                          type: string
+                        type: array
+                      state:
+                        description: Output only. State of the Rollout Sequence.
+                        type: string
+                      stateChangeTime:
+                        description: Output only. The timestamp at which the operational
+                          state was last changed. Used to track how long it has been
+                          in the current state.
+                        type: string
+                    type: object
+                  targetControlPlaneVersion:
+                    description: Output only. The target control plane version of
+                      the Rollout Sequence.
+                    type: string
+                  targetNodeVersion:
+                    description: Output only. The target node version of the Rollout
+                      Sequence.
+                    type: string
+                  uid:
+                    description: Output only. Google-generated UUID for this resource.
+                      This is unique across all Rollout Sequence resources. If a Rollout
+                      Sequence resource is deleted and another resource with the same
+                      name is created, it gets a different uid.
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp at which the Rollout Sequence
+                      was last updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

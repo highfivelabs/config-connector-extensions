@@ -16,12 +16,12 @@ this file only adds to them.
 ## Where things stand
 
 After the VPN tunnel PR (foundation item 10's `ComputeVPNTunnel`, the
-first field gap under decision 19): thirty-eight kinds (`README.md`,
-design.md's intro),
-mockgcp patches 0001 to 0033 (`UPSTREAM.md` and `upstream.yaml`, which
-must agree: `task upstream:yaml-check`; the next free number is
-**0034**, but take it from `main` when you need it: two agents add
-patches), the live-test switch and the Taskfile (`docs/live-runs.md`,
+first field gap under decision 19): thirty-eight kinds (`docs/kinds/`,
+`task kinds`),
+mockgcp patches 0001 to 0034 (`UPSTREAM.md` and `upstream.yaml`, which
+must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
+without a number, `CONTRIBUTING.md`; only an ordered one takes the next
+number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
@@ -48,6 +48,19 @@ make the referenced object in the test.
 `task operator-e2e` goes through `hack/operator-e2e.sh`, which fails
 unless `tests/operator/run.sh` is intact (more than 200 lines, errexit,
 the closing `echo "all checks passed"`), exits 0 and ends with that line.
+
+**Generating a kind from Discovery (`discokind`, first choice).** If the
+gap is a standard collection (create with an ID query parameter, get,
+delete, optionally patch with an update mask), add it to
+`hack/discokind/kinds.yaml`, run `go run ./hack/discokind` and
+`hack/generate.sh`, and write its two fixtures
+(`pkg/controller/direct/<service>/testdata/discokind/<Kind>/create.yaml`,
+`update.yaml`; `live-skip` for organization-level kinds). No controller,
+mockgcp patch, test code or `controllers.go` edit; several kinds per pull
+request. `docs/throughput.md` says why and what it reaches (178 of the
+494 whole-resource gaps), `docs/testing.md` how such a kind is tested.
+Run one kind live with `LIVE_RUN=TestLoggingSavedQuery task test-live
+PROJECT=hfl-dev-514205 KINDS=logging`.
 
 **Generating a kind.** `hack/scaffold-kind.sh` runs Config Connector's
 `controllerbuilder` (types, mapper, controller) on an offload VM and brings
@@ -409,12 +422,16 @@ run's name prefix (`by_run` for names that carry the run ID). Package-level
 test helpers collide across a package's test files: keep helpers in one
 `helpers_mockgcp_test.go` per package or local to the test.
 
-**Branches, merges, PRs.** One PR per kind, `agent/<short-name>`, cut
-from the latest `main`; if it needs an unmerged sibling, say so and the
-coordinator merges first. Sibling PRs conflict in the same doc spots
-(design.md's intro count and kind list, the 6.5 notes, section 7's
-numbered items, the README table, UPSTREAM's patch table, the live-runs
-ledger, `hack/live/sweep.sh`, `pkg/controller/controllers.go`): when main
+**Branches, merges, PRs.** One PR per hand-written kind (generated kinds
+go several to a PR), `agent/<short-name>`, cut from the latest `main`, in
+your own `git worktree`, never a checkout another agent uses; if it needs
+an unmerged sibling, say so and the coordinator merges first. A kind's
+notes and live rows go in its own `docs/kinds/<Kind>.md`, not in
+design.md 6.5, the README or the live-runs ledger, and a patch that
+touches no other patch's files is named, not numbered (`CONTRIBUTING.md`).
+What still conflicts: UPSTREAM's patch table and `upstream.yaml`,
+`hack/live/sweep.sh` and `pkg/controller/controllers.go` for hand-written
+kinds; when main
 moves, `git merge --no-ff --signoff origin/main`, keep both sides
 (renumber the later item, recount the kinds), regenerate, commit with a
 full message ending in the attribution lines your session is given

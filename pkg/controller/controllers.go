@@ -146,6 +146,13 @@ func AddToScheme(scheme *runtime.Scheme) error {
 			return err
 		}
 	}
+	// The discokind kinds' groups (zz_discokinds.go); adding a group twice
+	// is harmless.
+	for _, add := range discoSchemes {
+		if err := add(scheme); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -1,0 +1,276 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: logginglinks.logging.gcp.hfl.dev
+spec:
+  group: logging.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: LoggingLink
+    listKind: LoggingLinkList
+    plural: logginglinks
+    shortNames:
+    - hfllogginglink
+    - hfllogginglinks
+    singular: logginglink
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: LoggingLink is a logging.v2 resource (https://logging.googleapis.com/v2/{parent}/locations/{location}/buckets/{bucket}/links/{id}),
+          from its Discovery document logging.v2 (hack/discokind). Terraform's google_logging_linked_dataset.
+          A BigQuery linked dataset of a Log Analytics bucket; Config Connector's
+          LoggingLink takes a project's bucket only.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              bigqueryDataset:
+                description: Optional. The information of a BigQuery Dataset. When
+                  a link is created, a BigQuery dataset is created along with it,
+                  in the same project as the LogBucket it's linked to. This dataset
+                  will also have BigQuery Views corresponding to the LogViews in the
+                  bucket.
+                type: object
+                x-kubernetes-validations:
+                - message: bigqueryDataset is immutable
+                  rule: self == oldSelf
+              billingAccountRef:
+                description: Immutable. The billingAccount the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed BillingAccount
+                      resource. Should be in the format "billingAccounts/{billingAccountID}".
+                    type: string
+                  name:
+                    description: The name of a BillingAccount resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a BillingAccount resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: billingAccountRef is immutable
+                  rule: self == oldSelf
+              bucket:
+                description: Immutable. The bucket, part of the resource's name ({parent}/locations/{location}/buckets/{bucket}/links/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: bucket is immutable
+                  rule: self == oldSelf
+              description:
+                description: Optional. Describes this link.The maximum length of the
+                  description is 8000 characters.
+                type: string
+                x-kubernetes-validations:
+                - message: description is immutable
+                  rule: self == oldSelf
+              folderRef:
+                description: Immutable. The folder the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The 'name' field of a folder, when not managed by
+                      Config Connector. This field must be set when 'name' field is
+                      not set.
+                    type: string
+                  name:
+                    description: The 'name' field of a 'Folder' resource. This field
+                      must be set when 'external' field is not set.
+                    type: string
+                  namespace:
+                    description: The 'namespace' field of a 'Folder' resource. If
+                      unset, the namespace is defaulted to the namespace of the referencer
+                      resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: folderRef is immutable
+                  rule: self == oldSelf
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/buckets/{bucket}/links/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              organizationRef:
+                description: Immutable. The organization the resource belongs to.
+                properties:
+                  external:
+                    description: The 'name' field of an organization, when not managed
+                      by Config Connector.
+                    type: string
+                required:
+                - external
+                type: object
+                x-kubernetes-validations:
+                - message: organizationRef is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            required:
+            - bucket
+            - location
+            type: object
+            x-kubernetes-validations:
+            - message: exactly one of projectRef, folderRef, organizationRef, billingAccountRef
+                is required
+              rule: '[has(self.projectRef), has(self.folderRef), has(self.organizationRef),
+                has(self.billingAccountRef)].filter(x, x).size() == 1'
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/buckets/{bucket}/links/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The creation timestamp of the link.
+                    type: string
+                  lifecycleState:
+                    description: Output only. The resource lifecycle state.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

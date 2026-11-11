@@ -54,6 +54,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
+	discofake "github.com/highfivelabs/config-connector-extensions/pkg/discokind/fake"
 )
 
 func main() {
@@ -88,7 +90,8 @@ func run(ctx context.Context, projects []string) error {
 		}
 	}()
 	mockConn := mock.NewGRPCConnection(ctx)
-	httpClient := &http.Client{Transport: mock}
+	// The discokind kinds' collections in front of mockgcp.
+	httpClient := &http.Client{Transport: discofake.New(mock, discokind.Kinds())}
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 
 	// As the harness does for mock mode: Terraform-based and DCL-based
