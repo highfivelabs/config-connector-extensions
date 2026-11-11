@@ -27,8 +27,9 @@
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
 # (E2E_IAM_DENY_ADMIN=true), and log sinks of the billing account in
-# E2E_BILLING_ACCOUNT, by name, where it is set. A failed list or delete
-# fails the sweep.
+# E2E_BILLING_ACCOUNT, by name, where it is set, and the discokind kinds
+# in hack/live/discokinds.tsv (their global collection in the project), by
+# name, through the API. A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -225,6 +226,41 @@ for kind in securityProfileGroups securityProfiles; do
     act "${kind%s}" "${name}" ns_delete "${name}"
   done <<<"${rows}"
 done
+# The discokind kinds (hack/live/discokinds.tsv, generated): each
+# collection under the project, by the run's name; an ID that takes no
+# dashes (cce11091530a3f2...) is read as the run's name with them. A
+# soft-deleted resource is already gone.
+disco_api() { # disco_api METHOD URL
+  curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" "$2"
+}
+disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an operation
+  local op name fin
+  op="$(disco_api DELETE "$1$2")" || return 1
+  name="$(jq -r 'if (.done == false and (.name // "" | test("/operations/|^operations/"))) then .name else "" end' <<<"${op}")"
+  [[ -n "${name}" ]] || return 0
+  for _ in $(seq 1 60); do
+    fin="$(disco_api GET "$1${name}" | jq -r '.done // false')" || return 1
+    [[ "${fin}" == true ]] && return 0
+    sleep 5
+  done
+  return 1
+}
+while IFS=$'\t' read -r dkind base coll soft; do
+  [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
+  coll="${coll//\{project\}/${project}}"
+  field="${coll##*/}"
+  softf="${soft%%=*}" softv="${soft#*=}"
+  rows="$(disco_api GET "${base}${coll}?pageSize=1000" \
+    | jq -r --arg f "${field}" --arg s "${softf}" '.[$f][]? | "\(.name) \(.createTime // "-") \(if $s == "-" then "-" else (.[$s] // "-") end)"')"
+  while read -r name made state; do
+    [[ -n "${name}" ]] || continue
+    [[ "${soft}" == "-" || "${state}" != "${softv}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    id="$(sed -E 's/^cce([0-9]{8})([0-9a-f]{4})/cce-\1-\2-/' <<<"${name##*/}")"
+    by_run "${id}" "${made}" || continue
+    act "${dkind}" "${name}" disco_delete "${base}" "${name}"
+  done <<<"${rows}"
+done <"${HERE}/discokinds.tsv"
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
