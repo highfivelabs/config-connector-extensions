@@ -219,6 +219,9 @@ on the same VM, minutes apart.
 | 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | `e24d9c6` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | `addPacketMirroringRule` refused `tlsInspect: false`: 400 "TLS Inspection cannot be set for packet mirroring rule" (mockgcp accepted it; fixed: the field is gone from the kind and patch 0032 refuses it). Run `cce-11100835-60b4` | 1 policy (swept by run ID in the next run) |
 | 2026-11-10 | `64c9c42` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | create, a resync with no write, a second rule, delete and abandon pass; the patch (new description, rule name, `destIpRanges`, `srcIpRanges` emptied) did not reach the cloud in 15 minutes, cause not logged (the test now prints the cloud rule and the object's Ready message on timeout). `ComputeNetworkFirewallPolicyRule` failed its network-context subtest, as on `main` (#51 fixes it). Run `cce-11100936-3a4c` | the compute package's resources (swept by run ID) |
+| 2026-11-10 | `81ac634` | ComputeVPNTunnel | PASS | FAIL | `vpnTunnels.insert`: 400 "peer_ip may not be a reserved IP (RFC5735)" for the peer gateway on 203.0.113.10, which mockgcp accepted (fixed: the test reserves an external address of its project for the peer; `docs/fake-cloud.md`). Run `cce-11100852-72bb`; an earlier attempt, `cce-11100848-13c6`, stopped at its first sweep (`externalVpnGateways.list` refuses a `name~` filter; the sweeper now matches names itself) | the network, HA and external VPN gateways and router (deleted by the test) |
+| 2026-11-10 | `23fa22b` | ComputeVPNTunnel | PASS | FAIL | "a resync writes nothing" saw one write: `vpnTunnels.insert` leaves the labels out, so the first reconcile set them (fixed: Create sets them after insert, as Terraform's tunnel does; patch 0033's insert leaves them out too). The other five subtests passed. Run `cce-11101009-a46a` | 2 tunnels, an address, the gateways, router and network (deleted); `task live-list` empty |
+| 2026-11-10 | `edf63e7` | ComputeVPNTunnel | PASS | PASS | none: an HA VPN tunnel to an external peer on the test's own address, with a phase 1 and 2 cipher suite the API returned as sent, labels set after insert, a resync with no write, a label change by `setLabels`, the CRD refusing a cipher suite change, delete and abandon. Run `cce-11101104-1658` (the package's `TestComputeNetworkFirewallPolicyRule` failed as in #51, which fixes it) | 2 tunnels, an address, 2 VPN gateways, a router, a network (deleted); `task live-list` empty |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -307,6 +310,18 @@ them needs the API and the role). With them:
 The test binds a policy to two networks of its own, unbinds one,
 deletes it (unbinding first) and abandons and then acquires another; the
 sweeper unbinds and deletes policies whose name carries a run ID.
+
+`ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
+`roles/compute.networkAdmin` has `compute.vpnTunnels.*`,
+`compute.vpnGateways.*` and `compute.externalVpnGateways.*`. The test
+makes a network, an HA VPN gateway, an external address of its own, an
+external peer gateway on that address (the API refuses a reserved
+address such as 203.0.113.10 for a peer, run `cce-11100852-72bb`; nothing
+answers on ours, so the tunnel never comes up) and a Cloud Router through
+the API, then two tunnels; the sweeper deletes tunnels, then HA and
+external VPN gateways and addresses, by name. A
+tunnel bills by the hour while it exists; the test keeps each for a few
+minutes.
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

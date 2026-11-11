@@ -430,7 +430,7 @@ compute.googleapis.com,compute.googleapis.com/TargetTcpProxy,6,ComputeTargetTCPP
 compute.googleapis.com,compute.googleapis.com/TargetVpnGateway,5,ComputeTargetVPNGateway,3,,0,2,false,api=v1:targetVpnGateways; official-spec-fields-unmatched=2/4
 compute.googleapis.com,compute.googleapis.com/UrlMap,355,ComputeURLMap,225,,0,130,false,api=v1:urlMaps; official-spec-fields-unmatched=6/230
 compute.googleapis.com,compute.googleapis.com/VpnGateway,8,ComputeVPNGateway,5,,0,3,false,api=v1:vpnGateways; official-spec-fields-unmatched=4/8
-compute.googleapis.com,compute.googleapis.com/VpnTunnel,24,ComputeVPNTunnel,15,,0,9,false,api=v1:vpnTunnels; official-spec-fields-unmatched=2/15
+compute.googleapis.com,compute.googleapis.com/VpnTunnel,24,ComputeVPNTunnel,15,ComputeVPNTunnel,7,2,false,api=v1:vpnTunnels; official-spec-fields-unmatched=2/15; ours-spec-fields-unmatched=3/24
 compute.googleapis.com,compute.googleapis.com/WireGroup,9,,0,,0,9,false,api=v1:wireGroups
 compute.googleapis.com,compute.googleapis.com/ZoneVmExtensionPolicy,6,,0,,0,6,false,api=v1:zoneVmExtensionPolicies
 confidentialcomputing.googleapis.com,confidentialcomputing.googleapis.com/Challenge,0,,0,,0,0,false,api=v1:google.cloud.confidentialcomputing.v1.ConfidentialComputing.CreateChallenge

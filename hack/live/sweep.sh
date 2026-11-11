@@ -17,7 +17,8 @@
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
 # firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
-# them), Cloud Routers (their route policies go with them) and VPC
+# them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
+# (their route policies go with them) and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
@@ -282,6 +283,42 @@ rows="$("${G[@]}" compute network-endpoint-groups list --verbosity=error \
 while read -r name region zone; do
   [[ -n "${name}" ]] || continue
   act "network endpoint group" "${name} ${region:-${zone:-global}}" "${G[@]}" compute network-endpoint-groups delete "${name}" "$(scope "${region}" "${zone}")"
+done <<<"${rows}"
+# VPN tunnels before the gateways and routers they use.
+rows="$("${G[@]}" compute vpn-tunnels list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "VPN tunnel" "${name} ${region}" "${G[@]}" compute vpn-tunnels delete "${name}" --region="${region}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute vpn-gateways list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "HA VPN gateway" "${name} ${region}" "${G[@]}" compute vpn-gateways delete "${name}" --region="${region}"
+done <<<"${rows}"
+# externalVpnGateways.list refuses a name~ filter (a 400, "Invalid list
+# filter expression", seen live), so the names and ages are matched here
+# as cfilter would.
+rows="$("${G[@]}" compute external-vpn-gateways list --verbosity=error --format='value(name,creationTimestamp)')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  if [[ -n "${run}" ]]; then
+    [[ "${name}" == "${run}-"* ]] || continue
+  else
+    [[ "${name}" == "${PREFIX}"* ]] || continue
+    if [[ "${mode}" == "sweep" ]]; then
+      [[ "$(date -u -d "${made}" +%s 2>/dev/null || echo 0)" -lt "$(date -u -d "${cutoff}" +%s 2>/dev/null || echo 0)" ]] || continue
+    fi
+  fi
+  act "external VPN gateway" "${name}" "${G[@]}" compute external-vpn-gateways delete "${name}"
+done <<<"${rows}"
+# Regional addresses (the VPN tunnel test's peer address), by name.
+rows="$("${G[@]}" compute addresses list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "address" "${name} ${region:-global}" "${G[@]}" compute addresses delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"

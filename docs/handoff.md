@@ -8,17 +8,17 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
 `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
-`DNSResponsePolicy` and
-`ComputeNetworkFirewallPolicyPacketMirroringRule`. Read
+`DNSResponsePolicy`,
+`ComputeNetworkFirewallPolicyPacketMirroringRule` and `ComputeVPNTunnel`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the packet mirroring rule PR (foundation item 2's
-`ComputeNetworkFirewallPolicyPacketMirroringRule`): thirty-seven kinds
-(`docs/kinds/`, `task kinds`),
-mockgcp patches 0001 to 0032 and 0034 (`UPSTREAM.md` and `upstream.yaml`, which
+After the VPN tunnel PR (foundation item 10's `ComputeVPNTunnel`, the
+first field gap under decision 19): thirty-eight kinds (`docs/kinds/`,
+`task kinds`),
+mockgcp patches 0001 to 0034 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
 number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
@@ -220,6 +220,38 @@ and credentials, so mockgcp still answers it) is smaller than moving a
 dependency. A kind with no API resource of its own needs a line in
 `hack/coverage/overrides.yaml` (`subresources`), or the coverage report
 counts it outside the denominator.
+
+Field gaps (the builder's 2026-11-10 reversal of decision 5, recorded
+as design.md decision 19 in PRs #49 and #51) have begun. Take them in
+`docs/coverage/foundation.md`'s order (items 9 to 19 and 21 to 27 that
+say "field"), with the attribute lists in `docs/coverage/attributes.csv`.
+Before building one, read design.md 6.6 ("Field gaps on large
+Terraform-based kinds"), which the first field-gap PR proposed as the
+builder asked, and check how the API changes each missing field. A field
+the API takes only at create gets a create-only whole-object kind
+(insert, get, labels, delete; the rest immutable by CEL), as
+`ComputeVPNTunnel` (item 10's `cipherSuite`) did. A field the API
+changes by mask, where Config Connector's update never sends it, gets a
+field kind beside Config Connector's object (not built yet; its name is
+design.md section 10 question 5, so it waits on the builder). Otherwise
+a whole-object kind, as decisions 11, 13 and 14. Item 10's other fields
+(`ComputeInterconnectAttachment`'s IPv6 candidates and `l2Forwarding`,
+`ComputeInterconnect`'s `applicationAwareInterconnect`) need a Dedicated
+Interconnect to prove live, which `hfl-dev-514205` has not; item 11
+(`ComputeServiceAttachment`: DCL-based upstream, with direct types, a
+mapper and a mockgcp service at the pin) is the next that can run live.
+Upstream's `KMSCryptoKey` supports a direct controller
+(`static_config.go`); read it before item 18.
+
+What `ComputeVPNTunnel` taught: upstream's direct types and mapper for a
+Terraform-based kind (here from PR #10151) copy cleanly into a
+create-only kind; mockgcp had no VPN tunnel service (patch 0033). A
+Config Connector reference whose `Normalize` wants its registered kind is
+easier resolved with `configConnectorSelfLink` (`router_controller.go`):
+`external` as given, or the named object's `status.selfLink`.
+`ComputeRouterRef.Resolve` (v1alpha1) finds our router or Config
+Connector's for any kind that names a router. Patch numbers: 0029 to
+0032 went to #49, #52, #53 and #55, merged first, so this PR's is 0033.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our
