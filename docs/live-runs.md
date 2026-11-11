@@ -46,6 +46,8 @@ task live-list PROJECT=our-chassis-514316-r0           # list every live-test re
 ```
 
 `PROJECT` defaults to `HFL_GCP_TEST_PROJECT`, then `our-chassis-514316-r0`.
+`hfl-dev-514205` is also allowed, as a fallback until the quota of
+`our-chassis-514316-r0` matches it; it is never the default.
 The persistent test estate (`factory/estate/gcp/README.md`) writes that
 variable, with the folder, the scratch project and the Log Router key
 (`E2E_TEST_FOLDER`, `E2E_LOGGING_FOLDER`, `E2E_LOGGING_KMS_KEY`,
