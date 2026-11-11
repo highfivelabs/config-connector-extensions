@@ -8,6 +8,7 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
 `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
+`DNSResponsePolicy` and
 `ComputeNetworkFirewallPolicyPacketMirroringRule`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
@@ -15,19 +16,22 @@ this file only adds to them.
 ## Where things stand
 
 After the packet mirroring rule PR (foundation item 2's
-`ComputeNetworkFirewallPolicyPacketMirroringRule`, cut from `main` at
-`2827c0f`): thirty-three kinds (`README.md`, design.md's intro),
-mockgcp patches 0001 to 0028 and 0031 (`UPSTREAM.md` and `upstream.yaml`, which
-must agree: `task upstream:yaml-check`; 0029 is taken twice by open pull
-requests, the principal access boundary policy's and the billing account
-sink's, and 0030 by the SCC mute config's, so the next free number is
-**0032**; check the open branches before taking one), the live-test switch and the Taskfile (`docs/live-runs.md`,
+`ComputeNetworkFirewallPolicyPacketMirroringRule`): thirty-seven kinds
+(`README.md`, design.md's intro),
+mockgcp patches 0001 to 0032 (`UPSTREAM.md` and `upstream.yaml`, which
+must agree: `task upstream:yaml-check`; the next free number is
+**0033**, but take it from `main` when you need it: two agents add
+patches), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
 which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
 its association and its rule (organization and folder only), and `IAMDenyPolicy`,
-which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`).
+which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
+and `LoggingBillingAccountSink`, which waits on billing account access
+(`E2E_BILLING_ACCOUNT`),
+and `DNSResponsePolicy`, which waits on Cloud DNS in `hfl-dev-514205`
+(`dns.googleapis.com` and `roles/dns.admin`; `E2E_DNS_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -61,6 +65,13 @@ in each PR.
 
 ## What is left, in order
 
+**Split between two GCP agents (the coordinator, 2026-11-10).** This
+queue: `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
+`DNSResponsePolicy` and its rule, then packet mirroring rules. The other
+GCP agent: `LoggingBillingAccountSink` (15), Security Command Center (16)
+and field gaps (decision 19). Coordinate through `main`: merge `main`
+before each check run.
+
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
@@ -76,9 +87,14 @@ stable kinds (13: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation
 PR #13960 as a complete kind of ours (14); `LoggingBillingAccountSink`
 now, live pending billing-account access (15); Security Command Center
 kinds with organization, folder and project parents (16). Decision 5
-stands for other field gaps (wait for the release). Whole-resource gaps
-first; any other field gap that needs the builder goes to section 10
-with a recommendation. A deprecation path for our kinds is the builder's
+(field gaps wait for the release) was reversed by the builder on
+2026-11-10: decision 19, build foundation field gaps now in
+`docs/coverage/foundation.md`'s order and keep up with upstream
+mechanically. Whole-resource gaps first; any other field gap that needs the builder goes to section 10
+with a recommendation. Immutability is CEL in the CRD, never a webhook (decision 20). The
+builder has folderAdmin and another agent is making the `live-tests`
+folder and project `hfl-test-g1`; keep folder-level kinds "live:
+pending" until that agent reports. A deprecation path for our kinds is the builder's
 separate design; do not build it. Organization custom IAM roles (foundation item 3) are
 not a gap: Config Connector's `IAMCustomRole` takes the
 `cnrm.cloud.google.com/organization-id` annotation (the item says where). Org-level live tests wait for the test folder:
@@ -100,21 +116,85 @@ begun: `IAMDenyPolicy` (`iam.gcp.hfl.dev/v1beta1`; stable kinds go in
 and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
-are built. Next the rest of decision 13:
-`IAMPrincipalAccessBoundaryPolicy` (upstream has a direct controller;
-mockgcp has no service for it, so patch 0029),
-`DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
-alpha types and controllers),
-then 15 (`LoggingBillingAccountSink`, live pending billing-account
-access), 16 (Security Command Center, three parents). Packet mirroring
+and `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`, patch
+0030; live pending organization-level access) and `DNSResponsePolicy`
+(`dns.gcp.hfl.dev/v1beta1`) are built. `IAMBinding`
+moved to `v1beta1` (decision 24, the builder's K12, for the catalog's
+0.4.0 charts); `v1alpha1` is no longer served (section 10, question 4)
+and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
+`DNSResponsePolicyRule` (upstream has its types,
+identity, reference and fuzzer but a Terraform-only controller, and
+mockgcp serves no rules: write the controller after the policy's and add
+a mockgcp patch; the sweeper must delete a policy's rules before it),
+then 16 (Security Command Center, three parents). Packet mirroring
 rules: the global network policy's is built
-(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0031; live
-passes but for the patch, design.md section 7 item 33: rerun
+(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0032; live
+passes but for the patch, design.md section 7 item 37: rerun
 `task test-live PROJECT=hfl-dev-514205 KINDS=compute` and read the
 patch subtest's timeout message first); the
 hierarchical policy's has rule calls in the beta API only (live pending
 the test folder) and the regional policy's has none in any API version.
-Then on down `docs/coverage/foundation.md`.
+Then on down `docs/coverage/foundation.md`, with the
+field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
+(design.md 6.5, patch 0029), live pending billing account access.
+
+What `LoggingBillingAccountSink` taught: upstream's direct kinds often
+already carry the identity format for a parent their spec lacks (the
+log sink's identity parses `billingAccounts/...`); copy the kind and add
+the reference rather than writing one. Reuse upstream's leaf types
+(destination, exclusions) by import, so a later upstream fix reaches
+ours. mockgcp's log sink update took `description` and `filter` only;
+patch 0029 adds the rest.
+
+What `IAMPrincipalAccessBoundaryPolicy` taught: a service mockgcp has
+no generated HTTP gateway for (IAM v3) can still be served: register the
+`cloud.google.com/go` gRPC server and add its REST paths to the mux with
+`mux.HandlePath`, calling the server's methods (patch 0030,
+`mockiam/principalaccessboundarypolicies.go`). A patch that edits a file
+earlier patches edit (`mockiam/service.go`: 0006, 0007, 0010) must be
+diffed against the file with those applied, not against the pin.
+
+Decision 16 has begun: `SecurityCenterMuteConfig` (design.md 6.5, patch
+0031) takes an organization, folder or project. Upstream PR #7673 has
+the three parents for mute configs, BigQuery exports and custom modules
+but predates `master`'s kinds: copy `master`'s kind and #7673's parent
+(`apis/securitycenter/v1alpha1/parent.go`, `ResolveParent`), as the
+mute config did. Next: `SecurityCenterBigQueryExport` (mockgcp already
+serves all three parents), the two custom module kinds, then
+`SecurityCenterNotificationConfig` (Terraform-based upstream). Live
+needs Security Command Center active for the project
+(`E2E_SECURITY_CENTER=true`). A new API group also goes in the manager's
+ClusterRole (`config/operator/rbac.yaml`, both rules);
+`TestManagerRoleCoversEveryKind` fails without it.
+
+Field gaps (design.md decision 19, the builder's 2026-11-10 reversal of
+decision 5) are not begun. Take them in `docs/coverage/foundation.md`'s
+order (items 9 to 19 and 21 to 27 that say "field"), with the attribute
+lists in `docs/coverage/attributes.csv`. The accepted pattern is a
+parallel kind of ours that owns the whole object (decisions 11, 13 and 14).
+It suits small kinds like the log bucket and the sink fields (item 12) or
+the DNS policy fields (item 15). It is costly for the big Terraform-based
+kinds (`ContainerCluster`, `ComputeVPNTunnel`, `KMSCryptoKey`). The first
+field-gap PR that hits one of those should propose another pattern in a
+short design note, as the builder asked, for example a field kind that
+patches only its fields with an update mask beside Config Connector's
+object, and why. Decision 11 rejected that for `RunService`, because
+Terraform's whole-object update resets the fields.
+
+What `DNSResponsePolicy` taught: a new group (`dns.gcp.hfl.dev`) is a
+`groupversion_info.go` and `doc.go` copied, the kind added to
+`pkg/controller/controllers.go` (both lists), and the group added to the
+manager's ClusterRole (`config/operator/rbac.yaml`, both rules; without
+it the operator's manager cannot read the kind, which only
+`task operator-e2e` shows); the generator picks up the rest. Upstream's `NoProto` fuzzers (for kinds on the
+`google.golang.org/api` REST types) run as a test the same way as the
+proto ones (`FuzzSpec` and `FuzzStatus`). Upstream's direct DNS kinds
+leave `labels` out; ours takes `metadata.labels`
+(`label.NewGCPLabelsFromK8sLabels`), so live objects carry the run's
+labels with no spec field. Check what the live project has before
+writing a live test: `gcloud projects get-iam-policy` and `gcloud
+services list` (both read-only) showed no DNS API or role, so the test
+and sweeper sit behind `E2E_DNS_ADMIN`.
 
 What `ComputeNetworkFirewallPolicyPacketMirroringRule` taught: read the
 Discovery documents for which calls exist where

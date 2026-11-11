@@ -1,4 +1,4 @@
-config-connector-extensions patch 0031: mockgcp's packet mirroring rules of a global network firewall policy: addPacketMirroringRule, getPacketMirroringRule, patchPacketMirroringRule, removePacketMirroringRule.
+config-connector-extensions patch 0032: mockgcp's packet mirroring rules of a global network firewall policy: addPacketMirroringRule, getPacketMirroringRule, patchPacketMirroringRule, removePacketMirroringRule.
 
 For compute.gcp.hfl.dev ComputeNetworkFirewallPolicyPacketMirroringRule.
 Written here (upstream's mock answers Unimplemented; the HTTP routes are

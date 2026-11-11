@@ -131,7 +131,7 @@ func (a *networkFirewallPolicyPacketMirroringRuleAdapter) get(ctx context.Contex
 // packetMirroringRuleMissing is a 404, or the 400 the API answers for a
 // priority the policy has no packet mirroring rule at (assumed after the
 // firewall rules' "does not contain a rule at priority"; mockgcp patch
-// 0031 answers "does not contain a packet mirroring rule at priority").
+// 0032 answers "does not contain a packet mirroring rule at priority").
 func packetMirroringRuleMissing(err error) bool {
 	if direct.IsNotFound(err) {
 		return true

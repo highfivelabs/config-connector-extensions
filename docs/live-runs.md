@@ -100,6 +100,8 @@ refuses any project but the ones listed.
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
+| `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
+| `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
@@ -204,9 +206,15 @@ on the same VM, minutes apart.
 | 2026-11-10 | `1ff3750` | ComputeRouter | PASS | PASS | none left: run `cce-11100336-0ecc` (the first attempt, `cce-11100319-ed80`, was preempted and swept by ID); the API's defaults (BFD, peer IP, NAT timeouts, `identifierRange`) leave a resync without a write | 2 routers with an interface, a BGP peer, an MD5 key and a Cloud NAT (deleted) |
 | 2026-11-10 | `afe91be` | ComputeRouterRoutePolicy (and the rest of `compute`) | PASS | PASS | none: a policy on our `ComputeRouter` named by `routerRef.name`, and the name refused while a Config Connector `ComputeRouter` of the same name exists, as on the fake (design.md section 7 item 28). Run `cce-11100428-c1fb` | the compute package's networks, routers (one of ours), NEG and firewall policies (deleted); `task live-list` empty |
 | 2026-11-10 | pending | IAMDenyPolicy | PASS | pending, needs `iam.denypolicies.*` (Deny Admin, `roles/iam.denyAdmin`, granted on an organization) for `cce-live-tests`; then `E2E_IAM_DENY_ADMIN=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | IAMPrincipalAccessBoundaryPolicy | PASS | pending, needs organization-level access (a policy lives under an organization) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation | PASS | pending, needs the test folder (both act on an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
-| 2026-11-10 | `e24d9c6` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | `addPacketMirroringRule` refused `tlsInspect: false`: 400 "TLS Inspection cannot be set for packet mirroring rule" (mockgcp accepted it; fixed: the field is gone from the kind and patch 0031 refuses it). Run `cce-11100835-60b4` | 1 policy (swept by run ID in the next run) |
+| 2026-11-10 | pending | LoggingBillingAccountSink | PASS | pending, needs billing account access: a billing account on which `cce-live-tests` has `roles/logging.configWriter`, passed as `E2E_BILLING_ACCOUNT=billingAccounts/{id}` (design.md decision 15) | not run (the test skips live without it) | none |
+| 2026-11-10 | `18addd0` | ComputeNetworkFirewallPolicyRule (and the rest of `compute`) | PASS | PASS | after one run (`cce-11100614-922f`) that found: `patchRule` does not clear `srcNetworkContext` when sent `""` (it kept INTERNET, and the reconciler patched on every resync); fixed by sending `UNSPECIFIED`, with `""` and `UNSPECIFIED` compared as unset. The missing-priority answer is the regional one, 400 "The firewall policy does not contain a rule at priority 1000." Run `cce-11100702-7115` | 2 global network firewall policies and their rules, and the compute package's other resources (deleted); `task live-list` empty |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
+| 2026-11-10 | pending | DNSResponsePolicy | PASS | pending, needs `dns.googleapis.com` on in `hfl-dev-514205` and `roles/dns.admin` for `cce-live-tests`; then `E2E_DNS_ADMIN=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | `e24d9c6` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | `addPacketMirroringRule` refused `tlsInspect: false`: 400 "TLS Inspection cannot be set for packet mirroring rule" (mockgcp accepted it; fixed: the field is gone from the kind and patch 0032 refuses it). Run `cce-11100835-60b4` | 1 policy (swept by run ID in the next run) |
 | 2026-11-10 | `64c9c42` | ComputeNetworkFirewallPolicyPacketMirroringRule | PASS | FAIL | create, a resync with no write, a second rule, delete and abandon pass; the patch (new description, rule name, `destIpRanges`, `srcIpRanges` emptied) did not reach the cloud in 15 minutes, cause not logged (the test now prints the cloud rule and the object's Ready message on timeout). `ComputeNetworkFirewallPolicyRule` failed its network-context subtest, as on `main` (#51 fixes it). Run `cce-11100936-3a4c` | the compute package's resources (swept by run ID) |
 
 `+` means the commit plus the uncommitted changes that became the next
@@ -264,6 +272,38 @@ KINDS=iam`. The test's policy is on the run's project and denies
 but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
+
+`LoggingBillingAccountSink` (package `logging`) waits on billing account
+access: the live-test service account needs `roles/logging.configWriter`
+(or `logging.sinks.*`) on a billing account, which only the builder can
+grant; until then a live `logging` run skips the test and the sweeper
+leaves billing account sinks alone. With it:
+`E2E_BILLING_ACCOUNT=billingAccounts/<id> task test-live
+PROJECT=hfl-dev-514205 KINDS=logging` (the variable must reach the
+sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
+project that need not exist (assumed: the API does not check the
+destination at create); their names carry the run ID, and the sweeper
+deletes them from that billing account.
+
+`SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
+Command Center for the run's project: it must be active for the project
+(or its organization), and the live-test service account needs
+`securitycenter.muteconfigs.*` there (`roles/securitycenter.muteConfigsEditor`;
+assumed from the Security Command Center reference, not yet seen). Until
+then a live run skips the test and the sweeper leaves mute configs
+alone. With it: `E2E_SECURITY_CENTER=true task test-live
+PROJECT=hfl-dev-514205 KINDS=securitycenter`. A folder's and an
+organization's mute configs run on the fake only (the test folder).
+
+`DNSResponsePolicy` (package `dns`) waits on Cloud DNS in the project:
+`dns.googleapis.com` is not on in `hfl-dev-514205` and `cce-live-tests`
+has no DNS role (checked 2026-11-10). Until both are, a live `dns` run
+skips the test and the sweeper leaves response policies alone (listing
+them needs the API and the role). With them:
+`E2E_DNS_ADMIN=true task test-live PROJECT=hfl-dev-514205 KINDS=dns`.
+The test binds a policy to two networks of its own, unbinds one,
+deletes it (unbinding first) and abandons and then acquires another; the
+sweeper unbinds and deletes policies whose name carries a run ID.
 
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as

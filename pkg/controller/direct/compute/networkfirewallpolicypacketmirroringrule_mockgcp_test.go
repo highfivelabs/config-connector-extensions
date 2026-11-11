@@ -16,7 +16,7 @@
 package compute_test
 
 // ComputeNetworkFirewallPolicyPacketMirroringRule end to end on the fake
-// cloud (pkg/test/mockenv; mockgcp patch 0031) or a real project
+// cloud (pkg/test/mockenv; mockgcp patch 0032) or a real project
 // (docs/live-runs.md). The case: a security team's packet mirroring on a
 // VPC's global network firewall policy: web traffic is not mirrored (so a
 // broader mirror rule below it skips it), and the rest goes to the next
