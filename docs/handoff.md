@@ -62,6 +62,13 @@ in each PR.
 
 ## What is left, in order
 
+**Split between two GCP agents (the coordinator, 2026-11-10).** This
+queue: `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`,
+`DNSResponsePolicy` and its rule, then packet mirroring rules. The other
+GCP agent: `LoggingBillingAccountSink` (15), Security Command Center (16)
+and field gaps (decision 19). Coordinate through `main`: merge `main`
+before each check run.
+
 The queue is `docs/coverage/foundation.md` (the builder's priority:
 platform foundations first), not the older rank lists. After the
 folder and organization `ServiceIdentity` (built; live pending the test
@@ -81,7 +88,10 @@ kinds with organization, folder and project parents (16). Decision 5
 2026-11-10: decision 19, build foundation field gaps now in
 `docs/coverage/foundation.md`'s order and keep up with upstream
 mechanically. Whole-resource gaps first; any other field gap that needs the builder goes to section 10
-with a recommendation. A deprecation path for our kinds is the builder's
+with a recommendation. Immutability is CEL in the CRD, never a webhook (decision 20). The
+builder has folderAdmin and another agent is making the `live-tests`
+folder and project `hfl-test-g1`; keep folder-level kinds "live:
+pending" until that agent reports. A deprecation path for our kinds is the builder's
 separate design; do not build it. Organization custom IAM roles (foundation item 3) are
 not a gap: Config Connector's `IAMCustomRole` takes the
 `cnrm.cloud.google.com/organization-id` annotation (the item says where). Org-level live tests wait for the test folder:
