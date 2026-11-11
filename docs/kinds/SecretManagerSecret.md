@@ -22,3 +22,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | `e8a920c` | PASS | PASS | none (`TestRegionalSecret`, `TestGlobalSecretUnchanged`; run `cce-11112128-d3db`, the fallback project) | 1 regional and 1 global secret (deleted); `task live-list` empty |

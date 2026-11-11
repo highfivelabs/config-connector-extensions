@@ -24,3 +24,4 @@ One row per run.
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-11 | pending | PASS (CI, `task check`) | pending, needs `logging.savedQueries.*` for the live-test account (`roles/logging.admin`, or a custom role) and a laptop able to start offload | not run | none |
+| 2026-11-11 | `e8a920c` | PASS | PASS | none: create, a resync with no write, a changed spec, delete and abandon match the fake (run `cce-11112128-d3db`, the fallback project) | the test's saved queries (deleted, the abandoned one by its cleanup); `task live-list` empty |
