@@ -125,7 +125,9 @@ func main() {
 		fmt.Printf("ok: %d kinds, each with its docs/kinds file\n", len(crds))
 		return
 	}
-	sort.Slice(docs, func(i, j int) bool { return docs[i].front.APIVersion+docs[i].file < docs[j].front.APIVersion+docs[j].file })
+	sort.Slice(docs, func(i, j int) bool {
+		return docs[i].front.APIVersion+docs[i].file < docs[j].front.APIVersion+docs[j].file
+	})
 	fmt.Println("| Kind | API version | Last live run | Gap it fills |")
 	fmt.Println("| --- | --- | --- | --- |")
 	for _, d := range docs {
