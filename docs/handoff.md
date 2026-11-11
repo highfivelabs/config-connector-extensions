@@ -60,13 +60,13 @@ mockgcp patch, test code or `controllers.go` edit; several kinds per pull
 request. `docs/throughput.md` says why and what it reaches (178 of the
 494 whole-resource gaps), `docs/testing.md` how such a kind is tested.
 Run one kind live with `LIVE_RUN=TestLoggingSavedQuery task test-live
-PROJECT=hfl-dev-514205 KINDS=logging`.
+PROJECT=our-chassis-514316-r0 KINDS=logging`.
 
 **Generating a kind.** `hack/scaffold-kind.sh` runs Config Connector's
 `controllerbuilder` (types, mapper, controller) on an offload VM and brings
 the files back as the run's artifacts (`gcloud storage cp -r
-gs://hfl-dev-514205-offload/runs/<run>/offload-artifacts/scaffold <dir>
---project hfl-dev-514205`); its header says how. It was first used for
+gs://our-chassis-514316-r0-offload/runs/<run>/offload-artifacts/scaffold <dir>
+--project our-chassis-514316-r0`); its header says how. It was first used for
 `ServiceIdentity`. What it taught: a proto without `field_behavior` puts
 output fields in the spec, so field behaviour goes in
 `hack/scaffold/<service>/overlay.proto` (from Magic Modules' product YAML
@@ -143,7 +143,7 @@ then 16 (Security Command Center, three parents). Packet mirroring
 rules: the global network policy's is built
 (`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0032; live
 passes but for the patch, design.md section 7 item 37: rerun
-`task test-live PROJECT=hfl-dev-514205 KINDS=compute` and read the
+`task test-live PROJECT=our-chassis-514316-r0 KINDS=compute` and read the
 patch subtest's timeout message first); the
 hierarchical policy's has rule calls in the beta API only (live pending
 the test folder) and the regional policy's has none in any API version.
@@ -280,7 +280,7 @@ generated ones it shadows), rename the mapper functions when the package
 already has kinds, and check that the controller writes status through
 `op.UpdateStatus`: upstream's deny policy set `externalRef` on a typed
 copy only. A kind whose live test needs a role the live-test account
-cannot get in `hfl-dev-514205` skips live behind an `E2E_...` switch,
+cannot get in `our-chassis-514316-r0` skips live behind an `E2E_...` switch,
 and so does its sweeper section, since a failed list fails the sweep.
 `hack/live/sweep.sh` defined `by_run` after the security profile loop
 that calls it, so profiles were never swept; fixed in this PR.
@@ -354,7 +354,7 @@ Still true from before:
   organization policies.
 - The default network tier and default service accounts change a whole
   project: live, they run only in a test project under the test folder,
-  never in `hfl-dev-514205` (disabling or deleting its compute default
+  never in `our-chassis-514316-r0` (disabling or deleting its compute default
   service account would break the offload VMs and `RunService`).
 - **Live runs for the other 27 `pkg/iampolicy` rows** (design.md section
   7, item 26).
@@ -370,9 +370,9 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 
 ```sh
 ../offload/offload run --hours 3 --prep 'task upstream' --step-skippable 'task check' --step 'task operator-e2e'
-../offload/offload run --sa cce-live-tests@hfl-dev-514205.iam.gserviceaccount.com --hours 3 \
+../offload/offload run --sa cce-live-tests@our-chassis-514316-r0.iam.gserviceaccount.com --hours 3 \
   --prep 'task upstream' --step-skippable 'task check' \
-  --step 'task test-live PROJECT=hfl-dev-514205 KINDS="compute iam run"'
+  --step 'task test-live PROJECT=our-chassis-514316-r0 KINDS="compute iam run"'
 ```
 
 - **Put `task upstream` in a `--prep`.** `third_party` is gitignored and
@@ -383,7 +383,7 @@ are fine (with `GOFLAGS=-p=2 nice`). Everything else runs on offload.
 - **After a preempted live run, sweep it.** The live run's own sweep only
   takes leftovers older than 2h. Sweep the interrupted run by ID before
   the next run:
-  `--step 'task live-sweep PROJECT=hfl-dev-514205 RUN=<run ID>'`.
+  `--step 'task live-sweep PROJECT=our-chassis-514316-r0 RUN=<run ID>'`.
 - **Start offload with the tool's background mode**, never with a shell
   `&`: a shell-backgrounded offload dies with the shell and orphans its
   VM. If that happens, `../offload/offload ls`, then
