@@ -17,9 +17,9 @@ After the Security Command Center mute config PR (decision 16's
 `SecurityCenterMuteConfig`): thirty-five kinds (`README.md`, design.md's
 intro; the latest, `SecurityCenterMuteConfig`, decision 16),
 mockgcp patches 0001 to 0031 (`UPSTREAM.md` and `upstream.yaml`, which
-must agree: `task upstream:yaml-check`; the next free number is
-**0032**, but take it from `main` when you need it: two agents add
-patches), the live-test switch and the Taskfile (`docs/live-runs.md`,
+must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
+without a number, `CONTRIBUTING.md`; only an ordered one takes the next
+number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
 `taskfiles/README.md`; use `task`, not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
 `ComputeProjectDefaultNetworkTier` and `ProjectDefaultServiceAccounts`,
@@ -349,12 +349,16 @@ run's name prefix (`by_run` for names that carry the run ID). Package-level
 test helpers collide across a package's test files: keep helpers in one
 `helpers_mockgcp_test.go` per package or local to the test.
 
-**Branches, merges, PRs.** One PR per kind, `agent/<short-name>`, cut
-from the latest `main`; if it needs an unmerged sibling, say so and the
-coordinator merges first. Sibling PRs conflict in the same doc spots
-(design.md's intro count and kind list, the 6.5 notes, section 7's
-numbered items, the README table, UPSTREAM's patch table, the live-runs
-ledger, `hack/live/sweep.sh`, `pkg/controller/controllers.go`): when main
+**Branches, merges, PRs.** One PR per hand-written kind (generated kinds
+go several to a PR), `agent/<short-name>`, cut from the latest `main`, in
+your own `git worktree`, never a checkout another agent uses; if it needs
+an unmerged sibling, say so and the coordinator merges first. A kind's
+notes and live rows go in its own `docs/kinds/<Kind>.md`, not in
+design.md 6.5, the README or the live-runs ledger, and a patch that
+touches no other patch's files is named, not numbered (`CONTRIBUTING.md`).
+What still conflicts: UPSTREAM's patch table and `upstream.yaml`,
+`hack/live/sweep.sh` and `pkg/controller/controllers.go` for hand-written
+kinds; when main
 moves, `git merge --no-ff --signoff origin/main`, keep both sides
 (renumber the later item, recount the kinds), regenerate, commit with a
 full message ending in the attribution lines your session is given
