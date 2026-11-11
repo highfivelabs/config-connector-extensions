@@ -119,7 +119,10 @@ here, and to the account, in the same change.
 
 ## Adding a kind
 
-A kind is not done until it has one live run in the ledger below:
+A kind is not done until it has one live run recorded. From 2026-11-11 a
+run's rows go in the kind's own file, `docs/kinds/<Kind>.md` ("Live
+runs"), so pull requests do not conflict here; the ledger below keeps the
+runs before then.
 
 1. Its end-to-end test uses `pkg/test/mockenv` and takes every name from
    `mockenv.Name`, labels from `mockenv.Labels()`, the project from
@@ -128,7 +131,7 @@ A kind is not done until it has one live run in the ledger below:
 2. The sweeper knows its resource type (`hack/live/sweep.sh`), and the
    service account has the role it needs.
 3. `task test-live PROJECT=hfl-dev-514205 KINDS=<package>` on an offload VM.
-4. A row per kind below. A difference between mock and live is fixed where
+4. A row in the kind's `docs/kinds` file. A difference between mock and live is fixed where
    it belongs: in our controller (with a test), or in mockgcp (a patch in
    `patches/k8s-config-connector/`), or written down in `docs/fake-cloud.md`
    when the fake cannot show it.
@@ -333,3 +336,4 @@ Every run ended with `task live-list` empty (run `cce-11091348-ef59`:
 roughly: five db-f1-micro instances for 25 to 40 minutes each (well under
 $0.50 together), Spot VMs of 4 to 8 vCPUs for about 4 VM-hours (about
 $0.30), and Artifact Registry and Secret Manager use of a few cents.
+

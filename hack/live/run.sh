@@ -10,7 +10,9 @@
 #   hack/live/run.sh --project P [KIND...]
 #
 # KIND is a package under pkg/controller/direct (default: every built kind,
-# in docs/design.md section 6.3's order). Credentials are Application
+# in docs/design.md section 6.3's order). LIVE_RUN, when set, is a go test
+# -run regexp for both runs of every package (one kind of a package:
+# LIVE_RUN=TestIAMOAuthClient). Credentials are Application
 # Default Credentials, which must be a service account (it is the IAM
 # principal the SQLUser test grants roles to); on an offload VM started
 # with --sa they are that service account's.
@@ -74,7 +76,7 @@ mkdir -p "${out}"
 commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 dirty="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
 started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-echo "live: run ${run_id} in ${project} as ${sa}, commit ${commit} (${dirty} changed files), kinds: ${kinds[*]}"
+echo "live: run ${run_id} in ${project} as ${sa}, commit ${commit} (${dirty} changed files), kinds: ${kinds[*]}${LIVE_RUN:+, tests ${LIVE_RUN}}"
 
 finish() {
   local code=$?
@@ -135,12 +137,14 @@ fi
   echo "| --- | --- | --- | --- |"
 } >"${out}/summary.md"
 
+run_filter=()
+[[ -z "${LIVE_RUN:-}" ]] || run_filter=(-run "${LIVE_RUN}")
 failed=0
 for k in "${kinds[@]}"; do
   pkg="./pkg/controller/direct/${k}/"
   echo "== live: ${k}: mock"
   mock=PASS
-  E2E_GCP_TARGET=mock go test -count=1 -v -timeout 15m "${pkg}" >"${out}/${k}.mock.log" 2>&1 || mock=FAIL
+  E2E_GCP_TARGET=mock go test -count=1 -v -timeout 15m ${run_filter[@]+"${run_filter[@]}"} "${pkg}" >"${out}/${k}.mock.log" 2>&1 || mock=FAIL
   grep -E '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:' "${out}/${k}.mock.log" || true
   echo "== live: ${k}: live"
   live=PASS
@@ -148,7 +152,7 @@ for k in "${kinds[@]}"; do
   # Streamed as it runs, so a preempted VM's log still has it.
   E2E_GCP_TARGET=real GCP_PROJECT_ID="${project}" E2E_RUN_ID="${run_id}" \
     E2E_SERVICE_ACCOUNT="${sa}" E2E_SQL_INSTANCE="${sql_instance}" \
-    go test -count=1 -v -timeout 60m "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
+    go test -count=1 -v -timeout 60m ${run_filter[@]+"${run_filter[@]}"} "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
     | grep -E --line-buffered '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:|^=== RUN' || live=FAIL
   secs=$(( $(date +%s) - t0 ))
   [[ "${mock}" == PASS && "${live}" == PASS ]] || failed=1
