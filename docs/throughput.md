@@ -109,15 +109,17 @@ what a live run is for; `docs/testing.md`).
 
 ## Still to fix
 
-- **Docs per kind, not per file.** A kind's design notes and ledger row in
-  their own files (`docs/kinds/<Kind>.md`) would end the merge conflicts
-  in design.md, handoff.md and live-runs.md for hand-written kinds too.
-- **mockgcp patches named, not numbered**, so siblings do not renumber.
-- **Done 2026-11-11: the compute insert shape** (`insert`, `get`,
-  `patch` or `update`, `delete`, the name in the body, compute
-  operations): 15 of the 25 Compute Engine tier 1 gaps generated. Left
-  out on purpose: commitments (they cannot be deleted), storage pools and
-  instant snapshots (billed, need disks), resize requests (make VMs),
-  licenses.
+- **Done 2026-11-11 (#62 to #66):** the generator and its fake and test
+  (above); docs per kind (`docs/kinds/<Kind>.md`, checked by
+  `hack/kinddocs`, no committed list of kinds); patches that touch no
+  other patch's files named, not numbered; the compute insert shape
+  (`insert`, `get`, `patch` or `update`, `delete`, the name in the body,
+  compute operations), with 15 of the 25 Compute Engine tier 1 gaps
+  generated. Left out on purpose: commitments (they cannot be deleted),
+  storage pools and instant snapshots (billed, need disks), resize
+  requests (make VMs), licenses.
+- **What still conflicts**: UPSTREAM.md's patch table and `upstream.yaml`,
+  `hack/live/sweep.sh` and `pkg/controller/controllers.go` for
+  hand-written kinds (generated kinds touch none of them).
 - **A live job** that runs the generated kinds' tests in the test project
   on a schedule (`docs/testing.md`).

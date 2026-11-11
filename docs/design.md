@@ -1,29 +1,9 @@
 # config-connector-extensions design
 
-config-connector-extensions has thirty-three kinds: `SQLUser` with `spec.databaseRoles`,
-`SQLAdminBackup`, regional `SecretManagerSecret` and
-`SecretManagerSecretVersion`, `ArtifactRegistryRepository` with a custom
-remote upstream and its credentials, `ArtifactRegistryTag`,
-`IAMWorkloadIdentityPoolNamespace`,
-`IAMWorkloadIdentityPoolManagedIdentity` and
-`IAMWorkloadIdentityPoolProviderKey`, a narrow direct
-`RunService` with `invokerIamDisabled` and GPUs,
-`ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy`,
-`StorageBucketObject`, `ComputeRegionNetworkFirewallPolicy`,
-`LoggingSettings`, `LoggingBillingAccountSink`,
-`ComputeProjectMetadataItem`, `IAMBinding`,
-`IAMMember`, `ComputeRegionNetworkFirewallPolicyRule`,
-`ComputeRegionNetworkFirewallPolicyAssociation`, a folder's or
-organization's `ServiceIdentity`, `ComputeProjectDefaultNetworkTier`,
-`ProjectDefaultServiceAccounts`, and a project's or organization's
-`NetworkSecurityAddressGroup`, `NetworkSecuritySecurityProfile` and
-`NetworkSecuritySecurityProfileGroup`, a whole `ComputeRouter`, and a
-stable `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicy`,
-`ComputeOrganizationSecurityPolicyAssociation`,
-`ComputeOrganizationSecurityPolicyRule`,
-`ComputeNetworkFirewallPolicyRule`,
-`IAMPrincipalAccessBoundaryPolicy`, and an organization's, folder's or
-project's `SecurityCenterMuteConfig` (section 6). Each
+config-connector-extensions has the kinds in `docs/kinds/`, one file
+each (`task kinds` lists them): gap kinds copied from Config Connector's
+nearest code (section 2.3) and kinds generated from the APIs' Discovery
+documents (section 2.4). Each
 passes its end-to-end test against mockgcp; those in `docs/live-runs.md`
 also pass it against a real project. An operator runs the managers beside
 Config Connector's, each as its own Kubernetes service account carrying

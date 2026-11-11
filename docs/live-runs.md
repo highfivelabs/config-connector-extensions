@@ -118,7 +118,10 @@ here, and to the account, in the same change.
 
 ## Adding a kind
 
-A kind is not done until it has one live run in the ledger below:
+A kind is not done until it has one live run recorded. From 2026-11-11 a
+run's rows go in the kind's own file, `docs/kinds/<Kind>.md` ("Live
+runs"), so pull requests do not conflict here; the ledger below keeps the
+runs before then.
 
 1. Its end-to-end test uses `pkg/test/mockenv` and takes every name from
    `mockenv.Name`, labels from `mockenv.Labels()`, the project from
@@ -127,7 +130,7 @@ A kind is not done until it has one live run in the ledger below:
 2. The sweeper knows its resource type (`hack/live/sweep.sh`), and the
    service account has the role it needs.
 3. `task test-live PROJECT=hfl-dev-514205 KINDS=<package>` on an offload VM.
-4. A row per kind below. A difference between mock and live is fixed where
+4. A row in the kind's `docs/kinds` file. A difference between mock and live is fixed where
    it belongs: in our controller (with a test), or in mockgcp (a patch in
    `patches/k8s-config-connector/`), or written down in `docs/fake-cloud.md`
    when the fake cannot show it.
@@ -211,13 +214,6 @@ on the same VM, minutes apart.
 | 2026-11-10 | `18addd0` | ComputeNetworkFirewallPolicyRule (and the rest of `compute`) | PASS | PASS | after one run (`cce-11100614-922f`) that found: `patchRule` does not clear `srcNetworkContext` when sent `""` (it kept INTERNET, and the reconciler patched on every resync); fixed by sending `UNSPECIFIED`, with `""` and `UNSPECIFIED` compared as unset. The missing-priority answer is the regional one, 400 "The firewall policy does not contain a rule at priority 1000." Run `cce-11100702-7115` | 2 global network firewall policies and their rules, and the compute package's other resources (deleted); `task live-list` empty |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
-| 2026-11-11 | pending | LoggingSavedQuery | pending (CI) | pending, needs `logging.savedQueries.*` for the live-test account (`roles/logging.admin`, or a custom role) and a laptop able to start offload | not run | none |
-| 2026-11-11 | pending | IAMOauthClient | pending (CI) | pending, needs `iam.oauthClients.*` for the live-test account (`roles/iam.oauthClientAdmin`) | not run | none |
-| 2026-11-11 | pending | IAMWorkforcePoolProviderKey | pending (CI) | pending, needs organization-level access (`live-skip`) | not run | none |
-| 2026-11-11 | pending | IAMWorkforcePoolProviderScimTenant | pending (CI) | pending, needs organization-level access (`live-skip`) | not run | none |
-| 2026-11-11 | pending | GKEHubMembershipRBACRoleBinding | pending (CI) | pending, needs a test cluster in the fleet (`live-skip`) | not run | none |
-| 2026-11-11 | pending | GKEHubRolloutSequence | pending (CI) | pending: free, ready to run (`LIVE_RUN=TestGKEHubRolloutSequence KINDS=gkehub`); needs `gkehub.rolloutsequences.*` (`roles/gkehub.admin`) and the GKE Hub API on | not run | none |
-| 2026-11-11 | pending | LoggingLink | pending (CI) | pending, needs a Log Analytics bucket (`live-skip`) | not run | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -327,3 +323,4 @@ Every run ended with `task live-list` empty (run `cce-11091348-ef59`:
 roughly: five db-f1-micro instances for 25 to 40 minutes each (well under
 $0.50 together), Spot VMs of 4 to 8 vCPUs for about 4 VM-hours (about
 $0.30), and Artifact Registry and Secret Manager use of a few cents.
+

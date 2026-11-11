@@ -151,6 +151,11 @@ tasks:
     cmds:
       - hack/live/sweep.sh --project "{{.PROJECT}}" --list
 
+  kinds:
+    desc: Every kind as a table, from docs/kinds/ (hack/kinddocs).
+    cmds:
+      - go run ./hack/kinddocs
+
   # Everything that must hold before a commit: the checkout is the pin plus
   # our patches, generated files are current, code is formatted and vetted,
   # it builds, and the tests pass.
@@ -177,6 +182,7 @@ tasks:
       - go vet -tags fakecloud ./cmd/manager
       - hack/check-no-fake-cloud.sh
       - hack/check-spdx.sh
+      - go run ./hack/kinddocs -check
 
   # Some packages' tests, as test-mock runs them: what CI runs for a pull
   # request that changes only some kinds (hack/ci/select.sh).
