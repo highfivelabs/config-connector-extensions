@@ -204,8 +204,11 @@ on the same VM, minutes apart.
 | 2026-11-10 | `1ff3750` | ComputeRouter | PASS | PASS | none left: run `cce-11100336-0ecc` (the first attempt, `cce-11100319-ed80`, was preempted and swept by ID); the API's defaults (BFD, peer IP, NAT timeouts, `identifierRange`) leave a resync without a write | 2 routers with an interface, a BGP peer, an MD5 key and a Cloud NAT (deleted) |
 | 2026-11-10 | `afe91be` | ComputeRouterRoutePolicy (and the rest of `compute`) | PASS | PASS | none: a policy on our `ComputeRouter` named by `routerRef.name`, and the name refused while a Config Connector `ComputeRouter` of the same name exists, as on the fake (design.md section 7 item 28). Run `cce-11100428-c1fb` | the compute package's networks, routers (one of ours), NEG and firewall policies (deleted); `task live-list` empty |
 | 2026-11-10 | pending | IAMDenyPolicy | PASS | pending, needs `iam.denypolicies.*` (Deny Admin, `roles/iam.denyAdmin`, granted on an organization) for `cce-live-tests`; then `E2E_IAM_DENY_ADMIN=true` | not run (the test skips live without it) | none |
+| 2026-11-10 | pending | IAMPrincipalAccessBoundaryPolicy | PASS | pending, needs organization-level access (a policy lives under an organization) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation | PASS | pending, needs the test folder (both act on an organization or folder) | not run (the test skips live) | none |
 | 2026-11-10 | pending | ComputeOrganizationSecurityPolicyRule | PASS | pending, needs the test folder (a rule of a policy under an organization or folder) | not run (the test skips live) | none |
+| 2026-11-10 | pending | LoggingBillingAccountSink | PASS | pending, needs billing account access: a billing account on which `cce-live-tests` has `roles/logging.configWriter`, passed as `E2E_BILLING_ACCOUNT=billingAccounts/{id}` (design.md decision 15) | not run (the test skips live without it) | none |
+| 2026-11-10 | `18addd0` | ComputeNetworkFirewallPolicyRule (and the rest of `compute`) | PASS | PASS | after one run (`cce-11100614-922f`) that found: `patchRule` does not clear `srcNetworkContext` when sent `""` (it kept INTERNET, and the reconciler patched on every resync); fixed by sending `UNSPECIFIED`, with `""` and `UNSPECIFIED` compared as unset. The missing-priority answer is the regional one, 400 "The firewall policy does not contain a rule at priority 1000." Run `cce-11100702-7115` | 2 global network firewall policies and their rules, and the compute package's other resources (deleted); `task live-list` empty |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (project parent) | PASS | pending, needs Security Command Center active for `hfl-dev-514205` and `securitycenter.muteconfigs.*` (`roles/securitycenter.muteConfigsEditor`) for `cce-live-tests`; then `E2E_SECURITY_CENTER=true` | not run (the test skips live without it) | none |
 | 2026-11-10 | pending | SecurityCenterMuteConfig (folder and organization parents) | PASS | pending, needs test folder | not run (the subtest skips live) | none |
 
@@ -265,6 +268,17 @@ but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
 
+`LoggingBillingAccountSink` (package `logging`) waits on billing account
+access: the live-test service account needs `roles/logging.configWriter`
+(or `logging.sinks.*`) on a billing account, which only the builder can
+grant; until then a live `logging` run skips the test and the sweeper
+leaves billing account sinks alone. With it:
+`E2E_BILLING_ACCOUNT=billingAccounts/<id> task test-live
+PROJECT=hfl-dev-514205 KINDS=logging` (the variable must reach the
+sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
+project that need not exist (assumed: the API does not check the
+destination at create); their names carry the run ID, and the sweeper
+deletes them from that billing account.
 `SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
 Command Center for the run's project: it must be active for the project
 (or its organization), and the live-test service account needs

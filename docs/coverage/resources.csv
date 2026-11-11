@@ -784,6 +784,7 @@ hypercomputecluster.googleapis.com,hypercomputecluster.googleapis.com/Cluster,61
 iam.googleapis.com,iam.googleapis.com/IAMBinding,0,,0,IAMBinding,0,0,false,"outside-denominator; one role binding in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/IAMDenyPolicy,0,,0,IAMDenyPolicy,0,0,false,"outside-denominator; an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
+iam.googleapis.com,iam.googleapis.com/IAMPrincipalAccessBoundaryPolicy,0,,0,IAMPrincipalAccessBoundaryPolicy,0,0,false,outside-denominator; no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,,0,8,false,api=v1:projects.locations.oauthClients
 iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
 iam.googleapis.com,iam.googleapis.com/Role,7,IAMCustomRole,4,,0,3,false,api=v1:organizations.roles; request-wrapper=CreateRoleRequest; official-spec-fields-unmatched=2/5
@@ -843,7 +844,7 @@ logging.googleapis.com,logging.googleapis.com/BillingAccountExclusion,4,LoggingL
 logging.googleapis.com,logging.googleapis.com/BillingAccountLocationBucket,8,LoggingLogBucket,3,,0,5,false,api=v2:billingAccounts.locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/BillingAccountLocationBucketLink,1,,0,,0,1,false,api=v2:billingAccounts.locations.buckets.links
 logging.googleapis.com,logging.googleapis.com/BillingAccountLocationBucketView,2,LoggingLogView,2,,0,0,false,api=v2:billingAccounts.locations.buckets.views; official-spec-fields-unmatched=7/9
-logging.googleapis.com,logging.googleapis.com/BillingAccountSink,13,,0,,0,13,false,api=v2:billingAccounts.sinks
+logging.googleapis.com,logging.googleapis.com/BillingAccountSink,13,,0,LoggingBillingAccountSink,10,3,false,api=v2:billingAccounts.sinks; ours-spec-fields-unmatched=5/14
 logging.googleapis.com,logging.googleapis.com/Bucket,8,LoggingLogBucket,3,,0,5,false,api=v2:locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/BucketLink,1,LoggingLink,1,,0,0,false,api=v2:locations.buckets.links; official-spec-fields-unmatched=2/3
 logging.googleapis.com,logging.googleapis.com/BucketView,2,LoggingLogView,2,,0,0,false,api=v2:locations.buckets.views; official-spec-fields-unmatched=7/9
@@ -872,7 +873,7 @@ logging.googleapis.com,logging.googleapis.com/organizations.locations.savedQueri
 logging.googleapis.com,logging.googleapis.com/projects.exclusions,4,LoggingLogExclusion,4,,0,0,false,api=v2:projects.exclusions; official-spec-fields-unmatched=5/8
 logging.googleapis.com,logging.googleapis.com/projects.locations.logScopes,2,LoggingLogScope,1,,0,1,false,api=v2:projects.locations.logScopes; official-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/projects.locations.savedQueries,77,,0,,0,77,false,api=v2:projects.locations.savedQueries; recursive-cut=5
-logging.googleapis.com,logging.googleapis.com/sinks,13,LoggingLogSink,11,,0,2,false,api=v2:sinks; official-spec-fields-unmatched=8/18
+logging.googleapis.com,logging.googleapis.com/sinks,13,LoggingLogSink,11,LoggingBillingAccountSink,0,2,false,api=v2:sinks; official-spec-fields-unmatched=8/18; ours-spec-fields-unmatched=5/14
 looker.googleapis.com,looker.googleapis.com/Instance,56,,0,,0,56,false,api=v1:projects.locations.instances
 looker.googleapis.com,looker.googleapis.com/InstanceBackup,1,,0,,0,1,false,api=v1:projects.locations.instances.backups
 lustre.googleapis.com,lustre.googleapis.com/DirectoryPolicy,2,,0,,0,2,false,api=v1:google.cloud.lustre.v1.Lustre.CreateDirectoryPolicy

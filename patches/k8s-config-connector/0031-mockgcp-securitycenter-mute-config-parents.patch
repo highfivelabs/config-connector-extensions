@@ -1,4 +1,4 @@
-config-connector-extensions patch 0030: mockgcp serves a folder's and a project's Security Command Center mute configs.
+config-connector-extensions patch 0031: mockgcp serves a folder's and a project's Security Command Center mute configs.
 
 For securitycenter.gcp.hfl.dev SecurityCenterMuteConfig. mocksecuritycenter/muteconfig.go
 took organizations/{id} as a mute config's parent only; it now takes

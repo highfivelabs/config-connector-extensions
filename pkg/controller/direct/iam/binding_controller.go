@@ -23,7 +23,8 @@ package iam
 // writer changed it meanwhile). Other roles, audit configs and the same
 // role under another condition are carried through unchanged. Delete
 // removes the binding. A resource that is gone while the binding is being
-// deleted leaves nothing to remove.
+// deleted leaves nothing to remove. The kind is iam.gcp.hfl.dev/v1beta1
+// (docs/design.md decision 24); v1alpha1 is no longer served.
 
 import (
 	"context"
@@ -41,7 +42,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 )
 
@@ -64,7 +65,7 @@ func (m *bindingModel) AdapterForObject(ctx context.Context, op *directbase.Adap
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	t, name, gone, err := resolveResource(ctx, op, obj.Spec.ResourceRef)
+	t, name, gone, err := resolveResource(ctx, op, bindingRef(obj.Spec.ResourceRef))
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,16 @@ type bindingAdapter struct {
 var _ directbase.Adapter = &bindingAdapter{}
 
 func (a *bindingAdapter) condition() *iampolicy.Condition {
-	return conditionOf(a.desired.Spec.Condition)
+	c := a.desired.Spec.Condition
+	if c == nil {
+		return nil
+	}
+	return &iampolicy.Condition{Title: c.Title, Description: c.Description, Expression: c.Expression}
+}
+
+// bindingRef is policyRef for IAMBinding's v1beta1 reference.
+func bindingRef(r krm.IAMResourceReference) iampolicy.Ref {
+	return iampolicy.Ref{APIVersion: r.APIVersion, Kind: r.Kind, Name: r.Name, Namespace: r.Namespace, External: r.External}
 }
 
 func (a *bindingAdapter) Find(ctx context.Context) (bool, error) {

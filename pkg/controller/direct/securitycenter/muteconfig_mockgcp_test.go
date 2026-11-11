@@ -16,7 +16,7 @@
 package securitycenter_test
 
 // SecurityCenterMuteConfig end to end on the fake cloud (pkg/test/mockenv,
-// patch 0030) or a real project (docs/live-runs.md). The case: a landing
+// patch 0031) or a real project (docs/live-runs.md). The case: a landing
 // zone mutes Security Command Center findings it has accepted, a known
 // public bucket in one project, a sandbox folder's findings, and an
 // organization-wide finding category, each at its own level.
