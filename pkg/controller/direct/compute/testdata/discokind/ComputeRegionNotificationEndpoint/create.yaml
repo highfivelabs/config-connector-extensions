@@ -1,0 +1,13 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionNotificationEndpoint
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  grpcSettings:
+    endpoint: https://example.com
+    payloadName: ${NAME}
+    retryDurationSec: 30
+  description: made by a config-connector-extensions test

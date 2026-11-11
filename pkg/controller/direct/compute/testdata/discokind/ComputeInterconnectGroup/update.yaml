@@ -1,0 +1,10 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeInterconnectGroup
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  intent:
+    topologyCapability: NO_SLA
+  description: changed

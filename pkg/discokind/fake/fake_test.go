@@ -94,3 +94,66 @@ func TestStandardCollection(t *testing.T) {
 		}
 	}
 }
+
+func TestComputeInsertStyle(t *testing.T) {
+	ctx := context.Background()
+	for _, put := range []bool{false, true} {
+		k := &discokind.Kind{
+			BaseURL: "https://compute.googleapis.com/compute/v1/", Name: "{parent}/regions/{region}/widgets/{id}",
+			Parents: []string{"project"}, InsertStyle: true, UpdatePUT: put, Updatable: true,
+			CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+			Output: []string{"creationTimestamp", "fingerprint", "id", "selfLink"},
+		}
+		api := &discokind.API{HTTP: &http.Client{Transport: New(unreachable{}, []*discokind.Kind{k})}, BaseURL: k.BaseURL, PollInterval: time.Millisecond}
+		path := "projects/p/regions/r/widgets/w1"
+		op, err := api.Do(ctx, http.MethodPost, "projects/p/regions/r/widgets", nil, map[string]any{"name": "w1", "color": "red", "size": 3})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if op["kind"] != "compute#operation" {
+			t.Fatalf("insert answered %v", op)
+		}
+		if _, err := api.Wait(ctx, op); err != nil {
+			t.Fatal(err)
+		}
+		got, err := api.Get(ctx, path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got["name"] != "w1" || got["selfLink"] != k.BaseURL+path || got["fingerprint"] == nil {
+			t.Errorf("inserted %v", got)
+		}
+		if _, err := api.Do(ctx, http.MethodPatch, path, nil, map[string]any{"name": "w1", "color": "blue", "fingerprint": "stale"}); !direct.HasHTTPCode(err, 412) && !put {
+			t.Errorf("a stale fingerprint: %v, want 412", err)
+		}
+		method := http.MethodPatch
+		if put {
+			method = http.MethodPut
+		}
+		op, err = api.Do(ctx, method, path, nil, map[string]any{"name": "w1", "color": "blue", "fingerprint": got["fingerprint"]})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := api.Wait(ctx, op); err != nil {
+			t.Fatal(err)
+		}
+		got, _ = api.Get(ctx, path)
+		if got["color"] != "blue" || (put && got["size"] != nil) || (!put && got["size"] == nil) {
+			t.Errorf("after %s: %v", method, got)
+		}
+		list, _ := api.Get(ctx, "projects/p/regions/r/widgets")
+		if items, _ := list["items"].([]any); len(items) != 1 {
+			t.Errorf("list: %v", list)
+		}
+		op, err = api.Do(ctx, http.MethodDelete, path, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := api.Wait(ctx, op); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := api.Get(ctx, path); !direct.IsNotFound(err) {
+			t.Errorf("after delete: %v", err)
+		}
+	}
+}

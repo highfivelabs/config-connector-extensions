@@ -264,20 +264,22 @@ func discoveryCommit(root string) (string, error) {
 
 // built is a kind, worked out from its config and Discovery document.
 type built struct {
-	c          *Config
-	d          *Discovery
-	svc        string // logging
-	baseURL    string
-	name       string // the name template
-	pathParams []string
-	idParam    string
-	createLRO  bool
-	updateLRO  bool
-	deleteLRO  bool
-	updatable  bool
-	schema     *Schema
-	output     []string
-	sweep      string // the collection under a project, for the sweeper
+	c           *Config
+	d           *Discovery
+	svc         string // logging
+	baseURL     string
+	name        string // the name template
+	pathParams  []string
+	idParam     string
+	createLRO   bool
+	updateLRO   bool
+	deleteLRO   bool
+	updatable   bool
+	insertStyle bool
+	updatePUT   bool
+	schema      *Schema
+	output      []string
+	sweep       string // the collection under a project, for the sweeper
 }
 
 func findRes(d *Discovery, path string) *DRes {
@@ -323,38 +325,58 @@ func build(c *Config, d *Discovery) (*built, error) {
 		return nil, fmt.Errorf("no resource %s in %s", c.Resource, c.Discovery)
 	}
 	create, get, del := r.Methods["create"], r.Methods["get"], r.Methods["delete"]
+	if create == nil && r.Methods["insert"] != nil {
+		// Compute Engine's shape: insert with the name in the body.
+		create = r.Methods["insert"]
+		k.insertStyle = true
+	}
 	if create == nil || get == nil || del == nil {
-		return nil, fmt.Errorf("%s lacks create, get or delete", c.Resource)
+		return nil, fmt.Errorf("%s lacks create (or insert), get or delete", c.Resource)
 	}
 	patch := r.Methods["patch"]
+	if patch == nil && k.insertStyle && r.Methods["update"] != nil {
+		patch = r.Methods["update"]
+		k.updatePUT = true
+	}
 	k.updatable = patch != nil
 	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(create), isLRO(patch), isLRO(del)
-	for n, p := range create.Parameters {
-		if p.Location == "query" && strings.HasSuffix(n, "Id") {
-			k.idParam = n
+	if !k.insertStyle {
+		for n, p := range create.Parameters {
+			if p.Location == "query" && strings.HasSuffix(n, "Id") {
+				k.idParam = n
+			}
+		}
+		if k.idParam == "" {
+			return nil, fmt.Errorf("%s.create has no ID query parameter", c.Resource)
 		}
 	}
-	if k.idParam == "" {
-		return nil, fmt.Errorf("%s.create has no ID query parameter", c.Resource)
+	prefix, flat := "", get.FlatPath
+	if k.insertStyle {
+		// Compute's paths are already flat, relative to servicePath.
+		flat = get.Path
+	} else {
+		// The version prefix: what is before {+name} in get's path.
+		i := strings.Index(get.Path, "{+name}")
+		if i < 0 {
+			return nil, fmt.Errorf("%s.get path %s has no {+name}", c.Resource, get.Path)
+		}
+		prefix = get.Path[:i]
 	}
-	// The version prefix: what is before {+name} in get's path.
-	i := strings.Index(get.Path, "{+name}")
-	if i < 0 {
-		return nil, fmt.Errorf("%s.get path %s has no {+name}", c.Resource, get.Path)
-	}
-	prefix := get.Path[:i]
 	k.baseURL = d.RootURL + d.ServicePath + prefix
-	segs := strings.Split(strings.TrimPrefix(get.FlatPath, prefix), "/")
+	segs := strings.Split(strings.TrimPrefix(flat, prefix), "/")
 	var out []string
-	for j := 0; j < len(segs); j += 2 {
+	for j := 0; j < len(segs); {
 		coll := segs[j]
 		if j+1 >= len(segs) || !flatParamRE.MatchString(segs[j+1]) {
-			return nil, fmt.Errorf("%s.get flat path %s is not collection/{id} pairs", c.Resource, get.FlatPath)
+			// A literal segment (compute's global).
+			out = append(out, coll)
+			j++
+			continue
 		}
 		switch {
 		case j == 0 && len(c.Parents) > 0:
-			if parentCollections[c.Parents[0]] == "" {
-				return nil, fmt.Errorf("unknown parent %s", c.Parents[0])
+			if parentCollections[c.Parents[0]] != coll {
+				return nil, fmt.Errorf("%s's name starts with %s, not the first parent's %s", c.Resource, coll, parentCollections[c.Parents[0]])
 			}
 			out = append(out, "{parent}")
 		case j == len(segs)-2:
@@ -364,18 +386,16 @@ func build(c *Config, d *Discovery) (*built, error) {
 			k.pathParams = append(k.pathParams, p)
 			out = append(out, coll, "{"+p+"}")
 		}
+		j += 2
 	}
 	k.name = strings.Join(out, "/")
 	// Every parent has the same collection.
 	first := strings.Split(c.Resource, ".")[0]
-	for _, p := range c.Parents {
+	for _, p := range c.Parents[min(1, len(c.Parents)):] {
 		alt := parentCollections[p] + strings.TrimPrefix(c.Resource, first)
 		if findRes(d, alt) == nil {
 			return nil, fmt.Errorf("parent %s: no resource %s", p, alt)
 		}
-	}
-	if len(c.Parents) > 0 && parentCollections[c.Parents[0]] != first {
-		return nil, fmt.Errorf("resource %s does not start with the first parent's collection %s", c.Resource, parentCollections[c.Parents[0]])
 	}
 	if create.Request == nil || create.Request.Ref == "" {
 		return nil, fmt.Errorf("%s.create has no request schema", c.Resource)
@@ -385,8 +405,16 @@ func build(c *Config, d *Discovery) (*built, error) {
 		return nil, fmt.Errorf("no schema %s", create.Request.Ref)
 	}
 	for f, s := range k.schema.Properties {
-		if isOutput(s) {
+		if isOutput(s) || (k.insertStyle && f == "fingerprint") {
+			// A compute fingerprint is read and sent back by the
+			// controller, never set by the spec.
 			k.output = append(k.output, f)
+		} else if contains(k.pathParams, f) || (len(c.Parents) > 0 && f == c.Parents[0]) {
+			// The name's parts are the spec's own fields.
+			if c.Skip == nil {
+				c.Skip = map[string]string{}
+			}
+			c.Skip[f] = "part of the name"
 		}
 	}
 	sort.Strings(k.output)
@@ -401,7 +429,8 @@ func collectionTemplate(name string) string {
 }
 
 func isOutput(s *Schema) bool {
-	return s.ReadOnly || strings.HasPrefix(strings.TrimSpace(s.Description), "Output only")
+	d := strings.TrimSpace(s.Description)
+	return s.ReadOnly || strings.HasPrefix(d, "Output only") || strings.HasPrefix(d, "[Output Only]")
 }
 
 func contains(l []string, s string) bool {

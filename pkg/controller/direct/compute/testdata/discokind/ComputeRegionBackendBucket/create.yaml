@@ -1,0 +1,11 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionBackendBucket
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  bucketName: ${NAME}-bucket
+  loadBalancingScheme: INTERNAL_MANAGED
+  description: made by a config-connector-extensions test

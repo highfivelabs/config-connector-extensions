@@ -236,8 +236,18 @@ disco_api() { # disco_api METHOD URL
   curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" "$2"
 }
 disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an operation
-  local op name fin
+  local op name self fin
   op="$(disco_api DELETE "$1$2")" || return 1
+  # A Compute Engine operation: status until DONE, at its selfLink.
+  self="$(jq -r 'if (.kind == "compute#operation" and .status != "DONE") then .selfLink else "" end' <<<"${op}")"
+  if [[ -n "${self}" ]]; then
+    for _ in $(seq 1 60); do
+      fin="$(disco_api GET "${self}" | jq -r '.status')" || return 1
+      [[ "${fin}" == DONE ]] && return 0
+      sleep 5
+    done
+    return 1
+  fi
   name="$(jq -r 'if (.done == false and (.name // "" | test("/operations/|^operations/"))) then .name else "" end' <<<"${op}")"
   [[ -n "${name}" ]] || return 0
   for _ in $(seq 1 60); do
@@ -247,10 +257,9 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
   done
   return 1
 }
-while IFS=$'\t' read -r dkind base coll soft; do
+while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   coll="${coll//\{project\}/${project}}"
-  field="${coll##*/}"
   softf="${soft%%=*}" softv="${soft#*=}"
   rows="$(disco_api GET "${base}${coll}?pageSize=1000" \
     | jq -r --arg f "${field}" --arg s "${softf}" '.[$f][]? | "\(.name) \(.createTime // "-") \(if $s == "-" then "-" else (.[$s] // "-") end)"')"
@@ -260,6 +269,9 @@ while IFS=$'\t' read -r dkind base coll soft; do
     [[ "${made}" != "-" ]] || made=""
     id="$(sed -E 's/^cce([0-9]{8})([0-9a-f]{4})/cce-\1-\2-/' <<<"${name##*/}")"
     by_run "${id}" "${made}" || continue
+    # A Compute Engine name is the bare ID; the item's path is its collection's.
+    # (Its creationTimestamp has a local offset, so its age is the run ID's.)
+    [[ "${name}" == */* ]] || name="${coll}/${name}"
     act "${dkind}" "${name}" disco_delete "${base}" "${name}"
   done <<<"${rows}"
 done <"${HERE}/discokinds.tsv"

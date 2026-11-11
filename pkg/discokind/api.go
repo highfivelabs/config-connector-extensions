@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"google.golang.org/api/googleapi"
@@ -46,6 +47,9 @@ func (a *API) Get(ctx context.Context, name string) (map[string]any, error) {
 // Do sends one request and decodes the answer.
 func (a *API) Do(ctx context.Context, method, path string, query map[string]string, body map[string]any) (map[string]any, error) {
 	u := a.BaseURL + path
+	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
+		u = path
+	}
 	if len(query) > 0 {
 		v := url.Values{}
 		for k, q := range query {
@@ -98,6 +102,35 @@ func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, erro
 		interval = 2 * time.Second
 	}
 	for {
+		// A Compute Engine operation: status DONE, errors in error.errors,
+		// read again at its selfLink.
+		if st, ok := op["status"].(string); ok {
+			if st == "DONE" {
+				if e, ok := op["error"].(map[string]any); ok {
+					code, _ := op["httpErrorStatusCode"].(float64)
+					if code == 0 {
+						code = http.StatusBadRequest
+					}
+					b, _ := json.Marshal(e["errors"])
+					return nil, &googleapi.Error{Code: int(code), Message: string(b)}
+				}
+				return op, nil
+			}
+			self, _ := op["selfLink"].(string)
+			if self == "" {
+				return nil, fmt.Errorf("a compute operation without a selfLink: %v", op)
+			}
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(interval):
+			}
+			var err error
+			if op, err = a.Get(ctx, self); err != nil {
+				return nil, fmt.Errorf("reading operation %s: %w", self, err)
+			}
+			continue
+		}
 		if done, _ := op["done"].(bool); done {
 			if e, ok := op["error"].(map[string]any); ok {
 				code, _ := e["code"].(float64)

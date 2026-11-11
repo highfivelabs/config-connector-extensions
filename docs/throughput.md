@@ -113,8 +113,11 @@ what a live run is for; `docs/testing.md`).
   their own files (`docs/kinds/<Kind>.md`) would end the merge conflicts
   in design.md, handoff.md and live-runs.md for hand-written kinds too.
 - **mockgcp patches named, not numbered**, so siblings do not renumber.
-- **The compute insert shape** (`insert`, `get`, `patch`, `delete` with
-  the name in the body and global or regional operations) in the same
-  generator: 25 of the 62 tier 1 gaps are Compute Engine's.
+- **Done 2026-11-11: the compute insert shape** (`insert`, `get`,
+  `patch` or `update`, `delete`, the name in the body, compute
+  operations): 15 of the 25 Compute Engine tier 1 gaps generated. Left
+  out on purpose: commitments (they cannot be deleted), storage pools and
+  instant snapshots (billed, need disks), resize requests (make VMs),
+  licenses.
 - **A live job** that runs the generated kinds' tests in the test project
   on a schedule (`docs/testing.md`).
