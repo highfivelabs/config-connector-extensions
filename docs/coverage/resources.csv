@@ -375,7 +375,7 @@ compute.googleapis.com,compute.googleapis.com/Network,14,ComputeNetwork,9,,0,5,f
 compute.googleapis.com,compute.googleapis.com/NetworkAttachment,6,ComputeNetworkAttachment,6,,0,0,false,api=v1:networkAttachments; official-spec-fields-unmatched=4/9
 compute.googleapis.com,compute.googleapis.com/NetworkEdgeSecurityService,3,ComputeNetworkEdgeSecurityService,3,,0,0,false,api=v1:networkEdgeSecurityServices; official-spec-fields-unmatched=4/6
 compute.googleapis.com,compute.googleapis.com/NetworkEndpointGroup,17,ComputeNetworkEndpointGroup,6,,0,11,false,api=v1:networkEndpointGroups; official-spec-fields-unmatched=2/7
-compute.googleapis.com,compute.googleapis.com/NetworkFirewallPolicy,73,ComputeNetworkFirewallPolicy;ComputeNetworkFirewallPolicyAssociation;ComputeNetworkFirewallPolicyRule,26,ComputeNetworkFirewallPolicyRule,1,46,false,api=v1:networkFirewallPolicies; ours-spec-fields-unmatched=4/26
+compute.googleapis.com,compute.googleapis.com/NetworkFirewallPolicy,73,ComputeNetworkFirewallPolicy;ComputeNetworkFirewallPolicyAssociation;ComputeNetworkFirewallPolicyRule,26,ComputeNetworkFirewallPolicyPacketMirroringRule;ComputeNetworkFirewallPolicyRule,12,35,false,api=v1:networkFirewallPolicies
 compute.googleapis.com,compute.googleapis.com/NodeGroup,12,ComputeNodeGroup,10,,0,2,false,api=v1:nodeGroups; official-spec-fields-unmatched=5/14
 compute.googleapis.com,compute.googleapis.com/NodeTemplate,14,ComputeNodeTemplate,8,,0,6,false,api=v1:nodeTemplates; official-spec-fields-unmatched=2/9
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,0,74,false,api=v1:organizationSecurityPolicies
@@ -668,7 +668,7 @@ dns.googleapis.com,dns.googleapis.com/ManagedZone,26,DNSManagedZone,17,,0,9,fals
 dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,,0,8,false,api=v1:outboundEndpoints
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,50,DNSRecordSet,43,,0,7,false,api=v1:resourceRecordSets; official-spec-fields-unmatched=5/48
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9
 documentai.googleapis.com,documentai.googleapis.com/Processor,5,DocumentAIProcessor,3,,0,2,false,api=v1:projects.locations.processors; official-spec-fields-unmatched=3/6
 documentai.googleapis.com,documentai.googleapis.com/Schema,3,,0,,0,3,false,api=v1:projects.locations.schemas
@@ -784,6 +784,7 @@ hypercomputecluster.googleapis.com,hypercomputecluster.googleapis.com/Cluster,61
 iam.googleapis.com,iam.googleapis.com/IAMBinding,0,,0,IAMBinding,0,0,false,"outside-denominator; one role binding in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/IAMDenyPolicy,0,,0,IAMDenyPolicy,0,0,false,"outside-denominator; an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
+iam.googleapis.com,iam.googleapis.com/IAMPrincipalAccessBoundaryPolicy,0,,0,IAMPrincipalAccessBoundaryPolicy,0,0,false,outside-denominator; no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,,0,8,false,api=v1:projects.locations.oauthClients
 iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
 iam.googleapis.com,iam.googleapis.com/Role,7,IAMCustomRole,4,,0,3,false,api=v1:organizations.roles; request-wrapper=CreateRoleRequest; official-spec-fields-unmatched=2/5
@@ -843,7 +844,7 @@ logging.googleapis.com,logging.googleapis.com/BillingAccountExclusion,4,LoggingL
 logging.googleapis.com,logging.googleapis.com/BillingAccountLocationBucket,8,LoggingLogBucket,3,,0,5,false,api=v2:billingAccounts.locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/BillingAccountLocationBucketLink,1,,0,,0,1,false,api=v2:billingAccounts.locations.buckets.links
 logging.googleapis.com,logging.googleapis.com/BillingAccountLocationBucketView,2,LoggingLogView,2,,0,0,false,api=v2:billingAccounts.locations.buckets.views; official-spec-fields-unmatched=7/9
-logging.googleapis.com,logging.googleapis.com/BillingAccountSink,13,,0,,0,13,false,api=v2:billingAccounts.sinks
+logging.googleapis.com,logging.googleapis.com/BillingAccountSink,13,,0,LoggingBillingAccountSink,10,3,false,api=v2:billingAccounts.sinks; ours-spec-fields-unmatched=5/14
 logging.googleapis.com,logging.googleapis.com/Bucket,8,LoggingLogBucket,3,,0,5,false,api=v2:locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/BucketLink,1,LoggingLink,1,,0,0,false,api=v2:locations.buckets.links; official-spec-fields-unmatched=2/3
 logging.googleapis.com,logging.googleapis.com/BucketView,2,LoggingLogView,2,,0,0,false,api=v2:locations.buckets.views; official-spec-fields-unmatched=7/9
@@ -872,7 +873,7 @@ logging.googleapis.com,logging.googleapis.com/organizations.locations.savedQueri
 logging.googleapis.com,logging.googleapis.com/projects.exclusions,4,LoggingLogExclusion,4,,0,0,false,api=v2:projects.exclusions; official-spec-fields-unmatched=5/8
 logging.googleapis.com,logging.googleapis.com/projects.locations.logScopes,2,LoggingLogScope,1,,0,1,false,api=v2:projects.locations.logScopes; official-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/projects.locations.savedQueries,77,,0,,0,77,false,api=v2:projects.locations.savedQueries; recursive-cut=5
-logging.googleapis.com,logging.googleapis.com/sinks,13,LoggingLogSink,11,,0,2,false,api=v2:sinks; official-spec-fields-unmatched=8/18
+logging.googleapis.com,logging.googleapis.com/sinks,13,LoggingLogSink,11,LoggingBillingAccountSink,0,2,false,api=v2:sinks; official-spec-fields-unmatched=8/18; ours-spec-fields-unmatched=5/14
 looker.googleapis.com,looker.googleapis.com/Instance,56,,0,,0,56,false,api=v1:projects.locations.instances
 looker.googleapis.com,looker.googleapis.com/InstanceBackup,1,,0,,0,1,false,api=v1:projects.locations.instances.backups
 lustre.googleapis.com,lustre.googleapis.com/DirectoryPolicy,2,,0,,0,2,false,api=v1:google.cloud.lustre.v1.Lustre.CreateDirectoryPolicy
@@ -1106,19 +1107,19 @@ securesourcemanager.googleapis.com,securesourcemanager.googleapis.com/Repository
 securesourcemanager.googleapis.com,securesourcemanager.googleapis.com/RepositoryPullRequestPullRequestComment,8,,0,,0,8,false,api=v1:projects.locations.repositories.pullRequests.pullRequestComments
 securitycenter.googleapis.com,securitycenter.googleapis.com/BigQueryExport,5,SecurityCenterBigQueryExport,4,,0,1,false,api=v1:folders.bigQueryExports; official-spec-fields-unmatched=3/6
 securitycenter.googleapis.com,securitycenter.googleapis.com/EventThreatDetectionSettingCustomModule,7,SecuritycenterEventThreatDetectionCustomModule,6,,0,1,false,api=v1:folders.eventThreatDetectionSettings.customModules; official-spec-fields-unmatched=2/7
-securitycenter.googleapis.com,securitycenter.googleapis.com/MuteConfig,6,SecurityCenterMuteConfig,5,,0,1,false,api=v1:folders.muteConfigs; official-spec-fields-unmatched=2/6
+securitycenter.googleapis.com,securitycenter.googleapis.com/MuteConfig,6,SecurityCenterMuteConfig,5,SecurityCenterMuteConfig,0,1,false,api=v1:folders.muteConfigs; official-spec-fields-unmatched=2/6; ours-spec-fields-unmatched=4/8
 securitycenter.googleapis.com,securitycenter.googleapis.com/NotificationConfig,5,SecurityCenterNotificationConfig,4,,0,1,false,api=v1:folders.notificationConfigs; official-spec-fields-unmatched=3/6
 securitycenter.googleapis.com,securitycenter.googleapis.com/SecurityHealthAnalyticsSettingCustomModule,17,SecuritycenterSecurityHealthAnalyticsCustomModule,16,,0,1,false,api=v1:folders.securityHealthAnalyticsSettings.customModules; official-spec-fields-unmatched=2/17
 securitycenter.googleapis.com,securitycenter.googleapis.com/Source,4,SecurityCenterSource,3,,0,1,false,api=v1:organizations.sources; official-spec-fields-unmatched=2/4
 securitycenter.googleapis.com,securitycenter.googleapis.com/SourceFinding,379,,0,,0,379,false,api=v1:organizations.sources.findings
 securitycenter.googleapis.com,securitycenter.googleapis.com/organizations.bigQueryExports,5,SecurityCenterBigQueryExport,4,,0,1,false,api=v1:organizations.bigQueryExports; official-spec-fields-unmatched=3/6
 securitycenter.googleapis.com,securitycenter.googleapis.com/organizations.eventThreatDetectionSettings.customModules,7,SecuritycenterEventThreatDetectionCustomModule;SecuritycenterSecurityHealthAnalyticsCustomModule,6,,0,1,false,api=v1:organizations.eventThreatDetectionSettings.customModules
-securitycenter.googleapis.com,securitycenter.googleapis.com/organizations.muteConfigs,6,SecurityCenterMuteConfig,5,,0,1,false,api=v1:organizations.muteConfigs; official-spec-fields-unmatched=2/6
+securitycenter.googleapis.com,securitycenter.googleapis.com/organizations.muteConfigs,6,SecurityCenterMuteConfig,5,SecurityCenterMuteConfig,0,1,false,api=v1:organizations.muteConfigs; official-spec-fields-unmatched=2/6; ours-spec-fields-unmatched=4/8
 securitycenter.googleapis.com,securitycenter.googleapis.com/organizations.notificationConfigs,5,SecurityCenterNotificationConfig,4,,0,1,false,api=v1:organizations.notificationConfigs; official-spec-fields-unmatched=3/6
 securitycenter.googleapis.com,securitycenter.googleapis.com/organizations.securityHealthAnalyticsSettings.customModules,17,SecuritycenterEventThreatDetectionCustomModule;SecuritycenterSecurityHealthAnalyticsCustomModule,16,,0,1,false,api=v1:organizations.securityHealthAnalyticsSettings.customModules
 securitycenter.googleapis.com,securitycenter.googleapis.com/projects.bigQueryExports,5,,0,,0,5,false,api=v1:projects.bigQueryExports
 securitycenter.googleapis.com,securitycenter.googleapis.com/projects.eventThreatDetectionSettings.customModules,7,,0,,0,7,false,api=v1:projects.eventThreatDetectionSettings.customModules
-securitycenter.googleapis.com,securitycenter.googleapis.com/projects.muteConfigs,6,,0,,0,6,false,api=v1:projects.muteConfigs
+securitycenter.googleapis.com,securitycenter.googleapis.com/projects.muteConfigs,6,,0,SecurityCenterMuteConfig,5,1,false,api=v1:projects.muteConfigs; ours-spec-fields-unmatched=4/8
 securitycenter.googleapis.com,securitycenter.googleapis.com/projects.notificationConfigs,5,,0,,0,5,false,api=v1:projects.notificationConfigs
 securitycenter.googleapis.com,securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules,17,,0,,0,17,false,api=v1:projects.securityHealthAnalyticsSettings.customModules
 securitycentermanagement.googleapis.com,securitycentermanagement.googleapis.com/EventThreatDetectionCustomModule,6,SecurityCenterManagementEventThreatDetectionCustomModule,6,,0,0,false,api=v1:google.cloud.securitycentermanagement.v1.SecurityCenterManagement.CreateEventThreatDetectionCustomModule; official-spec-fields-unmatched=3/8

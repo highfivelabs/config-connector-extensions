@@ -16,7 +16,7 @@
 package compute_test
 
 // ComputeVPNTunnel end to end on the fake cloud (pkg/test/mockenv, patch
-// 0031) or a real project (docs/live-runs.md). The case: an HA VPN tunnel
+// 0033) or a real project (docs/live-runs.md). The case: an HA VPN tunnel
 // to an external peer gateway with a chosen cipher suite, the field Config
 // Connector's ComputeVPNTunnel lacks. The network, HA VPN gateway, external
 // peer gateway (on an external address the test reserves) and Cloud Router

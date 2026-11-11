@@ -58,7 +58,7 @@ cloudsupport.googleapis.com,3,1,0,17,2,0,15,11.8,0.0,88.2
 cloudtasks.googleapis.com,2,1,0,50,12,0,38,24.0,0.0,76.0
 commerceproducer.googleapis.com,2,1,0,85,81,0,4,95.3,0.0,4.7
 composer.googleapis.com,3,3,0,86,82,0,4,95.3,0.0,4.7
-compute.googleapis.com,95,69,1,3437,1738,49,1650,50.6,1.4,48.0
+compute.googleapis.com,95,69,1,3437,1738,60,1639,50.6,1.7,47.7
 confidentialcomputing.googleapis.com,1,0,0,0,0,0,0,0.0,0.0,0.0
 config.googleapis.com,3,2,0,40,21,0,19,52.5,0.0,47.5
 configdelivery.googleapis.com,4,4,0,26,21,0,5,80.8,0.0,19.2
@@ -129,7 +129,7 @@ jobs.googleapis.com,4,2,0,63,13,0,50,20.6,0.0,79.4
 library-example.googleapis.com,2,0,0,6,0,0,6,0.0,0.0,100.0
 licensemanager.googleapis.com,1,1,0,7,7,0,0,100.0,0.0,0.0
 livestream.googleapis.com,6,4,0,141,93,0,48,66.0,0.0,34.0
-logging.googleapis.com,33,24,0,484,116,0,368,24.0,0.0,76.0
+logging.googleapis.com,33,24,1,484,116,10,358,24.0,2.1,74.0
 looker.googleapis.com,2,0,0,57,0,0,57,0.0,0.0,100.0
 lustre.googleapis.com,3,0,0,32,0,0,32,0.0,0.0,100.0
 managedidentities.googleapis.com,3,0,0,11,0,0,11,0.0,0.0,100.0
@@ -171,7 +171,7 @@ run.googleapis.com,6,3,0,599,228,20,351,38.1,3.3,58.6
 saasservicemgmt.googleapis.com,8,6,0,92,48,0,44,52.2,0.0,47.8
 secretmanager.googleapis.com,2,1,1,30,10,10,10,33.3,33.3,33.3
 securesourcemanager.googleapis.com,8,4,0,48,28,0,20,58.3,0.0,41.7
-securitycenter.googleapis.com,17,11,0,503,73,0,430,14.5,0.0,85.5
+securitycenter.googleapis.com,17,11,1,503,73,5,425,14.5,1.0,84.5
 securitycentermanagement.googleapis.com,2,2,0,22,22,0,0,100.0,0.0,0.0
 securityposture.googleapis.com,2,2,0,63,59,0,4,93.7,0.0,6.3
 serviceconsumermanagement.googleapis.com,1,0,0,1,0,0,1,0.0,0.0,100.0
