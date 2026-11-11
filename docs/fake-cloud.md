@@ -171,6 +171,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   is under the same parent. A project's profile and group run live
   (`docs/live-runs.md`); an organization's are not yet compared with the
   real API.
+- **IAM principal access boundary policies in mockgcp** (patch 0030,
+  ours, for `IAMPrincipalAccessBoundaryPolicy`). Create, get, list,
+  update with a mask and delete under any organization and location;
+  the REST paths are added by hand (mockgcp has no IAM v3 gateway), and
+  every write answers a finished operation. It sets
+  `enforcementVersion` to `1` when unset (the real API's latest version
+  is assumed), checks no permissions, and stores any rule: no check of
+  the resource names, the 500-resource limit or the effect.
 - **IAM deny policies in mockgcp** (upstream's, unpatched, for
   `IAMDenyPolicy`). It serves create, get, list, a whole-policy update
   that must carry the current etag, and delete, under a project's number
