@@ -50,6 +50,7 @@ live-test project; neither has a default in the tree. Set them in the
 environment or in a git-ignored `.env` (`.env.example` names every
 variable; `task` loads `.env`). On an offload VM they reach the run only
 through `env NAME=...` on the command line, as below.
+`GCP_LIVE_FALLBACK_PROJECT` (optional, never the default) allows the previous dev project as a fallback until the live-test project's quota matches it.
 The persistent test estate (`factory/estate/gcp/README.md`) writes that
 variable, with the folder, the scratch project and the Log Router key
 (`E2E_TEST_FOLDER`, `E2E_LOGGING_FOLDER`, `E2E_LOGGING_KMS_KEY`,

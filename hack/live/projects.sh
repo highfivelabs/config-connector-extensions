@@ -12,8 +12,12 @@
 #                               scratch projects (factory/estate/gcp), in
 #                               the live-tests folder; the live-test
 #                               account of a generation has roles only there
+#   GCP_LIVE_FALLBACK_PROJECT   optional: the previous dev project, allowed
+#                               (never the default) as a fallback until the
+#                               live-test project's quota matches it
 : "${GCP_PROJECT:?set GCP_PROJECT, the live-test project (see .env.example)}"
 LIVE_PROJECTS=("${GCP_PROJECT}")
+[[ -n "${GCP_LIVE_FALLBACK_PROJECT:-}" ]] && LIVE_PROJECTS+=("${GCP_LIVE_FALLBACK_PROJECT}")
 LIVE_PROJECT_PATTERN="${GCP_LIVE_PROJECT_PATTERN:-}"
 
 live_project_allowed() {
@@ -26,6 +30,6 @@ live_project_allowed() {
     [[ "$1" == "${p}" ]] && return 0
   done
   if [[ -n "${LIVE_PROJECT_PATTERN}" && "$1" =~ ${LIVE_PROJECT_PATTERN} ]]; then return 0; fi
-  echo "live: refusing project $1: live tests may touch only GCP_PROJECT (${LIVE_PROJECTS[*]})${LIVE_PROJECT_PATTERN:+ and GCP_LIVE_PROJECT_PATTERN (${LIVE_PROJECT_PATTERN})} (hack/live/projects.sh)" >&2
+  echo "live: refusing project $1: live tests may touch only GCP_PROJECT and GCP_LIVE_FALLBACK_PROJECT (${LIVE_PROJECTS[*]})${LIVE_PROJECT_PATTERN:+ and GCP_LIVE_PROJECT_PATTERN (${LIVE_PROJECT_PATTERN})} (hack/live/projects.sh)" >&2
   return 1
 }
