@@ -190,7 +190,7 @@ flattening all three, 2026-11-08).
 | `0022-mockgcp-serviceusage-hierarchy-identity.patch` | written here: `services.generateServiceIdentity` (v1beta1) for `folders/{id}/services/{service}` and `organizations/{id}/services/{service}` | offered: GoogleCloudPlatform/k8s-config-connector#15284 |
 | `0023-mockgcp-compute-project-default-network-tier.patch` | written here: `projects.setDefaultNetworkTier` (`PREMIUM` or `STANDARD`) | offered: GoogleCloudPlatform/k8s-config-connector#15288 |
 | `0024-mockgcp-iam-service-accounts-list-undelete.patch` | written here: `serviceAccounts.list` and `undelete`; delete, disable and enable by unique ID as well as email; a deleted account kept for undelete | offered: GoogleCloudPlatform/k8s-config-connector#15283 |
-| `0025-mockgcp-networksecurity-organization-address-groups.patch` | written here: mockgcp serves the `OrganizationAddressGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/addressGroups/{a}`) with the project service's server | offered: GoogleCloudPlatform/k8s-config-connector#15285 |
+| `0025-mockgcp-networksecurity-organization-address-groups.patch` | written here: mockgcp serves the `OrganizationAddressGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/addressGroups/{a}`) with the project service's server | follow GoogleCloudPlatform/k8s-config-connector#4711 (our #15285 closed as its duplicate; see "Watched upstream change") |
 | `0026-mockgcp-networksecurity-organization-security-profiles.patch` | written here: mockgcp serves the `OrganizationSecurityProfileGroupService` (create, get, update, delete of `organizations/{id}/locations/{l}/securityProfiles/{p}` and `.../securityProfileGroups/{g}`) with its own server, since the project service's parses only project names | offered: GoogleCloudPlatform/k8s-config-connector#15289 |
 | `0027-mockgcp-compute-routers-as-the-api.patch` | written here: `routers.get` returns each MD5 authentication key by name, without its value, and `routers.insert` and `routers.update` refuse more than one feature (interfaces, peers with keys, NATs) at a time, as the real API does | offered: GoogleCloudPlatform/k8s-config-connector#15286 |
 | `0028-mockgcp-compute-organization-security-policy-rules.patch` | written here: `organizationSecurityPolicies.addRule`, `getRule`, `patchRule` and `removeRule` (rules by priority in the policy), and the beta-only fields of a FIREWALL rule (direction, logging, targets, destination ranges, layer 4 configs), which the v1 messages drop, kept beside the rule by the HTTP layer | the rule methods yes; the beta fields a stopgap |
@@ -227,7 +227,7 @@ When one merges and the pin passes it, drop the patch.
 | GoogleCloudPlatform/k8s-config-connector#15284 | `b3b495d9` | `0022-mockgcp-serviceusage-hierarchy-identity.patch` | open |
 | GoogleCloudPlatform/k8s-config-connector#15288 | `b0d0a022` | `0023-mockgcp-compute-project-default-network-tier.patch` | open |
 | GoogleCloudPlatform/k8s-config-connector#15283 | `368552c1` | `0024-mockgcp-iam-service-accounts-list-undelete.patch` | open |
-| GoogleCloudPlatform/k8s-config-connector#15285 | `112e5e3a` | `0025-mockgcp-networksecurity-organization-address-groups.patch` | open |
+| GoogleCloudPlatform/k8s-config-connector#15285 | `112e5e3a` | `0025-mockgcp-networksecurity-organization-address-groups.patch` | closed 2026-11-10: duplicate of #4711 |
 | GoogleCloudPlatform/k8s-config-connector#15289 | `6e0ae4e4` | `0026-mockgcp-networksecurity-organization-security-profiles.patch` | open |
 | GoogleCloudPlatform/k8s-config-connector#15286 | `0d5ce7b4` | `0027-mockgcp-compute-routers-as-the-api.patch` | open |
 
@@ -262,6 +262,19 @@ is live yet; when it is, follow "Switching to PR #7148" in `docs/design.md`.
 | PR head | `eb5d176ab176d4afa5b7d1878d8f035281a7a072` |
 | Read on | 2026-11-07 (open, review required, last updated 2026-06-04) |
 | Verdict | not adequate: `databaseRoles` commented out |
+
+Upstream's mockgcp organization address groups are an open draft pull
+request, #4711 (its direct controller is draft #4719). We closed our #15285
+as its duplicate (builder 2026-11-10: where upstream work is in progress,
+close ours and follow it). Patch 0025 keeps carrying the feature here; when
+#4711 merges and the pin passes it, drop 0025.
+
+| | |
+| --- | --- |
+| Watched PR | #4711 "mockGCP: Add mocks for NetworkSecurityAddressGroup" |
+| PR head | `efd3714a62b5264a530d98073ea6255a820ac971` |
+| Read on | 2026-11-10 (open draft, review required, last updated 2025-06-22) |
+| Verdict | follow; patch 0025 stays until it merges |
 
 ## Updating the pin
 
