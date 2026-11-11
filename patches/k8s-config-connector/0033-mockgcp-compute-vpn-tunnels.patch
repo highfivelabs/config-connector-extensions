@@ -1,0 +1,233 @@
+mockgcp: serve compute vpnTunnels (insert, get, setLabels, delete)
+
+Written here for config-connector-extensions' ComputeVPNTunnel: mockgcp
+had no VPN tunnel service. Every field but the labels is set only by
+insert, as in the real API, and insert leaves the labels out (seen
+live); the shared secret is not returned, its hash is; setLabels checks the label fingerprint. It does not check that the
+gateways, peer or router exist. Writes of VPN tunnels and HA VPN
+gateways answer with a regional operation, as the real API does (the
+gateways answered with a global one, which a regional client's Wait
+cannot find).
+
+--- a/mockgcp/mockcompute/service.go
++++ b/mockgcp/mockcompute/service.go
+@@ -85,6 +85,7 @@
+ 	pb.RegisterSubnetworksServer(grpcServer, &SubnetsV1{MockService: s})
+ 	pb.RegisterVpnGatewaysServer(grpcServer, &VPNGatewaysV1{MockService: s})
+ 	pb.RegisterTargetVpnGatewaysServer(grpcServer, &TargetVpnGatewaysV1{MockService: s})
++	pb.RegisterVpnTunnelsServer(grpcServer, &VpnTunnelsV1{MockService: s})
+ 	pb.RegisterTargetGrpcProxiesServer(grpcServer, &TargetGrpcProxyV1{MockService: s})
+ 
+ 	pb.RegisterTargetHttpProxiesServer(grpcServer, &GlobalTargetHTTPProxiesV1{MockService: s})
+@@ -231,6 +232,9 @@
+ 	}
+ 
+ 	if err := pb.RegisterTargetVpnGatewaysHandler(ctx, mux.ServeMux, conn); err != nil {
++		return nil, err
++	}
++	if err := pb.RegisterVpnTunnelsHandler(ctx, mux.ServeMux, conn); err != nil {
+ 		return nil, err
+ 	}
+ 
+--- a/mockgcp/mockcompute/vpngatewayv1.go
++++ b/mockgcp/mockcompute/vpngatewayv1.go
+@@ -68,7 +68,7 @@
+ 		return nil, err
+ 	}
+ 
+-	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "insert", obj)
+ }
+ 
+ func (s *VPNGatewaysV1) Delete(ctx context.Context, req *pb.DeleteVpnGatewayRequest) (*pb.Operation, error) {
+@@ -85,7 +85,7 @@
+ 		return nil, err
+ 	}
+ 
+-	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "delete", deleted)
+ }
+ 
+ func (s *VPNGatewaysV1) SetLabels(ctx context.Context, req *pb.SetLabelsVpnGatewayRequest) (*pb.Operation, error) {
+@@ -107,7 +107,7 @@
+ 		return nil, err
+ 	}
+ 
+-	return s.newLRO(ctx, name.Project.ID)
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "setLabels", obj)
+ }
+ 
+ type regionalVpnGatewayName struct {
+--- /dev/null
++++ b/mockgcp/mockcompute/vpntunnelv1.go
+@@ -0,0 +1,170 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockcompute
++
++import (
++	"context"
++	"crypto/sha256"
++	"encoding/base64"
++	"strings"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/projects"
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++)
++
++// VpnTunnelsV1 serves regional VPN tunnels: insert, get, setLabels and
++// delete. Every field but the labels is set only by insert, and insert
++// leaves the labels out. The shared secret is never returned; its hash is.
++type VpnTunnelsV1 struct {
++	*MockService
++	pb.UnimplementedVpnTunnelsServer
++}
++
++func (s *VpnTunnelsV1) Get(ctx context.Context, req *pb.GetVpnTunnelRequest) (*pb.VpnTunnel, error) {
++	name, err := s.parseVpnTunnelName("projects/" + req.GetProject() + "/regions/" + req.GetRegion() + "/vpnTunnels/" + req.GetVpnTunnel())
++	if err != nil {
++		return nil, err
++	}
++
++	obj := &pb.VpnTunnel{}
++	if err := s.storage.Get(ctx, name.String(), obj); err != nil {
++		return nil, err
++	}
++
++	return obj, nil
++}
++
++func (s *VpnTunnelsV1) Insert(ctx context.Context, req *pb.InsertVpnTunnelRequest) (*pb.Operation, error) {
++	name, err := s.parseVpnTunnelName("projects/" + req.GetProject() + "/regions/" + req.GetRegion() + "/vpnTunnels/" + req.GetVpnTunnelResource().GetName())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++
++	obj := proto.CloneOf(req.GetVpnTunnelResource())
++	if obj.GetSharedSecret() == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.sharedSecret': ''. The shared secret must not be empty.")
++	}
++	if (obj.GetVpnGateway() == "") == (obj.GetTargetVpnGateway() == "") {
++		return nil, status.Errorf(codes.InvalidArgument, "Exactly one of vpnGateway and targetVpnGateway must be set.")
++	}
++	hash := sha256.Sum256([]byte(obj.GetSharedSecret()))
++	obj.SharedSecretHash = PtrTo(base64.RawStdEncoding.EncodeToString(hash[:])[:27])
++	obj.SharedSecret = nil
++
++	id := s.generateID()
++	obj.Id = &id
++	obj.SelfLink = PtrTo(BuildComputeSelfLink(ctx, fqn))
++	obj.CreationTimestamp = PtrTo(s.nowString())
++	obj.Kind = PtrTo("compute#vpnTunnel")
++	obj.Region = PtrTo(BuildComputeSelfLink(ctx, "projects/"+name.Project.ID+"/regions/"+name.Region))
++	// insert does not set labels; setLabels does (seen live).
++	obj.Labels = nil
++	obj.LabelFingerprint = PtrTo(labelsFingerprint(nil))
++	obj.Status = PtrTo("FIRST_HANDSHAKE")
++	obj.DetailedStatus = PtrTo("Waiting for the first handshake.")
++	if obj.IkeVersion == nil {
++		obj.IkeVersion = PtrTo(int32(2))
++	}
++
++	if err := s.storage.Create(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "insert", obj)
++}
++
++func (s *VpnTunnelsV1) SetLabels(ctx context.Context, req *pb.SetLabelsVpnTunnelRequest) (*pb.Operation, error) {
++	name, err := s.parseVpnTunnelName("projects/" + req.GetProject() + "/regions/" + req.GetRegion() + "/vpnTunnels/" + req.GetResource())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++
++	obj := &pb.VpnTunnel{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	if obj.GetLabelFingerprint() != req.GetRegionSetLabelsRequestResource().GetLabelFingerprint() {
++		return nil, status.Errorf(codes.FailedPrecondition, "Labels fingerprint either invalid or resource labels have changed")
++	}
++
++	obj.Labels = req.GetRegionSetLabelsRequestResource().GetLabels()
++	obj.LabelFingerprint = PtrTo(labelsFingerprint(obj.GetLabels()))
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "setLabels", obj)
++}
++
++func (s *VpnTunnelsV1) Delete(ctx context.Context, req *pb.DeleteVpnTunnelRequest) (*pb.Operation, error) {
++	name, err := s.parseVpnTunnelName("projects/" + req.GetProject() + "/regions/" + req.GetRegion() + "/vpnTunnels/" + req.GetVpnTunnel())
++	if err != nil {
++		return nil, err
++	}
++
++	deleted := &pb.VpnTunnel{}
++	if err := s.storage.Delete(ctx, name.String(), deleted); err != nil {
++		return nil, err
++	}
++
++	return s.regionalOperation(ctx, name.Project.ID, name.Region, "delete", deleted)
++}
++
++// regionalOperation is a done regional operation on target, as the real
++// API answers a regional resource's write (newLRO makes a global one,
++// which a regional client cannot wait on).
++func (s *MockService) regionalOperation(ctx context.Context, projectID, region, opType string, target interface {
++	proto.Message
++	GetId() uint64
++	GetSelfLink() string
++}) (*pb.Operation, error) {
++	op := &pb.Operation{
++		TargetId:      PtrTo(target.GetId()),
++		TargetLink:    PtrTo(target.GetSelfLink()),
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, projectID, region, op, func() (proto.Message, error) {
++		return target, nil
++	})
++}
++
++type vpnTunnelName struct {
++	Project *projects.ProjectData
++	Region  string
++	Name    string
++}
++
++func (n *vpnTunnelName) String() string {
++	return "projects/" + n.Project.ID + "/regions/" + n.Region + "/vpnTunnels/" + n.Name
++}
++
++// parseVpnTunnelName parses projects/*/regions/*/vpnTunnels/*.
++func (s *MockService) parseVpnTunnelName(name string) (*vpnTunnelName, error) {
++	tokens := strings.Split(name, "/")
++	if len(tokens) == 6 && tokens[0] == "projects" && tokens[2] == "regions" && tokens[4] == "vpnTunnels" {
++		project, err := s.Projects.GetProjectByID(tokens[1])
++		if err != nil {
++			return nil, err
++		}
++		return &vpnTunnelName{Project: project, Region: tokens[3], Name: tokens[5]}, nil
++	}
++	return nil, status.Errorf(codes.InvalidArgument, "name %q is not valid", name)
++}
