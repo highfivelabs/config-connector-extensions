@@ -62,7 +62,7 @@ func (m *memberModel) AdapterForObject(ctx context.Context, op *directbase.Adapt
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	t, name, gone, err := resolveResource(ctx, op, obj.Spec.ResourceRef)
+	t, name, gone, err := resolveResource(ctx, op, policyRef(obj.Spec.ResourceRef))
 	if err != nil {
 		return nil, err
 	}

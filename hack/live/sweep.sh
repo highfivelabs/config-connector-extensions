@@ -26,7 +26,10 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true), and Cloud DNS response policies, by name,
+# (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
+# E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
+# Center mute configs of the project, by name, where it is active
+# (E2E_SECURITY_CENTER=true), and Cloud DNS response policies, by name,
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true). A failed list or
 # delete fails the sweep.
 set -o errexit -o nounset -o pipefail
@@ -269,6 +272,35 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
+  done <<<"${rows}"
+fi
+
+# Log sinks of the billing account in E2E_BILLING_ACCOUNT
+# (billingAccounts/{id}), by the run's name, only where the live-test
+# service account administers logging on it; without it the
+# LoggingBillingAccountSink test does not run live and there is nothing to
+# sweep.
+if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
+  billing="${E2E_BILLING_ACCOUNT#billingAccounts/}"
+  rows="$("${G[@]}" logging sinks list --billing-account="${billing}" --verbosity=error --format='value(name,createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "billing account log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --billing-account="${billing}"
+  done <<<"${rows}"
+fi
+
+# Security Command Center mute configs of the project, by the run's name,
+# only where Security Command Center is active for the project and the
+# live-test service account may list them (E2E_SECURITY_CENTER=true);
+# without it the SecurityCenterMuteConfig test does not run live.
+if [[ "${E2E_SECURITY_CENTER:-}" == true ]]; then
+  rows="$("${G[@]}" scc muteconfigs list --project="${project}" --verbosity=error \
+    --format='value(name.basename(),createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "mute config" "${id}" "${G[@]}" scc muteconfigs delete "${id}" --project="${project}"
   done <<<"${rows}"
 fi
 

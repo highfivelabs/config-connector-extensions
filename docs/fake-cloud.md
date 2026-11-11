@@ -106,7 +106,8 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   below says of them: `addRule` does not refuse a priority in use, no
   rule's fields are checked (including `srcNetworkContext` against
   `srcNetworks`), `patchRule` replaces the rule whole where the real API
-  keeps a list the body leaves out, and no rule is ever "not ready".
+  keeps a list the body leaves out (and a network context sent as `""`;
+  the controller sends `UNSPECIFIED`), and no rule is ever "not ready".
 - **Regional network firewall policies in mockgcp** (patch 0014, adapted
   from its global ones; their rules are patch 0020). The fingerprint is
   not checked on patch, a policy is deleted even when associated, and
@@ -170,6 +171,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   is under the same parent. A project's profile and group run live
   (`docs/live-runs.md`); an organization's are not yet compared with the
   real API.
+- **IAM principal access boundary policies in mockgcp** (patch 0030,
+  ours, for `IAMPrincipalAccessBoundaryPolicy`). Create, get, list,
+  update with a mask and delete under any organization and location;
+  the REST paths are added by hand (mockgcp has no IAM v3 gateway), and
+  every write answers a finished operation. It sets
+  `enforcementVersion` to `1` when unset (the real API's latest version
+  is assumed), checks no permissions, and stores any rule: no check of
+  the resource names, the 500-resource limit or the effect.
 - **IAM deny policies in mockgcp** (upstream's, unpatched, for
   `IAMDenyPolicy`). It serves create, get, list, a whole-policy update
   that must carry the current etag, and delete, under a project's number
@@ -193,6 +202,23 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   and add, get and remove of an association. It checks no permissions
   on the parent or the attachment, does not refuse a second association
   to the same organization or folder, and does not default `type`.
+- **A billing account's log sinks in mockgcp** (patch 0029, ours, for
+  `LoggingBillingAccountSink`). Sinks under `billingAccounts/{id}`, with
+  a writer identity the fake makes up
+  (`serviceAccount:service-billing-{id}@gcp-sa-logging.iam.gserviceaccount.com`;
+  the real address has not been seen). `UpdateSink` applies the mask's
+  `description`, `filter`, `destination`, `disabled`, `exclusions`,
+  `includeChildren` and `bigqueryOptions`, and refuses any other path. It
+  checks no billing account (any ID is one), no destination (a topic or
+  bucket that does not exist is accepted) and no filter, does not
+  require `uniqueWriterIdentity`, and keeps no exclusion's timestamps.
+- **Security Command Center mute configs in mockgcp** (patch 0031, ours,
+  for `SecurityCenterMuteConfig`). A folder's and a project's beside an
+  organization's, each stored and named under its parent as given (a
+  project by the ID it was named with; whether the real API answers
+  with its number is not known). It checks no parent (any folder or
+  organization ID is one), no filter syntax, and no expiry of a dynamic
+  mute config.
 - **Organization security policy rules in mockgcp** (patch 0028, ours,
   for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
   `patchRule` and `removeRule` by priority in the policy's rules;
