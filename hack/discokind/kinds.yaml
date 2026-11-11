@@ -1,0 +1,42 @@
+# The kinds hack/discokind generates (pkg/discokind, docs/throughput.md).
+# One entry per kind; `go run ./hack/discokind` then `hack/generate.sh`.
+# Each kind also needs its fixtures,
+# pkg/controller/direct/<service>/testdata/discokind/<Kind>/{create,update}.yaml
+# (pkg/discokind/kindtest), a row in docs/live-runs.md once it ran live,
+# and its line in docs/design.md 6.6.
+#
+# Fields: kind, group, version; discovery (<api>.<version>); resource (the
+# Discovery resource path under the first parent); parents (project,
+# folder, organization, billingAccount; the same collection must exist
+# under each); terraform; softDelete {field, value}; fakeDefaults;
+# immutable (top-level fields the API cannot patch, beyond those its
+# descriptions call Immutable); skip {field: why}; note.
+
+- kind: LoggingSavedQuery
+  group: logging.gcp.hfl.dev
+  version: v1alpha1
+  discovery: logging.v2
+  resource: projects.locations.savedQueries
+  parents: [project, folder, organization, billingAccount]
+  terraform: google_logging_saved_query
+
+- kind: IAMOauthClient
+  group: iam.gcp.hfl.dev
+  version: v1alpha1
+  discovery: iam.v1
+  resource: projects.locations.oauthClients
+  parents: [project]
+  terraform: google_iam_oauth_client
+  softDelete: {field: state, value: DELETED}
+  fakeDefaults: {state: ACTIVE}
+  note: A deleted client is kept for 30 days and its ID cannot be reused in that time.
+
+- kind: IAMWorkforcePoolProviderKey
+  group: iam.gcp.hfl.dev
+  version: v1alpha1
+  discovery: iam.v1
+  resource: locations.workforcePools.providers.keys
+  terraform: google_iam_workforce_pool_provider_key
+  softDelete: {field: state, value: DELETED}
+  fakeDefaults: {state: ACTIVE}
+  note: A workforce pool belongs to an organization; workforcePool and provider are the pool's and the provider's IDs.

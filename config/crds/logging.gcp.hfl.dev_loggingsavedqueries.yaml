@@ -1,0 +1,1100 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: loggingsavedqueries.logging.gcp.hfl.dev
+spec:
+  group: logging.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: LoggingSavedQuery
+    listKind: LoggingSavedQueryList
+    plural: loggingsavedqueries
+    shortNames:
+    - hflloggingsavedquery
+    - hflloggingsavedquerys
+    singular: loggingsavedquery
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: LoggingSavedQuery is a logging.v2 resource (https://logging.googleapis.com/v2/{parent}/locations/{location}/savedQueries/{id}),
+          from its Discovery document logging.v2 (hack/discokind). Terraform's google_logging_saved_query.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              billingAccountRef:
+                description: Immutable. The billingAccount the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed BillingAccount
+                      resource. Should be in the format "billingAccounts/{billingAccountID}".
+                    type: string
+                  name:
+                    description: The name of a BillingAccount resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a BillingAccount resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: billingAccountRef is immutable
+                  rule: self == oldSelf
+              description:
+                description: Optional. A human readable description of the saved query.
+                type: string
+              displayName:
+                description: Required. The user specified title for the SavedQuery.
+                type: string
+              folderRef:
+                description: Immutable. The folder the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The 'name' field of a folder, when not managed by
+                      Config Connector. This field must be set when 'name' field is
+                      not set.
+                    type: string
+                  name:
+                    description: The 'name' field of a 'Folder' resource. This field
+                      must be set when 'external' field is not set.
+                    type: string
+                  namespace:
+                    description: The 'namespace' field of a 'Folder' resource. If
+                      unset, the namespace is defaulted to the namespace of the referencer
+                      resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: folderRef is immutable
+                  rule: self == oldSelf
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/savedQueries/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              loggingQuery:
+                description: Logging query that can be executed in Logs Explorer or
+                  via Logging API.
+                properties:
+                  filter:
+                    description: Required. An advanced query using the Logging Query
+                      Language (https://docs.cloud.google.com/logging/docs/view/logging-query-language).
+                      The maximum length of the filter is 20000 characters.
+                    type: string
+                  summaryFieldEnd:
+                    description: Characters will be counted from the end of the string.
+                    format: int32
+                    type: integer
+                  summaryFieldStart:
+                    description: Characters will be counted from the start of the
+                      string.
+                    format: int32
+                    type: integer
+                  summaryFields:
+                    description: Optional. The set of summary fields to display for
+                      this saved query.
+                    items:
+                      properties:
+                        field:
+                          description: Optional. The field from the LogEntry to include
+                            in the summary line, for example resource.type or jsonPayload.name.
+                          type: string
+                      type: object
+                    type: array
+                required:
+                - filter
+                type: object
+              opsAnalyticsQuery:
+                description: Analytics query that can be executed in Log Analytics.
+                properties:
+                  queryBuilder:
+                    description: Optional. A query builder configuration used in Log
+                      Analytics.If both query_builder and sql_query_text fields are
+                      set, then the sql_query_text will be used, if its non-empty.
+                      At least one of the two fields must be set.
+                    properties:
+                      fieldSources:
+                        description: Defines the items to include in the query result,
+                          analogous to a SQL SELECT clause.
+                        items:
+                          properties:
+                            aliasRef:
+                              description: The alias name for a field that has already
+                                been aliased within a different ProjectedField type
+                                elsewhere in the query model. The alias must be defined
+                                in the QueryBuilderConfig's field_sources list, otherwise
+                                the model is invalid.
+                              type: string
+                            columnType:
+                              description: 'The type of the selected field. This comes
+                                from the schema. Can be one of the BigQuery data types:
+                                - STRING - INT64 - FLOAT64 - BOOL - TIMESTAMP - DATE
+                                - RECORD - JSON'
+                              type: string
+                            field:
+                              description: 'The fully qualified, dot-delimited path
+                                to the selected atomic field (the leaf value). This
+                                path is used for primary selection and actions like
+                                drill-down or projection.The path components should
+                                match the exact field names or keys as they appear
+                                in the underlying data schema. For JSON fields, this
+                                means respecting the original casing (e.g., camelCase
+                                or snake_case as present in the JSON).To reference
+                                field names containing special characters (e.g., hyphens,
+                                spaces), enclose the individual path segment in backticks
+                                (`).Examples: * json_payload.labels.message * json_payload.request_id
+                                * httpRequest.status * json_payload.\my-custom-field`.value
+                                *jsonPayload.`my key with spaces`.data`'
+                              type: string
+                            isJson:
+                              description: 'Whether the field is a JSON field, or
+                                has a parent that is a JSON field. This value is used
+                                to determine JSON extractions in generated SQL queries.
+                                Note that this is_json flag may be true when the column_type
+                                is not JSON if the parent is a JSON field. Ex: - A
+                                json_payload.message field might have is_json=true,
+                                since the ''json_payload'' parent is of type JSON,
+                                and columnType=''STRING'' if the ''message'' field
+                                is of type STRING.'
+                              type: boolean
+                            parentPath:
+                              description: 'The dot-delimited path of the parent container
+                                that holds the target field.This path defines the
+                                structural hierarchy and is essential for correctly
+                                generating SQL when field keys contain special characters
+                                (e.g., dots or brackets).Example: json_payload.labels
+                                (This points to the ''labels'' object). This is an
+                                empty string if the target field is at the root level.'
+                              type: string
+                            projectedField:
+                              description: A projected field option for when a user
+                                wants to use a field with some additional transformations
+                                such as casting or extractions.
+                              properties:
+                                alias:
+                                  description: 'The alias name for the field. Valid
+                                    alias examples are: - single word alias: TestAlias
+                                    - numbers in an alias: Alias123 - multi word alias
+                                    should be enclosed in quotes: "Test Alias" Invalid
+                                    alias examples are: - alias containing keywords:
+                                    WHERE, SELECT, FROM, etc. - alias starting with
+                                    a number: 1stAlias'
+                                  type: string
+                                cast:
+                                  description: 'The cast for the field. This can any
+                                    SQL cast type. Examples: - STRING - CHAR - DATE
+                                    - TIMESTAMP - DATETIME - INT - FLOAT'
+                                  type: string
+                                field:
+                                  description: Optional. The field name. This will
+                                    be the field that is selected using the dot notation
+                                    to display the drill down value.
+                                  type: string
+                                operation:
+                                  description: |-
+                                    Specifies the role of this field (direct selection, grouping, or
+                                    aggregation).
+
+                                    One of FIELD_OPERATION_UNSPECIFIED, NO_SETTING, GROUP_BY, AGGREGATE.
+                                  type: string
+                                regexExtraction:
+                                  description: 'The re2 extraction for the field.
+                                    This will be used to extract the value from the
+                                    field using REGEXP_EXTRACT. More information on
+                                    re2 can be found here: https://github.com/google/re2/wiki/Syntax.
+                                    Meta characters like +?()| will need to be escaped.
+                                    Examples: - ".(autoscaler.*)$" will be converted
+                                    to REGEXP_EXTRACT(JSON_VALUE(field),"request(.*(autoscaler.*)$)")in
+                                    SQL. - "\(test_value\)$" will be converted to
+                                    REGEXP_EXTRACT(JSON_VALUE(field),"request(\(test_value\)$)")
+                                    in SQL.'
+                                  type: string
+                                sqlAggregationFunction:
+                                  description: The function to apply to the field.
+                                  properties:
+                                    parameters:
+                                      description: Optional. Parameters to be applied
+                                        to the aggregation. Aggregations that support
+                                        or require parameters are listed above.
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    type:
+                                      description: 'Required. Specifies the aggregation
+                                        function. Use one of the following string
+                                        identifiers: "average": Computes the average
+                                        (AVG). Applies only to numeric values. "count":
+                                        Counts the number of values (COUNT). "count-distinct":
+                                        Counts the number of distinct values (COUNT
+                                        DISTINCT). "count-distinct-approx": Approximates
+                                        the count of distinct values (APPROX_COUNT_DISTINCT).
+                                        "max": Finds the maximum value (MAX). Applies
+                                        only to numeric values. "min": Finds the minimum
+                                        value (MIN). Applies only to numeric values.
+                                        "sum": Computes the sum (SUM). Applies only
+                                        to numeric values.'
+                                      type: string
+                                  required:
+                                  - type
+                                  type: object
+                                truncationGranularity:
+                                  description: The truncation granularity when grouping
+                                    by a time/date field. This will be used to truncate
+                                    the field to the granularity specified. This can
+                                    be either a date or a time granularity found at
+                                    https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_date
+                                    and https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_time
+                                    respectively.
+                                  type: string
+                                virtualField:
+                                  description: Optional. A virtual field definition,
+                                    used in place of field to define a field that
+                                    is computed from other fields rather than being
+                                    directly present in the data schema.For example,
+                                    a virtual field can be defined using COALESCE
+                                    to select the first non-null value from a list
+                                    of fields.If virtual_field is set, field must
+                                    not be set.
+                                  properties:
+                                    underlyingFieldSources:
+                                      description: 'The field sources that will be
+                                        used to create the virtual field, based on
+                                        the semantics of the virtual field type.The
+                                        field sources must follow these rules, based
+                                        on the virtual field type: - For VIRTUAL_FIELD_TYPE_UNSPECIFIED,
+                                        this field must be empty. - For COALESCE,
+                                        this field must be non-empty and include a
+                                        minimum of two field sources. The underlying
+                                        field sources must be actual projected fields
+                                        that represent actual schema fields and that
+                                        must not be transformed and aggregated in
+                                        any way, except for casting. The type of all
+                                        the underlying field sources must be equivalent
+                                        so that picking one of them would result in
+                                        the same value type.'
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    virtualFieldType:
+                                      description: |-
+                                        Required. The type of the virtual field.
+
+                                        One of VIRTUAL_FIELD_TYPE_UNSPECIFIED, COALESCE.
+                                      type: string
+                                  required:
+                                  - virtualFieldType
+                                  type: object
+                              type: object
+                          type: object
+                        type: array
+                      filter:
+                        description: The filter to use for the query. This equates
+                          to the WHERE clause in SQL.
+                        properties:
+                          childPredicates:
+                            description: The children of the filter predicate. This
+                              equates to the branches of the filter predicate that
+                              could contain further nested leaves.
+                            x-kubernetes-preserve-unknown-fields: true
+                          leafPredicate:
+                            description: The leaves of the filter predicate. This
+                              equates to the last leaves of the filter predicate associated
+                              with an operator.
+                            properties:
+                              comparator:
+                                description: |-
+                                  The comparison type to use for the filter.
+
+                                  One of COMPARATOR_UNSPECIFIED, EQUALS, MATCHES_REGEXP, GREATER_THAN, LESS_THAN, GREATER_THAN_EQUALS, LESS_THAN_EQUALS, IS_NULL, IN, LIKE.
+                                type: string
+                              fieldSource:
+                                description: 'Can be one of the FieldSource types:
+                                  field name, alias ref, variable ref, or a literal
+                                  value.'
+                                properties:
+                                  aliasRef:
+                                    description: The alias name for a field that has
+                                      already been aliased within a different ProjectedField
+                                      type elsewhere in the query model. The alias
+                                      must be defined in the QueryBuilderConfig's
+                                      field_sources list, otherwise the model is invalid.
+                                    type: string
+                                  columnType:
+                                    description: 'The type of the selected field.
+                                      This comes from the schema. Can be one of the
+                                      BigQuery data types: - STRING - INT64 - FLOAT64
+                                      - BOOL - TIMESTAMP - DATE - RECORD - JSON'
+                                    type: string
+                                  field:
+                                    description: 'The fully qualified, dot-delimited
+                                      path to the selected atomic field (the leaf
+                                      value). This path is used for primary selection
+                                      and actions like drill-down or projection.The
+                                      path components should match the exact field
+                                      names or keys as they appear in the underlying
+                                      data schema. For JSON fields, this means respecting
+                                      the original casing (e.g., camelCase or snake_case
+                                      as present in the JSON).To reference field names
+                                      containing special characters (e.g., hyphens,
+                                      spaces), enclose the individual path segment
+                                      in backticks (`).Examples: * json_payload.labels.message
+                                      * json_payload.request_id * httpRequest.status
+                                      * json_payload.\my-custom-field`.value *jsonPayload.`my
+                                      key with spaces`.data`'
+                                    type: string
+                                  isJson:
+                                    description: 'Whether the field is a JSON field,
+                                      or has a parent that is a JSON field. This value
+                                      is used to determine JSON extractions in generated
+                                      SQL queries. Note that this is_json flag may
+                                      be true when the column_type is not JSON if
+                                      the parent is a JSON field. Ex: - A json_payload.message
+                                      field might have is_json=true, since the ''json_payload''
+                                      parent is of type JSON, and columnType=''STRING''
+                                      if the ''message'' field is of type STRING.'
+                                    type: boolean
+                                  parentPath:
+                                    description: 'The dot-delimited path of the parent
+                                      container that holds the target field.This path
+                                      defines the structural hierarchy and is essential
+                                      for correctly generating SQL when field keys
+                                      contain special characters (e.g., dots or brackets).Example:
+                                      json_payload.labels (This points to the ''labels''
+                                      object). This is an empty string if the target
+                                      field is at the root level.'
+                                    type: string
+                                  projectedField:
+                                    description: A projected field option for when
+                                      a user wants to use a field with some additional
+                                      transformations such as casting or extractions.
+                                    properties:
+                                      alias:
+                                        description: 'The alias name for the field.
+                                          Valid alias examples are: - single word
+                                          alias: TestAlias - numbers in an alias:
+                                          Alias123 - multi word alias should be enclosed
+                                          in quotes: "Test Alias" Invalid alias examples
+                                          are: - alias containing keywords: WHERE,
+                                          SELECT, FROM, etc. - alias starting with
+                                          a number: 1stAlias'
+                                        type: string
+                                      cast:
+                                        description: 'The cast for the field. This
+                                          can any SQL cast type. Examples: - STRING
+                                          - CHAR - DATE - TIMESTAMP - DATETIME - INT
+                                          - FLOAT'
+                                        type: string
+                                      field:
+                                        description: Optional. The field name. This
+                                          will be the field that is selected using
+                                          the dot notation to display the drill down
+                                          value.
+                                        type: string
+                                      operation:
+                                        description: |-
+                                          Specifies the role of this field (direct selection, grouping, or
+                                          aggregation).
+
+                                          One of FIELD_OPERATION_UNSPECIFIED, NO_SETTING, GROUP_BY, AGGREGATE.
+                                        type: string
+                                      regexExtraction:
+                                        description: 'The re2 extraction for the field.
+                                          This will be used to extract the value from
+                                          the field using REGEXP_EXTRACT. More information
+                                          on re2 can be found here: https://github.com/google/re2/wiki/Syntax.
+                                          Meta characters like +?()| will need to
+                                          be escaped. Examples: - ".(autoscaler.*)$"
+                                          will be converted to REGEXP_EXTRACT(JSON_VALUE(field),"request(.*(autoscaler.*)$)")in
+                                          SQL. - "\(test_value\)$" will be converted
+                                          to REGEXP_EXTRACT(JSON_VALUE(field),"request(\(test_value\)$)")
+                                          in SQL.'
+                                        type: string
+                                      sqlAggregationFunction:
+                                        description: The function to apply to the
+                                          field.
+                                        properties:
+                                          parameters:
+                                            description: Optional. Parameters to be
+                                              applied to the aggregation. Aggregations
+                                              that support or require parameters are
+                                              listed above.
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          type:
+                                            description: 'Required. Specifies the
+                                              aggregation function. Use one of the
+                                              following string identifiers: "average":
+                                              Computes the average (AVG). Applies
+                                              only to numeric values. "count": Counts
+                                              the number of values (COUNT). "count-distinct":
+                                              Counts the number of distinct values
+                                              (COUNT DISTINCT). "count-distinct-approx":
+                                              Approximates the count of distinct values
+                                              (APPROX_COUNT_DISTINCT). "max": Finds
+                                              the maximum value (MAX). Applies only
+                                              to numeric values. "min": Finds the
+                                              minimum value (MIN). Applies only to
+                                              numeric values. "sum": Computes the
+                                              sum (SUM). Applies only to numeric values.'
+                                            type: string
+                                        required:
+                                        - type
+                                        type: object
+                                      truncationGranularity:
+                                        description: The truncation granularity when
+                                          grouping by a time/date field. This will
+                                          be used to truncate the field to the granularity
+                                          specified. This can be either a date or
+                                          a time granularity found at https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_date
+                                          and https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_time
+                                          respectively.
+                                        type: string
+                                      virtualField:
+                                        description: Optional. A virtual field definition,
+                                          used in place of field to define a field
+                                          that is computed from other fields rather
+                                          than being directly present in the data
+                                          schema.For example, a virtual field can
+                                          be defined using COALESCE to select the
+                                          first non-null value from a list of fields.If
+                                          virtual_field is set, field must not be
+                                          set.
+                                        properties:
+                                          underlyingFieldSources:
+                                            description: 'The field sources that will
+                                              be used to create the virtual field,
+                                              based on the semantics of the virtual
+                                              field type.The field sources must follow
+                                              these rules, based on the virtual field
+                                              type: - For VIRTUAL_FIELD_TYPE_UNSPECIFIED,
+                                              this field must be empty. - For COALESCE,
+                                              this field must be non-empty and include
+                                              a minimum of two field sources. The
+                                              underlying field sources must be actual
+                                              projected fields that represent actual
+                                              schema fields and that must not be transformed
+                                              and aggregated in any way, except for
+                                              casting. The type of all the underlying
+                                              field sources must be equivalent so
+                                              that picking one of them would result
+                                              in the same value type.'
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          virtualFieldType:
+                                            description: |-
+                                              Required. The type of the virtual field.
+
+                                              One of VIRTUAL_FIELD_TYPE_UNSPECIFIED, COALESCE.
+                                            type: string
+                                        required:
+                                        - virtualFieldType
+                                        type: object
+                                    type: object
+                                type: object
+                              fieldSourceValue:
+                                description: The field. This will be the field that
+                                  is set as the Right Hand Side of the filter.
+                                properties:
+                                  aliasRef:
+                                    description: The alias name for a field that has
+                                      already been aliased within a different ProjectedField
+                                      type elsewhere in the query model. The alias
+                                      must be defined in the QueryBuilderConfig's
+                                      field_sources list, otherwise the model is invalid.
+                                    type: string
+                                  columnType:
+                                    description: 'The type of the selected field.
+                                      This comes from the schema. Can be one of the
+                                      BigQuery data types: - STRING - INT64 - FLOAT64
+                                      - BOOL - TIMESTAMP - DATE - RECORD - JSON'
+                                    type: string
+                                  field:
+                                    description: 'The fully qualified, dot-delimited
+                                      path to the selected atomic field (the leaf
+                                      value). This path is used for primary selection
+                                      and actions like drill-down or projection.The
+                                      path components should match the exact field
+                                      names or keys as they appear in the underlying
+                                      data schema. For JSON fields, this means respecting
+                                      the original casing (e.g., camelCase or snake_case
+                                      as present in the JSON).To reference field names
+                                      containing special characters (e.g., hyphens,
+                                      spaces), enclose the individual path segment
+                                      in backticks (`).Examples: * json_payload.labels.message
+                                      * json_payload.request_id * httpRequest.status
+                                      * json_payload.\my-custom-field`.value *jsonPayload.`my
+                                      key with spaces`.data`'
+                                    type: string
+                                  isJson:
+                                    description: 'Whether the field is a JSON field,
+                                      or has a parent that is a JSON field. This value
+                                      is used to determine JSON extractions in generated
+                                      SQL queries. Note that this is_json flag may
+                                      be true when the column_type is not JSON if
+                                      the parent is a JSON field. Ex: - A json_payload.message
+                                      field might have is_json=true, since the ''json_payload''
+                                      parent is of type JSON, and columnType=''STRING''
+                                      if the ''message'' field is of type STRING.'
+                                    type: boolean
+                                  parentPath:
+                                    description: 'The dot-delimited path of the parent
+                                      container that holds the target field.This path
+                                      defines the structural hierarchy and is essential
+                                      for correctly generating SQL when field keys
+                                      contain special characters (e.g., dots or brackets).Example:
+                                      json_payload.labels (This points to the ''labels''
+                                      object). This is an empty string if the target
+                                      field is at the root level.'
+                                    type: string
+                                  projectedField:
+                                    description: A projected field option for when
+                                      a user wants to use a field with some additional
+                                      transformations such as casting or extractions.
+                                    properties:
+                                      alias:
+                                        description: 'The alias name for the field.
+                                          Valid alias examples are: - single word
+                                          alias: TestAlias - numbers in an alias:
+                                          Alias123 - multi word alias should be enclosed
+                                          in quotes: "Test Alias" Invalid alias examples
+                                          are: - alias containing keywords: WHERE,
+                                          SELECT, FROM, etc. - alias starting with
+                                          a number: 1stAlias'
+                                        type: string
+                                      cast:
+                                        description: 'The cast for the field. This
+                                          can any SQL cast type. Examples: - STRING
+                                          - CHAR - DATE - TIMESTAMP - DATETIME - INT
+                                          - FLOAT'
+                                        type: string
+                                      field:
+                                        description: Optional. The field name. This
+                                          will be the field that is selected using
+                                          the dot notation to display the drill down
+                                          value.
+                                        type: string
+                                      operation:
+                                        description: |-
+                                          Specifies the role of this field (direct selection, grouping, or
+                                          aggregation).
+
+                                          One of FIELD_OPERATION_UNSPECIFIED, NO_SETTING, GROUP_BY, AGGREGATE.
+                                        type: string
+                                      regexExtraction:
+                                        description: 'The re2 extraction for the field.
+                                          This will be used to extract the value from
+                                          the field using REGEXP_EXTRACT. More information
+                                          on re2 can be found here: https://github.com/google/re2/wiki/Syntax.
+                                          Meta characters like +?()| will need to
+                                          be escaped. Examples: - ".(autoscaler.*)$"
+                                          will be converted to REGEXP_EXTRACT(JSON_VALUE(field),"request(.*(autoscaler.*)$)")in
+                                          SQL. - "\(test_value\)$" will be converted
+                                          to REGEXP_EXTRACT(JSON_VALUE(field),"request(\(test_value\)$)")
+                                          in SQL.'
+                                        type: string
+                                      sqlAggregationFunction:
+                                        description: The function to apply to the
+                                          field.
+                                        properties:
+                                          parameters:
+                                            description: Optional. Parameters to be
+                                              applied to the aggregation. Aggregations
+                                              that support or require parameters are
+                                              listed above.
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          type:
+                                            description: 'Required. Specifies the
+                                              aggregation function. Use one of the
+                                              following string identifiers: "average":
+                                              Computes the average (AVG). Applies
+                                              only to numeric values. "count": Counts
+                                              the number of values (COUNT). "count-distinct":
+                                              Counts the number of distinct values
+                                              (COUNT DISTINCT). "count-distinct-approx":
+                                              Approximates the count of distinct values
+                                              (APPROX_COUNT_DISTINCT). "max": Finds
+                                              the maximum value (MAX). Applies only
+                                              to numeric values. "min": Finds the
+                                              minimum value (MIN). Applies only to
+                                              numeric values. "sum": Computes the
+                                              sum (SUM). Applies only to numeric values.'
+                                            type: string
+                                        required:
+                                        - type
+                                        type: object
+                                      truncationGranularity:
+                                        description: The truncation granularity when
+                                          grouping by a time/date field. This will
+                                          be used to truncate the field to the granularity
+                                          specified. This can be either a date or
+                                          a time granularity found at https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_date
+                                          and https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_time
+                                          respectively.
+                                        type: string
+                                      virtualField:
+                                        description: Optional. A virtual field definition,
+                                          used in place of field to define a field
+                                          that is computed from other fields rather
+                                          than being directly present in the data
+                                          schema.For example, a virtual field can
+                                          be defined using COALESCE to select the
+                                          first non-null value from a list of fields.If
+                                          virtual_field is set, field must not be
+                                          set.
+                                        properties:
+                                          underlyingFieldSources:
+                                            description: 'The field sources that will
+                                              be used to create the virtual field,
+                                              based on the semantics of the virtual
+                                              field type.The field sources must follow
+                                              these rules, based on the virtual field
+                                              type: - For VIRTUAL_FIELD_TYPE_UNSPECIFIED,
+                                              this field must be empty. - For COALESCE,
+                                              this field must be non-empty and include
+                                              a minimum of two field sources. The
+                                              underlying field sources must be actual
+                                              projected fields that represent actual
+                                              schema fields and that must not be transformed
+                                              and aggregated in any way, except for
+                                              casting. The type of all the underlying
+                                              field sources must be equivalent so
+                                              that picking one of them would result
+                                              in the same value type.'
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          virtualFieldType:
+                                            description: |-
+                                              Required. The type of the virtual field.
+
+                                              One of VIRTUAL_FIELD_TYPE_UNSPECIFIED, COALESCE.
+                                            type: string
+                                        required:
+                                        - virtualFieldType
+                                        type: object
+                                    type: object
+                                type: object
+                              isNegation:
+                                description: Determines if the NOT flag should be
+                                  added to the comparator.
+                                type: boolean
+                              literalValue:
+                                description: The Value will be used to hold user defined
+                                  constants set as the Right Hand Side of the filter.
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          operatorType:
+                            description: |-
+                              The operator type for the filter. Currently there is no support for
+                              multiple levels of nesting, so this will be a single value with no joining
+                              of different operator types
+
+                              One of OPERATOR_TYPE_UNSPECIFIED, AND, OR, LEAF.
+                            type: string
+                        type: object
+                      limit:
+                        description: The limit to use for the query. This equates
+                          to the LIMIT clause in SQL. A limit of 0 will be treated
+                          as not enabled.
+                        format: int64
+                        type: integer
+                      orderBys:
+                        description: The sort orders to use for the query. This equates
+                          to the ORDER BY clause in SQL.
+                        items:
+                          properties:
+                            fieldSource:
+                              description: 'The field to sort on. Can be one of the
+                                FieldSource types: field name, alias ref, variable
+                                ref, or a literal value.'
+                              properties:
+                                aliasRef:
+                                  description: The alias name for a field that has
+                                    already been aliased within a different ProjectedField
+                                    type elsewhere in the query model. The alias must
+                                    be defined in the QueryBuilderConfig's field_sources
+                                    list, otherwise the model is invalid.
+                                  type: string
+                                columnType:
+                                  description: 'The type of the selected field. This
+                                    comes from the schema. Can be one of the BigQuery
+                                    data types: - STRING - INT64 - FLOAT64 - BOOL
+                                    - TIMESTAMP - DATE - RECORD - JSON'
+                                  type: string
+                                field:
+                                  description: 'The fully qualified, dot-delimited
+                                    path to the selected atomic field (the leaf value).
+                                    This path is used for primary selection and actions
+                                    like drill-down or projection.The path components
+                                    should match the exact field names or keys as
+                                    they appear in the underlying data schema. For
+                                    JSON fields, this means respecting the original
+                                    casing (e.g., camelCase or snake_case as present
+                                    in the JSON).To reference field names containing
+                                    special characters (e.g., hyphens, spaces), enclose
+                                    the individual path segment in backticks (`).Examples:
+                                    * json_payload.labels.message * json_payload.request_id
+                                    * httpRequest.status * json_payload.\my-custom-field`.value
+                                    *jsonPayload.`my key with spaces`.data`'
+                                  type: string
+                                isJson:
+                                  description: 'Whether the field is a JSON field,
+                                    or has a parent that is a JSON field. This value
+                                    is used to determine JSON extractions in generated
+                                    SQL queries. Note that this is_json flag may be
+                                    true when the column_type is not JSON if the parent
+                                    is a JSON field. Ex: - A json_payload.message
+                                    field might have is_json=true, since the ''json_payload''
+                                    parent is of type JSON, and columnType=''STRING''
+                                    if the ''message'' field is of type STRING.'
+                                  type: boolean
+                                parentPath:
+                                  description: 'The dot-delimited path of the parent
+                                    container that holds the target field.This path
+                                    defines the structural hierarchy and is essential
+                                    for correctly generating SQL when field keys contain
+                                    special characters (e.g., dots or brackets).Example:
+                                    json_payload.labels (This points to the ''labels''
+                                    object). This is an empty string if the target
+                                    field is at the root level.'
+                                  type: string
+                                projectedField:
+                                  description: A projected field option for when a
+                                    user wants to use a field with some additional
+                                    transformations such as casting or extractions.
+                                  properties:
+                                    alias:
+                                      description: 'The alias name for the field.
+                                        Valid alias examples are: - single word alias:
+                                        TestAlias - numbers in an alias: Alias123
+                                        - multi word alias should be enclosed in quotes:
+                                        "Test Alias" Invalid alias examples are: -
+                                        alias containing keywords: WHERE, SELECT,
+                                        FROM, etc. - alias starting with a number:
+                                        1stAlias'
+                                      type: string
+                                    cast:
+                                      description: 'The cast for the field. This can
+                                        any SQL cast type. Examples: - STRING - CHAR
+                                        - DATE - TIMESTAMP - DATETIME - INT - FLOAT'
+                                      type: string
+                                    field:
+                                      description: Optional. The field name. This
+                                        will be the field that is selected using the
+                                        dot notation to display the drill down value.
+                                      type: string
+                                    operation:
+                                      description: |-
+                                        Specifies the role of this field (direct selection, grouping, or
+                                        aggregation).
+
+                                        One of FIELD_OPERATION_UNSPECIFIED, NO_SETTING, GROUP_BY, AGGREGATE.
+                                      type: string
+                                    regexExtraction:
+                                      description: 'The re2 extraction for the field.
+                                        This will be used to extract the value from
+                                        the field using REGEXP_EXTRACT. More information
+                                        on re2 can be found here: https://github.com/google/re2/wiki/Syntax.
+                                        Meta characters like +?()| will need to be
+                                        escaped. Examples: - ".(autoscaler.*)$" will
+                                        be converted to REGEXP_EXTRACT(JSON_VALUE(field),"request(.*(autoscaler.*)$)")in
+                                        SQL. - "\(test_value\)$" will be converted
+                                        to REGEXP_EXTRACT(JSON_VALUE(field),"request(\(test_value\)$)")
+                                        in SQL.'
+                                      type: string
+                                    sqlAggregationFunction:
+                                      description: The function to apply to the field.
+                                      properties:
+                                        parameters:
+                                          description: Optional. Parameters to be
+                                            applied to the aggregation. Aggregations
+                                            that support or require parameters are
+                                            listed above.
+                                          x-kubernetes-preserve-unknown-fields: true
+                                        type:
+                                          description: 'Required. Specifies the aggregation
+                                            function. Use one of the following string
+                                            identifiers: "average": Computes the average
+                                            (AVG). Applies only to numeric values.
+                                            "count": Counts the number of values (COUNT).
+                                            "count-distinct": Counts the number of
+                                            distinct values (COUNT DISTINCT). "count-distinct-approx":
+                                            Approximates the count of distinct values
+                                            (APPROX_COUNT_DISTINCT). "max": Finds
+                                            the maximum value (MAX). Applies only
+                                            to numeric values. "min": Finds the minimum
+                                            value (MIN). Applies only to numeric values.
+                                            "sum": Computes the sum (SUM). Applies
+                                            only to numeric values.'
+                                          type: string
+                                      required:
+                                      - type
+                                      type: object
+                                    truncationGranularity:
+                                      description: The truncation granularity when
+                                        grouping by a time/date field. This will be
+                                        used to truncate the field to the granularity
+                                        specified. This can be either a date or a
+                                        time granularity found at https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_date
+                                        and https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc_granularity_time
+                                        respectively.
+                                      type: string
+                                    virtualField:
+                                      description: Optional. A virtual field definition,
+                                        used in place of field to define a field that
+                                        is computed from other fields rather than
+                                        being directly present in the data schema.For
+                                        example, a virtual field can be defined using
+                                        COALESCE to select the first non-null value
+                                        from a list of fields.If virtual_field is
+                                        set, field must not be set.
+                                      properties:
+                                        underlyingFieldSources:
+                                          description: 'The field sources that will
+                                            be used to create the virtual field, based
+                                            on the semantics of the virtual field
+                                            type.The field sources must follow these
+                                            rules, based on the virtual field type:
+                                            - For VIRTUAL_FIELD_TYPE_UNSPECIFIED,
+                                            this field must be empty. - For COALESCE,
+                                            this field must be non-empty and include
+                                            a minimum of two field sources. The underlying
+                                            field sources must be actual projected
+                                            fields that represent actual schema fields
+                                            and that must not be transformed and aggregated
+                                            in any way, except for casting. The type
+                                            of all the underlying field sources must
+                                            be equivalent so that picking one of them
+                                            would result in the same value type.'
+                                          x-kubernetes-preserve-unknown-fields: true
+                                        virtualFieldType:
+                                          description: |-
+                                            Required. The type of the virtual field.
+
+                                            One of VIRTUAL_FIELD_TYPE_UNSPECIFIED, COALESCE.
+                                          type: string
+                                      required:
+                                      - virtualFieldType
+                                      type: object
+                                  type: object
+                              type: object
+                            sortOrderDirection:
+                              description: |-
+                                The sort order to use for the query.
+
+                                One of SORT_ORDER_UNSPECIFIED, SORT_ORDER_NONE, SORT_ORDER_ASCENDING, SORT_ORDER_DESCENDING.
+                              type: string
+                          type: object
+                        type: array
+                      resourceNames:
+                        description: 'Required. The view/resource to query. For now
+                          only a single view/resource will be sent, but there are
+                          plans to allow multiple views in the future. Marking as
+                          repeated for that purpose. Example: - "projects/123/locations/global/buckets/456/views/_Default"
+                          - "projects/123/locations/global/metricBuckets/456/views/_Default"'
+                        items:
+                          type: string
+                        type: array
+                      searchTerm:
+                        description: The plain text search to use for the query. There
+                          is no support for multiple search terms. This uses the SEARCH
+                          functionality in BigQuery. For example, a search_term =
+                          'ERROR' would result in the following SQL:SELECT * FROM
+                          resource WHERE SEARCH(resource, 'ERROR') LIMIT 100
+                        type: string
+                    required:
+                    - resourceNames
+                    type: object
+                  sqlQueryText:
+                    description: Optional. A Log Analytics SQL query in text format.If
+                      both sql_query_text and query_builder fields are set, then the
+                      sql_query_text will be used, if its non-empty. At least one
+                      of the two fields must be set.
+                    type: string
+                type: object
+              organizationRef:
+                description: Immutable. The organization the resource belongs to.
+                properties:
+                  external:
+                    description: The 'name' field of an organization, when not managed
+                      by Config Connector.
+                    type: string
+                required:
+                - external
+                type: object
+                x-kubernetes-validations:
+                - message: organizationRef is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              visibility:
+                description: |-
+                  Required. The visibility status of this query, which determines its
+                  ownership.
+
+                  One of VISIBILITY_UNSPECIFIED, PRIVATE, SHARED.
+                type: string
+            required:
+            - displayName
+            - location
+            - visibility
+            type: object
+            x-kubernetes-validations:
+            - message: exactly one of projectRef, folderRef, organizationRef, billingAccountRef
+                is required
+              rule: '[has(self.projectRef), has(self.folderRef), has(self.organizationRef),
+                has(self.billingAccountRef)].filter(x, x).size() == 1'
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/savedQueries/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The timestamp when the saved query was
+                      created.
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp when the saved query was
+                      last updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

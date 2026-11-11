@@ -1,0 +1,219 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: iamoauthclients.iam.gcp.hfl.dev
+spec:
+  group: iam.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: IAMOauthClient
+    listKind: IAMOauthClientList
+    plural: iamoauthclients
+    shortNames:
+    - hfliamoauthclient
+    - hfliamoauthclients
+    singular: iamoauthclient
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: IAMOauthClient is a iam.v1 resource (https://iam.googleapis.com/v1/{parent}/locations/{location}/oauthClients/{id}),
+          from its Discovery document iam.v1 (hack/discokind). Terraform's google_iam_oauth_client.
+          A deleted client is kept for 30 days and its ID cannot be reused in that
+          time.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              allowedGrantTypes:
+                description: Optional. The list of OAuth grant types is allowed for
+                  the OauthClient.
+                items:
+                  type: string
+                type: array
+              allowedRedirectUris:
+                description: Required. The list of redirect uris that is allowed to
+                  redirect back when authorization process is completed.
+                items:
+                  type: string
+                type: array
+              allowedScopes:
+                description: 'Required. The list of scopes that the OauthClient is
+                  allowed to request during OAuth flows. The following scopes are
+                  supported: * `https://www.googleapis.com/auth/cloud-platform`: See,
+                  edit, configure, and delete your Google Cloud data and see the email
+                  address for your Google Account.'
+                items:
+                  type: string
+                type: array
+              clientType:
+                description: |-
+                  Immutable. The type of OauthClient. Either public or private. For private
+                  clients, the client secret can be managed using the dedicated
+                  OauthClientCredential resource.
+
+                  One of CLIENT_TYPE_UNSPECIFIED, PUBLIC_CLIENT, CONFIDENTIAL_CLIENT.
+                type: string
+                x-kubernetes-validations:
+                - message: clientType is immutable
+                  rule: self == oldSelf
+              description:
+                description: Optional. A user-specified description of the OauthClient.
+                  Cannot exceed 256 characters.
+                type: string
+              disabled:
+                description: Optional. Whether the OauthClient is disabled. You cannot
+                  use a disabled OAuth client.
+                type: boolean
+              displayName:
+                description: Optional. A user-specified display name of the OauthClient.
+                  Cannot exceed 32 characters.
+                type: string
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/oauthClients/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            required:
+            - allowedRedirectUris
+            - allowedScopes
+            - location
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/oauthClients/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  clientId:
+                    description: Output only. The system-generated OauthClient id.
+                    type: string
+                  expireTime:
+                    description: Output only. Time after which the OauthClient will
+                      be permanently purged and cannot be recovered.
+                    type: string
+                  state:
+                    description: Output only. The state of the OauthClient.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

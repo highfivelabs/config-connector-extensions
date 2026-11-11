@@ -311,3 +311,18 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
 Google requires a service account ID of 6 to 30 characters, and mockgcp
 refuses a shorter one as real Google Cloud would; the sample uses
 `app-runtime`.
+
+## The generated kinds' fake (`pkg/discokind/fake`)
+
+The kinds `hack/discokind` generates are not served by mockgcp but by
+`pkg/discokind/fake`, an in-memory store in front of it (in
+`pkg/test/mockenv` and both fake-cloud binaries) that serves every such
+kind's collection from the kind's descriptor: create with the ID
+parameter (409 when it exists), get, list, patch by update mask, delete
+(or, for a soft-deleting API such as OAuth clients, the deleted state),
+and finished operations where the API answers one. It sets `name`,
+`createTime`, `updateTime`, `uid` and `etag` when the API has them, and a
+kind's `fakeDefaults`. It does not check required fields, enum values,
+cross-field rules or permissions, and fills in no other defaults: that is
+the live run's job (`docs/testing.md`).
+

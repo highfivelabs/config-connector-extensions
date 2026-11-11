@@ -37,6 +37,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	// The discokind kinds register with pkg/controller.
+	_ "github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
+	discofake "github.com/highfivelabs/config-connector-extensions/pkg/discokind/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/fakecloud"
 )
 
@@ -73,7 +77,9 @@ func run(ctx context.Context, addr string, projects []string) error {
 			klog.Errorf("mockgcp gRPC server: %v", err)
 		}
 	}()
-	httpClient := &http.Client{Transport: mock}
+	// The discokind kinds' collections in front of mockgcp.
+	cloud := discofake.New(mock, discokind.Kinds())
+	httpClient := &http.Client{Transport: cloud}
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	for _, p := range projects {
 		if p = strings.TrimSpace(p); p != "" {
@@ -83,7 +89,7 @@ func run(ctx context.Context, addr string, projects []string) error {
 		}
 	}
 
-	srv := &http.Server{Addr: addr, Handler: fakecloud.Handler(mock), ReadHeaderTimeout: 10 * time.Second}
+	srv := &http.Server{Addr: addr, Handler: fakecloud.Handler(cloud), ReadHeaderTimeout: 10 * time.Second}
 	go func() {
 		<-ctx.Done()
 		_ = srv.Close()
