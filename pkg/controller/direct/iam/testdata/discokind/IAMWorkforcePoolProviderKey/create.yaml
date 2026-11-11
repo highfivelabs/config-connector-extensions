@@ -1,0 +1,11 @@
+apiVersion: iam.gcp.hfl.dev/v1alpha1
+kind: IAMWorkforcePoolProviderKey
+metadata:
+  name: ${NAME}
+spec:
+  location: global
+  workforcePool: ${NAME}-pool
+  provider: ${NAME}-provider
+  use: ENCRYPTION
+  keyData:
+    keySpec: RSA_2048

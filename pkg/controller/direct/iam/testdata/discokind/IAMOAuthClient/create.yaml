@@ -1,0 +1,14 @@
+apiVersion: iam.gcp.hfl.dev/v1alpha1
+kind: IAMOAuthClient
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  displayName: config-connector-extensions test
+  description: An OAuth client made by a config-connector-extensions test.
+  clientType: CONFIDENTIAL_CLIENT
+  allowedGrantTypes: [AUTHORIZATION_CODE_GRANT]
+  allowedRedirectUris: ["https://www.example.com/callback"]
+  allowedScopes: ["https://www.googleapis.com/auth/cloud-platform"]
