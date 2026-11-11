@@ -43,11 +43,18 @@ task fake-cloud-up && task fake-cloud-test && task fake-cloud-down
 end-to-end test on `pkg/test/mockenv` (a real kube-apiserver, Config
 Connector's direct reconciler, and mockgcp) covering create, update,
 delete and `deletion-policy: abandon`. If mockgcp lacks the API, extend it
-with a numbered patch in `patches/k8s-config-connector/` and say whether
-the patch should go upstream. Write the test so it also runs live (names
+with a patch in `patches/k8s-config-connector/` and say whether the patch
+should go upstream. Patches apply in file-name order. A patch that only
+adds files, or touches files no other patch touches, is named by what it
+does, without a number (`mockgcp-dns-response-policies.patch`): it sorts
+after the numbered ones and needs no renumbering when a sibling merges
+first. Only a patch that must apply after another takes the next number. Write the test so it also runs live (names
 from `mockenv.Name`, labels from `mockenv.Labels()`, everything it makes
-deleted): a kind is done after one live run is recorded in
-`docs/live-runs.md`.
+deleted): a kind is done after one live run is recorded in its own file
+in `docs/kinds/` (`docs/kinds/README.md`). A kind's pull request adds or
+edits that file, not a shared list; `task check:static` checks every CRD
+has one. A kind that is a standard collection is generated instead
+(`hack/discokind`, `docs/design.md` section 2.4).
 
 A new, changed or retired kind, or a moved Config Connector pin, changes the
 numbers in the README's Coverage section: run `task coverage` (`hack/coverage/run.sh`) and commit

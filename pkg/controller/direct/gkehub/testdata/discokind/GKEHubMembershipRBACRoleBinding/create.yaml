@@ -1,0 +1,15 @@
+apiVersion: gkehub.gcp.hfl.dev/v1alpha1
+kind: GKEHubMembershipRBACRoleBinding
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  membership: ${NAME}-cluster
+  labels:
+    cce-e2e: "true"
+    cce-run: "${RUN_ID}"
+  user: platform-team@example.com
+  role:
+    predefinedRole: VIEW

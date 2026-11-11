@@ -1,0 +1,221 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: gkehubmembershiprbacrolebindings.gkehub.gcp.hfl.dev
+spec:
+  group: gkehub.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: GKEHubMembershipRBACRoleBinding
+    listKind: GKEHubMembershipRBACRoleBindingList
+    plural: gkehubmembershiprbacrolebindings
+    shortNames:
+    - hflgkehubmembershiprbacrolebinding
+    - hflgkehubmembershiprbacrolebindings
+    singular: gkehubmembershiprbacrolebinding
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: GKEHubMembershipRBACRoleBinding is a gkehub.v1 resource (https://gkehub.googleapis.com/v1/{parent}/locations/{location}/memberships/{membership}/rbacrolebindings/{id}),
+          from its Discovery document gkehub.v1 (hack/discokind). Terraform's google_gke_hub_membership_rbac_role_binding.
+          Config Connector has GKEHubScopeRBACRoleBinding for a fleet scope; this
+          is a membership's (one cluster's).
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              group:
+                description: group is the group, as seen by the kubernetes cluster.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Labels for this RBACRolebinding.
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/memberships/{membership}/rbacrolebindings/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              membership:
+                description: Immutable. The membership, part of the resource's name
+                  ({parent}/locations/{location}/memberships/{membership}/rbacrolebindings/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: membership is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              role:
+                description: Required. Role to bind to the principal
+                properties:
+                  customRole:
+                    description: Optional. custom_role is the name of a custom KubernetesClusterRole
+                      to use.
+                    type: string
+                  predefinedRole:
+                    description: |-
+                      predefined_role is the Kubernetes default role to use
+
+                      One of UNKNOWN, ADMIN, EDIT, VIEW, ANTHOS_SUPPORT.
+                    type: string
+                type: object
+              user:
+                description: user is the name of the user as seen by the kubernetes
+                  cluster, example "alice" or "alice@domain.tld"
+                type: string
+            required:
+            - location
+            - membership
+            - projectRef
+            - role
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/memberships/{membership}/rbacrolebindings/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. When the rbacrolebinding was created.
+                    type: string
+                  deleteTime:
+                    description: Output only. When the rbacrolebinding was deleted.
+                    type: string
+                  state:
+                    description: Output only. State of the rbacrolebinding resource.
+                    properties:
+                      code:
+                        description: Output only. The current state of the rbacrolebinding
+                          resource.
+                        type: string
+                    type: object
+                  uid:
+                    description: Output only. Google-generated UUID for this resource.
+                      This is unique across all rbacrolebinding resources. If a rbacrolebinding
+                      resource is deleted and another resource with the same name
+                      is created, it gets a different uid.
+                    type: string
+                  updateTime:
+                    description: Output only. When the rbacrolebinding was last updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

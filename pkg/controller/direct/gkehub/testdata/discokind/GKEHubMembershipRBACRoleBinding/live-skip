@@ -1,0 +1,1 @@
+a membership is a registered GKE cluster, which this test does not make; live: pending, needs a test cluster in the fleet
