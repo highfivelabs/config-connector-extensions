@@ -214,6 +214,10 @@ on the same VM, minutes apart.
 | 2026-11-11 | pending | LoggingSavedQuery | pending (CI) | pending, needs `logging.savedQueries.*` for the live-test account (`roles/logging.admin`, or a custom role) and a laptop able to start offload | not run | none |
 | 2026-11-11 | pending | IAMOauthClient | pending (CI) | pending, needs `iam.oauthClients.*` for the live-test account (`roles/iam.oauthClientAdmin`) | not run | none |
 | 2026-11-11 | pending | IAMWorkforcePoolProviderKey | pending (CI) | pending, needs organization-level access (`live-skip`) | not run | none |
+| 2026-11-11 | pending | IAMWorkforcePoolProviderScimTenant | pending (CI) | pending, needs organization-level access (`live-skip`) | not run | none |
+| 2026-11-11 | pending | GKEHubMembershipRBACRoleBinding | pending (CI) | pending, needs a test cluster in the fleet (`live-skip`) | not run | none |
+| 2026-11-11 | pending | GKEHubRolloutSequence | pending (CI) | pending: free, ready to run (`LIVE_RUN=TestGKEHubRolloutSequence KINDS=gkehub`); needs `gkehub.rolloutsequences.*` (`roles/gkehub.admin`) and the GKE Hub API on | not run | none |
+| 2026-11-11 | pending | LoggingLink | pending (CI) | pending, needs a Log Analytics bucket (`live-skip`) | not run | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for

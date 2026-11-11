@@ -40,3 +40,39 @@
   softDelete: {field: state, value: DELETED}
   fakeDefaults: {state: ACTIVE}
   note: A workforce pool belongs to an organization; workforcePool and provider are the pool's and the provider's IDs.
+
+- kind: IAMWorkforcePoolProviderScimTenant
+  group: iam.gcp.hfl.dev
+  version: v1alpha1
+  discovery: iam.v1
+  resource: locations.workforcePools.providers.scimTenants
+  terraform: google_iam_workforce_pool_provider_scim_tenant
+  softDelete: {field: state, value: DELETED}
+  fakeDefaults: {state: ACTIVE}
+  note: A workforce pool belongs to an organization; workforcePool and provider are the pool's and the provider's IDs.
+
+- kind: GKEHubMembershipRBACRoleBinding
+  group: gkehub.gcp.hfl.dev
+  version: v1alpha1
+  discovery: gkehub.v1
+  resource: projects.locations.memberships.rbacrolebindings
+  parents: [project]
+  terraform: google_gke_hub_membership_rbac_role_binding
+  note: Config Connector has GKEHubScopeRBACRoleBinding for a fleet scope; this is a membership's (one cluster's).
+
+- kind: GKEHubRolloutSequence
+  group: gkehub.gcp.hfl.dev
+  version: v1alpha1
+  discovery: gkehub.v1
+  resource: projects.locations.rolloutSequences
+  parents: [project]
+  note: The order in which a fleet's clusters take GKE upgrades.
+
+- kind: LoggingLink
+  group: logging.gcp.hfl.dev
+  version: v1alpha1
+  discovery: logging.v2
+  resource: projects.locations.buckets.links
+  parents: [project, folder, organization, billingAccount]
+  terraform: google_logging_linked_dataset
+  note: A BigQuery linked dataset of a Log Analytics bucket; Config Connector's LoggingLink takes a project's bucket only.

@@ -182,7 +182,10 @@ one, it retires as any other (section 3.4). Why, and what it reaches:
 references beyond the parent (the other parts of a name are IDs), no
 secrets in status, no Compute Engine insert-style resources yet. The
 first kinds: `LoggingSavedQuery`, `IAMOauthClient`,
-`IAMWorkforcePoolProviderKey` (2026-11-11).
+`IAMWorkforcePoolProviderKey` (2026-11-11); then
+`IAMWorkforcePoolProviderScimTenant`, `GKEHubMembershipRBACRoleBinding`,
+`GKEHubRolloutSequence` (foundation item 5) and `LoggingLink` with
+folder, organization and billing account parents.
 
 ### Switching to PR #7148
 

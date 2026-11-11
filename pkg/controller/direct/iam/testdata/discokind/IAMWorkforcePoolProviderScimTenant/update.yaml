@@ -1,0 +1,12 @@
+apiVersion: iam.gcp.hfl.dev/v1alpha1
+kind: IAMWorkforcePoolProviderScimTenant
+metadata:
+  name: ${NAME}
+spec:
+  location: global
+  workforcePool: ${NAME}-pool
+  provider: ${NAME}-provider
+  claimMapping:
+    google.subject: user.externalId
+  displayName: config-connector-extensions test, changed
+  description: changed

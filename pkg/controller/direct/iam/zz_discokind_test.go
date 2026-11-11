@@ -28,3 +28,8 @@ func TestIAMOauthClient(t *testing.T) { kindtest.Run(t, "IAMOauthClient") }
 
 // TestIAMWorkforcePoolProviderKey runs testdata/discokind/IAMWorkforcePoolProviderKey/ on the fake cloud, or live.
 func TestIAMWorkforcePoolProviderKey(t *testing.T) { kindtest.Run(t, "IAMWorkforcePoolProviderKey") }
+
+// TestIAMWorkforcePoolProviderScimTenant runs testdata/discokind/IAMWorkforcePoolProviderScimTenant/ on the fake cloud, or live.
+func TestIAMWorkforcePoolProviderScimTenant(t *testing.T) {
+	kindtest.Run(t, "IAMWorkforcePoolProviderScimTenant")
+}
