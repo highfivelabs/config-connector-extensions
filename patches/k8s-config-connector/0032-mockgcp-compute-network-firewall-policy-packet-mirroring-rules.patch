@@ -1,0 +1,189 @@
+config-connector-extensions patch 0032: mockgcp's packet mirroring rules of a global network firewall policy: addPacketMirroringRule, getPacketMirroringRule, patchPacketMirroringRule, removePacketMirroringRule.
+
+For compute.gcp.hfl.dev ComputeNetworkFirewallPolicyPacketMirroringRule.
+Written here (upstream's mock answers Unimplemented; the HTTP routes are
+generated already), after the policy's firewall rules in
+networkfirewallpolicies.go: a rule is addressed by its priority in the
+policy's packetMirroringRules; add refuses a rule without a priority or
+at a priority the policy has; get, patch and remove answer 400 "The
+firewall policy does not contain a packet mirroring rule at priority N"
+for a priority it has not (modelled on the firewall rules' answer); a
+patch replaces the rule whole; kind compute#packetMirroringRule;
+tlsInspect is refused, even false, as the real API refused it in a live
+run. No default rules are added and nothing else in the rule is
+checked. A new file,
+so it touches no file another patch edits.
+diff --git a/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go b/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go
+new file mode 100644
+index 00000000..e9f3669e
+--- /dev/null
++++ b/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go
+@@ -0,0 +1,168 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockcompute
++
++// Packet mirroring rules of a global network firewall policy
++// (networkFirewallPolicies.getPacketMirroringRule, addPacketMirroringRule,
++// patchPacketMirroringRule, removePacketMirroringRule), written for
++// config-connector-extensions after the policy's firewall rules above
++// (GetRule, AddRule, PatchRule, RemoveRule): a rule is addressed by its
++// priority in the policy's packetMirroringRules. A missing priority is a
++// 400, as for firewall rules; a priority already taken is refused on add.
++// A patch replaces the rule (the real API keeps lists the body leaves out;
++// a client that sends every field converges either way). tlsInspect is
++// refused, even false, as the real API refuses it (seen live). No default
++// rules are added and nothing else is checked of the match, the action or
++// the security profile group.
++
++import (
++	"context"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++)
++
++func packetMirroringRuleMissing(priority int32) error {
++	return status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The firewall policy does not contain a packet mirroring rule at priority %d.", priority, priority)
++}
++
++func checkPacketMirroringRule(r *pb.FirewallPolicyRule) error {
++	if r.TlsInspect != nil {
++		return status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.tlsInspect': '%t'. TLS Inspection cannot be set for packet mirroring rule.", r.GetTlsInspect())
++	}
++	return nil
++}
++
++func mockFieldValuesForPacketMirroringRule(r *pb.FirewallPolicyRule) {
++	r.RuleTupleCount = PtrTo(int32(2))
++	r.Kind = PtrTo("compute#packetMirroringRule")
++	if r.Description == nil {
++		r.Description = PtrTo("")
++	}
++}
++
++func (s *NetworkFirewallPoliciesV1) GetPacketMirroringRule(ctx context.Context, req *pb.GetPacketMirroringRuleNetworkFirewallPolicyRequest) (*pb.FirewallPolicyRule, error) {
++	obj, _, _, err := s.resolvePolicy(ctx, req.GetProject(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	for _, r := range obj.GetPacketMirroringRules() {
++		if r.GetPriority() == req.GetPriority() {
++			return r, nil
++		}
++	}
++	return nil, packetMirroringRuleMissing(req.GetPriority())
++}
++
++func (s *NetworkFirewallPoliciesV1) AddPacketMirroringRule(ctx context.Context, req *pb.AddPacketMirroringRuleNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, fqn, projectID, err := s.resolvePolicy(ctx, req.GetProject(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	r := proto.CloneOf(req.GetFirewallPolicyRuleResource())
++	if err := checkPacketMirroringRule(r); err != nil {
++		return nil, err
++	}
++	if r.Priority == nil {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '0'. A priority is required.")
++	}
++	for _, have := range obj.GetPacketMirroringRules() {
++		if have.GetPriority() == r.GetPriority() {
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '%d'. The firewall policy already contains a packet mirroring rule at priority %d.", r.GetPriority(), r.GetPriority())
++		}
++	}
++	mockFieldValuesForPacketMirroringRule(r)
++	obj.PacketMirroringRules = append(obj.PacketMirroringRules, r)
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo("compute.networkFirewallPolicies.addPacketMirroringRule"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startGlobalLRO(ctx, projectID, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++func (s *NetworkFirewallPoliciesV1) PatchPacketMirroringRule(ctx context.Context, req *pb.PatchPacketMirroringRuleNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, fqn, projectID, err := s.resolvePolicy(ctx, req.GetProject(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	if err := checkPacketMirroringRule(req.GetFirewallPolicyRuleResource()); err != nil {
++		return nil, err
++	}
++	found := false
++	for i, have := range obj.GetPacketMirroringRules() {
++		if have.GetPriority() == req.GetPriority() {
++			r := proto.CloneOf(req.GetFirewallPolicyRuleResource())
++			r.Priority = PtrTo(req.GetPriority())
++			mockFieldValuesForPacketMirroringRule(r)
++			obj.PacketMirroringRules[i] = r
++			found = true
++		}
++	}
++	if !found {
++		return nil, packetMirroringRuleMissing(req.GetPriority())
++	}
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo("compute.networkFirewallPolicies.patchPacketMirroringRule"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startGlobalLRO(ctx, projectID, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++func (s *NetworkFirewallPoliciesV1) RemovePacketMirroringRule(ctx context.Context, req *pb.RemovePacketMirroringRuleNetworkFirewallPolicyRequest) (*pb.Operation, error) {
++	obj, fqn, projectID, err := s.resolvePolicy(ctx, req.GetProject(), req.GetFirewallPolicy())
++	if err != nil {
++		return nil, err
++	}
++	var kept []*pb.FirewallPolicyRule
++	for _, have := range obj.GetPacketMirroringRules() {
++		if have.GetPriority() != req.GetPriority() {
++			kept = append(kept, have)
++		}
++	}
++	if len(kept) == len(obj.GetPacketMirroringRules()) {
++		return nil, packetMirroringRuleMissing(req.GetPriority())
++	}
++	obj.PacketMirroringRules = kept
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo("compute.networkFirewallPolicies.removePacketMirroringRule"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startGlobalLRO(ctx, projectID, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}

@@ -172,6 +172,8 @@ patches:
   - {file: patches/k8s-config-connector/0029-mockgcp-logging-billing-account-sinks.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0030-mockgcp-iam-principal-access-boundary-policies.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0031-mockgcp-securitycenter-mute-config-parents.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0033-mockgcp-compute-vpn-tunnels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
@@ -391,6 +393,10 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicy_identity.go, apis/compute/v1alpha1/computeorganizationsecuritypolicy_identity_test.go, apis/compute/v1alpha1/computeorganizationsecuritypolicy_reference.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_identity.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_identity_test.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyassociation_reference.go]}
   - here: [apis/compute/v1beta1/computeorganizationsecuritypolicyrule_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_types.go]}
+  - here: [apis/compute/v1beta1/computevpntunnel_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computevpntunnel_types.go]}
+  - here: [pkg/controller/direct/compute/vpntunnel_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computevpntunnel_mapper.go]}
   - here: [apis/compute/v1beta1/computeorganizationsecuritypolicyrule_identity.go, apis/compute/v1beta1/computeorganizationsecuritypolicyrule_identity_test.go, apis/compute/v1beta1/computeorganizationsecuritypolicyrule_reference.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_identity.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_identity_test.go, apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_reference.go]}
   - here: [pkg/controller/direct/compute/organizationsecuritypolicy_controller.go]
@@ -405,6 +411,22 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeorganizationsecuritypolicyassociation_fuzzer.go]}
   - here: [pkg/controller/direct/compute/organizationsecuritypolicyassociation_mapper_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeorganizationsecuritypolicyassociation_mapper_test.go]}
+  - here: [apis/dns/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/groupversion_info.go]}
+  - here: [apis/dns/v1beta1/doc.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/doc.go]}
+  - here: [apis/dns/v1beta1/dnsresponsepolicy_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/dnsresponsepolicy_types.go]}
+  - here: [apis/dns/v1beta1/dnsresponsepolicy_identity.go, apis/dns/v1beta1/dnsresponsepolicy_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/dnsresponsepolicy_identity.go, apis/dns/v1alpha1/dnsresponsepolicy_identity_test.go]}
+  - here: [apis/dns/v1beta1/dnsresponsepolicy_reference.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/dnsresponsepolicy_reference.go]}
+  - here: [pkg/controller/direct/dns/responsepolicy_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/dnsresponsepolicy_controller.go]}
+  - here: [pkg/controller/direct/dns/responsepolicy_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/zz_generated.v1alpha1.mappers.go]}
+  - here: [pkg/controller/direct/dns/responsepolicy_fuzzer_test.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/dnsresponsepolicy_fuzzer.go]}
   - here: [apis/run/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/groupversion_info.go]}
   - here: [apis/run/v1alpha1/runservice_types.go]
@@ -473,3 +495,6 @@ other_sources:
   - repo: GoogleCloudPlatform/magic-modules
     commit: aad42de6b6564e69c864647145979e60c9eaece1
     used_for: the behaviour of ComputeRouter (mmv1/products/compute/Router.yaml, RouterNat.yaml; resource_compute_router_peer.go.tmpl and resource_compute_router_interface.go.tmpl read as data; the MD5 key value is never read back, a peer's enable is "TRUE" or "FALSE", an interface needs only an IP range)
+  - repo: GoogleCloudPlatform/magic-modules
+    commit: aad42de6b6564e69c864647145979e60c9eaece1
+    used_for: the fields and calls of ComputeNetworkFirewallPolicyPacketMirroringRule (mmv1/products/compute/NetworkFirewallPolicyPacketMirroringRule.yaml; Apache-2.0; read, not copied)

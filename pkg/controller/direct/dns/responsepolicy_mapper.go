@@ -1,0 +1,121 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// SPDX-License-Identifier: Apache-2.0
+
+// Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
+// pkg/controller/direct/dns/zz_generated.v1alpha1.mappers.go (UPSTREAM.md),
+// generated there by dev/tools/openapi-to-krm: only the DNSResponsePolicy
+// functions, on our KRM types (dns.gcp.hfl.dev/v1beta1).
+
+package dns
+
+import (
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
+	api "google.golang.org/api/dns/v1"
+
+	krm "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
+)
+
+func DNSResponsePolicySpec_FromAPI(mapCtx *direct.MapContext, in *api.ResponsePolicy) *krm.DNSResponsePolicySpec {
+	if in == nil {
+		return nil
+	}
+	out := &krm.DNSResponsePolicySpec{}
+	out.Description = direct.LazyPtr(in.Description)
+	out.GkeClusters = direct.Slice_FromProto(mapCtx, in.GkeClusters, ResponsepolicyGkeClusters_FromAPI)
+	out.Networks = direct.Slice_FromProto(mapCtx, in.Networks, ResponsepolicyNetworks_FromAPI)
+	// MISSING: ProjectRef
+	// MISSING: ResourceID
+	return out
+}
+
+func DNSResponsePolicySpec_ToAPI(mapCtx *direct.MapContext, in *krm.DNSResponsePolicySpec) *api.ResponsePolicy {
+	if in == nil {
+		return nil
+	}
+	out := &api.ResponsePolicy{}
+	out.Description = direct.ValueOf(in.Description)
+	out.GkeClusters = direct.Slice_ToProto(mapCtx, in.GkeClusters, ResponsepolicyGkeClusters_ToAPI)
+	out.Networks = direct.Slice_ToProto(mapCtx, in.Networks, ResponsepolicyNetworks_ToAPI)
+	// MISSING: Id
+	// MISSING: Labels
+	// MISSING: ResponsePolicyName
+	// MISSING: HTTPStatusCode
+	// MISSING: Header
+	return out
+}
+
+func DNSResponsePolicyStatus_FromAPI(mapCtx *direct.MapContext, in *api.ResponsePolicy) *krm.DNSResponsePolicyStatus {
+	if in == nil {
+		return nil
+	}
+	out := &krm.DNSResponsePolicyStatus{}
+	// MISSING: Conditions
+	// MISSING: ObservedGeneration
+	// MISSING: ExternalRef (written by the controller)
+	return out
+}
+
+func DNSResponsePolicyStatus_ToAPI(mapCtx *direct.MapContext, in *krm.DNSResponsePolicyStatus) *api.ResponsePolicy {
+	if in == nil {
+		return nil
+	}
+	out := &api.ResponsePolicy{}
+	// MISSING: Description
+	// MISSING: GkeClusters
+	// MISSING: Id
+	// MISSING: Labels
+	// MISSING: Networks
+	// MISSING: ResponsePolicyName
+	// MISSING: HTTPStatusCode
+	// MISSING: Header
+	return out
+}
+
+func ResponsepolicyGkeClusters_FromAPI(mapCtx *direct.MapContext, in *api.ResponsePolicyGKECluster) *krm.ResponsepolicyGkeClusters {
+	if in == nil {
+		return nil
+	}
+	out := &krm.ResponsepolicyGkeClusters{}
+	out.GkeClusterName = in.GkeClusterName
+	return out
+}
+
+func ResponsepolicyGkeClusters_ToAPI(mapCtx *direct.MapContext, in *krm.ResponsepolicyGkeClusters) *api.ResponsePolicyGKECluster {
+	if in == nil {
+		return nil
+	}
+	out := &api.ResponsePolicyGKECluster{}
+	out.GkeClusterName = in.GkeClusterName
+	return out
+}
+
+func ResponsepolicyNetworks_FromAPI(mapCtx *direct.MapContext, in *api.ResponsePolicyNetwork) *krm.ResponsepolicyNetworks {
+	if in == nil {
+		return nil
+	}
+	out := &krm.ResponsepolicyNetworks{}
+	out.NetworkUrl = in.NetworkUrl
+	return out
+}
+
+func ResponsepolicyNetworks_ToAPI(mapCtx *direct.MapContext, in *krm.ResponsepolicyNetworks) *api.ResponsePolicyNetwork {
+	if in == nil {
+		return nil
+	}
+	out := &api.ResponsePolicyNetwork{}
+	out.NetworkUrl = in.NetworkUrl
+	return out
+}

@@ -8,6 +8,7 @@ resources:
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
+- compute.gcp.hfl.dev_computenetworkfirewallpolicypacketmirroringrules.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyassociations.yaml
@@ -29,8 +30,10 @@ resources:
 - compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
+- compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
+- dns.gcp.hfl.dev_dnsresponsepolicies.yaml
 - gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
 - gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
 - iam.gcp.hfl.dev_iambindings.yaml

@@ -35,7 +35,7 @@ Tier 1, 16 services, most covered attributes first:
 
 | Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered | Terraform `google-beta` | Terraform `google` |
 | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 1.2% | 48.2% | 56.0% | 53.2% |
+| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 1.7% | 47.7% | 56.0% | 53.2% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
 | 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 2.1% | 74.0% | 37.6% | 37.6% |
 | 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 0.0% | 39.9% | 74.5% | 73.2% |
@@ -369,6 +369,35 @@ calls `users.update` with `revokeExistingRoles`, so the user ends with
 exactly the listed roles, whoever granted the others. Roles granted out of
 band while the list is unchanged are not detected (the controller compares
 against what it last applied, `status.appliedDatabaseRoles`).
+
+### The merge gate
+
+GitHub Actions is off in the organization (the builder, 2026-11-11); the
+workflows in `.github/workflows/` stay, disabled. Their pull-request jobs
+run before the push instead, on an offload Spot VM:
+
+```sh
+task hooks          # once per clone: core.hooksPath=hack/hooks
+task ci             # by hand: HEAD (or SHA=..., CI_BASE=<base branch>)
+```
+
+`task ci` (`hack/ci/gate.sh`) checks the commit out into a temporary
+worktree, makes `ci.yml`'s plan (`hack/ci/select.sh plan`, against the
+merge base with `origin/main`), and runs on one VM what the plan
+selects: `task tools`, then `task check` (mode full) or
+`hack/ci/select.sh run GROUPS` (mode groups), then `task operator-e2e`
+when the plan says `e2e=true`. A docs-only change runs nothing. The VM is
+16 vCPUs and 64 GB (8 and 32 GB on a quota error, never smaller: `go vet`
+needs the memory). Only mockgcp, the fake Google Cloud: no credentials reach a test.
+
+It then posts the commit status `offload/ci` (success or failure, the
+machine and the minutes, a link to the run's log in the offload bucket)
+on the commit. The pre-push hook (`hack/hooks/pre-push`) runs it for
+every branch commit pushed and refuses the push on a failure; a commit
+that already has `offload/ci` success is not run again.
+
+**Merge only when the `offload/ci` status on the pull request's head is
+success.** A new commit on the branch needs its own run.
 
 ## Layout
 

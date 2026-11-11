@@ -7,16 +7,18 @@ seed-catalog kinds (`docs/design.md` 6.5), updated by the ones that built
 `IAMRoleMember` (now `IAMMember`, design.md decision 12), the folder and
 organization `ServiceIdentity`, `ProjectDefaultServiceAccounts`,
 `NetworkSecurityAddressGroup`, the security profile kinds, `ComputeRouter`,
-`IAMDenyPolicy` and `ComputeOrganizationSecurityPolicyRule`. Read
+`IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyRule` and
+`DNSResponsePolicy`,
+`ComputeNetworkFirewallPolicyPacketMirroringRule` and `ComputeVPNTunnel`. Read
 `CLAUDE.md`, `README.md`, `docs/design.md` and `docs/live-runs.md` first;
 this file only adds to them.
 
 ## Where things stand
 
-After the Security Command Center mute config PR (decision 16's
-`SecurityCenterMuteConfig`): thirty-five kinds (`README.md`, design.md's
-intro; the latest, `SecurityCenterMuteConfig`, decision 16),
-mockgcp patches 0001 to 0031 (`UPSTREAM.md` and `upstream.yaml`, which
+After the VPN tunnel PR (foundation item 10's `ComputeVPNTunnel`, the
+first field gap under decision 19): thirty-eight kinds (`docs/kinds/`,
+`task kinds`),
+mockgcp patches 0001 to 0034 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
 number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
@@ -27,7 +29,9 @@ which wait on the test folder, as do `ComputeOrganizationSecurityPolicy`,
 its association and its rule (organization and folder only), and `IAMDenyPolicy`,
 which waits on Deny Admin (granted on an organization; `E2E_IAM_DENY_ADMIN=true`),
 and `LoggingBillingAccountSink`, which waits on billing account access
-(`E2E_BILLING_ACCOUNT`).
+(`E2E_BILLING_ACCOUNT`),
+and `DNSResponsePolicy`, which waits on Cloud DNS in `hfl-dev-514205`
+(`dns.googleapis.com` and `roles/dns.admin`; `E2E_DNS_ADMIN=true`).
 
 `ComputeRegionNetworkFirewallPolicyRule` (rank 6) passes live. What the
 real API did that the fake cannot show is in design.md 6.5 and
@@ -126,14 +130,24 @@ and `ComputeOrganizationSecurityPolicyAssociation` and
 `ComputeOrganizationSecurityPolicyRule` and
 `ComputeNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1`)
 and `IAMPrincipalAccessBoundaryPolicy` (`iam.gcp.hfl.dev/v1beta1`, patch
-0030; live pending organization-level access) are built. `IAMBinding`
+0030; live pending organization-level access) and `DNSResponsePolicy`
+(`dns.gcp.hfl.dev/v1beta1`) are built. `IAMBinding`
 moved to `v1beta1` (decision 24, the builder's K12, for the catalog's
 0.4.0 charts); `v1alpha1` is no longer served (section 10, question 4)
 and `CHANGELOG.md` says how to upgrade. Next the rest of decision 13:
-`DNSResponsePolicy` and its rule (one PR per kind, copied from upstream's
-alpha types and controllers),
-then 16 (Security Command Center, three parents), then packet
-mirroring rules and on down `docs/coverage/foundation.md`, with the
+`DNSResponsePolicyRule` (upstream has its types,
+identity, reference and fuzzer but a Terraform-only controller, and
+mockgcp serves no rules: write the controller after the policy's and add
+a mockgcp patch; the sweeper must delete a policy's rules before it),
+then 16 (Security Command Center, three parents). Packet mirroring
+rules: the global network policy's is built
+(`ComputeNetworkFirewallPolicyPacketMirroringRule`, patch 0032; live
+passes but for the patch, design.md section 7 item 37: rerun
+`task test-live PROJECT=hfl-dev-514205 KINDS=compute` and read the
+patch subtest's timeout message first); the
+hierarchical policy's has rule calls in the beta API only (live pending
+the test folder) and the regional policy's has none in any API version.
+Then on down `docs/coverage/foundation.md`, with the
 field gaps (decision 19). 15 is built: `LoggingBillingAccountSink`
 (design.md 6.5, patch 0029), live pending billing account access.
 
@@ -179,6 +193,65 @@ short design note, as the builder asked, for example a field kind that
 patches only its fields with an update mask beside Config Connector's
 object, and why. Decision 11 rejected that for `RunService`, because
 Terraform's whole-object update resets the fields.
+
+What `DNSResponsePolicy` taught: a new group (`dns.gcp.hfl.dev`) is a
+`groupversion_info.go` and `doc.go` copied, the kind added to
+`pkg/controller/controllers.go` (both lists), and the group added to the
+manager's ClusterRole (`config/operator/rbac.yaml`, both rules; without
+it the operator's manager cannot read the kind, which only
+`task operator-e2e` shows); the generator picks up the rest. Upstream's `NoProto` fuzzers (for kinds on the
+`google.golang.org/api` REST types) run as a test the same way as the
+proto ones (`FuzzSpec` and `FuzzStatus`). Upstream's direct DNS kinds
+leave `labels` out; ours takes `metadata.labels`
+(`label.NewGCPLabelsFromK8sLabels`), so live objects carry the run's
+labels with no spec field. Check what the live project has before
+writing a live test: `gcloud projects get-iam-policy` and `gcloud
+services list` (both read-only) showed no DNS API or role, so the test
+and sweeper sit behind `E2E_DNS_ADMIN`.
+
+What `ComputeNetworkFirewallPolicyPacketMirroringRule` taught: read the
+Discovery documents for which calls exist where
+(`.cache/coverage/discovery/compute.{v1,beta,alpha}.json`) before taking
+a queue item's list of kinds as buildable. When the pinned
+`google.golang.org/api` client lacks a call and the generated
+`cloud.google.com/go` client cannot send an empty list, a plain JSON
+request through `htransport.NewClient(ctx, opts...)` (the same transport
+and credentials, so mockgcp still answers it) is smaller than moving a
+dependency. A kind with no API resource of its own needs a line in
+`hack/coverage/overrides.yaml` (`subresources`), or the coverage report
+counts it outside the denominator.
+
+Field gaps (the builder's 2026-11-10 reversal of decision 5, recorded
+as design.md decision 19 in PRs #49 and #51) have begun. Take them in
+`docs/coverage/foundation.md`'s order (items 9 to 19 and 21 to 27 that
+say "field"), with the attribute lists in `docs/coverage/attributes.csv`.
+Before building one, read design.md 6.6 ("Field gaps on large
+Terraform-based kinds"), which the first field-gap PR proposed as the
+builder asked, and check how the API changes each missing field. A field
+the API takes only at create gets a create-only whole-object kind
+(insert, get, labels, delete; the rest immutable by CEL), as
+`ComputeVPNTunnel` (item 10's `cipherSuite`) did. A field the API
+changes by mask, where Config Connector's update never sends it, gets a
+field kind beside Config Connector's object (not built yet; its name is
+design.md section 10 question 5, so it waits on the builder). Otherwise
+a whole-object kind, as decisions 11, 13 and 14. Item 10's other fields
+(`ComputeInterconnectAttachment`'s IPv6 candidates and `l2Forwarding`,
+`ComputeInterconnect`'s `applicationAwareInterconnect`) need a Dedicated
+Interconnect to prove live, which `hfl-dev-514205` has not; item 11
+(`ComputeServiceAttachment`: DCL-based upstream, with direct types, a
+mapper and a mockgcp service at the pin) is the next that can run live.
+Upstream's `KMSCryptoKey` supports a direct controller
+(`static_config.go`); read it before item 18.
+
+What `ComputeVPNTunnel` taught: upstream's direct types and mapper for a
+Terraform-based kind (here from PR #10151) copy cleanly into a
+create-only kind; mockgcp had no VPN tunnel service (patch 0033). A
+Config Connector reference whose `Normalize` wants its registered kind is
+easier resolved with `configConnectorSelfLink` (`router_controller.go`):
+`external` as given, or the named object's `status.selfLink`.
+`ComputeRouterRef.Resolve` (v1alpha1) finds our router or Config
+Connector's for any kind that names a router. Patch numbers: 0029 to
+0032 went to #49, #52, #53 and #55, merged first, so this PR's is 0033.
 
 What `ComputeNetworkFirewallPolicyRule` taught: upstream's kind really
 was Terraform-only (no `apis/` types), so it was adapted from our

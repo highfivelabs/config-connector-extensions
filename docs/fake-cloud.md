@@ -187,6 +187,26 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   organization), and none of the rule's contents: any principal or
   permission string and any `denialCondition` is stored. Nothing it
   stores is enforced.
+- **DNS response policies in mockgcp** (upstream's, unpatched, for
+  `DNSResponsePolicy`). It serves create (a new numeric ID), get, a
+  whole-policy update and patch (both replace the stored policy with the
+  body: a patch of `networks` alone drops the description and labels,
+  where the real API keeps them), and delete. It does not check that a
+  bound network or GKE cluster exists, does not refuse to delete a
+  policy still bound to a network (upstream's controller unbinds first,
+  as ours does), and its list answers empty. Labels are stored as sent.
+- **Packet mirroring rules of a global network firewall policy in
+  mockgcp** (patch 0032, ours, for
+  `ComputeNetworkFirewallPolicyPacketMirroringRule`). It serves add, get,
+  patch and remove by priority in the policy's `packetMirroringRules`; a
+  missing priority is a 400 worded after the firewall rules' answer, not
+  seen from this API; a patch replaces the rule whole, where the real API
+  is assumed to keep lists the body leaves out (the controller sends
+  `[]`). It refuses `tlsInspect`, even `false`, as the real API did in a
+  live run. Otherwise it checks nothing in the rule: a `mirror` rule's security
+  profile group need not exist, and the API's rules for which matchers
+  and directions a packet mirroring rule takes are not modelled. It adds
+  no default packet mirroring rules to a new policy.
 - **Organization security policies in mockgcp** (upstream's,
   unpatched, for `ComputeOrganizationSecurityPolicy` and its
   association). It serves insert (a new numeric ID, the parent as sent,
@@ -211,6 +231,21 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   with its number is not known). It checks no parent (any folder or
   organization ID is one), no filter syntax, and no expiry of a dynamic
   mute config.
+- **VPN tunnels in mockgcp** (patch 0033, ours, for `ComputeVPNTunnel`).
+  Insert, get, `setLabels` (refused on a stale label fingerprint) and
+  delete of `projects/{p}/regions/{r}/vpnTunnels/{t}`; insert leaves
+  the labels out, as the API does (live run `cce-11101009-a46a`); a read never
+  returns the shared secret, only a hash of it, and a new tunnel reads as
+  `FIRST_HANDSHAKE`. It checks only that the secret is set and that
+  exactly one of the HA and Classic gateways is named: not that the
+  gateways, the peer or the router exist, are in the tunnel's region or
+  network, or that the interfaces match; not that the peer's address is
+  public (the API refuses a reserved one, RFC 5735); not the cipher suite's
+  algorithm names or combinations; and it keeps the references as sent
+  (the real API answers with full URLs). The patch also makes HA VPN
+  gateway writes answer with a regional operation, as the API does:
+  upstream's mock answered with a global one, which the regional client's
+  `Wait` could not find (the test's gateway failed with a 404 on it).
 - **Organization security policy rules in mockgcp** (patch 0028, ours,
   for `ComputeOrganizationSecurityPolicyRule`). `addRule`, `getRule`,
   `patchRule` and `removeRule` by priority in the policy's rules;

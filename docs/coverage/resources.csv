@@ -375,7 +375,7 @@ compute.googleapis.com,compute.googleapis.com/Network,14,ComputeNetwork,9,,0,5,f
 compute.googleapis.com,compute.googleapis.com/NetworkAttachment,6,ComputeNetworkAttachment,6,,0,0,false,api=v1:networkAttachments; official-spec-fields-unmatched=4/9
 compute.googleapis.com,compute.googleapis.com/NetworkEdgeSecurityService,3,ComputeNetworkEdgeSecurityService,3,,0,0,false,api=v1:networkEdgeSecurityServices; official-spec-fields-unmatched=4/6
 compute.googleapis.com,compute.googleapis.com/NetworkEndpointGroup,17,ComputeNetworkEndpointGroup,6,,0,11,false,api=v1:networkEndpointGroups; official-spec-fields-unmatched=2/7
-compute.googleapis.com,compute.googleapis.com/NetworkFirewallPolicy,73,ComputeNetworkFirewallPolicy;ComputeNetworkFirewallPolicyAssociation;ComputeNetworkFirewallPolicyRule,26,ComputeNetworkFirewallPolicyRule,1,46,false,api=v1:networkFirewallPolicies; ours-spec-fields-unmatched=4/26
+compute.googleapis.com,compute.googleapis.com/NetworkFirewallPolicy,73,ComputeNetworkFirewallPolicy;ComputeNetworkFirewallPolicyAssociation;ComputeNetworkFirewallPolicyRule,26,ComputeNetworkFirewallPolicyPacketMirroringRule;ComputeNetworkFirewallPolicyRule,12,35,false,api=v1:networkFirewallPolicies
 compute.googleapis.com,compute.googleapis.com/NodeGroup,12,ComputeNodeGroup,10,,0,2,false,api=v1:nodeGroups; official-spec-fields-unmatched=5/14
 compute.googleapis.com,compute.googleapis.com/NodeTemplate,14,ComputeNodeTemplate,8,,0,6,false,api=v1:nodeTemplates; official-spec-fields-unmatched=2/9
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,0,74,false,api=v1:organizationSecurityPolicies
@@ -430,7 +430,7 @@ compute.googleapis.com,compute.googleapis.com/TargetTcpProxy,6,ComputeTargetTCPP
 compute.googleapis.com,compute.googleapis.com/TargetVpnGateway,5,ComputeTargetVPNGateway,3,,0,2,false,api=v1:targetVpnGateways; official-spec-fields-unmatched=2/4
 compute.googleapis.com,compute.googleapis.com/UrlMap,355,ComputeURLMap,225,,0,130,false,api=v1:urlMaps; official-spec-fields-unmatched=6/230
 compute.googleapis.com,compute.googleapis.com/VpnGateway,8,ComputeVPNGateway,5,,0,3,false,api=v1:vpnGateways; official-spec-fields-unmatched=4/8
-compute.googleapis.com,compute.googleapis.com/VpnTunnel,24,ComputeVPNTunnel,15,,0,9,false,api=v1:vpnTunnels; official-spec-fields-unmatched=2/15
+compute.googleapis.com,compute.googleapis.com/VpnTunnel,24,ComputeVPNTunnel,15,ComputeVPNTunnel,7,2,false,api=v1:vpnTunnels; official-spec-fields-unmatched=2/15; ours-spec-fields-unmatched=3/24
 compute.googleapis.com,compute.googleapis.com/WireGroup,9,,0,,0,9,false,api=v1:wireGroups
 compute.googleapis.com,compute.googleapis.com/ZoneVmExtensionPolicy,6,,0,,0,6,false,api=v1:zoneVmExtensionPolicies
 confidentialcomputing.googleapis.com,confidentialcomputing.googleapis.com/Challenge,0,,0,,0,0,false,api=v1:google.cloud.confidentialcomputing.v1.ConfidentialComputing.CreateChallenge
@@ -668,7 +668,7 @@ dns.googleapis.com,dns.googleapis.com/ManagedZone,26,DNSManagedZone,17,,0,9,fals
 dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,,0,8,false,api=v1:outboundEndpoints
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,50,DNSRecordSet,43,,0,7,false,api=v1:resourceRecordSets; official-spec-fields-unmatched=5/48
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9
 documentai.googleapis.com,documentai.googleapis.com/Processor,5,DocumentAIProcessor,3,,0,2,false,api=v1:projects.locations.processors; official-spec-fields-unmatched=3/6
 documentai.googleapis.com,documentai.googleapis.com/Schema,3,,0,,0,3,false,api=v1:projects.locations.schemas
