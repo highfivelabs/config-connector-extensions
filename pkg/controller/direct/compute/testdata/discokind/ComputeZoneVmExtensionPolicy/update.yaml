@@ -8,3 +8,6 @@ spec:
   zone: us-central1-a
   description: changed
   priority: 900
+  extensionPolicies:
+    ops-agent:
+      stringConfig: "{}"

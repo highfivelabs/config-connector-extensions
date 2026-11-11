@@ -7,3 +7,9 @@ spec:
     external: ${PROJECT}
   priority: 1000
   description: made by a config-connector-extensions test
+  extensionPolicies:
+    ops-agent:
+      stringConfig: "{}"
+  rolloutOperation:
+    rolloutInput:
+      predefinedRolloutPlan: SLOW_ROLLOUT

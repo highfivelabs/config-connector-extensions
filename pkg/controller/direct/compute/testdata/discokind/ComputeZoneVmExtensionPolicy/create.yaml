@@ -8,3 +8,6 @@ spec:
   zone: us-central1-a
   priority: 1000
   description: made by a config-connector-extensions test
+  extensionPolicies:
+    ops-agent:
+      stringConfig: "{}"
