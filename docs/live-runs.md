@@ -118,6 +118,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
+| `roles/datastore.owner` | project | `FirestoreBackupSchedule` (not granted, and no Firestore database exists: the test skips live without `E2E_FIRESTORE_DATABASE`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
@@ -338,6 +339,16 @@ them needs the API and the role). With them:
 The test binds a policy to two networks of its own, unbinds one,
 deletes it (unbinding first) and abandons and then acquires another; the
 sweeper unbinds and deletes policies whose name carries a run ID.
+
+`FirestoreBackupSchedule` (package `firestore`) waits on Firestore: a
+schedule belongs to a database, which no test makes (a database's ID
+cannot be reused for a while after deletion), and the live-test service
+account needs `roles/datastore.owner`; `$GCP_PROJECT` has neither
+(`firestore.googleapis.com` off, checked 2026-11-12). With a database:
+`E2E_FIRESTORE_DATABASE=projects/P/databases/D task test-live
+PROJECT=$GCP_PROJECT KINDS=firestore`. A schedule's ID is the API's and it
+carries no labels, so the sweeper cannot tell a run's schedules from
+others; the test deletes what it makes, the abandoned one included.
 
 `ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
 `roles/compute.networkAdmin` has `compute.vpnTunnels.*`,

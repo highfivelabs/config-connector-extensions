@@ -8,6 +8,12 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`firestore.gcp.hfl.dev/v1beta1` `FirestoreBackupSchedule`**, a stable
+  copy of Config Connector's alpha Firestore backup schedule (decision 26),
+  with upstream's fields. The API assigns the schedule's ID at create;
+  `status.externalRef` keeps it. Live pending a Firestore database in the
+  live-test project (`E2E_FIRESTORE_DATABASE`). The operator's role gains
+  `firestore.gcp.hfl.dev`.
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
