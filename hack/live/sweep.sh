@@ -33,8 +33,8 @@
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
-# project), by name, through the API. A failed list or delete fails the
-# sweep.
+# project), by name, through the API, and the project's GKE Hub fleet
+# when a test made it, by label. A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -285,6 +285,28 @@ while IFS=$'\t' read -r dkind base coll field soft; do
     act "${dkind}" "${name}" disco_delete "${base}" "${name}"
   done <<<"${rows}"
 done <"${HERE}/discokinds.tsv"
+# The project's fleet, when a live GKEHubRolloutSequence test made it (it
+# then carries the run's labels; pkg/controller/direct/gkehub/fleet_test.go),
+# after the rollout sequences that name it. A fleet without our labels is
+# the project's own and is left alone. A project has at most one,
+# "default"; none (404), or no GKE Hub for the account (403: then no test
+# of ours made one either), is nothing to sweep.
+fleet="projects/${project}/locations/global/fleets/default"
+if body="$(disco_api GET "https://gkehub.googleapis.com/v1/${fleet}" 2>/dev/null)"; then
+  read -r e2e frun made fstate < <(jq -r '"\(.labels["cce-e2e"] // "-") \(.labels["cce-run"] // "-") \(.createTime // "-") \(.state.code // "-")"' <<<"${body}")
+  if [[ "${e2e}" == true && "${fstate}" != DELETING ]]; then
+    [[ "${made}" != "-" ]] || made=""
+    if by_run "${frun}-fleet" "${made}"; then
+      act fleet "${fleet}" disco_delete "https://gkehub.googleapis.com/v1/" "${fleet}"
+    fi
+  fi
+else
+  code="$(jq -r '.error.code // "-"' <<<"${body}" 2>/dev/null || echo -)"
+  if [[ "${code}" != 404 && "${code}" != 403 ]]; then
+    echo "  FAILED to read the fleet ${fleet}: ${body}" >&2
+    failed=$((failed + 1))
+  fi
+fi
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do

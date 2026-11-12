@@ -22,3 +22,5 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `e1e23f5` | PASS | FAIL | the namespace was created twice: the read after the create operation answered 404, so the next reconcile sent the create again (the IAM API's read-after-create lag; the fake answers at once). Fixed: Create reads for up to 30 s (run `cce-11120814-5d2a`, the fallback project) | 1 pool with its namespaces (deleted) |
+| 2026-11-12 | `78644ec` | PASS | PASS | none, with the fix (run `cce-11120932-1df3`, the fallback project) | 1 pool with its namespaces (deleted); `task live-list` empty |

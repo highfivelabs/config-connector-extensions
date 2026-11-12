@@ -55,6 +55,17 @@ import (
 
 const namespace = "discokind"
 
+// Setup is what a kind needs in the cloud before its test that its
+// fixtures cannot make (a fleet for a rollout sequence). It runs after the
+// environment is up and registers its own cleanup with t.Cleanup.
+type Setup func(t *testing.T, env *mockenv.Env)
+
+var setups = map[string]Setup{}
+
+// RegisterSetup gives a kind a Setup; a hand-written test file beside the
+// generated one calls it from init.
+func RegisterSetup(kind string, s Setup) { setups[kind] = s }
+
 // Run is the test of one kind.
 func Run(t *testing.T, kindName string) {
 	k := discokind.ByKind(kindName)
@@ -75,6 +86,9 @@ func Run(t *testing.T, kindName string) {
 	}
 
 	env := mockenv.New(t, namespace)
+	if s := setups[kindName]; s != nil {
+		s(t, env)
+	}
 	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL}
 	if !mockenv.Live() {
 		api.PollInterval = 200 * time.Millisecond
@@ -123,7 +137,10 @@ func Run(t *testing.T, kindName string) {
 		}
 		return u
 	}
-	waitCloud := func(name string, want map[string]any) map[string]any {
+	// waitCloud waits for the cloud's name to hold want, the spec of the
+	// object objName; on timeout it says why the object is not done (its
+	// Ready condition carries the API's refusal, which no log shows).
+	waitCloud := func(objName, name string, want map[string]any) map[string]any {
 		deadline := time.Now().Add(mockenv.Timeout())
 		for {
 			got, err := api.Get(env.Ctx, name)
@@ -131,7 +148,8 @@ func Run(t *testing.T, kindName string) {
 				return got
 			}
 			if time.Now().After(deadline) {
-				t.Fatalf("the cloud's %s does not hold the spec: differs in %v (err %v)\nwant %v\ngot  %v", name, discokind.Diff(want, got), err, want, got)
+				ready, msg := mockenv.Ready(get(objName))
+				t.Fatalf("the cloud's %s does not hold the spec: differs in %v (err %v)\nwant %v\ngot  %v\nthe object's Ready: %v %q", name, discokind.Diff(want, got), err, want, got, ready, msg)
 			}
 			time.Sleep(500 * time.Millisecond)
 		}
@@ -157,7 +175,7 @@ func Run(t *testing.T, kindName string) {
 		if !k.NameRegexp().MatchString(cloudName) {
 			t.Errorf("status.externalRef %q is not a %s name (%s)", cloudName, kindName, k.Name)
 		}
-		waitCloud(cloudName, spec(create))
+		waitCloud(obj.GetName(), cloudName, spec(create))
 	})
 	if cloudName == "" {
 		t.FailNow()
@@ -199,7 +217,7 @@ func Run(t *testing.T, kindName string) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			waitCloud(cloudName, spec(update))
+			waitCloud(obj.GetName(), cloudName, spec(update))
 			env.WaitReady(gvk, namespace, obj.GetName())
 		})
 	}

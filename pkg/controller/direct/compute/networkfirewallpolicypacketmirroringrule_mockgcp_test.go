@@ -123,7 +123,8 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 				Direction:         "INGRESS",
 				Description:       mockenv.Ptr("web traffic is not mirrored"),
 				Match: computev1alpha1.NetworkFirewallPolicyPacketMirroringRuleMatch{
-					SrcIPRanges: []string{"10.0.0.0/8"},
+					SrcIPRanges:  []string{"10.0.0.0/8"},
+					DestIPRanges: []string{"10.20.0.0/16"},
 					Layer4Configs: []computev1alpha1.NetworkFirewallPolicyPacketMirroringRuleLayer4Config{
 						{IPProtocol: "tcp", Ports: []string{"80", "443"}},
 					},
@@ -180,16 +181,18 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 	t.Run("changed fields and an emptied list are one patch", func(t *testing.T) {
 		before := writes("patchPacketMirroringRule")
 		update(t, web, func(o *computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
+			// An INGRESS rule must keep a source (the API refuses one without,
+			// run cce-11120814-5d2a), so the emptied list is the destination's.
 			o.Spec.Description = mockenv.Ptr("web traffic to the frontends is not mirrored")
-			o.Spec.Match.SrcIPRanges = nil
-			o.Spec.Match.DestIPRanges = []string{"10.10.0.0/16"}
+			o.Spec.Match.SrcIPRanges = []string{"10.10.0.0/16"}
+			o.Spec.Match.DestIPRanges = nil
 			o.Spec.RuleName = mockenv.Ptr("no-web")
 		})
 		deadline := time.Now().Add(mockenv.Timeout())
 		for {
 			got, err := cloudRule(1000)
 			if err == nil && got.GetDescription() == "web traffic to the frontends is not mirrored" &&
-				len(got.GetMatch().GetSrcIpRanges()) == 0 && slices.Equal(got.GetMatch().GetDestIpRanges(), []string{"10.10.0.0/16"}) &&
+				len(got.GetMatch().GetDestIpRanges()) == 0 && slices.Equal(got.GetMatch().GetSrcIpRanges(), []string{"10.10.0.0/16"}) &&
 				got.GetRuleName() == "no-web" {
 				break
 			}

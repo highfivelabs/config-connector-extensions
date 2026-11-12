@@ -1,0 +1,1 @@
+Health Check as a Service is gated per project: regionNotificationEndpoints.insert answers 400 invalidResourceUsage "HealthCheck as a Service feature is not available for this project" (run cce-11112128-d3db), and there is no public way to enable it; live: pending, needs the project allowlisted by Google

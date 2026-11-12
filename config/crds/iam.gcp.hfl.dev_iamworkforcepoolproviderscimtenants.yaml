@@ -89,10 +89,12 @@ spec:
               description:
                 description: Optional. Gemini Enterprise only. The description of
                   the SCIM tenant. Cannot exceed 256 characters.
+                maxLength: 256
                 type: string
               displayName:
                 description: Optional. Gemini Enterprise only. The display name of
                   the SCIM tenant. Cannot exceed 32 characters.
+                maxLength: 32
                 type: string
               location:
                 description: Immutable. The location, part of the resource's name

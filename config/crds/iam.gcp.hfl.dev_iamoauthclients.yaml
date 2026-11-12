@@ -95,6 +95,7 @@ spec:
               description:
                 description: Optional. A user-specified description of the OauthClient.
                   Cannot exceed 256 characters.
+                maxLength: 256
                 type: string
               disabled:
                 description: Optional. Whether the OauthClient is disabled. You cannot
@@ -103,6 +104,7 @@ spec:
               displayName:
                 description: Optional. A user-specified display name of the OauthClient.
                   Cannot exceed 32 characters.
+                maxLength: 32
                 type: string
               location:
                 description: Immutable. The location, part of the resource's name

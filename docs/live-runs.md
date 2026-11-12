@@ -339,6 +339,25 @@ external VPN gateways and addresses, by name. A
 tunnel bills by the hour while it exists; the test keeps each for a few
 minutes.
 
+`GKEHubRolloutSequence` (package `gkehub`) needs a fleet in the run's
+project: a rollout sequence's stages name fleet host projects, and
+`rolloutSequences.create` answers 404 "fleet not found" without one. A
+fleet is free and a project has at most one (`fleets/default`), so the
+live test makes it when the project has none (labelled with the run,
+`pkg/controller/direct/gkehub/fleet_test.go`), deletes it after its own
+resources, and leaves alone a fleet the project already had; the
+sweeper deletes a fleet that carries a live run's labels. It needs
+`roles/gkehub.admin` (`gkehub.fleet.*`, `gkehub.rolloutsequences.*`) and
+the GKE Hub API on. A changed rollout sequence took about seven minutes
+to read back changed (run `cce-11120814-5d2a`).
+
+`ComputeRegionNotificationEndpoint` skips live (its fixtures'
+`live-skip`): `regionNotificationEndpoints.insert` answers 400
+`invalidResourceUsage` "HealthCheck as a Service feature is not
+available for this project" (run `cce-11112128-d3db`). Health Check as a
+Service is gated per project, with no public way to turn it on; the kind
+waits for a project Google has allowlisted.
+
 `ComputeProjectDefaultNetworkTier` changes a whole project, so it runs
 live only in a test project under the test folder, passed as
 `E2E_TEST_FOLDER_PROJECT=<project ID>`; without it a live `compute` run

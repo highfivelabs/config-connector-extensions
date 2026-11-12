@@ -71,6 +71,7 @@ type IAMOauthClientSpec struct {
 	// Optional. A user-specified description of the OauthClient. Cannot exceed
 	// 256 characters.
 	// +optional
+	// +kubebuilder:validation:MaxLength=256
 	Description *string `json:"description,omitempty"`
 
 	// Optional. Whether the OauthClient is disabled. You cannot use a disabled
@@ -81,6 +82,7 @@ type IAMOauthClientSpec struct {
 	// Optional. A user-specified display name of the OauthClient. Cannot exceed
 	// 32 characters.
 	// +optional
+	// +kubebuilder:validation:MaxLength=32
 	DisplayName *string `json:"displayName,omitempty"`
 }
 

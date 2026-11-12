@@ -16,7 +16,7 @@
 package kindtest
 
 // Every discokind fixture against its CRD's OpenAPI schema (required
-// fields, types, fields the schema does not have), without a
+// fields, types, string lengths, fields the schema does not have), without a
 // kube-apiserver: a fixture that misses a field
 // the API marks Required fails here in a second rather than in an envtest
 // run. CEL rules are not checked here; the end-to-end test checks them.
@@ -28,6 +28,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
@@ -130,8 +131,12 @@ func check(path string, v any, s *apiextensionsv1.JSONSchemaProps) []string {
 			}
 		}
 	case "string":
-		if _, ok := v.(string); !ok {
+		str, ok := v.(string)
+		if !ok {
 			errs = append(errs, fmt.Sprintf("%s: want a string, got %T", path, v))
+		}
+		if n := utf8.RuneCountInString(str); s.MaxLength != nil && int64(n) > *s.MaxLength {
+			errs = append(errs, fmt.Sprintf("%s: %d characters, more than its maxLength %d", path, n, *s.MaxLength))
 		}
 	case "integer", "number":
 		switch v.(type) {
