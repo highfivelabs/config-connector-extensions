@@ -18,10 +18,12 @@ this file only adds to them.
 After the VPN tunnel PR (foundation item 10's `ComputeVPNTunnel`, the
 first field gap under decision 19): thirty-eight kinds (`docs/kinds/`,
 `task kinds`),
-mockgcp patches 0001 to 0034 (`UPSTREAM.md` and `upstream.yaml`, which
+mockgcp patches 0001 to 0035 (`UPSTREAM.md` and `upstream.yaml`, which
 must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
 without a number, `CONTRIBUTING.md`; only an ordered one takes the next
-number from `main`), the live-test switch and the Taskfile (`docs/live-runs.md`,
+number from `main`; but `task upstream:yaml-check` reads only numbered
+names from `UPSTREAM.md` and refuses an unnumbered patch, so for now every
+patch is numbered, found 2026-11-12 with 0035), the live-test switch and the Taskfile (`docs/live-runs.md`,
 factory's `taskfiles/README.md` for the shared `go:*` tasks; use `task`,
 not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,

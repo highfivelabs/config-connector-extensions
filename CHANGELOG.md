@@ -8,6 +8,10 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`dns.gcp.hfl.dev/v1beta1` `DNSResponsePolicyRule`**, a stable copy of
+  Config Connector's alpha, Terraform-based response policy rule (decision
+  13), with upstream's fields and a controller written here. Live pending
+  `roles/dns.admin` for the live-test account (`E2E_DNS_ADMIN=true`).
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
