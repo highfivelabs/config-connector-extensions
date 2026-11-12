@@ -8,6 +8,21 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Five kinds generated from Discovery** (`docs/design.md` section 2.4):
+  `compute.gcp.hfl.dev/v1beta1` `ComputeNetworkAttachment`,
+  `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionInstanceTemplate`,
+  `looker.gcp.hfl.dev/v1alpha1` `LookerInstance`, and
+  `networkservices.gcp.hfl.dev/v1alpha1` `NetworkServicesAgentGateway` and
+  `NetworkServicesAgentConnectivityTemplate`. The operator's role gains
+  the two new groups. A generated Compute Engine kind now takes a
+  resource's path and its full URL as the same value, so a spec that
+  names a subnet by path no longer differs from what the API returns.
+- **`IAMMember` and `IAMBinding` on a BigQuery dataset**
+  (`resourceRef.kind: BigQueryDataset`). A dataset has no IAM policy
+  calls; its access list is read and patched as one, as Terraform's
+  `google_bigquery_dataset_iam_*` do. Authorized views, routines and
+  datasets and the project special groups in the list are left as they
+  are.
 - **Five foundation kinds generated from Discovery** (`docs/design.md`
   section 2.4): `resourcemanager.gcp.hfl.dev/v1alpha1`
   `ResourceManagerCapabilityConfig` and `ResourceManagerBoundary`, and

@@ -8,6 +8,7 @@ resources:
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
+- compute.gcp.hfl.dev_computenetworkattachments.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicypacketmirroringrules.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
@@ -22,6 +23,7 @@ resources:
 - compute.gcp.hfl.dev_computeregionhealthaggregationpolicies.yaml
 - compute.gcp.hfl.dev_computeregionhealthcheckservices.yaml
 - compute.gcp.hfl.dev_computeregionhealthsources.yaml
+- compute.gcp.hfl.dev_computeregioninstancetemplates.yaml
 - compute.gcp.hfl.dev_computeregionnetworkendpoints.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicies.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
@@ -50,12 +52,15 @@ resources:
 - logging.gcp.hfl.dev_logginglinks.yaml
 - logging.gcp.hfl.dev_loggingsavedqueries.yaml
 - logging.gcp.hfl.dev_loggingsettings.yaml
+- looker.gcp.hfl.dev_lookerinstances.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityautomateddnsrecords.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivitypscauthorizationpolicies.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofilegroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofiles.yaml
+- networkservices.gcp.hfl.dev_networkservicesagentconnectivitytemplates.yaml
+- networkservices.gcp.hfl.dev_networkservicesagentgateways.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagercapabilityconfigs.yaml

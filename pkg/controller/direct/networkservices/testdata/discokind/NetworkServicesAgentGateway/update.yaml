@@ -1,0 +1,11 @@
+apiVersion: networkservices.gcp.hfl.dev/v1alpha1
+kind: NetworkServicesAgentGateway
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  googleManaged:
+    governedAccessPath: AGENT_TO_ANYWHERE
+  description: changed

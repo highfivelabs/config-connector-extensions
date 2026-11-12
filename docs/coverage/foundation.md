@@ -494,6 +494,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
 | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 14 | false |
 | ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
+| ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
 | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 12 | false |
 | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | compute.googleapis.com/OrganizationSecurityPolicy | 0 | false |
 | ComputeProjectDefaultNetworkTier | (not a create) a project's default network tier, written with projects.setDefaultNetworkTier (it always exists) | n/a | false |
@@ -521,31 +522,31 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
@@ -710,7 +711,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/InterconnectAttachmentGroup` | - | - | 5 | 0 | 0 | 5 | 7 |
 | foundation | `compute.googleapis.com/InterconnectGroup` | - | ComputeInterconnectGroup | 4 | 0 | 4 | 0 | 7 |
 | foundation | `compute.googleapis.com/Network` | ComputeNetwork | - | 14 | 9 | 0 | 5 | 16 |
-| foundation | `compute.googleapis.com/NetworkAttachment` | ComputeNetworkAttachment (alpha) | - | 6 | 6 | 0 | 0 | - |
+| foundation | `compute.googleapis.com/NetworkAttachment` | ComputeNetworkAttachment (alpha) | ComputeNetworkAttachment | 6 | 6 | 0 | 0 | - |
 | security | `compute.googleapis.com/NetworkEdgeSecurityService` | ComputeNetworkEdgeSecurityService (alpha) | - | 3 | 3 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/NetworkFirewallPolicy` | ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha) | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | 73 | 26 | 12 | 35 | 2 |
 | foundation | `compute.googleapis.com/OrganizationSecurityPolicy` | ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha) | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | 86 | 12 | 0 | 74 | 8 |

@@ -35,7 +35,7 @@ Tier 1, 16 services, most covered attributes first:
 
 | Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered | Terraform `google-beta` | Terraform `google` |
 | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 5.3% | 44.1% | 56.0% | 53.2% |
+| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 7.8% | 41.7% | 56.0% | 53.2% |
 | 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 66.5% | 9.5% | 37.6% | 37.6% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
 | 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 15.0% | 24.8% | 74.5% | 73.2% |
@@ -66,7 +66,7 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `dataplex.googleapis.com` | ![dataplex.googleapis.com](docs/coverage/bars/dataplex.googleapis.com.svg) | 84.1% | 0.0% | 15.9% | 70.1% | 70.1% |
 | 2 | application | `cloudbuild.googleapis.com` | ![cloudbuild.googleapis.com](docs/coverage/bars/cloudbuild.googleapis.com.svg) | 38.7% | 0.0% | 61.3% | 45.3% | 45.3% |
 | 2 | application | `run.googleapis.com` | ![run.googleapis.com](docs/coverage/bars/run.googleapis.com.svg) | 38.1% | 3.3% | 58.6% | 71.0% | 69.6% |
-| 2 | application | `networkservices.googleapis.com` | ![networkservices.googleapis.com](docs/coverage/bars/networkservices.googleapis.com.svg) | 54.2% | 0.0% | 45.8% | 75.3% | 74.7% |
+| 2 | application | `networkservices.googleapis.com` | ![networkservices.googleapis.com](docs/coverage/bars/networkservices.googleapis.com.svg) | 54.2% | 7.9% | 37.9% | 75.3% | 74.7% |
 | 2 | security | `privateca.googleapis.com` | ![privateca.googleapis.com](docs/coverage/bars/privateca.googleapis.com.svg) | 71.3% | 0.0% | 28.7% | 94.6% | 94.6% |
 | 2 | application | `bigquery.googleapis.com` | ![bigquery.googleapis.com](docs/coverage/bars/bigquery.googleapis.com.svg) | 26.6% | 0.0% | 73.4% | 44.0% | 42.4% |
 | 2 | application | `clouddeploy.googleapis.com` | ![clouddeploy.googleapis.com](docs/coverage/bars/clouddeploy.googleapis.com.svg) | 56.7% | 0.0% | 43.3% | 90.8% | 90.8% |
@@ -86,6 +86,7 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `alloydb.googleapis.com` | ![alloydb.googleapis.com](docs/coverage/bars/alloydb.googleapis.com.svg) | 56.2% | 0.0% | 43.8% | 68.8% | 62.5% |
 | 2 | application | `redis.googleapis.com` | ![redis.googleapis.com](docs/coverage/bars/redis.googleapis.com.svg) | 72.0% | 0.0% | 28.0% | 78.0% | 78.0% |
 | 2 | security | `securityposture.googleapis.com` | ![securityposture.googleapis.com](docs/coverage/bars/securityposture.googleapis.com.svg) | 93.7% | 0.0% | 6.3% | 87.3% | 87.3% |
+| 2 | application | `looker.googleapis.com` | ![looker.googleapis.com](docs/coverage/bars/looker.googleapis.com.svg) | 0.0% | 98.2% | 1.8% | 77.2% | 77.2% |
 | 2 | application | `artifactregistry.googleapis.com` | ![artifactregistry.googleapis.com](docs/coverage/bars/artifactregistry.googleapis.com.svg) | 68.3% | 14.3% | 17.5% | 84.1% | 84.1% |
 | 2 | application | `dataform.googleapis.com` | ![dataform.googleapis.com](docs/coverage/bars/dataform.googleapis.com.svg) | 53.8% | 0.0% | 46.2% | 47.3% | 19.4% |
 | 2 | application | `cloudfunctions.googleapis.com` | ![cloudfunctions.googleapis.com](docs/coverage/bars/cloudfunctions.googleapis.com.svg) | 80.3% | 0.0% | 19.7% | 86.9% | 86.9% |
@@ -122,7 +123,6 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `dataflow.googleapis.com` | ![dataflow.googleapis.com](docs/coverage/bars/dataflow.googleapis.com.svg) | 1.5% | 0.0% | 98.5% | 8.3% | 8.3% |
 | 2 | application | `datastore.googleapis.com` | ![datastore.googleapis.com](docs/coverage/bars/datastore.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 0.0% | 0.0% |
 | 2 | application | `cloudquotas.googleapis.com` | ![cloudquotas.googleapis.com](docs/coverage/bars/cloudquotas.googleapis.com.svg) | 0.0% | 0.0% | 100.0% | 88.9% | 88.9% |
-| 2 | application | `looker.googleapis.com` | ![looker.googleapis.com](docs/coverage/bars/looker.googleapis.com.svg) | 0.0% | 0.0% | 100.0% | 77.2% | 77.2% |
 | 2 | application | `servicemanagement.googleapis.com` | ![servicemanagement.googleapis.com](docs/coverage/bars/servicemanagement.googleapis.com.svg) | 0.0% | 0.0% | 100.0% | 0.4% | 0.4% |
 
 </details>

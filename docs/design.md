@@ -174,8 +174,20 @@ Engine kinds: regional notification endpoints, health check services,
 health aggregation policies, health sources, composite health checks and
 backend buckets; global and zonal VM extension policies; rollout plans;
 BYOIP public advertised and delegated prefixes (foundation item 7);
-Cross-Site networks and wire groups and Interconnect groups. Then five
-foundation (tier 1) gaps of the same shape (2026-11-12): Resource
+Cross-Site networks and wire groups and Interconnect groups. Then
+(2026-11-12) five that the catalog's modules create and Config Connector
+lacks: `ComputeNetworkAttachment` (Config Connector's is alpha; VPC
+networking is a foundation area, so ours is `v1beta1` under decision 13),
+`ComputeRegionInstanceTemplate` (Config Connector's template is global
+only; the API cannot change a template, so every field is immutable),
+`LookerInstance`, and `NetworkServicesAgentGateway` and
+`NetworkServicesAgentConnectivityTemplate` (preview). Compute Engine
+answers a resource path a request sent (`projects/P/regions/R/subnetworks/S`)
+with its full URL, so the controller's comparison takes the two as one
+(`sameComputeURL`); without it a network attachment's `subnetworks` would
+differ on every resync.
+Then five foundation (tier 1)
+gaps of the same shape (2026-11-12): Resource
 Manager's `ResourceManagerCapabilityConfig` (an organization, folder or
 project) and `ResourceManagerBoundary` (an organization or folder), and
 Network Connectivity's `NetworkConnectivityPscAuthorizationPolicy`,
@@ -194,7 +206,11 @@ line); `kindtest` prints the object's Ready message when the cloud does
 not reach the spec; and a kind can have a live `Setup` for what its
 fixtures cannot make (`GKEHubRolloutSequence` makes the project's fleet,
 free, and deletes it). `ComputeRegionNotificationEndpoint` skips live:
-Health Check as a Service is gated per project.
+Health Check as a Service is gated per project. `ComputeRegionBackendBucket` and
+`LoggingLink` got Setups of their own (2026-11-12, run
+`cce-11121541-aa4d`): a Cloud Storage bucket, and a log bucket with Log
+Analytics on, for the test's object and its abandoned one; both pass
+live.
 
 ### Switching to PR #7148
 
@@ -281,7 +297,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route). These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route). These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the
@@ -2320,3 +2336,20 @@ moves to section 8.
    `resourceRef` to Config Connector's object, for example
    `KMSCryptoKeyFields` for `keyAccessJustificationsPolicy`; the fields
    keep the API's names. Not needed until the first such PR.
+6. **Which version do our kinds take, and when are they promoted?**
+   (2026-11-12.) The catalog's charts refuse `v1alpha1` kinds (decision
+   24), and most of ours are `v1alpha1`, including ones that pass live
+   and that its modules need: `ComputeRouterRoutePolicy`,
+   `StorageBucketObject`, `ComputeRegionNetworkEndpoint`,
+   `ComputeRegionNetworkFirewallPolicyAssociation` (catalog
+   `docs/coverage/resource-types.csv` counts these as "none" or "alpha",
+   which keeps four to six modules each blocked). Decision 13 makes our
+   copies of alpha-only foundation kinds stable (`v1beta1`); it does not
+   say whether that reaches beyond foundation areas (Backup for GKE, for
+   instance, which two GKE modules use), nor when a kind of ours that
+   started at `v1alpha1` moves up. Recommendation: a kind is `v1beta1`
+   once it has passed live once and its schema has had no breaking
+   change since; copies of upstream alpha-only kinds outside the
+   foundation stay out of scope until a module needs one, and are then
+   built as `v1beta1` under decision 13's reasoning. Until answered, new
+   kinds stay `v1alpha1` except decision 13's.

@@ -58,7 +58,7 @@ cloudsupport.googleapis.com,3,1,0,17,2,0,15,11.8,0.0,88.2
 cloudtasks.googleapis.com,2,1,0,50,12,0,38,24.0,0.0,76.0
 commerceproducer.googleapis.com,2,1,0,85,81,0,4,95.3,0.0,4.7
 composer.googleapis.com,3,3,0,86,82,0,4,95.3,0.0,4.7
-compute.googleapis.com,95,69,16,3437,1738,183,1516,50.6,5.3,44.1
+compute.googleapis.com,95,69,16,3437,1738,267,1432,50.6,7.8,41.7
 confidentialcomputing.googleapis.com,1,0,0,0,0,0,0,0.0,0.0,0.0
 config.googleapis.com,3,2,0,40,21,0,19,52.5,0.0,47.5
 configdelivery.googleapis.com,4,4,0,26,21,0,5,80.8,0.0,19.2
@@ -130,7 +130,7 @@ library-example.googleapis.com,2,0,0,6,0,0,6,0.0,0.0,100.0
 licensemanager.googleapis.com,1,1,0,7,7,0,0,100.0,0.0,0.0
 livestream.googleapis.com,6,4,0,141,93,0,48,66.0,0.0,34.0
 logging.googleapis.com,33,24,9,484,116,322,46,24.0,66.5,9.5
-looker.googleapis.com,2,0,0,57,0,0,57,0.0,0.0,100.0
+looker.googleapis.com,2,0,1,57,0,56,1,0.0,98.2,1.8
 lustre.googleapis.com,3,0,0,32,0,0,32,0.0,0.0,100.0
 managedidentities.googleapis.com,3,0,0,11,0,0,11,0.0,0.0,100.0
 managedkafka.googleapis.com,8,6,0,55,30,0,25,54.5,0.0,45.5
@@ -145,7 +145,7 @@ netapp.googleapis.com,11,7,0,179,54,0,125,30.2,0.0,69.8
 networkconnectivity.googleapis.com,14,11,3,153,92,23,38,60.1,15.0,24.8
 networkmanagement.googleapis.com,4,2,0,76,42,0,34,55.3,0.0,44.7
 networksecurity.googleapis.com,31,25,3,432,317,29,86,73.4,6.7,19.9
-networkservices.googleapis.com,21,14,0,356,193,0,163,54.2,0.0,45.8
+networkservices.googleapis.com,21,14,2,356,193,28,135,54.2,7.9,37.9
 notebooks.googleapis.com,5,5,0,133,122,0,11,91.7,0.0,8.3
 observability.googleapis.com,3,0,0,10,0,0,10,0.0,0.0,100.0
 oracledatabase.googleapis.com,13,4,0,518,125,0,393,24.1,0.0,75.9

@@ -18,7 +18,7 @@
 # (their users and backups go with them), and Compute Engine network
 # firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
 # them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
-# (their route policies go with them) and VPC
+# (their route policies go with them), subnets and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
@@ -34,7 +34,10 @@
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
 # project), by name, through the API, and the project's GKE Hub fleet
-# when a test made it, by label. A failed list or delete fails the sweep.
+# when a test made it, by label, global log buckets (with their links), by
+# name, where the account may list them, and BigQuery datasets, by name,
+# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true). A failed list
+# or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -438,6 +441,19 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   done
 fi
 
+# BigQuery datasets (the IAMMember test's), by the run's name with its
+# dashes as underscores (a dataset ID takes no dashes), their tables with
+# them, only where the live-test account has BigQuery
+# (E2E_BIGQUERY_ADMIN=true); without it the test does not run live.
+if [[ "${E2E_BIGQUERY_ADMIN:-}" == true ]]; then
+  bqbase="https://bigquery.googleapis.com/bigquery/v2/projects/${project}/datasets"
+  rows="$(disco_api GET "${bqbase}?maxResults=1000" | jq -r '.datasets[]? | .datasetReference.datasetId')"
+  for id in ${rows}; do
+    by_run "${id//_/-}" || continue
+    act "BigQuery dataset" "${id}" disco_api DELETE "${bqbase}/${id}?deleteContents=true"
+  done
+fi
+
 # Cloud Run services, every region.
 rows="$("${G[@]}" run services list --verbosity=error \
   --format='value(metadata.name,metadata.labels."cloud.googleapis.com/location",metadata.creationTimestamp)')"
@@ -446,6 +462,32 @@ while read -r name region made; do
   by_run "${name}" "${made}" || continue
   act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
 done <<<"${rows}"
+
+# Log buckets (a live LoggingLink test's, with Log Analytics on), global,
+# by the run's name, links first (deleting a link is an operation). A
+# deleted bucket stays DELETE_REQUESTED for seven days: already gone. An
+# account that may not list log buckets (403) made none: nothing to sweep.
+# Names are projects/P/locations/global/buckets/B.
+lbase="https://logging.googleapis.com/v2/"
+if body="$(disco_api GET "${lbase}projects/${project}/locations/global/buckets?pageSize=1000" 2>/dev/null)"; then
+  rows="$(jq -r '.buckets[]? | select(.lifecycleState == "ACTIVE") | "\(.name) \(.createTime // "-")"' <<<"${body}")"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    links="$(disco_api GET "${lbase}${name}/links" | jq -r '.links[]? | select(.lifecycleState != "DELETE_REQUESTED") | .name')"
+    for link in ${links}; do
+      act "log bucket link" "${link}" disco_delete "${lbase}" "${link}"
+    done
+    act "log bucket" "${name}" disco_api DELETE "${lbase}${name}"
+  done <<<"${rows}"
+else
+  code="$(jq -r '.error.code // "-"' <<<"${body}" 2>/dev/null || echo -)"
+  if [[ "${code}" != 403 ]]; then
+    echo "  FAILED to list log buckets: ${body}" >&2
+    failed=$((failed + 1))
+  fi
+fi
 
 # Cloud Storage: buckets by the run's name prefix (bucket names are
 # global), aged by their creation time; rm -r takes their objects too.
@@ -463,6 +505,14 @@ while read -r name made; do
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
 
+# Subnets (a live test's Setup makes them for the network attachments and
+# instance templates it tests), by name, before their networks.
+rows="$("${G[@]}" compute networks subnets list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "subnet" "${name} ${region}" "${G[@]}" compute networks subnets delete "${name}" --region="${region}"
+done <<<"${rows}"
 names="$("${G[@]}" compute networks list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
 for name in ${names}; do
   act "VPC network" "${name}" "${G[@]}" compute networks delete "${name}"

@@ -1,0 +1,267 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: networkservicesagentconnectivitytemplates.networkservices.gcp.hfl.dev
+spec:
+  group: networkservices.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: NetworkServicesAgentConnectivityTemplate
+    listKind: NetworkServicesAgentConnectivityTemplateList
+    plural: networkservicesagentconnectivitytemplates
+    shortNames:
+    - hflnetworkservicesagentconnectivitytemplate
+    - hflnetworkservicesagentconnectivitytemplates
+    singular: networkservicesagentconnectivitytemplate
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: NetworkServicesAgentConnectivityTemplate is a networkservices.v1
+          resource (https://networkservices.googleapis.com/v1/{parent}/locations/{location}/agentConnectivityTemplates/{id}),
+          from its Discovery document networkservices.v1 (hack/discokind). Terraform's
+          google_network_services_agent_connectivity_template. The network access
+          an agent gateway provides.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              accessPath:
+                description: |-
+                  Optional. Immutable. The path of the access. Maps roughly to
+                  ingress/egress, though we keep CLIENT_TO_AGENT and AGENT_TO_ANYWHERE as
+                  carryovers from Agent Gateway's original resource model. The path is
+                  immutable once set. Exactly one path can be set.
+
+                  One of ACCESS_PATH_UNSPECIFIED, CLIENT_TO_AGENT, AGENT_TO_ANYWHERE.
+                type: string
+                x-kubernetes-validations:
+                - message: accessPath is immutable
+                  rule: self == oldSelf
+              accessTypes:
+                description: Optional. The types of network access provided to the
+                  gateway. Both PUBLIC and PRIVATE can be configured.
+                items:
+                  type: string
+                type: array
+              agentCompute:
+                description: |-
+                  Optional. The compute environment where the agent is hosted. Exactly one
+                  type of compute must be chosen.
+
+                  One of AGENT_COMPUTE_UNSPECIFIED, GKE, CLOUD_RUN, BORG, GCE_VM.
+                type: string
+              deploymentModel:
+                description: |-
+                  Optional. The deployment model for the gateway.
+
+                  One of DEPLOYMENT_MODEL_UNSPECIFIED, CENTRALIZED, AMBIENT.
+                type: string
+              description:
+                description: Optional. A free-text description of the resource. Max
+                  length 1024 characters.
+                type: string
+              egressNetworkConfig:
+                description: Optional. Configuration for egress network traffic.
+                properties:
+                  dnsPeeringConfig:
+                    description: Optional. DNS Peering configuration.
+                    properties:
+                      domain:
+                        description: 'Optional. Deprecated: Use `domains` instead.
+                          The domain to peer.'
+                        type: string
+                      domains:
+                        description: Optional. The domains to peer.
+                        items:
+                          type: string
+                        type: array
+                      targetNetwork:
+                        description: 'Optional. The target network resource name for
+                          DNS peering. Format: projects/{project}/global/networks/{network_id}'
+                        type: string
+                    type: object
+                  networkAttachment:
+                    description: 'Optional. The network attachment resource name.
+                      Format: projects/{project}/regions/{region}/networkAttachments/{network_attachment_id}'
+                    type: string
+                  tlsConfig:
+                    description: Optional. The TLS configuration for the egress traffic.
+                    properties:
+                      additionalRoots:
+                        description: |-
+                          Optional. The additional roots to trust.
+
+                          One of ADDITIONAL_ROOTS_UNSPECIFIED, NO_ADDITIONAL_ROOTS, PUBLICLY_TRUSTED_ROOTS.
+                        type: string
+                      trustConfig:
+                        description: 'Optional. The trust config resource name. Format:
+                          projects/{project}/locations/{location}/trustConfigs/{trust_config}'
+                        type: string
+                    type: object
+                  trustConfig:
+                    description: 'Optional. Deprecated: Use tls_config instead. The
+                      trust config resource name. Format: projects/{project}/locations/{location}/trustConfigs/{trust_config}'
+                    type: string
+                  vpcEgress:
+                    description: |-
+                      Optional. The VPC egress setting.
+
+                      One of VPC_EGRESS_UNSPECIFIED, ALL_TRAFFIC, PRIVATE_RANGES_ONLY.
+                    type: string
+                type: object
+              etag:
+                description: Optional. Etag of the resource. If this is provided,
+                  it must match the server's etag. If the provided etag does not match
+                  the server's etag, the request will fail with a 409 ABORTED error.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Set of label tags associated with the AgentConnectivityTemplate
+                  resource.
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/agentConnectivityTemplates/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            required:
+            - location
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/agentConnectivityTemplates/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The timestamp when the resource was
+                      created.
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp when the resource was
+                      updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -54,6 +54,7 @@ var samples = map[string]struct{ name, getURL string }{
 	"IAPTunnelInstance":                {"projects/p/iap_tunnel/zones/us-central1-a/instances/i", "https://iap.googleapis.com/v1/projects/p/iap_tunnel/zones/us-central1-a/instances/i:getIamPolicy"},
 	"IAPWebCloudRunService":            {"projects/p/iap_web/cloud_run-us-central1/services/s", "https://iap.googleapis.com/v1/projects/p/iap_web/cloud_run-us-central1/services/s:getIamPolicy"},
 	"ComputeBackendService":            {"projects/p/global/backendServices/b", "https://compute.googleapis.com/compute/v1/projects/p/global/backendServices/b/getIamPolicy?optionsRequestedPolicyVersion=3"},
+	"BigQueryDataset":                  {"projects/p/datasets/d_1", "https://bigquery.googleapis.com/bigquery/v2/projects/p/datasets/d_1"},
 	"ComputeMachineImage":              {"projects/p/global/machineImages/m", "https://compute.googleapis.com/compute/v1/projects/p/global/machineImages/m/getIamPolicy?optionsRequestedPolicyVersion=3"},
 }
 

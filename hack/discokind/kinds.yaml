@@ -204,6 +204,54 @@
   parents: [project]
   note: "A group of Interconnects for a topology Google checks."
 
+# Gaps the catalog's modules create (catalog docs/coverage/resource-types.csv,
+# 2026-11-12). ComputeNetworkAttachment is a Config Connector alpha kind
+# for VPC networking, a foundation area: our own stable kind (decision 13).
+
+- kind: ComputeNetworkAttachment
+  group: compute.gcp.hfl.dev
+  version: v1beta1
+  discovery: compute.v1
+  resource: networkAttachments
+  parents: [project]
+  terraform: google_compute_network_attachment
+  note: "Subnets of a consumer's network that Private Service Connect producers attach interfaces to."
+
+- kind: ComputeRegionInstanceTemplate
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionInstanceTemplates
+  parents: [project]
+  terraform: google_compute_region_instance_template
+  note: "A regional instance template; Config Connector's ComputeInstanceTemplate is global only."
+
+- kind: LookerInstance
+  group: looker.gcp.hfl.dev
+  version: v1alpha1
+  discovery: looker.v1
+  resource: projects.locations.instances
+  parents: [project]
+  terraform: google_looker_instance
+  note: "A Looker (Google Cloud core) instance."
+
+- kind: NetworkServicesAgentGateway
+  group: networkservices.gcp.hfl.dev
+  version: v1alpha1
+  discovery: networkservices.v1
+  resource: projects.locations.agentGateways
+  parents: [project]
+  terraform: google_network_services_agent_gateway
+  note: "A gateway that governs the traffic of AI agents, MCP servers and tools."
+
+- kind: NetworkServicesAgentConnectivityTemplate
+  group: networkservices.gcp.hfl.dev
+  version: v1alpha1
+  discovery: networkservices.v1
+  resource: projects.locations.agentConnectivityTemplates
+  parents: [project]
+  terraform: google_network_services_agent_connectivity_template
+  note: "The network access an agent gateway provides."
 # Foundation (tier 1) gaps with this shape, 2026-11-12: Resource Manager's
 # capability configs and boundaries, and Network Connectivity's PSC
 # authorization policies, automated DNS records and spoke gateway routes.
