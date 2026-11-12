@@ -363,6 +363,16 @@ sweeper deletes a fleet that carries a live run's labels. It needs
 the GKE Hub API on. A changed rollout sequence took about seven minutes
 to read back changed (run `cce-11120814-5d2a`).
 
+`ComputeRegionBackendBucket` (package `compute`) and `LoggingLink`
+(package `logging`) make what their fixtures name in a live `Setup`
+(`regionbackendbucket_test.go`, `link_test.go`): two regional Cloud
+Storage buckets, and two global log buckets with Log Analytics on. The
+account's `roles/storage.admin`, `roles/compute.loadBalancerAdmin` and
+`roles/logging.admin` (in the fallback project) cover them; the sweeper
+deletes log buckets, links first, by the run's name, where the account
+may list them. A deleted log bucket is kept seven days and its ID is not
+reused.
+
 `ComputeRegionNotificationEndpoint` skips live (its fixtures'
 `live-skip`): `regionNotificationEndpoints.insert` answers 400
 `invalidResourceUsage` "HealthCheck as a Service feature is not
