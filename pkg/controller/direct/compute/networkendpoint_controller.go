@@ -22,7 +22,8 @@
 // controller config's REST options (as this package's other controllers
 // do), not upstream's package-private client helper; the helpers named for
 // this package (networkEndpoint...) beside the regional endpoint's
-// lastComponent.
+// lastComponent; a detach never sends an empty instance
+// (networkEndpointDetachTarget).
 
 package compute
 
@@ -217,10 +218,7 @@ func (a *ComputeNetworkEndpointAdapter) Delete(ctx context.Context, deleteOp *di
 	log := klog.FromContext(ctx)
 	log.V(2).Info("deleting ComputeNetworkEndpoint", "id", a.id)
 
-	target := a.actual
-	if target == nil {
-		target = a.desired
-	}
+	target := networkEndpointDetachTarget(a.actual, a.desired)
 	req := &pb.DetachNetworkEndpointsNetworkEndpointGroupRequest{
 		Project:              a.id.Project,
 		Zone:                 a.id.Zone,
@@ -390,4 +388,22 @@ func compareComputeNetworkEndpoint(ctx context.Context, actual, desired *pb.Netw
 		return nil, nil, err
 	}
 	return diffs, updateMask, nil
+}
+
+// networkEndpointDetachTarget is the endpoint a detach names: the one read
+// (else the desired one), without an empty instance. The API lists a
+// NON_GCP_PRIVATE_IP_PORT group's endpoints with "instance": "" and refuses
+// that same field on detach (400 "An instance name cannot be associated
+// with network endpoint of type NON_GCP_PRIVATE_IP_PORT", run
+// cce-11121922-5984); upstream's controller sent it back as read.
+func networkEndpointDetachTarget(actual, desired *pb.NetworkEndpoint) *pb.NetworkEndpoint {
+	target := actual
+	if target == nil {
+		target = desired
+	}
+	target = proto.Clone(target).(*pb.NetworkEndpoint)
+	if target.GetInstance() == "" {
+		target.Instance = nil
+	}
+	return target
 }

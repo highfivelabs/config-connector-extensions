@@ -22,9 +22,17 @@ a change instead. The test uses a `NON_GCP_PRIVATE_IP_PORT` group (hybrid
 endpoints need no VM), so it runs live for the cost of a network and a
 group.
 
+One change from upstream's controller, found live: the API lists a
+`NON_GCP_PRIVATE_IP_PORT` group's endpoints with `"instance": ""` and
+refuses that same field on detach (400 "An instance name cannot be
+associated with network endpoint of type NON_GCP_PRIVATE_IP_PORT"), so
+the detach sends no empty instance. The fake accepts either.
+
 ## Live runs
 
 One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `58c848a` | PASS | FAIL | the delete never finished; the test said nothing (it now prints the Ready condition) (run `cce-11121846-91d6`) | 1 network, 1 zonal NEG with 3 endpoints (deleted with the group) |
+| 2026-11-12 | `9952ffc` | PASS | FAIL | detach: 400 "Invalid value for field 'resource.instance': ''. An instance name cannot be associated with network endpoint of type NON_GCP_PRIVATE_IP_PORT"; the endpoint was read back with an empty instance and sent so (fixed, with a unit test) (run `cce-11121922-5984`) | the same (deleted with the group) |
