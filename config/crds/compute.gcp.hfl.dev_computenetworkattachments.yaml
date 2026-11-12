@@ -1,0 +1,273 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computenetworkattachments.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeNetworkAttachment
+    listKind: ComputeNetworkAttachmentList
+    plural: computenetworkattachments
+    shortNames:
+    - hflcomputenetworkattachment
+    - hflcomputenetworkattachments
+    singular: computenetworkattachment
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: ComputeNetworkAttachment is a compute.v1 resource (https://compute.googleapis.com/compute/v1/{parent}/regions/{region}/networkAttachments/{id}),
+          from its Discovery document compute.v1 (hack/discokind). Terraform's google_compute_network_attachment.
+          Subnets of a consumer's network that Private Service Connect producers attach
+          interfaces to.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              connectionPreference:
+                description: One of ACCEPT_AUTOMATIC, ACCEPT_MANUAL, INVALID.
+                type: string
+              description:
+                description: An optional description of this resource. Provide this
+                  property when you create the resource.
+                type: string
+              producerAcceptLists:
+                description: Projects or service class ids that are allowed to connect
+                  to this network attachment. The project can be specified using its
+                  id or number. Service class id can be specified as "serviceclasses/{service_class_id}".
+                items:
+                  type: string
+                type: array
+              producerRejectLists:
+                description: Projects or service class ids that are not allowed to
+                  connect to this network attachment. The project can be specified
+                  using its id or number. Service class id can be specified as "serviceclasses/{service_class_id}".
+                items:
+                  type: string
+                type: array
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              region:
+                description: Immutable. The region, part of the resource's name ({parent}/regions/{region}/networkAttachments/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: region is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              subnetworks:
+                description: An array of URLs where each entry is the URL of a subnet
+                  provided by the service consumer to use for endpoints in the producers
+                  that connect to this network attachment.
+                items:
+                  type: string
+                type: array
+            required:
+            - projectRef
+            - region
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/regions/{region}/networkAttachments/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  connectionEndpoints:
+                    description: Output only. [Output Only] An array of connections
+                      for all the producers connected to this network attachment.
+                    items:
+                      properties:
+                        ipAddress:
+                          description: The IPv4 address assigned to the producer instance
+                            network interface. This value will be a range in case
+                            of Serverless.
+                          type: string
+                        ipv6Address:
+                          description: The IPv6 address assigned to the producer instance
+                            network interface. This is only assigned when the stack
+                            types of both the instance network interface and the consumer
+                            subnet are IPv4_IPv6.
+                          type: string
+                        projectIdOrNum:
+                          description: The project id or number of the interface to
+                            which the IP was assigned.
+                          type: string
+                        secondaryIpCidrRanges:
+                          description: Alias IP ranges from the same subnetwork.
+                          items:
+                            type: string
+                          type: array
+                        serviceClassId:
+                          description: The service class id of the producer service
+                            to which the IP was assigned.
+                          type: string
+                        status:
+                          description: The status of a connected endpoint to this
+                            network attachment.
+                          type: string
+                        subnetwork:
+                          description: The subnetwork used to assign the IP to the
+                            producer instance network interface.
+                          type: string
+                        subnetworkCidrRange:
+                          description: Output only. [Output Only] The CIDR range of
+                            the subnet from which the IPv4 internal IP was allocated
+                            from.
+                          type: string
+                      type: object
+                    type: array
+                  creationTimestamp:
+                    description: Output only. [Output Only] Creation timestamp inRFC3339
+                      text format.
+                    type: string
+                  fingerprint:
+                    description: Fingerprint of this resource. A hash of the contents
+                      stored in this object. This field is used in optimistic locking.
+                      An up-to-date fingerprint must be provided in order to patch.
+                    type: string
+                  id:
+                    description: Output only. [Output Only] The unique identifier
+                      for the resource type. The server generates this identifier.
+                    type: string
+                  kind:
+                    description: Output only. [Output Only] Type of the resource.
+                    type: string
+                  network:
+                    description: Output only. [Output Only] The URL of the network
+                      which the Network Attachment belongs to. Practically it is inferred
+                      by fetching the network of the first subnetwork associated.
+                      Because it is required that all the subnetworks must be from
+                      the same network, it is assured that the Network Attachment
+                      belongs to the same network as all the subnetworks.
+                    type: string
+                  region:
+                    description: Output only. [Output Only] URL of the region where
+                      the network attachment resides. This field applies only to the
+                      region resource. You must specify this field as part of the
+                      HTTP request URL. It is not settable as a field in the request
+                      body.
+                    type: string
+                  selfLink:
+                    description: Output only. [Output Only] Server-defined URL for
+                      the resource.
+                    type: string
+                  selfLinkWithId:
+                    description: Output only. [Output Only] Server-defined URL for
+                      this resource's resource id.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

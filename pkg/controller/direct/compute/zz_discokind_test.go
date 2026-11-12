@@ -39,6 +39,9 @@ func TestComputeGlobalVmExtensionPolicy(t *testing.T) {
 // TestComputeInterconnectGroup runs testdata/discokind/ComputeInterconnectGroup/ on the fake cloud, or live.
 func TestComputeInterconnectGroup(t *testing.T) { kindtest.Run(t, "ComputeInterconnectGroup") }
 
+// TestComputeNetworkAttachment runs testdata/discokind/ComputeNetworkAttachment/ on the fake cloud, or live.
+func TestComputeNetworkAttachment(t *testing.T) { kindtest.Run(t, "ComputeNetworkAttachment") }
+
 // TestComputePublicAdvertisedPrefix runs testdata/discokind/ComputePublicAdvertisedPrefix/ on the fake cloud, or live.
 func TestComputePublicAdvertisedPrefix(t *testing.T) {
 	kindtest.Run(t, "ComputePublicAdvertisedPrefix")
@@ -67,6 +70,11 @@ func TestComputeRegionHealthCheckService(t *testing.T) {
 
 // TestComputeRegionHealthSource runs testdata/discokind/ComputeRegionHealthSource/ on the fake cloud, or live.
 func TestComputeRegionHealthSource(t *testing.T) { kindtest.Run(t, "ComputeRegionHealthSource") }
+
+// TestComputeRegionInstanceTemplate runs testdata/discokind/ComputeRegionInstanceTemplate/ on the fake cloud, or live.
+func TestComputeRegionInstanceTemplate(t *testing.T) {
+	kindtest.Run(t, "ComputeRegionInstanceTemplate")
+}
 
 // TestComputeRegionNotificationEndpoint runs testdata/discokind/ComputeRegionNotificationEndpoint/ on the fake cloud, or live.
 func TestComputeRegionNotificationEndpoint(t *testing.T) {

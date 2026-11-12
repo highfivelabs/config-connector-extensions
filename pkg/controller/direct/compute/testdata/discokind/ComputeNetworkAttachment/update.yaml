@@ -1,0 +1,14 @@
+apiVersion: compute.gcp.hfl.dev/v1beta1
+kind: ComputeNetworkAttachment
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  connectionPreference: ACCEPT_MANUAL
+  subnetworks:
+  - projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}-subnet
+  producerAcceptLists: []
+  producerRejectLists: [${PROJECT}]
+  description: made by a config-connector-extensions test

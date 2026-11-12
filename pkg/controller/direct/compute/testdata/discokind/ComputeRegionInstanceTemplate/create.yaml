@@ -1,0 +1,20 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionInstanceTemplate
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  description: made by a config-connector-extensions test
+  properties:
+    machineType: e2-micro
+    disks:
+    - boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/debian-cloud/global/images/family/debian-12
+        diskSizeGb: "10"
+    networkInterfaces:
+    - network: projects/${PROJECT}/global/networks/${NAME}-net
+      subnetwork: projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}-subnet

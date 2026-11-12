@@ -18,7 +18,7 @@
 # (their users and backups go with them), and Compute Engine network
 # firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
 # them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
-# (their route policies go with them) and VPC
+# (their route policies go with them), subnets and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
@@ -463,6 +463,14 @@ while read -r name made; do
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
 
+# Subnets (a live test's Setup makes them for the network attachments and
+# instance templates it tests), by name, before their networks.
+rows="$("${G[@]}" compute networks subnets list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "subnet" "${name} ${region}" "${G[@]}" compute networks subnets delete "${name}" --region="${region}"
+done <<<"${rows}"
 names="$("${G[@]}" compute networks list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
 for name in ${names}; do
   act "VPC network" "${name}" "${G[@]}" compute networks delete "${name}"

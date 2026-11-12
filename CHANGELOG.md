@@ -8,6 +8,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Five kinds generated from Discovery** (`docs/design.md` section 2.4):
+  `compute.gcp.hfl.dev/v1beta1` `ComputeNetworkAttachment`,
+  `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionInstanceTemplate`,
+  `looker.gcp.hfl.dev/v1alpha1` `LookerInstance`, and
+  `networkservices.gcp.hfl.dev/v1alpha1` `NetworkServicesAgentGateway` and
+  `NetworkServicesAgentConnectivityTemplate`. The operator's role gains
+  the two new groups. A generated Compute Engine kind now takes a
+  resource's path and its full URL as the same value, so a spec that
+  names a subnet by path no longer differs from what the API returns.
 - **The slot guard, opt-in** (`docs/design.md` section 2.5). A manager
   given `--slot=<name>` (or `HFL_SLOT`; through the operator,
   `--manager-arg=--slot=<name>`) labels its objects `hfl.dev/slot`, labels

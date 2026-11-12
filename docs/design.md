@@ -174,7 +174,18 @@ Engine kinds: regional notification endpoints, health check services,
 health aggregation policies, health sources, composite health checks and
 backend buckets; global and zonal VM extension policies; rollout plans;
 BYOIP public advertised and delegated prefixes (foundation item 7);
-Cross-Site networks and wire groups and Interconnect groups.
+Cross-Site networks and wire groups and Interconnect groups. Then
+(2026-11-12) five that the catalog's modules create and Config Connector
+lacks: `ComputeNetworkAttachment` (Config Connector's is alpha; VPC
+networking is a foundation area, so ours is `v1beta1` under decision 13),
+`ComputeRegionInstanceTemplate` (Config Connector's template is global
+only; the API cannot change a template, so every field is immutable),
+`LookerInstance`, and `NetworkServicesAgentGateway` and
+`NetworkServicesAgentConnectivityTemplate` (preview). Compute Engine
+answers a resource path a request sent (`projects/P/regions/R/subnetworks/S`)
+with its full URL, so the controller's comparison takes the two as one
+(`sameComputeURL`); without it a network attachment's `subnetworks` would
+differ on every resync.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -2311,3 +2322,20 @@ moves to section 8.
    `resourceRef` to Config Connector's object, for example
    `KMSCryptoKeyFields` for `keyAccessJustificationsPolicy`; the fields
    keep the API's names. Not needed until the first such PR.
+6. **Which version do our kinds take, and when are they promoted?**
+   (2026-11-12.) The catalog's charts refuse `v1alpha1` kinds (decision
+   24), and most of ours are `v1alpha1`, including ones that pass live
+   and that its modules need: `ComputeRouterRoutePolicy`,
+   `StorageBucketObject`, `ComputeRegionNetworkEndpoint`,
+   `ComputeRegionNetworkFirewallPolicyAssociation` (catalog
+   `docs/coverage/resource-types.csv` counts these as "none" or "alpha",
+   which keeps four to six modules each blocked). Decision 13 makes our
+   copies of alpha-only foundation kinds stable (`v1beta1`); it does not
+   say whether that reaches beyond foundation areas (Backup for GKE, for
+   instance, which two GKE modules use), nor when a kind of ours that
+   started at `v1alpha1` moves up. Recommendation: a kind is `v1beta1`
+   once it has passed live once and its schema has had no breaking
+   change since; copies of upstream alpha-only kinds outside the
+   foundation stay out of scope until a module needs one, and are then
+   built as `v1beta1` under decision 13's reasoning. Until answered, new
+   kinds stay `v1alpha1` except decision 13's.

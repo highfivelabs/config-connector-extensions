@@ -1,0 +1,13 @@
+apiVersion: networkservices.gcp.hfl.dev/v1alpha1
+kind: NetworkServicesAgentConnectivityTemplate
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  accessPath: AGENT_TO_ANYWHERE
+  agentCompute: CLOUD_RUN
+  deploymentModel: CENTRALIZED
+  accessTypes: [PUBLIC]
+  description: made by a config-connector-extensions test
