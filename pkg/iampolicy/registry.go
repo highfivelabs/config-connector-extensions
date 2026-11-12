@@ -38,6 +38,9 @@ const (
 	// {resource}/setIamPolicy under /compute/{version}, with the body
 	// {"policy": ...}.
 	Compute
+	// BigQuery is a BigQuery dataset's access list, read and patched as
+	// the dataset itself (bigquery.go): datasets have no IAM policy calls.
+	BigQuery
 )
 
 // ResourceType is a kind of Google Cloud resource whose IAM policy can be

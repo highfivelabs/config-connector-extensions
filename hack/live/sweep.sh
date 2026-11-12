@@ -34,9 +34,10 @@
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
 # project), by name, through the API, and the project's GKE Hub fleet
-# when a test made it, by label, and global log buckets (with their
-# links), by name, where the account may list them. A failed list or
-# delete fails the sweep.
+# when a test made it, by label, global log buckets (with their links), by
+# name, where the account may list them, and BigQuery datasets, by name,
+# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true). A failed list
+# or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -437,6 +438,19 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   for name in ${rows}; do
     by_run "${name}" || continue
     act "DNS response policy" "${name}" dns_rp_delete "${name}"
+  done
+fi
+
+# BigQuery datasets (the IAMMember test's), by the run's name with its
+# dashes as underscores (a dataset ID takes no dashes), their tables with
+# them, only where the live-test account has BigQuery
+# (E2E_BIGQUERY_ADMIN=true); without it the test does not run live.
+if [[ "${E2E_BIGQUERY_ADMIN:-}" == true ]]; then
+  bqbase="https://bigquery.googleapis.com/bigquery/v2/projects/${project}/datasets"
+  rows="$(disco_api GET "${bqbase}?maxResults=1000" | jq -r '.datasets[]? | .datasetReference.datasetId')"
+  for id in ${rows}; do
+    by_run "${id//_/-}" || continue
+    act "BigQuery dataset" "${id}" disco_api DELETE "${bqbase}/${id}?deleteContents=true"
   done
 fi
 

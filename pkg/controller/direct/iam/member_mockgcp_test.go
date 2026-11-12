@@ -20,13 +20,14 @@ package iam_test
 // real project (docs/live-runs.md). The case: a module that gives one
 // member a role on a resource Config Connector's IAMPolicyMember cannot
 // reference, and expects every other member of the role, and every other
-// role, to stay as it is. Three such resources, one for each way a policy
+// role, to stay as it is. Four such resources, one for each way a policy
 // is reached: a regional secret (the google.iam.v1 verbs on a regional
-// host), a managed folder (Cloud Storage's own paths) and a backend service
-// (Compute Engine's). Each is the run's own (mockenv.Name) and is deleted at
-// the end.
+// host), a managed folder (Cloud Storage's own paths), a backend service
+// (Compute Engine's) and a BigQuery dataset (its access list). Each is the
+// run's own (mockenv.Name) and is deleted at the end.
 
 import (
+	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -37,6 +38,7 @@ import (
 	"cloud.google.com/go/iam/apiv1/iampb"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	bigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/option"
 	secretmanager "google.golang.org/api/secretmanager/v1"
 	storageapi "google.golang.org/api/storage/v1"
@@ -195,7 +197,9 @@ func TestIAMMember(t *testing.T) {
 				for _, r := range env.Requests() {
 					post := strings.HasPrefix(r, "POST ") && strings.Contains(r, "setIamPolicy")
 					put := strings.HasPrefix(r, "PUT ") && strings.Contains(r, "/iam")
-					if post || put {
+					// A BigQuery dataset's access list is patched.
+					patch := strings.HasPrefix(r, "PATCH ") && strings.Contains(r, "/datasets/")
+					if post || put || patch {
 						n++
 					}
 				}
@@ -329,6 +333,50 @@ func TestIAMMember(t *testing.T) {
 				t.Errorf("the message should name the kind and list the supported ones: %q", msg)
 			}
 			del(t, o)
+		})
+	})
+
+	t.Run("a BigQuery dataset", func(t *testing.T) {
+		// Live, the live-test account needs BigQuery (roles/bigquery.admin,
+		// or dataOwner on a dataset it may create): E2E_BIGQUERY_ADMIN=true.
+		if mockenv.Live() && os.Getenv("E2E_BIGQUERY_ADMIN") != "true" {
+			t.Skip("live: pending, needs BigQuery for the live-test account (E2E_BIGQUERY_ADMIN=true)")
+		}
+		bq, err := bigquery.NewService(env.Ctx, env.GCPOptions()...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// A dataset ID takes letters, digits and underscores only.
+		id := strings.ReplaceAll(mockenv.Name("iam_member_dataset"), "-", "_")
+		if _, err := bq.Datasets.Insert(mockenv.Project, &bigquery.Dataset{
+			DatasetReference: &bigquery.DatasetReference{ProjectId: mockenv.Project, DatasetId: id},
+			Location:         "US",
+			Labels:           mockenv.Labels(),
+		}).Context(env.Ctx).Do(); err != nil {
+			t.Fatalf("creating the dataset: %v", err)
+		}
+		t.Cleanup(func() {
+			if err := bq.Datasets.Delete(mockenv.Project, id).DeleteContents(true).Context(env.Ctx).Do(); err != nil && !iampolicy.IsNotFound(err) {
+				t.Errorf("deleting the dataset: %v", err)
+			}
+		})
+		tg := target{kind: "BigQueryDataset", name: "projects/" + mockenv.Project + "/datasets/" + id, role: "roles/bigquery.dataViewer"}
+		exercise(t, tg, "dataset")
+
+		t.Run("an authorized view and the project's owners are left alone", func(t *testing.T) {
+			ds, err := bq.Datasets.Get(mockenv.Project, id).Context(env.Ctx).Do()
+			if err != nil {
+				t.Fatal(err)
+			}
+			owners := 0
+			for _, a := range ds.Access {
+				if a.SpecialGroup == "projectOwners" {
+					owners++
+				}
+			}
+			if owners == 0 {
+				t.Errorf("the dataset lost its projectOwners entry: %+v", ds.Access)
+			}
 		})
 	})
 

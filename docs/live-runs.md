@@ -363,6 +363,18 @@ sweeper deletes a fleet that carries a live run's labels. It needs
 the GKE Hub API on. A changed rollout sequence took about seven minutes
 to read back changed (run `cce-11120814-5d2a`).
 
+`IAMMember`'s BigQuery dataset case (package `iam`) waits on BigQuery
+for the live-test account: making a dataset needs
+`bigquery.datasets.create` and changing its access list
+`bigquery.datasets.update` (`roles/bigquery.admin`, or
+`roles/bigquery.dataOwner` with `roles/bigquery.user`; assumed from the
+BigQuery reference, not yet seen), which `cce-live-tests` has in neither
+project. Until then a live `iam` run skips the case and the sweeper
+leaves datasets alone. With it: `E2E_BIGQUERY_ADMIN=true task test-live
+PROJECT=$GCP_PROJECT KINDS=iam LIVE_RUN=TestIAMMember`. The case makes
+one dataset (US, empty, labelled with the run) and deletes it; the
+sweeper deletes datasets whose ID is the run's name with underscores.
+
 `ComputeRegionBackendBucket` (package `compute`) and `LoggingLink`
 (package `logging`) make what their fixtures name in a live `Setup`
 (`regionbackendbucket_test.go`, `link_test.go`): two regional Cloud
