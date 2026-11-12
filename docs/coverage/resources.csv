@@ -335,7 +335,7 @@ composer.googleapis.com,composer.googleapis.com/Environment,82,ComposerEnvironme
 composer.googleapis.com,composer.googleapis.com/EnvironmentUserWorkloadsConfigMap,2,ComposerUserWorkloadsConfigMap,2,,0,0,false,api=v1:projects.locations.environments.userWorkloadsConfigMaps; official-spec-fields-unmatched=2/3
 composer.googleapis.com,composer.googleapis.com/EnvironmentUserWorkloadsSecret,2,ComposerUserWorkloadsSecret,2,,0,0,false,api=v1:projects.locations.environments.userWorkloadsSecrets; official-spec-fields-unmatched=2/3
 compute.googleapis.com,compute.googleapis.com/Address,15,ComputeAddress,13,,0,2,false,api=v1:addresses; official-spec-fields-unmatched=2/13
-compute.googleapis.com,compute.googleapis.com/Autoscaler,25,ComputeAutoscaler,18,,0,7,false,api=v1:autoscalers; official-spec-fields-unmatched=13/30
+compute.googleapis.com,compute.googleapis.com/Autoscaler,25,ComputeAutoscaler,18,ComputeAutoscaler,0,7,false,api=v1:autoscalers; official-spec-fields-unmatched=13/30; ours-spec-fields-unmatched=13/30
 compute.googleapis.com,compute.googleapis.com/BackendBucket,21,ComputeBackendBucket,19,,0,2,false,api=v1:backendBuckets; official-spec-fields-unmatched=2/20
 compute.googleapis.com,compute.googleapis.com/BackendService,135,ComputeBackendService,84,,0,51,false,api=v1:backendServices; official-spec-fields-unmatched=13/96
 compute.googleapis.com,compute.googleapis.com/ComputeNetworkEndpoint,0,,0,ComputeNetworkEndpoint,0,0,false,outside-denominator; no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com
@@ -383,7 +383,7 @@ compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,Comp
 compute.googleapis.com,compute.googleapis.com/PacketMirroring,12,ComputePacketMirroring,12,,0,0,false,api=v1:packetMirrorings; official-spec-fields-unmatched=5/16
 compute.googleapis.com,compute.googleapis.com/PublicAdvertisedPrefix,7,,0,ComputePublicAdvertisedPrefix,7,0,false,api=v1:publicAdvertisedPrefixes; ours-spec-fields-unmatched=2/8
 compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,ComputePublicDelegatedPrefix,15,0,false,api=v1:publicDelegatedPrefixes; ours-spec-fields-unmatched=3/17
-compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,,0,7,false,api=v1:regionAutoscalers
+compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,ComputeAutoscaler,0,7,false,api=v1:regionAutoscalers; ours-spec-fields-unmatched=13/30
 compute.googleapis.com,compute.googleapis.com/RegionBackendBucket,21,,0,ComputeRegionBackendBucket,21,0,false,api=v1:regionBackendBuckets; ours-spec-fields-unmatched=3/23
 compute.googleapis.com,compute.googleapis.com/RegionBackendService,135,ComputeBackendService,84,,0,51,false,api=v1:regionBackendServices; official-spec-fields-unmatched=13/96
 compute.googleapis.com,compute.googleapis.com/RegionCommitment,49,,0,,0,49,false,api=v1:regionCommitments

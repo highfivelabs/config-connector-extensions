@@ -8,6 +8,9 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
+  Config Connector's alpha zonal autoscaler (decision 26), with upstream's
+  fields.
 - **`IAMBinding` and `IAMMember` on a Cloud Functions 2nd gen function**
   (`google_cloudfunctions2_function_iam_binding`, `_iam_member`): a
   resource row for `CloudFunctions2Function`, ours

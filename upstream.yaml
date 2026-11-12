@@ -180,6 +180,7 @@ patches:
   - {file: patches/k8s-config-connector/0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0033-mockgcp-compute-vpn-tunnels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0039-mockgcp-compute-autoscalers.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request
@@ -402,6 +403,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computenetworkendpoint_identity.go, apis/compute/v1alpha1/computenetworkendpoint_identity_test.go, apis/compute/v1alpha1/computenetworkendpoint_reference.go]}
   - here: [pkg/controller/direct/compute/networkendpoint_controller.go, pkg/controller/direct/compute/networkendpoint_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkendpoint_controller.go, pkg/controller/direct/compute/computenetworkendpoint_mapper.go]}
+  - here: [apis/compute/v1beta1/computeautoscaler_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_types.go]}
+  - here: [apis/compute/v1beta1/computeautoscaler_identity.go, apis/compute/v1beta1/computeautoscaler_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_identity.go, apis/compute/v1alpha1/computeautoscaler_identity_test.go]}
+  - here: [pkg/controller/direct/compute/autoscaler_controller.go, pkg/controller/direct/compute/autoscaler_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeautoscaler_controller.go, pkg/controller/direct/compute/computeautoscaler_mapper.go]}
   - here: [apis/compute/v1beta1/computeorganizationsecuritypolicyrule_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_types.go]}
   - here: [apis/compute/v1beta1/computevpntunnel_types.go]
