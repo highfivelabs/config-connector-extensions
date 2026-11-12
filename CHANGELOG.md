@@ -13,6 +13,11 @@ has been released yet; each release moves its entries out of
   (`google_cloudbuildv2_repository`), named as Config Connector's
   reference type names it. Config Connector has no kind for it, so it
   starts at `v1alpha1`.
+- **`IAMBinding` and `IAMMember` on a Cloud Functions 2nd gen function**
+  (`google_cloudfunctions2_function_iam_binding`, `_iam_member`): a
+  resource row for `CloudFunctions2Function`, ours
+  (`cloudfunctions2.gcp.hfl.dev/v1beta1`) found by name before Config
+  Connector's alpha kind, through Cloud Functions' v2 IAM methods.
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
