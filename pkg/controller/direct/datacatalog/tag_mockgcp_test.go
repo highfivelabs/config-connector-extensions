@@ -39,7 +39,6 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -59,7 +58,7 @@ func TestDataCatalogTag(t *testing.T) {
 	}
 	gvk := datacatalogv1beta1.DataCatalogTagGVK
 	env := mockenv.New(t, namespace)
-	cloud, err := api.NewRESTClient(env.Ctx, append(env.GCPOptions(), option.WithQuotaProject(mockenv.Project))...)
+	cloud, err := api.NewRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
 		t.Fatal(err)
 	}
