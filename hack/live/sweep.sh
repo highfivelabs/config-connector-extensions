@@ -441,6 +441,32 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   done
 fi
 
+# Data Catalog entry groups (deleted with force, their entries and tags
+# with them) and tag templates (the DataCatalogTag test's), by the run's
+# name with its dashes as underscores (their IDs take no dashes), only
+# where the live-test account has Data Catalog (E2E_DATA_CATALOG=true:
+# datacatalog.googleapis.com on and roles/datacatalog.admin); without it
+# the test does not run live. Tag templates have no list call, so they
+# are found with a catalog search.
+if [[ "${E2E_DATA_CATALOG:-}" == true ]]; then
+  dcbase="https://datacatalog.googleapis.com/v1"
+  rows="$(disco_api GET "${dcbase}/projects/${project}/locations/us-central1/entryGroups?pageSize=1000" | jq -r '.entryGroups[]? | .name')"
+  for name in ${rows}; do
+    leaf="${name##*/}"
+    by_run "${leaf//_/-}" || continue
+    act "Data Catalog entry group" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+  rows="$(curl -sS --fail-with-body -X POST -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    -H "Content-Type: application/json" "${dcbase}/catalog:search" \
+    -d "{\"scope\":{\"includeProjectIds\":[\"${project}\"]},\"query\":\"type=tag_template\",\"pageSize\":500}" \
+    | jq -r '.results[]? | .relativeResourceName')"
+  for name in ${rows}; do
+    leaf="${name##*/}"
+    by_run "${leaf//_/-}" || continue
+    act "Data Catalog tag template" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+fi
+
 # BigQuery datasets (the IAMMember test's), by the run's name with its
 # dashes as underscores (a dataset ID takes no dashes), their tables with
 # them, only where the live-test account has BigQuery

@@ -8,6 +8,12 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`datacatalog.gcp.hfl.dev/v1beta1` `DataCatalogTag`**, a stable copy of
+  Config Connector's alpha Data Catalog tag (decision 26), with upstream's
+  fields. The API assigns the tag's ID at create; `status.externalRef`
+  keeps it, also across updates, and `resourceID` acquires an existing
+  tag. Live pending Data Catalog in the live-test project
+  (`E2E_DATA_CATALOG=true`).
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
