@@ -22,3 +22,5 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `2d789ab` | FAIL | FAIL | the fixtures gave `diskSizeGb` as a string; the CRD takes an integer and refused the object (fixture fixed in `ceda3f6`) (run `cce-11121547-237e`) | the setup's networks and subnets (deleted) |
+| 2026-11-12 | `ceda3f6` | PASS | PASS | none: an e2-micro template on the test's subnet, a resync with no write (the API's full URLs for network and subnet match the paths sent), the CRD refusing a change, delete and abandon (run `cce-11121602-5e8b`, the fallback project) | 2 regional instance templates, 2 networks with a subnet each (deleted); `task live-list` empty |

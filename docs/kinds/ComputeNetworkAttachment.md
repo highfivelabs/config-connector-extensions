@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `2d789ab` | PASS | PASS | none, with the live Setup (a network and subnet for the test's object and its abandoned one) and the URL comparison: the API returns `subnetworks` as full URLs, and a resync wrote nothing; create, a changed accept and reject list, delete and abandon match the fake (run `cce-11121547-237e`, the fallback project) | 2 network attachments, 2 networks with a subnet each (deleted); `task live-list` empty |
