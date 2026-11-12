@@ -6,6 +6,7 @@ ComputeCrossSiteNetwork	https://compute.googleapis.com/compute/v1/	projects/{pro
 ComputeGlobalPublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicDelegatedPrefixes	items	-
 ComputeGlobalVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/global/vmExtensionPolicies	items	-
 ComputeInterconnectGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/interconnectGroups	items	-
+ComputeNetworkAttachment	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/networkAttachments	items	-
 ComputePublicAdvertisedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicAdvertisedPrefixes	items	-
 ComputePublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/publicDelegatedPrefixes	items	-
 ComputeRegionBackendBucket	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/backendBuckets	items	-
@@ -13,9 +14,13 @@ ComputeRegionCompositeHealthCheck	https://compute.googleapis.com/compute/v1/	pro
 ComputeRegionHealthAggregationPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/healthAggregationPolicies	items	-
 ComputeRegionHealthCheckService	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/healthCheckServices	items	-
 ComputeRegionHealthSource	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/healthSources	items	-
+ComputeRegionInstanceTemplate	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/instanceTemplates	items	-
 ComputeRegionNotificationEndpoint	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/notificationEndpoints	items	-
 ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}/global/rolloutPlans	items	-
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
 GKEHubRolloutSequence	https://gkehub.googleapis.com/v1/	projects/{project}/locations/global/rolloutSequences	rolloutSequences	-
 IAMOauthClient	https://iam.googleapis.com/v1/	projects/{project}/locations/global/oauthClients	oauthClients	state=DELETED
 LoggingSavedQuery	https://logging.googleapis.com/v2/	projects/{project}/locations/global/savedQueries	savedQueries	-
+LookerInstance	https://looker.googleapis.com/v1/	projects/{project}/locations/global/instances	instances	-
+NetworkServicesAgentConnectivityTemplate	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentConnectivityTemplates	agentConnectivityTemplates	-
+NetworkServicesAgentGateway	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentGateways	agentGateways	-

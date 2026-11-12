@@ -1,0 +1,10 @@
+apiVersion: looker.gcp.hfl.dev/v1alpha1
+kind: LookerInstance
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  platformEdition: LOOKER_CORE_STANDARD_ANNUAL
+  publicIpEnabled: true

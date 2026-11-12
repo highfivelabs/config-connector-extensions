@@ -1,0 +1,667 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: lookerinstances.looker.gcp.hfl.dev
+spec:
+  group: looker.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: LookerInstance
+    listKind: LookerInstanceList
+    plural: lookerinstances
+    shortNames:
+    - hfllookerinstance
+    - hfllookerinstances
+    singular: lookerinstance
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: LookerInstance is a looker.v1 resource (https://looker.googleapis.com/v1/{parent}/locations/{location}/instances/{id}),
+          from its Discovery document looker.v1 (hack/discokind). Terraform's google_looker_instance.
+          A Looker (Google Cloud core) instance.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              acceleratedSecurityPatchEnabled:
+                description: Optional. Accelerated security patch enabled for the
+                  instance.
+                type: boolean
+              adminSettings:
+                description: Optional. Looker Instance Admin settings.
+                properties:
+                  allowedEmailDomains:
+                    description: Optional. Email domain allowlist for the instance.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              authType:
+                description: Optional. Auth type for the Looker instance.
+                properties:
+                  googleAuthEnabled:
+                    description: Optional. Whether google auth is enabled on the Looker
+                      instance.
+                    type: boolean
+                  workforceAuthEnabled:
+                    description: Optional. Whether Workforce auth is enabled on the
+                      Looker instance.
+                    type: boolean
+                type: object
+              catalogIntegrationOptOut:
+                description: Optional. Indicates whether catalog integration is disabled
+                  for the Looker instance.
+                type: boolean
+              classType:
+                description: |-
+                  Optional. Storage class of the instance.
+
+                  One of CLASS_TYPE_UNSPECIFIED, R1, P1.
+                type: string
+              consumerNetwork:
+                description: 'Optional. Network name in the consumer project. Format:
+                  `projects/{project}/global/networks/{network}`. Note that the consumer
+                  network may be in a different GCP project than the consumer project
+                  that is hosting the Looker Instance.'
+                type: string
+              controlledEgressConfig:
+                description: Optional. Controlled egress configuration.
+                properties:
+                  egressFqdns:
+                    description: Optional. List of fully qualified domain names to
+                      be added to the allowlist for outbound traffic.
+                    items:
+                      type: string
+                    type: array
+                  marketplaceEnabled:
+                    description: Optional. Whether marketplace is enabled.
+                    type: boolean
+                type: object
+              controlledEgressEnabled:
+                description: Optional. Whether controlled egress is enabled on the
+                  Looker instance.
+                type: boolean
+              customDomain:
+                description: Optional. Custom domain configuration for the instance.
+                properties:
+                  domain:
+                    description: Optional. Domain name.
+                    type: string
+                type: object
+              denyMaintenancePeriod:
+                description: Optional. Maintenance denial period for this instance.
+                properties:
+                  endDate:
+                    description: Required. End date of the deny maintenance period.
+                    properties:
+                      day:
+                        description: Day of a month. Must be from 1 to 31 and valid
+                          for the year and month, or 0 to specify a year by itself
+                          or a year and month where the day isn't significant.
+                        format: int32
+                        type: integer
+                      month:
+                        description: Month of a year. Must be from 1 to 12, or 0 to
+                          specify a year without a month and day.
+                        format: int32
+                        type: integer
+                      year:
+                        description: Year of the date. Must be from 1 to 9999, or
+                          0 to specify a date without a year.
+                        format: int32
+                        type: integer
+                    type: object
+                  startDate:
+                    description: Required. Start date of the deny maintenance period.
+                    properties:
+                      day:
+                        description: Day of a month. Must be from 1 to 31 and valid
+                          for the year and month, or 0 to specify a year by itself
+                          or a year and month where the day isn't significant.
+                        format: int32
+                        type: integer
+                      month:
+                        description: Month of a year. Must be from 1 to 12, or 0 to
+                          specify a year without a month and day.
+                        format: int32
+                        type: integer
+                      year:
+                        description: Year of the date. Must be from 1 to 9999, or
+                          0 to specify a date without a year.
+                        format: int32
+                        type: integer
+                    type: object
+                  time:
+                    description: Required. Time in UTC when the period starts and
+                      ends.
+                    properties:
+                      hours:
+                        description: Hours of a day in 24 hour format. Must be greater
+                          than or equal to 0 and typically must be less than or equal
+                          to 23. An API may choose to allow the value "24:00:00" for
+                          scenarios like business closing time.
+                        format: int32
+                        type: integer
+                      minutes:
+                        description: Minutes of an hour. Must be greater than or equal
+                          to 0 and less than or equal to 59.
+                        format: int32
+                        type: integer
+                      nanos:
+                        description: Fractions of seconds, in nanoseconds. Must be
+                          greater than or equal to 0 and less than or equal to 999,999,999.
+                        format: int32
+                        type: integer
+                      seconds:
+                        description: Seconds of a minute. Must be greater than or
+                          equal to 0 and typically must be less than or equal to 59.
+                          An API may allow the value 60 if it allows leap-seconds.
+                        format: int32
+                        type: integer
+                    type: object
+                required:
+                - endDate
+                - startDate
+                - time
+                type: object
+              encryptionConfig:
+                description: Optional. Encryption configuration (CMEK). Only set if
+                  CMEK has been enabled on the instance.
+                properties:
+                  kmsKeyName:
+                    description: Optional. Immutable. Name of the CMEK key in KMS
+                      (input parameter).
+                    type: string
+                type: object
+              fipsEnabled:
+                description: Optional. Whether FIPS is enabled on the Looker instance.
+                type: boolean
+              geminiEnabled:
+                description: Optional. Whether Gemini feature is enabled on the Looker
+                  instance or not.
+                type: boolean
+              ingressIpAllowlistConfig:
+                description: Optional. Ingress IP allowlist configuration for the
+                  Looker instance.
+                properties:
+                  allowlistRules:
+                    description: Optional. List of IP range rules to allow ingress
+                      traffic.
+                    items:
+                      properties:
+                        description:
+                          description: Optional. Description for the IP range.
+                          type: string
+                        ipRange:
+                          description: Optional. The IP range to allow ingress traffic
+                            from.
+                          type: string
+                      type: object
+                    type: array
+                  enabled:
+                    description: Optional. Whether ingress IP allowlist functionality
+                      is enabled on the Looker instance.
+                    type: boolean
+                  googleServicesEnabled:
+                    description: Optional. Whether google service connections are
+                      enabled for the instance.
+                    type: boolean
+                type: object
+              linkedLspProjectNumber:
+                description: Optional. Linked Google Cloud Project Number for Looker
+                  Studio Pro.
+                format: int64
+                type: integer
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/instances/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              maintenanceWindow:
+                description: Optional. Maintenance window for this instance.
+                properties:
+                  dayOfWeek:
+                    description: |-
+                      Required. Day of the week for this MaintenanceWindow (in UTC).
+
+                      One of DAY_OF_WEEK_UNSPECIFIED, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY.
+                    type: string
+                  startTime:
+                    description: Required. Time in UTC when the period starts. Maintenance
+                      will be scheduled within 60 minutes.
+                    properties:
+                      hours:
+                        description: Hours of a day in 24 hour format. Must be greater
+                          than or equal to 0 and typically must be less than or equal
+                          to 23. An API may choose to allow the value "24:00:00" for
+                          scenarios like business closing time.
+                        format: int32
+                        type: integer
+                      minutes:
+                        description: Minutes of an hour. Must be greater than or equal
+                          to 0 and less than or equal to 59.
+                        format: int32
+                        type: integer
+                      nanos:
+                        description: Fractions of seconds, in nanoseconds. Must be
+                          greater than or equal to 0 and less than or equal to 999,999,999.
+                        format: int32
+                        type: integer
+                      seconds:
+                        description: Seconds of a minute. Must be greater than or
+                          equal to 0 and typically must be less than or equal to 59.
+                          An API may allow the value 60 if it allows leap-seconds.
+                        format: int32
+                        type: integer
+                    type: object
+                required:
+                - dayOfWeek
+                - startTime
+                type: object
+              oauthConfig:
+                description: Optional. Looker instance OAuth login settings.
+                properties:
+                  clientId:
+                    description: Input only. Client ID from an external OAuth application.
+                      This is an input-only field, and thus will not be set in any
+                      responses.
+                    type: string
+                  clientSecret:
+                    description: Input only. Client secret from an external OAuth
+                      application. This is an input-only field, and thus will not
+                      be set in any responses.
+                    type: string
+                  sharedOauthClientEnabled:
+                    description: Optional. Whether to use the shared OAuth client.
+                      Instances specifying this field do not need to provide client_id
+                      and client_secret.
+                    type: boolean
+                type: object
+              periodicExportConfig:
+                description: Optional. Configuration for periodic export.
+                properties:
+                  gcsUri:
+                    description: 'Required. Cloud Storage bucket URI for periodic
+                      export. Format: gs://{bucket_name}'
+                    type: string
+                  kmsKey:
+                    description: 'Required. Name of the CMEK key in KMS. Format: projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}'
+                    type: string
+                  startTime:
+                    description: Required. Time in UTC to start the periodic export
+                      job.
+                    properties:
+                      hours:
+                        description: Hours of a day in 24 hour format. Must be greater
+                          than or equal to 0 and typically must be less than or equal
+                          to 23. An API may choose to allow the value "24:00:00" for
+                          scenarios like business closing time.
+                        format: int32
+                        type: integer
+                      minutes:
+                        description: Minutes of an hour. Must be greater than or equal
+                          to 0 and less than or equal to 59.
+                        format: int32
+                        type: integer
+                      nanos:
+                        description: Fractions of seconds, in nanoseconds. Must be
+                          greater than or equal to 0 and less than or equal to 999,999,999.
+                        format: int32
+                        type: integer
+                      seconds:
+                        description: Seconds of a minute. Must be greater than or
+                          equal to 0 and typically must be less than or equal to 59.
+                          An API may allow the value 60 if it allows leap-seconds.
+                        format: int32
+                        type: integer
+                    type: object
+                required:
+                - gcsUri
+                - kmsKey
+                - startTime
+                type: object
+              platformEdition:
+                description: |-
+                  Optional. Platform edition. Marked as OPTIONAL for backward compatibility,
+                  though it is required during instance creation.
+
+                  One of PLATFORM_EDITION_UNSPECIFIED, LOOKER_CORE_TRIAL, LOOKER_CORE_STANDARD, LOOKER_CORE_STANDARD_ANNUAL, LOOKER_CORE_ENTERPRISE_ANNUAL, LOOKER_CORE_EMBED_ANNUAL, LOOKER_CORE_NONPROD_STANDARD_ANNUAL, LOOKER_CORE_NONPROD_ENTERPRISE_ANNUAL, LOOKER_CORE_NONPROD_EMBED_ANNUAL, LOOKER_CORE_TRIAL_STANDARD, LOOKER_CORE_TRIAL_ENTERPRISE, LOOKER_CORE_TRIAL_EMBED.
+                type: string
+              privateIpEnabled:
+                description: Optional. Whether private IP is enabled on the Looker
+                  instance.
+                type: boolean
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              pscConfig:
+                description: Optional. PSC configuration. Used when `psc_enabled`
+                  is true.
+                properties:
+                  allowedVpcs:
+                    description: 'Optional. List of VPCs that are allowed ingress
+                      into looker. Format: projects/{project}/global/networks/{network}'
+                    items:
+                      type: string
+                    type: array
+                  serviceAttachments:
+                    description: Optional. List of egress service attachment configurations.
+                    items:
+                      properties:
+                        localFqdn:
+                          description: Optional. Fully qualified domain name that
+                            will be used in the private DNS record created for the
+                            service attachment.
+                          type: string
+                        localFqdns:
+                          description: Optional. List of fully qualified domain names
+                            that will be used in the private DNS record created for
+                            the service attachment.
+                          items:
+                            type: string
+                          type: array
+                        targetServiceAttachmentUri:
+                          description: 'Required. URI of the service attachment to
+                            connect to. Format: projects/{project}/regions/{region}/serviceAttachments/{service_attachment}'
+                          type: string
+                      required:
+                      - targetServiceAttachmentUri
+                      type: object
+                    type: array
+                type: object
+              pscEnabled:
+                description: Optional. Whether to use Private Service Connect (PSC)
+                  for private IP connectivity. If true, neither `public_ip_enabled`
+                  nor `private_ip_enabled` can be true.
+                type: boolean
+              publicIpEnabled:
+                description: Optional. Whether public IP is enabled on the Looker
+                  instance.
+                type: boolean
+              releaseChannel:
+                description: |-
+                  Optional. The selected release channel for the instance.
+
+                  One of RELEASE_CHANNEL_UNSPECIFIED, RAPID, REGULAR, STABLE.
+                type: string
+              reservedRange:
+                description: Optional. Name of a reserved IP address range within
+                  the Instance.consumer_network, to be used for private services access
+                  connection. May or may not be specified in a create request.
+                type: string
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              userMetadata:
+                description: Optional. User metadata.
+                properties:
+                  additionalDeveloperUserCount:
+                    description: Optional. The number of additional developer users
+                      the instance owner has purchased.
+                    format: int32
+                    type: integer
+                  additionalStandardUserCount:
+                    description: Optional. The number of additional standard users
+                      the instance owner has purchased.
+                    format: int32
+                    type: integer
+                  additionalViewerUserCount:
+                    description: Optional. The number of additional viewer users the
+                      instance owner has purchased.
+                    format: int32
+                    type: integer
+                type: object
+            required:
+            - location
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/instances/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The time when the Looker instance provisioning
+                      was first requested.
+                    type: string
+                  egressPublicIp:
+                    description: Output only. Public Egress IP (IPv4).
+                    type: string
+                  ingressPrivateIp:
+                    description: Output only. Private Ingress IP (IPv4).
+                    type: string
+                  ingressPublicIp:
+                    description: Output only. Public Ingress IP (IPv4).
+                    type: string
+                  lastDenyMaintenancePeriod:
+                    description: Output only. Last computed maintenance denial period
+                      for this instance.
+                    properties:
+                      endDate:
+                        description: Required. End date of the deny maintenance period.
+                        properties:
+                          day:
+                            description: Day of a month. Must be from 1 to 31 and
+                              valid for the year and month, or 0 to specify a year
+                              by itself or a year and month where the day isn't significant.
+                            format: int32
+                            type: integer
+                          month:
+                            description: Month of a year. Must be from 1 to 12, or
+                              0 to specify a year without a month and day.
+                            format: int32
+                            type: integer
+                          year:
+                            description: Year of the date. Must be from 1 to 9999,
+                              or 0 to specify a date without a year.
+                            format: int32
+                            type: integer
+                        type: object
+                      startDate:
+                        description: Required. Start date of the deny maintenance
+                          period.
+                        properties:
+                          day:
+                            description: Day of a month. Must be from 1 to 31 and
+                              valid for the year and month, or 0 to specify a year
+                              by itself or a year and month where the day isn't significant.
+                            format: int32
+                            type: integer
+                          month:
+                            description: Month of a year. Must be from 1 to 12, or
+                              0 to specify a year without a month and day.
+                            format: int32
+                            type: integer
+                          year:
+                            description: Year of the date. Must be from 1 to 9999,
+                              or 0 to specify a date without a year.
+                            format: int32
+                            type: integer
+                        type: object
+                      time:
+                        description: Required. Time in UTC when the period starts
+                          and ends.
+                        properties:
+                          hours:
+                            description: Hours of a day in 24 hour format. Must be
+                              greater than or equal to 0 and typically must be less
+                              than or equal to 23. An API may choose to allow the
+                              value "24:00:00" for scenarios like business closing
+                              time.
+                            format: int32
+                            type: integer
+                          minutes:
+                            description: Minutes of an hour. Must be greater than
+                              or equal to 0 and less than or equal to 59.
+                            format: int32
+                            type: integer
+                          nanos:
+                            description: Fractions of seconds, in nanoseconds. Must
+                              be greater than or equal to 0 and less than or equal
+                              to 999,999,999.
+                            format: int32
+                            type: integer
+                          seconds:
+                            description: Seconds of a minute. Must be greater than
+                              or equal to 0 and typically must be less than or equal
+                              to 59. An API may allow the value 60 if it allows leap-seconds.
+                            format: int32
+                            type: integer
+                        type: object
+                    type: object
+                  lookerUri:
+                    description: Output only. Looker instance URI which can be used
+                      to access the Looker Instance UI.
+                    type: string
+                  lookerVersion:
+                    description: Output only. The Looker version that the instance
+                      is using.
+                    type: string
+                  maintenanceSchedule:
+                    description: Output only. Maintenance schedule for this instance.
+                    properties:
+                      endTime:
+                        description: The scheduled end time for the maintenance.
+                        type: string
+                      startTime:
+                        description: The scheduled start time for the maintenance.
+                        type: string
+                    type: object
+                  satisfiesPzi:
+                    description: Output only. Reserved for future use.
+                    type: boolean
+                  satisfiesPzs:
+                    description: Output only. Reserved for future use.
+                    type: boolean
+                  softDeleteReason:
+                    description: Output only. The reason for the instance being in
+                      a soft-deleted state.
+                    type: string
+                  state:
+                    description: Output only. The state of the instance.
+                    type: string
+                  suspendedTime:
+                    description: Output only. The time when the Looker instance was
+                      suspended (soft deleted).
+                    type: string
+                  updateTime:
+                    description: Output only. The time when the Looker instance was
+                      last updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

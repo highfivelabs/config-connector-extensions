@@ -311,7 +311,8 @@ func Diff(desired, actual map[string]any) []string {
 
 // Subset reports whether every value want sets is in got: maps by key,
 // lists element by element and of equal length, numbers by value whether
-// the API wrote them as numbers or (int64) as strings.
+// the API wrote them as numbers or (int64) as strings, and a Compute
+// Engine resource's path as its full URL (sameComputeURL).
 func Subset(want, got any) bool {
 	switch w := want.(type) {
 	case nil:
@@ -343,7 +344,7 @@ func Subset(want, got any) bool {
 		return true
 	case string:
 		if g, ok := got.(string); ok {
-			return w == g
+			return w == g || sameComputeURL(w, g)
 		}
 		if got == nil {
 			return w == ""
@@ -358,6 +359,33 @@ func Subset(want, got any) bool {
 		}
 		return scalarString(w) == scalarString(got)
 	}
+}
+
+// computeURLPrefixes are the forms of a Compute Engine resource's URL
+// that the API writes in place of the path a request sent
+// (projects/P/regions/R/subnetworks/S): it answers with its own full URL.
+var computeURLPrefixes = []string{
+	"https://www.googleapis.com/compute/v1/",
+	"https://www.googleapis.com/compute/beta/",
+	"https://compute.googleapis.com/compute/v1/",
+	"https://compute.googleapis.com/compute/beta/",
+}
+
+// sameComputeURL reports whether two strings name the same Compute Engine
+// resource, one as its full URL, the other as that URL or its path from
+// projects/.
+func sameComputeURL(a, b string) bool {
+	trim := func(s string) (string, bool) {
+		for _, p := range computeURLPrefixes {
+			if strings.HasPrefix(s, p) {
+				return strings.TrimPrefix(s, p), true
+			}
+		}
+		return s, false
+	}
+	a, aURL := trim(a)
+	b, bURL := trim(b)
+	return (aURL || bURL) && strings.HasPrefix(a, "projects/") && a == b
 }
 
 func scalarString(v any) string {

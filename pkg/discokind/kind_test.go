@@ -58,6 +58,7 @@ func TestDiff(t *testing.T) {
 		"labels":      map[string]any{"a": "1", "b": "2"},
 		"list":        []any{map[string]any{"x": "1", "y": "default"}},
 		"createTime":  "2026-01-01T00:00:00Z",
+		"subnetworks": []any{"https://www.googleapis.com/compute/v1/projects/p/regions/r/subnetworks/s"},
 	}
 	for _, c := range []struct {
 		desired map[string]any
@@ -69,6 +70,11 @@ func TestDiff(t *testing.T) {
 		{map[string]any{"displayName": "e", "size": int64(43)}, []string{"displayName", "size"}},
 		{map[string]any{"list": []any{}}, []string{"list"}},
 		{map[string]any{"missing": "x", "disabled": false}, []string{"missing"}},
+		// Compute Engine answers a path with its full URL.
+		{map[string]any{"subnetworks": []any{"projects/p/regions/r/subnetworks/s"}}, nil},
+		{map[string]any{"subnetworks": []any{"https://www.googleapis.com/compute/v1/projects/p/regions/r/subnetworks/s"}}, nil},
+		{map[string]any{"subnetworks": []any{"projects/p/regions/r/subnetworks/t"}}, []string{"subnetworks"}},
+		{map[string]any{"subnetworks": []any{"regions/r/subnetworks/s"}}, []string{"subnetworks"}},
 	} {
 		if got := Diff(c.desired, actual); !reflect.DeepEqual(got, c.want) {
 			t.Errorf("Diff(%v) = %v, want %v", c.desired, got, c.want)

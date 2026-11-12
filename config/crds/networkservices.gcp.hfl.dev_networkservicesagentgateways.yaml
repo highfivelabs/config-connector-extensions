@@ -1,0 +1,286 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: networkservicesagentgateways.networkservices.gcp.hfl.dev
+spec:
+  group: networkservices.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: NetworkServicesAgentGateway
+    listKind: NetworkServicesAgentGatewayList
+    plural: networkservicesagentgateways
+    shortNames:
+    - hflnetworkservicesagentgateway
+    - hflnetworkservicesagentgateways
+    singular: networkservicesagentgateway
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: NetworkServicesAgentGateway is a networkservices.v1 resource
+          (https://networkservices.googleapis.com/v1/{parent}/locations/{location}/agentGateways/{id}),
+          from its Discovery document networkservices.v1 (hack/discokind). Terraform's
+          google_network_services_agent_gateway. A gateway that governs the traffic
+          of AI agents, MCP servers and tools.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              agentConnectivityTemplate:
+                description: 'Optional. The resource name of the AgentConnectivityTemplate.
+                  Format: projects/{project}/locations/{location}/agentConnectivityTemplates/{template}'
+                type: string
+              description:
+                description: Optional. A free-text description of the resource. Max
+                  length 1024 characters.
+                type: string
+              etag:
+                description: Optional. Etag of the resource. If this is provided,
+                  it must match the server's etag. If the provided etag does not match
+                  the server's etag, the request will fail with a 409 ABORTED error.
+                type: string
+              googleManaged:
+                description: Optional. Proxy is orchestrated and managed by GoogleCloud
+                  in a tenant project.
+                properties:
+                  governedAccessPath:
+                    description: |-
+                      Optional. Operating Mode of Agent Gateway.
+
+                      One of GOVERNED_ACCESS_PATH_UNSPECIFIED, AGENT_TO_ANYWHERE, CLIENT_TO_AGENT.
+                    type: string
+                type: object
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Set of label tags associated with the AgentGateway
+                  resource.
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/agentGateways/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              networkConfig:
+                description: Optional. Network configuration for the AgentGateway.
+                properties:
+                  dnsPeeringConfig:
+                    description: Optional. Optional DNS peering configuration for
+                      connectivity to your private VPC network.
+                    properties:
+                      domains:
+                        description: Required. Domain names for which DNS queries
+                          should be forwarded to the target network.
+                        items:
+                          type: string
+                        type: array
+                      targetNetwork:
+                        description: Required. Target network in 'target project'
+                          to which DNS queries should be forwarded to. Must be in
+                          format of `projects/{project}/global/networks/{network}`.
+                        type: string
+                      targetProject:
+                        description: Required. Target project ID to which DNS queries
+                          should be forwarded to. This can be the same project that
+                          contains the AgentGateway or a different project.
+                        type: string
+                    required:
+                    - domains
+                    - targetNetwork
+                    - targetProject
+                    type: object
+                  egress:
+                    description: Optional. Optional PSC-Interface network attachment
+                      for connectivity to your private VPCs network.
+                    properties:
+                      networkAttachment:
+                        description: Optional. The URI of the Network Attachment resource.
+                        type: string
+                    type: object
+                type: object
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              protocols:
+                description: Optional. Deprecated.
+                items:
+                  type: string
+                type: array
+              registries:
+                description: 'Optional. A list of Agent registries containing the
+                  agents, MCP servers and tools governed by the Agent Gateway. Note:
+                  Currently limited to project-scoped registries Must be of format
+                  `//agentregistry.googleapis.com/projects/{project}/locations/{location}/`'
+                items:
+                  type: string
+                type: array
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              selfManaged:
+                description: Optional. Attach to existing Application Load Balancers
+                  or Secure Web Proxies.
+                properties:
+                  resourceUri:
+                    description: Optional. A supported Google Cloud networking proxy
+                      in the Project and Location
+                    type: string
+                  resourceUris:
+                    description: Optional. List of supported Google Cloud networking
+                      proxies in the Project and Location. resource_uris is mutually
+                      exclusive with resource_uri.
+                    items:
+                      type: string
+                    type: array
+                type: object
+            required:
+            - location
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/agentGateways/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  agentGatewayCard:
+                    description: Output only. Field for populated AgentGateway card.
+                    properties:
+                      mtlsEndpoint:
+                        description: Output only. mTLS Endpoint associated with this
+                          AgentGateway
+                        type: string
+                      rootCertificates:
+                        description: Output only. Root Certificates for Agents to
+                          validate this AgentGateway
+                        items:
+                          type: string
+                        type: array
+                      serviceExtensionsServiceAccount:
+                        description: Output only. Service Account used by Service
+                          Extensions to operate.
+                        type: string
+                    type: object
+                  createTime:
+                    description: Output only. The timestamp when the resource was
+                      created.
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp when the resource was
+                      updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

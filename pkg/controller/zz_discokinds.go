@@ -21,9 +21,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	lookerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/looker/v1alpha1"
+	networkservicesv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 )
 
@@ -275,6 +278,61 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"configured", "creationTimestamp", "id", "kind", "physicalStructure", "selfLink"},
 	},
+	{
+		GVK:         computev1beta1.ComputeNetworkAttachmentGVK,
+		CRDName:     "computenetworkattachments.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/networkAttachments/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"connectionEndpoints", "creationTimestamp", "fingerprint", "id", "kind", "network", "region", "selfLink", "selfLinkWithId"},
+	},
+	{
+		GVK:         computev1alpha1.ComputeRegionInstanceTemplateGVK,
+		CRDName:     "computeregioninstancetemplates.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/instanceTemplates/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"creationTimestamp", "id", "kind", "region", "selfLink"},
+	},
+	{
+		GVK:       lookerv1alpha1.LookerInstanceGVK,
+		CRDName:   "lookerinstances.looker.gcp.hfl.dev",
+		BaseURL:   "https://looker.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/instances/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "instanceId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "egressPublicIp", "ingressPrivateIp", "ingressPublicIp", "lastDenyMaintenancePeriod", "lookerUri", "lookerVersion", "maintenanceSchedule", "name", "satisfiesPzi", "satisfiesPzs", "softDeleteReason", "state", "suspendedTime", "updateTime"},
+	},
+	{
+		GVK:       networkservicesv1alpha1.NetworkServicesAgentGatewayGVK,
+		CRDName:   "networkservicesagentgateways.networkservices.gcp.hfl.dev",
+		BaseURL:   "https://networkservices.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/agentGateways/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "agentGatewayId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"agentGatewayCard", "createTime", "updateTime"},
+	},
+	{
+		GVK:       networkservicesv1alpha1.NetworkServicesAgentConnectivityTemplateGVK,
+		CRDName:   "networkservicesagentconnectivitytemplates.networkservices.gcp.hfl.dev",
+		BaseURL:   "https://networkservices.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/agentConnectivityTemplates/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "agentConnectivityTemplateId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -282,6 +340,9 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	iamv1alpha1.AddToScheme,
 	gkehubv1alpha1.AddToScheme,
 	computev1alpha1.AddToScheme,
+	computev1beta1.AddToScheme,
+	lookerv1alpha1.AddToScheme,
+	networkservicesv1alpha1.AddToScheme,
 }
 
 func init() {
