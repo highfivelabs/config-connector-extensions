@@ -64,7 +64,7 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | security | `networksecurity.googleapis.com` | ![networksecurity.googleapis.com](docs/coverage/bars/networksecurity.googleapis.com.svg) | 73.4% | 6.7% | 19.9% | 95.8% | 91.2% |
 | 2 | application | `discoveryengine.googleapis.com` | ![discoveryengine.googleapis.com](docs/coverage/bars/discoveryengine.googleapis.com.svg) | 59.2% | 0.0% | 40.8% | 35.8% | 35.8% |
 | 2 | application | `dataplex.googleapis.com` | ![dataplex.googleapis.com](docs/coverage/bars/dataplex.googleapis.com.svg) | 84.1% | 7.5% | 8.4% | 70.1% | 70.1% |
-| 2 | application | `cloudbuild.googleapis.com` | ![cloudbuild.googleapis.com](docs/coverage/bars/cloudbuild.googleapis.com.svg) | 38.7% | 0.0% | 61.3% | 45.3% | 45.3% |
+| 2 | application | `cloudbuild.googleapis.com` | ![cloudbuild.googleapis.com](docs/coverage/bars/cloudbuild.googleapis.com.svg) | 38.7% | 0.4% | 60.9% | 45.3% | 45.3% |
 | 2 | application | `run.googleapis.com` | ![run.googleapis.com](docs/coverage/bars/run.googleapis.com.svg) | 38.1% | 3.3% | 58.6% | 71.0% | 69.6% |
 | 2 | application | `networkservices.googleapis.com` | ![networkservices.googleapis.com](docs/coverage/bars/networkservices.googleapis.com.svg) | 54.2% | 7.9% | 37.9% | 75.3% | 74.7% |
 | 2 | security | `privateca.googleapis.com` | ![privateca.googleapis.com](docs/coverage/bars/privateca.googleapis.com.svg) | 71.3% | 0.0% | 28.7% | 94.6% | 94.6% |
