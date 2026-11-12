@@ -295,3 +295,152 @@
   resource: projects.locations.spokes.gatewayAdvertisedRoutes
   parents: [project]
   note: "A route a Network Connectivity Center gateway spoke advertises."
+
+# Config Connector has these only as alpha kinds. Where it does, ours is a
+# stable (v1beta1) equivalent (docs/design.md decision 26, the
+# coordinator's direction of 2026-11-12), named as Config Connector names
+# it (decision 18). Ranked by the catalog's docs/coverage/blocked-kinds.md.
+
+- kind: CertificateManagerCertificateIssuanceConfig
+  group: certificatemanager.gcp.hfl.dev
+  version: v1beta1
+  discovery: certificatemanager.v1
+  resource: projects.locations.certificateIssuanceConfigs
+  parents: [project]
+  terraform: google_certificate_manager_certificate_issuance_config
+  note: "How Certificate Manager issues certificates from a Certificate Authority Service pool."
+
+- kind: BackupDRManagementServer
+  group: backupdr.gcp.hfl.dev
+  version: v1beta1
+  discovery: backupdr.v1
+  resource: projects.locations.managementServers
+  parents: [project]
+  terraform: google_backup_dr_management_server
+  note: "A Backup and DR management server (the management console of a backup appliance estate)."
+
+- kind: NetworkSecurityDNSThreatDetector
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.dnsThreatDetectors
+  parents: [project]
+  terraform: google_network_security_dns_threat_detector
+  note: "DNS threat detection for a project's VPC networks."
+
+- kind: GKEBackupBackupPlan
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.backupPlans
+  parents: [project]
+  terraform: google_gke_backup_backup_plan
+  note: "What Backup for GKE backs up from a cluster, and when."
+
+- kind: GKEBackupRestorePlan
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.restorePlans
+  parents: [project]
+  terraform: google_gke_backup_restore_plan
+  note: "How Backup for GKE restores a backup plan's backups into a cluster."
+
+- kind: GKEBackupBackupChannel
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.backupChannels
+  parents: [project]
+  terraform: google_gke_backup_backup_channel
+  note: "Lets a project's backup plans store backups in another project."
+
+- kind: GKEBackupRestoreChannel
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.restoreChannels
+  parents: [project]
+  terraform: google_gke_backup_restore_channel
+  note: "Lets a project's restore plans restore from another project's backups."
+
+- kind: ComputeGlobalNetworkEndpointGroup
+  group: compute.gcp.hfl.dev
+  version: v1beta1
+  discovery: compute.v1
+  resource: globalNetworkEndpointGroups
+  parents: [project]
+  terraform: google_compute_global_network_endpoint_group
+  note: "A global network endpoint group of internet endpoints (an external backend of a global load balancer)."
+
+- kind: APIGatewayAPIConfig
+  group: apigateway.gcp.hfl.dev
+  version: v1beta1
+  discovery: apigateway.v1
+  resource: projects.locations.apis.configs
+  parents: [project]
+  terraform: google_api_gateway_api_config
+  note: "An API Gateway API's configuration: its OpenAPI or gRPC definition."
+
+- kind: APIGatewayGateway
+  group: apigateway.gcp.hfl.dev
+  version: v1beta1
+  discovery: apigateway.v1
+  resource: projects.locations.gateways
+  parents: [project]
+  terraform: google_api_gateway_gateway
+  note: "A regional API Gateway serving one API config."
+
+- kind: BigLakeCatalog
+  group: biglake.gcp.hfl.dev
+  version: v1beta1
+  discovery: biglake.v1
+  resource: projects.locations.catalogs
+  parents: [project]
+  terraform: google_biglake_catalog
+  note: "A BigLake Metastore catalog."
+
+- kind: BigLakeDatabase
+  group: biglake.gcp.hfl.dev
+  version: v1beta1
+  discovery: biglake.v1
+  resource: projects.locations.catalogs.databases
+  parents: [project]
+  terraform: google_biglake_database
+  note: "A database in a BigLake Metastore catalog."
+
+- kind: CloudBuildConnection
+  group: cloudbuild.gcp.hfl.dev
+  version: v1beta1
+  discovery: cloudbuild.v2
+  resource: projects.locations.connections
+  parents: [project]
+  terraform: google_cloudbuildv2_connection
+  note: "A Cloud Build connection to a GitHub, GitLab or Bitbucket host."
+
+- kind: CloudDeployTarget
+  group: clouddeploy.gcp.hfl.dev
+  version: v1beta1
+  discovery: clouddeploy.v1
+  resource: projects.locations.targets
+  parents: [project]
+  terraform: google_clouddeploy_target
+  note: "A Cloud Deploy target: where a delivery pipeline deploys."
+
+- kind: CloudDeployDeployPolicy
+  group: clouddeploy.gcp.hfl.dev
+  version: v1beta1
+  discovery: clouddeploy.v1
+  resource: projects.locations.deployPolicies
+  parents: [project]
+  terraform: google_clouddeploy_deploy_policy
+  note: "When Cloud Deploy may not roll out (rollout restrictions)."
+
+- kind: CloudDeployAutomation
+  group: clouddeploy.gcp.hfl.dev
+  version: v1beta1
+  discovery: clouddeploy.v1
+  resource: projects.locations.deliveryPipelines.automations
+  parents: [project]
+  terraform: google_clouddeploy_automation
+  note: "Automatic promotion and advancement of a delivery pipeline's rollouts."

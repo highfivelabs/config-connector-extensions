@@ -1,0 +1,15 @@
+apiVersion: gkebackup.gcp.hfl.dev/v1beta1
+kind: GKEBackupRestorePlan
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  backupPlan: projects/${PROJECT}/locations/us-central1/backupPlans/${NAME}-plan
+  cluster: projects/${PROJECT}/locations/us-central1/clusters/${NAME}-cluster
+  restoreConfig:
+    allNamespaces: true
+    volumeDataRestorePolicy: NO_VOLUME_DATA_RESTORATION
+    namespacedResourceRestoreMode: FAIL_ON_CONFLICT
+  description: changed

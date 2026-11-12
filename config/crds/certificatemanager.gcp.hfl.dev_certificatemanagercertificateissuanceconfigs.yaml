@@ -1,0 +1,225 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: certificatemanagercertificateissuanceconfigs.certificatemanager.gcp.hfl.dev
+spec:
+  group: certificatemanager.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: CertificateManagerCertificateIssuanceConfig
+    listKind: CertificateManagerCertificateIssuanceConfigList
+    plural: certificatemanagercertificateissuanceconfigs
+    shortNames:
+    - hflcertificatemanagercertificateissuanceconfig
+    - hflcertificatemanagercertificateissuanceconfigs
+    singular: certificatemanagercertificateissuanceconfig
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: CertificateManagerCertificateIssuanceConfig is a certificatemanager.v1
+          resource (https://certificatemanager.googleapis.com/v1/{parent}/locations/{location}/certificateIssuanceConfigs/{id}),
+          from its Discovery document certificatemanager.v1 (hack/discokind). Terraform's
+          google_certificate_manager_certificate_issuance_config. How Certificate
+          Manager issues certificates from a Certificate Authority Service pool.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              certificateAuthorityConfig:
+                description: Required. The CA that issues the workload certificate.
+                  It includes the CA address, type, authentication to CA service,
+                  etc.
+                properties:
+                  certificateAuthorityServiceConfig:
+                    description: Defines a CertificateAuthorityServiceConfig.
+                    properties:
+                      caPool:
+                        description: Required. A CA pool resource used to issue a
+                          certificate. The CA pool string has a relative resource
+                          path following the form "projects/{project}/locations/{location}/caPools/{ca_pool}".
+                        type: string
+                    required:
+                    - caPool
+                    type: object
+                type: object
+              description:
+                description: Optional. One or more paragraphs of text description
+                  of a CertificateIssuanceConfig.
+                type: string
+              keyAlgorithm:
+                description: |-
+                  Required. The key algorithm to use when generating the private key.
+
+                  One of KEY_ALGORITHM_UNSPECIFIED, RSA_2048, ECDSA_P256.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Set of labels associated with a CertificateIssuanceConfig.
+                type: object
+              lifetime:
+                description: Required. Workload certificate lifetime requested.
+                type: string
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/certificateIssuanceConfigs/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              rotationWindowPercentage:
+                description: Required. Specifies the percentage of elapsed time of
+                  the certificate lifetime to wait before renewing the certificate.
+                  Must be a number between 1-99, inclusive.
+                format: int32
+                type: integer
+              tags:
+                additionalProperties:
+                  type: string
+                description: 'Optional. Input only. Immutable. Tag keys/values directly
+                  bound to this resource. For example: "123/environment": "production",
+                  "123/costCenter": "marketing"'
+                type: object
+                x-kubernetes-validations:
+                - message: tags is immutable
+                  rule: self == oldSelf
+            required:
+            - certificateAuthorityConfig
+            - keyAlgorithm
+            - lifetime
+            - location
+            - projectRef
+            - rotationWindowPercentage
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/certificateIssuanceConfigs/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The creation timestamp of a CertificateIssuanceConfig.
+                    type: string
+                  updateTime:
+                    description: Output only. The last update timestamp of a CertificateIssuanceConfig.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

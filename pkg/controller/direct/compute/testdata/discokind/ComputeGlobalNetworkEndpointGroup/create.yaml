@@ -1,0 +1,10 @@
+apiVersion: compute.gcp.hfl.dev/v1beta1
+kind: ComputeGlobalNetworkEndpointGroup
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  networkEndpointType: INTERNET_FQDN_PORT
+  defaultPort: 443
+  description: made by a config-connector-extensions test

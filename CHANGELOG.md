@@ -8,6 +8,25 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Eight more stable kinds for Config Connector alpha-only kinds**
+  (decision 26), generated from Discovery:
+  `apigateway.gcp.hfl.dev/v1beta1` `APIGatewayAPIConfig` and
+  `APIGatewayGateway`, `biglake.gcp.hfl.dev/v1beta1` `BigLakeCatalog` and
+  `BigLakeDatabase`, `cloudbuild.gcp.hfl.dev/v1beta1`
+  `CloudBuildConnection`, and `clouddeploy.gcp.hfl.dev/v1beta1`
+  `CloudDeployTarget`, `CloudDeployDeployPolicy` and
+  `CloudDeployAutomation`. The operator's role gains their four groups.
+- **Eight stable kinds for Config Connector alpha-only kinds**
+  (`docs/design.md` decision 26), generated from Discovery:
+  `certificatemanager.gcp.hfl.dev/v1beta1`
+  `CertificateManagerCertificateIssuanceConfig`,
+  `backupdr.gcp.hfl.dev/v1beta1` `BackupDRManagementServer`,
+  `networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityDNSThreatDetector`,
+  `gkebackup.gcp.hfl.dev/v1beta1` `GKEBackupBackupPlan`,
+  `GKEBackupRestorePlan`, `GKEBackupBackupChannel` and
+  `GKEBackupRestoreChannel`, and `compute.gcp.hfl.dev/v1beta1`
+  `ComputeGlobalNetworkEndpointGroup`. The operator's role gains the
+  `certificatemanager`, `backupdr` and `gkebackup` groups.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeNetworkEndpoint`**, a stable
   copy of Config Connector's alpha zonal network endpoint (decision 26),
   with upstream's fields: `networkEndpointGroupRef`, `zone`,
@@ -44,6 +63,14 @@ has been released yet; each release moves its entries out of
   `hfl.dev/slot-takeover: <slot>` may claim that slot's resources, which
   is how a resource moves between two installs. Without a slot nothing
   changes. `AddToManager` takes a new `controller.Options` argument.
+
+### Fixed
+
+- **A generated kind whose create takes a `requestId` beside its ID**
+  (`NetworkConnectivityPscAuthorizationPolicy`, `BackupDRManagementServer`)
+  sent its ID as the `requestId`: `hack/discokind` picked any query
+  parameter ending in `Id`, in map order. It now skips `requestId` and
+  refuses two candidates.
 
 ### Changed
 

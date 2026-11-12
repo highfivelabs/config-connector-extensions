@@ -1,0 +1,1 @@
+the Cloud Deploy API is not on in the live-test project and the live-test account has no Cloud Deploy role (an automation also needs its pipeline and a service account to act as); live: pending both

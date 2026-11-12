@@ -2,9 +2,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- apigateway.gcp.hfl.dev_apigatewayapiconfigs.yaml
+- apigateway.gcp.hfl.dev_apigatewaygateways.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
+- backupdr.gcp.hfl.dev_backupdrmanagementservers.yaml
+- biglake.gcp.hfl.dev_biglakecatalogs.yaml
+- biglake.gcp.hfl.dev_biglakedatabases.yaml
+- certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
+- cloudbuild.gcp.hfl.dev_cloudbuildconnections.yaml
+- clouddeploy.gcp.hfl.dev_clouddeployautomations.yaml
+- clouddeploy.gcp.hfl.dev_clouddeploydeploypolicies.yaml
+- clouddeploy.gcp.hfl.dev_clouddeploytargets.yaml
 - compute.gcp.hfl.dev_computecrosssitenetworks.yaml
+- compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
@@ -37,6 +48,10 @@ resources:
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicies.yaml
+- gkebackup.gcp.hfl.dev_gkebackupbackupchannels.yaml
+- gkebackup.gcp.hfl.dev_gkebackupbackupplans.yaml
+- gkebackup.gcp.hfl.dev_gkebackuprestorechannels.yaml
+- gkebackup.gcp.hfl.dev_gkebackuprestoreplans.yaml
 - gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
 - gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
 - iam.gcp.hfl.dev_iambindings.yaml
@@ -58,6 +73,7 @@ resources:
 - networkconnectivity.gcp.hfl.dev_networkconnectivitypscauthorizationpolicies.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
+- networksecurity.gcp.hfl.dev_networksecuritydnsthreatdetectors.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofilegroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofiles.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentconnectivitytemplates.yaml

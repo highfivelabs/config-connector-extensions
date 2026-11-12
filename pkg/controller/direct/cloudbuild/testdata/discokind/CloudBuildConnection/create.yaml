@@ -1,0 +1,13 @@
+apiVersion: cloudbuild.gcp.hfl.dev/v1beta1
+kind: CloudBuildConnection
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  githubConfig:
+    appInstallationId: 123
+    authorizerCredential:
+      oauthTokenSecretVersion: projects/${PROJECT}/secrets/${NAME}-token/versions/1
+  disabled: false

@@ -1,0 +1,13 @@
+apiVersion: backupdr.gcp.hfl.dev/v1beta1
+kind: BackupDRManagementServer
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  type: BACKUP_RESTORE
+  networks:
+  - network: projects/${PROJECT}/global/networks/${NAME}-net
+    peeringMode: PRIVATE_SERVICE_ACCESS
+  description: changed, which the API cannot do

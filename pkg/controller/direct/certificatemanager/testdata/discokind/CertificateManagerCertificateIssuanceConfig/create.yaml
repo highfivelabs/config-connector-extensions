@@ -1,0 +1,15 @@
+apiVersion: certificatemanager.gcp.hfl.dev/v1beta1
+kind: CertificateManagerCertificateIssuanceConfig
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  certificateAuthorityConfig:
+    certificateAuthorityServiceConfig:
+      caPool: projects/${PROJECT}/locations/us-central1/caPools/${NAME}-pool
+  keyAlgorithm: ECDSA_P256
+  lifetime: 1814400s
+  rotationWindowPercentage: 34
+  description: made by a config-connector-extensions test

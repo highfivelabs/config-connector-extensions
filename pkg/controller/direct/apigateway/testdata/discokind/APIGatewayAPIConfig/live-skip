@@ -1,0 +1,1 @@
+an API config needs its API (and a gateway its config), which this test does not make, and the API Gateway API is not on in the live-test project; live: pending both
