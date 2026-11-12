@@ -1612,12 +1612,13 @@ Notes on what was built from this table:
   It shares everything else with `IAMBinding` (`pkg/iampolicy`,
   `policy_common.go`), and the resource table grew by the rows
   `IAMPolicyMember` cannot reference, which both kinds accept (marked
-  `NotInIAMPolicyMember` in `registry_more.go`: 30 rows, and the regional
+  `NotInIAMPolicyMember` in `registry_more.go`: 31 rows, and the regional
   `SecretManagerSecret` that was already there; the catalog counts 32 by
   its own grouping, and a type missing is a row to add): `StorageManagedFolder`
   (Cloud Storage's own paths with the folder's name escaped whole and
   ending in a slash), `LoggingLogView`, `RunWorkerPool`, `PrivateCACAPool`,
   `CloudDeployDeliveryPipeline`, `CloudDeployTarget`, `DataformRepository`,
+  `CloudFunctions2Function` (2026-11-12, Cloud Functions' v2 API),
   `DataplexLake`, `DataplexZone`, `DataplexDataScan`, `DataplexAspectType`,
   `WorkstationConfig`, `Workstation`, `BigQueryAnalyticsHubDataExchange`,
   `BigQueryAnalyticsHubListing`, `APIGatewayAPI`, `APIGatewayAPIConfig`,
