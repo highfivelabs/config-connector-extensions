@@ -14,7 +14,7 @@ spec:
       autoDelete: true
       initializeParams:
         sourceImage: projects/debian-cloud/global/images/family/debian-12
-        diskSizeGb: "10"
+        diskSizeGb: 10
     networkInterfaces:
     - network: projects/${PROJECT}/global/networks/${NAME}-net
       subnetwork: projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}-subnet
