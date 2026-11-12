@@ -505,6 +505,21 @@ while read -r name made; do
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
 
+# Disks (the resource policy attachment test makes them), by name, before
+# the resource policies they hold; then the resource policies.
+rows="$("${G[@]}" compute disks list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,zone.basename())')"
+while read -r name zone; do
+  [[ -n "${name}" ]] || continue
+  act "disk" "${name} ${zone}" "${G[@]}" compute disks delete "${name}" --zone="${zone}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute resource-policies list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "resource policy" "${name} ${region}" "${G[@]}" compute resource-policies delete "${name}" --region="${region}"
+done <<<"${rows}"
+
 # Subnets (a live test's Setup makes them for the network attachments and
 # instance templates it tests), by name, before their networks.
 rows="$("${G[@]}" compute networks subnets list --verbosity=error \

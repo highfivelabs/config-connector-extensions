@@ -402,6 +402,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computenetworkendpoint_identity.go, apis/compute/v1alpha1/computenetworkendpoint_identity_test.go, apis/compute/v1alpha1/computenetworkendpoint_reference.go]}
   - here: [pkg/controller/direct/compute/networkendpoint_controller.go, pkg/controller/direct/compute/networkendpoint_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkendpoint_controller.go, pkg/controller/direct/compute/computenetworkendpoint_mapper.go]}
+  - here: [apis/compute/v1beta1/computediskresourcepolicyattachment_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_types.go]}
+  - here: [apis/compute/v1beta1/computediskresourcepolicyattachment_identity.go, apis/compute/v1beta1/computediskresourcepolicyattachment_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_identity.go, apis/compute/v1alpha1/computediskresourcepolicyattachment_identity_test.go]}
+  - here: [pkg/controller/direct/compute/diskresourcepolicyattachment_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computediskresourcepolicyattachment_controller.go]}
   - here: [apis/compute/v1beta1/computeorganizationsecuritypolicyrule_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeorganizationsecuritypolicyrule_types.go]}
   - here: [apis/compute/v1beta1/computevpntunnel_types.go]

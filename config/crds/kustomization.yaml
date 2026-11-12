@@ -16,6 +16,7 @@ resources:
 - clouddeploy.gcp.hfl.dev_clouddeploytargets.yaml
 - cloudfunctions2.gcp.hfl.dev_cloudfunctions2functions.yaml
 - compute.gcp.hfl.dev_computecrosssitenetworks.yaml
+- compute.gcp.hfl.dev_computediskresourcepolicyattachments.yaml
 - compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
