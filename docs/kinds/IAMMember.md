@@ -15,6 +15,24 @@ apiVersion: iam.gcp.hfl.dev/v1alpha1
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
+BigQuery datasets (2026-11-12, for the catalog's
+`google_bigquery_dataset_iam_member` and `_iam_binding`, which five of
+its modules use; Config Connector has only the alpha
+`BigQueryDatasetAccess`). A dataset has no `getIamPolicy` or
+`setIamPolicy` (the pinned Discovery document has none), so
+`pkg/iampolicy` reads and patches its access list as a policy
+(`bigquery.go`, after Terraform's `google_bigquery_dataset_iam_*`, read
+not copied): the legacy roles `READER`, `WRITER` and `OWNER` are
+`roles/bigquery.dataViewer`, `dataEditor` and `dataOwner`; `userByEmail`
+is `user:` or, for a service account's address, `serviceAccount:`;
+authorized views, routines and datasets and the project special groups
+are kept as they are. A write rereads the dataset, refuses on a changed
+etag (the read-modify-write then repeats) and patches with `If-Match`.
+`resourceRef.kind: BigQueryDataset`, by name (Config Connector's
+`BigQueryDataset`) or `external: projects/P/datasets/D`. Proven on the
+fake (`TestIAMMember`, "a BigQuery dataset"); live pending BigQuery for
+the live-test account (`E2E_BIGQUERY_ADMIN=true`, `docs/live-runs.md`).
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

@@ -15,6 +15,8 @@ apiVersion: iam.gcp.hfl.dev/v1beta1
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
+BigQuery datasets: see `IAMMember.md` (the same `pkg/iampolicy` row, 2026-11-12).
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

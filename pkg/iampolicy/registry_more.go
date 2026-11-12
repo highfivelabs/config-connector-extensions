@@ -166,6 +166,17 @@ func moreTypes() []*ResourceType {
 		mixin("IAPWebCloudRunService", "iap.googleapis.com", "v1", true,
 			`projects/[^/]+/iap_web/cloud_run-[^/]+/services/[^/]+`, nil, nil),
 
+		// A BigQuery dataset, whose policy is its access list (bigquery.go).
+		{
+			Kind: "BigQueryDataset", NotInIAMPolicyMember: true,
+			GVKs:     []schema.GroupVersionKind{cnrm("bigquery", "v1beta1", "BigQueryDataset")},
+			Protocol: BigQuery, Host: "bigquery.googleapis.com", Version: "v2",
+			Name: re(`projects/[^/]+/datasets/[A-Za-z0-9_]+`),
+			FromObject: func(o ObjectParts) (string, error) {
+				return "projects/" + o.Project + "/datasets/" + o.ID, nil
+			},
+		},
+
 		// Compute Engine, whose policy is read and set with its own verbs.
 		{
 			Kind: "ComputeBackendService", NotInIAMPolicyMember: true,
