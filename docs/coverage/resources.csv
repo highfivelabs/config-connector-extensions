@@ -259,7 +259,7 @@ cloudbilling.googleapis.com,cloudbilling.googleapis.com/TaskPushNotificationConf
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/BitbucketServerConfig,11,,0,,0,11,false,api=v1:projects.locations.bitbucketServerConfigs
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/Build,108,,0,,0,108,false,api=v1:projects.builds
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,30,CloudBuildConnection,30,CloudBuildConnection,0,0,false,api=v2:projects.locations.connections; official-spec-fields-unmatched=3/32; ours-spec-fields-unmatched=4/33
-cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,3,,0,,0,3,false,api=v2:projects.locations.connections.repositories
+cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,3,,0,CloudBuildRepository,3,0,false,api=v2:projects.locations.connections.repositories; ours-spec-fields-unmatched=5/7
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/GithubEnterpriseConfig,15,,0,,0,15,false,api=v1:projects.githubEnterpriseConfigs
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/LocationBuild,108,,0,,0,108,false,api=v1:projects.locations.builds
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/LocationGithubEnterpriseConfig,15,,0,,0,15,false,api=v1:projects.locations.githubEnterpriseConfigs

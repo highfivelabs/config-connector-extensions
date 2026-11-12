@@ -40,7 +40,7 @@ ces.googleapis.com,8,2,0,611,137,0,474,22.4,0.0,77.6
 chronicle.googleapis.com,10,7,0,474,74,0,400,15.6,0.0,84.4
 cloudasset.googleapis.com,2,2,0,26,26,0,0,100.0,0.0,0.0
 cloudbilling.googleapis.com,4,1,0,15,2,0,13,13.3,0.0,86.7
-cloudbuild.googleapis.com,10,4,0,667,258,0,409,38.7,0.0,61.3
+cloudbuild.googleapis.com,10,4,1,667,258,3,406,38.7,0.4,60.9
 cloudchannel.googleapis.com,6,4,0,85,45,0,40,52.9,0.0,47.1
 cloudcontrolspartner.googleapis.com,1,1,0,2,2,0,0,100.0,0.0,0.0
 clouddeploy.googleapis.com,7,5,0,240,136,6,98,56.7,2.5,40.8
