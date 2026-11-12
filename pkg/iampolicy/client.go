@@ -176,6 +176,12 @@ func (c *Client) Modify(ctx context.Context, t *ResourceType, name string, chang
 	if attempts <= 0 {
 		attempts = 5
 	}
+	if t.Protocol == BigQuery {
+		// A dataset's access list is read and patched whole; within this
+		// process the writes to one dataset go one at a time (bigquery.go).
+		unlock := lockDataset(name)
+		defer unlock()
+	}
 	for i := 1; ; i++ {
 		p, err := c.Get(ctx, t, name)
 		if err != nil {

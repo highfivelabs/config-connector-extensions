@@ -62,6 +62,11 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **Two `IAMMember` or `IAMBinding` objects on one BigQuery dataset could
+  lose a member**: the access list is read, checked and patched in three
+  calls, and two writers in one manager could both pass the check. Writes
+  to one dataset now go one at a time within a manager; the API's
+  `If-Match` still guards against other writers.
 - **A generated kind whose create takes a `requestId` beside its ID**
   (`NetworkConnectivityPscAuthorizationPolicy`, `BackupDRManagementServer`)
   sent its ID as the `requestId`: `hack/discokind` picked any query
