@@ -26,7 +26,9 @@ import (
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	lookerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/looker/v1alpha1"
+	networkconnectivityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkconnectivity/v1alpha1"
 	networkservicesv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1alpha1"
+	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 )
 
@@ -333,6 +335,61 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
 	},
+	{
+		GVK:       resourcemanagerv1alpha1.ResourceManagerCapabilityConfigGVK,
+		CRDName:   "resourcemanagercapabilityconfigs.resourcemanager.gcp.hfl.dev",
+		BaseURL:   "https://cloudresourcemanager.googleapis.com/v3/",
+		Name:      "{parent}/capabilityConfigs/{id}",
+		Parents:   []string{"folder", "organization", "project"},
+		IDParam:   "capabilityConfigId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "state", "updateTime"},
+	},
+	{
+		GVK:       resourcemanagerv1alpha1.ResourceManagerBoundaryGVK,
+		CRDName:   "resourcemanagerboundaries.resourcemanager.gcp.hfl.dev",
+		BaseURL:   "https://cloudresourcemanager.googleapis.com/v3/",
+		Name:      "{parent}/boundaries/{id}",
+		Parents:   []string{"folder", "organization"},
+		IDParam:   "boundaryId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "managementProject", "state", "updateTime"},
+	},
+	{
+		GVK:       networkconnectivityv1alpha1.NetworkConnectivityPscAuthorizationPolicyGVK,
+		CRDName:   "networkconnectivitypscauthorizationpolicies.networkconnectivity.gcp.hfl.dev",
+		BaseURL:   "https://networkconnectivity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/pscAuthorizationPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "requestId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"createTime", "etag", "uid", "updateTime"},
+	},
+	{
+		GVK:       networkconnectivityv1alpha1.NetworkConnectivityAutomatedDnsRecordGVK,
+		CRDName:   "networkconnectivityautomateddnsrecords.networkconnectivity.gcp.hfl.dev",
+		BaseURL:   "https://networkconnectivity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/automatedDnsRecords/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "requestId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"createTime", "currentConfig", "dnsZone", "fqdn", "state", "stateDetails", "updateTime"},
+	},
+	{
+		GVK:       networkconnectivityv1alpha1.NetworkConnectivitySpokeGatewayAdvertisedRouteGVK,
+		CRDName:   "networkconnectivityspokegatewayadvertisedroutes.networkconnectivity.gcp.hfl.dev",
+		BaseURL:   "https://networkconnectivity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/spokes/{spoke}/gatewayAdvertisedRoutes/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "requestId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "state", "uniqueId", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -343,6 +400,8 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	computev1beta1.AddToScheme,
 	lookerv1alpha1.AddToScheme,
 	networkservicesv1alpha1.AddToScheme,
+	resourcemanagerv1alpha1.AddToScheme,
+	networkconnectivityv1alpha1.AddToScheme,
 }
 
 func init() {

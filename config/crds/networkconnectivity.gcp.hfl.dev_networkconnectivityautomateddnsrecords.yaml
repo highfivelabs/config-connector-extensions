@@ -1,0 +1,337 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: networkconnectivityautomateddnsrecords.networkconnectivity.gcp.hfl.dev
+spec:
+  group: networkconnectivity.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: NetworkConnectivityAutomatedDnsRecord
+    listKind: NetworkConnectivityAutomatedDnsRecordList
+    plural: networkconnectivityautomateddnsrecords
+    shortNames:
+    - hflnetworkconnectivityautomateddnsrecord
+    - hflnetworkconnectivityautomateddnsrecords
+    singular: networkconnectivityautomateddnsrecord
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: NetworkConnectivityAutomatedDnsRecord is a networkconnectivity.v1
+          resource (https://networkconnectivity.googleapis.com/v1/{parent}/locations/{location}/automatedDnsRecords/{id}),
+          from its Discovery document networkconnectivity.v1 (hack/discokind). A DNS
+          record Private Service Connect keeps for a consumer network.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              consumerNetwork:
+                description: 'Required. Immutable. The full resource path of the consumer
+                  network this AutomatedDnsRecord is visible to. Example: "projects/{projectNumOrId}/global/networks/{networkName}".'
+                type: string
+                x-kubernetes-validations:
+                - message: consumerNetwork is immutable
+                  rule: self == oldSelf
+              creationMode:
+                description: |-
+                  Required. Immutable. The creation mode of the AutomatedDnsRecord. This
+                  field is immutable.
+
+                  One of CREATION_MODE_UNSPECIFIED, CONSUMER_API, SERVICE_CONNECTION_MAP.
+                type: string
+                x-kubernetes-validations:
+                - message: creationMode is immutable
+                  rule: self == oldSelf
+              description:
+                description: A human-readable description of the record.
+                type: string
+                x-kubernetes-validations:
+                - message: description is immutable
+                  rule: self == oldSelf
+              dnsSuffix:
+                description: 'Required. Immutable. The dns suffix for this record
+                  to use in longest-suffix matching. Requires a trailing dot. Example:
+                  "example.com."'
+                type: string
+                x-kubernetes-validations:
+                - message: dnsSuffix is immutable
+                  rule: self == oldSelf
+              etag:
+                description: Optional. The etag is computed by the server, and may
+                  be sent on update and delete requests to ensure the client has an
+                  up-to-date value before proceeding.
+                type: string
+                x-kubernetes-validations:
+                - message: etag is immutable
+                  rule: self == oldSelf
+              hostname:
+                description: Required. Immutable. The hostname for the DNS record.
+                  This value will be prepended to the `dns_suffix` to create the full
+                  domain name (FQDN) for the record. For example, if `hostname` is
+                  "corp.db" and `dns_suffix` is "example.com.", the resulting record
+                  will be "corp.db.example.com.". Should not include a trailing dot.
+                type: string
+                x-kubernetes-validations:
+                - message: hostname is immutable
+                  rule: self == oldSelf
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. User-defined labels.
+                type: object
+                x-kubernetes-validations:
+                - message: labels is immutable
+                  rule: self == oldSelf
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/automatedDnsRecords/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              originalConfig:
+                description: Required. Immutable. The configuration settings used
+                  to create this DNS record. These settings define the desired state
+                  of the record as specified by the producer.
+                properties:
+                  rrdatas:
+                    description: 'Required. The list of resource record data strings.
+                      The content and format of these strings depend on the AutomatedDnsRecord.type.
+                      For many common record types, this list may contain multiple
+                      strings. As defined in RFC 1035 (section 5) and RFC 1034 (section
+                      3.6.1) -- see examples. Examples: A record: ["192.0.2.1"] or
+                      ["192.0.2.1", "192.0.2.2"] TXT record: ["This is a text record"]
+                      CNAME record: ["target.example.com."] AAAA record: ["::1"] or
+                      ["2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"]'
+                    items:
+                      type: string
+                    type: array
+                  ttl:
+                    description: Required. Number of seconds that this DNS record
+                      can be cached by resolvers.
+                    type: string
+                required:
+                - rrdatas
+                - ttl
+                type: object
+                x-kubernetes-validations:
+                - message: originalConfig is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              recordType:
+                description: |-
+                  Required. Immutable. The identifier of a supported record type.
+
+                  One of RECORD_TYPE_UNSPECIFIED, A, AAAA, TXT, CNAME.
+                type: string
+                x-kubernetes-validations:
+                - message: recordType is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              serviceClass:
+                description: Required. Immutable. The service class identifier which
+                  authorizes this AutomatedDnsRecord. Any API calls targeting this
+                  AutomatedDnsRecord must have `networkconnectivity.serviceClasses.use`
+                  IAM permission for the provided service class.
+                type: string
+                x-kubernetes-validations:
+                - message: serviceClass is immutable
+                  rule: self == oldSelf
+            required:
+            - consumerNetwork
+            - creationMode
+            - dnsSuffix
+            - hostname
+            - location
+            - originalConfig
+            - projectRef
+            - recordType
+            - serviceClass
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/automatedDnsRecords/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The timestamp of when the record was
+                      created.
+                    type: string
+                  currentConfig:
+                    description: 'Output only. The current settings for this record
+                      as identified by (`hostname`, `dns_suffix`, `type`) in Cloud
+                      DNS. The `current_config` field reflects the actual settings
+                      of the DNS record in Cloud DNS based on the `hostname`, `dns_suffix`,
+                      and `type`. * **Absence:** If `current_config` is unset, it
+                      means a DNS record with the specified `hostname`, `dns_suffix`,
+                      and `type` does not currently exist in Cloud DNS. This could
+                      be because the `AutomatedDnsRecord` has never been successfully
+                      programmed, has been deleted, or there was an error during provisioning.
+                      * **Presence:** If `current_config` is present: * It can be
+                      different from the `original_config`. This can happen due to
+                      several reasons: * Out-of-band changes: A consumer might have
+                      directly modified the DNS record in Cloud DNS. * `OVERWRITE`
+                      operations from other `AutomatedDnsRecord` resources: Another
+                      `AutomatedDnsRecord` with the same identifying attributes (`hostname`,
+                      `dns_suffix`, `type`) but a different configuration might have
+                      overwritten the record using `insert_mode: OVERWRITE`. Therefore,
+                      the presence of `current_config` indicates that a corresponding
+                      DNS record exists, but its values (TTL and RRData) might not
+                      always align with the `original_config` of the AutomatedDnsRecord.'
+                    properties:
+                      rrdatas:
+                        description: 'Required. The list of resource record data strings.
+                          The content and format of these strings depend on the AutomatedDnsRecord.type.
+                          For many common record types, this list may contain multiple
+                          strings. As defined in RFC 1035 (section 5) and RFC 1034
+                          (section 3.6.1) -- see examples. Examples: A record: ["192.0.2.1"]
+                          or ["192.0.2.1", "192.0.2.2"] TXT record: ["This is a text
+                          record"] CNAME record: ["target.example.com."] AAAA record:
+                          ["::1"] or ["2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"]'
+                        items:
+                          type: string
+                        type: array
+                      ttl:
+                        description: Required. Number of seconds that this DNS record
+                          can be cached by resolvers.
+                        type: string
+                    type: object
+                  dnsZone:
+                    description: 'Output only. DnsZone is the DNS zone managed by
+                      automation. Format: projects/{project}/managedZones/{managedZone}'
+                    type: string
+                  fqdn:
+                    description: Output only. The FQDN created by combining the hostname
+                      and dns suffix. Should include a trailing dot.
+                    type: string
+                  state:
+                    description: Output only. The current operational state of this
+                      AutomatedDnsRecord as managed by Service Connectivity Automation.
+                    type: string
+                  stateDetails:
+                    description: Output only. A human-readable message providing more
+                      context about the current state, such as an error description
+                      if the state is `FAILED_DEPROGRAMMING`.
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp of when the record was
+                      updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

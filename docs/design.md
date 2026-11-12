@@ -186,6 +186,16 @@ answers a resource path a request sent (`projects/P/regions/R/subnetworks/S`)
 with its full URL, so the controller's comparison takes the two as one
 (`sameComputeURL`); without it a network attachment's `subnetworks` would
 differ on every resync.
+Then five foundation (tier 1)
+gaps of the same shape (2026-11-12): Resource
+Manager's `ResourceManagerCapabilityConfig` (an organization, folder or
+project) and `ResourceManagerBoundary` (an organization or folder), and
+Network Connectivity's `NetworkConnectivityPscAuthorizationPolicy`,
+`NetworkConnectivityAutomatedDnsRecord` and
+`NetworkConnectivitySpokeGatewayAdvertisedRoute`; all five are proven on
+the fake and skip live (organization access, or a role and paid
+prerequisites the live-test project lacks; each fixture's `live-skip`
+says which).
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -287,7 +297,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds and the two `NetworkServicesAgent*` kinds. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route). These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the

@@ -252,3 +252,46 @@
   parents: [project]
   terraform: google_network_services_agent_connectivity_template
   note: "The network access an agent gateway provides."
+# Foundation (tier 1) gaps with this shape, 2026-11-12: Resource Manager's
+# capability configs and boundaries, and Network Connectivity's PSC
+# authorization policies, automated DNS records and spoke gateway routes.
+
+- kind: ResourceManagerCapabilityConfig
+  group: resourcemanager.gcp.hfl.dev
+  version: v1alpha1
+  discovery: cloudresourcemanager.v3
+  resource: folders.capabilityConfigs
+  parents: [folder, organization, project]
+  note: "Which capabilities (such as app management) a folder, organization or project has, and their boundaries."
+
+- kind: ResourceManagerBoundary
+  group: resourcemanager.gcp.hfl.dev
+  version: v1alpha1
+  discovery: cloudresourcemanager.v3
+  resource: folders.boundaries
+  parents: [folder, organization]
+  note: "The descendant projects of a folder or organization a capability config applies to."
+
+- kind: NetworkConnectivityPscAuthorizationPolicy
+  group: networkconnectivity.gcp.hfl.dev
+  version: v1alpha1
+  discovery: networkconnectivity.v1
+  resource: projects.locations.pscAuthorizationPolicies
+  parents: [project]
+  note: "Which consumers may connect to a Private Service Connect target."
+
+- kind: NetworkConnectivityAutomatedDnsRecord
+  group: networkconnectivity.gcp.hfl.dev
+  version: v1alpha1
+  discovery: networkconnectivity.v1
+  resource: projects.locations.automatedDnsRecords
+  parents: [project]
+  note: "A DNS record Private Service Connect keeps for a consumer network."
+
+- kind: NetworkConnectivitySpokeGatewayAdvertisedRoute
+  group: networkconnectivity.gcp.hfl.dev
+  version: v1alpha1
+  discovery: networkconnectivity.v1
+  resource: projects.locations.spokes.gatewayAdvertisedRoutes
+  parents: [project]
+  note: "A route a Network Connectivity Center gateway spoke advertises."

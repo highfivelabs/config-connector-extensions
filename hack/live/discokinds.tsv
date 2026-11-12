@@ -22,5 +22,8 @@ GKEHubRolloutSequence	https://gkehub.googleapis.com/v1/	projects/{project}/locat
 IAMOauthClient	https://iam.googleapis.com/v1/	projects/{project}/locations/global/oauthClients	oauthClients	state=DELETED
 LoggingSavedQuery	https://logging.googleapis.com/v2/	projects/{project}/locations/global/savedQueries	savedQueries	-
 LookerInstance	https://looker.googleapis.com/v1/	projects/{project}/locations/global/instances	instances	-
+NetworkConnectivityAutomatedDnsRecord	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/automatedDnsRecords	automatedDnsRecords	-
+NetworkConnectivityPscAuthorizationPolicy	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/pscAuthorizationPolicies	pscAuthorizationPolicies	-
 NetworkServicesAgentConnectivityTemplate	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentConnectivityTemplates	agentConnectivityTemplates	-
 NetworkServicesAgentGateway	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentGateways	agentGateways	-
+ResourceManagerCapabilityConfig	https://cloudresourcemanager.googleapis.com/v3/	projects/{project}/capabilityConfigs	capabilityConfigs	-

@@ -1,0 +1,8 @@
+apiVersion: resourcemanager.gcp.hfl.dev/v1alpha1
+kind: ResourceManagerBoundary
+metadata:
+  name: ${NAME}
+spec:
+  organizationRef:
+    external: organizations/${ORGANIZATION}
+  displayName: cce test boundary

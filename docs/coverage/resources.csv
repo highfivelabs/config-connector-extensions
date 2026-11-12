@@ -306,8 +306,8 @@ cloudnumberregistry.googleapis.com,cloudnumberregistry.googleapis.com/Realm,6,,0
 cloudnumberregistry.googleapis.com,cloudnumberregistry.googleapis.com/RegistryBook,3,CloudNumberRegistryRegistryBook,3,,0,0,false,api=v1alpha:projects.locations.registryBooks; official-spec-fields-unmatched=3/5
 cloudprofiler.googleapis.com,cloudprofiler.googleapis.com/Profile,4,,0,,0,4,false,api=v2:projects.profiles; request-wrapper=CreateProfileRequest
 cloudquotas.googleapis.com,cloudquotas.googleapis.com/QuotaPreference,9,,0,,0,9,false,api=v1:google.api.cloudquotas.v1.CloudQuotas.CreateQuotaPreference
-cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Boundary,4,,0,,0,4,false,api=v3:folders.boundaries
-cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/CapabilityConfig,5,,0,,0,5,false,api=v3:folders.capabilityConfigs
+cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Boundary,4,,0,ResourceManagerBoundary,4,0,false,api=v3:folders.boundaries; ours-spec-fields-unmatched=4/7
+cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/CapabilityConfig,5,,0,ResourceManagerCapabilityConfig,5,0,false,api=v3:folders.capabilityConfigs; ours-spec-fields-unmatched=5/9
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Folder,4,Folder,3,,0,1,false,api=v3:folders; official-spec-fields-unmatched=2/4
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Lien,6,ResourceManagerLien,5,,0,1,false,api=v3:liens; official-spec-fields-unmatched=1/5
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Project,5,Project,2,,0,3,false,api=v3:projects; official-spec-fields-unmatched=4/5
@@ -316,9 +316,9 @@ cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagBindi
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagKey,7,TagsTagKey,6,,0,1,false,api=v3:tagKeys; official-spec-fields-unmatched=1/6
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagValue,4,TagsTagValue,4,,0,0,false,api=v3:tagValues; official-spec-fields-unmatched=1/4
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/TagValueTagHold,3,,0,,0,3,false,api=v3:tagValues.tagHolds
-cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/organizations.boundaries,4,,0,,0,4,false,api=v3:organizations.boundaries
-cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/organizations.capabilityConfigs,5,,0,,0,5,false,api=v3:organizations.capabilityConfigs
-cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/projects.capabilityConfigs,5,,0,,0,5,false,api=v3:projects.capabilityConfigs
+cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/organizations.boundaries,4,,0,ResourceManagerBoundary,4,0,false,api=v3:organizations.boundaries; ours-spec-fields-unmatched=4/7
+cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/organizations.capabilityConfigs,5,,0,ResourceManagerCapabilityConfig,5,0,false,api=v3:organizations.capabilityConfigs; ours-spec-fields-unmatched=5/9
+cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/projects.capabilityConfigs,5,,0,ResourceManagerCapabilityConfig,5,0,false,api=v3:projects.capabilityConfigs; ours-spec-fields-unmatched=5/9
 cloudscheduler.googleapis.com,cloudscheduler.googleapis.com/Job,28,CloudSchedulerJob,28,,0,0,false,api=v1:projects.locations.jobs; official-spec-fields-unmatched=2/29
 cloudsecuritycompliance.googleapis.com,cloudsecuritycompliance.googleapis.com/CloudControl,36,CloudSecurityComplianceCloudControl,36,,0,0,false,api=v1:google.cloud.cloudsecuritycompliance.v1.Config.CreateCloudControl; recursive-cut=3; official-spec-fields-unmatched=24/59
 cloudsecuritycompliance.googleapis.com,cloudsecuritycompliance.googleapis.com/Framework,12,CloudSecurityComplianceFramework,11,,0,1,false,api=v1:google.cloud.cloudsecuritycompliance.v1.Config.CreateFramework; recursive-cut=1; official-spec-fields-unmatched=13/19
@@ -935,19 +935,19 @@ netapp.googleapis.com,netapp.googleapis.com/Volume,79,,0,,0,79,false,api=v1:proj
 netapp.googleapis.com,netapp.googleapis.com/VolumeQuotaRule,6,NetappQuotaRule,6,,0,0,false,api=v1:projects.locations.volumes.quotaRules; official-spec-fields-unmatched=3/8
 netapp.googleapis.com,netapp.googleapis.com/VolumeReplication,12,NetappReplication,12,,0,0,false,api=v1:projects.locations.volumes.replications; official-spec-fields-unmatched=3/14
 netapp.googleapis.com,netapp.googleapis.com/VolumeSnapshot,3,,0,,0,3,false,api=v1:projects.locations.volumes.snapshots
-networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/AutomatedDnsRecord,11,,0,,0,11,false,api=v1:projects.locations.automatedDnsRecords
+networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/AutomatedDnsRecord,11,,0,NetworkConnectivityAutomatedDnsRecord,11,0,false,api=v1:projects.locations.automatedDnsRecords; ours-spec-fields-unmatched=4/14
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/Hub,8,NetworkConnectivityHub,2,,0,6,false,api=v1:projects.locations.global.hubs; official-spec-fields-unmatched=2/3
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/InternalRange,17,NetworkConnectivityInternalRange,14,,0,3,false,api=v1:projects.locations.internalRanges; official-spec-fields-unmatched=3/16
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/MulticloudDataTransferConfig,3,NetworkConnectivityMulticloudDataTransferConfig,3,,0,0,false,api=v1:projects.locations.multicloudDataTransferConfigs; official-spec-fields-unmatched=3/5
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/MulticloudDataTransferConfigDestination,6,NetworkConnectivityDestination,5,,0,1,false,api=v1:projects.locations.multicloudDataTransferConfigs.destinations; official-spec-fields-unmatched=2/6
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/PolicyBasedRoute,13,NetworkConnectivityPolicyBasedRoute,13,,0,0,false,api=v1:projects.locations.global.policyBasedRoutes; official-spec-fields-unmatched=2/14
-networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/PscAuthorizationPolicy,6,,0,,0,6,false,api=v1:projects.locations.pscAuthorizationPolicies
+networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/PscAuthorizationPolicy,6,,0,NetworkConnectivityPscAuthorizationPolicy,6,0,false,api=v1:projects.locations.pscAuthorizationPolicies; ours-spec-fields-unmatched=3/8
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/RegionalEndpoint,7,NetworkConnectivityRegionalEndpoint,6,,0,1,false,api=v1:projects.locations.regionalEndpoints; official-spec-fields-unmatched=3/9
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/ServiceConnectionMap,17,NetworkConnectivityServiceConnectionMap,16,,0,1,false,api=v1:projects.locations.serviceConnectionMaps; official-spec-fields-unmatched=4/19
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/ServiceConnectionPolicy,9,NetworkConnectivityServiceConnectionPolicy,7,,0,2,false,api=v1:projects.locations.serviceConnectionPolicies; official-spec-fields-unmatched=3/9
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/ServiceConnectionToken,4,NetworkConnectivityServiceConnectionToken,4,,0,0,false,api=v1:projects.locations.serviceConnectionTokens; official-spec-fields-unmatched=4/7
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/Spoke,33,NetworkConnectivitySpoke,12,,0,21,false,api=v1:projects.locations.spokes; official-spec-fields-unmatched=3/14
-networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute,6,,0,,0,6,false,api=v1:projects.locations.spokes.gatewayAdvertisedRoutes
+networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute,6,,0,NetworkConnectivitySpokeGatewayAdvertisedRoute,6,0,false,api=v1:projects.locations.spokes.gatewayAdvertisedRoutes; ours-spec-fields-unmatched=4/9
 networkconnectivity.googleapis.com,networkconnectivity.googleapis.com/Transport,13,NetworkConnectivityTransport,10,,0,3,false,api=v1:projects.locations.transports; official-spec-fields-unmatched=3/12
 networkmanagement.googleapis.com,networkmanagement.googleapis.com/ConnectivityTest,45,NetworkManagementConnectivityTest,31,,0,14,false,api=v1:projects.locations.global.connectivityTests; official-spec-fields-unmatched=9/39
 networkmanagement.googleapis.com,networkmanagement.googleapis.com/NetworkMonitoringProvider,1,,0,,0,1,false,api=v1:projects.locations.networkMonitoringProviders

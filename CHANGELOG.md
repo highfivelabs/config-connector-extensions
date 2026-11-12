@@ -23,6 +23,14 @@ has been released yet; each release moves its entries out of
   `google_bigquery_dataset_iam_*` do. Authorized views, routines and
   datasets and the project special groups in the list are left as they
   are.
+- **Five foundation kinds generated from Discovery** (`docs/design.md`
+  section 2.4): `resourcemanager.gcp.hfl.dev/v1alpha1`
+  `ResourceManagerCapabilityConfig` and `ResourceManagerBoundary`, and
+  `networkconnectivity.gcp.hfl.dev/v1alpha1`
+  `NetworkConnectivityPscAuthorizationPolicy`,
+  `NetworkConnectivityAutomatedDnsRecord` and
+  `NetworkConnectivitySpokeGatewayAdvertisedRoute`. The operator's role
+  gains the `networkconnectivity.gcp.hfl.dev` group.
 - **The slot guard, opt-in** (`docs/design.md` section 2.5). A manager
   given `--slot=<name>` (or `HFL_SLOT`; through the operator,
   `--manager-arg=--slot=<name>`) labels its objects `hfl.dev/slot`, labels

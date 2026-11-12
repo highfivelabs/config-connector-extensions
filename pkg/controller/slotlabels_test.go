@@ -33,18 +33,21 @@ import (
 // with labels changes this list, its adapter gets CloudLabels, and the
 // design's list changes with it.
 var slotLabelled = map[string]slotguard.LabelSource{
-	"SecretManagerSecret":                      slotguard.Metadata,
-	"ArtifactRegistryRepository":               slotguard.Metadata,
-	"DNSResponsePolicy":                        slotguard.Metadata,
-	"RunService":                               slotguard.Spec,
-	"ComputeVPNTunnel":                         slotguard.Spec,
-	"NetworkSecurityAddressGroup":              slotguard.Spec,
-	"NetworkSecuritySecurityProfile":           slotguard.Spec,
-	"NetworkSecuritySecurityProfileGroup":      slotguard.Spec,
-	"GKEHubMembershipRBACRoleBinding":          slotguard.Spec,
-	"GKEHubRolloutSequence":                    slotguard.Spec,
-	"NetworkServicesAgentGateway":              slotguard.Spec,
-	"NetworkServicesAgentConnectivityTemplate": slotguard.Spec,
+	"SecretManagerSecret":                            slotguard.Metadata,
+	"ArtifactRegistryRepository":                     slotguard.Metadata,
+	"DNSResponsePolicy":                              slotguard.Metadata,
+	"RunService":                                     slotguard.Spec,
+	"ComputeVPNTunnel":                               slotguard.Spec,
+	"NetworkSecurityAddressGroup":                    slotguard.Spec,
+	"NetworkSecuritySecurityProfile":                 slotguard.Spec,
+	"NetworkSecuritySecurityProfileGroup":            slotguard.Spec,
+	"GKEHubMembershipRBACRoleBinding":                slotguard.Spec,
+	"GKEHubRolloutSequence":                          slotguard.Spec,
+	"NetworkServicesAgentGateway":                    slotguard.Spec,
+	"NetworkServicesAgentConnectivityTemplate":       slotguard.Spec,
+	"NetworkConnectivityPscAuthorizationPolicy":      slotguard.Spec,
+	"NetworkConnectivityAutomatedDnsRecord":          slotguard.Spec,
+	"NetworkConnectivitySpokeGatewayAdvertisedRoute": slotguard.Spec,
 }
 
 func TestSlotLabelSources(t *testing.T) {

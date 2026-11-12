@@ -38,13 +38,13 @@ Tier 1, 16 services, most covered attributes first:
 | 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 7.8% | 41.7% | 56.0% | 53.2% |
 | 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 66.5% | 9.5% | 37.6% | 37.6% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
-| 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 0.0% | 39.9% | 74.5% | 73.2% |
+| 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 15.0% | 24.8% | 74.5% | 73.2% |
 | 1 | foundation | `orgpolicy.googleapis.com` | ![orgpolicy.googleapis.com](docs/coverage/bars/orgpolicy.googleapis.com.svg) | 67.8% | 0.0% | 32.2% | 92.6% | 92.6% |
 | 1 | foundation | `dns.googleapis.com` | ![dns.googleapis.com](docs/coverage/bars/dns.googleapis.com.svg) | 29.5% | 0.0% | 70.5% | 33.3% | 32.6% |
 | 1 | foundation | `iam.googleapis.com` | ![iam.googleapis.com](docs/coverage/bars/iam.googleapis.com.svg) | 39.8% | 21.2% | 38.9% | 78.8% | 78.8% |
+| 1 | foundation | `cloudresourcemanager.googleapis.com` | ![cloudresourcemanager.googleapis.com](docs/coverage/bars/cloudresourcemanager.googleapis.com.svg) | 40.0% | 41.8% | 18.2% | 65.5% | 65.5% |
 | 1 | foundation | `gkehub.googleapis.com` | ![gkehub.googleapis.com](docs/coverage/bars/gkehub.googleapis.com.svg) | 16.5% | 8.0% | 75.6% | 54.0% | 54.0% |
 | 1 | foundation | `billingbudgets.googleapis.com` | ![billingbudgets.googleapis.com](docs/coverage/bars/billingbudgets.googleapis.com.svg) | 85.7% | 0.0% | 14.3% | 78.6% | 78.6% |
-| 1 | foundation | `cloudresourcemanager.googleapis.com` | ![cloudresourcemanager.googleapis.com](docs/coverage/bars/cloudresourcemanager.googleapis.com.svg) | 40.0% | 0.0% | 60.0% | 65.5% | 65.5% |
 | 1 | foundation | `cloudkms.googleapis.com` | ![cloudkms.googleapis.com](docs/coverage/bars/cloudkms.googleapis.com.svg) | 42.9% | 0.0% | 57.1% | 52.4% | 50.0% |
 | 1 | foundation | `cloudidentity.googleapis.com` | ![cloudidentity.googleapis.com](docs/coverage/bars/cloudidentity.googleapis.com.svg) | 21.3% | 0.0% | 78.7% | 31.9% | 21.3% |
 | 1 | foundation | `vpcaccess.googleapis.com` | ![vpcaccess.googleapis.com](docs/coverage/bars/vpcaccess.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 100.0% | 100.0% |

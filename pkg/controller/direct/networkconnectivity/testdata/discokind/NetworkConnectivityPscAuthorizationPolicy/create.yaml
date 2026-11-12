@@ -1,0 +1,12 @@
+apiVersion: networkconnectivity.gcp.hfl.dev/v1alpha1
+kind: NetworkConnectivityPscAuthorizationPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  authorizationMode: AUTHORIZATION_MODE_TRANSITIVE_TO_SERVICE_ATTACHMENT
+  authorizedClientResources: [projects/${PROJECT}]
+  targetResourceUri: //agentregistry.googleapis.com/projects/${PROJECT}/locations/us-central1/services/${NAME}
+  description: made by a config-connector-extensions test

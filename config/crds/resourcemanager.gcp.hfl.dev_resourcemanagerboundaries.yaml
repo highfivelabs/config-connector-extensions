@@ -1,0 +1,225 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: resourcemanagerboundaries.resourcemanager.gcp.hfl.dev
+spec:
+  group: resourcemanager.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ResourceManagerBoundary
+    listKind: ResourceManagerBoundaryList
+    plural: resourcemanagerboundaries
+    shortNames:
+    - hflresourcemanagerboundary
+    - hflresourcemanagerboundarys
+    singular: resourcemanagerboundary
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ResourceManagerBoundary is a cloudresourcemanager.v3 resource
+          (https://cloudresourcemanager.googleapis.com/v3/{parent}/boundaries/{id}),
+          from its Discovery document cloudresourcemanager.v3 (hack/discokind). The
+          descendant projects of a folder or organization a capability config applies
+          to.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              displayName:
+                description: 'Optional. Human-readable display name of the Boundary.
+                  When present it must be between 4 to 30 characters. Allowed characters
+                  are: lowercase and uppercase letters, numbers, hyphen, single-quote,
+                  double-quote, space, and exclamation point. Example: `My Production
+                  Boundary`'
+                type: string
+              etag:
+                description: This checksum is computed by the server based on the
+                  value of other fields, and may be sent on update and delete requests
+                  to ensure the client has an up-to-date value before proceeding.
+                type: string
+              folderRef:
+                description: Immutable. The folder the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The 'name' field of a folder, when not managed by
+                      Config Connector. This field must be set when 'name' field is
+                      not set.
+                    type: string
+                  name:
+                    description: The 'name' field of a 'Folder' resource. This field
+                      must be set when 'external' field is not set.
+                    type: string
+                  namespace:
+                    description: The 'namespace' field of a 'Folder' resource. If
+                      unset, the namespace is defaulted to the namespace of the referencer
+                      resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: folderRef is immutable
+                  rule: self == oldSelf
+              organizationRef:
+                description: Immutable. The organization the resource belongs to.
+                properties:
+                  external:
+                    description: The 'name' field of an organization, when not managed
+                      by Config Connector.
+                    type: string
+                required:
+                - external
+                type: object
+                x-kubernetes-validations:
+                - message: organizationRef is immutable
+                  rule: self == oldSelf
+              resourceFilter:
+                description: Optional. The filter defining the criteria for descendant
+                  projects to be included in the Boundary. Descendant projects are
+                  dynamically included in the Boundary based on this filter.
+                properties:
+                  tagFilter:
+                    description: A tag based filter. A project must match it to be
+                      included.
+                    properties:
+                      tagKey:
+                        description: 'Required. Immutable. The namespaced name of
+                          the tag key. Format: `{parent_id}/{tag_key_short_name}`
+                          Example: `123456789012/env` (where 123456789012 is the organization
+                          ID).'
+                        type: string
+                      tagValue:
+                        description: 'Required. The allowed value for the tag key.
+                          A project matches this tag filter if its effective tag value
+                          for the given `tag_key` matches this value. Format: short
+                          name of the tag value. Example: `production` or `staging`.'
+                        type: string
+                    required:
+                    - tagKey
+                    - tagValue
+                    type: object
+                type: object
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            type: object
+            x-kubernetes-validations:
+            - message: exactly one of folderRef, organizationRef is required
+              rule: '[has(self.folderRef), has(self.organizationRef)].filter(x, x).size()
+                == 1'
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/boundaries/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The creation time of the Boundary.
+                    type: string
+                  managementProject:
+                    description: 'Output only. The Management Project of the CapabilityConfig
+                      this Boundary is associated with. Will be empty if the Boundary
+                      is not associated with any CapabilityConfig. Format: `projects/{project_number}`
+                      Example: `projects/123456789012`'
+                    type: string
+                  state:
+                    description: Output only. The lifecycle state of the Boundary.
+                    type: string
+                  updateTime:
+                    description: Output only. The most recent time this Boundary was
+                      modified.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

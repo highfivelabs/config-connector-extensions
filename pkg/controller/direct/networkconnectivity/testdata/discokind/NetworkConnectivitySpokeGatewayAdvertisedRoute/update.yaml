@@ -1,0 +1,13 @@
+apiVersion: networkconnectivity.gcp.hfl.dev/v1alpha1
+kind: NetworkConnectivitySpokeGatewayAdvertisedRoute
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  spoke: ${NAME}-spoke
+  ipRange: 10.1.0.0/24
+  priority: 200
+  recipient: ADVERTISE_TO_HUB
+  description: made by a config-connector-extensions test

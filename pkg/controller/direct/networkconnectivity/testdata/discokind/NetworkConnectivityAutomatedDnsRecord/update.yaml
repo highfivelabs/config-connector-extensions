@@ -1,0 +1,18 @@
+apiVersion: networkconnectivity.gcp.hfl.dev/v1alpha1
+kind: NetworkConnectivityAutomatedDnsRecord
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  consumerNetwork: projects/${PROJECT}/global/networks/${NAME}-net
+  creationMode: CONSUMER_API
+  dnsSuffix: example.com.
+  hostname: cce
+  recordType: A
+  serviceClass: gcp-memorystore
+  originalConfig:
+    rrdatas: [10.0.0.5]
+    ttl: 300s
+  description: changed, which the API cannot do
