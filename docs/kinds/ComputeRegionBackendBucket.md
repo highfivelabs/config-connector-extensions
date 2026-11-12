@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `81d7b24` | PASS | PASS | none, with the live Setup: the test makes the two regional Cloud Storage buckets (US-CENTRAL1, uniform access, labelled with the run) its fixtures name, and deletes them after the backend buckets; create, a resync with no write, a changed description, delete and abandon match the fake (run `cce-11121541-aa4d`, the fallback project) | 2 regional backend buckets, 2 empty buckets (deleted); `task live-list` empty of this run |
