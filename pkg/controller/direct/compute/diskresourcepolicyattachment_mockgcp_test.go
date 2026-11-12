@@ -47,6 +47,9 @@ func TestComputeDiskResourcePolicyAttachment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Closed after the disks' own cleanups (cleanups run last first): a
+	// closed client panics on a call.
+	t.Cleanup(func() { disks.Close() })
 	policies, err := gcp.NewResourcePoliciesRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
 		t.Fatal(err)
@@ -112,7 +115,6 @@ func TestComputeDiskResourcePolicyAttachment(t *testing.T) {
 	}
 	data := newDisk("data")
 	kept := newDisk("kept")
-	t.Cleanup(func() { disks.Close() })
 
 	attached := func(disk string) bool {
 		d, err := disks.Get(env.Ctx, &pb.GetDiskRequest{Project: mockenv.Project, Zone: zone, Disk: disk})
