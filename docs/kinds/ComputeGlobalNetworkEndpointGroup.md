@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `205791c` | PASS | PASS | none: an INTERNET_FQDN_PORT group on port 443, a resync with no write, the CRD refusing a change (groups cannot be patched), delete and abandon match the fake (run `cce-11121831-6d51`, the fallback project) | 2 global network endpoint groups (deleted); `task live-list` empty |
