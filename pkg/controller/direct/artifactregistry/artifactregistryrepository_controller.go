@@ -355,3 +355,9 @@ func compareRepository(ctx context.Context, actual *pb.Repository, desiredKRM *k
 	narrowRemoteRepositoryConfigMask(desiredPb, maskedActual, updateMask) // Written here.
 	return diffs, updateMask, desiredPb, nil
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard). Written here.
+func (a *ArtifactRegistryRepositoryAdapter) CloudLabels() map[string]string {
+	return a.actual.GetLabels()
+}

@@ -34,6 +34,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	"github.com/highfivelabs/config-connector-extensions/pkg/slotguard"
 )
 
 // useFakeCloud points the controllers at a fake Google Cloud. It is nil
@@ -47,10 +48,12 @@ func main() {
 		userProjectOverride bool
 		billingProject      string
 		metricsBindAddress  string
+		slot                string
 	)
 	flag.StringVar(&scopedNamespace, "scoped-namespace", "", "watch only this namespace; if unset, watch the whole cluster")
 	flag.BoolVar(&userProjectOverride, "user-project-override", false, "use the resource project for preconditions, quota and billing (as Config Connector's flag)")
 	flag.StringVar(&billingProject, "billing-project", "", "project for preconditions, quota and billing when --user-project-override is set")
+	flag.StringVar(&slot, "slot", "", "the version slot this manager is (default $"+slotguard.EnvVar+"); when set, the slot guard marks each resource with the slot and refuses to write one another slot holds (docs/design.md, \"Version slots\")")
 	flag.StringVar(&metricsBindAddress, "metrics-bind-address", "0", "controller-runtime metrics address; \"0\" disables it")
 	// No klog.InitFlags: Config Connector's dependencies already register
 	// klog's flags on the default flag set (calling it again panics).
@@ -98,7 +101,7 @@ func main() {
 		klog.Fatalf("initializing controller config: %v", err)
 	}
 
-	if err := controller.AddToManager(ctx, mgr, cfg); err != nil {
+	if err := controller.AddToManager(ctx, mgr, cfg, controller.Options{Slot: slotguard.Resolve(slot)}); err != nil {
 		klog.Fatalf("adding controllers: %v", err)
 	}
 

@@ -433,3 +433,9 @@ func (a *ServiceAdapter) Delete(ctx context.Context, deleteOp *directbase.Delete
 	}
 	return true, nil
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard). Written here.
+func (a *ServiceAdapter) CloudLabels() map[string]string {
+	return a.actual.GetLabels()
+}

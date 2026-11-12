@@ -417,3 +417,16 @@ func (a *adapter) Delete(ctx context.Context, op *directbase.DeleteOperation) (b
 	}
 	return true, nil
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard), when its collection has them.
+func (a *adapter) CloudLabels() map[string]string {
+	raw, _ := a.actual["labels"].(map[string]any)
+	out := make(map[string]string, len(raw))
+	for k, v := range raw {
+		if s, ok := v.(string); ok {
+			out[k] = s
+		}
+	}
+	return out
+}

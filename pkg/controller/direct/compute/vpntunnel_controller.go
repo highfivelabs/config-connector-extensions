@@ -270,3 +270,9 @@ func (a *vpnTunnelAdapter) updateStatus(ctx context.Context, op directbase.Opera
 	status.ExternalRef = direct.LazyPtr(a.id.String())
 	return op.UpdateStatus(ctx, status, nil)
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard). Written here.
+func (a *vpnTunnelAdapter) CloudLabels() map[string]string {
+	return a.actual.GetLabels()
+}
