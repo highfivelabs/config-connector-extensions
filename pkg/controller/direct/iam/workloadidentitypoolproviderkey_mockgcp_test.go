@@ -28,6 +28,7 @@ import (
 	"time"
 
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	api "google.golang.org/api/iam/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -105,7 +106,13 @@ func TestWorkloadIdentityPoolProviderKey(t *testing.T) {
 		if !strings.Contains(pem, "BEGIN CERTIFICATE") || format != "RSA_X509_PEM" {
 			t.Errorf("status.observedState.keyData = %q, %q; want the PEM and its format", pem, format)
 		}
+		// The IAM API can answer 404 for a moment after the key's create
+		// (run cce-11120814-5d2a): read until it answers, for 30 s.
 		got, err := keys.Get(cloudKey).Context(env.Ctx).Do()
+		for deadline := time.Now().Add(30 * time.Second); direct.IsNotFound(err) && time.Now().Before(deadline); {
+			time.Sleep(time.Second)
+			got, err = keys.Get(cloudKey).Context(env.Ctx).Do()
+		}
 		if err != nil {
 			t.Fatalf("reading the key from the cloud: %v", err)
 		}

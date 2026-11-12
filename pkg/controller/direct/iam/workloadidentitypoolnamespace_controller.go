@@ -135,8 +135,30 @@ func (a *namespaceAdapter) Create(ctx context.Context, createOp *directbase.Crea
 	if err := a.wait(ctx, op); err != nil {
 		return fmt.Errorf("creating IAMWorkloadIdentityPoolNamespace %s: %w", a.id, err)
 	}
-	return a.readAndUpdateStatus(ctx, createOp)
+	// The IAM API can answer a get with 404 for a moment after the create's
+	// operation is done (run cce-11120814-5d2a); an error here would make
+	// the next reconcile create it again, so wait for it to be readable.
+	var actual *api.WorkloadIdentityPoolNamespace
+	for deadline := time.Now().Add(createdReadTimeout); ; {
+		actual, err = a.namespaces().Get(a.id.String()).Context(ctx).Do()
+		if err == nil || !direct.IsNotFound(err) || time.Now().After(deadline) {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("reading IAMWorkloadIdentityPoolNamespace %s after create: %w", a.id, err)
+	}
+	return a.updateStatus(ctx, createOp, actual)
 }
+
+// createdReadTimeout is how long Create waits for a namespace it made to
+// answer a get.
+const createdReadTimeout = 30 * time.Second
 
 func (a *namespaceAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
 	var mask []string
