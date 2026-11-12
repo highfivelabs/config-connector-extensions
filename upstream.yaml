@@ -180,6 +180,7 @@ patches:
   - {file: patches/k8s-config-connector/0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0033-mockgcp-compute-vpn-tunnels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0040-mockgcp-compute-create-instances-redistribution.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request

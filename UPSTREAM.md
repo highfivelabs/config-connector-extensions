@@ -206,6 +206,7 @@ flattening all three, 2026-11-08).
 | `0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch` | written here: `networkFirewallPolicies.addPacketMirroringRule`, `getPacketMirroringRule`, `patchPacketMirroringRule` and `removePacketMirroringRule` (rules by priority in the policy's `packetMirroringRules`), in a new file; 0029 and 0030 are taken by open sibling pull requests | yes |
 | `0033-mockgcp-compute-vpn-tunnels.patch` | written here: mockgcp serves `vpnTunnels` (insert, get, `setLabels` with the label fingerprint, delete); the shared secret is kept out of reads and its hash returned; VPN tunnel and HA VPN gateway writes answer with a regional operation (the gateways answered with a global one, which a regional client cannot wait on) | yes |
 | `0034-mockgcp-serviceusage-public-services.patch` | written here: Service Usage knows every public Google API (the services of the pinned Discovery documents), so enabling iam, logging, monitoring, artifactregistry and the rest works in the fake; numbered after the patches open in #55 and #56 | yes |
+| `0040-mockgcp-compute-create-instances-redistribution.patch` | written here: `regionInstanceGroupManagers.createInstances` refused unless the group's `updatePolicy.instanceRedistributionType` is `NONE`, as the API does (run `cce-11122245-f5ea`); numbered 0040 (0035 to 0039 taken by pull requests open at the time) | yes |
 
 ## Pull requests we opened upstream
 

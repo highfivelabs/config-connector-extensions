@@ -20,9 +20,9 @@ package compute_test
 // stateful regional managed instance group (the catalog's compute-mig
 // module) keeps one named VM with preserved metadata. The test makes the
 // group itself through the API (a network, a subnet, an e2-micro instance
-// template and a regional group of size 0); the config then creates its
-// instance (createInstances), and deleting the group at the end deletes
-// the instances.
+// template and a regional group of size 0, redistribution off); the
+// config then creates its instance (createInstances), and deleting the
+// group at the end deletes the instances.
 
 import (
 	"fmt"
@@ -133,6 +133,10 @@ func newStatefulGroup(t *testing.T, env *mockenv.Env, base string) string {
 			BaseInstanceName: mockenv.Ptr(group),
 			InstanceTemplate: mockenv.Ptr("projects/" + mockenv.Project + "/global/instanceTemplates/" + template),
 			TargetSize:       mockenv.Ptr(int32(0)),
+			// createInstances, which a per-instance config is made with,
+			// needs redistribution off (412 CONDITION_NOT_MET otherwise,
+			// run cce-11122245-f5ea), as a stateful group has it.
+			UpdatePolicy: &pb.InstanceGroupManagerUpdatePolicy{InstanceRedistributionType: mockenv.Ptr("NONE")},
 		},
 	})
 	if err == nil {

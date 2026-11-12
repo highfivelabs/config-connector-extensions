@@ -1,0 +1,24 @@
+config-connector-extensions patch 0040: mockgcp refuses createInstances on a regional group that redistributes instances.
+
+The API answers 412 CONDITION_NOT_MET "CreateInstances can be used only
+when instance redistribution is disabled (set to NONE)." for a regional
+managed instance group whose updatePolicy.instanceRedistributionType is
+not NONE (PROACTIVE is its default); mockgcp accepted it (found by
+ComputeRegionPerInstanceConfig's live run cce-11122245-f5ea).
+
+diff --git a/mockgcp/mockcompute/instancegroupmanager.go b/mockgcp/mockcompute/instancegroupmanager.go
+--- a/mockgcp/mockcompute/instancegroupmanager.go
++++ b/mockgcp/mockcompute/instancegroupmanager.go
+@@ -355,6 +355,12 @@
+ 	igm := &pb.InstanceGroupManager{}
+ 	if err := s.storage.Get(ctx, fqn, igm); err != nil {
+ 		return nil, err
++	}
++
++	// The API refuses createInstances on a regional group that
++	// redistributes instances (PROACTIVE, its default).
++	if igm.GetUpdatePolicy().GetInstanceRedistributionType() != "NONE" {
++		return nil, status.Errorf(codes.FailedPrecondition, "CreateInstances can be used only when instance redistribution is disabled (set to NONE).")
+ 	}
+ 
+ 	res := req.GetRegionInstanceGroupManagersCreateInstancesRequestResource()
