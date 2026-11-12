@@ -20,8 +20,12 @@ package controller
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	apigatewayv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigateway/v1beta1"
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
+	biglakev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/biglake/v1beta1"
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
+	cloudbuildv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1beta1"
+	clouddeployv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/clouddeploy/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	gkebackupv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkebackup/v1beta1"
@@ -482,6 +486,94 @@ var discoKinds = []*discokind.Kind{
 		Updatable: false,
 		Output:    []string{"creationTimestamp", "id", "kind", "region", "selfLink", "size", "zone"},
 	},
+	{
+		GVK:       apigatewayv1beta1.APIGatewayAPIConfigGVK,
+		CRDName:   "apigatewayapiconfigs.apigateway.gcp.hfl.dev",
+		BaseURL:   "https://apigateway.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/apis/{api}/configs/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "apiConfigId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"createTime", "serviceConfigId", "state", "updateTime"},
+	},
+	{
+		GVK:       apigatewayv1beta1.APIGatewayGatewayGVK,
+		CRDName:   "apigatewaygateways.apigateway.gcp.hfl.dev",
+		BaseURL:   "https://apigateway.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gateways/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewayId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"createTime", "defaultHostname", "effectiveStreamingMode", "state", "updateTime"},
+	},
+	{
+		GVK:       biglakev1beta1.BigLakeCatalogGVK,
+		CRDName:   "biglakecatalogs.biglake.gcp.hfl.dev",
+		BaseURL:   "https://biglake.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/catalogs/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "catalogId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: false,
+		Output:    []string{"createTime", "deleteTime", "expireTime", "name", "updateTime"},
+	},
+	{
+		GVK:       biglakev1beta1.BigLakeDatabaseGVK,
+		CRDName:   "biglakedatabases.biglake.gcp.hfl.dev",
+		BaseURL:   "https://biglake.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/catalogs/{catalog}/databases/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "databaseId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"createTime", "deleteTime", "expireTime", "name", "updateTime"},
+	},
+	{
+		GVK:       cloudbuildv1beta1.CloudBuildConnectionGVK,
+		CRDName:   "cloudbuildconnections.cloudbuild.gcp.hfl.dev",
+		BaseURL:   "https://cloudbuild.googleapis.com/v2/",
+		Name:      "{parent}/locations/{location}/connections/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "connectionId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "installationState", "reconciling", "updateTime"},
+	},
+	{
+		GVK:       clouddeployv1beta1.CloudDeployTargetGVK,
+		CRDName:   "clouddeploytargets.clouddeploy.gcp.hfl.dev",
+		BaseURL:   "https://clouddeploy.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/targets/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "targetId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "targetId", "uid", "updateTime"},
+	},
+	{
+		GVK:       clouddeployv1beta1.CloudDeployDeployPolicyGVK,
+		CRDName:   "clouddeploydeploypolicies.clouddeploy.gcp.hfl.dev",
+		BaseURL:   "https://clouddeploy.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/deployPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "deployPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "name", "uid", "updateTime"},
+	},
+	{
+		GVK:       clouddeployv1beta1.CloudDeployAutomationGVK,
+		CRDName:   "clouddeployautomations.clouddeploy.gcp.hfl.dev",
+		BaseURL:   "https://clouddeploy.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/deliveryPipelines/{deliveryPipeline}/automations/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "automationId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "name", "uid", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -498,6 +590,10 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	backupdrv1beta1.AddToScheme,
 	networksecurityv1beta1.AddToScheme,
 	gkebackupv1beta1.AddToScheme,
+	apigatewayv1beta1.AddToScheme,
+	biglakev1beta1.AddToScheme,
+	cloudbuildv1beta1.AddToScheme,
+	clouddeployv1beta1.AddToScheme,
 }
 
 func init() {

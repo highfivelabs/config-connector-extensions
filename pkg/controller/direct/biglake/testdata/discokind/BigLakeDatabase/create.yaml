@@ -1,0 +1,14 @@
+apiVersion: biglake.gcp.hfl.dev/v1beta1
+kind: BigLakeDatabase
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us
+  catalog: ${NAME}-catalog
+  type: HIVE
+  hiveOptions:
+    locationUri: gs://${NAME}-bucket/db
+    parameters:
+      owner: cce

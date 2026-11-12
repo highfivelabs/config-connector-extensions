@@ -2,8 +2,13 @@
 # What hack/live/sweep.sh lists for the discokind kinds under a project:
 # kind, base URL, collection (location global, region us-central1, zone
 # us-central1-a), the list answer's field, soft-delete field=value.
+APIGatewayGateway	https://apigateway.googleapis.com/v1/	projects/{project}/locations/global/gateways	gateways	-
 BackupDRManagementServer	https://backupdr.googleapis.com/v1/	projects/{project}/locations/global/managementServers	managementServers	-
+BigLakeCatalog	https://biglake.googleapis.com/v1/	projects/{project}/locations/global/catalogs	catalogs	-
 CertificateManagerCertificateIssuanceConfig	https://certificatemanager.googleapis.com/v1/	projects/{project}/locations/global/certificateIssuanceConfigs	certificateIssuanceConfigs	-
+CloudBuildConnection	https://cloudbuild.googleapis.com/v2/	projects/{project}/locations/global/connections	connections	-
+CloudDeployDeployPolicy	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/deployPolicies	deployPolicies	-
+CloudDeployTarget	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/targets	targets	-
 ComputeCrossSiteNetwork	https://compute.googleapis.com/compute/v1/	projects/{project}/global/crossSiteNetworks	items	-
 ComputeGlobalNetworkEndpointGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/networkEndpointGroups	items	-
 ComputeGlobalPublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicDelegatedPrefixes	items	-

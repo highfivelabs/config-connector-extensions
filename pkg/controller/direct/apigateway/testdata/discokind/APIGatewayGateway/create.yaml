@@ -1,0 +1,10 @@
+apiVersion: apigateway.gcp.hfl.dev/v1beta1
+kind: APIGatewayGateway
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  apiConfig: projects/${PROJECT}/locations/global/apis/${NAME}-api/configs/${NAME}-config
+  displayName: cce test gateway

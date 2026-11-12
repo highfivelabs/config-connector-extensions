@@ -82,8 +82,8 @@ analyticshub.googleapis.com,analyticshub.googleapis.com/DataExchange,8,BigQueryA
 analyticshub.googleapis.com,analyticshub.googleapis.com/DataExchangeListing,26,BigQueryAnalyticsHubListing,16,,0,10,false,api=v1:projects.locations.dataExchanges.listings; official-spec-fields-unmatched=4/20
 analyticshub.googleapis.com,analyticshub.googleapis.com/DataExchangeQueryTemplate,8,BigQueryAnalyticsHubQueryTemplate,7,,0,1,false,api=v1:projects.locations.dataExchanges.queryTemplates; official-spec-fields-unmatched=2/9
 apigateway.googleapis.com,apigateway.googleapis.com/Api,4,APIGatewayAPI,4,,0,0,false,api=v1:projects.locations.apis; official-spec-fields-unmatched=2/5
-apigateway.googleapis.com,apigateway.googleapis.com/ApiConfig,12,APIGatewayAPIConfig,10,,0,2,false,api=v1:projects.locations.apis.configs; official-spec-fields-unmatched=5/14
-apigateway.googleapis.com,apigateway.googleapis.com/Gateway,5,APIGatewayGateway,3,,0,2,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/5
+apigateway.googleapis.com,apigateway.googleapis.com/ApiConfig,12,APIGatewayAPIConfig,10,APIGatewayAPIConfig,2,0,false,api=v1:projects.locations.apis.configs; official-spec-fields-unmatched=5/14; ours-spec-fields-unmatched=4/15
+apigateway.googleapis.com,apigateway.googleapis.com/Gateway,5,APIGatewayGateway,3,APIGatewayGateway,2,0,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/5; ours-spec-fields-unmatched=3/7
 apigee.googleapis.com,apigee.googleapis.com/AnalyticDatastore,7,,0,,0,7,false,api=v1:organizations.analytics.datastores
 apigee.googleapis.com,apigee.googleapis.com/Api,3,,0,,0,3,false,api=v1:organizations.apis
 apigee.googleapis.com,apigee.googleapis.com/ApiKeyvaluemap,3,,0,,0,3,false,api=v1:organizations.apis.keyvaluemaps
@@ -194,8 +194,8 @@ baremetalsolution.googleapis.com,baremetalsolution.googleapis.com/VolumeSnapshot
 batch.googleapis.com,batch.googleapis.com/Job,97,BatchJob,86,,0,11,false,api=v1:projects.locations.jobs; official-spec-fields-unmatched=8/94
 beyondcorp.googleapis.com,beyondcorp.googleapis.com/SecurityGateway,13,,0,,0,13,false,api=v1:projects.locations.securityGateways
 beyondcorp.googleapis.com,beyondcorp.googleapis.com/SecurityGatewayApplication,18,,0,,0,18,false,api=v1:projects.locations.securityGateways.applications
-biglake.googleapis.com,biglake.googleapis.com/Catalog,0,BigLakeCatalog,0,,0,0,false,api=v1:projects.locations.catalogs; official-spec-fields-unmatched=3/3
-biglake.googleapis.com,biglake.googleapis.com/CatalogDatabase,3,BigLakeDatabase,3,,0,0,false,api=v1:projects.locations.catalogs.databases; official-spec-fields-unmatched=2/5
+biglake.googleapis.com,biglake.googleapis.com/Catalog,0,BigLakeCatalog,0,BigLakeCatalog,0,0,false,api=v1:projects.locations.catalogs; official-spec-fields-unmatched=3/3; ours-spec-fields-unmatched=3/3
+biglake.googleapis.com,biglake.googleapis.com/CatalogDatabase,3,BigLakeDatabase,3,BigLakeDatabase,0,0,false,api=v1:projects.locations.catalogs.databases; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=4/7
 biglake.googleapis.com,biglake.googleapis.com/CatalogDatabaseTable,7,BigLakeTable,7,,0,0,false,api=v1:projects.locations.catalogs.databases.tables; official-spec-fields-unmatched=2/9
 bigquery.googleapis.com,bigquery.googleapis.com/Dataset,40,BigQueryDataset;BigQueryDatasetAccess,26,,0,14,false,api=v2:datasets
 bigquery.googleapis.com,bigquery.googleapis.com/Job,254,BigQueryJob,58,,0,196,false,api=v2:jobs; recursive-cut=9; official-spec-fields-unmatched=4/62
@@ -258,7 +258,7 @@ cloudbilling.googleapis.com,cloudbilling.googleapis.com/SubAccount,3,,0,,0,3,fal
 cloudbilling.googleapis.com,cloudbilling.googleapis.com/TaskPushNotificationConfig,6,,0,,0,6,false,api=v1:tasks.pushNotificationConfigs
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/BitbucketServerConfig,11,,0,,0,11,false,api=v1:projects.locations.bitbucketServerConfigs
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/Build,108,,0,,0,108,false,api=v1:projects.builds
-cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,30,CloudBuildConnection,30,,0,0,false,api=v2:projects.locations.connections; official-spec-fields-unmatched=3/32
+cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,30,CloudBuildConnection,30,CloudBuildConnection,0,0,false,api=v2:projects.locations.connections; official-spec-fields-unmatched=3/32; ours-spec-fields-unmatched=4/33
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,3,,0,,0,3,false,api=v2:projects.locations.connections.repositories
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/GithubEnterpriseConfig,15,,0,,0,15,false,api=v1:projects.githubEnterpriseConfigs
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/LocationBuild,108,,0,,0,108,false,api=v1:projects.locations.builds
@@ -275,11 +275,11 @@ cloudchannel.googleapis.com,cloudchannel.googleapis.com/AccountCustomerEntitleme
 cloudcontrolspartner.googleapis.com,cloudcontrolspartner.googleapis.com/Customer,2,CloudcontrolspartnerCustomer,2,,0,0,false,api=v1:organizations.locations.customers; official-spec-fields-unmatched=3/4
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/CustomTargetType,23,CloudDeployCustomTargetType,13,,0,10,false,api=v1:projects.locations.customTargetTypes; official-spec-fields-unmatched=3/15
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipeline,104,CloudDeployDeliveryPipeline,37,,0,67,false,api=v1:projects.locations.deliveryPipelines; official-spec-fields-unmatched=3/39
-clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipelineAutomation,27,CloudDeployAutomation,25,,0,2,false,api=v1:projects.locations.deliveryPipelines.automations; official-spec-fields-unmatched=5/30
+clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipelineAutomation,27,CloudDeployAutomation,25,CloudDeployAutomation,2,0,false,api=v1:projects.locations.deliveryPipelines.automations; official-spec-fields-unmatched=5/30; ours-spec-fields-unmatched=5/32
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipelineRelease,16,,0,,0,16,false,api=v1:projects.locations.deliveryPipelines.releases
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipelineReleaseRollout,5,,0,,0,5,false,api=v1:projects.locations.deliveryPipelines.releases.rollouts
-clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeployPolicy,35,CloudDeployDeployPolicy,32,,0,3,false,api=v1:projects.locations.deployPolicies; official-spec-fields-unmatched=4/36
-clouddeploy.googleapis.com,clouddeploy.googleapis.com/Target,30,CloudDeployTarget,29,,0,1,false,api=v1:projects.locations.targets; official-spec-fields-unmatched=3/31
+clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeployPolicy,35,CloudDeployDeployPolicy,32,CloudDeployDeployPolicy,3,0,false,api=v1:projects.locations.deployPolicies; official-spec-fields-unmatched=4/36; ours-spec-fields-unmatched=4/39
+clouddeploy.googleapis.com,clouddeploy.googleapis.com/Target,30,CloudDeployTarget,29,CloudDeployTarget,1,0,false,api=v1:projects.locations.targets; official-spec-fields-unmatched=3/31; ours-spec-fields-unmatched=5/29
 cloudfunctions.googleapis.com,cloudfunctions.googleapis.com/Function,61,CloudFunctions2Function;CloudFunctionsFunction,49,,0,12,false,api=v2:projects.locations.functions
 cloudidentity.googleapis.com,cloudidentity.googleapis.com/AllowlistedDomain,1,,0,,0,1,false,api=v1:allowlistedDomains
 cloudidentity.googleapis.com,cloudidentity.googleapis.com/Device,6,,0,,0,6,false,api=v1:devices

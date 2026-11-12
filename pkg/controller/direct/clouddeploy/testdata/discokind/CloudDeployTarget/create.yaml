@@ -1,0 +1,12 @@
+apiVersion: clouddeploy.gcp.hfl.dev/v1beta1
+kind: CloudDeployTarget
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  run:
+    location: projects/${PROJECT}/locations/us-central1
+  requireApproval: false
+  description: made by a config-connector-extensions test

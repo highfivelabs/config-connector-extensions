@@ -1,0 +1,14 @@
+apiVersion: apigateway.gcp.hfl.dev/v1beta1
+kind: APIGatewayAPIConfig
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  api: ${NAME}-api
+  displayName: cce test config
+  openapiDocuments:
+  - document:
+      path: openapi.yaml
+      contents: b3BlbmFwaTogMy4wLjAK

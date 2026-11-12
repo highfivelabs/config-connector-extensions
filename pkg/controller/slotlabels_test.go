@@ -55,6 +55,11 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"GKEBackupRestorePlan":                           slotguard.Spec,
 	"GKEBackupBackupChannel":                         slotguard.Spec,
 	"GKEBackupRestoreChannel":                        slotguard.Spec,
+	"APIGatewayAPIConfig":                            slotguard.Spec,
+	"APIGatewayGateway":                              slotguard.Spec,
+	"CloudDeployTarget":                              slotguard.Spec,
+	"CloudDeployDeployPolicy":                        slotguard.Spec,
+	"CloudDeployAutomation":                          slotguard.Spec,
 }
 
 func TestSlotLabelSources(t *testing.T) {
