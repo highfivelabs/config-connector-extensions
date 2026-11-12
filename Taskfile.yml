@@ -233,6 +233,19 @@ tasks:
           ENVTEST_K8S_VERSION: '{{.ENVTEST_K8S_VERSION}}'
           CMD: E2E_GCP_TARGET=mock go test {{.PKGS}} -count=1{{if .RUN}} -run '{{.RUN}}'{{end}}
 
+  # The version-slot move on the fake cloud (docs/design.md "Version
+  # slots"): the slot guard's own tests, then two managers as two slots
+  # moving a secret and an address group (labelled: the guard marks and
+  # checks them) and a saved query (no labels) from one to the other. Live:
+  # task test-live KINDS=secretmanager LIVE_RUN=TestSlotMove.
+  "test:slot-move":
+    desc: 'Move resources between two version slots (two managers) on the fake cloud, with the slot guard (pkg/slotguard, pkg/test/slotmove).'
+    cmds:
+      - task: test:pkgs
+        vars: {PKGS: ./pkg/slotguard/... ./pkg/controller/, RUN: 'Test(Resolve|Validate|DesiredLabels|Holder|FindNeedsCloudLabels|SlotLabelSources)$'}
+      - task: test:pkgs
+        vars: {PKGS: ./pkg/controller/direct/secretmanager/ ./pkg/controller/direct/networksecurity/ ./pkg/controller/direct/logging/, RUN: '^TestSlotMove'}
+
   # The fake cloud: kind, Config Connector's CRDs and ours, and
   # bin/fakecloud (Config Connector's manager and ours against mockgcp).
   # docs/fake-cloud.md.
