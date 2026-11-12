@@ -69,6 +69,11 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **Two `IAMMember` or `IAMBinding` objects on one BigQuery dataset could
+  lose a member**: the access list is read, checked and patched in three
+  calls, and two writers in one manager could both pass the check. Writes
+  to one dataset now go one at a time within a manager; the API's
+  `If-Match` still guards against other writers.
 - **Generated kinds lacked every nested field called `name`**
   (`hack/discokind` dropped `name` at every level, not only the
   resource's own): `ComputeRegionInstanceTemplate`'s network interface
