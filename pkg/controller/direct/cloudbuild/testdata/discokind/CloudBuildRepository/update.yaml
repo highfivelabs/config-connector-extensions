@@ -1,0 +1,12 @@
+apiVersion: cloudbuild.gcp.hfl.dev/v1alpha1
+kind: CloudBuildRepository
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  connection: ${NAME}-connection
+  remoteUri: https://github.com/example/${NAME}-renamed.git
+  annotations:
+    team: platform
