@@ -22,3 +22,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `e1e23f5` | PASS | PASS | none; the backend service case took 24 minutes live, nearly all of it before its first subtest (making the health check and backend service), against 15 s for the others (run `cce-11120814-5d2a`, the fallback project) | 1 regional secret, 1 bucket with a managed folder, 1 health check and 1 backend service (deleted); `task live-list` empty |

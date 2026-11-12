@@ -176,6 +176,17 @@ backend buckets; global and zonal VM extension policies; rollout plans;
 BYOIP public advertised and delegated prefixes (foundation item 7);
 Cross-Site networks and wire groups and Interconnect groups.
 
+What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
+a string field whose Discovery description says "Cannot exceed N
+characters" gets that `maxLength` in the CRD, and the fixture check
+holds fixtures to it (an OAuth client's 41-character display name was
+refused by every patch, and the reconciler backed off without a log
+line); `kindtest` prints the object's Ready message when the cloud does
+not reach the spec; and a kind can have a live `Setup` for what its
+fixtures cannot make (`GKEHubRolloutSequence` makes the project's fleet,
+free, and deletes it). `ComputeRegionNotificationEndpoint` skips live:
+Health Check as a Service is gated per project.
+
 ### Switching to PR #7148
 
 When `hack/upstream-pr.sh` reports `databaseRoles` live:
@@ -1742,11 +1753,10 @@ To raise confidence in `ArtifactRegistryRepository`:
     to delete a bound policy, which mockgcp does not make; `gkeClusters`,
     which no test sets (it needs a GKE cluster).
 37. `ComputeNetworkFirewallPolicyPacketMirroringRule`: the live patch
-    (run `cce-11100936-3a4c`: the rule did not change in 15 minutes;
-    rerun with the test's new timeout message, which prints the cloud
-    rule and the Ready message, and fix what it shows: the JSON POST,
-    the emptied `srcIpRanges`, or an INGRESS rule with only
-    `destIpRanges`); a live `mirror`
+    is done (run `cce-11120932-1df3`: the test had emptied an INGRESS
+    rule's only source, which the API refuses; it now empties the
+    destination, and the fake refuses an INGRESS rule without a source);
+    left: a live `mirror`
     rule (a security profile group with a custom mirroring profile and a
     mirroring endpoint group); the hierarchical policy's packet mirroring
     rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
