@@ -33,6 +33,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/deletiondefender"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/jitter"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -71,28 +72,33 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/storage"
+	"github.com/highfivelabs/config-connector-extensions/pkg/slotguard"
 )
 
 type kind struct {
 	gvk     schema.GroupVersionKind
 	crdName string
 	model   func(context.Context, *config.ControllerConfig) (directbase.Model, error)
+	// labels is where the cloud resource's labels come from, for the slot
+	// guard (pkg/slotguard); unset, a CRD with spec.labels means
+	// slotguard.Spec, any other none.
+	labels slotguard.LabelSource
 }
 
 // Kinds is every kind config-connector-extensions reconciles.
 var Kinds = []kind{
 	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
 	{gvk: sqladminv1alpha1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
-	{gvk: secretmanagerv1beta1.SecretManagerSecretGVK, crdName: "secretmanagersecrets.secretmanager.gcp.hfl.dev", model: secretmanager.NewModel},
+	{gvk: secretmanagerv1beta1.SecretManagerSecretGVK, crdName: "secretmanagersecrets.secretmanager.gcp.hfl.dev", model: secretmanager.NewModel, labels: slotguard.Metadata},
 	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
-	{gvk: artifactregistryv1beta1.ArtifactRegistryRepositoryGVK, crdName: "artifactregistryrepositories.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryRepositoryModel},
+	{gvk: artifactregistryv1beta1.ArtifactRegistryRepositoryGVK, crdName: "artifactregistryrepositories.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryRepositoryModel, labels: slotguard.Metadata},
 	{gvk: artifactregistryv1alpha1.ArtifactRegistryTagGVK, crdName: "artifactregistrytags.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryTagModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK, crdName: "iamworkloadidentitypoolmanagedidentities.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolManagedIdentityModel},
 	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolProviderKeyGVK, crdName: "iamworkloadidentitypoolproviderkeys.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolProviderKeyModel},
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
 	{gvk: iamv1alpha1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
-	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel},
+	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
 	{gvk: computev1alpha1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1alpha1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
 	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
@@ -105,9 +111,9 @@ var Kinds = []kind{
 	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
-	{gvk: networksecurityv1alpha1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel},
-	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGVK, crdName: "networksecuritysecurityprofiles.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileModel},
-	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGroupGVK, crdName: "networksecuritysecurityprofilegroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileGroupModel},
+	{gvk: networksecurityv1alpha1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel, labels: slotguard.Spec},
+	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGVK, crdName: "networksecuritysecurityprofiles.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileModel, labels: slotguard.Spec},
+	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGroupGVK, crdName: "networksecuritysecurityprofilegroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileGroupModel, labels: slotguard.Spec},
 	{gvk: computev1alpha1.ComputeRouterGVK, crdName: "computerouters.compute.gcp.hfl.dev", model: compute.NewRouterModel},
 	{gvk: iamv1beta1.IAMDenyPolicyGVK, crdName: "iamdenypolicies.iam.gcp.hfl.dev", model: iam.NewDenyPolicyModel},
 	{gvk: iamv1beta1.IAMPrincipalAccessBoundaryPolicyGVK, crdName: "iamprincipalaccessboundarypolicies.iam.gcp.hfl.dev", model: iam.NewPrincipalAccessBoundaryPolicyModel},
@@ -116,9 +122,9 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyRuleGVK, crdName: "computeorganizationsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewOrganizationSecurityPolicyRuleModel},
 	{gvk: computev1beta1.ComputeNetworkFirewallPolicyRuleGVK, crdName: "computenetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyRuleModel},
 	{gvk: securitycenterv1alpha1.SecurityCenterMuteConfigGVK, crdName: "securitycentermuteconfigs.securitycenter.gcp.hfl.dev", model: securitycenter.NewMuteConfigModel},
-	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel},
+	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel, labels: slotguard.Metadata},
 	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
-	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel},
+	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -156,9 +162,16 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	return nil
 }
 
+// Options are the manager's choices that change how every kind reconciles.
+type Options struct {
+	// Slot is the version slot this manager is (--slot, HFL_SLOT); empty
+	// turns the slot guard off (pkg/slotguard).
+	Slot string
+}
+
 // AddToManager adds a direct controller and a deletion defender for every
 // kind in Kinds. The kinds' CRDs must be installed.
-func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.ControllerConfig) error {
+func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.ControllerConfig, opts Options) error {
 	crds, err := apiextensionsclient.NewForConfig(mgr.GetConfig())
 	if err != nil {
 		return fmt.Errorf("building apiextensions client: %w", err)
@@ -170,21 +183,50 @@ func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.Controll
 		JitterGenerator:    jitter.NewDefaultGenerator(nil, nil),
 		SkipNameValidation: cfg.SkipNameValidation,
 	}
+	var guard *slotguard.Guard
+	if opts.Slot != "" {
+		if err := slotguard.Validate(opts.Slot); err != nil {
+			return err
+		}
+		guard = &slotguard.Guard{Slot: opts.Slot, Recorder: mgr.GetEventRecorderFor("config-connector-extensions-slot-guard")}
+	}
 	for _, k := range Kinds {
 		model, err := k.model(ctx, cfg)
 		if err != nil {
 			return fmt.Errorf("building model for %v: %w", k.gvk, err)
 		}
-		if err := directbase.AddController(mgr, k.gvk, model, deps); err != nil {
-			return fmt.Errorf("adding controller for %v: %w", k.gvk, err)
-		}
 		crd, err := crds.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, k.crdName, metav1.GetOptions{})
 		if err != nil {
 			return fmt.Errorf("reading CRD %s: %w", k.crdName, err)
+		}
+		if guard != nil {
+			if model, err = guard.Wrap(k.gvk, model, LabelSource(k, crd)); err != nil {
+				return err
+			}
+		}
+		if err := directbase.AddController(mgr, k.gvk, model, deps); err != nil {
+			return fmt.Errorf("adding controller for %v: %w", k.gvk, err)
 		}
 		if err := deletiondefender.Add(mgr, crd, crcontroller.Options{SkipNameValidation: &cfg.SkipNameValidation}); err != nil {
 			return fmt.Errorf("adding deletion defender for %v: %w", k.gvk, err)
 		}
 	}
 	return nil
+}
+
+// LabelSource is where k's cloud labels come from: the kind's own choice,
+// else spec.labels when its CRD (served version) has it, else none.
+func LabelSource(k kind, crd *apiextensionsv1.CustomResourceDefinition) slotguard.LabelSource {
+	if k.labels != slotguard.None {
+		return k.labels
+	}
+	for _, v := range crd.Spec.Versions {
+		if v.Name != k.gvk.Version || v.Schema == nil || v.Schema.OpenAPIV3Schema == nil {
+			continue
+		}
+		if _, ok := v.Schema.OpenAPIV3Schema.Properties["spec"].Properties["labels"]; ok {
+			return slotguard.Spec
+		}
+	}
+	return slotguard.None
 }

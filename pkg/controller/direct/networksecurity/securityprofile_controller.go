@@ -341,3 +341,9 @@ func (a *securityProfileAdapter) updateStatus(ctx context.Context, op directbase
 
 	return op.UpdateStatus(ctx, status, nil)
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard). Written here.
+func (a *securityProfileAdapter) CloudLabels() map[string]string {
+	return a.actual.GetLabels()
+}

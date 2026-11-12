@@ -332,3 +332,9 @@ func (a *Adapter) Delete(ctx context.Context, deleteOp *directbase.DeleteOperati
 	log.V(2).Info("successfully deleted Secret", "name", a.id)
 	return true, nil
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard). Written here.
+func (a *Adapter) CloudLabels() map[string]string {
+	return a.actual.GetLabels()
+}

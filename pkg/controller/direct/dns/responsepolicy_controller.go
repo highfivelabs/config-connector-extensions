@@ -329,3 +329,12 @@ func normalizeResponsePolicyURLs(policy *api.ResponsePolicy) error {
 	}
 	return errors.Join(errs...)
 }
+
+// CloudLabels are the found resource's labels, for the slot guard
+// (pkg/slotguard). Written here.
+func (a *DNSResponsePolicyAdapter) CloudLabels() map[string]string {
+	if a.actual == nil {
+		return nil
+	}
+	return a.actual.Labels
+}

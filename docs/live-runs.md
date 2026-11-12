@@ -134,6 +134,18 @@ APIs enabled for it: `artifactregistry`, `secretmanager`, `sqladmin`,
 needs the API on); `compute`, `iam` and `storage` were already on. A new kind that needs another role or API adds it
 here, and to the account, in the same change.
 
+### The slot move, live
+
+`TestSlotMoveSecretManagerSecret` (`pkg/test/slotmove`, section 2.5 of
+`docs/design.md`) runs two managers as two slots against the project and
+moves one regional secret from one to the other; it makes one secret and
+deletes it. Run only it:
+
+```sh
+../offload/offload run --sa "$GCP_LIVE_SA" --hours 1 -- \
+  env GCP_PROJECT="$GCP_PROJECT" LIVE_RUN=TestSlotMove bash -c 'task upstream && task test-live KINDS=secretmanager'
+```
+
 ## Adding a kind
 
 A kind is not done until it has one live run recorded. From 2026-11-11 a

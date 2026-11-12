@@ -132,7 +132,7 @@ func run(ctx context.Context, projects []string) error {
 		return err
 	}
 	cfg := &config.ControllerConfig{HTTPClient: httpClient, UserAgent: "config-connector-extensions-fakecloud"}
-	if err := controller.AddToManager(ctx, mgr, cfg); err != nil {
+	if err := controller.AddToManager(ctx, mgr, cfg, controller.Options{}); err != nil {
 		return fmt.Errorf("adding config-connector-extensions controllers: %w", err)
 	}
 

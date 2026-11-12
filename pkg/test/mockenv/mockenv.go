@@ -51,7 +51,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -71,6 +73,8 @@ type Env struct {
 	HTTP *http.Client
 
 	requests *recorder
+	// slotRequests are each slot's own requests (NewSlots).
+	slotRequests map[string]*recorder
 
 	mockSQL    sync.Once
 	mockSQLErr error
@@ -110,6 +114,54 @@ func repoRoot() string {
 // Credentials), and a manager running every config-connector-extensions controller, and
 // creates each namespace given. Everything stops when the test ends.
 func New(t *testing.T, namespaces ...string) *Env {
+	t.Helper()
+	c := startCluster(t)
+	c.startManager(t, "", "", c.requests)
+	c.createNamespaces(t, namespaces)
+	return c.Env
+}
+
+// NewSlots starts one cluster and one fake cloud (or one real project), and
+// one manager per slot: slot i runs with --slot=slots[i] and watches only
+// namespace "slot-<slot>", as two version slots of a hosted install do.
+// The returned Env's HTTP and Requests are the test's own; each slot's
+// requests are SlotRequests(slot).
+func NewSlots(t *testing.T, slots ...string) *Env {
+	t.Helper()
+	c := startCluster(t)
+	c.slotRequests = map[string]*recorder{}
+	for _, slot := range slots {
+		rec := &recorder{inner: c.requests.inner}
+		c.slotRequests[slot] = rec
+		c.startManager(t, slot, SlotNamespace(slot), rec)
+		c.createNamespaces(t, []string{SlotNamespace(slot)})
+	}
+	return c.Env
+}
+
+// SlotNamespace is the namespace NewSlots gives a slot's manager.
+func SlotNamespace(slot string) string { return "slot-" + slot }
+
+// SlotRequests is every request the slot's controllers made to the
+// cloud so far, as "METHOD URL".
+func (e *Env) SlotRequests(slot string) []string {
+	e.T.Helper()
+	r, ok := e.slotRequests[slot]
+	if !ok {
+		e.T.Fatalf("no slot %q", slot)
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return slices.Clone(r.urls)
+}
+
+type cluster struct {
+	*Env
+	restConfig *rest.Config
+	scheme     *k8sruntime.Scheme
+}
+
+func startCluster(t *testing.T) *cluster {
 	t.Helper()
 	checkTarget(t)
 	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
@@ -191,18 +243,38 @@ func New(t *testing.T, namespaces ...string) *Env {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, gcpHTTP)
 		createMockProject(t, ctx, gcpHTTP, Project)
 	}
+	return &cluster{
+		Env:        &Env{T: t, Ctx: ctx, Kube: kube, HTTP: gcpHTTP, requests: requests},
+		restConfig: restConfig,
+		scheme:     scheme,
+	}
+}
 
-	mgr, err := ctrl.NewManager(restConfig, ctrl.Options{
-		Scheme:  scheme,
+// startManager runs every config-connector-extensions controller, as slot
+// (none if ""), watching namespace (the whole cluster if ""), reaching the
+// cloud through rec.
+func (c *cluster) startManager(t *testing.T, slot, namespace string, rec *recorder) {
+	t.Helper()
+	gcpHTTP := &http.Client{Transport: rec}
+	ctx := c.Ctx
+	if !Live() {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, gcpHTTP)
+	}
+	opts := ctrl.Options{
+		Scheme:  c.scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
-	})
+	}
+	if namespace != "" {
+		opts.Cache = cache.Options{DefaultNamespaces: map[string]cache.Config{namespace: {}}}
+	}
+	mgr, err := ctrl.NewManager(c.restConfig, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Several Envs in one test binary register the same controller names;
 	// each has its own manager, so the names never meet.
 	cfg := &config.ControllerConfig{HTTPClient: gcpHTTP, SkipNameValidation: true}
-	if err := controller.AddToManager(ctx, mgr, cfg); err != nil {
+	if err := controller.AddToManager(ctx, mgr, cfg, controller.Options{Slot: slot}); err != nil {
 		t.Fatal(err)
 	}
 	// Stop the manager before envtest (cleanups run last-registered first),
@@ -219,14 +291,15 @@ func New(t *testing.T, namespaces ...string) *Env {
 		stopMgr()
 		<-mgrDone
 	})
+}
 
+func (c *cluster) createNamespaces(t *testing.T, namespaces []string) {
+	t.Helper()
 	for _, ns := range namespaces {
-		if err := kube.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}); err != nil {
+		if err := c.Kube.Create(c.Ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}); err != nil {
 			t.Fatal(err)
 		}
 	}
-
-	return &Env{T: t, Ctx: ctx, Kube: kube, HTTP: gcpHTTP, requests: requests}
 }
 
 // GCPOptions are the client options that reach the fake cloud.

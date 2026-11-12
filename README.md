@@ -335,6 +335,7 @@ task check      # pin check, generated files current, gofmt, vet, build, tests
 task build      # bin/manager, bin/operator, bin/fakegcp, bin/fakecloud
 task operator-e2e  # the operator on kind with the fake cloud (tests/operator/run.sh)
 task test-live PROJECT=<project>  # the same tests against a real project (docs/live-runs.md)
+task test:slot-move  # two managers as two version slots move resources, with the slot guard (docs/design.md 2.5)
 task coverage   # regenerate the Coverage section and docs/coverage/ (task coverage:check to verify)
 ```
 
