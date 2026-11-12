@@ -1,0 +1,16 @@
+apiVersion: gkebackup.gcp.hfl.dev/v1beta1
+kind: GKEBackupBackupPlan
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  cluster: projects/${PROJECT}/locations/us-central1/clusters/${NAME}-cluster
+  backupConfig:
+    allNamespaces: true
+    includeVolumeData: false
+    includeSecrets: false
+  retentionPolicy:
+    backupRetainDays: 7
+  description: made by a config-connector-extensions test

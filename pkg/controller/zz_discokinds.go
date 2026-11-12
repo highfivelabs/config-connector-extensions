@@ -20,13 +20,17 @@ package controller
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
+	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	gkebackupv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkebackup/v1beta1"
 	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	lookerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/looker/v1alpha1"
 	networkconnectivityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkconnectivity/v1alpha1"
+	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	networkservicesv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1alpha1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
@@ -374,7 +378,7 @@ var discoKinds = []*discokind.Kind{
 		BaseURL:   "https://networkconnectivity.googleapis.com/v1/",
 		Name:      "{parent}/locations/{location}/automatedDnsRecords/{id}",
 		Parents:   []string{"project"},
-		IDParam:   "requestId",
+		IDParam:   "automatedDnsRecordId",
 		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
 		Updatable: false,
 		Output:    []string{"createTime", "currentConfig", "dnsZone", "fqdn", "state", "stateDetails", "updateTime"},
@@ -385,10 +389,98 @@ var discoKinds = []*discokind.Kind{
 		BaseURL:   "https://networkconnectivity.googleapis.com/v1/",
 		Name:      "{parent}/locations/{location}/spokes/{spoke}/gatewayAdvertisedRoutes/{id}",
 		Parents:   []string{"project"},
-		IDParam:   "requestId",
+		IDParam:   "gatewayAdvertisedRouteId",
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "state", "uniqueId", "updateTime"},
+	},
+	{
+		GVK:       certificatemanagerv1beta1.CertificateManagerCertificateIssuanceConfigGVK,
+		CRDName:   "certificatemanagercertificateissuanceconfigs.certificatemanager.gcp.hfl.dev",
+		BaseURL:   "https://certificatemanager.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/certificateIssuanceConfigs/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "certificateIssuanceConfigId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       backupdrv1beta1.BackupDRManagementServerGVK,
+		CRDName:   "backupdrmanagementservers.backupdr.gcp.hfl.dev",
+		BaseURL:   "https://backupdr.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/managementServers/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "requestId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"baProxyUri", "createTime", "managementUri", "name", "oauth2ClientId", "satisfiesPzi", "satisfiesPzs", "state", "updateTime", "workforceIdentityBasedManagementUri", "workforceIdentityBasedOauth2ClientId"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityDNSThreatDetectorGVK,
+		CRDName:   "networksecuritydnsthreatdetectors.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/dnsThreatDetectors/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "dnsThreatDetectorId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       gkebackupv1beta1.GKEBackupBackupPlanGVK,
+		CRDName:   "gkebackupbackupplans.gkebackup.gcp.hfl.dev",
+		BaseURL:   "https://gkebackup.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/backupPlans/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "backupPlanId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"backupChannel", "createTime", "etag", "lastSuccessfulBackupTime", "name", "protectedNamespaceCount", "protectedPodCount", "rpoRiskLevel", "rpoRiskReason", "state", "stateReason", "uid", "updateTime"},
+	},
+	{
+		GVK:       gkebackupv1beta1.GKEBackupRestorePlanGVK,
+		CRDName:   "gkebackuprestoreplans.gkebackup.gcp.hfl.dev",
+		BaseURL:   "https://gkebackup.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/restorePlans/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "restorePlanId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "etag", "name", "restoreChannel", "state", "stateReason", "uid", "updateTime"},
+	},
+	{
+		GVK:       gkebackupv1beta1.GKEBackupBackupChannelGVK,
+		CRDName:   "gkebackupbackupchannels.gkebackup.gcp.hfl.dev",
+		BaseURL:   "https://gkebackup.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/backupChannels/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "backupChannelId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "destinationProjectId", "etag", "uid", "updateTime"},
+	},
+	{
+		GVK:       gkebackupv1beta1.GKEBackupRestoreChannelGVK,
+		CRDName:   "gkebackuprestorechannels.gkebackup.gcp.hfl.dev",
+		BaseURL:   "https://gkebackup.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/restoreChannels/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "restoreChannelId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "destinationProjectId", "etag", "uid", "updateTime"},
+	},
+	{
+		GVK:         computev1beta1.ComputeGlobalNetworkEndpointGroupGVK,
+		CRDName:     "computeglobalnetworkendpointgroups.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/global/networkEndpointGroups/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"creationTimestamp", "id", "kind", "region", "selfLink", "size", "zone"},
 	},
 }
 
@@ -402,6 +494,10 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	networkservicesv1alpha1.AddToScheme,
 	resourcemanagerv1alpha1.AddToScheme,
 	networkconnectivityv1alpha1.AddToScheme,
+	certificatemanagerv1beta1.AddToScheme,
+	backupdrv1beta1.AddToScheme,
+	networksecurityv1beta1.AddToScheme,
+	gkebackupv1beta1.AddToScheme,
 }
 
 func init() {

@@ -48,6 +48,13 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"NetworkConnectivityPscAuthorizationPolicy":      slotguard.Spec,
 	"NetworkConnectivityAutomatedDnsRecord":          slotguard.Spec,
 	"NetworkConnectivitySpokeGatewayAdvertisedRoute": slotguard.Spec,
+	"CertificateManagerCertificateIssuanceConfig":    slotguard.Spec,
+	"BackupDRManagementServer":                       slotguard.Spec,
+	"NetworkSecurityDNSThreatDetector":               slotguard.Spec,
+	"GKEBackupBackupPlan":                            slotguard.Spec,
+	"GKEBackupRestorePlan":                           slotguard.Spec,
+	"GKEBackupBackupChannel":                         slotguard.Spec,
+	"GKEBackupRestoreChannel":                        slotguard.Spec,
 }
 
 func TestSlotLabelSources(t *testing.T) {

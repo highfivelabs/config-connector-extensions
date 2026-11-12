@@ -183,7 +183,7 @@ backupdr.googleapis.com,backupdr.googleapis.com/AutoProtectionPolicyBinding,2,,0
 backupdr.googleapis.com,backupdr.googleapis.com/BackupPlan,23,BackupDRBackupPlan,15,,0,8,false,api=v1:projects.locations.backupPlans; official-spec-fields-unmatched=3/18
 backupdr.googleapis.com,backupdr.googleapis.com/BackupPlanAssociation,3,BackupDRBackupPlanAssociation,3,,0,0,false,api=v1:projects.locations.backupPlanAssociations; official-spec-fields-unmatched=4/7
 backupdr.googleapis.com,backupdr.googleapis.com/BackupVault,8,BackupDRBackupVault,5,,0,3,false,api=v1:projects.locations.backupVaults; official-spec-fields-unmatched=4/9
-backupdr.googleapis.com,backupdr.googleapis.com/ManagementServer,5,BackupDRManagementServer,5,,0,0,false,api=v1:projects.locations.managementServers; official-spec-fields-unmatched=3/8
+backupdr.googleapis.com,backupdr.googleapis.com/ManagementServer,5,BackupDRManagementServer,5,BackupDRManagementServer,0,0,false,api=v1:projects.locations.managementServers; official-spec-fields-unmatched=3/8; ours-spec-fields-unmatched=4/9
 backupdr.googleapis.com,backupdr.googleapis.com/RestoreTemplate,12,,0,,0,12,false,api=v1:projects.locations.restoreTemplates
 backupdr.googleapis.com,backupdr.googleapis.com/RestoreVerificationPlan,8,,0,,0,8,false,api=v1:projects.locations.restoreVerificationPlans
 backupdr.googleapis.com,backupdr.googleapis.com/RestoreVerificationPlanAssociation,4,,0,,0,4,false,api=v1:projects.locations.restoreVerificationPlans.associations
@@ -227,7 +227,7 @@ binaryauthorization.googleapis.com,binaryauthorization.googleapis.com/Attestor,9
 binaryauthorization.googleapis.com,binaryauthorization.googleapis.com/PlatformPolicy,28,BinaryAuthorizationPlatformPolicy;BinaryAuthorizationPolicy,23,,0,5,false,api=v1:projects.platforms.policies
 blockchainnodeengine.googleapis.com,blockchainnodeengine.googleapis.com/BlockchainNode,13,BlockchainNodeEngineBlockchainNode,12,,0,1,false,api=v1:projects.locations.blockchainNodes; official-spec-fields-unmatched=3/15
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/Certificate,11,CertificateManagerCertificate,9,,0,2,false,api=v1:projects.locations.certificates; official-spec-fields-unmatched=12/19
-certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateIssuanceConfig,8,CertificateManagerCertificateIssuanceConfig,6,,0,2,false,api=v1:projects.locations.certificateIssuanceConfigs; official-spec-fields-unmatched=3/8
+certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateIssuanceConfig,8,CertificateManagerCertificateIssuanceConfig,6,CertificateManagerCertificateIssuanceConfig,2,0,false,api=v1:projects.locations.certificateIssuanceConfigs; official-spec-fields-unmatched=3/8; ours-spec-fields-unmatched=3/10
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateMap,4,CertificateManagerCertificateMap,3,,0,1,false,api=v1:projects.locations.certificateMaps; official-spec-fields-unmatched=2/3
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateMapCertificateMapEntry,6,CertificateManagerCertificateMapEntry,6,,0,0,false,api=v1:projects.locations.certificateMaps.certificateMapEntries; official-spec-fields-unmatched=3/7
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/DnsAuthorization,6,CertificateManagerDNSAuthorization,5,,0,1,false,api=v1:projects.locations.dnsAuthorizations; official-spec-fields-unmatched=3/6
@@ -351,7 +351,7 @@ compute.googleapis.com,compute.googleapis.com/ForwardingRule,31,ComputeForwardin
 compute.googleapis.com,compute.googleapis.com/FutureReservation,47,ComputeFutureReservation,36,,0,11,false,api=v1:futureReservations; official-spec-fields-unmatched=4/39
 compute.googleapis.com,compute.googleapis.com/GlobalAddress,15,ComputeAddress,13,,0,2,false,api=v1:globalAddresses; official-spec-fields-unmatched=2/13
 compute.googleapis.com,compute.googleapis.com/GlobalForwardingRule,31,ComputeForwardingRule,27,,0,4,false,api=v1:globalForwardingRules; official-spec-fields-unmatched=14/38
-compute.googleapis.com,compute.googleapis.com/GlobalNetworkEndpointGroup,17,ComputeGlobalNetworkEndpointGroup;ComputeNetworkEndpointGroup,6,,0,11,false,api=v1:globalNetworkEndpointGroups
+compute.googleapis.com,compute.googleapis.com/GlobalNetworkEndpointGroup,17,ComputeGlobalNetworkEndpointGroup;ComputeNetworkEndpointGroup,6,ComputeGlobalNetworkEndpointGroup,11,0,false,api=v1:globalNetworkEndpointGroups; ours-spec-fields-unmatched=2/18
 compute.googleapis.com,compute.googleapis.com/GlobalPublicDelegatedPrefix,15,,0,ComputeGlobalPublicDelegatedPrefix;ComputePublicDelegatedPrefix,14,1,false,api=v1:globalPublicDelegatedPrefixes
 compute.googleapis.com,compute.googleapis.com/GlobalVmExtensionPolicy,10,,0,ComputeGlobalVmExtensionPolicy,7,3,false,api=v1:globalVmExtensionPolicies; ours-spec-fields-unmatched=3/9
 compute.googleapis.com,compute.googleapis.com/HealthCheck,49,ComputeHealthCheck,45,,0,4,false,api=v1:healthChecks; official-spec-fields-unmatched=2/46
@@ -738,11 +738,11 @@ gdchardwaremanagement.googleapis.com,gdchardwaremanagement.googleapis.com/Zone,2
 geminidataanalytics.googleapis.com,geminidataanalytics.googleapis.com/Conversation,5,GeminiDataAnalyticsConversation,3,,0,2,false,api=v1:google.cloud.geminidataanalytics.v1.DataChatService.CreateConversation; official-spec-fields-unmatched=3/5
 geminidataanalytics.googleapis.com,geminidataanalytics.googleapis.com/DataAgent,218,,0,,0,218,false,api=v1:google.cloud.geminidataanalytics.v1.DataAgentService.CreateDataAgent; recursive-cut=5
 geminidataanalytics.googleapis.com,geminidataanalytics.googleapis.com/DataAgentSync,218,,0,,0,218,false,api=v1:google.cloud.geminidataanalytics.v1.DataAgentService.CreateDataAgentSync; recursive-cut=5
-gkebackup.googleapis.com,gkebackup.googleapis.com/BackupChannel,4,GKEBackupBackupChannel,4,,0,0,false,api=v1:projects.locations.backupChannels; official-spec-fields-unmatched=3/6
-gkebackup.googleapis.com,gkebackup.googleapis.com/BackupPlan,30,GKEBackupBackupPlan,25,,0,5,false,api=v1:projects.locations.backupPlans; official-spec-fields-unmatched=5/30
+gkebackup.googleapis.com,gkebackup.googleapis.com/BackupChannel,4,GKEBackupBackupChannel,4,GKEBackupBackupChannel,0,0,false,api=v1:projects.locations.backupChannels; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=3/6
+gkebackup.googleapis.com,gkebackup.googleapis.com/BackupPlan,30,GKEBackupBackupPlan,25,GKEBackupBackupPlan,4,1,false,api=v1:projects.locations.backupPlans; official-spec-fields-unmatched=5/30; ours-spec-fields-unmatched=3/32
 gkebackup.googleapis.com,gkebackup.googleapis.com/BackupPlanBackup,4,GKEBackupBackup,4,,0,0,false,api=v1:projects.locations.backupPlans.backups; official-spec-fields-unmatched=2/6
-gkebackup.googleapis.com,gkebackup.googleapis.com/RestoreChannel,4,GKEBackupRestoreChannel,4,,0,0,false,api=v1:projects.locations.restoreChannels; official-spec-fields-unmatched=3/6
-gkebackup.googleapis.com,gkebackup.googleapis.com/RestorePlan,40,GKEBackupRestorePlan,38,,0,2,false,api=v1:projects.locations.restorePlans; official-spec-fields-unmatched=4/42
+gkebackup.googleapis.com,gkebackup.googleapis.com/RestoreChannel,4,GKEBackupRestoreChannel,4,GKEBackupRestoreChannel,0,0,false,api=v1:projects.locations.restoreChannels; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=3/6
+gkebackup.googleapis.com,gkebackup.googleapis.com/RestorePlan,40,GKEBackupRestorePlan,38,GKEBackupRestorePlan,1,1,false,api=v1:projects.locations.restorePlans; official-spec-fields-unmatched=4/42; ours-spec-fields-unmatched=3/42
 gkebackup.googleapis.com,gkebackup.googleapis.com/RestorePlanRestore,16,GKEBackupRestore,14,,0,2,false,api=v1:projects.locations.restorePlans.restores; official-spec-fields-unmatched=3/17
 gkehub.googleapis.com,gkehub.googleapis.com/Fleet,8,GKEHubFleet,7,,0,1,false,api=v1:projects.locations.fleets; official-spec-fields-unmatched=4/11
 gkehub.googleapis.com,gkehub.googleapis.com/Membership,21,GKEHubFeatureMembership;GKEHubMembership,7,,0,14,false,api=v1:projects.locations.memberships
@@ -958,7 +958,7 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/AuthorizationPolic
 networksecurity.googleapis.com,networksecurity.googleapis.com/AuthzPolicy,183,NetworkSecurityAuthzPolicy,178,,0,5,false,api=v1:projects.locations.authzPolicies; official-spec-fields-unmatched=7/184
 networksecurity.googleapis.com,networksecurity.googleapis.com/BackendAuthenticationConfig,6,NetworkSecurityBackendAuthenticationConfig,6,,0,0,false,api=v1:projects.locations.backendAuthenticationConfigs; official-spec-fields-unmatched=3/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/ClientTlsPolicy,8,NetworkSecurityClientTLSPolicy,7,,0,1,false,api=v1:projects.locations.clientTlsPolicies; official-spec-fields-unmatched=3/9
-networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,4,NetworkSecurityDNSThreatDetector,4,,0,0,false,api=v1:projects.locations.dnsThreatDetectors; official-spec-fields-unmatched=4/7
+networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,4,NetworkSecurityDNSThreatDetector,4,NetworkSecurityDNSThreatDetector,0,0,false,api=v1:projects.locations.dnsThreatDetectors; official-spec-fields-unmatched=4/7; ours-spec-fields-unmatched=3/6
 networksecurity.googleapis.com,networksecurity.googleapis.com/FirewallEndpoint,14,NetworkSecurityFirewallEndpoint,5,,0,9,false,api=v1:organizations.locations.firewallEndpoints; official-spec-fields-unmatched=4/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/FirewallEndpointAssociation,6,NetworkSecurityFirewallEndpointAssociation,6,,0,0,false,api=v1:projects.locations.firewallEndpointAssociations; official-spec-fields-unmatched=3/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/FirewallEndpointWildfireVerdictChangeRequest,3,,0,,0,3,false,api=v1:organizations.locations.firewallEndpoints.wildfireVerdictChangeRequests

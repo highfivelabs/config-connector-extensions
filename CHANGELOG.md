@@ -8,6 +8,17 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Eight stable kinds for Config Connector alpha-only kinds**
+  (`docs/design.md` decision 26), generated from Discovery:
+  `certificatemanager.gcp.hfl.dev/v1beta1`
+  `CertificateManagerCertificateIssuanceConfig`,
+  `backupdr.gcp.hfl.dev/v1beta1` `BackupDRManagementServer`,
+  `networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityDNSThreatDetector`,
+  `gkebackup.gcp.hfl.dev/v1beta1` `GKEBackupBackupPlan`,
+  `GKEBackupRestorePlan`, `GKEBackupBackupChannel` and
+  `GKEBackupRestoreChannel`, and `compute.gcp.hfl.dev/v1beta1`
+  `ComputeGlobalNetworkEndpointGroup`. The operator's role gains the
+  `certificatemanager`, `backupdr` and `gkebackup` groups.
 - **Five kinds generated from Discovery** (`docs/design.md` section 2.4):
   `compute.gcp.hfl.dev/v1beta1` `ComputeNetworkAttachment`,
   `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionInstanceTemplate`,

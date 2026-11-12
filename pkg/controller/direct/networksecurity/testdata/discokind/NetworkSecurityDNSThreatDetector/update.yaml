@@ -1,0 +1,10 @@
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityDNSThreatDetector
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  provider: INFOBLOX
+  excludedNetworks: [projects/${PROJECT}/global/networks/${NAME}-net]

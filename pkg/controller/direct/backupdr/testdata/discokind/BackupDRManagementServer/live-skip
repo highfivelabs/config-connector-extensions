@@ -1,0 +1,1 @@
+a management server needs a VPC with private services access to Backup and DR, takes about an hour, and the live-test account has no Backup and DR role; live: pending a decision to pay for one and the role
