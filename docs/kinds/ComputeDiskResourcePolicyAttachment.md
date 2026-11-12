@@ -30,3 +30,5 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `75f5fab` | FAIL | FAIL | every step passed both ways; the test's cleanup closed its disks client before deleting the disks, so the schedule could not be deleted while a disk used it (fixed in the test) (run `cce-11122249-686f`) | 2 disks (10 GB pd-standard), 1 snapshot schedule (deleted by the run's sweep) |
+| 2026-11-12 | `0509dde` | PASS | PASS | none: attach, a resync with no write, the CRD refusing a change, detach on delete, abandon keeping it (run `cce-11122300-2508`) | 2 disks (10 GB pd-standard), 1 snapshot schedule; nothing of the run left |
