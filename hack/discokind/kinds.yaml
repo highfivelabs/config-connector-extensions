@@ -418,6 +418,15 @@
   terraform: google_cloudbuildv2_connection
   note: "A Cloud Build connection to a GitHub, GitLab or Bitbucket host."
 
+- kind: CloudBuildRepository
+  group: cloudbuild.gcp.hfl.dev
+  version: v1alpha1
+  discovery: cloudbuild.v2
+  resource: projects.locations.connections.repositories
+  parents: [project]
+  terraform: google_cloudbuildv2_repository
+  note: "A repository of a Cloud Build connection (its remote URI on the connection's GitHub, GitLab or Bitbucket host); Config Connector names the kind CloudBuildRepository in its reference type but has no kind."
+
 - kind: CloudDeployTarget
   group: clouddeploy.gcp.hfl.dev
   version: v1beta1

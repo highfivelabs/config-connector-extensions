@@ -13,6 +13,11 @@ has been released yet; each release moves its entries out of
   upstream's fields (`instanceId`, `resourceID`, both immutable) and
   `status.externalRef`. Live pending a provisioned Apigee instance
   (`E2E_APIGEE_INSTANCE`). The operator's role gains `apigee.gcp.hfl.dev`.
+- **`cloudbuild.gcp.hfl.dev/v1alpha1` `CloudBuildRepository`**, generated
+  from Discovery: a repository of a Cloud Build connection
+  (`google_cloudbuildv2_repository`), named as Config Connector's
+  reference type names it. Config Connector has no kind for it, so it
+  starts at `v1alpha1`.
 - **`IAMBinding` and `IAMMember` on a Cloud Functions 2nd gen function**
   (`google_cloudfunctions2_function_iam_binding`, `_iam_member`): a
   resource row for `CloudFunctions2Function`, ours

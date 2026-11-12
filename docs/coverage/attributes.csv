@@ -9763,9 +9763,9 @@ cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,gitlabConfig.serv
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,gitlabConfig.sslCa,string,false,both,spec.gitlabConfig.sslCA,spec.gitlabConfig.sslCa
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,gitlabConfig.webhookSecretSecretVersion,string,true,both,spec.gitlabConfig.webhookSecretSecretVersionRef,spec.gitlabConfig.webhookSecretSecretVersion
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/Connection,name,string,false,both,metadata.name,metadata.name
-cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,annotations{},string,false,none,,
-cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,name,string,false,none,,
-cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,remoteUri,string,true,none,,
+cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,annotations{},string,false,ours,,spec.annotations{}
+cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,name,string,false,ours,,metadata.name
+cloudbuild.googleapis.com,cloudbuild.googleapis.com/ConnectionRepository,remoteUri,string,true,ours,,spec.remoteUri
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/GithubEnterpriseConfig,appId,string,true,none,,
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/GithubEnterpriseConfig,displayName,string,false,none,,
 cloudbuild.googleapis.com,cloudbuild.googleapis.com/GithubEnterpriseConfig,hostUrl,string,false,none,,
