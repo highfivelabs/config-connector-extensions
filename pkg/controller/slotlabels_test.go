@@ -60,6 +60,12 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"CloudDeployTarget":                              slotguard.Spec,
 	"CloudDeployDeployPolicy":                        slotguard.Spec,
 	"CloudDeployAutomation":                          slotguard.Spec,
+	"CloudFunctions2Function":                        slotguard.Spec,
+	"DataplexLake":                                   slotguard.Spec,
+	"DataplexZone":                                   slotguard.Spec,
+	"DataplexAsset":                                  slotguard.Spec,
+	"DataplexAspectType":                             slotguard.Spec,
+	"DataplexDataScan":                               slotguard.Spec,
 }
 
 func TestSlotLabelSources(t *testing.T) {

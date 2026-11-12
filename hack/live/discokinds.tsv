@@ -9,6 +9,7 @@ CertificateManagerCertificateIssuanceConfig	https://certificatemanager.googleapi
 CloudBuildConnection	https://cloudbuild.googleapis.com/v2/	projects/{project}/locations/global/connections	connections	-
 CloudDeployDeployPolicy	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/deployPolicies	deployPolicies	-
 CloudDeployTarget	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/targets	targets	-
+CloudFunctions2Function	https://cloudfunctions.googleapis.com/v2/	projects/{project}/locations/global/functions	functions	-
 ComputeCrossSiteNetwork	https://compute.googleapis.com/compute/v1/	projects/{project}/global/crossSiteNetworks	items	-
 ComputeGlobalNetworkEndpointGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/networkEndpointGroups	items	-
 ComputeGlobalPublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicDelegatedPrefixes	items	-
@@ -26,6 +27,9 @@ ComputeRegionInstanceTemplate	https://compute.googleapis.com/compute/v1/	project
 ComputeRegionNotificationEndpoint	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/notificationEndpoints	items	-
 ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}/global/rolloutPlans	items	-
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
+DataplexAspectType	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/aspectTypes	aspectTypes	-
+DataplexDataScan	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/dataScans	dataScans	-
+DataplexLake	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/lakes	lakes	-
 GKEBackupBackupChannel	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/backupChannels	backupChannels	-
 GKEBackupBackupPlan	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/backupPlans	backupPlans	-
 GKEBackupRestoreChannel	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/restoreChannels	restoreChannels	-

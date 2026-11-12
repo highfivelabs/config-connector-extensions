@@ -1,0 +1,13 @@
+apiVersion: dataplex.gcp.hfl.dev/v1beta1
+kind: DataplexDataScan
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  data:
+    resource: //bigquery.googleapis.com/projects/${PROJECT}/datasets/cce/tables/t
+  dataProfileSpec:
+    samplingPercent: 10
+  description: made by a config-connector-extensions test

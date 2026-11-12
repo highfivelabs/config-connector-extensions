@@ -14,6 +14,7 @@ resources:
 - clouddeploy.gcp.hfl.dev_clouddeployautomations.yaml
 - clouddeploy.gcp.hfl.dev_clouddeploydeploypolicies.yaml
 - clouddeploy.gcp.hfl.dev_clouddeploytargets.yaml
+- cloudfunctions2.gcp.hfl.dev_cloudfunctions2functions.yaml
 - compute.gcp.hfl.dev_computecrosssitenetworks.yaml
 - compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
@@ -47,6 +48,11 @@ resources:
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
+- dataplex.gcp.hfl.dev_dataplexaspecttypes.yaml
+- dataplex.gcp.hfl.dev_dataplexassets.yaml
+- dataplex.gcp.hfl.dev_dataplexdatascans.yaml
+- dataplex.gcp.hfl.dev_dataplexlakes.yaml
+- dataplex.gcp.hfl.dev_dataplexzones.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicies.yaml
 - gkebackup.gcp.hfl.dev_gkebackupbackupchannels.yaml
 - gkebackup.gcp.hfl.dev_gkebackupbackupplans.yaml
