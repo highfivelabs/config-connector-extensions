@@ -375,6 +375,16 @@ PROJECT=$GCP_PROJECT KINDS=iam LIVE_RUN=TestIAMMember`. The case makes
 one dataset (US, empty, labelled with the run) and deletes it; the
 sweeper deletes datasets whose ID is the run's name with underscores.
 
+`ComputeRegionBackendBucket` (package `compute`) and `LoggingLink`
+(package `logging`) make what their fixtures name in a live `Setup`
+(`regionbackendbucket_test.go`, `link_test.go`): two regional Cloud
+Storage buckets, and two global log buckets with Log Analytics on. The
+account's `roles/storage.admin`, `roles/compute.loadBalancerAdmin` and
+`roles/logging.admin` (in the fallback project) cover them; the sweeper
+deletes log buckets, links first, by the run's name, where the account
+may list them. A deleted log bucket is kept seven days and its ID is not
+reused.
+
 `ComputeRegionNotificationEndpoint` skips live (its fixtures'
 `live-skip`): `regionNotificationEndpoints.insert` answers 400
 `invalidResourceUsage` "HealthCheck as a Service feature is not

@@ -185,7 +185,11 @@ line); `kindtest` prints the object's Ready message when the cloud does
 not reach the spec; and a kind can have a live `Setup` for what its
 fixtures cannot make (`GKEHubRolloutSequence` makes the project's fleet,
 free, and deletes it). `ComputeRegionNotificationEndpoint` skips live:
-Health Check as a Service is gated per project.
+Health Check as a Service is gated per project. `ComputeRegionBackendBucket` and
+`LoggingLink` got Setups of their own (2026-11-12, run
+`cce-11121541-aa4d`): a Cloud Storage bucket, and a log bucket with Log
+Analytics on, for the test's object and its abandoned one; both pass
+live.
 
 ### Switching to PR #7148
 
