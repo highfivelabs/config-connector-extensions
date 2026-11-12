@@ -24,3 +24,4 @@ One row per run.
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-11 | pending | PASS (CI, `task check`) | pending, needs a Log Analytics bucket (`live-skip`) | not run | none |
+| 2026-11-12 | `81d7b24` | PASS | PASS | none, with the live Setup: the test makes the two global log buckets (Log Analytics on, 1-day retention) its fixtures name, and deletes them after the links. A link took about two minutes to make; the CRD refuses the changed description (links cannot be patched), as on the fake (run `cce-11121541-aa4d`, the fallback project) | 2 links (BigQuery linked datasets) and 2 log buckets (deleted; a deleted log bucket is kept 7 days, its ID not reused); `task live-list` empty of this run |

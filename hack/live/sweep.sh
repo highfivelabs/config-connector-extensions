@@ -34,7 +34,9 @@
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
 # project), by name, through the API, and the project's GKE Hub fleet
-# when a test made it, by label. A failed list or delete fails the sweep.
+# when a test made it, by label, and global log buckets (with their
+# links), by name, where the account may list them. A failed list or
+# delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -446,6 +448,32 @@ while read -r name region made; do
   by_run "${name}" "${made}" || continue
   act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
 done <<<"${rows}"
+
+# Log buckets (a live LoggingLink test's, with Log Analytics on), global,
+# by the run's name, links first (deleting a link is an operation). A
+# deleted bucket stays DELETE_REQUESTED for seven days: already gone. An
+# account that may not list log buckets (403) made none: nothing to sweep.
+# Names are projects/P/locations/global/buckets/B.
+lbase="https://logging.googleapis.com/v2/"
+if body="$(disco_api GET "${lbase}projects/${project}/locations/global/buckets?pageSize=1000" 2>/dev/null)"; then
+  rows="$(jq -r '.buckets[]? | select(.lifecycleState == "ACTIVE") | "\(.name) \(.createTime // "-")"' <<<"${body}")"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    links="$(disco_api GET "${lbase}${name}/links" | jq -r '.links[]? | select(.lifecycleState != "DELETE_REQUESTED") | .name')"
+    for link in ${links}; do
+      act "log bucket link" "${link}" disco_delete "${lbase}" "${link}"
+    done
+    act "log bucket" "${name}" disco_api DELETE "${lbase}${name}"
+  done <<<"${rows}"
+else
+  code="$(jq -r '.error.code // "-"' <<<"${body}" 2>/dev/null || echo -)"
+  if [[ "${code}" != 403 ]]; then
+    echo "  FAILED to list log buckets: ${body}" >&2
+    failed=$((failed + 1))
+  fi
+fi
 
 # Cloud Storage: buckets by the run's name prefix (bucket names are
 # global), aged by their creation time; rm -r takes their objects too.
