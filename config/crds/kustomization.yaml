@@ -9,6 +9,7 @@ resources:
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
 - compute.gcp.hfl.dev_computenetworkattachments.yaml
+- compute.gcp.hfl.dev_computenetworkendpoints.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicypacketmirroringrules.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
