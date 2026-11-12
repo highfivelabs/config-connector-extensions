@@ -12,6 +12,17 @@ has been released yet; each release moves its entries out of
   Config Connector's alpha, Terraform-based response policy rule (decision
   13), with upstream's fields and a controller written here. Live pending
   `roles/dns.admin` for the live-test account (`E2E_DNS_ADMIN=true`).
+- **`aiplatform.gcp.hfl.dev/v1beta1` `AIPlatformReasoningEngine`**, a
+  stable copy of Config Connector's alpha Vertex AI Agent Engine (decision
+  26), with upstream's fields. The API assigns the engine's ID at create;
+  `status.externalRef` keeps it, and `resourceID` acquires an existing
+  engine. Live pending Vertex AI in the live-test project
+  (`E2E_VERTEX_AI=true`).
+- **`cloudbuild.gcp.hfl.dev/v1alpha1` `CloudBuildRepository`**, generated
+  from Discovery: a repository of a Cloud Build connection
+  (`google_cloudbuildv2_repository`), named as Config Connector's
+  reference type names it. Config Connector has no kind for it, so it
+  starts at `v1alpha1`.
 - **`IAMBinding` and `IAMMember` on a Cloud Functions 2nd gen function**
   (`google_cloudfunctions2_function_iam_binding`, `_iam_member`): a
   resource row for `CloudFunctions2Function`, ours

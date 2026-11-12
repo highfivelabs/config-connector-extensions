@@ -24,6 +24,7 @@ import (
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
 	biglakev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/biglake/v1beta1"
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
+	cloudbuildv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1alpha1"
 	cloudbuildv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1beta1"
 	clouddeployv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/clouddeploy/v1beta1"
 	cloudfunctions2v1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudfunctions2/v1beta1"
@@ -544,6 +545,17 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "installationState", "reconciling", "updateTime"},
 	},
 	{
+		GVK:       cloudbuildv1alpha1.CloudBuildRepositoryGVK,
+		CRDName:   "cloudbuildrepositories.cloudbuild.gcp.hfl.dev",
+		BaseURL:   "https://cloudbuild.googleapis.com/v2/",
+		Name:      "{parent}/locations/{location}/connections/{connection}/repositories/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "repositoryId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"createTime", "updateTime", "webhookId"},
+	},
+	{
 		GVK:       clouddeployv1beta1.CloudDeployTargetGVK,
 		CRDName:   "clouddeploytargets.clouddeploy.gcp.hfl.dev",
 		BaseURL:   "https://clouddeploy.googleapis.com/v1/",
@@ -661,6 +673,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	apigatewayv1beta1.AddToScheme,
 	biglakev1beta1.AddToScheme,
 	cloudbuildv1beta1.AddToScheme,
+	cloudbuildv1alpha1.AddToScheme,
 	clouddeployv1beta1.AddToScheme,
 	cloudfunctions2v1beta1.AddToScheme,
 	dataplexv1beta1.AddToScheme,
