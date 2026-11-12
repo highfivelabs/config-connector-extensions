@@ -36,3 +36,4 @@ One row per run.
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-12 | `58c848a` | PASS | FAIL | the delete never finished; the test said nothing (it now prints the Ready condition) (run `cce-11121846-91d6`) | 1 network, 1 zonal NEG with 3 endpoints (deleted with the group) |
 | 2026-11-12 | `9952ffc` | PASS | FAIL | detach: 400 "Invalid value for field 'resource.instance': ''. An instance name cannot be associated with network endpoint of type NON_GCP_PRIVATE_IP_PORT"; the endpoint was read back with an empty instance and sent so (fixed, with a unit test) (run `cce-11121922-5984`) | the same (deleted with the group) |
+| 2026-11-12 | `912326c` | PASS | PASS | none, with the fix: two hybrid endpoints attached, a resync with no attach, the CRD refusing a change, delete detaching one, abandon keeping one (run `cce-11121948-f0b6`, the fallback project) | 1 network, 1 zonal NEG with 3 endpoints (deleted with the group); `task live-list` empty |
