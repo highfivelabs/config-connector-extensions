@@ -1,0 +1,1 @@
+a repository belongs to a Cloud Build connection, which needs a GitHub app installation and an OAuth token in Secret Manager that a test cannot make; live: pending a test GitHub app

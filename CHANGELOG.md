@@ -8,6 +8,11 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`cloudbuild.gcp.hfl.dev/v1alpha1` `CloudBuildRepository`**, generated
+  from Discovery: a repository of a Cloud Build connection
+  (`google_cloudbuildv2_repository`), named as Config Connector's
+  reference type names it. Config Connector has no kind for it, so it
+  starts at `v1alpha1`.
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
