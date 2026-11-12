@@ -59,11 +59,18 @@ func (c *Client) url(t *ResourceType, name string, verb string) (string, error) 
 		return u + "/iam", nil
 	case Compute:
 		return "https://" + host + "/compute/" + t.Version + "/" + name + "/" + verb, nil
+	case BigQuery:
+		// The dataset itself: its access list is the policy (bigquery.go).
+		return "https://" + host + "/bigquery/" + t.Version + "/" + name, nil
 	}
 	return "", fmt.Errorf("unknown protocol %d for %s", t.Protocol, t.Kind)
 }
 
 func (c *Client) do(ctx context.Context, method, u string, body []byte) ([]byte, error) {
+	return c.doHeader(ctx, method, u, body, nil)
+}
+
+func (c *Client) doHeader(ctx context.Context, method, u string, body []byte, header map[string]string) ([]byte, error) {
 	var rd io.Reader
 	if body != nil {
 		rd = bytes.NewReader(body)
@@ -74,6 +81,9 @@ func (c *Client) do(ctx context.Context, method, u string, body []byte) ([]byte,
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range header {
+		req.Header.Set(k, v)
 	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
@@ -91,6 +101,9 @@ func (c *Client) Get(ctx context.Context, t *ResourceType, name string) (*iampb.
 	u, err := c.url(t, name, "getIamPolicy")
 	if err != nil {
 		return nil, err
+	}
+	if t.Protocol == BigQuery {
+		return c.bigqueryGet(ctx, u)
 	}
 	var out []byte
 	switch {
@@ -113,6 +126,9 @@ func (c *Client) Set(ctx context.Context, t *ResourceType, name string, p *iampb
 	u, err := c.url(t, name, "setIamPolicy")
 	if err != nil {
 		return nil, err
+	}
+	if t.Protocol == BigQuery {
+		return c.bigquerySet(ctx, u, p)
 	}
 	pj, err := protojson.Marshal(p)
 	if err != nil {
