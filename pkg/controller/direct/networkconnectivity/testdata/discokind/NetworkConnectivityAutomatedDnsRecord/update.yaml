@@ -14,4 +14,5 @@ spec:
   serviceClass: gcp-memorystore
   originalConfig:
     rrdatas: [10.0.0.5]
+    ttl: 300s
   description: changed, which the API cannot do
