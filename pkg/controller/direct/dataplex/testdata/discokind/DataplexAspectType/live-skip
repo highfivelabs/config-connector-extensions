@@ -1,0 +1,1 @@
+the live-test account has no Dataplex role (a zone also needs its lake, an asset its zone and bucket, a scan its table, which this test does not make); live: pending roles/dataplex.admin

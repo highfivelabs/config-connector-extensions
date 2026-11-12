@@ -290,6 +290,9 @@ spec:
                         description: Optional. A list of namespaced Kubernetes resources.
                         items:
                           properties:
+                            name:
+                              description: Optional. The name of the Kubernetes resource.
+                              type: string
                             namespace:
                               description: Optional. The Namespace of the Kubernetes
                                 resource.

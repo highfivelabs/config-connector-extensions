@@ -587,6 +587,14 @@ type ComputeRegionInstanceTemplateAccessConfig struct {
 	// +optional
 	IpCollection *string `json:"ipCollection,omitempty"`
 
+	// The name of this access configuration. In accessConfigs
+	// (IPv4), the default and recommended name is External NAT, but
+	// you can use any arbitrary string, such as My external IP orNetwork Access.
+	// In ipv6AccessConfigs, the
+	// recommend name is External IPv6.
+	// +optional
+	Name *string `json:"name,omitempty"`
+
 	// Applies to accessConfigs (IPv4) only. Anexternal IP
 	// address associated with this instance. Specify an unused static
 	// external IP address available to the project or leave this field undefined

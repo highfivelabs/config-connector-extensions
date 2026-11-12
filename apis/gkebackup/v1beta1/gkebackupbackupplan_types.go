@@ -88,6 +88,10 @@ type GKEBackupBackupPlanEncryptionKey struct {
 }
 
 type GKEBackupBackupPlanNamespacedName struct {
+	// Optional. The name of the Kubernetes resource.
+	// +optional
+	Name *string `json:"name,omitempty"`
+
 	// Optional. The Namespace of the Kubernetes resource.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`

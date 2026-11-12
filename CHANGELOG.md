@@ -8,6 +8,13 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Six more stable kinds for Config Connector alpha-only kinds**
+  (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
+  `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
+  `DataplexLake`, `DataplexZone`, `DataplexAsset`, `DataplexAspectType`
+  and `DataplexDataScan`. `IAMMember` and `IAMBinding` find ours by name
+  before Config Connector's alpha kinds for Dataplex, Cloud Deploy
+  targets, API Gateway and Cloud Build connections.
 - **Eight more stable kinds for Config Connector alpha-only kinds**
   (decision 26), generated from Discovery:
   `apigateway.gcp.hfl.dev/v1beta1` `APIGatewayAPIConfig` and
@@ -67,6 +74,11 @@ has been released yet; each release moves its entries out of
   calls, and two writers in one manager could both pass the check. Writes
   to one dataset now go one at a time within a manager; the API's
   `If-Match` still guards against other writers.
+- **Generated kinds lacked every nested field called `name`**
+  (`hack/discokind` dropped `name` at every level, not only the
+  resource's own): `ComputeRegionInstanceTemplate`'s network interface
+  and disk names, the BYOIP prefixes' and VM extension policies' named
+  parts, and the Backup for GKE plans' selected applications gain them.
 - **A generated kind whose create takes a `requestId` beside its ID**
   (`NetworkConnectivityPscAuthorizationPolicy`, `BackupDRManagementServer`)
   sent its ID as the `requestId`: `hack/discokind` picked any query

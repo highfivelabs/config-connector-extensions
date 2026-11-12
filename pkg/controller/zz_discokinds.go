@@ -26,8 +26,10 @@ import (
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
 	cloudbuildv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1beta1"
 	clouddeployv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/clouddeploy/v1beta1"
+	cloudfunctions2v1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudfunctions2/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	dataplexv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dataplex/v1beta1"
 	gkebackupv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkebackup/v1beta1"
 	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
@@ -574,6 +576,72 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"createTime", "name", "uid", "updateTime"},
 	},
+	{
+		GVK:       cloudfunctions2v1beta1.CloudFunctions2FunctionGVK,
+		CRDName:   "cloudfunctions2functions.cloudfunctions2.gcp.hfl.dev",
+		BaseURL:   "https://cloudfunctions.googleapis.com/v2/",
+		Name:      "{parent}/locations/{location}/functions/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "functionId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "satisfiesPzi", "satisfiesPzs", "state", "stateMessages", "updateTime", "upgradeInfo", "url"},
+	},
+	{
+		GVK:       dataplexv1beta1.DataplexLakeGVK,
+		CRDName:   "dataplexlakes.dataplex.gcp.hfl.dev",
+		BaseURL:   "https://dataplex.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/lakes/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "lakeId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"assetStatus", "createTime", "metastoreStatus", "name", "serviceAccount", "state", "uid", "updateTime"},
+	},
+	{
+		GVK:       dataplexv1beta1.DataplexZoneGVK,
+		CRDName:   "dataplexzones.dataplex.gcp.hfl.dev",
+		BaseURL:   "https://dataplex.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/lakes/{lake}/zones/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "zoneId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"assetStatus", "createTime", "name", "state", "uid", "updateTime"},
+	},
+	{
+		GVK:       dataplexv1beta1.DataplexAssetGVK,
+		CRDName:   "dataplexassets.dataplex.gcp.hfl.dev",
+		BaseURL:   "https://dataplex.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "assetId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "discoveryStatus", "name", "resourceStatus", "securityStatus", "state", "uid", "updateTime"},
+	},
+	{
+		GVK:       dataplexv1beta1.DataplexAspectTypeGVK,
+		CRDName:   "dataplexaspecttypes.dataplex.gcp.hfl.dev",
+		BaseURL:   "https://dataplex.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/aspectTypes/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "aspectTypeId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "name", "transferStatus", "uid", "updateTime"},
+	},
+	{
+		GVK:       dataplexv1beta1.DataplexDataScanGVK,
+		CRDName:   "dataplexdatascans.dataplex.gcp.hfl.dev",
+		BaseURL:   "https://dataplex.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/dataScans/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "dataScanId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "dataDiscoveryResult", "dataDocumentationResult", "dataProfileResult", "dataQualityResult", "executionStatus", "name", "state", "type", "uid", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -594,6 +662,8 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	biglakev1beta1.AddToScheme,
 	cloudbuildv1beta1.AddToScheme,
 	clouddeployv1beta1.AddToScheme,
+	cloudfunctions2v1beta1.AddToScheme,
+	dataplexv1beta1.AddToScheme,
 }
 
 func init() {

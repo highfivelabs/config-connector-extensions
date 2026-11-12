@@ -1,0 +1,16 @@
+apiVersion: dataplex.gcp.hfl.dev/v1beta1
+kind: DataplexAsset
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  lake: ${NAME}-lake
+  zone: ${NAME}-zone
+  resourceSpec:
+    name: projects/${PROJECT}/buckets/${NAME}-bucket
+    type: STORAGE_BUCKET
+  discoverySpec:
+    enabled: false
+  description: made by a config-connector-extensions test

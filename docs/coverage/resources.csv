@@ -280,7 +280,7 @@ clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipelineRelease,16
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeliveryPipelineReleaseRollout,5,,0,,0,5,false,api=v1:projects.locations.deliveryPipelines.releases.rollouts
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/DeployPolicy,35,CloudDeployDeployPolicy,32,CloudDeployDeployPolicy,3,0,false,api=v1:projects.locations.deployPolicies; official-spec-fields-unmatched=4/36; ours-spec-fields-unmatched=4/39
 clouddeploy.googleapis.com,clouddeploy.googleapis.com/Target,30,CloudDeployTarget,29,CloudDeployTarget,1,0,false,api=v1:projects.locations.targets; official-spec-fields-unmatched=3/31; ours-spec-fields-unmatched=5/29
-cloudfunctions.googleapis.com,cloudfunctions.googleapis.com/Function,61,CloudFunctions2Function;CloudFunctionsFunction,49,,0,12,false,api=v2:projects.locations.functions
+cloudfunctions.googleapis.com,cloudfunctions.googleapis.com/Function,61,CloudFunctions2Function;CloudFunctionsFunction,49,CloudFunctions2Function,12,0,false,api=v2:projects.locations.functions; ours-spec-fields-unmatched=5/65
 cloudidentity.googleapis.com,cloudidentity.googleapis.com/AllowlistedDomain,1,,0,,0,1,false,api=v1:allowlistedDomains
 cloudidentity.googleapis.com,cloudidentity.googleapis.com/Device,6,,0,,0,6,false,api=v1:devices
 cloudidentity.googleapis.com,cloudidentity.googleapis.com/Group,10,CloudIdentityGroup,6,,0,4,false,api=v1:groups; official-spec-fields-unmatched=2/8
@@ -352,8 +352,8 @@ compute.googleapis.com,compute.googleapis.com/FutureReservation,47,ComputeFuture
 compute.googleapis.com,compute.googleapis.com/GlobalAddress,15,ComputeAddress,13,,0,2,false,api=v1:globalAddresses; official-spec-fields-unmatched=2/13
 compute.googleapis.com,compute.googleapis.com/GlobalForwardingRule,31,ComputeForwardingRule,27,,0,4,false,api=v1:globalForwardingRules; official-spec-fields-unmatched=14/38
 compute.googleapis.com,compute.googleapis.com/GlobalNetworkEndpointGroup,17,ComputeGlobalNetworkEndpointGroup;ComputeNetworkEndpointGroup,6,ComputeGlobalNetworkEndpointGroup,11,0,false,api=v1:globalNetworkEndpointGroups; ours-spec-fields-unmatched=2/18
-compute.googleapis.com,compute.googleapis.com/GlobalPublicDelegatedPrefix,15,,0,ComputeGlobalPublicDelegatedPrefix;ComputePublicDelegatedPrefix,14,1,false,api=v1:globalPublicDelegatedPrefixes
-compute.googleapis.com,compute.googleapis.com/GlobalVmExtensionPolicy,10,,0,ComputeGlobalVmExtensionPolicy,7,3,false,api=v1:globalVmExtensionPolicies; ours-spec-fields-unmatched=3/9
+compute.googleapis.com,compute.googleapis.com/GlobalPublicDelegatedPrefix,15,,0,ComputeGlobalPublicDelegatedPrefix;ComputePublicDelegatedPrefix,15,0,false,api=v1:globalPublicDelegatedPrefixes
+compute.googleapis.com,compute.googleapis.com/GlobalVmExtensionPolicy,10,,0,ComputeGlobalVmExtensionPolicy,8,2,false,api=v1:globalVmExtensionPolicies; ours-spec-fields-unmatched=3/10
 compute.googleapis.com,compute.googleapis.com/HealthCheck,49,ComputeHealthCheck,45,,0,4,false,api=v1:healthChecks; official-spec-fields-unmatched=2/46
 compute.googleapis.com,compute.googleapis.com/HttpHealthCheck,9,ComputeHTTPHealthCheck,9,,0,0,false,api=v1:httpHealthChecks; official-spec-fields-unmatched=1/9
 compute.googleapis.com,compute.googleapis.com/HttpsHealthCheck,9,ComputeHTTPSHealthCheck,9,,0,0,false,api=v1:httpsHealthChecks; official-spec-fields-unmatched=1/9
@@ -381,7 +381,7 @@ compute.googleapis.com,compute.googleapis.com/NodeTemplate,14,ComputeNodeTemplat
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,0,74,false,api=v1:organizationSecurityPolicies
 compute.googleapis.com,compute.googleapis.com/PacketMirroring,12,ComputePacketMirroring,12,,0,0,false,api=v1:packetMirrorings; official-spec-fields-unmatched=5/16
 compute.googleapis.com,compute.googleapis.com/PublicAdvertisedPrefix,7,,0,ComputePublicAdvertisedPrefix,7,0,false,api=v1:publicAdvertisedPrefixes; ours-spec-fields-unmatched=2/8
-compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,ComputePublicDelegatedPrefix,14,1,false,api=v1:publicDelegatedPrefixes; ours-spec-fields-unmatched=3/16
+compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,ComputePublicDelegatedPrefix,15,0,false,api=v1:publicDelegatedPrefixes; ours-spec-fields-unmatched=3/17
 compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,,0,7,false,api=v1:regionAutoscalers
 compute.googleapis.com,compute.googleapis.com/RegionBackendBucket,21,,0,ComputeRegionBackendBucket,21,0,false,api=v1:regionBackendBuckets; ours-spec-fields-unmatched=3/23
 compute.googleapis.com,compute.googleapis.com/RegionBackendService,135,ComputeBackendService,84,,0,51,false,api=v1:regionBackendServices; official-spec-fields-unmatched=13/96
@@ -394,7 +394,7 @@ compute.googleapis.com,compute.googleapis.com/RegionHealthCheckService,6,,0,Comp
 compute.googleapis.com,compute.googleapis.com/RegionHealthSource,5,,0,ComputeRegionHealthSource,5,0,false,api=v1:regionHealthSources; ours-spec-fields-unmatched=3/7
 compute.googleapis.com,compute.googleapis.com/RegionInstanceGroupManager,85,ComputeInstanceGroupManager,26,,0,59,false,api=v1:regionInstanceGroupManagers; official-spec-fields-unmatched=9/34
 compute.googleapis.com,compute.googleapis.com/RegionInstanceGroupManagerResizeRequest,17,,0,,0,17,false,api=v1:regionInstanceGroupManagerResizeRequests; request-wrapper=InstanceGroupManagerResizeRequest
-compute.googleapis.com,compute.googleapis.com/RegionInstanceTemplate,150,ComputeInstanceTemplate,65,ComputeRegionInstanceTemplate,84,1,false,api=v1:regionInstanceTemplates; official-spec-fields-unmatched=19/83; ours-spec-fields-unmatched=3/150
+compute.googleapis.com,compute.googleapis.com/RegionInstanceTemplate,150,ComputeInstanceTemplate,65,ComputeRegionInstanceTemplate,85,0,false,api=v1:regionInstanceTemplates; official-spec-fields-unmatched=19/83; ours-spec-fields-unmatched=3/152
 compute.googleapis.com,compute.googleapis.com/RegionInstantSnapshot,5,,0,,0,5,false,api=v1:regionInstantSnapshots
 compute.googleapis.com,compute.googleapis.com/RegionInstantSnapshotGroup,3,,0,,0,3,false,api=v1:regionInstantSnapshotGroups
 compute.googleapis.com,compute.googleapis.com/RegionNetworkEndpointGroup,17,ComputeNetworkEndpointGroup;ComputeRegionNetworkEndpointGroup,12,,0,5,false,api=v1:regionNetworkEndpointGroups
@@ -517,12 +517,12 @@ datamigration.googleapis.com,datamigration.googleapis.com/ConversionWorkspaceMap
 datamigration.googleapis.com,datamigration.googleapis.com/MigrationJob,68,CloudDMSMigrationJob;DatabaseMigrationMigrationJob,24,,0,44,false,api=v1:projects.locations.migrationJobs
 datamigration.googleapis.com,datamigration.googleapis.com/PrivateConnection,7,CloudDMSPrivateConnection;DatabaseMigrationPrivateConnection,5,,0,2,false,api=v1:projects.locations.privateConnections
 datapipelines.googleapis.com,datapipelines.googleapis.com/Pipeline,57,,0,,0,57,false,api=v1:projects.locations.pipelines
-dataplex.googleapis.com,dataplex.googleapis.com/AspectType,23,DataplexAspectType,21,,0,2,false,api=v1:projects.locations.aspectTypes; recursive-cut=3; official-spec-fields-unmatched=3/24
+dataplex.googleapis.com,dataplex.googleapis.com/AspectType,23,DataplexAspectType,21,DataplexAspectType,2,0,false,api=v1:projects.locations.aspectTypes; recursive-cut=3; official-spec-fields-unmatched=3/24; ours-spec-fields-unmatched=4/27
 dataplex.googleapis.com,dataplex.googleapis.com/DataDomain,8,,0,,0,8,false,api=v1:projects.locations.dataDomains
 dataplex.googleapis.com,dataplex.googleapis.com/DataDomainBinding,2,DataplexDataAttributeBinding,2,,0,0,false,api=v1:projects.locations.dataDomains.bindings; official-spec-fields-unmatched=9/10
 dataplex.googleapis.com,dataplex.googleapis.com/DataProduct,13,DataplexDataProduct,7,,0,6,false,api=v1:projects.locations.dataProducts; official-spec-fields-unmatched=4/10
 dataplex.googleapis.com,dataplex.googleapis.com/DataProductDataAsset,4,DataplexDataAsset,3,,0,1,false,api=v1:projects.locations.dataProducts.dataAssets; official-spec-fields-unmatched=2/4
-dataplex.googleapis.com,dataplex.googleapis.com/DataScan,74,DataplexDataScan,55,,0,19,false,api=v1:projects.locations.dataScans; official-spec-fields-unmatched=2/57
+dataplex.googleapis.com,dataplex.googleapis.com/DataScan,74,DataplexDataScan,55,DataplexDataScan,19,0,false,api=v1:projects.locations.dataScans; official-spec-fields-unmatched=2/57; ours-spec-fields-unmatched=3/77
 dataplex.googleapis.com,dataplex.googleapis.com/EncryptionConfig,3,DataplexEncryptionConfig,3,,0,0,false,api=v1:organizations.locations.encryptionConfigs; official-spec-fields-unmatched=4/6
 dataplex.googleapis.com,dataplex.googleapis.com/EntryGroup,5,DataplexEntryGroup,2,,0,3,false,api=v1:projects.locations.entryGroups; official-spec-fields-unmatched=3/5
 dataplex.googleapis.com,dataplex.googleapis.com/EntryGroupEntry,18,DataplexEntry,18,,0,0,false,api=v1:projects.locations.entryGroups.entries; official-spec-fields-unmatched=2/19
@@ -531,10 +531,10 @@ dataplex.googleapis.com,dataplex.googleapis.com/EntryType,8,DataplexEntryType,7,
 dataplex.googleapis.com,dataplex.googleapis.com/Glossary,3,DataplexGlossary,3,,0,0,false,api=v1:projects.locations.glossaries; official-spec-fields-unmatched=3/6
 dataplex.googleapis.com,dataplex.googleapis.com/GlossaryCategory,4,DataplexGlossaryCategory,4,,0,0,false,api=v1:projects.locations.glossaries.categories; official-spec-fields-unmatched=3/7
 dataplex.googleapis.com,dataplex.googleapis.com/GlossaryTerm,4,DataplexGlossaryTerm,3,,0,1,false,api=v1:projects.locations.glossaries.terms; official-spec-fields-unmatched=1/4
-dataplex.googleapis.com,dataplex.googleapis.com/Lake,4,DataplexLake,3,,0,1,false,api=v1:projects.locations.lakes; official-spec-fields-unmatched=3/6
+dataplex.googleapis.com,dataplex.googleapis.com/Lake,4,DataplexLake,3,DataplexLake,1,0,false,api=v1:projects.locations.lakes; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=3/7
 dataplex.googleapis.com,dataplex.googleapis.com/LakeTask,41,DataplexTask,40,,0,1,false,api=v1:projects.locations.lakes.tasks; official-spec-fields-unmatched=2/42
-dataplex.googleapis.com,dataplex.googleapis.com/LakeZone,15,DataplexZone,14,,0,1,false,api=v1:projects.locations.lakes.zones; official-spec-fields-unmatched=2/16
-dataplex.googleapis.com,dataplex.googleapis.com/LakeZoneAsset,16,DataplexAsset,16,,0,0,false,api=v1:projects.locations.lakes.zones.assets; official-spec-fields-unmatched=3/19
+dataplex.googleapis.com,dataplex.googleapis.com/LakeZone,15,DataplexZone,14,DataplexZone,1,0,false,api=v1:projects.locations.lakes.zones; official-spec-fields-unmatched=2/16; ours-spec-fields-unmatched=4/19
+dataplex.googleapis.com,dataplex.googleapis.com/LakeZoneAsset,16,DataplexAsset,16,DataplexAsset,0,0,false,api=v1:projects.locations.lakes.zones.assets; official-spec-fields-unmatched=3/19; ours-spec-fields-unmatched=5/21
 dataplex.googleapis.com,dataplex.googleapis.com/LakeZoneEntity,25,DataplexEntity,25,,0,0,false,api=v1:projects.locations.lakes.zones.entities; recursive-cut=1; official-spec-fields-unmatched=4/29
 dataplex.googleapis.com,dataplex.googleapis.com/LakeZoneEntityPartition,2,,0,,0,2,false,api=v1:projects.locations.lakes.zones.entities.partitions
 dataplex.googleapis.com,dataplex.googleapis.com/MetadataFeed,9,DataplexMetadataFeed,9,,0,0,false,api=v1:projects.locations.metadataFeeds; official-spec-fields-unmatched=3/11
@@ -739,10 +739,10 @@ geminidataanalytics.googleapis.com,geminidataanalytics.googleapis.com/Conversati
 geminidataanalytics.googleapis.com,geminidataanalytics.googleapis.com/DataAgent,218,,0,,0,218,false,api=v1:google.cloud.geminidataanalytics.v1.DataAgentService.CreateDataAgent; recursive-cut=5
 geminidataanalytics.googleapis.com,geminidataanalytics.googleapis.com/DataAgentSync,218,,0,,0,218,false,api=v1:google.cloud.geminidataanalytics.v1.DataAgentService.CreateDataAgentSync; recursive-cut=5
 gkebackup.googleapis.com,gkebackup.googleapis.com/BackupChannel,4,GKEBackupBackupChannel,4,GKEBackupBackupChannel,0,0,false,api=v1:projects.locations.backupChannels; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=3/6
-gkebackup.googleapis.com,gkebackup.googleapis.com/BackupPlan,30,GKEBackupBackupPlan,25,GKEBackupBackupPlan,4,1,false,api=v1:projects.locations.backupPlans; official-spec-fields-unmatched=5/30; ours-spec-fields-unmatched=3/32
+gkebackup.googleapis.com,gkebackup.googleapis.com/BackupPlan,30,GKEBackupBackupPlan,25,GKEBackupBackupPlan,3,2,false,api=v1:projects.locations.backupPlans; official-spec-fields-unmatched=5/30; ours-spec-fields-unmatched=4/32
 gkebackup.googleapis.com,gkebackup.googleapis.com/BackupPlanBackup,4,GKEBackupBackup,4,,0,0,false,api=v1:projects.locations.backupPlans.backups; official-spec-fields-unmatched=2/6
 gkebackup.googleapis.com,gkebackup.googleapis.com/RestoreChannel,4,GKEBackupRestoreChannel,4,GKEBackupRestoreChannel,0,0,false,api=v1:projects.locations.restoreChannels; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=3/6
-gkebackup.googleapis.com,gkebackup.googleapis.com/RestorePlan,40,GKEBackupRestorePlan,38,GKEBackupRestorePlan,1,1,false,api=v1:projects.locations.restorePlans; official-spec-fields-unmatched=4/42; ours-spec-fields-unmatched=3/42
+gkebackup.googleapis.com,gkebackup.googleapis.com/RestorePlan,40,GKEBackupRestorePlan,38,GKEBackupRestorePlan,0,2,false,api=v1:projects.locations.restorePlans; official-spec-fields-unmatched=4/42; ours-spec-fields-unmatched=4/42
 gkebackup.googleapis.com,gkebackup.googleapis.com/RestorePlanRestore,16,GKEBackupRestore,14,,0,2,false,api=v1:projects.locations.restorePlans.restores; official-spec-fields-unmatched=3/17
 gkehub.googleapis.com,gkehub.googleapis.com/Fleet,8,GKEHubFleet,7,,0,1,false,api=v1:projects.locations.fleets; official-spec-fields-unmatched=4/11
 gkehub.googleapis.com,gkehub.googleapis.com/Membership,21,GKEHubFeatureMembership;GKEHubMembership,7,,0,14,false,api=v1:projects.locations.memberships

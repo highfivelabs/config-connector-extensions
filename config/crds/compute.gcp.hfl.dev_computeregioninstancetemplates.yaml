@@ -769,6 +769,14 @@ spec:
                                   - Partial URL, as in - projects/projectId/regions/region/publicDelegatedPrefixes/pdp-name
                                   - regions/region/publicDelegatedPrefixes/pdp-name
                                 type: string
+                              name:
+                                description: The name of this access configuration.
+                                  In accessConfigs (IPv4), the default and recommended
+                                  name is External NAT, but you can use any arbitrary
+                                  string, such as My external IP orNetwork Access.
+                                  In ipv6AccessConfigs, the recommend name is External
+                                  IPv6.
+                                type: string
                               natIP:
                                 description: Applies to accessConfigs (IPv4) only.
                                   Anexternal IP address associated with this instance.
@@ -915,6 +923,14 @@ spec:
                                   - Full resource URL, as inhttps://www.googleapis.com/compute/v1/projects/projectId/regions/region/publicDelegatedPrefixes/pdp-name
                                   - Partial URL, as in - projects/projectId/regions/region/publicDelegatedPrefixes/pdp-name
                                   - regions/region/publicDelegatedPrefixes/pdp-name
+                                type: string
+                              name:
+                                description: The name of this access configuration.
+                                  In accessConfigs (IPv4), the default and recommended
+                                  name is External NAT, but you can use any arbitrary
+                                  string, such as My external IP orNetwork Access.
+                                  In ipv6AccessConfigs, the recommend name is External
+                                  IPv6.
                                 type: string
                               natIP:
                                 description: Applies to accessConfigs (IPv4) only.

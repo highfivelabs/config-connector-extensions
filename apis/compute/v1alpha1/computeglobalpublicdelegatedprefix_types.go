@@ -128,6 +128,10 @@ type ComputeGlobalPublicDelegatedPrefixPublicDelegatedPrefixPublicDelegatedSubPr
 	// One of DELEGATION, EXTERNAL_IPV6_FORWARDING_RULE_CREATION, EXTERNAL_IPV6_SUBNETWORK_CREATION, INTERNAL_IPV6_SUBNETWORK_CREATION.
 	// +optional
 	Mode *string `json:"mode,omitempty"`
+
+	// The name of the sub public delegated prefix.
+	// +optional
+	Name *string `json:"name,omitempty"`
 }
 
 // ComputeGlobalPublicDelegatedPrefixObservedState is the API's read-only fields.

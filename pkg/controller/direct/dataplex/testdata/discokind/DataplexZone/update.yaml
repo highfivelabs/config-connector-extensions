@@ -1,0 +1,15 @@
+apiVersion: dataplex.gcp.hfl.dev/v1beta1
+kind: DataplexZone
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  lake: ${NAME}-lake
+  type: RAW
+  resourceSpec:
+    locationType: SINGLE_REGION
+  discoverySpec:
+    enabled: false
+  description: changed

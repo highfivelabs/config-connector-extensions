@@ -15,6 +15,10 @@
 
 package iampolicy
 
+// Where Config Connector has only an alpha kind for a resource, ours
+// (v1beta1, docs/design.md decision 26) comes first in the row's GVKs, so a
+// resourceRef by name finds our object when both exist.
+//
 // The resource types Config Connector's IAMPolicyMember cannot reference
 // (the seed catalog's rank 2, docs/design.md 6.5): every one is marked
 // NotInIAMPolicyMember. Written here from each service's REST reference
@@ -97,22 +101,22 @@ func moreTypes() []*ResourceType {
 			[]schema.GroupVersionKind{cnrm("clouddeploy", "v1beta1", "CloudDeployDeliveryPipeline")}, inLocation("deliveryPipelines")),
 		mixin("CloudDeployTarget", "clouddeploy.googleapis.com", "v1", false,
 			loc+`/targets/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("clouddeploy", "v1alpha1", "CloudDeployTarget")}, inLocation("targets")),
+			[]schema.GroupVersionKind{gvk("clouddeploy.gcp.hfl.dev", "v1beta1", "CloudDeployTarget"), cnrm("clouddeploy", "v1alpha1", "CloudDeployTarget")}, inLocation("targets")),
 		mixin("DataformRepository", "dataform.googleapis.com", "v1beta1", false,
 			loc+`/repositories/[^/]+`,
 			[]schema.GroupVersionKind{cnrm("dataform", "v1beta1", "DataformRepository")}, inLocation("repositories")),
 		mixin("DataplexLake", "dataplex.googleapis.com", "v1", false,
 			loc+`/lakes/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("dataplex", "v1alpha1", "DataplexLake")}, inLocation("lakes")),
+			[]schema.GroupVersionKind{gvk("dataplex.gcp.hfl.dev", "v1beta1", "DataplexLake"), cnrm("dataplex", "v1alpha1", "DataplexLake")}, inLocation("lakes")),
 		mixin("DataplexZone", "dataplex.googleapis.com", "v1", false,
 			loc+`/lakes/[^/]+/zones/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("dataplex", "v1alpha1", "DataplexZone")}, nil),
+			[]schema.GroupVersionKind{gvk("dataplex.gcp.hfl.dev", "v1beta1", "DataplexZone"), cnrm("dataplex", "v1alpha1", "DataplexZone")}, nil),
 		mixin("DataplexDataScan", "dataplex.googleapis.com", "v1", false,
 			loc+`/dataScans/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("dataplex", "v1alpha1", "DataplexDataScan")}, inLocation("dataScans")),
+			[]schema.GroupVersionKind{gvk("dataplex.gcp.hfl.dev", "v1beta1", "DataplexDataScan"), cnrm("dataplex", "v1alpha1", "DataplexDataScan")}, inLocation("dataScans")),
 		mixin("DataplexAspectType", "dataplex.googleapis.com", "v1", false,
 			loc+`/aspectTypes/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("dataplex", "v1alpha1", "DataplexAspectType")}, inLocation("aspectTypes")),
+			[]schema.GroupVersionKind{gvk("dataplex.gcp.hfl.dev", "v1beta1", "DataplexAspectType"), cnrm("dataplex", "v1alpha1", "DataplexAspectType")}, inLocation("aspectTypes")),
 		mixin("WorkstationConfig", "workstations.googleapis.com", "v1", false,
 			loc+`/workstationClusters/[^/]+/workstationConfigs/[^/]+`,
 			[]schema.GroupVersionKind{cnrm("workstations", "v1beta1", "WorkstationConfig")}, nil),
@@ -133,10 +137,10 @@ func moreTypes() []*ResourceType {
 			}),
 		mixin("APIGatewayAPIConfig", "apigateway.googleapis.com", "v1", false,
 			`projects/[^/]+/locations/global/apis/[^/]+/configs/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("apigateway", "v1alpha1", "APIGatewayAPIConfig")}, nil),
+			[]schema.GroupVersionKind{gvk("apigateway.gcp.hfl.dev", "v1beta1", "APIGatewayAPIConfig"), cnrm("apigateway", "v1alpha1", "APIGatewayAPIConfig")}, nil),
 		mixin("APIGatewayGateway", "apigateway.googleapis.com", "v1", false,
 			loc+`/gateways/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("apigateway", "v1alpha1", "APIGatewayGateway")}, inLocation("gateways")),
+			[]schema.GroupVersionKind{gvk("apigateway.gcp.hfl.dev", "v1beta1", "APIGatewayGateway"), cnrm("apigateway", "v1alpha1", "APIGatewayGateway")}, inLocation("gateways")),
 		mixin("BinaryAuthorizationAttestor", "binaryauthorization.googleapis.com", "v1", false,
 			`projects/[^/]+/attestors/[^/]+`,
 			[]schema.GroupVersionKind{cnrm("binaryauthorization", "v1beta1", "BinaryAuthorizationAttestor")},
@@ -155,7 +159,7 @@ func moreTypes() []*ResourceType {
 			[]schema.GroupVersionKind{cnrm("datacatalog", "v1alpha1", "DataCatalogTagTemplate")}, inLocation("tagTemplates")),
 		mixin("CloudBuildConnection", "cloudbuild.googleapis.com", "v2", false,
 			loc+`/connections/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("cloudbuild", "v1alpha1", "CloudBuildConnection")}, inLocation("connections")),
+			[]schema.GroupVersionKind{gvk("cloudbuild.gcp.hfl.dev", "v1beta1", "CloudBuildConnection"), cnrm("cloudbuild", "v1alpha1", "CloudBuildConnection")}, inLocation("connections")),
 		// No Config Connector kind: external only.
 		mixin("WorkbenchInstance", "notebooks.googleapis.com", "v2", false,
 			loc+`/instances/[^/]+`, nil, nil),
