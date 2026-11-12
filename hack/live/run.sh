@@ -40,7 +40,8 @@ source hack/live/projects.sh
 # E2E_TEST_FOLDER_PROJECT; logging's LoggingBillingAccountSink skips live
 # without a billing account, E2E_BILLING_ACCOUNT; securitycenter
 # (SecurityCenterMuteConfig) skips live unless E2E_SECURITY_CENTER=true;
-# spanner (SpannerInstanceConfig) skips live unless E2E_SPANNER=true
+# spanner (SpannerInstanceConfig) skips live unless E2E_SPANNER=true;
+# aiplatform (AIPlatformReasoningEngine) skips live unless E2E_VERTEX_AI=true
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"

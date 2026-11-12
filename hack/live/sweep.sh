@@ -450,6 +450,19 @@ if [[ "${E2E_SPANNER:-}" == true ]]; then
   for name in ${rows}; do
     by_run "${name#custom-}" || continue
     act "Spanner instance config" "${name}" "${G[@]}" spanner instance-configs delete "${name}"
+# Vertex AI reasoning engines (the AIPlatformReasoningEngine test's), by
+# the run's display name (the ID is the API's), only where the live-test
+# account has Vertex AI (E2E_VERTEX_AI=true: aiplatform.googleapis.com on
+# and roles/aiplatform.user); without it the test does not run live.
+if [[ "${E2E_VERTEX_AI:-}" == true ]]; then
+  for region in us-central1; do
+    rebase="https://${region}-aiplatform.googleapis.com/v1/projects/${project}/locations/${region}/reasoningEngines"
+    rows="$(disco_api GET "${rebase}?pageSize=100" | jq -r '.reasoningEngines[]? | "\(.name) \(.displayName) \(.createTime)"')"
+    while read -r name display made; do
+      [[ -n "${name}" ]] || continue
+      by_run "${display}" "${made}" || continue
+      act "reasoning engine" "${name}" disco_api DELETE "https://${region}-aiplatform.googleapis.com/v1/${name}"
+    done <<<"${rows}"
   done
 fi
 
