@@ -340,6 +340,10 @@ them needs the API and the role). With them:
 The test binds a policy to two networks of its own, unbinds one,
 deletes it (unbinding first) and abandons and then acquires another; the
 sweeper unbinds and deletes policies whose name carries a run ID.
+`DNSResponsePolicyRule` (the same package) waits on the same switch; its
+test makes a policy of its own through the API, with rules that answer a
+name, switch to `bypassResponsePolicy` and are abandoned, and the sweeper
+deletes a policy's rules before the policy.
 
 `ApigeeNATAddress` (package `apigee`) waits on Apigee: a NAT address
 belongs to an Apigee instance, which needs a provisioned Apigee

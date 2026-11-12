@@ -27647,9 +27647,9 @@ dns.googleapis.com,dns.googleapis.com/ResponsePolicy,id,string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,labels{},string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,networks[].networkUrl,string,false,both,spec.networks[].networkUrl,spec.networks[].networkUrl
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,responsePolicyName,string,false,none,,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,behavior,string,false,official,spec.behavior,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,dnsName,string,false,official,spec.dnsName,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].name,string,false,official,spec.localData.localDatas[].name,
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,behavior,string,false,both,spec.behavior,spec.behavior
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,dnsName,string,false,both,spec.dnsName,spec.dnsName
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].name,string,false,both,spec.localData.localDatas[].name,spec.localData.localDatas[].name
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].routingPolicy.geo.enableFencing,boolean,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[],string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress,string,false,none,,
@@ -27695,10 +27695,10 @@ dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].routingPolicy.wrr.items[].rrdatas[],string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].routingPolicy.wrr.items[].signatureRrdatas[],string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].routingPolicy.wrr.items[].weight,number,false,none,,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].rrdatas[],string,false,official,spec.localData.localDatas[].rrdatas[],
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].rrdatas[],string,false,both,spec.localData.localDatas[].rrdatas[],spec.localData.localDatas[].rrdatas[]
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].signatureRrdatas[],string,false,none,,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].ttl,integer,false,official,spec.localData.localDatas[].ttl,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].type,string,false,official,spec.localData.localDatas[].type,
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].ttl,integer,false,both,spec.localData.localDatas[].ttl,spec.localData.localDatas[].ttl
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,localData.localDatas[].type,string,false,both,spec.localData.localDatas[].type,spec.localData.localDatas[].type
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,ruleName,string,false,none,,
 documentai.googleapis.com,documentai.googleapis.com/Processor,activeSchemaVersion,string,false,none,,
 documentai.googleapis.com,documentai.googleapis.com/Processor,defaultProcessorVersion,string,false,none,,

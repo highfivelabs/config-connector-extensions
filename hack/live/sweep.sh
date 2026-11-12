@@ -427,9 +427,15 @@ fi
 # has Cloud DNS for the live-test service account (E2E_DNS_ADMIN=true:
 # dns.googleapis.com on and roles/dns.admin); without it the
 # DNSResponsePolicy test does not run live and there is nothing to sweep.
-# A policy is unbound from its networks before it is deleted, as the
-# controller does.
+# A policy's rules (DNSResponsePolicyRule's) go first, since a policy with
+# rules cannot be deleted; then it is unbound from its networks, as the
+# controller does, and deleted.
 dns_rp_delete() { # dns_rp_delete NAME
+  local rules r
+  rules="$("${G[@]}" dns response-policies rules list "$1" --verbosity=error --format='value(ruleName)')" || return 1
+  for r in ${rules}; do
+    "${G[@]}" dns response-policies rules delete "${r}" --response-policy="$1" || return 1
+  done
   "${G[@]}" dns response-policies update "$1" --networks="" &&
     "${G[@]}" dns response-policies delete "$1"
 }

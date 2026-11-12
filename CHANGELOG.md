@@ -13,6 +13,10 @@ has been released yet; each release moves its entries out of
   upstream's fields (`instanceId`, `resourceID`, both immutable) and
   `status.externalRef`. Live pending a provisioned Apigee instance
   (`E2E_APIGEE_INSTANCE`). The operator's role gains `apigee.gcp.hfl.dev`.
+- **`dns.gcp.hfl.dev/v1beta1` `DNSResponsePolicyRule`**, a stable copy of
+  Config Connector's alpha, Terraform-based response policy rule (decision
+  13), with upstream's fields and a controller written here. Live pending
+  `roles/dns.admin` for the live-test account (`E2E_DNS_ADMIN=true`).
 - **`aiplatform.gcp.hfl.dev/v1beta1` `AIPlatformReasoningEngine`**, a
   stable copy of Config Connector's alpha Vertex AI Agent Engine (decision
   26), with upstream's fields. The API assigns the engine's ID at create;
