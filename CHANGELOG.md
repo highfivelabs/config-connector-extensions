@@ -8,6 +8,12 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`aiplatform.gcp.hfl.dev/v1beta1` `AIPlatformReasoningEngine`**, a
+  stable copy of Config Connector's alpha Vertex AI Agent Engine (decision
+  26), with upstream's fields. The API assigns the engine's ID at create;
+  `status.externalRef` keeps it, and `resourceID` acquires an existing
+  engine. Live pending Vertex AI in the live-test project
+  (`E2E_VERTEX_AI=true`).
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
