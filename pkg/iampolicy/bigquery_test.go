@@ -90,3 +90,22 @@ func TestBigQueryEntryRoundTrip(t *testing.T) {
 		t.Error("an authorized routine is not a member")
 	}
 }
+
+func TestLockDatasetSerializes(t *testing.T) {
+	unlock := lockDataset("projects/p/datasets/d")
+	got := make(chan struct{})
+	go func() {
+		u := lockDataset("projects/p/datasets/d")
+		close(got)
+		u()
+	}()
+	other := lockDataset("projects/p/datasets/e") // another dataset is not held up
+	other()
+	select {
+	case <-got:
+		t.Fatal("a second writer took the dataset's lock while the first held it")
+	default:
+	}
+	unlock()
+	<-got
+}

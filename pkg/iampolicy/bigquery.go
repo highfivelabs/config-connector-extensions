@@ -35,7 +35,12 @@ package iampolicy
 //
 // A write reads the dataset again, refuses with 412 when its etag is not
 // the policy's (Modify then reads again), and patches the access list
-// with If-Match, so a concurrent change is never lost.
+// with If-Match, so a concurrent change by another writer is refused by
+// the API. Within one manager, Modify also takes a lock per dataset
+// (lockDataset): the read, the etag check and the patch are not atomic,
+// and two of our objects on one dataset otherwise race between the check
+// and the patch (the fake, which ignores If-Match, lost one member that
+// way in CI).
 
 import (
 	"context"
@@ -43,6 +48,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"cloud.google.com/go/iam/apiv1/iampb"
 	"google.golang.org/api/googleapi"
@@ -210,4 +216,15 @@ func (c *Client) bigquerySet(ctx context.Context, u string, p *iampb.Policy) (*i
 		return nil, fmt.Errorf("reading the dataset's access list: %w", err)
 	}
 	return bigqueryPolicy(nd), nil
+}
+
+var datasetLocks sync.Map // dataset name -> *sync.Mutex
+
+// lockDataset locks the dataset's access list for one read-modify-write
+// and returns the unlock.
+func lockDataset(name string) func() {
+	m, _ := datasetLocks.LoadOrStore(name, &sync.Mutex{})
+	mu := m.(*sync.Mutex)
+	mu.Lock()
+	return mu.Unlock
 }
