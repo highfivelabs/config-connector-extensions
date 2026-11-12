@@ -41,7 +41,8 @@ source hack/live/projects.sh
 # without a billing account, E2E_BILLING_ACCOUNT; securitycenter
 # (SecurityCenterMuteConfig) skips live unless E2E_SECURITY_CENTER=true;
 # apigee (ApigeeNATAddress) skips live unless E2E_APIGEE_INSTANCE names an
-# Apigee instance
+# Apigee instance;
+# aiplatform (AIPlatformReasoningEngine) skips live unless E2E_VERTEX_AI=true
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"

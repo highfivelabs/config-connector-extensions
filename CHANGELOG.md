@@ -13,6 +13,12 @@ has been released yet; each release moves its entries out of
   upstream's fields (`instanceId`, `resourceID`, both immutable) and
   `status.externalRef`. Live pending a provisioned Apigee instance
   (`E2E_APIGEE_INSTANCE`). The operator's role gains `apigee.gcp.hfl.dev`.
+- **`aiplatform.gcp.hfl.dev/v1beta1` `AIPlatformReasoningEngine`**, a
+  stable copy of Config Connector's alpha Vertex AI Agent Engine (decision
+  26), with upstream's fields. The API assigns the engine's ID at create;
+  `status.externalRef` keeps it, and `resourceID` acquires an existing
+  engine. Live pending Vertex AI in the live-test project
+  (`E2E_VERTEX_AI=true`).
 - **`cloudbuild.gcp.hfl.dev/v1alpha1` `CloudBuildRepository`**, generated
   from Discovery: a repository of a Cloud Build connection
   (`google_cloudbuildv2_repository`), named as Config Connector's
