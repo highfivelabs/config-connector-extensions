@@ -119,6 +119,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
 | `roles/datastore.owner` | project | `FirestoreBackupSchedule` (not granted, and no Firestore database exists: the test skips live without `E2E_FIRESTORE_DATABASE`) |
+| `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
@@ -349,6 +350,16 @@ account needs `roles/datastore.owner`; `$GCP_PROJECT` has neither
 PROJECT=$GCP_PROJECT KINDS=firestore`. A schedule's ID is the API's and it
 carries no labels, so the sweeper cannot tell a run's schedules from
 others; the test deletes what it makes, the abandoned one included.
+
+`AIPlatformReasoningEngine` (package `aiplatform`) waits on Vertex AI in
+the project: `aiplatform.googleapis.com` is not on in `$GCP_PROJECT` and
+`cce-live-tests` has no Vertex AI role (checked 2026-11-12). Until both
+are (the API, and `roles/aiplatform.user`), a live `aiplatform` run skips
+the test and the sweeper leaves reasoning engines alone. With them:
+`E2E_VERTEX_AI=true task test-live PROJECT=$GCP_PROJECT KINDS=aiplatform`.
+The test makes an engine with no code (sessions and memory only), which
+costs nothing while idle; the sweeper deletes engines in `us-central1`
+whose display name carries a run ID.
 
 `ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
 `roles/compute.networkAdmin` has `compute.vpnTunnels.*`,

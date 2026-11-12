@@ -2,6 +2,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- aiplatform.gcp.hfl.dev_aiplatformreasoningengines.yaml
 - apigateway.gcp.hfl.dev_apigatewayapiconfigs.yaml
 - apigateway.gcp.hfl.dev_apigatewaygateways.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
@@ -11,6 +12,7 @@ resources:
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildconnections.yaml
+- cloudbuild.gcp.hfl.dev_cloudbuildrepositories.yaml
 - clouddeploy.gcp.hfl.dev_clouddeployautomations.yaml
 - clouddeploy.gcp.hfl.dev_clouddeploydeploypolicies.yaml
 - clouddeploy.gcp.hfl.dev_clouddeploytargets.yaml
