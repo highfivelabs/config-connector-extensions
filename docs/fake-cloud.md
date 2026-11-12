@@ -203,9 +203,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   seen from this API; a patch replaces the rule whole, where the real API
   is assumed to keep lists the body leaves out (the controller sends
   `[]`). It refuses `tlsInspect`, even `false`, as the real API did in a
-  live run. Otherwise it checks nothing in the rule: a `mirror` rule's security
-  profile group need not exist, and the API's rules for which matchers
-  and directions a packet mirroring rule takes are not modelled. It adds
+  live run, and an `INGRESS` rule that names no source (no `srcIpRanges`
+  or other `src*` matcher), with the real API's 400 (run
+  `cce-11120814-5d2a`). Otherwise it checks nothing in the rule: a `mirror` rule's security
+  profile group need not exist, and the API's other rules for which
+  matchers and directions a packet mirroring rule takes are not modelled. It adds
   no default packet mirroring rules to a new policy.
 - **Organization security policies in mockgcp** (upstream's,
   unpatched, for `ComputeOrganizationSecurityPolicy` and its

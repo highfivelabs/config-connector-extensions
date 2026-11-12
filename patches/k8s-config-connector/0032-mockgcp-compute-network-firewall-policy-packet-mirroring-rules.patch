@@ -10,7 +10,7 @@ firewall policy does not contain a packet mirroring rule at priority N"
 for a priority it has not (modelled on the firewall rules' answer); a
 patch replaces the rule whole; kind compute#packetMirroringRule;
 tlsInspect is refused, even false, as the real API refused it in a live
-run. No default rules are added and nothing else in the rule is
+run, and so is an INGRESS rule that names no source (seen live). No default rules are added and nothing else in the rule is
 checked. A new file,
 so it touches no file another patch edits.
 diff --git a/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go b/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go
@@ -18,7 +18,7 @@ new file mode 100644
 index 00000000..e9f3669e
 --- /dev/null
 +++ b/mockgcp/mockcompute/networkfirewallpolicypacketmirroringrules.go
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,176 @@
 +// Copyright 2026 High Five Labs
 +// SPDX-License-Identifier: Apache-2.0
 +//
@@ -45,9 +45,10 @@ index 00000000..e9f3669e
 +// 400, as for firewall rules; a priority already taken is refused on add.
 +// A patch replaces the rule (the real API keeps lists the body leaves out;
 +// a client that sends every field converges either way). tlsInspect is
-+// refused, even false, as the real API refuses it (seen live). No default
-+// rules are added and nothing else is checked of the match, the action or
-+// the security profile group.
++// refused, even false, as the real API refuses it (seen live), and so is
++// an INGRESS rule that names no source (seen live). No default rules are
++// added and nothing else is checked of the match, the action or the
++// security profile group.
 +
 +import (
 +	"context"
@@ -66,6 +67,13 @@ index 00000000..e9f3669e
 +func checkPacketMirroringRule(r *pb.FirewallPolicyRule) error {
 +	if r.TlsInspect != nil {
 +		return status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.tlsInspect': '%t'. TLS Inspection cannot be set for packet mirroring rule.", r.GetTlsInspect())
++	}
++	// An INGRESS rule must name a source (seen live, run cce-11120814-5d2a).
++	m := r.GetMatch()
++	if r.GetDirection() == "INGRESS" && len(m.GetSrcAddressGroups()) == 0 && len(m.GetSrcFqdns()) == 0 &&
++		len(m.GetSrcIpRanges()) == 0 && m.SrcNetworkContext == nil && m.SrcNetworkType == nil && len(m.GetSrcNetworks()) == 0 &&
++		len(m.GetSrcRegionCodes()) == 0 && len(m.GetSrcSecureTags()) == 0 && len(m.GetSrcThreatIntelligences()) == 0 {
++		return status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.direction': 'INGRESS'. Must specify src_address_groups, src_fqdn, src_ip_ranges, src_network_context, src_network_scope, src_region_code, src_secure_tags or src_threat_intelligence for ingress direction.")
 +	}
 +	return nil
 +}
