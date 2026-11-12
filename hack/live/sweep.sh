@@ -441,6 +441,18 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   done
 fi
 
+# Spanner user-managed instance configurations (the SpannerInstanceConfig
+# test's), by the run's name after "custom-", only where the live-test
+# account has Spanner (E2E_SPANNER=true: spanner.googleapis.com on and
+# roles/spanner.admin); without it the test does not run live.
+if [[ "${E2E_SPANNER:-}" == true ]]; then
+  rows="$("${G[@]}" spanner instance-configs list --verbosity=error --filter='configType=USER_MANAGED' --format='value(name.basename())')"
+  for name in ${rows}; do
+    by_run "${name#custom-}" || continue
+    act "Spanner instance config" "${name}" "${G[@]}" spanner instance-configs delete "${name}"
+  done
+fi
+
 # BigQuery datasets (the IAMMember test's), by the run's name with its
 # dashes as underscores (a dataset ID takes no dashes), their tables with
 # them, only where the live-test account has BigQuery

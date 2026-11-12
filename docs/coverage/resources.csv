@@ -1139,7 +1139,7 @@ servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceNetwork
 serviceusage.googleapis.com,serviceusage.googleapis.com/ServiceIdentity,0,,0,ServiceIdentity,0,0,false,"outside-denominator; a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)"
 spanner.googleapis.com,spanner.googleapis.com/Instance,29,SpannerInstance,13,,0,16,false,api=v1:projects.instances; request-wrapper=CreateInstanceRequest; official-spec-fields-unmatched=2/14
 spanner.googleapis.com,spanner.googleapis.com/InstanceBackup,3,,0,,0,3,false,api=v1:projects.instances.backups
-spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9
+spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,SpannerInstanceConfig,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9; ours-spec-fields-unmatched=2/9
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabase,6,SpannerDatabase,1,,0,5,false,api=v1:projects.instances.databases; request-wrapper=CreateDatabaseRequest; official-spec-fields-unmatched=6/7
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabaseBackupSchedule,7,SpannerBackupSchedule,7,,0,0,false,api=v1:projects.instances.databases.backupSchedules; official-spec-fields-unmatched=3/9
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabaseSession,3,,0,,0,3,false,api=v1:projects.instances.databases.sessions; request-wrapper=CreateSessionRequest

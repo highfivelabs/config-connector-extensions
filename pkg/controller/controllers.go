@@ -55,6 +55,7 @@ import (
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
 	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
 	storagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
@@ -69,6 +70,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/securitycenter"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/serviceusage"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/spanner"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/storage"
@@ -126,6 +128,7 @@ var Kinds = []kind{
 	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel, labels: slotguard.Metadata},
 	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
+	{gvk: spannerv1beta1.SpannerInstanceConfigGVK, crdName: "spannerinstanceconfigs.spanner.gcp.hfl.dev", model: spanner.NewInstanceConfigModel, labels: slotguard.Spec},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -142,6 +145,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,
 		dnsv1beta1.AddToScheme,
+		spannerv1beta1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,

@@ -8,6 +8,11 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`spanner.gcp.hfl.dev/v1beta1` `SpannerInstanceConfig`**, a stable copy
+  of Config Connector's alpha user-managed Spanner instance configuration
+  (decision 26), with upstream's fields; the fields the API cannot update
+  are immutable. Live pending Spanner in the live-test project
+  (`E2E_SPANNER=true`).
 - **Six more stable kinds for Config Connector alpha-only kinds**
   (decision 26): `cloudfunctions2.gcp.hfl.dev/v1beta1`
   `CloudFunctions2Function`, and `dataplex.gcp.hfl.dev/v1beta1`
