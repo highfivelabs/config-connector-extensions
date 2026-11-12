@@ -338,6 +338,7 @@ compute.googleapis.com,compute.googleapis.com/Address,15,ComputeAddress,13,,0,2,
 compute.googleapis.com,compute.googleapis.com/Autoscaler,25,ComputeAutoscaler,18,,0,7,false,api=v1:autoscalers; official-spec-fields-unmatched=13/30
 compute.googleapis.com,compute.googleapis.com/BackendBucket,21,ComputeBackendBucket,19,,0,2,false,api=v1:backendBuckets; official-spec-fields-unmatched=2/20
 compute.googleapis.com,compute.googleapis.com/BackendService,135,ComputeBackendService,84,,0,51,false,api=v1:backendServices; official-spec-fields-unmatched=13/96
+compute.googleapis.com,compute.googleapis.com/ComputeNetworkEndpoint,0,,0,ComputeNetworkEndpoint,0,0,false,outside-denominator; no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeProjectDefaultNetworkTier,0,,0,ComputeProjectDefaultNetworkTier,0,0,false,"outside-denominator; a project's default network tier, written with projects.setDefaultNetworkTier (it always exists)"
 compute.googleapis.com,compute.googleapis.com/ComputeProjectMetadataItem,0,,0,ComputeProjectMetadataItem,0,0,false,"outside-denominator; one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)"
 compute.googleapis.com,compute.googleapis.com/ComputeRegionNetworkEndpoint,0,,0,ComputeRegionNetworkEndpoint,0,0,false,"outside-denominator; an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints"

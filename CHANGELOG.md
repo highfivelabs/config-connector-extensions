@@ -34,6 +34,10 @@ has been released yet; each release moves its entries out of
   `GKEBackupRestoreChannel`, and `compute.gcp.hfl.dev/v1beta1`
   `ComputeGlobalNetworkEndpointGroup`. The operator's role gains the
   `certificatemanager`, `backupdr` and `gkebackup` groups.
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeNetworkEndpoint`**, a stable
+  copy of Config Connector's alpha zonal network endpoint (decision 26),
+  with upstream's fields: `networkEndpointGroupRef`, `zone`,
+  `ipAddress`, `instanceRef` and the port as `resourceID`.
 - **Five kinds generated from Discovery** (`docs/design.md` section 2.4):
   `compute.gcp.hfl.dev/v1beta1` `ComputeNetworkAttachment`,
   `compute.gcp.hfl.dev/v1alpha1` `ComputeRegionInstanceTemplate`,
