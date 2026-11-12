@@ -38,7 +38,9 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/iterator"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
@@ -141,6 +143,25 @@ func TestComputeNetworkEndpoint(t *testing.T) {
 		}
 		return obj
 	}
+	// waitGone waits for the object to go, and on timeout says why not:
+	// its Ready condition carries the API's refusal of the detach.
+	waitGone := func(t *testing.T, name string) {
+		t.Helper()
+		deadline := time.Now().Add(mockenv.Timeout())
+		for {
+			u := &unstructured.Unstructured{}
+			u.SetGroupVersionKind(gvk)
+			err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u)
+			if apierrors.IsNotFound(err) {
+				return
+			}
+			if time.Now().After(deadline) {
+				ready, msg := mockenv.Ready(u)
+				t.Fatalf("%s was not deleted: err %v, Ready %v %q; cloud endpoints %v", name, err, ready, msg, cloudEndpoints(t))
+			}
+			time.Sleep(time.Second)
+		}
+	}
 	waitCloud := func(t *testing.T, what string, cond func([]string) bool) {
 		t.Helper()
 		deadline := time.Now().Add(mockenv.Timeout())
@@ -202,7 +223,7 @@ func TestComputeNetworkEndpoint(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, first.Name)); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(first)
+		waitGone(t, first.Name)
 		waitCloud(t, "only the second endpoint", func(e []string) bool {
 			return !has(e, "10.20.0.5:8080") && has(e, "10.20.0.6:8080")
 		})
@@ -218,7 +239,7 @@ func TestComputeNetworkEndpoint(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, k.Name)); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(k)
+		waitGone(t, k.Name)
 		if e := cloudEndpoints(t); !has(e, "10.20.0.8:8080") {
 			t.Errorf("cloud endpoints = %v, want the abandoned one kept", e)
 		}
