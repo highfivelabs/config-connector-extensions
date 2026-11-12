@@ -281,7 +281,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds and the two `GKEHub*` kinds. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route). These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the
