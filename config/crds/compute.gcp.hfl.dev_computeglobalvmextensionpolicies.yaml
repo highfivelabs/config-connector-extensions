@@ -154,6 +154,9 @@ spec:
                           If a conflict occurs, the local value is overwritten with
                           the rollout value.'
                         type: string
+                      name:
+                        description: Optional. The name of the rollout plan. Ex. projects//locations/global/rolloutPlans/.
+                        type: string
                       predefinedRolloutPlan:
                         description: |-
                           Optional. Specifies the predefined rollout plan for the policy. Valid

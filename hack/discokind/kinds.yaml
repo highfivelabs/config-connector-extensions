@@ -444,3 +444,57 @@
   parents: [project]
   terraform: google_clouddeploy_automation
   note: "Automatic promotion and advancement of a delivery pipeline's rollouts."
+
+- kind: CloudFunctions2Function
+  group: cloudfunctions2.gcp.hfl.dev
+  version: v1beta1
+  discovery: cloudfunctions.v2
+  resource: projects.locations.functions
+  parents: [project]
+  terraform: google_cloudfunctions2_function
+  note: "A Cloud Run functions (2nd gen) function."
+
+- kind: DataplexLake
+  group: dataplex.gcp.hfl.dev
+  version: v1beta1
+  discovery: dataplex.v1
+  resource: projects.locations.lakes
+  parents: [project]
+  terraform: google_dataplex_lake
+  note: "A Dataplex lake: a domain of data across projects and buckets."
+
+- kind: DataplexZone
+  group: dataplex.gcp.hfl.dev
+  version: v1beta1
+  discovery: dataplex.v1
+  resource: projects.locations.lakes.zones
+  parents: [project]
+  terraform: google_dataplex_zone
+  note: "A raw or curated zone of a Dataplex lake."
+
+- kind: DataplexAsset
+  group: dataplex.gcp.hfl.dev
+  version: v1beta1
+  discovery: dataplex.v1
+  resource: projects.locations.lakes.zones.assets
+  parents: [project]
+  terraform: google_dataplex_asset
+  note: "A bucket or dataset attached to a Dataplex zone."
+
+- kind: DataplexAspectType
+  group: dataplex.gcp.hfl.dev
+  version: v1beta1
+  discovery: dataplex.v1
+  resource: projects.locations.aspectTypes
+  parents: [project]
+  terraform: google_dataplex_aspect_type
+  note: "A Dataplex Catalog aspect type: the schema of metadata attached to entries."
+
+- kind: DataplexDataScan
+  group: dataplex.gcp.hfl.dev
+  version: v1beta1
+  discovery: dataplex.v1
+  resource: projects.locations.dataScans
+  parents: [project]
+  terraform: google_dataplex_datascan
+  note: "A Dataplex data quality or data profile scan."

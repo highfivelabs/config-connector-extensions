@@ -185,7 +185,9 @@ func (g *typeGen) structDef(name string, s *Schema, top bool) string {
 	fmt.Fprintf(&b, "type %s struct {\n", name)
 	for _, f := range fields {
 		p := s.Properties[f]
-		if !g.status && (isOutput(p) || f == "name" || (g.k.insertStyle && f == "fingerprint")) {
+		// The resource's own name is the object's (its ID and parents);
+		// a nested name is data (an asset's bucket, a template's field).
+		if !g.status && (isOutput(p) || (top && f == "name") || (g.k.insertStyle && f == "fingerprint")) {
 			continue
 		}
 		if top && g.k.c.Skip[f] != "" {

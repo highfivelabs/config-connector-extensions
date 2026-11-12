@@ -204,7 +204,14 @@ Backup for GKE kinds (`GKEBackupBackupPlan`, `GKEBackupRestorePlan`,
 `ComputeGlobalNetworkEndpointGroup`. Then eight more (2026-11-12):
 `APIGatewayAPIConfig`, `APIGatewayGateway`, `BigLakeCatalog`,
 `BigLakeDatabase`, `CloudBuildConnection`, `CloudDeployTarget`,
-`CloudDeployDeployPolicy` and `CloudDeployAutomation`.
+`CloudDeployDeployPolicy` and `CloudDeployAutomation`. Then six more:
+`CloudFunctions2Function` and Dataplex's `DataplexLake`, `DataplexZone`,
+`DataplexAsset`, `DataplexAspectType` and `DataplexDataScan`; the IAM
+rows for these resources list our kind before Config Connector's alpha
+one, so a `resourceRef` by name finds ours. Generating them found that
+`hack/discokind` dropped every field called `name`, nested ones too (an
+asset's bucket, an aspect type's template, a template's network
+interface); only the resource's own top-level name is now left out.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -306,7 +313,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, the two `APIGateway*` kinds and the three `CloudDeploy*` kinds. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function` and the five `Dataplex*` kinds. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the

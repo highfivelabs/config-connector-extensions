@@ -1,0 +1,19 @@
+apiVersion: cloudfunctions2.gcp.hfl.dev/v1beta1
+kind: CloudFunctions2Function
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  buildConfig:
+    runtime: python312
+    entryPoint: main
+    source:
+      storageSource:
+        bucket: ${NAME}-source
+        object: function.zip
+  serviceConfig:
+    availableMemory: 256M
+    maxInstanceCount: 1
+  description: made by a config-connector-extensions test

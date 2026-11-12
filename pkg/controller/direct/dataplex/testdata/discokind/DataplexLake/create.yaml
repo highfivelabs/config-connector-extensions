@@ -1,0 +1,10 @@
+apiVersion: dataplex.gcp.hfl.dev/v1beta1
+kind: DataplexLake
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  displayName: cce test lake
+  description: made by a config-connector-extensions test

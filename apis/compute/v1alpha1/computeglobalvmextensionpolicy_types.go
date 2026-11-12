@@ -100,6 +100,12 @@ type ComputeGlobalVmExtensionPolicyGlobalVmExtensionPolicyRolloutOperationRollou
 	// +optional
 	ConflictBehavior *string `json:"conflictBehavior,omitempty"`
 
+	// Optional. The name of the rollout plan.
+	// Ex.
+	// projects//locations/global/rolloutPlans/.
+	// +optional
+	Name *string `json:"name,omitempty"`
+
 	// Optional. Specifies the predefined rollout plan for the policy. Valid
 	// values
 	// are `SLOW_ROLLOUT` and `FAST_ROLLOUT`. The recommended value is

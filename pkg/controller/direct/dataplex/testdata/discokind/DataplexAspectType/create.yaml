@@ -1,0 +1,16 @@
+apiVersion: dataplex.gcp.hfl.dev/v1beta1
+kind: DataplexAspectType
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  metadataTemplate:
+    name: cce
+    type: record
+    recordFields:
+    - name: owner
+      type: string
+      index: 1
+  description: made by a config-connector-extensions test

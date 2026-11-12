@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 16.5% | 44.6% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 16.5% | 44.5% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.3% | 29.5% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 15.9% | 43.7% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 16.2% | 43.4% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 66.5% | 9.5% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 0.0% | 70.5% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -73,7 +73,7 @@ What these numbers miss, for the foundation:
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 5 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
-| 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 9 / 57 (0.0%) | none |
+| 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 7 / 57 (0.0%) | none |
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 159 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 34 / 85 (51.8%) | none for the fields |
@@ -183,16 +183,14 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** whole, **size** M, **modules** 0 (none).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `compute.googleapis.com/PublicAdvertisedPrefix`: 0 / 7 / 0 of 7; ComputePublicAdvertisedPrefix (ours)
-  - `compute.googleapis.com/PublicDelegatedPrefix`: 0 / 14 / 1 of 15; ComputePublicDelegatedPrefix (ours)
-  - `compute.googleapis.com/GlobalPublicDelegatedPrefix`: 0 / 14 / 1 of 15; ComputeGlobalPublicDelegatedPrefix (ours), ComputePublicDelegatedPrefix (ours)
+  - `compute.googleapis.com/PublicDelegatedPrefix`: 0 / 15 / 0 of 15; ComputePublicDelegatedPrefix (ours)
+  - `compute.googleapis.com/GlobalPublicDelegatedPrefix`: 0 / 15 / 0 of 15; ComputeGlobalPublicDelegatedPrefix (ours), ComputePublicDelegatedPrefix (ours)
   - `compute.googleapis.com/InterconnectGroup`: 0 / 4 / 0 of 4; ComputeInterconnectGroup (ours)
   - `compute.googleapis.com/InterconnectAttachmentGroup`: 0 / 0 / 5 of 5; no kind
   - `compute.googleapis.com/WireGroup`: 0 / 7 / 2 of 9; ComputeWireGroup (ours)
   - `compute.googleapis.com/CrossSiteNetwork`: 0 / 2 / 0 of 2; ComputeCrossSiteNetwork (ours)
 - **Missing, whole resources:** `ComputePublicAdvertisedPrefix`, `ComputePublicDelegatedPrefix` (regional and global), `ComputeInterconnectGroup`, `ComputeInterconnectAttachmentGroup`, `ComputeWireGroup`, `ComputeCrossSiteNetwork`.
 - **Missing, attributes that matter:** Prefixes: `ipCidrRange`, `pdpScope`, `parentPrefix`, `mode`, `allocatablePrefixLength`, `publicDelegatedSubPrefixs[]`; groups: `intent`, `interconnects{}`/`attachments{}`; wire group: `wireProperties`, `endpoints{}`, `adminEnabled`.
-  - uncovered in `compute.googleapis.com/PublicDelegatedPrefix` (measured): `publicDelegatedSubPrefixs[].name`
-  - uncovered in `compute.googleapis.com/GlobalPublicDelegatedPrefix` (measured): `publicDelegatedSubPrefixs[].name`
   - uncovered in `compute.googleapis.com/InterconnectAttachmentGroup` (measured): `attachments{}.attachment`, `description`, `intent.availabilitySla`, `interconnectGroup`, `name`
   - uncovered in `compute.googleapis.com/WireGroup` (measured): `endpoints{}.interconnects{}.interconnect`, `endpoints{}.interconnects{}.vlanTags[]`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kinds or pull requests.
@@ -493,7 +491,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | --- | --- | ---: | :-: |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
-| ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 14 | false |
+| ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 15 | false |
 | ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
 | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 12 | false |
@@ -501,7 +499,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeProjectDefaultNetworkTier | (not a create) a project's default network tier, written with projects.setDefaultNetworkTier (it always exists) | n/a | false |
 | ComputeProjectMetadataItem | (not a create) one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method) | n/a | false |
 | ComputePublicAdvertisedPrefix | compute.googleapis.com/PublicAdvertisedPrefix | 7 | false |
-| ComputePublicDelegatedPrefix | compute.googleapis.com/PublicDelegatedPrefix | 14 | false |
+| ComputePublicDelegatedPrefix | compute.googleapis.com/PublicDelegatedPrefix | 15 | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
 | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
@@ -707,7 +705,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/Firewall` | ComputeFirewall | - | 19 | 17 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/FirewallPolicy` | ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule | - | 73 | 24 | 0 | 49 | 2 |
 | foundation | `compute.googleapis.com/GlobalAddress` | ComputeAddress | - | 15 | 13 | 0 | 2 | - |
-| foundation | `compute.googleapis.com/GlobalPublicDelegatedPrefix` | - | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | 15 | 0 | 14 | 1 | 7 |
+| foundation | `compute.googleapis.com/GlobalPublicDelegatedPrefix` | - | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/Interconnect` | ComputeInterconnect (alpha) | - | 25 | 16 | 0 | 9 | 10 |
 | foundation | `compute.googleapis.com/InterconnectAttachment` | ComputeInterconnectAttachment | - | 36 | 13 | 0 | 23 | 10 |
 | foundation | `compute.googleapis.com/InterconnectAttachmentGroup` | - | - | 5 | 0 | 0 | 5 | 7 |
@@ -719,7 +717,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/OrganizationSecurityPolicy` | ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha) | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | 86 | 12 | 0 | 74 | 8 |
 | security | `compute.googleapis.com/PacketMirroring` | ComputePacketMirroring | - | 12 | 12 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | - | ComputePublicAdvertisedPrefix | 7 | 0 | 7 | 0 | 7 |
-| foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | ComputePublicDelegatedPrefix | 15 | 0 | 14 | 1 | 7 |
+| foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 22 | 51 | 2 |
 | security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | - |
 | security | `compute.googleapis.com/RegionSslPolicy` | ComputeRegionSSLPolicy (alpha) | - | 6 | 5 | 0 | 1 | - |

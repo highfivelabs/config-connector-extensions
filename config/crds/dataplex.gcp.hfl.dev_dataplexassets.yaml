@@ -1,0 +1,373 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: dataplexassets.dataplex.gcp.hfl.dev
+spec:
+  group: dataplex.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: DataplexAsset
+    listKind: DataplexAssetList
+    plural: dataplexassets
+    shortNames:
+    - hfldataplexasset
+    - hfldataplexassets
+    singular: dataplexasset
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: DataplexAsset is a dataplex.v1 resource (https://dataplex.googleapis.com/v1/{parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}),
+          from its Discovery document dataplex.v1 (hack/discokind). Terraform's google_dataplex_asset.
+          A bucket or dataset attached to a Dataplex zone.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              description:
+                description: Optional. Description of the asset.
+                type: string
+              discoverySpec:
+                description: Optional. Specification of the discovery feature applied
+                  to data referenced by this asset. When this spec is left unset,
+                  the asset will use the spec set on the parent zone.
+                properties:
+                  csvOptions:
+                    description: Optional. Configuration for CSV data.
+                    properties:
+                      delimiter:
+                        description: Optional. The delimiter being used to separate
+                          values. This defaults to ','.
+                        type: string
+                      disableTypeInference:
+                        description: Optional. Whether to disable the inference of
+                          data type for CSV data. If true, all columns will be registered
+                          as strings.
+                        type: boolean
+                      encoding:
+                        description: Optional. The character encoding of the data.
+                          The default is UTF-8.
+                        type: string
+                      headerRows:
+                        description: Optional. The number of rows to interpret as
+                          header rows that should be skipped when reading data rows.
+                        format: int32
+                        type: integer
+                    type: object
+                  enabled:
+                    description: Optional. Whether discovery is enabled.
+                    type: boolean
+                  excludePatterns:
+                    description: Optional. The list of patterns to apply for selecting
+                      data to exclude during discovery. For Cloud Storage bucket assets,
+                      these are interpreted as glob patterns used to match object
+                      names. For BigQuery dataset assets, these are interpreted as
+                      patterns to match table names.
+                    items:
+                      type: string
+                    type: array
+                  includePatterns:
+                    description: Optional. The list of patterns to apply for selecting
+                      data to include during discovery if only a subset of the data
+                      should considered. For Cloud Storage bucket assets, these are
+                      interpreted as glob patterns used to match object names. For
+                      BigQuery dataset assets, these are interpreted as patterns to
+                      match table names.
+                    items:
+                      type: string
+                    type: array
+                  jsonOptions:
+                    description: Optional. Configuration for Json data.
+                    properties:
+                      disableTypeInference:
+                        description: Optional. Whether to disable the inference of
+                          data type for Json data. If true, all columns will be registered
+                          as their primitive types (strings, number or boolean).
+                        type: boolean
+                      encoding:
+                        description: Optional. The character encoding of the data.
+                          The default is UTF-8.
+                        type: string
+                    type: object
+                  schedule:
+                    description: 'Optional. Cron schedule (https://en.wikipedia.org/wiki/Cron)
+                      for running discovery periodically. Successive discovery runs
+                      must be scheduled at least 60 minutes apart. The default value
+                      is to run discovery every 60 minutes.To explicitly set a timezone
+                      to the cron tab, apply a prefix in the cron tab: "CRON_TZ=${IANA_TIME_ZONE}"
+                      or TZ=${IANA_TIME_ZONE}". The ${IANA_TIME_ZONE} may only be
+                      a valid string from IANA time zone database. For example, CRON_TZ=America/New_York
+                      1 * * * *, or TZ=America/New_York 1 * * * *.'
+                    type: string
+                type: object
+              displayName:
+                description: Optional. User friendly display name.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. User defined labels for the asset.
+                type: object
+              lake:
+                description: Immutable. The lake, part of the resource's name ({parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: lake is immutable
+                  rule: self == oldSelf
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              resourceSpec:
+                description: Required. Specification of the resource that is referenced
+                  by this asset.
+                properties:
+                  name:
+                    description: 'Immutable. Relative name of the cloud resource that
+                      contains the data that is being managed within a lake. For example:
+                      projects/{project_number}/buckets/{bucket_id} projects/{project_number}/datasets/{dataset_id}'
+                    type: string
+                  readAccessMode:
+                    description: |-
+                      Optional. Determines how read permissions are handled for each asset and
+                      their associated tables. Only available to storage buckets assets.
+
+                      One of ACCESS_MODE_UNSPECIFIED, DIRECT, MANAGED.
+                    type: string
+                  type:
+                    description: |-
+                      Required. Immutable. Type of resource.
+
+                      One of TYPE_UNSPECIFIED, STORAGE_BUCKET, BIGQUERY_DATASET.
+                    type: string
+                required:
+                - type
+                type: object
+              zone:
+                description: Immutable. The zone, part of the resource's name ({parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: zone is immutable
+                  rule: self == oldSelf
+            required:
+            - lake
+            - location
+            - projectRef
+            - resourceSpec
+            - zone
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The time when the asset was created.
+                    type: string
+                  discoveryStatus:
+                    description: Output only. Status of the discovery feature applied
+                      to data referenced by this asset.
+                    properties:
+                      lastRunDuration:
+                        description: The duration of the last discovery run.
+                        type: string
+                      lastRunTime:
+                        description: The start time of the last discovery run.
+                        type: string
+                      message:
+                        description: Additional information about the current state.
+                        type: string
+                      state:
+                        description: The current status of the discovery feature.
+                        type: string
+                      stats:
+                        description: Data Stats of the asset reported by discovery.
+                        properties:
+                          dataItems:
+                            description: The count of data items within the referenced
+                              resource.
+                            type: string
+                          dataSize:
+                            description: The number of stored data bytes within the
+                              referenced resource.
+                            type: string
+                          filesets:
+                            description: The count of fileset entities within the
+                              referenced resource.
+                            type: string
+                          tables:
+                            description: The count of table entities within the referenced
+                              resource.
+                            type: string
+                        type: object
+                      updateTime:
+                        description: Last update time of the status.
+                        type: string
+                    type: object
+                  resourceStatus:
+                    description: Output only. Status of the resource referenced by
+                      this asset.
+                    properties:
+                      managedAccessIdentity:
+                        description: Output only. Service account associated with
+                          the BigQuery Connection.
+                        type: string
+                      message:
+                        description: Additional information about the current state.
+                        type: string
+                      state:
+                        description: The current state of the managed resource.
+                        type: string
+                      updateTime:
+                        description: Last update time of the status.
+                        type: string
+                    type: object
+                  securityStatus:
+                    description: Output only. Status of the security policy applied
+                      to resource referenced by this asset.
+                    properties:
+                      message:
+                        description: Additional information about the current state.
+                        type: string
+                      state:
+                        description: The current state of the security policy applied
+                          to the attached resource.
+                        type: string
+                      updateTime:
+                        description: Last update time of the status.
+                        type: string
+                    type: object
+                  state:
+                    description: Output only. Current state of the asset.
+                    type: string
+                  uid:
+                    description: Output only. System generated globally unique ID
+                      for the asset. This ID will be different if the asset is deleted
+                      and re-created with the same name.
+                    type: string
+                  updateTime:
+                    description: Output only. The time when the asset was last updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
