@@ -19,3 +19,6 @@ ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects
 GKEHubRolloutSequence	https://gkehub.googleapis.com/v1/	projects/{project}/locations/global/rolloutSequences	rolloutSequences	-
 IAMOauthClient	https://iam.googleapis.com/v1/	projects/{project}/locations/global/oauthClients	oauthClients	state=DELETED
 LoggingSavedQuery	https://logging.googleapis.com/v2/	projects/{project}/locations/global/savedQueries	savedQueries	-
+NetworkConnectivityAutomatedDnsRecord	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/automatedDnsRecords	automatedDnsRecords	-
+NetworkConnectivityPscAuthorizationPolicy	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/pscAuthorizationPolicies	pscAuthorizationPolicies	-
+ResourceManagerCapabilityConfig	https://cloudresourcemanager.googleapis.com/v3/	projects/{project}/capabilityConfigs	capabilityConfigs	-

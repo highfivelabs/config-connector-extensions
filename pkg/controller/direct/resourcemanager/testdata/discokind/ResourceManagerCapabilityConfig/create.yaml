@@ -1,0 +1,9 @@
+apiVersion: resourcemanager.gcp.hfl.dev/v1alpha1
+kind: ResourceManagerCapabilityConfig
+metadata:
+  name: ${NAME}
+spec:
+  organizationRef:
+    external: organizations/${ORGANIZATION}
+  types: [APP_MANAGEMENT]
+  displayName: cce test config

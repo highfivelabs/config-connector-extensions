@@ -50,10 +50,15 @@ resources:
 - logging.gcp.hfl.dev_logginglinks.yaml
 - logging.gcp.hfl.dev_loggingsavedqueries.yaml
 - logging.gcp.hfl.dev_loggingsettings.yaml
+- networkconnectivity.gcp.hfl.dev_networkconnectivityautomateddnsrecords.yaml
+- networkconnectivity.gcp.hfl.dev_networkconnectivitypscauthorizationpolicies.yaml
+- networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofilegroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofiles.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
+- resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml
+- resourcemanager.gcp.hfl.dev_resourcemanagercapabilityconfigs.yaml
 - run.gcp.hfl.dev_runservices.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml

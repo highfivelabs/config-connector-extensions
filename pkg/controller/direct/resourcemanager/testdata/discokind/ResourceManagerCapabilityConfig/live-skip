@@ -1,0 +1,1 @@
+a capability config belongs to an organization, folder or project and changes what the folder's or organization's projects can do; a live run never touches the organization (docs/live-runs.md); live: pending the test folder

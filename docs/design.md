@@ -174,7 +174,16 @@ Engine kinds: regional notification endpoints, health check services,
 health aggregation policies, health sources, composite health checks and
 backend buckets; global and zonal VM extension policies; rollout plans;
 BYOIP public advertised and delegated prefixes (foundation item 7);
-Cross-Site networks and wire groups and Interconnect groups.
+Cross-Site networks and wire groups and Interconnect groups. Then five
+foundation (tier 1) gaps of the same shape (2026-11-12): Resource
+Manager's `ResourceManagerCapabilityConfig` (an organization, folder or
+project) and `ResourceManagerBoundary` (an organization or folder), and
+Network Connectivity's `NetworkConnectivityPscAuthorizationPolicy`,
+`NetworkConnectivityAutomatedDnsRecord` and
+`NetworkConnectivitySpokeGatewayAdvertisedRoute`; all five are proven on
+the fake and skip live (organization access, or a role and paid
+prerequisites the live-test project lacks; each fixture's `live-skip`
+says which).
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
