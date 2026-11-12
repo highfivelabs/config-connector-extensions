@@ -118,6 +118,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
+| `roles/apigee.admin` | project | `ApigeeNATAddress` (not granted, and no Apigee organization exists: the test skips live without `E2E_APIGEE_INSTANCE`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
@@ -338,6 +339,15 @@ them needs the API and the role). With them:
 The test binds a policy to two networks of its own, unbinds one,
 deletes it (unbinding first) and abandons and then acquires another; the
 sweeper unbinds and deletes policies whose name carries a run ID.
+
+`ApigeeNATAddress` (package `apigee`) waits on Apigee: a NAT address
+belongs to an Apigee instance, which needs a provisioned Apigee
+organization (billed, and an hour or more to make), and the live-test
+service account needs `roles/apigee.admin`; `$GCP_PROJECT` has neither
+(`apigee.googleapis.com` off, checked 2026-11-12). No test makes an
+organization or an instance. With one: `E2E_APIGEE_INSTANCE=organizations/O/instances/I
+task test-live PROJECT=$GCP_PROJECT KINDS=apigee`; the sweeper then
+deletes that instance's NAT addresses whose name carries a run ID.
 
 `ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
 `roles/compute.networkAdmin` has `compute.vpnTunnels.*`,
