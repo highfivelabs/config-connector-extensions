@@ -72,11 +72,13 @@ type IAMWorkforcePoolProviderScimTenantSpec struct {
 	// Optional. Gemini Enterprise only. The description of the SCIM tenant.
 	// Cannot exceed 256 characters.
 	// +optional
+	// +kubebuilder:validation:MaxLength=256
 	Description *string `json:"description,omitempty"`
 
 	// Optional. Gemini Enterprise only. The display name of the SCIM tenant.
 	// Cannot exceed 32 characters.
 	// +optional
+	// +kubebuilder:validation:MaxLength=32
 	DisplayName *string `json:"displayName,omitempty"`
 }
 

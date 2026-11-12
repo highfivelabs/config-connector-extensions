@@ -18,9 +18,28 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 )
+
+// cannotExceed is how Discovery descriptions state a string field's limit
+// ("Optional. A user-specified display name of the OauthClient. Cannot
+// exceed 32 characters."). The API refuses a longer value (an OAuth
+// client's patch, run cce-11112128-d3db), so the CRD refuses it first.
+var cannotExceed = regexp.MustCompile(`(?i)\bcannot exceed (\d+) characters\b`)
+
+// maxLength is the CRD's maxLength for a string field whose description
+// states one, or "".
+func maxLength(p *Schema) string {
+	if p.Type != "string" {
+		return ""
+	}
+	if m := cannotExceed.FindStringSubmatch(p.Description); m != nil {
+		return m[1]
+	}
+	return ""
+}
 
 const header = `// Copyright 2026 High Five Labs
 // SPDX-License-Identifier: Apache-2.0
@@ -182,6 +201,9 @@ func (g *typeGen) structDef(name string, s *Schema, top bool) string {
 				b.WriteString("// +kubebuilder:validation:Required\n")
 			} else {
 				b.WriteString("// +optional\n")
+			}
+			if n := maxLength(p); n != "" {
+				fmt.Fprintf(&b, "// +kubebuilder:validation:MaxLength=%s\n", n)
 			}
 			if top && (!g.k.updatable || strings.Contains(p.Description, "Immutable.") || contains(g.k.c.Immutable, f)) {
 				fmt.Fprintf(&b, "// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"%s is immutable\"\n", f)

@@ -8,5 +8,5 @@ spec:
   provider: ${NAME}-provider
   claimMapping:
     google.subject: user.externalId
-  displayName: config-connector-extensions test, changed
+  displayName: cce test, changed
   description: changed
