@@ -212,6 +212,14 @@ one, so a `resourceRef` by name finds ours. Generating them found that
 `hack/discokind` dropped every field called `name`, nested ones too (an
 asset's bucket, an aspect type's template, a template's network
 interface); only the resource's own top-level name is now left out.
+Then `CloudBuildRepository` (`v1alpha1`, 2026-11-12), a Cloud Build
+connection's repository, for the catalog's `cloud-build-v2-connection`
+module (`google_cloudbuildv2_repository`): Config Connector names the kind
+in its reference type (`apis/cloudbuild/v1beta1/repository_reference.go`)
+but has no kind, so it takes that name (decision 18) and starts at
+`v1alpha1` (decision 26's last sentence; question 6's first half). The
+API cannot patch a repository, so every field is immutable. Live waits,
+as the connection's does, on a test GitHub app.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N

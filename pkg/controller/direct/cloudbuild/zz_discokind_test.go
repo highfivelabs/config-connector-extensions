@@ -25,3 +25,6 @@ import (
 
 // TestCloudBuildConnection runs testdata/discokind/CloudBuildConnection/ on the fake cloud, or live.
 func TestCloudBuildConnection(t *testing.T) { kindtest.Run(t, "CloudBuildConnection") }
+
+// TestCloudBuildRepository runs testdata/discokind/CloudBuildRepository/ on the fake cloud, or live.
+func TestCloudBuildRepository(t *testing.T) { kindtest.Run(t, "CloudBuildRepository") }

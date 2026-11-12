@@ -11,6 +11,7 @@ resources:
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildconnections.yaml
+- cloudbuild.gcp.hfl.dev_cloudbuildrepositories.yaml
 - clouddeploy.gcp.hfl.dev_clouddeployautomations.yaml
 - clouddeploy.gcp.hfl.dev_clouddeploydeploypolicies.yaml
 - clouddeploy.gcp.hfl.dev_clouddeploytargets.yaml
