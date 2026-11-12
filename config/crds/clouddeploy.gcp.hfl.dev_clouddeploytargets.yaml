@@ -1,0 +1,377 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: clouddeploytargets.clouddeploy.gcp.hfl.dev
+spec:
+  group: clouddeploy.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: CloudDeployTarget
+    listKind: CloudDeployTargetList
+    plural: clouddeploytargets
+    shortNames:
+    - hflclouddeploytarget
+    - hflclouddeploytargets
+    singular: clouddeploytarget
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: 'CloudDeployTarget is a clouddeploy.v1 resource (https://clouddeploy.googleapis.com/v1/{parent}/locations/{location}/targets/{id}),
+          from its Discovery document clouddeploy.v1 (hack/discokind). Terraform''s
+          google_clouddeploy_target. A Cloud Deploy target: where a delivery pipeline
+          deploys.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              annotations:
+                additionalProperties:
+                  type: string
+                description: Optional. User annotations. These attributes can only
+                  be set and used by the user, and not by Cloud Deploy. See https://google.aip.dev/128#annotations
+                  for more details such as format and size limitations.
+                type: object
+              anthosCluster:
+                description: Optional. Information specifying an Anthos Cluster.
+                properties:
+                  membership:
+                    description: Optional. Membership of the GKE Hub-registered cluster
+                      to which to apply the Skaffold configuration. Format is `projects/{project}/locations/{location}/memberships/{membership_name}`.
+                    type: string
+                type: object
+              associatedEntities:
+                description: 'Optional. Map of entity IDs to their associated entities.
+                  Associated entities allows specifying places other than the deployment
+                  target for specific features. For example, the Gateway API canary
+                  can be configured to deploy the HTTPRoute to a different cluster(s)
+                  than the deployment cluster using associated entities. An entity
+                  ID must consist of lower-case letters, numbers, and hyphens, start
+                  with a letter and end with a letter or a number, and have a max
+                  length of 63 characters. In other words, it must match the following
+                  regex: `^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$`.'
+                x-kubernetes-preserve-unknown-fields: true
+              customTarget:
+                description: Optional. Information specifying a Custom Target.
+                properties:
+                  customTargetType:
+                    description: Required. The name of the CustomTargetType. Format
+                      must be `projects/{project}/locations/{location}/customTargetTypes/{custom_target_type}`.
+                    type: string
+                required:
+                - customTargetType
+                type: object
+              deployParameters:
+                additionalProperties:
+                  type: string
+                description: Optional. The deploy parameters to use for this target.
+                type: object
+              description:
+                description: Optional. Description of the `Target`. Max length is
+                  255 characters.
+                type: string
+              etag:
+                description: Optional. This checksum is computed by the server based
+                  on the value of other fields, and may be sent on update and delete
+                  requests to ensure the client has an up-to-date value before proceeding.
+                type: string
+              executionConfigs:
+                description: Optional. Configurations for all execution that relates
+                  to this `Target`. Each `ExecutionEnvironmentUsage` value may only
+                  be used in a single configuration; using the same value multiple
+                  times is an error. When one or more configurations are specified,
+                  they must include the `RENDER` and `DEPLOY` `ExecutionEnvironmentUsage`
+                  values. When no configurations are specified, execution will use
+                  the default specified in `DefaultPool`.
+                items:
+                  properties:
+                    artifactStorage:
+                      description: Optional. Cloud Storage location in which to store
+                        execution outputs. This can either be a bucket ("gs://my-bucket")
+                        or a path within a bucket ("gs://my-bucket/my-dir"). If unspecified,
+                        a default bucket located in the same region will be used.
+                      type: string
+                    defaultPool:
+                      description: Optional. Use default Cloud Build pool.
+                      properties:
+                        artifactStorage:
+                          description: Optional. Cloud Storage location where execution
+                            outputs should be stored. This can either be a bucket
+                            ("gs://my-bucket") or a path within a bucket ("gs://my-bucket/my-dir").
+                            If unspecified, a default bucket located in the same region
+                            will be used.
+                          type: string
+                        serviceAccount:
+                          description: Optional. Google service account to use for
+                            execution. If unspecified, the project execution service
+                            account (-compute@developer.gserviceaccount.com) will
+                            be used.
+                          type: string
+                      type: object
+                    executionTimeout:
+                      description: Optional. Execution timeout for a Cloud Build Execution.
+                        This must be between 10m and 24h in seconds format. If unspecified,
+                        a default timeout of 1h is used.
+                      type: string
+                    privatePool:
+                      description: Optional. Use private Cloud Build pool.
+                      properties:
+                        artifactStorage:
+                          description: Optional. Cloud Storage location where execution
+                            outputs should be stored. This can either be a bucket
+                            ("gs://my-bucket") or a path within a bucket ("gs://my-bucket/my-dir").
+                            If unspecified, a default bucket located in the same region
+                            will be used.
+                          type: string
+                        serviceAccount:
+                          description: Optional. Google service account to use for
+                            execution. If unspecified, the project execution service
+                            account (-compute@developer.gserviceaccount.com) will
+                            be used.
+                          type: string
+                        workerPool:
+                          description: Required. Resource name of the Cloud Build
+                            worker pool to use. The format is `projects/{project}/locations/{location}/workerPools/{pool}`.
+                          type: string
+                      required:
+                      - workerPool
+                      type: object
+                    serviceAccount:
+                      description: Optional. Google service account to use for execution.
+                        If unspecified, the project execution service account (-compute@developer.gserviceaccount.com)
+                        is used.
+                      type: string
+                    usages:
+                      description: Required. Usages when this configuration should
+                        be applied.
+                      items:
+                        type: string
+                      type: array
+                    verbose:
+                      description: Optional. If true, additional logging will be enabled
+                        when running builds in this execution environment.
+                      type: boolean
+                    workerPool:
+                      description: Optional. The resource name of the `WorkerPool`,
+                        with the format `projects/{project}/locations/{location}/workerPools/{worker_pool}`.
+                        If this optional field is unspecified, the default Cloud Build
+                        pool will be used.
+                      type: string
+                  required:
+                  - usages
+                  type: object
+                type: array
+              gke:
+                description: Optional. Information specifying a GKE Cluster.
+                properties:
+                  cluster:
+                    description: Optional. Information specifying a GKE Cluster. Format
+                      is `projects/{project_id}/locations/{location_id}/clusters/{cluster_id}`.
+                    type: string
+                  dnsEndpoint:
+                    description: Optional. If set, the cluster will be accessed using
+                      the DNS endpoint. Note that both `dns_endpoint` and `internal_ip`
+                      cannot be set to true.
+                    type: boolean
+                  internalIp:
+                    description: Optional. If true, `cluster` is accessed using the
+                      private IP address of the control plane endpoint. Otherwise,
+                      the default IP address of the control plane endpoint is used.
+                      The default IP address is the private IP address for clusters
+                      with private control-plane endpoints and the public IP address
+                      otherwise. Only specify this option when `cluster` is a [private
+                      GKE cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/private-cluster-concept).
+                      Note that `internal_ip` and `dns_endpoint` cannot both be set
+                      to true.
+                    type: boolean
+                  proxyUrl:
+                    description: Optional. If set, used to configure a [proxy](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#proxy)
+                      to the Kubernetes server.
+                    type: string
+                type: object
+              labels:
+                additionalProperties:
+                  type: string
+                description: 'Optional. Labels are attributes that can be set and
+                  used by both the user and by Cloud Deploy. Labels must meet the
+                  following constraints: * Keys and values can contain only lowercase
+                  letters, numeric characters, underscores, and dashes. * All characters
+                  must use UTF-8 encoding, and international characters are allowed.
+                  * Keys must start with a lowercase letter or international character.
+                  * Each resource is limited to a maximum of 64 labels. Both keys
+                  and values are additionally constrained to be <= 128 bytes.'
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/targets/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              multiTarget:
+                description: Optional. Information specifying a multiTarget.
+                properties:
+                  targetIds:
+                    description: Required. The target_ids of this multiTarget.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - targetIds
+                type: object
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              requireApproval:
+                description: Optional. Whether or not the `Target` requires approval.
+                type: boolean
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              run:
+                description: Optional. Information specifying a Cloud Run deployment
+                  target.
+                properties:
+                  location:
+                    description: Required. The location for the Cloud Run Service.
+                      Format must be `projects/{project}/locations/{location}`.
+                    type: string
+                required:
+                - location
+                type: object
+            required:
+            - location
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/targets/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. Time at which the `Target` was created.
+                    type: string
+                  targetId:
+                    description: Output only. Resource id of the `Target`.
+                    type: string
+                  uid:
+                    description: Output only. Unique identifier of the `Target`.
+                    type: string
+                  updateTime:
+                    description: Output only. Most recent time at which the `Target`
+                      was updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

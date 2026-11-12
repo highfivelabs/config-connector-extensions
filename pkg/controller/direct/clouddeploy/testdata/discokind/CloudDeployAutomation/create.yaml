@@ -1,0 +1,18 @@
+apiVersion: clouddeploy.gcp.hfl.dev/v1beta1
+kind: CloudDeployAutomation
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  deliveryPipeline: ${NAME}-pipeline
+  serviceAccount: cce-deploy@${PROJECT}.iam.gserviceaccount.com
+  selector:
+    targets:
+    - id: "*"
+  rules:
+  - promoteReleaseRule:
+      id: promote
+      destinationTargetId: "@next"
+  description: made by a config-connector-extensions test

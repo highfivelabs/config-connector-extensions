@@ -201,7 +201,10 @@ says which). Then eight copies of Config Connector alpha-only kinds as
 `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, the four
 Backup for GKE kinds (`GKEBackupBackupPlan`, `GKEBackupRestorePlan`,
 `GKEBackupBackupChannel`, `GKEBackupRestoreChannel`) and
-`ComputeGlobalNetworkEndpointGroup`.
+`ComputeGlobalNetworkEndpointGroup`. Then eight more (2026-11-12):
+`APIGatewayAPIConfig`, `APIGatewayGateway`, `BigLakeCatalog`,
+`BigLakeDatabase`, `CloudBuildConnection`, `CloudDeployTarget`,
+`CloudDeployDeployPolicy` and `CloudDeployAutomation`.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -303,7 +306,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer` and `NetworkSecurityDNSThreatDetector`. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, the two `APIGateway*` kinds and the three `CloudDeploy*` kinds. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the

@@ -1,0 +1,1 @@
+the BigLake API is not on in the live-test project and the live-test account has no BigLake role (a database also needs its catalog, which this test does not make); live: pending both

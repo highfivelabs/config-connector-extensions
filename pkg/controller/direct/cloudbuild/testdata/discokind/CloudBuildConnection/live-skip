@@ -1,0 +1,1 @@
+a connection needs a GitHub app installation and an OAuth token in Secret Manager, which a test cannot make; live: pending a test GitHub app

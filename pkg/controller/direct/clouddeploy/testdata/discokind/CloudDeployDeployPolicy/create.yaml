@@ -1,0 +1,19 @@
+apiVersion: clouddeploy.gcp.hfl.dev/v1beta1
+kind: CloudDeployDeployPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  selectors:
+  - deliveryPipeline:
+      id: "*"
+  rules:
+  - rolloutRestriction:
+      id: no-weekends
+      timeWindows:
+        timeZone: America/New_York
+        weeklyWindows:
+        - daysOfWeek: [SATURDAY, SUNDAY]
+  description: made by a config-connector-extensions test

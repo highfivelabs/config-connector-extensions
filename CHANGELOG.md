@@ -8,6 +8,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Eight more stable kinds for Config Connector alpha-only kinds**
+  (decision 26), generated from Discovery:
+  `apigateway.gcp.hfl.dev/v1beta1` `APIGatewayAPIConfig` and
+  `APIGatewayGateway`, `biglake.gcp.hfl.dev/v1beta1` `BigLakeCatalog` and
+  `BigLakeDatabase`, `cloudbuild.gcp.hfl.dev/v1beta1`
+  `CloudBuildConnection`, and `clouddeploy.gcp.hfl.dev/v1beta1`
+  `CloudDeployTarget`, `CloudDeployDeployPolicy` and
+  `CloudDeployAutomation`. The operator's role gains their four groups.
 - **Eight stable kinds for Config Connector alpha-only kinds**
   (`docs/design.md` decision 26), generated from Discovery:
   `certificatemanager.gcp.hfl.dev/v1beta1`

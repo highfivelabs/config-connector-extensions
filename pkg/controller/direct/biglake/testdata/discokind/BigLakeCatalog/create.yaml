@@ -1,0 +1,8 @@
+apiVersion: biglake.gcp.hfl.dev/v1beta1
+kind: BigLakeCatalog
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us
