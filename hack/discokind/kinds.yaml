@@ -295,3 +295,80 @@
   resource: projects.locations.spokes.gatewayAdvertisedRoutes
   parents: [project]
   note: "A route a Network Connectivity Center gateway spoke advertises."
+
+# Config Connector has these only as alpha kinds. Where it does, ours is a
+# stable (v1beta1) equivalent (docs/design.md decision 26, the
+# coordinator's direction of 2026-11-12), named as Config Connector names
+# it (decision 18). Ranked by the catalog's docs/coverage/blocked-kinds.md.
+
+- kind: CertificateManagerCertificateIssuanceConfig
+  group: certificatemanager.gcp.hfl.dev
+  version: v1beta1
+  discovery: certificatemanager.v1
+  resource: projects.locations.certificateIssuanceConfigs
+  parents: [project]
+  terraform: google_certificate_manager_certificate_issuance_config
+  note: "How Certificate Manager issues certificates from a Certificate Authority Service pool."
+
+- kind: BackupDRManagementServer
+  group: backupdr.gcp.hfl.dev
+  version: v1beta1
+  discovery: backupdr.v1
+  resource: projects.locations.managementServers
+  parents: [project]
+  terraform: google_backup_dr_management_server
+  note: "A Backup and DR management server (the management console of a backup appliance estate)."
+
+- kind: NetworkSecurityDNSThreatDetector
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.dnsThreatDetectors
+  parents: [project]
+  terraform: google_network_security_dns_threat_detector
+  note: "DNS threat detection for a project's VPC networks."
+
+- kind: GKEBackupBackupPlan
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.backupPlans
+  parents: [project]
+  terraform: google_gke_backup_backup_plan
+  note: "What Backup for GKE backs up from a cluster, and when."
+
+- kind: GKEBackupRestorePlan
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.restorePlans
+  parents: [project]
+  terraform: google_gke_backup_restore_plan
+  note: "How Backup for GKE restores a backup plan's backups into a cluster."
+
+- kind: GKEBackupBackupChannel
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.backupChannels
+  parents: [project]
+  terraform: google_gke_backup_backup_channel
+  note: "Lets a project's backup plans store backups in another project."
+
+- kind: GKEBackupRestoreChannel
+  group: gkebackup.gcp.hfl.dev
+  version: v1beta1
+  discovery: gkebackup.v1
+  resource: projects.locations.restoreChannels
+  parents: [project]
+  terraform: google_gke_backup_restore_channel
+  note: "Lets a project's restore plans restore from another project's backups."
+
+- kind: ComputeGlobalNetworkEndpointGroup
+  group: compute.gcp.hfl.dev
+  version: v1beta1
+  discovery: compute.v1
+  resource: globalNetworkEndpointGroups
+  parents: [project]
+  terraform: google_compute_global_network_endpoint_group
+  note: "A global network endpoint group of internet endpoints (an external backend of a global load balancer)."

@@ -26,6 +26,11 @@ import (
 // TestComputeCrossSiteNetwork runs testdata/discokind/ComputeCrossSiteNetwork/ on the fake cloud, or live.
 func TestComputeCrossSiteNetwork(t *testing.T) { kindtest.Run(t, "ComputeCrossSiteNetwork") }
 
+// TestComputeGlobalNetworkEndpointGroup runs testdata/discokind/ComputeGlobalNetworkEndpointGroup/ on the fake cloud, or live.
+func TestComputeGlobalNetworkEndpointGroup(t *testing.T) {
+	kindtest.Run(t, "ComputeGlobalNetworkEndpointGroup")
+}
+
 // TestComputeGlobalPublicDelegatedPrefix runs testdata/discokind/ComputeGlobalPublicDelegatedPrefix/ on the fake cloud, or live.
 func TestComputeGlobalPublicDelegatedPrefix(t *testing.T) {
 	kindtest.Run(t, "ComputeGlobalPublicDelegatedPrefix")

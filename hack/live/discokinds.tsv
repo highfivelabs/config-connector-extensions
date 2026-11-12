@@ -2,7 +2,10 @@
 # What hack/live/sweep.sh lists for the discokind kinds under a project:
 # kind, base URL, collection (location global, region us-central1, zone
 # us-central1-a), the list answer's field, soft-delete field=value.
+BackupDRManagementServer	https://backupdr.googleapis.com/v1/	projects/{project}/locations/global/managementServers	managementServers	-
+CertificateManagerCertificateIssuanceConfig	https://certificatemanager.googleapis.com/v1/	projects/{project}/locations/global/certificateIssuanceConfigs	certificateIssuanceConfigs	-
 ComputeCrossSiteNetwork	https://compute.googleapis.com/compute/v1/	projects/{project}/global/crossSiteNetworks	items	-
+ComputeGlobalNetworkEndpointGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/networkEndpointGroups	items	-
 ComputeGlobalPublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicDelegatedPrefixes	items	-
 ComputeGlobalVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/global/vmExtensionPolicies	items	-
 ComputeInterconnectGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/interconnectGroups	items	-
@@ -18,12 +21,17 @@ ComputeRegionInstanceTemplate	https://compute.googleapis.com/compute/v1/	project
 ComputeRegionNotificationEndpoint	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/notificationEndpoints	items	-
 ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}/global/rolloutPlans	items	-
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
+GKEBackupBackupChannel	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/backupChannels	backupChannels	-
+GKEBackupBackupPlan	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/backupPlans	backupPlans	-
+GKEBackupRestoreChannel	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/restoreChannels	restoreChannels	-
+GKEBackupRestorePlan	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/restorePlans	restorePlans	-
 GKEHubRolloutSequence	https://gkehub.googleapis.com/v1/	projects/{project}/locations/global/rolloutSequences	rolloutSequences	-
 IAMOauthClient	https://iam.googleapis.com/v1/	projects/{project}/locations/global/oauthClients	oauthClients	state=DELETED
 LoggingSavedQuery	https://logging.googleapis.com/v2/	projects/{project}/locations/global/savedQueries	savedQueries	-
 LookerInstance	https://looker.googleapis.com/v1/	projects/{project}/locations/global/instances	instances	-
 NetworkConnectivityAutomatedDnsRecord	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/automatedDnsRecords	automatedDnsRecords	-
 NetworkConnectivityPscAuthorizationPolicy	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/pscAuthorizationPolicies	pscAuthorizationPolicies	-
+NetworkSecurityDNSThreatDetector	https://networksecurity.googleapis.com/v1/	projects/{project}/locations/global/dnsThreatDetectors	dnsThreatDetectors	-
 NetworkServicesAgentConnectivityTemplate	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentConnectivityTemplates	agentConnectivityTemplates	-
 NetworkServicesAgentGateway	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentGateways	agentGateways	-
 ResourceManagerCapabilityConfig	https://cloudresourcemanager.googleapis.com/v3/	projects/{project}/capabilityConfigs	capabilityConfigs	-

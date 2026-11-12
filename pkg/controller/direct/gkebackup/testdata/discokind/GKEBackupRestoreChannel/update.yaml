@@ -1,0 +1,10 @@
+apiVersion: gkebackup.gcp.hfl.dev/v1beta1
+kind: GKEBackupRestoreChannel
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  destinationProject: projects/${PROJECT}
+  description: changed
