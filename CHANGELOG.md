@@ -52,6 +52,14 @@ has been released yet; each release moves its entries out of
   is how a resource moves between two installs. Without a slot nothing
   changes. `AddToManager` takes a new `controller.Options` argument.
 
+### Fixed
+
+- **A generated kind whose create takes a `requestId` beside its ID**
+  (`NetworkConnectivityPscAuthorizationPolicy`, `BackupDRManagementServer`)
+  sent its ID as the `requestId`: `hack/discokind` picked any query
+  parameter ending in `Id`, in map order. It now skips `requestId` and
+  refuses two candidates.
+
 ### Changed
 
 - **`IAMBinding` is `iam.gcp.hfl.dev/v1beta1`** (`docs/design.md`

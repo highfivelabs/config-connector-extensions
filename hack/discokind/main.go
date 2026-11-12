@@ -346,8 +346,19 @@ func build(c *Config, d *Discovery) (*built, error) {
 	k.updatable = patch != nil
 	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(create), isLRO(patch), isLRO(del)
 	if !k.insertStyle {
-		for n, p := range create.Parameters {
-			if p.Location == "query" && strings.HasSuffix(n, "Id") {
+		// The ID parameter: a query parameter named ...Id, but not
+		// requestId (an idempotency key some APIs take beside the ID).
+		// Sorted, so a run does not depend on map order.
+		names := make([]string, 0, len(create.Parameters))
+		for n := range create.Parameters {
+			names = append(names, n)
+		}
+		sort.Strings(names)
+		for _, n := range names {
+			if p := create.Parameters[n]; p.Location == "query" && strings.HasSuffix(n, "Id") && n != "requestId" {
+				if k.idParam != "" {
+					return nil, fmt.Errorf("%s.create has two ID query parameters, %s and %s", c.Resource, k.idParam, n)
+				}
 				k.idParam = n
 			}
 		}
