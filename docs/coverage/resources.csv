@@ -37,7 +37,7 @@ aiplatform.googleapis.com,aiplatform.googleapis.com/InteractionsHttp,3,,0,,0,3,f
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationBatchPredictionJob,142,,0,,0,142,false,api=v1:projects.locations.batchPredictionJobs
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationDataset,10,,0,,0,10,false,api=v1:projects.locations.datasets
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationDatasetDatasetVersion,1,,0,,0,1,false,api=v1:projects.locations.datasets.datasetVersions
-aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngine,118,AIPlatformReasoningEngine,24,,0,94,false,api=v1:projects.locations.reasoningEngines; official-spec-fields-unmatched=3/26
+aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngine,118,AIPlatformReasoningEngine,24,AIPlatformReasoningEngine,0,94,false,api=v1:projects.locations.reasoningEngines; official-spec-fields-unmatched=3/26; ours-spec-fields-unmatched=3/26
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngineSandboxEnvironment,10,,0,,0,10,false,api=v1:projects.locations.reasoningEngines.sandboxEnvironments
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngineSandboxEnvironmentTemplate,19,,0,,0,19,false,api=v1:projects.locations.reasoningEngines.sandboxEnvironmentTemplates
 aiplatform.googleapis.com,aiplatform.googleapis.com/MemoryBankMemory,18,,0,,0,18,false,api=v1:projects.locations.memoryBanks.memories
@@ -54,7 +54,7 @@ aiplatform.googleapis.com,aiplatform.googleapis.com/OnlineEvaluator,249,AIPlatfo
 aiplatform.googleapis.com,aiplatform.googleapis.com/PersistentResource,34,AIPlatformPersistentResource,31,,0,3,false,api=v1:projects.locations.persistentResources; official-spec-fields-unmatched=3/33
 aiplatform.googleapis.com,aiplatform.googleapis.com/PipelineJob,20,VertexAIPipelineJob,15,,0,5,false,api=v1:projects.locations.pipelineJobs; official-spec-fields-unmatched=3/18
 aiplatform.googleapis.com,aiplatform.googleapis.com/RagCorpora,13,,0,,0,13,false,api=v1:projects.locations.ragCorpora
-aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngine,118,AIPlatformReasoningEngine,24,,0,94,false,api=v1:reasoningEngines; official-spec-fields-unmatched=3/26
+aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngine,118,AIPlatformReasoningEngine,24,AIPlatformReasoningEngine,0,94,false,api=v1:reasoningEngines; official-spec-fields-unmatched=3/26; ours-spec-fields-unmatched=3/26
 aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngineMemory,18,,0,,0,18,false,api=v1:projects.locations.reasoningEngines.memories
 aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngineSandboxEnvironment,10,,0,,0,10,false,api=v1:reasoningEngines.sandboxEnvironments
 aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngineSandboxEnvironmentTemplate,19,,0,,0,19,false,api=v1:reasoningEngines.sandboxEnvironmentTemplates
