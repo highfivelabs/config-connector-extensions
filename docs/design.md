@@ -194,6 +194,80 @@ When `hack/upstream-pr.sh` reports `databaseRoles` live:
 Refreshing later is the same steps against the newer head; once the PR
 merges, retire the kind instead ("Retiring a gap kind").
 
+### 2.5 Version slots: release, adopt, pause and the slot guard
+
+A hosted Bundt runs its infrastructure clusters as version slots (for
+example `current` and `previous`), each running one version of every
+provider, and moves an organization between slots with one sequence:
+pause or abandon on the old slot, adopt on the new, check there is no
+diff, delete the old object. These kinds take part on the same terms as
+Config Connector's (checked 2026-11-12 at the pin), because every kind,
+the `discokind` ones included, runs on Config Connector's unchanged direct
+reconciler (`third_party/.../pkg/controller/direct/directbase/directbase_controller.go`):
+
+| Kind family | Release without deleting | Adopt an existing resource | Pause |
+| --- | --- | --- | --- |
+| Every kind (typed kinds under `pkg/controller/direct/*`, and the `discokind` kinds) | had: `cnrm.cloud.google.com/deletion-policy: abandon` (`directbase` `doReconcile`, `k8s.HasAbandonAnnotation`); the deletion defender abandons when the CRD is deleted | had: `Find` by the object's identity, then `Update`, never `Create`, when found (Config Connector's "acquire") | had: `cnrm.cloud.google.com/actuation-mode: Paused` per object, or `spec.actuation: Paused` on `ConfigConnector` / `ConfigConnectorContext` (`resourceactuation.ShouldSkipActuation`); `cnrm.cloud.google.com/reconcile-interval-in-seconds: "0"` stops drift correction only |
+| Kinds whose ID the server assigns: `ComputeOrganizationSecurityPolicy`, `SQLAdminBackup`, `SecretManagerSecretVersion` | had | had, only with `spec.resourceID` set to the existing ID (without it the first reconcile creates a new one) | had |
+| Singletons and parts of a shared resource: `LoggingSettings`, `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`, `ServiceIdentity`, `ComputeProjectMetadataItem`, `IAMBinding`, `IAMMember`, the firewall policy and security policy rules and associations | had (abandon leaves the setting, key, binding or rule) | had: they always exist, or are named by their parent and key | had |
+| Every kind | **added:** the slot guard (below) | **added:** `hfl.dev/slot-takeover` lets the new slot claim a resource the old one marked | (the guard makes a resumed old slot harmless where it can mark) |
+
+Two upstream behaviours a move must allow for: a `Paused` object is never
+finalized, so the old object is resumed with `deletion-policy: abandon`
+in the same update and then deleted (abandoning makes no cloud call); and
+the reconciler's event filter (`kccpredicate.UnderlyingResourceOutOfSyncPredicate`)
+ignores most annotation changes, so annotations that should act at once
+are set when the object is created.
+
+**The slot guard** (`pkg/slotguard`, added 2026-11-12) is opt-in: off
+unless the manager has `--slot=<name>` or `HFL_SLOT` (the flag wins; the
+operator passes it with `--manager-arg=--slot=<name>`). A slot is 1-63
+lowercase letters, digits, `-` or `_`, so it is both a Google and a
+Kubernetes label value. With a slot, every kind's model is wrapped
+(`pkg/controller/controllers.go`, `AddToManager`); the reconciler is
+unchanged:
+
+- The object gets the label `hfl.dev/slot=<slot>`.
+- A kind whose resource has labels gets the label `hfl-dev-slot=<slot>`
+  in the labels it asks for, so create writes it and an adoption adds it
+  (Google label keys cannot hold `.` or `/`). Where the labels come from
+  is the kind's (`kind.labels`): `metadata.labels`, or `spec.labels` when
+  the CRD has it; `TestSlotLabelSources` pins the list.
+- `Find` (a read) reads the resource's `hfl-dev-slot`. If it names another
+  slot, nothing is sent: an update sets `Ready` False with reason
+  `SlotMismatch` and a Warning event `SlotMismatch` ("cloud resource is
+  held by slot <x>; this controller is slot <y>") and is retried with the
+  workqueue's backoff; a delete is refused, which the reconciler reports
+  as `Ready` False reason `DeleteFailed` with message `SlotMismatch: ...`
+  (upstream's handler names the reason), with the same event. A resource
+  with no slot label is claimed, and so is one held by the slot the
+  object's `hfl.dev/slot-takeover` annotation names.
+
+The move, as `task test:slot-move` runs it (`pkg/test/slotmove`, two
+managers on one cluster and one fake cloud, each watching its own
+namespace):
+
+1. Old slot: `cnrm.cloud.google.com/actuation-mode: Paused`.
+2. New slot: apply the object with `hfl.dev/slot-takeover: <old slot>`.
+   It finds the resource by name and updates only the slot label: same
+   name, same creation time, nothing else changed. (Without the
+   annotation it is refused with `SlotMismatch`.)
+3. Old slot: resumed, it is refused (`SlotMismatch`, no write), and a
+   delete without abandon is refused too.
+4. Old slot: `deletion-policy: abandon` (and resume) and delete: the
+   resource stays, held by the new slot.
+
+**Kinds the guard cannot mark** (their resources have no labels): every
+kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
+all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
+`DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
+`NetworkSecurity*` kinds and the two `GKEHub*` kinds. These move the same
+way, but nothing in the cloud stops a resumed old slot, so Bundt must
+keep the old slot's object paused (or abandoned) for the whole move, as
+the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the
+mark in its custom metadata and the compute kinds that have
+`labelFingerprint` in theirs; neither is built.
+
 ## 3. Keeping in sync with upstream
 
 ### 3.1 Pin, patches, record
@@ -1948,6 +2022,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     `v1beta1`, which takes over the same binding (`CHANGELOG.md`).
     Whether `v1alpha1` should instead have stayed served, deprecated, for
     a window is section 10, question 4.
+
+25. **Version slots use Config Connector's own annotations, plus an opt-in
+    slot guard** (2026-11-12, for Bundt's hosted slots): release is
+    `deletion-policy: abandon`, adopt is acquire by name, pause is
+    `actuation-mode: Paused`, all upstream's and already honoured; the
+    guard (section 2.5) adds `hfl.dev/slot` on the object and
+    `hfl-dev-slot` on labelled resources, refuses writes to a resource
+    another slot holds, and lets `hfl.dev/slot-takeover` hand a resource
+    over. Config Connector's own lease (`cnrm.cloud.google.com/management-conflict-prevention-policy`)
+    is not used: it covers only some kinds, and Bundt decided against it.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
