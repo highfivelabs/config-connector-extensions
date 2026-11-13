@@ -59,6 +59,11 @@ pull_requests:
     read_on: "2026-11-10"
     role: copied
     for: the parent of SecurityCenterMuteConfig (and the later Security Command Center kinds), apis/securitycenter/v1alpha1/parent.go
+  - ref: GoogleCloudPlatform/k8s-config-connector#14133
+    head: dcb10c53f5e7bee2c6185f4debf56d92610b0fbe
+    read_on: "2026-11-13"
+    role: copied
+    for: IAMPolicyBinding types; identity and mapper written after it
   - ref: GoogleCloudPlatform/k8s-config-connector#13517
     head: eb2774cef2776e8a1dc2f766d6cf491f0931f8b7
     read_on: "2026-11-08"
@@ -185,6 +190,7 @@ patches:
   - {file: patches/k8s-config-connector/0041-mockgcp-compute-region-autoscalers.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0042-mockgcp-compute-zonal-per-instance-configs.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0043-mockgcp-compute-region-disk-operations.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0044-mockgcp-iam-policy-bindings.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -395,6 +401,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/iam/iamprincipalaccessboundarypolicy_mapper.go]}
   - here: [pkg/controller/direct/iam/principalaccessboundarypolicy_fuzzer_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/iam/iamprincipalaccessboundarypolicy_fuzzer.generated.go]}
+  - here: [apis/iam/v1alpha1/iampolicybinding_types.go]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14133, paths: [apis/iam/v1alpha1/iampolicybinding_types.go]}
+  - here: [apis/iam/v1alpha1/iampolicybinding_identity.go, apis/iam/v1alpha1/iampolicybinding_identity_test.go, pkg/controller/direct/iam/policybinding_mapper.go]
+    from: {written_here: true}
+  - here: [pkg/controller/direct/iam/policybinding_controller.go]
+    from: {written_here: true}
   - here: [apis/compute/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/groupversion_info.go]}
   - here: [apis/compute/v1beta1/doc.go]

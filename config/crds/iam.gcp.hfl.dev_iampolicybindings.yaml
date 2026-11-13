@@ -1,0 +1,351 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: iampolicybindings.iam.gcp.hfl.dev
+spec:
+  group: iam.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: IAMPolicyBinding
+    listKind: IAMPolicyBindingList
+    plural: iampolicybindings
+    shortNames:
+    - hfliampolicybinding
+    - hfliampolicybindings
+    singular: iampolicybinding
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'IAMPolicyBinding is the Schema for the IAMPolicyBinding API:
+          an IAM v3 policy binding (a principal access boundary policy bound to the
+          principals of an organization, folder or project).'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: IAMPolicyBindingSpec defines the desired state of IAMPolicyBinding
+            properties:
+              annotations:
+                additionalProperties:
+                  type: string
+                description: Optional. User-defined annotations. See https://google.aip.dev/148#annotations
+                  for more details such as format and size limitations
+                type: object
+              condition:
+                description: |-
+                  Optional. The condition to apply to the policy binding. When set, the
+                   `expression` field in the `Expr` must include from 1 to 10 subexpressions,
+                   joined by the
+                   "||"(Logical OR), "&&"(Logical AND) or "!"(Logical NOT) operators and
+                   cannot contain more than 250 characters.
+
+                   The condition is currently only supported when bound to policies of kind
+                   principal access boundary.
+
+                   When the bound policy is a principal access boundary policy, the only
+                   supported attributes in any subexpression are `principal.type` and
+                   `principal.subject`. An example expression is: "principal.type ==
+                   'iam.googleapis.com/ServiceAccount'" or "principal.subject ==
+                   'bob@example.com'".
+                properties:
+                  description:
+                    description: Optional. Description of the expression.
+                    type: string
+                  expression:
+                    description: Textual representation of an expression in Common
+                      Expression Language syntax.
+                    type: string
+                  location:
+                    description: Optional. String indicating the location of the expression
+                      for error reporting, e.g. a file name and a position in the
+                      file.
+                    type: string
+                  title:
+                    description: Optional. Title for the expression.
+                    type: string
+                type: object
+              displayName:
+                description: Optional. The description of the policy binding. Must
+                  be less than or equal to 63 characters.
+                type: string
+              folderRef:
+                description: 'The folder the binding belongs to: exactly one of organizationRef,
+                  folderRef and projectRef. Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The 'name' field of a folder, when not managed by
+                      Config Connector. This field must be set when 'name' field is
+                      not set.
+                    type: string
+                  name:
+                    description: The 'name' field of a 'Folder' resource. This field
+                      must be set when 'external' field is not set.
+                    type: string
+                  namespace:
+                    description: The 'namespace' field of a 'Folder' resource. If
+                      unset, the namespace is defaulted to the namespace of the referencer
+                      resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: folderRef is immutable
+                  rule: self == oldSelf
+              location:
+                description: The location of the binding (global, the default). Immutable.
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              organizationRef:
+                description: 'The organization the binding belongs to: exactly one
+                  of organizationRef, folderRef and projectRef. Immutable.'
+                properties:
+                  external:
+                    description: The 'name' field of an organization, when not managed
+                      by Config Connector.
+                    type: string
+                required:
+                - external
+                type: object
+                x-kubernetes-validations:
+                - message: organizationRef is immutable
+                  rule: self == oldSelf
+              policyKind:
+                description: 'Immutable. The kind of the policy to attach in this
+                  binding: PRINCIPAL_ACCESS_BOUNDARY or ACCESS. Left out, the API
+                  sets it to the policy''s kind.'
+                type: string
+                x-kubernetes-validations:
+                - message: policyKind is immutable
+                  rule: self == oldSelf
+              policyRef:
+                description: 'Required. Immutable. The policy to be bound: an IAMPrincipalAccessBoundaryPolicy
+                  (iam.gcp.hfl.dev) by name, or a policy''s resource name as external
+                  (organizations/{organization}/locations/global/principalAccessBoundaryPolicies/{id}).
+                  The binding parent and the policy must belong to the same organization.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A policy's resource name, organizations/{organization}/locations/global/principalAccessBoundaryPolicies/{id}.
+                    type: string
+                  name:
+                    description: The name of an IAMPrincipalAccessBoundaryPolicy (iam.gcp.hfl.dev).
+                    type: string
+                  namespace:
+                    description: The namespace of the IAMPrincipalAccessBoundaryPolicy;
+                      the binding's when left out.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: policyRef is immutable
+                  rule: self == oldSelf
+                - message: exactly one of external and name is required
+                  rule: has(self.external) != has(self.name)
+              projectRef:
+                description: 'The project the binding belongs to: exactly one of organizationRef,
+                  folderRef and projectRef. Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: The IAMPolicyBinding name. If not given, the metadata.name
+                  will be used. Immutable.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              target:
+                description: Required. Immutable. The full resource name of the resource
+                  to which the policy will be bound. Immutable once set.
+                properties:
+                  principalSet:
+                    description: 'Immutable. The full resource name that''s used for
+                      principal access boundary policy bindings. The principal set
+                      must be directly parented by the policy binding''s parent or
+                      same as the parent if the target is a project/folder/organization.
+                      Examples: //cloudresourcemanager.googleapis.com/projects/PROJECT_NUMBER,
+                      //cloudresourcemanager.googleapis.com/folders/FOLDER_ID, //cloudresourcemanager.googleapis.com/organizations/ORGANIZATION_ID,
+                      //iam.googleapis.com/locations/global/workforcePools/POOL_ID.'
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: target is immutable
+                  rule: self == oldSelf
+            required:
+            - policyRef
+            - target
+            type: object
+            x-kubernetes-validations:
+            - message: exactly one of organizationRef, folderRef and projectRef is
+                required
+              rule: '(has(self.organizationRef) ? 1 : 0) + (has(self.folderRef) ?
+                1 : 0) + (has(self.projectRef) ? 1 : 0) == 1'
+          status:
+            description: IAMPolicyBindingStatus defines the config connector machine
+              state of IAMPolicyBinding
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: A unique specifier for the IAMPolicyBinding resource
+                  in GCP.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              observedState:
+                description: ObservedState is the state of the resource as most recently
+                  observed in GCP.
+                properties:
+                  createTime:
+                    description: Output only. The time when the policy binding was
+                      created.
+                    type: string
+                  etag:
+                    description: The etag of the policy binding.
+                    type: string
+                  policyKind:
+                    description: The kind of the bound policy, as the API set it.
+                    type: string
+                  policyUid:
+                    description: Output only. The globally unique ID of the policy
+                      to be bound.
+                    type: string
+                  uid:
+                    description: Output only. The globally unique ID of the policy
+                      binding. Assigned when the policy binding is created.
+                    type: string
+                  updateTime:
+                    description: Output only. The time when the policy binding was
+                      most recently updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
