@@ -45,6 +45,7 @@ resources:
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeregionnotificationendpoints.yaml
+- compute.gcp.hfl.dev_computeregionperinstanceconfigs.yaml
 - compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
@@ -97,6 +98,7 @@ resources:
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - securitycenter.gcp.hfl.dev_securitycentermuteconfigs.yaml
 - serviceusage.gcp.hfl.dev_serviceidentities.yaml
+- spanner.gcp.hfl.dev_spannerinstanceconfigs.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
 - sqladmin.gcp.hfl.dev_sqladminbackups.yaml
 - storage.gcp.hfl.dev_storagebucketobjects.yaml

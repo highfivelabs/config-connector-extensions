@@ -11,6 +11,14 @@ has been released yet; each release moves its entries out of
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeDiskResourcePolicyAttachment`**, a
   stable copy of Config Connector's alpha attachment of a resource policy
   to a zonal disk (decision 26), with upstream's fields.
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionPerInstanceConfig`**, a
+  stable copy of Config Connector's alpha per-instance config of a
+  regional managed instance group (decision 26), with upstream's fields.
+- **`spanner.gcp.hfl.dev/v1beta1` `SpannerInstanceConfig`**, a stable copy
+  of Config Connector's alpha user-managed Spanner instance configuration
+  (decision 26), with upstream's fields; the fields the API cannot update
+  are immutable. Live pending Spanner in the live-test project
+  (`E2E_SPANNER=true`).
 - **`datacatalog.gcp.hfl.dev/v1beta1` `DataCatalogTag`**, a stable copy of
   Config Connector's alpha Data Catalog tag (decision 26), with upstream's
   fields. The API assigns the tag's ID at create; `status.externalRef`

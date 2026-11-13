@@ -1,0 +1,24 @@
+config-connector-extensions patch 0036: mockgcp's Spanner keeps a user-managed instance configuration's labels and leader options at create.
+
+mockspanner's CreateInstanceConfig copied only the name, base
+configuration, display name and replicas, so a configuration made with
+labels read back without them and every first resync of
+SpannerInstanceConfig wrote the labels again. The API keeps what the
+create sends (google.spanner.admin.instance.v1.InstanceConfig: labels,
+leader_options). Written here; nothing else changes.
+Upstream candidate: yes.
+
+diff --git a/mockgcp/mockspanner/admin/instance.go b/mockgcp/mockspanner/admin/instance.go
+index 3056946b1..c9eeb6ba3 100644
+--- a/mockgcp/mockspanner/admin/instance.go
++++ b/mockgcp/mockspanner/admin/instance.go
+@@ -324,6 +324,9 @@ func (s *SpannerInstanceV1) CreateInstanceConfig(ctx context.Context, req *pb.Cr
+ 		BaseConfig:  req.InstanceConfig.BaseConfig,
+ 		DisplayName: req.InstanceConfig.DisplayName,
+ 		Replicas:    req.InstanceConfig.Replicas,
++		// The API keeps the labels and leader options a create sends.
++		Labels:        req.InstanceConfig.Labels,
++		LeaderOptions: req.InstanceConfig.LeaderOptions,
+ 	}
+ 	if obj.Etag == "" {
+ 		obj.Etag = fields.ComputeWeakEtag(obj)
