@@ -233,6 +233,12 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   with its number is not known). It checks no parent (any folder or
   organization ID is one), no filter syntax, and no expiry of a dynamic
   mute config.
+- **Spanner instance configurations keep labels** (patch 0036, ours, for
+  `SpannerInstanceConfig`). Create keeps the labels and leader options
+  it is sent, as the API does. mockgcp still checks nothing about the
+  replicas (that they hold the base configuration's and add one of its
+  optional replicas), fills in no leader options, and answers every
+  configuration as `READY` at once.
 - **VPN tunnels in mockgcp** (patch 0033, ours, for `ComputeVPNTunnel`).
   Insert, get, `setLabels` (refused on a stale label fingerprint) and
   delete of `projects/{p}/regions/{r}/vpnTunnels/{t}`; insert leaves

@@ -2,6 +2,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- aiplatform.gcp.hfl.dev_aiplatformreasoningengines.yaml
 - apigateway.gcp.hfl.dev_apigatewayapiconfigs.yaml
 - apigateway.gcp.hfl.dev_apigatewaygateways.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
@@ -18,6 +19,7 @@ resources:
 - cloudfunctions2.gcp.hfl.dev_cloudfunctions2functions.yaml
 - compute.gcp.hfl.dev_computeautoscalers.yaml
 - compute.gcp.hfl.dev_computecrosssitenetworks.yaml
+- compute.gcp.hfl.dev_computediskresourcepolicyattachments.yaml
 - compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
@@ -44,18 +46,21 @@ resources:
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeregionnotificationendpoints.yaml
+- compute.gcp.hfl.dev_computeregionperinstanceconfigs.yaml
 - compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
+- datacatalog.gcp.hfl.dev_datacatalogtags.yaml
 - dataplex.gcp.hfl.dev_dataplexaspecttypes.yaml
 - dataplex.gcp.hfl.dev_dataplexassets.yaml
 - dataplex.gcp.hfl.dev_dataplexdatascans.yaml
 - dataplex.gcp.hfl.dev_dataplexlakes.yaml
 - dataplex.gcp.hfl.dev_dataplexzones.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicies.yaml
+- dns.gcp.hfl.dev_dnsresponsepolicyrules.yaml
 - gkebackup.gcp.hfl.dev_gkebackupbackupchannels.yaml
 - gkebackup.gcp.hfl.dev_gkebackupbackupplans.yaml
 - gkebackup.gcp.hfl.dev_gkebackuprestorechannels.yaml
@@ -94,6 +99,7 @@ resources:
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - securitycenter.gcp.hfl.dev_securitycentermuteconfigs.yaml
 - serviceusage.gcp.hfl.dev_serviceidentities.yaml
+- spanner.gcp.hfl.dev_spannerinstanceconfigs.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
 - sqladmin.gcp.hfl.dev_sqladminbackups.yaml
 - storage.gcp.hfl.dev_storagebucketobjects.yaml

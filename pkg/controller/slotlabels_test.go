@@ -66,6 +66,8 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"DataplexAsset":                                  slotguard.Spec,
 	"DataplexAspectType":                             slotguard.Spec,
 	"DataplexDataScan":                               slotguard.Spec,
+	"SpannerInstanceConfig":                          slotguard.Spec,
+	"AIPlatformReasoningEngine":                      slotguard.Spec,
 }
 
 func TestSlotLabelSources(t *testing.T) {

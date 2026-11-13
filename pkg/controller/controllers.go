@@ -41,10 +41,12 @@ import (
 	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	aiplatformv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/aiplatform/v1beta1"
 	artifactregistryv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
 	dnsv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
@@ -55,11 +57,14 @@ import (
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
 	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
 	storagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/dns"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
@@ -69,6 +74,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/securitycenter"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/serviceusage"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/spanner"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/storage"
@@ -102,6 +108,8 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
+	{gvk: computev1beta1.ComputeDiskResourcePolicyAttachmentGVK, crdName: "computediskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeDiskResourcePolicyAttachmentModel},
+	{gvk: computev1beta1.ComputeRegionPerInstanceConfigGVK, crdName: "computeregionperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputeRegionPerInstanceConfigModel},
 	{gvk: computev1alpha1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
 	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
 	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
@@ -125,8 +133,12 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeNetworkFirewallPolicyRuleGVK, crdName: "computenetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyRuleModel},
 	{gvk: securitycenterv1alpha1.SecurityCenterMuteConfigGVK, crdName: "securitycentermuteconfigs.securitycenter.gcp.hfl.dev", model: securitycenter.NewMuteConfigModel},
 	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel, labels: slotguard.Metadata},
+	{gvk: dnsv1beta1.DNSResponsePolicyRuleGVK, crdName: "dnsresponsepolicyrules.dns.gcp.hfl.dev", model: dns.NewResponsePolicyRuleModel},
 	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
+	{gvk: spannerv1beta1.SpannerInstanceConfigGVK, crdName: "spannerinstanceconfigs.spanner.gcp.hfl.dev", model: spanner.NewInstanceConfigModel, labels: slotguard.Spec},
+	{gvk: datacatalogv1beta1.DataCatalogTagGVK, crdName: "datacatalogtags.datacatalog.gcp.hfl.dev", model: datacatalog.NewTagModel},
+	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -143,6 +155,9 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,
 		dnsv1beta1.AddToScheme,
+		spannerv1beta1.AddToScheme,
+		datacatalogv1beta1.AddToScheme,
+		aiplatformv1beta1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,

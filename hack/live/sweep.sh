@@ -438,9 +438,15 @@ fi
 # has Cloud DNS for the live-test service account (E2E_DNS_ADMIN=true:
 # dns.googleapis.com on and roles/dns.admin); without it the
 # DNSResponsePolicy test does not run live and there is nothing to sweep.
-# A policy is unbound from its networks before it is deleted, as the
-# controller does.
+# A policy's rules (DNSResponsePolicyRule's) go first, since a policy with
+# rules cannot be deleted; then it is unbound from its networks, as the
+# controller does, and deleted.
 dns_rp_delete() { # dns_rp_delete NAME
+  local rules r
+  rules="$("${G[@]}" dns response-policies rules list "$1" --verbosity=error --format='value(ruleName)')" || return 1
+  for r in ${rules}; do
+    "${G[@]}" dns response-policies rules delete "${r}" --response-policy="$1" || return 1
+  done
   "${G[@]}" dns response-policies update "$1" --networks="" &&
     "${G[@]}" dns response-policies delete "$1"
 }
@@ -449,6 +455,60 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   for name in ${rows}; do
     by_run "${name}" || continue
     act "DNS response policy" "${name}" dns_rp_delete "${name}"
+  done
+fi
+
+# Spanner user-managed instance configurations (the SpannerInstanceConfig
+# test's), by the run's name after "custom-", only where the live-test
+# account has Spanner (E2E_SPANNER=true: spanner.googleapis.com on and
+# roles/spanner.admin); without it the test does not run live.
+if [[ "${E2E_SPANNER:-}" == true ]]; then
+  rows="$("${G[@]}" spanner instance-configs list --verbosity=error --filter='configType=USER_MANAGED' --format='value(name.basename())')"
+  for name in ${rows}; do
+    by_run "${name#custom-}" || continue
+    act "Spanner instance config" "${name}" "${G[@]}" spanner instance-configs delete "${name}"
+  done
+fi
+
+# Data Catalog entry groups (deleted with force, their entries and tags
+# with them) and tag templates (the DataCatalogTag test's), by the run's
+# name with its dashes as underscores (their IDs take no dashes), only
+# where the live-test account has Data Catalog (E2E_DATA_CATALOG=true:
+# datacatalog.googleapis.com on and roles/datacatalog.admin); without it
+# the test does not run live. Tag templates have no list call, so they
+# are found with a catalog search.
+if [[ "${E2E_DATA_CATALOG:-}" == true ]]; then
+  dcbase="https://datacatalog.googleapis.com/v1"
+  rows="$(disco_api GET "${dcbase}/projects/${project}/locations/us-central1/entryGroups?pageSize=1000" | jq -r '.entryGroups[]? | .name')"
+  for name in ${rows}; do
+    leaf="${name##*/}"
+    by_run "${leaf//_/-}" || continue
+    act "Data Catalog entry group" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+  rows="$(curl -sS --fail-with-body -X POST -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    -H "Content-Type: application/json" "${dcbase}/catalog:search" \
+    -d "{\"scope\":{\"includeProjectIds\":[\"${project}\"]},\"query\":\"type=tag_template\",\"pageSize\":500}" \
+    | jq -r '.results[]? | .relativeResourceName')"
+  for name in ${rows}; do
+    leaf="${name##*/}"
+    by_run "${leaf//_/-}" || continue
+    act "Data Catalog tag template" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+fi
+
+# Vertex AI reasoning engines (the AIPlatformReasoningEngine test's), by
+# the run's display name (the ID is the API's), only where the live-test
+# account has Vertex AI (E2E_VERTEX_AI=true: aiplatform.googleapis.com on
+# and roles/aiplatform.user); without it the test does not run live.
+if [[ "${E2E_VERTEX_AI:-}" == true ]]; then
+  for region in us-central1; do
+    rebase="https://${region}-aiplatform.googleapis.com/v1/projects/${project}/locations/${region}/reasoningEngines"
+    rows="$(disco_api GET "${rebase}?pageSize=100" | jq -r '.reasoningEngines[]? | "\(.name) \(.displayName) \(.createTime)"')"
+    while read -r name display made; do
+      [[ -n "${name}" ]] || continue
+      by_run "${display}" "${made}" || continue
+      act "reasoning engine" "${name}" disco_api DELETE "https://${region}-aiplatform.googleapis.com/v1/${name}"
+    done <<<"${rows}"
   done
 fi
 
@@ -515,6 +575,42 @@ while read -r name made; do
   fi
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
+
+# Disks (the resource policy attachment test makes them), by name, before
+# the resource policies they hold; then the resource policies.
+rows="$("${G[@]}" compute disks list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,zone.basename())')"
+while read -r name zone; do
+  [[ -n "${name}" ]] || continue
+  act "disk" "${name} ${zone}" "${G[@]}" compute disks delete "${name}" --zone="${zone}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute resource-policies list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "resource policy" "${name} ${region}" "${G[@]}" compute resource-policies delete "${name}" --region="${region}"
+done <<<"${rows}"
+# Managed instance groups (the per-instance config tests make a regional
+# one), by name; deleting a group deletes its instances. Then any instance
+# and instance template of a run left behind, before their subnets.
+# (Commas, not tabs: a regional group has no zone, and read would shift an
+# empty field.)
+rows="$("${G[@]}" compute instance-groups managed list --verbosity=error \
+  --filter="$(cfilter)" --format='csv[no-heading](name,region.basename(),zone.basename())')"
+while IFS=, read -r name region zone; do
+  [[ -n "${name}" ]] || continue
+  act "managed instance group" "${name} ${region:-${zone}}" "${G[@]}" compute instance-groups managed delete "${name}" "$(scope "${region}" "${zone}")"
+done <<<"${rows}"
+rows="$("${G[@]}" compute instances list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,zone.basename())')"
+while read -r name zone; do
+  [[ -n "${name}" ]] || continue
+  act "instance" "${name} ${zone}" "${G[@]}" compute instances delete "${name}" --zone="${zone}"
+done <<<"${rows}"
+names="$("${G[@]}" compute instance-templates list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
+for name in ${names}; do
+  act "instance template" "${name}" "${G[@]}" compute instance-templates delete "${name}" --global
+done
 
 # Subnets (a live test's Setup makes them for the network attachments and
 # instance templates it tests), by name, before their networks.

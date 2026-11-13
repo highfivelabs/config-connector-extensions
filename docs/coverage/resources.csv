@@ -37,7 +37,7 @@ aiplatform.googleapis.com,aiplatform.googleapis.com/InteractionsHttp,3,,0,,0,3,f
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationBatchPredictionJob,142,,0,,0,142,false,api=v1:projects.locations.batchPredictionJobs
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationDataset,10,,0,,0,10,false,api=v1:projects.locations.datasets
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationDatasetDatasetVersion,1,,0,,0,1,false,api=v1:projects.locations.datasets.datasetVersions
-aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngine,118,AIPlatformReasoningEngine,24,,0,94,false,api=v1:projects.locations.reasoningEngines; official-spec-fields-unmatched=3/26
+aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngine,118,AIPlatformReasoningEngine,24,AIPlatformReasoningEngine,0,94,false,api=v1:projects.locations.reasoningEngines; official-spec-fields-unmatched=3/26; ours-spec-fields-unmatched=3/26
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngineSandboxEnvironment,10,,0,,0,10,false,api=v1:projects.locations.reasoningEngines.sandboxEnvironments
 aiplatform.googleapis.com,aiplatform.googleapis.com/LocationReasoningEngineSandboxEnvironmentTemplate,19,,0,,0,19,false,api=v1:projects.locations.reasoningEngines.sandboxEnvironmentTemplates
 aiplatform.googleapis.com,aiplatform.googleapis.com/MemoryBankMemory,18,,0,,0,18,false,api=v1:projects.locations.memoryBanks.memories
@@ -54,7 +54,7 @@ aiplatform.googleapis.com,aiplatform.googleapis.com/OnlineEvaluator,249,AIPlatfo
 aiplatform.googleapis.com,aiplatform.googleapis.com/PersistentResource,34,AIPlatformPersistentResource,31,,0,3,false,api=v1:projects.locations.persistentResources; official-spec-fields-unmatched=3/33
 aiplatform.googleapis.com,aiplatform.googleapis.com/PipelineJob,20,VertexAIPipelineJob,15,,0,5,false,api=v1:projects.locations.pipelineJobs; official-spec-fields-unmatched=3/18
 aiplatform.googleapis.com,aiplatform.googleapis.com/RagCorpora,13,,0,,0,13,false,api=v1:projects.locations.ragCorpora
-aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngine,118,AIPlatformReasoningEngine,24,,0,94,false,api=v1:reasoningEngines; official-spec-fields-unmatched=3/26
+aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngine,118,AIPlatformReasoningEngine,24,AIPlatformReasoningEngine,0,94,false,api=v1:reasoningEngines; official-spec-fields-unmatched=3/26; ours-spec-fields-unmatched=3/26
 aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngineMemory,18,,0,,0,18,false,api=v1:projects.locations.reasoningEngines.memories
 aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngineSandboxEnvironment,10,,0,,0,10,false,api=v1:reasoningEngines.sandboxEnvironments
 aiplatform.googleapis.com,aiplatform.googleapis.com/ReasoningEngineSandboxEnvironmentTemplate,19,,0,,0,19,false,api=v1:reasoningEngines.sandboxEnvironmentTemplates
@@ -338,10 +338,12 @@ compute.googleapis.com,compute.googleapis.com/Address,15,ComputeAddress,13,,0,2,
 compute.googleapis.com,compute.googleapis.com/Autoscaler,25,ComputeAutoscaler,18,ComputeAutoscaler,0,7,false,api=v1:autoscalers; official-spec-fields-unmatched=13/30; ours-spec-fields-unmatched=13/30
 compute.googleapis.com,compute.googleapis.com/BackendBucket,21,ComputeBackendBucket,19,,0,2,false,api=v1:backendBuckets; official-spec-fields-unmatched=2/20
 compute.googleapis.com,compute.googleapis.com/BackendService,135,ComputeBackendService,84,,0,51,false,api=v1:backendServices; official-spec-fields-unmatched=13/96
+compute.googleapis.com,compute.googleapis.com/ComputeDiskResourcePolicyAttachment,0,,0,ComputeDiskResourcePolicyAttachment,0,0,false,outside-denominator; no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeNetworkEndpoint,0,,0,ComputeNetworkEndpoint,0,0,false,outside-denominator; no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeProjectDefaultNetworkTier,0,,0,ComputeProjectDefaultNetworkTier,0,0,false,"outside-denominator; a project's default network tier, written with projects.setDefaultNetworkTier (it always exists)"
 compute.googleapis.com,compute.googleapis.com/ComputeProjectMetadataItem,0,,0,ComputeProjectMetadataItem,0,0,false,"outside-denominator; one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)"
 compute.googleapis.com,compute.googleapis.com/ComputeRegionNetworkEndpoint,0,,0,ComputeRegionNetworkEndpoint,0,0,false,"outside-denominator; an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints"
+compute.googleapis.com,compute.googleapis.com/ComputeRegionPerInstanceConfig,0,,0,ComputeRegionPerInstanceConfig,0,0,false,outside-denominator; no API resource named like regionperinstanceconfig/computeregionperinstanceconfig in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeRouterRoutePolicy,0,,0,ComputeRouterRoutePolicy,0,0,false,"outside-denominator; a route policy of a Cloud Router, written with routers.patchRoutePolicy"
 compute.googleapis.com,compute.googleapis.com/CrossSiteNetwork,2,,0,ComputeCrossSiteNetwork,2,0,false,api=v1:crossSiteNetworks; ours-spec-fields-unmatched=2/3
 compute.googleapis.com,compute.googleapis.com/Disk,48,ComputeDisk,27,,0,21,false,api=v1:disks; official-spec-fields-unmatched=8/33
@@ -486,6 +488,7 @@ contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/DocumentLink,15,
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/DocumentSchema,17,ContentWarehouseDocumentSchema,16,,0,1,false,api=v1:google.cloud.contentwarehouse.v1.DocumentSchemaService.CreateDocumentSchema; recursive-cut=1; official-spec-fields-unmatched=9/24
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/RuleSet,28,ContentWarehouseRuleSet,27,,0,1,false,api=v1:google.cloud.contentwarehouse.v1.RuleSetService.CreateRuleSet; official-spec-fields-unmatched=3/29
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/SynonymSet,3,ContentWarehouseSynonymSet,3,,0,0,false,api=v1:google.cloud.contentwarehouse.v1.SynonymSetService.CreateSynonymSet; official-spec-fields-unmatched=3/5
+datacatalog.googleapis.com,datacatalog.googleapis.com/DataCatalogTag,0,,0,DataCatalogTag,0,0,false,outside-denominator; no API resource named like tag/datacatalogtag in datacatalog.googleapis.com
 datacatalog.googleapis.com,datacatalog.googleapis.com/Taxonomy,4,DataCatalogTaxonomy,4,,0,0,false,api=v1:projects.locations.taxonomies; official-spec-fields-unmatched=3/6
 datacatalog.googleapis.com,datacatalog.googleapis.com/TaxonomyPolicyTag,4,DataCatalogPolicyTag,4,,0,0,false,api=v1:projects.locations.taxonomies.policyTags; official-spec-fields-unmatched=2/5
 dataflow.googleapis.com,dataflow.googleapis.com/ConfigStoreSetting,3,,0,,0,3,false,api=v1b3:folders.locations.configStoreSettings
@@ -670,7 +673,7 @@ dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,,0,8,false,api=v1:ou
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,50,DNSRecordSet,43,,0,7,false,api=v1:resourceRecordSets; official-spec-fields-unmatched=5/48
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,DNSResponsePolicyRule,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=3/9
 documentai.googleapis.com,documentai.googleapis.com/Processor,5,DocumentAIProcessor,3,,0,2,false,api=v1:projects.locations.processors; official-spec-fields-unmatched=3/6
 documentai.googleapis.com,documentai.googleapis.com/Schema,3,,0,,0,3,false,api=v1:projects.locations.schemas
 documentai.googleapis.com,documentai.googleapis.com/SchemaSchemaVersion,19,,0,,0,19,false,api=v1:projects.locations.schemas.schemaVersions
@@ -1139,7 +1142,7 @@ servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceNetwork
 serviceusage.googleapis.com,serviceusage.googleapis.com/ServiceIdentity,0,,0,ServiceIdentity,0,0,false,"outside-denominator; a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)"
 spanner.googleapis.com,spanner.googleapis.com/Instance,29,SpannerInstance,13,,0,16,false,api=v1:projects.instances; request-wrapper=CreateInstanceRequest; official-spec-fields-unmatched=2/14
 spanner.googleapis.com,spanner.googleapis.com/InstanceBackup,3,,0,,0,3,false,api=v1:projects.instances.backups
-spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9
+spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,SpannerInstanceConfig,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9; ours-spec-fields-unmatched=2/9
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabase,6,SpannerDatabase,1,,0,5,false,api=v1:projects.instances.databases; request-wrapper=CreateDatabaseRequest; official-spec-fields-unmatched=6/7
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabaseBackupSchedule,7,SpannerBackupSchedule,7,,0,0,false,api=v1:projects.instances.databases.backupSchedules; official-spec-fields-unmatched=3/9
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabaseSession,3,,0,,0,3,false,api=v1:projects.instances.databases.sessions; request-wrapper=CreateSessionRequest
