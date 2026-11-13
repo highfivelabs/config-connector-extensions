@@ -240,6 +240,7 @@ ces.googleapis.com,ces.googleapis.com/AppGuardrail,51,,0,,0,51,false,api=v1:proj
 ces.googleapis.com,ces.googleapis.com/AppTool,249,,0,,0,249,false,api=v1:projects.locations.apps.tools; recursive-cut=30
 ces.googleapis.com,ces.googleapis.com/AppToolset,55,,0,,0,55,false,api=v1:projects.locations.apps.toolsets
 ces.googleapis.com,ces.googleapis.com/AppVersion,3,,0,,0,3,false,api=v1:projects.locations.apps.versions
+chronicle.googleapis.com,chronicle.googleapis.com/ChronicleRuleDeployment,0,,0,ChronicleRuleDeployment,0,0,false,outside-denominator; no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com
 chronicle.googleapis.com,chronicle.googleapis.com/DataAccessLabel,3,ChronicleDataAccessLabel,3,,0,0,false,api=v1:google.cloud.chronicle.v1.DataAccessControlService.CreateDataAccessLabel; official-spec-fields-unmatched=3/5
 chronicle.googleapis.com,chronicle.googleapis.com/DataAccessScope,13,ChronicleDataAccessScope,13,,0,0,false,api=v1:google.cloud.chronicle.v1.DataAccessControlService.CreateDataAccessScope; official-spec-fields-unmatched=3/15
 chronicle.googleapis.com,chronicle.googleapis.com/DataTable,10,ChronicleDataTable,10,,0,0,false,api=v1:google.cloud.chronicle.v1.DataTableService.CreateDataTable; official-spec-fields-unmatched=3/12
@@ -790,6 +791,7 @@ hypercomputecluster.googleapis.com,hypercomputecluster.googleapis.com/Cluster,61
 iam.googleapis.com,iam.googleapis.com/IAMBinding,0,,0,IAMBinding,0,0,false,"outside-denominator; one role binding in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/IAMDenyPolicy,0,,0,IAMDenyPolicy,0,0,false,"outside-denominator; an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
+iam.googleapis.com,iam.googleapis.com/IAMPolicyBinding,0,,0,IAMPolicyBinding,0,0,true,"outside-denominator; an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMPrincipalAccessBoundaryPolicy,0,,0,IAMPrincipalAccessBoundaryPolicy,0,0,false,outside-denominator; no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,IAMOauthClient,8,0,false,api=v1:projects.locations.oauthClients; ours-spec-fields-unmatched=3/10
 iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
@@ -995,7 +997,7 @@ networkservices.googleapis.com,networkservices.googleapis.com/AgentGateway,13,,0
 networkservices.googleapis.com,networkservices.googleapis.com/AuthzExtension,12,NetworkServicesAuthzExtension,10,,0,2,false,api=v1:projects.locations.authzExtensions; official-spec-fields-unmatched=4/13
 networkservices.googleapis.com,networkservices.googleapis.com/EndpointPolicy,11,NetworkServicesEndpointPolicy,10,,0,1,false,api=v1:projects.locations.endpointPolicies; official-spec-fields-unmatched=3/12
 networkservices.googleapis.com,networkservices.googleapis.com/ExtensionBinding,52,,0,,0,52,false,api=v1:projects.locations.extensionBindings
-networkservices.googleapis.com,networkservices.googleapis.com/Gateway,17,NetworkServicesGateway,7,,0,10,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/9
+networkservices.googleapis.com,networkservices.googleapis.com/Gateway,17,NetworkServicesGateway,7,NetworkServicesGateway,10,0,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=3/19
 networkservices.googleapis.com,networkservices.googleapis.com/GrpcRoute,24,NetworkServicesGRPCRoute,21,,0,3,false,api=v1:projects.locations.grpcRoutes; official-spec-fields-unmatched=3/23
 networkservices.googleapis.com,networkservices.googleapis.com/HttpRoute,76,NetworkServicesHTTPRoute,57,,0,19,false,api=v1:projects.locations.httpRoutes; official-spec-fields-unmatched=3/59
 networkservices.googleapis.com,networkservices.googleapis.com/LbEdgeExtension,19,NetworkServicesLBEdgeExtension,14,,0,5,false,api=v1:projects.locations.lbEdgeExtensions; official-spec-fields-unmatched=4/17

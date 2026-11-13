@@ -45,6 +45,8 @@ source hack/live/projects.sh
 # spanner (SpannerInstanceConfig) skips live unless E2E_SPANNER=true;
 # datacatalog (DataCatalogTag) skips live unless E2E_DATA_CATALOG=true;
 # aiplatform (AIPlatformReasoningEngine) skips live unless E2E_VERTEX_AI=true
+# chronicle (ChronicleRuleDeployment) skips live unless E2E_CHRONICLE_INSTANCE
+# names a SecOps instance, <location>/<instance ID>;
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"

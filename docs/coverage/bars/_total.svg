@@ -5,7 +5,7 @@
 <g clip-path="url(#c)">
 <rect x="10" y="8" width="620" height="18" fill="#d0d7de"/>
 <rect x="10.00" y="8" width="220.71" height="18" fill="#2f81f7"/>
-<rect x="230.71" y="8" width="12.99" height="18" fill="#2da44e"/>
+<rect x="230.71" y="8" width="13.13" height="18" fill="#2da44e"/>
 </g>
 <text x="10" y="43" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f"><tspan fill="#2f81f7">&#9632;</tspan> official 35.6%   <tspan fill="#2da44e">&#9632;</tspan> ours beyond 2.1%   <tspan fill="#8c959f">&#9632;</tspan> uncovered 62.3%   43589 attributes, 1244 resources</text>
 <clipPath id="t"><rect x="10" y="53" width="620" height="12" rx="3"/></clipPath>

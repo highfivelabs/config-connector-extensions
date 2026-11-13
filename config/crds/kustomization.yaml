@@ -13,6 +13,7 @@ resources:
 - biglake.gcp.hfl.dev_biglakecatalogs.yaml
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
+- chronicle.gcp.hfl.dev_chronicleruledeployments.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildconnections.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildrepositories.yaml
 - clouddeploy.gcp.hfl.dev_clouddeployautomations.yaml
@@ -76,6 +77,7 @@ resources:
 - iam.gcp.hfl.dev_iamdenypolicies.yaml
 - iam.gcp.hfl.dev_iammembers.yaml
 - iam.gcp.hfl.dev_iamoauthclients.yaml
+- iam.gcp.hfl.dev_iampolicybindings.yaml
 - iam.gcp.hfl.dev_iamprincipalaccessboundarypolicies.yaml
 - iam.gcp.hfl.dev_iamworkforcepoolproviderkeys.yaml
 - iam.gcp.hfl.dev_iamworkforcepoolproviderscimtenants.yaml

@@ -17,6 +17,14 @@ has been released yet; each release moves its entries out of
   and `scope` required), so ours is a stable equivalent with the same
   name (decision 26). The Cloud Router a Secure Web Proxy makes is left
   for whoever deletes the network, as Terraform leaves it by default.
+- **`iam.gcp.hfl.dev/v1alpha1` `IAMPolicyBinding`**: an IAM v3 policy
+  binding, a principal access boundary policy bound to the principals of
+  an organization, folder or project (`google_iam_projects_policy_binding`,
+  `google_iam_folders_policy_binding`, `google_iam_organizations_policy_binding`).
+  The policy is an `IAMPrincipalAccessBoundaryPolicy` by name or a
+  policy's resource name. Config Connector has no released kind, so it
+  starts at `v1alpha1`. Live pending an organization's principal access
+  boundary policy the live-test account may bind.
 - **`servicemanagement.gcp.hfl.dev/v1alpha1` `EndpointsService`**, a Cloud
   Endpoints service (`google_endpoints_service`): the managed service, its
   OpenAPI or gRPC configuration, and the rollout of that configuration to
@@ -24,6 +32,15 @@ has been released yet; each release moves its entries out of
   Config Connector has no kind for it, so it starts at `v1alpha1`.
   `IAMBinding` and `IAMMember` name it by `name`. The operator's role gains
   `servicemanagement.gcp.hfl.dev`.
+- **`chronicle.gcp.hfl.dev/v1alpha1` `ChronicleRuleDeployment`**, the
+  deployment of a Google SecOps (Chronicle) rule
+  (`google_chronicle_rule_deployment`): whether the rule runs, alerts or is
+  archived, its run frequency and schedule. The deployment comes with the
+  rule, so the object sets it and deleting the object leaves it, as
+  Terraform does. `ruleRef` takes Config Connector's `ChronicleRule` or an
+  external rule name. Config Connector has no kind for it, so it starts at
+  `v1alpha1`. Live pending a SecOps instance. The operator's role gains
+  `chronicle.gcp.hfl.dev`.
 - **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
   `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
   `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure
@@ -159,6 +176,14 @@ has been released yet; each release moves its entries out of
   changes. `AddToManager` takes a new `controller.Options` argument.
 
 ### Fixed
+
+- **`IAMBinding` and `IAMMember` waited forever to be deleted when the
+  object they name was being deleted too** (a namespace or a release
+  deleted at once): the binding's delete stuck on "reference ... is not
+  ready" while the parent, an `APIGatewayAPI` for example, was going. A
+  parent that is gone, or being deleted without `deletion-policy: abandon`,
+  takes the policy with it, so the binding's delete now succeeds without a
+  call; one kept with abandon still has the binding removed.
 
 - **The fake cloud answered 404 to an IAM policy read or write on a
   generated kind** (Cloud Build v2 connections, API Gateway configs and
