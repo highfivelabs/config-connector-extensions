@@ -27,7 +27,8 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
+# (E2E_IAM_DENY_ADMIN=true), IAM v3 policy bindings on the project, by
+# name, where E2E_IAM_POLICY_BINDING_POLICY is set, log sinks of the billing account in
 # E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
 # Center mute configs of the project, by name, where it is active
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
@@ -421,6 +422,37 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
+  done <<<"${rows}"
+fi
+
+# IAM v3 policy bindings on the project, by the run's name, only where the
+# live-test service account may bind a principal access boundary policy
+# (E2E_IAM_POLICY_BINDING_POLICY names it); without it the IAMPolicyBinding
+# test does not run live and there is nothing to sweep.
+if [[ -n "${E2E_IAM_POLICY_BINDING_POLICY:-}" ]]; then
+  iam3_api() { # iam3_api METHOD NAME
+    curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+      "https://iam.googleapis.com/v3/$2"
+  }
+  iam3_delete() { # iam3_delete NAME: delete and wait for the operation
+    local op fin
+    op="$(iam3_api DELETE "$1" | jq -r '.name')" || return 1
+    for _ in $(seq 1 60); do
+      fin="$(iam3_api GET "${op}" | jq -r '.done // false')" || return 1
+      if [[ "${fin}" == true ]]; then
+        iam3_api GET "${op}" | jq -e 'has("error") | not' >/dev/null
+        return
+      fi
+      sleep 5
+    done
+    return 1
+  }
+  rows="$(iam3_api GET "projects/${project}/locations/global/policyBindings?pageSize=1000" \
+    | jq -r '.policyBindings[]? | "\(.name) \(.createTime)"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    by_run "${name##*/}" "${made}" || continue
+    act "policy binding" "${name}" iam3_delete "${name}"
   done <<<"${rows}"
 fi
 
