@@ -32,7 +32,9 @@
 # Center mute configs of the project, by name, where it is active
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true), gateway security
-# policy rules in the project's us-central1 policies, by name, and the discokind
+# policy rules in the project's us-central1 policies, by name, Network
+# Services gateways (us-central1 and global) and the Cloud Routers a Secure
+# Web Proxy makes in a run's network, by name, and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
 # project, or its sweepLocation's), by name, through the API, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
@@ -281,6 +283,20 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
   done
   return 1
 }
+# Network Services gateways (NetworkServicesGateway) before the loop
+# deletes the gateway security policies a Secure Web Proxy uses (a policy
+# in use cannot go), in us-central1 (a Secure Web Proxy's) and global (an
+# OPEN_MESH gateway's), by the run's name.
+for loc in us-central1 global; do
+  rows="$(disco_api GET "https://networkservices.googleapis.com/v1/projects/${project}/locations/${loc}/gateways?pageSize=1000" \
+    | jq -r '.gateways[]? | "\(.name) \(.createTime // "-")"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    act "Network Services gateway" "${name}" disco_delete "https://networkservices.googleapis.com/v1/" "${name}"
+  done <<<"${rows}"
+done
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   # A kind whose test never runs live (its fixtures' live-skip) makes
@@ -394,6 +410,17 @@ rows="$("${G[@]}" compute addresses list --verbosity=error \
 while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "address" "${name} ${region:-global}" "${G[@]}" compute addresses delete "${name}" "$(scope "${region}" "")"
+done <<<"${rows}"
+# The Cloud Routers a Secure Web Proxy makes (swg-autogen-router-..., with
+# a Cloud NAT) in a run's network: the API keeps them after the last
+# gateway goes, and the network cannot go while they are there. Found by
+# their network's name (the run's), after the gateways above.
+rows="$("${G[@]}" compute routers list --verbosity=error \
+  --filter='name~^swg-autogen-router-' --format='value(name,region.basename(),network.basename())')"
+while read -r name region net; do
+  [[ -n "${name}" ]] || continue
+  by_run "${net}" || continue
+  act "Cloud Router" "${name} ${region}" "${G[@]}" compute routers delete "${name}" --region="${region}"
 done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"

@@ -243,6 +243,22 @@ is immutable; its `organization` is the Apigee organization (a project's
 ID), and it skips live until the live-test project has an Apigee
 organization.
 
+Then `NetworkServicesGateway` (`networkservices.gcp.hfl.dev/v1beta1`,
+2026-11-13), the gateway a Secure Web Proxy is, for the catalog's
+`net-swp` module. Config Connector's kind is `v1beta1`, but at 1.160.0 it
+cannot make a `SECURE_WEB_GATEWAY`: it lacks `network`, `subnetwork`,
+`gatewaySecurityPolicy`, `certificateUrls`, `labels` and `routingMode`,
+and requires `scope`. Ours keeps the name (decision 18) at `v1beta1`, as
+a stable equivalent under decision 26, generated with the API's whole
+field set for both types (`OPEN_MESH` and `SECURE_WEB_GATEWAY`). The
+fields Terraform's `google_network_services_gateway` forces a new gateway
+for are immutable here. `kindtest.RunCase` runs a kind's test with a
+second set of fixtures, so both types are tested. A Secure Web Proxy
+makes a Cloud Router with a Cloud NAT (`swg-autogen-router-...`) in its
+network, which the API keeps after the last gateway goes; ours keeps it
+too, as Terraform does by default, and the live test and the sweeper
+delete it. `docs/kinds/NetworkServicesGateway.md` has the rest.
+
 Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written rather than generated: a Cloud Endpoints service
 is three Service Management calls (create the service, submit a

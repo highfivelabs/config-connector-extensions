@@ -8,6 +8,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`networkservices.gcp.hfl.dev/v1beta1` `NetworkServicesGateway`**,
+  generated from Discovery: a gateway of either type, `OPEN_MESH` or
+  `SECURE_WEB_GATEWAY` (a Secure Web Proxy), with the API's whole field
+  set (`google_network_services_gateway`). Config Connector's `v1beta1`
+  kind cannot make a Secure Web Proxy (no `network`, `subnetwork`,
+  `gatewaySecurityPolicy`, `certificateUrls`, `labels` or `routingMode`,
+  and `scope` required), so ours is a stable equivalent with the same
+  name (decision 26). The Cloud Router a Secure Web Proxy makes is left
+  for whoever deletes the network, as Terraform leaves it by default.
 - **`servicemanagement.gcp.hfl.dev/v1alpha1` `EndpointsService`**, a Cloud
   Endpoints service (`google_endpoints_service`): the managed service, its
   OpenAPI or gRPC configuration, and the rollout of that configuration to

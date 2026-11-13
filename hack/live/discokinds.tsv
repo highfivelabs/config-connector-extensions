@@ -47,4 +47,5 @@ NetworkSecurityTLSInspectionPolicy	https://networksecurity.googleapis.com/v1/	pr
 NetworkSecurityURLList	https://networksecurity.googleapis.com/v1/	projects/{project}/locations/us-central1/urlLists	urlLists	-
 NetworkServicesAgentConnectivityTemplate	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentConnectivityTemplates	agentConnectivityTemplates	-
 NetworkServicesAgentGateway	https://networkservices.googleapis.com/v1/	projects/{project}/locations/global/agentGateways	agentGateways	-
+NetworkServicesGateway	https://networkservices.googleapis.com/v1/	projects/{project}/locations/us-central1/gateways	gateways	-
 ResourceManagerCapabilityConfig	https://cloudresourcemanager.googleapis.com/v3/	projects/{project}/capabilityConfigs	capabilityConfigs	-

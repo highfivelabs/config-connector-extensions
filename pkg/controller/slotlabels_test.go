@@ -45,6 +45,7 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"GKEHubRolloutSequence":                          slotguard.Spec,
 	"NetworkServicesAgentGateway":                    slotguard.Spec,
 	"NetworkServicesAgentConnectivityTemplate":       slotguard.Spec,
+	"NetworkServicesGateway":                         slotguard.Spec,
 	"NetworkConnectivityPscAuthorizationPolicy":      slotguard.Spec,
 	"NetworkConnectivityAutomatedDnsRecord":          slotguard.Spec,
 	"NetworkConnectivitySpokeGatewayAdvertisedRoute": slotguard.Spec,

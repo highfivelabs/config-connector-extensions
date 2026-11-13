@@ -378,6 +378,14 @@ Cloud Build v2 connections, API Gateway configs and gateways and the
 Dataplex kinds never became Ready on the fake cloud
 (`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
 
+`NetworkServicesGateway` (2026-11-13): the fake keeps what a gateway's
+spec says and checks none of what the real API does for a Secure Web
+Proxy: that the network, the subnet, an active proxy-only subnet in the
+region and the gateway security policy exist, that `routingMode` is set,
+and which fields go with which type. It makes no Cloud Router or Cloud
+NAT, and a gateway is ready at once, where a real one takes minutes. The
+live run shows these.
+
 ## Service Management's fake (`pkg/controller/direct/servicemanagement/fake`)
 
 mockgcp does not serve Service Management (`servicemanagement.googleapis.com`),
