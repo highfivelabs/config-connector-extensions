@@ -157,3 +157,54 @@ func TestComputeInsertStyle(t *testing.T) {
 		}
 	}
 }
+
+// next records the requests the fake passes on.
+type next struct{ paths []string }
+
+func (n *next) RoundTrip(req *http.Request) (*http.Response, error) {
+	n.paths = append(n.paths, req.Method+" "+req.URL.Path)
+	return jsonResponse(req, http.StatusOK, map[string]any{"etag": "BwE="})
+}
+
+// A custom method on an object, such as :getIamPolicy, is not the
+// collection's: it reaches the next round tripper (mockgcp, which serves
+// the IAM verbs for every resource), not the fake's "not found". Before,
+// a kind's name pattern took ".../widgets/w1:getIamPolicy" for an object
+// called "w1:getIamPolicy".
+func TestCustomMethodsReachNext(t *testing.T) {
+	ctx := context.Background()
+	k := &discokind.Kind{
+		BaseURL: "https://example.googleapis.com/v1/", Name: "{parent}/locations/{location}/widgets/{id}",
+		Parents: []string{"project"}, IDParam: "widgetId", Updatable: true,
+	}
+	n := &next{}
+	api := &discokind.API{HTTP: &http.Client{Transport: New(n, []*discokind.Kind{k})}, BaseURL: k.BaseURL, PollInterval: time.Millisecond}
+	name := "projects/p/locations/global/widgets/w1"
+	if _, err := api.Do(ctx, http.MethodPost, "projects/p/locations/global/widgets", map[string]string{"widgetId": "w1"}, map[string]any{}); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct{ method, verb string }{
+		{http.MethodGet, "getIamPolicy"}, {http.MethodPost, "getIamPolicy"},
+		{http.MethodPost, "setIamPolicy"}, {http.MethodPost, "testIamPermissions"},
+	} {
+		if _, err := api.Do(ctx, c.method, name+":"+c.verb, nil, map[string]any{}); err != nil {
+			t.Errorf("%s %s:%s: %v, want it passed to the next round tripper", c.method, name, c.verb, err)
+		}
+	}
+	want := []string{
+		"GET /v1/" + name + ":getIamPolicy", "POST /v1/" + name + ":getIamPolicy",
+		"POST /v1/" + name + ":setIamPolicy", "POST /v1/" + name + ":testIamPermissions",
+	}
+	if len(n.paths) != len(want) {
+		t.Fatalf("passed on %v, want %v", n.paths, want)
+	}
+	for i := range want {
+		if n.paths[i] != want[i] {
+			t.Errorf("passed on %q, want %q", n.paths[i], want[i])
+		}
+	}
+	// The object itself is still the fake's.
+	if got, err := api.Get(ctx, name); err != nil || got["name"] != name {
+		t.Errorf("get %s: %v, %v", name, got, err)
+	}
+}

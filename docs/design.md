@@ -220,6 +220,28 @@ but has no kind, so it takes that name (decision 18) and starts at
 `v1alpha1` (decision 26's last sentence; question 6's first half). The
 API cannot patch a repository, so every field is immutable. Live waits,
 as the connection's does, on a test GitHub app.
+Then (2026-11-12) the catalog's `net-swp` module's four Secure Web Proxy
+kinds, Config Connector alpha-only and so `v1beta1` (decision 26):
+`NetworkSecurityGatewaySecurityPolicy`,
+`NetworkSecurityGatewaySecurityPolicyRule` (the catalog listed it with no
+kind; upstream added its alpha kind before our pin),
+`NetworkSecurityURLList` and `NetworkSecurityTLSInspectionPolicy`; a rule's
+live test makes its policy first (`gatewaysecuritypolicy_test.go`), and the
+sweeper deletes a run's rules before the discokind loop deletes its
+policies. These collections have no `global` location (listing it is a
+400, run `cce-11130256-843f`), so `kinds.yaml` gained `sweepLocation`:
+the sweeper lists them in `us-central1`, where their live fixtures make
+them. The policy, its rule and the URL list pass live (runs
+`cce-11130311-56bc`, `cce-11130336-5f6f`); the rule's fixtures name the
+policy by `${KIND_NAME}`, a placeholder that stays the first object's
+`${NAME}` in the abandoned object's fixture too. Config Connector's alpha types reference the TLS inspection
+policy and CA pool; ours take their paths, as discokind does. A TLS
+inspection policy skips live (it needs a CA pool). And `ApigeeDnsZone`
+(`v1alpha1`, no Config Connector kind; Terraform's name, decision 18) for
+the catalog's `apigee` module: the API cannot patch a zone, so every field
+is immutable; its `organization` is the Apigee organization (a project's
+ID), and it skips live until the live-test project has an Apigee
+organization.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N

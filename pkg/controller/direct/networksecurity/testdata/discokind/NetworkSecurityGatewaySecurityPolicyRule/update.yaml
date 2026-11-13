@@ -1,0 +1,14 @@
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityGatewaySecurityPolicyRule
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  gatewaySecurityPolicy: ${KIND_NAME}-gsp
+  basicProfile: DENY
+  enabled: false
+  priority: 20
+  sessionMatcher: host() == 'example.org'
+  description: changed

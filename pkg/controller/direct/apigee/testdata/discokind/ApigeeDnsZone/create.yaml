@@ -1,0 +1,11 @@
+apiVersion: apigee.gcp.hfl.dev/v1alpha1
+kind: ApigeeDnsZone
+metadata:
+  name: ${NAME}
+spec:
+  organization: ${PROJECT}
+  description: made by a config-connector-extensions test
+  domain: ${NAME}.example.com.
+  peeringConfig:
+    targetProjectId: ${PROJECT}
+    targetNetworkId: ${NAME}-net

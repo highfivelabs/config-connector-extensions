@@ -8,6 +8,21 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
+  `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
+  `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure
+  Web Proxy's policy, its rules, URL lists and TLS inspection policy
+  (`google_network_security_gateway_security_policy`, `_rule`,
+  `google_network_security_url_lists`,
+  `google_network_security_tls_inspection_policy`). Config Connector's are
+  alpha only, so ours are stable equivalents (decision 26). Other resources
+  are named by their paths (a TLS inspection policy, a CA pool), not by
+  references.
+- **`apigee.gcp.hfl.dev/v1alpha1` `ApigeeDnsZone`**, generated from
+  Discovery: a private DNS zone an Apigee organization peers with
+  (`google_apigee_dns_zone`). Config Connector has no kind for it, so it
+  starts at `v1alpha1`. The API cannot change a zone: every field is
+  immutable. Live pending an Apigee organization.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionAutoscaler`**, a stable
   kind for Config Connector's alpha regional autoscaler, which has types
   but no controller upstream (decision 26), with upstream's fields.
@@ -129,6 +144,13 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **The fake cloud answered 404 to an IAM policy read or write on a
+  generated kind** (Cloud Build v2 connections, API Gateway configs and
+  gateways, Dataplex lakes, zones, aspect types and data scans): the
+  generated kinds' fake (`pkg/discokind/fake`) took `name:getIamPolicy`
+  for an object's name. Custom methods now reach mockgcp, which serves
+  the policy verbs for every resource, so `IAMBinding` and `IAMMember`
+  on these kinds become Ready in `bin/fakecloud` and `bin/fakegcp`.
 - **Two `IAMMember` or `IAMBinding` objects on one BigQuery dataset could
   lose a member**: the access list is read, checked and patched in three
   calls, and two writers in one manager could both pass the check. Writes

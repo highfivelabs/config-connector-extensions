@@ -86,6 +86,10 @@ type Config struct {
 	Skip map[string]string `json:"skip,omitempty"`
 	// Note is a sentence for the kind's doc comment.
 	Note string `json:"note,omitempty"`
+	// SweepLocation is the location the live sweeper lists the kind's
+	// collection in, for a collection that has no global location
+	// (default global); the kind's live fixtures use it.
+	SweepLocation string `json:"sweepLocation,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
