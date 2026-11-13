@@ -458,6 +458,18 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   done
 fi
 
+# Apigee NAT addresses (the ApigeeNATAddress test's), by the run's name,
+# only on the instance E2E_APIGEE_INSTANCE names (organizations/O/instances/I);
+# without it the test does not run live and there is no instance to list.
+if [[ -n "${E2E_APIGEE_INSTANCE:-}" ]]; then
+  apigeebase="https://apigee.googleapis.com/v1/${E2E_APIGEE_INSTANCE}/natAddresses"
+  rows="$(disco_api GET "${apigeebase}" | jq -r '.natAddresses[]? | .name')"
+  for name in ${rows}; do
+    by_run "${name##*/}" || continue
+    act "Apigee NAT address" "${name}" disco_api DELETE "${apigeebase}/${name##*/}"
+  done
+fi
+
 # Spanner user-managed instance configurations (the SpannerInstanceConfig
 # test's), by the run's name after "custom-", only where the live-test
 # account has Spanner (E2E_SPANNER=true: spanner.googleapis.com on and

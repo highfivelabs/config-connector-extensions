@@ -6372,7 +6372,7 @@ apigee.googleapis.com,apigee.googleapis.com/InstanceCanaryevaluation,metricLabel
 apigee.googleapis.com,apigee.googleapis.com/InstanceCanaryevaluation,metricLabels.location,string,true,none,,
 apigee.googleapis.com,apigee.googleapis.com/InstanceCanaryevaluation,startTime,string,true,none,,
 apigee.googleapis.com,apigee.googleapis.com/InstanceCanaryevaluation,treatment,string,true,none,,
-apigee.googleapis.com,apigee.googleapis.com/InstanceNatAddress,name,string,true,official,metadata.name,
+apigee.googleapis.com,apigee.googleapis.com/InstanceNatAddress,name,string,true,both,metadata.name,metadata.name
 apigee.googleapis.com,apigee.googleapis.com/Keyvaluemap,encrypted,boolean,true,none,,
 apigee.googleapis.com,apigee.googleapis.com/Keyvaluemap,maskedValues,boolean,false,none,,
 apigee.googleapis.com,apigee.googleapis.com/Keyvaluemap,name,string,true,none,,

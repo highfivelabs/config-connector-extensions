@@ -125,7 +125,7 @@ apigee.googleapis.com,apigee.googleapis.com/HostSecurityReport,15,,0,,0,15,false
 apigee.googleapis.com,apigee.googleapis.com/Instance,16,ApigeeInstance,9,,0,7,false,api=v1:organizations.instances; official-spec-fields-unmatched=3/11
 apigee.googleapis.com,apigee.googleapis.com/InstanceAttachment,1,ApigeeInstanceAttachment,1,,0,0,false,api=v1:organizations.instances.attachments; official-spec-fields-unmatched=2/3
 apigee.googleapis.com,apigee.googleapis.com/InstanceCanaryevaluation,7,,0,,0,7,false,api=v1:organizations.instances.canaryevaluations
-apigee.googleapis.com,apigee.googleapis.com/InstanceNatAddress,1,ApigeeNATAddress,1,,0,0,false,api=v1:organizations.instances.natAddresses; official-spec-fields-unmatched=2/2
+apigee.googleapis.com,apigee.googleapis.com/InstanceNatAddress,1,ApigeeNATAddress,1,ApigeeNATAddress,0,0,false,api=v1:organizations.instances.natAddresses; official-spec-fields-unmatched=2/2; ours-spec-fields-unmatched=2/2
 apigee.googleapis.com,apigee.googleapis.com/Keyvaluemap,3,,0,,0,3,false,api=v1:organizations.keyvaluemaps
 apigee.googleapis.com,apigee.googleapis.com/KeyvaluemapEntry,2,,0,,0,2,false,api=v1:organizations.keyvaluemaps.entries
 apigee.googleapis.com,apigee.googleapis.com/Organization,24,ApigeeOrganization,8,,0,16,false,api=v1:organizations; official-spec-fields-unmatched=3/11
