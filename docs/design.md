@@ -228,7 +228,10 @@ kind; upstream added its alpha kind before our pin),
 `NetworkSecurityURLList` and `NetworkSecurityTLSInspectionPolicy`; a rule's
 live test makes its policy first (`gatewaysecuritypolicy_test.go`), and the
 sweeper deletes a run's rules before the discokind loop deletes its
-policies. Config Connector's alpha types reference the TLS inspection
+policies. These collections have no `global` location (listing it is a
+400, run `cce-11130256-843f`), so `kinds.yaml` gained `sweepLocation`:
+the sweeper lists them in `us-central1`, where their live fixtures make
+them. Config Connector's alpha types reference the TLS inspection
 policy and CA pool; ours take their paths, as discokind does. A TLS
 inspection policy skips live (it needs a CA pool). And `ApigeeDnsZone`
 (`v1alpha1`, no Config Connector kind; Terraform's name, decision 18) for

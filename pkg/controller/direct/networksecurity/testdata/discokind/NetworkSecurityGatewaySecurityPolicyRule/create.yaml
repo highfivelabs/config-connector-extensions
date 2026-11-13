@@ -5,7 +5,7 @@ metadata:
 spec:
   projectRef:
     external: ${PROJECT}
-  location: global
+  location: us-central1
   gatewaySecurityPolicy: ${NAME}-gsp
   basicProfile: ALLOW
   enabled: true

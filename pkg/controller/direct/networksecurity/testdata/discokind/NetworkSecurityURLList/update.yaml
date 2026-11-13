@@ -5,6 +5,6 @@ metadata:
 spec:
   projectRef:
     external: ${PROJECT}
-  location: global
+  location: us-central1
   values: [example.com, www.example.org/path]
   description: changed

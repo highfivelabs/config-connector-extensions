@@ -10,7 +10,9 @@
 # folder, organization, billingAccount; the same collection must exist
 # under each); terraform; softDelete {field, value}; fakeDefaults;
 # immutable (top-level fields the API cannot patch, beyond those its
-# descriptions call Immutable); skip {field: why}; note.
+# descriptions call Immutable); skip {field: why}; note; sweepLocation (the
+# location the live sweeper lists, for a collection with no global one;
+# the live fixtures use it).
 
 - kind: LoggingSavedQuery
   group: logging.gcp.hfl.dev
@@ -336,6 +338,7 @@
   parents: [project]
   terraform: google_network_security_gateway_security_policy
   note: "A Secure Web Proxy's policy: the rules a gateway applies to its traffic."
+  sweepLocation: us-central1
 
 - kind: NetworkSecurityGatewaySecurityPolicyRule
   group: networksecurity.gcp.hfl.dev
@@ -354,6 +357,7 @@
   parents: [project]
   terraform: google_network_security_url_lists
   note: "A list of hostnames and URLs a gateway security policy rule can match."
+  sweepLocation: us-central1
 
 - kind: NetworkSecurityTLSInspectionPolicy
   group: networksecurity.gcp.hfl.dev
@@ -363,6 +367,7 @@
   parents: [project]
   terraform: google_network_security_tls_inspection_policy
   note: "How a Secure Web Proxy inspects TLS: the CA pool that issues its interception certificates."
+  sweepLocation: us-central1
 
 - kind: GKEBackupBackupPlan
   group: gkebackup.gcp.hfl.dev

@@ -33,7 +33,7 @@ func init() {
 }
 
 // gatewaySecurityPolicy makes the policy a rule's fixtures name
-// (${NAME}-gsp, global), since the API refuses a rule whose policy does not
+// (${NAME}-gsp, us-central1), since the API refuses a rule whose policy does not
 // exist. Live only: the fake does not check. It is deleted after the
 // test's own rule (t.Cleanup runs last-in first-out); the sweeper deletes
 // a run's rules before its policies (hack/live/sweep.sh).
@@ -42,7 +42,7 @@ func gatewaySecurityPolicy(t *testing.T, env *mockenv.Env) {
 		return
 	}
 	api := &discokind.API{HTTP: env.HTTP, BaseURL: "https://networksecurity.googleapis.com/v1/"}
-	parent := "projects/" + mockenv.Project + "/locations/global"
+	parent := "projects/" + mockenv.Project + "/locations/us-central1"
 	id := mockenv.Name("networksecuritygatewaysecuritypolicyrule") + "-gsp"
 	name := parent + "/gatewaySecurityPolicies/" + id
 	op, err := api.Do(env.Ctx, http.MethodPost, parent+"/gatewaySecurityPolicies", map[string]string{"gatewaySecurityPolicyId": id}, map[string]any{

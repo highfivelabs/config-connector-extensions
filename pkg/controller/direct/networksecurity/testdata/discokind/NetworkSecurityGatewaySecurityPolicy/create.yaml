@@ -5,5 +5,5 @@ metadata:
 spec:
   projectRef:
     external: ${PROJECT}
-  location: global
+  location: us-central1
   description: made by a config-connector-extensions test
