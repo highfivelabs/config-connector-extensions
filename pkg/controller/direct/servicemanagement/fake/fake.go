@@ -36,6 +36,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -46,6 +47,9 @@ import (
 )
 
 const host = "servicemanagement.googleapis.com"
+
+// iamVerb matches a resource's IAM methods.
+var iamVerb = regexp.MustCompile(`:(getIamPolicy|setIamPolicy|testIamPermissions)$`)
 
 type service struct {
 	managed  map[string]any
@@ -72,7 +76,9 @@ func New(next http.RoundTripper) *Cloud {
 }
 
 func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
-	if req.URL.Host != host || !strings.HasPrefix(req.URL.Path, "/v1/") {
+	if req.URL.Host != host || !strings.HasPrefix(req.URL.Path, "/v1/") || iamVerb.MatchString(req.URL.Path) {
+		// Not Service Management's, or a service's IAM policy, which
+		// mockgcp serves for every resource (patch 0018).
 		return c.Next.RoundTrip(req)
 	}
 	c.mu.Lock()

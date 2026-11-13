@@ -108,4 +108,11 @@ func TestServiceLifecycle(t *testing.T) {
 	if next.hits != 0 {
 		t.Errorf("%d requests went past the fake", next.hits)
 	}
+	// A service's IAM policy is mockgcp's.
+	if _, err := c.Services.GetIamPolicy("services/"+name, &gcp.GetIamPolicyRequest{}).Do(); err == nil {
+		t.Error("getIamPolicy did not reach the next round tripper")
+	}
+	if next.hits != 1 {
+		t.Errorf("getIamPolicy: %d requests went past the fake, want 1", next.hits)
+	}
 }
