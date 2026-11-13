@@ -40,6 +40,8 @@ source hack/live/projects.sh
 # E2E_TEST_FOLDER_PROJECT; logging's LoggingBillingAccountSink skips live
 # without a billing account, E2E_BILLING_ACCOUNT; securitycenter
 # (SecurityCenterMuteConfig) skips live unless E2E_SECURITY_CENTER=true;
+# apigee (ApigeeNATAddress) skips live unless E2E_APIGEE_INSTANCE names an
+# Apigee instance;
 # spanner (SpannerInstanceConfig) skips live unless E2E_SPANNER=true;
 # datacatalog (DataCatalogTag) skips live unless E2E_DATA_CATALOG=true;
 # aiplatform (AIPlatformReasoningEngine) skips live unless E2E_VERTEX_AI=true

@@ -1,0 +1,177 @@
+config-connector-extensions patch 0042: mockgcp serves per-instance configs of zonal managed instance groups.
+
+mockgcp served createInstances, listPerInstanceConfigs,
+updatePerInstanceConfigs, deletePerInstanceConfigs,
+applyUpdatesToInstances and listManagedInstances for regional groups
+only (instancegroupmanager.go); a zonal group answered Unimplemented.
+This adds them for zonal groups in a new file, as the regional ones do
+it, for ComputePerInstanceConfig. A zonal group has no instance
+redistribution, so createInstances takes no such check.
+
+diff --git a/mockgcp/mockcompute/zonalperinstanceconfigs.go b/mockgcp/mockcompute/zonalperinstanceconfigs.go
+new file mode 100644
+index 00000000..44822114
+--- /dev/null
++++ b/mockgcp/mockcompute/zonalperinstanceconfigs.go
+@@ -0,0 +1,161 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockcompute
++
++// Per-instance configs of zonal managed instance groups: createInstances,
++// listPerInstanceConfigs, updatePerInstanceConfigs,
++// deletePerInstanceConfigs, applyUpdatesToInstances and
++// listManagedInstances, as the regional group's methods in
++// instancegroupmanager.go serve them.
++
++import (
++	"context"
++	"fmt"
++
++	"google.golang.org/protobuf/proto"
++
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++func (s *instanceGroupManagers) getZonalIGM(ctx context.Context, project, zone, igmName string) (*zonalIGMName, *pb.InstanceGroupManager, error) {
++	name, err := s.parseZonalIGMName("projects/" + project + "/zones/" + zone + "/instanceGroupManagers/" + igmName)
++	if err != nil {
++		return nil, nil, err
++	}
++	igm := &pb.InstanceGroupManager{}
++	if err := s.storage.Get(ctx, name.String(), igm); err != nil {
++		return nil, nil, err
++	}
++	return name, igm, nil
++}
++
++func (s *instanceGroupManagers) zonalIGMOperation(ctx context.Context, name *zonalIGMName, igm *pb.InstanceGroupManager, opType string) (*pb.Operation, error) {
++	op := &pb.Operation{
++		TargetId:      igm.Id,
++		TargetLink:    igm.SelfLink,
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startZonalLRO(ctx, name.Project.ID, name.Zone, op, func() (proto.Message, error) {
++		return igm, nil
++	})
++}
++
++func (s *instanceGroupManagers) CreateInstances(ctx context.Context, req *pb.CreateInstancesInstanceGroupManagerRequest) (*pb.Operation, error) {
++	name, igm, err := s.getZonalIGM(ctx, req.GetProject(), req.GetZone(), req.GetInstanceGroupManager())
++	if err != nil {
++		return nil, err
++	}
++	for _, instance := range req.GetInstanceGroupManagersCreateInstancesRequestResource().GetInstances() {
++		pic := proto.Clone(instance).(*pb.PerInstanceConfig)
++		pic.Status = PtrTo("APPLYING")
++		pic.Fingerprint = PtrTo(computePICFingerprint(pic))
++		if err := s.storage.Create(ctx, name.String()+"/perInstanceConfigs/"+instance.GetName(), pic); err != nil {
++			return nil, err
++		}
++	}
++	return s.zonalIGMOperation(ctx, name, igm, "compute.instanceGroupManagers.createInstances")
++}
++
++func (s *instanceGroupManagers) ListPerInstanceConfigs(ctx context.Context, req *pb.ListPerInstanceConfigsInstanceGroupManagersRequest) (*pb.InstanceGroupManagersListPerInstanceConfigsResp, error) {
++	name, _, err := s.getZonalIGM(ctx, req.GetProject(), req.GetZone(), req.GetInstanceGroupManager())
++	if err != nil {
++		return nil, err
++	}
++	resp := &pb.InstanceGroupManagersListPerInstanceConfigsResp{}
++	kind := (&pb.PerInstanceConfig{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: name.String() + "/perInstanceConfigs/"}, func(obj proto.Message) error {
++		resp.Items = append(resp.Items, obj.(*pb.PerInstanceConfig))
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return resp, nil
++}
++
++func (s *instanceGroupManagers) UpdatePerInstanceConfigs(ctx context.Context, req *pb.UpdatePerInstanceConfigsInstanceGroupManagerRequest) (*pb.Operation, error) {
++	name, igm, err := s.getZonalIGM(ctx, req.GetProject(), req.GetZone(), req.GetInstanceGroupManager())
++	if err != nil {
++		return nil, err
++	}
++	for _, instance := range req.GetInstanceGroupManagersUpdatePerInstanceConfigsReqResource().GetPerInstanceConfigs() {
++		picFQN := name.String() + "/perInstanceConfigs/" + instance.GetName()
++		pic := &pb.PerInstanceConfig{}
++		if err := s.storage.Get(ctx, picFQN, pic); err != nil {
++			pic = proto.Clone(instance).(*pb.PerInstanceConfig)
++			pic.Status = PtrTo("APPLYING")
++			pic.Fingerprint = PtrTo(computePICFingerprint(pic))
++			if err := s.storage.Create(ctx, picFQN, pic); err != nil {
++				return nil, err
++			}
++			continue
++		}
++		proto.Merge(pic, instance)
++		pic.Status = PtrTo("APPLYING")
++		pic.Fingerprint = PtrTo(computePICFingerprint(pic))
++		if err := s.storage.Update(ctx, picFQN, pic); err != nil {
++			return nil, err
++		}
++	}
++	return s.zonalIGMOperation(ctx, name, igm, "compute.instanceGroupManagers.updatePerInstanceConfigs")
++}
++
++func (s *instanceGroupManagers) DeletePerInstanceConfigs(ctx context.Context, req *pb.DeletePerInstanceConfigsInstanceGroupManagerRequest) (*pb.Operation, error) {
++	name, igm, err := s.getZonalIGM(ctx, req.GetProject(), req.GetZone(), req.GetInstanceGroupManager())
++	if err != nil {
++		return nil, err
++	}
++	for _, instanceName := range req.GetInstanceGroupManagersDeletePerInstanceConfigsReqResource().GetNames() {
++		_ = s.storage.Delete(ctx, name.String()+"/perInstanceConfigs/"+instanceName, &pb.PerInstanceConfig{})
++	}
++	return s.zonalIGMOperation(ctx, name, igm, "compute.instanceGroupManagers.deletePerInstanceConfigs")
++}
++
++func (s *instanceGroupManagers) ApplyUpdatesToInstances(ctx context.Context, req *pb.ApplyUpdatesToInstancesInstanceGroupManagerRequest) (*pb.Operation, error) {
++	name, igm, err := s.getZonalIGM(ctx, req.GetProject(), req.GetZone(), req.GetInstanceGroupManager())
++	if err != nil {
++		return nil, err
++	}
++	return s.zonalIGMOperation(ctx, name, igm, "compute.instanceGroupManagers.applyUpdatesToInstances")
++}
++
++func (s *instanceGroupManagers) ListManagedInstances(ctx context.Context, req *pb.ListManagedInstancesInstanceGroupManagersRequest) (*pb.InstanceGroupManagersListManagedInstancesResponse, error) {
++	name, igm, err := s.getZonalIGM(ctx, req.GetProject(), req.GetZone(), req.GetInstanceGroupManager())
++	if err != nil {
++		return nil, err
++	}
++	resp := &pb.InstanceGroupManagersListManagedInstancesResponse{}
++	kind := (&pb.PerInstanceConfig{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: name.String() + "/perInstanceConfigs/"}, func(obj proto.Message) error {
++		pic := obj.(*pb.PerInstanceConfig)
++		managed := &pb.ManagedInstance{
++			CurrentAction:            PtrTo("NONE"),
++			Id:                       PtrTo(uint64(1234567890123456789)),
++			Instance:                 PtrTo(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s", name.Project.ID, name.Zone, pic.GetName())),
++			InstanceStatus:           PtrTo("RUNNING"),
++			Name:                     PtrTo(pic.GetName()),
++			PreservedStateFromConfig: pic.PreservedState,
++		}
++		if igm.InstanceTemplate != nil {
++			managed.Version = &pb.ManagedInstanceVersion{InstanceTemplate: igm.InstanceTemplate}
++		}
++		resp.ManagedInstances = append(resp.ManagedInstances, managed)
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return resp, nil
++}

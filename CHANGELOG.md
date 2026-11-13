@@ -23,6 +23,15 @@ has been released yet; each release moves its entries out of
   (`google_apigee_dns_zone`). Config Connector has no kind for it, so it
   starts at `v1alpha1`. The API cannot change a zone: every field is
   immutable. Live pending an Apigee organization.
+- **`compute.gcp.hfl.dev/v1beta1` `ComputePerInstanceConfig`**, a stable
+  per-instance config of a zonal managed instance group (decision 26), with
+  the fields of Config Connector's Terraform-based alpha kind; adapted from
+  our `ComputeRegionPerInstanceConfig`.
+- **`apigee.gcp.hfl.dev/v1beta1` `ApigeeNATAddress`**, a stable copy of
+  Config Connector's alpha Apigee NAT address (decision 26), with
+  upstream's fields (`instanceId`, `resourceID`, both immutable) and
+  `status.externalRef`. Live pending a provisioned Apigee instance
+  (`E2E_APIGEE_INSTANCE`). The operator's role gains `apigee.gcp.hfl.dev`.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
   Config Connector's alpha zonal autoscaler (decision 26), with upstream's
   fields.

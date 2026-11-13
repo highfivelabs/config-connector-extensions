@@ -125,7 +125,7 @@ apigee.googleapis.com,apigee.googleapis.com/HostSecurityReport,15,,0,,0,15,false
 apigee.googleapis.com,apigee.googleapis.com/Instance,16,ApigeeInstance,9,,0,7,false,api=v1:organizations.instances; official-spec-fields-unmatched=3/11
 apigee.googleapis.com,apigee.googleapis.com/InstanceAttachment,1,ApigeeInstanceAttachment,1,,0,0,false,api=v1:organizations.instances.attachments; official-spec-fields-unmatched=2/3
 apigee.googleapis.com,apigee.googleapis.com/InstanceCanaryevaluation,7,,0,,0,7,false,api=v1:organizations.instances.canaryevaluations
-apigee.googleapis.com,apigee.googleapis.com/InstanceNatAddress,1,ApigeeNATAddress,1,,0,0,false,api=v1:organizations.instances.natAddresses; official-spec-fields-unmatched=2/2
+apigee.googleapis.com,apigee.googleapis.com/InstanceNatAddress,1,ApigeeNATAddress,1,ApigeeNATAddress,0,0,false,api=v1:organizations.instances.natAddresses; official-spec-fields-unmatched=2/2; ours-spec-fields-unmatched=2/2
 apigee.googleapis.com,apigee.googleapis.com/Keyvaluemap,3,,0,,0,3,false,api=v1:organizations.keyvaluemaps
 apigee.googleapis.com,apigee.googleapis.com/KeyvaluemapEntry,2,,0,,0,2,false,api=v1:organizations.keyvaluemaps.entries
 apigee.googleapis.com,apigee.googleapis.com/Organization,24,ApigeeOrganization,8,,0,16,false,api=v1:organizations; official-spec-fields-unmatched=3/11
@@ -340,6 +340,7 @@ compute.googleapis.com,compute.googleapis.com/BackendBucket,21,ComputeBackendBuc
 compute.googleapis.com,compute.googleapis.com/BackendService,135,ComputeBackendService,84,,0,51,false,api=v1:backendServices; official-spec-fields-unmatched=13/96
 compute.googleapis.com,compute.googleapis.com/ComputeDiskResourcePolicyAttachment,0,,0,ComputeDiskResourcePolicyAttachment,0,0,false,outside-denominator; no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeNetworkEndpoint,0,,0,ComputeNetworkEndpoint,0,0,false,outside-denominator; no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com
+compute.googleapis.com,compute.googleapis.com/ComputePerInstanceConfig,0,,0,ComputePerInstanceConfig,0,0,false,outside-denominator; no API resource named like perinstanceconfig/computeperinstanceconfig in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeProjectDefaultNetworkTier,0,,0,ComputeProjectDefaultNetworkTier,0,0,false,"outside-denominator; a project's default network tier, written with projects.setDefaultNetworkTier (it always exists)"
 compute.googleapis.com,compute.googleapis.com/ComputeProjectMetadataItem,0,,0,ComputeProjectMetadataItem,0,0,false,"outside-denominator; one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)"
 compute.googleapis.com,compute.googleapis.com/ComputeRegionNetworkEndpoint,0,,0,ComputeRegionNetworkEndpoint,0,0,false,"outside-denominator; an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints"

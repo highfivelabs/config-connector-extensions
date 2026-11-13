@@ -6,6 +6,7 @@ resources:
 - apigateway.gcp.hfl.dev_apigatewayapiconfigs.yaml
 - apigateway.gcp.hfl.dev_apigatewaygateways.yaml
 - apigee.gcp.hfl.dev_apigeednszones.yaml
+- apigee.gcp.hfl.dev_apigeenataddresses.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
 - backupdr.gcp.hfl.dev_backupdrmanagementservers.yaml
@@ -32,6 +33,7 @@ resources:
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyassociations.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyrules.yaml
+- compute.gcp.hfl.dev_computeperinstanceconfigs.yaml
 - compute.gcp.hfl.dev_computeprojectdefaultnetworktiers.yaml
 - compute.gcp.hfl.dev_computeprojectmetadataitems.yaml
 - compute.gcp.hfl.dev_computepublicadvertisedprefixes.yaml
