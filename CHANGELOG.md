@@ -15,6 +15,13 @@ has been released yet; each release moves its entries out of
   can delegate to IAP (`iap.googleapis.com`) or Model Armor. Config
   Connector's alpha kind requires a backend service and has no `service`
   field; ours keeps the name at `v1beta1` (decision 26).
+- **`iam.gcp.hfl.dev/v1beta1` `IAMAccessPolicy`**, an IAM v3 access policy
+  of an organization, folder or project
+  (`google_iam_projects_access_policy` and its organization and folder
+  forms): its display name, annotations and rules. Config Connector's
+  alpha kind takes an organization only and has no controller; ours keeps
+  the name at `v1beta1`. Live pending an access policy role for the
+  live-test account.
 - **`networkservices.gcp.hfl.dev/v1beta1` `NetworkServicesGateway`**,
   generated from Discovery: a gateway of either type, `OPEN_MESH` or
   `SECURE_WEB_GATEWAY` (a Secure Web Proxy), with the API's whole field

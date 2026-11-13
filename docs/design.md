@@ -320,6 +320,22 @@ PR; the parent is one of `organizationRef`, `folderRef` and `projectRef`
 is written here. mockgcp patch 0044 serves the bindings.
 `docs/kinds/IAMPolicyBinding.md` has the rest.
 
+Then `IAMAccessPolicy` (`iam.gcp.hfl.dev/v1beta1`, 2026-11-13),
+hand-written, for the catalog's `geap-agent-gateway` module
+(`google_iam_projects_access_policy`, the policy an agent gateway's access
+rules are). Config Connector has the kind at `v1alpha1` with an
+organization parent only and no controller; ours keeps the name at
+`v1beta1` (decision 26) with an organization, folder or project parent
+(decision 18), and imports upstream's `AccessPolicyDetails` and observed
+state. IAM v3 has no Discovery document at the pin, so it is not
+generated. `cloud.google.com/go/iam` moved from v1.11.0 to v1.14.0, the
+first with access policies in `apiv3` (no other module moved). The API's
+update replaces the policy (no update mask), so any difference sends the
+whole spec. mockgcp patch 0045 serves the policies; a policy a binding
+names is refused deletion without force, as the API does. Live skips: the
+live-test account has no access policy role. `docs/kinds/IAMAccessPolicy.md`
+has the rest.
+
 Then `ChronicleRuleDeployment` (`chronicle.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written: the API has no Discovery document at the
 pinned discovery-artifact-manager commit (nor at its head), and a rule's

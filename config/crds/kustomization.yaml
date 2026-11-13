@@ -75,6 +75,7 @@ resources:
 - gkebackup.gcp.hfl.dev_gkebackuprestoreplans.yaml
 - gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
 - gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
+- iam.gcp.hfl.dev_iamaccesspolicies.yaml
 - iam.gcp.hfl.dev_iambindings.yaml
 - iam.gcp.hfl.dev_iamdenypolicies.yaml
 - iam.gcp.hfl.dev_iammembers.yaml

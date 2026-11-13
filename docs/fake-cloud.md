@@ -190,6 +190,15 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   not check the principal set against the parent or the condition's
   attributes, and serves neither `ACCESS` policies nor
   `searchTargetPolicyBindings`.
+- **IAM access policies in mockgcp** (patch 0045, ours, for
+  `IAMAccessPolicy`). Create, get, list, update of the whole policy (the
+  API's update has no mask; a stale etag is refused) and delete under any
+  organization, folder or project and location, on REST paths added by
+  hand as patches 0030 and 0044 do; every write answers a finished
+  operation. A rule needs an effect, principals and permissions. A policy
+  a binding names is refused deletion unless `force` is set. It checks no
+  permissions, nor whether principals, permissions and conditions are
+  valid, and serves neither `searchPolicyBindings` nor `validateOnly`.
 - **IAM deny policies in mockgcp** (upstream's, unpatched, for
   `IAMDenyPolicy`). It serves create, get, list, a whole-policy update
   that must carry the current etag, and delete, under a project's number
