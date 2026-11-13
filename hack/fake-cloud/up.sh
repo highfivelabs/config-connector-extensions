@@ -23,7 +23,8 @@ command -v docker >/dev/null && docker info >/dev/null 2>&1 || { echo "docker is
 command -v kind >/dev/null || { echo "kind is not installed" >&2; exit 1; }
 
 start=$(date +%s)
-if ! kind get clusters 2>/dev/null | grep -qx "${CLUSTER}"; then
+# grep without -q reads all its input: no SIGPIPE for kind under pipefail.
+if ! kind get clusters 2>/dev/null | grep -x "${CLUSTER}" >/dev/null; then
   kind create cluster --name "${CLUSTER}" --kubeconfig "${KUBECONFIG}" --wait 120s
 fi
 
