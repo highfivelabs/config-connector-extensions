@@ -42,6 +42,8 @@ source hack/live/projects.sh
 # (SecurityCenterMuteConfig) skips live unless E2E_SECURITY_CENTER=true;
 # firestore (FirestoreBackupSchedule) skips live unless
 # E2E_FIRESTORE_DATABASE names a Firestore database;
+# apigee (ApigeeNATAddress) skips live unless E2E_APIGEE_INSTANCE names an
+# Apigee instance;
 # spanner (SpannerInstanceConfig) skips live unless E2E_SPANNER=true;
 # datacatalog (DataCatalogTag) skips live unless E2E_DATA_CATALOG=true;
 # aiplatform (AIPlatformReasoningEngine) skips live unless E2E_VERTEX_AI=true

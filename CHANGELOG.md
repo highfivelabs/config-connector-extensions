@@ -14,6 +14,11 @@ has been released yet; each release moves its entries out of
   `status.externalRef` keeps it. Live pending a Firestore database in the
   live-test project (`E2E_FIRESTORE_DATABASE`). The operator's role gains
   `firestore.gcp.hfl.dev`.
+- **`apigee.gcp.hfl.dev/v1beta1` `ApigeeNATAddress`**, a stable copy of
+  Config Connector's alpha Apigee NAT address (decision 26), with
+  upstream's fields (`instanceId`, `resourceID`, both immutable) and
+  `status.externalRef`. Live pending a provisioned Apigee instance
+  (`E2E_APIGEE_INSTANCE`). The operator's role gains `apigee.gcp.hfl.dev`.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
   Config Connector's alpha zonal autoscaler (decision 26), with upstream's
   fields.

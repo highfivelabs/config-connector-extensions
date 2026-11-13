@@ -119,6 +119,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
 | `roles/datastore.owner` | project | `FirestoreBackupSchedule` (not granted, and no Firestore database exists: the test skips live without `E2E_FIRESTORE_DATABASE`) |
+| `roles/apigee.admin` | project | `ApigeeNATAddress` (not granted, and no Apigee organization exists: the test skips live without `E2E_APIGEE_INSTANCE`) |
 | `roles/spanner.admin` | project | `SpannerInstanceConfig` (not granted yet, and `spanner.googleapis.com` is off: the test skips live without `E2E_SPANNER=true`) |
 | `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
@@ -356,6 +357,15 @@ account needs `roles/datastore.owner`; `$GCP_PROJECT` has neither
 PROJECT=$GCP_PROJECT KINDS=firestore`. A schedule's ID is the API's and it
 carries no labels, so the sweeper cannot tell a run's schedules from
 others; the test deletes what it makes, the abandoned one included.
+
+`ApigeeNATAddress` (package `apigee`) waits on Apigee: a NAT address
+belongs to an Apigee instance, which needs a provisioned Apigee
+organization (billed, and an hour or more to make), and the live-test
+service account needs `roles/apigee.admin`; `$GCP_PROJECT` has neither
+(`apigee.googleapis.com` off, checked 2026-11-12). No test makes an
+organization or an instance. With one: `E2E_APIGEE_INSTANCE=organizations/O/instances/I
+task test-live PROJECT=$GCP_PROJECT KINDS=apigee`; the sweeper then
+deletes that instance's NAT addresses whose name carries a run ID.
 
 `SpannerInstanceConfig` (package `spanner`) waits on Spanner in the
 project: `spanner.googleapis.com` is not on in `$GCP_PROJECT` and

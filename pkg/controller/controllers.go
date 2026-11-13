@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	aiplatformv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/aiplatform/v1beta1"
+	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
 	artifactregistryv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
@@ -63,6 +64,7 @@ import (
 	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
 	storagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
@@ -139,6 +141,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 	{gvk: firestorev1beta1.FirestoreBackupScheduleGVK, crdName: "firestorebackupschedules.firestore.gcp.hfl.dev", model: firestore.NewFirestoreBackupScheduleModel},
+	{gvk: apigeev1beta1.ApigeeNATAddressGVK, crdName: "apigeenataddresses.apigee.gcp.hfl.dev", model: apigee.NewApigeeNATAddressModel},
 	{gvk: spannerv1beta1.SpannerInstanceConfigGVK, crdName: "spannerinstanceconfigs.spanner.gcp.hfl.dev", model: spanner.NewInstanceConfigModel, labels: slotguard.Spec},
 	{gvk: datacatalogv1beta1.DataCatalogTagGVK, crdName: "datacatalogtags.datacatalog.gcp.hfl.dev", model: datacatalog.NewTagModel},
 	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
@@ -159,6 +162,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		computev1beta1.AddToScheme,
 		dnsv1beta1.AddToScheme,
 		firestorev1beta1.AddToScheme,
+		apigeev1beta1.AddToScheme,
 		spannerv1beta1.AddToScheme,
 		datacatalogv1beta1.AddToScheme,
 		aiplatformv1beta1.AddToScheme,
