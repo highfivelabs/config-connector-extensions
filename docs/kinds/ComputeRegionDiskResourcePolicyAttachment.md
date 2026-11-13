@@ -38,3 +38,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | `6be05ea` | PASS | PASS | none: attach, a resync with no write, the CRD refusing a change, detach on delete, abandon keeping it (run `cce-11130242-e393`). The first mock run failed before patch 0043: mockgcp answered `regionDisks.insert` with a global operation (404 on wait) | 2 regional disks (10 GB pd-balanced, two zones), 1 snapshot schedule; nothing of the run left (the run's sweep matched 0) |
