@@ -605,7 +605,7 @@ while read -r name region; do
   act "resource policy" "${name} ${region}" "${G[@]}" compute resource-policies delete "${name}" --region="${region}"
 done <<<"${rows}"
 # Managed instance groups (the per-instance config tests make a regional
-# one), by name; deleting a group deletes its instances. Then any instance
+# and a zonal one), by name; deleting a group deletes its instances. Then any instance
 # and instance template of a run left behind, before their subnets.
 # (Commas, not tabs: a regional group has no zone, and read would shift an
 # empty field.)
