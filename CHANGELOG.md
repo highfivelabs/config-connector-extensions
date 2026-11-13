@@ -224,6 +224,12 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`IAMDenyPolicy` waited forever to be deleted when the Project, Folder
+  or Organization object its `projectRef`, `folderRef` or
+  `organizationRef` names by `name` was already gone**: its delete
+  resolved the parent again ("referenced Folder ... not found"). The
+  delete now takes the policy's name from `status.externalRef`, as the
+  generated kinds do; `deletion-policy: abandon` still keeps the policy.
 - **`LoggingBillingAccountSink` took a Cloud Storage bucket only as
   `projects/<p>/buckets/<name>` or `projects/_/buckets/<name>`**: a bucket's
   bare name, `gs://<name>` and `storage.googleapis.com/<name>` (Terraform's
