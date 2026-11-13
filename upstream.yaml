@@ -180,6 +180,7 @@ patches:
   - {file: patches/k8s-config-connector/0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0033-mockgcp-compute-vpn-tunnels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
 # paths at the pin, or at a pull request's head). also_prs: a pull request
@@ -458,6 +459,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/zz_generated.v1alpha1.mappers.go]}
   - here: [pkg/controller/direct/dns/responsepolicy_fuzzer_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/dnsresponsepolicy_fuzzer.go]}
+  - here: [apis/dns/v1beta1/dnsresponsepolicyrule_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/dnsresponsepolicyrule_types.go]}
+  - here: [apis/dns/v1beta1/dnsresponsepolicyrule_identity.go, apis/dns/v1beta1/dnsresponsepolicyrule_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/dnsresponsepolicyrule_identity.go, apis/dns/v1alpha1/dnsresponsepolicyrule_identity_test.go]}
+  - here: [pkg/controller/direct/dns/responsepolicyrule_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/zz_generated.v1alpha1.mappers.go]}
   - here: [apis/run/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/groupversion_info.go]}
   - here: [apis/run/v1alpha1/runservice_types.go]

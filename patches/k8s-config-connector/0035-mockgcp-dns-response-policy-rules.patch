@@ -1,0 +1,265 @@
+config-connector-extensions patch 0035: mockgcp serves Cloud DNS response policy rules.
+
+mockdns registered no ResponsePolicyRulesServer, so every rule request
+was a 404 from the mux (found writing DNSResponsePolicyRule). The rules
+are kept per policy: create (the rule's name in the body), get, update
+(replace), patch (the fields set), delete and list. A rule of a missing
+policy is 404 and a rule without a DNS name 400, as Cloud DNS answers.
+
+diff --git a/mockgcp/mockdns/responsepolicyrule.go b/mockgcp/mockdns/responsepolicyrule.go
+new file mode 100644
+index 000000000..3a09498cc
+--- /dev/null
++++ b/mockgcp/mockdns/responsepolicyrule.go
+@@ -0,0 +1,205 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// +tool:mockgcp-support
++// proto.service: google.cloud.dns.v1.ResponsePolicyRulesServer
++// proto.message: google.cloud.dns.v1.ResponsePolicyRule
++
++package mockdns
++
++import (
++	"context"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/types/known/emptypb"
++	apierrors "k8s.io/apimachinery/pkg/api/errors"
++
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/google/cloud/dns/v1"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++type responsePolicyRulesService struct {
++	*MockService
++	pb.UnimplementedResponsePolicyRulesServerServer
++}
++
++type responsePolicyRuleName struct {
++	Policy *responsePolicyName
++	Name   string
++}
++
++func (n *responsePolicyRuleName) String() string {
++	return n.Policy.String() + "/rules/" + n.Name
++}
++
++// ruleName is the rule's name, after checking its response policy exists:
++// the API answers 404 for a rule of a policy that does not.
++func (s *responsePolicyRulesService) ruleName(ctx context.Context, project, policy, rule string) (*responsePolicyRuleName, error) {
++	policyName, err := s.parseResponsePolicyName("projects/" + project + "/responsePolicies/" + policy)
++	if err != nil {
++		return nil, err
++	}
++	if err := s.storage.Get(ctx, policyName.String(), &pb.ResponsePolicy{}); err != nil {
++		if apierrors.IsNotFound(err) {
++			return nil, status.Errorf(codes.NotFound, "The 'parameters.responsePolicy' resource named '%s' does not exist.", policy)
++		}
++		return nil, err
++	}
++	if rule == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for 'entity.responsePolicyRule.ruleName': ''")
++	}
++	return &responsePolicyRuleName{Policy: policyName, Name: rule}, nil
++}
++
++func ruleNotFound(name *responsePolicyRuleName) error {
++	return status.Errorf(codes.NotFound, "The 'parameters.responsePolicyRule' resource named '%s' does not exist.", name.Name)
++}
++
++// checkRule makes the API's check that a rule has a DNS name.
++func checkRule(rule *pb.ResponsePolicyRule) error {
++	if rule.GetDnsName() == "" {
++		return status.Errorf(codes.InvalidArgument, "Invalid value for 'entity.responsePolicyRule.dnsName': ''")
++	}
++	return nil
++}
++
++func (s *responsePolicyRulesService) GetResponsePolicyRule(ctx context.Context, req *pb.GetResponsePolicyRuleRequest) (*pb.ResponsePolicyRule, error) {
++	name, err := s.ruleName(ctx, req.GetProject(), req.GetResponsePolicy(), req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	obj := &pb.ResponsePolicyRule{}
++	if err := s.storage.Get(ctx, name.String(), obj); err != nil {
++		if apierrors.IsNotFound(err) {
++			return nil, ruleNotFound(name)
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++func (s *responsePolicyRulesService) CreateResponsePolicyRule(ctx context.Context, req *pb.CreateResponsePolicyRuleRequest) (*pb.ResponsePolicyRule, error) {
++	name, err := s.ruleName(ctx, req.GetProject(), req.GetResponsePolicy(), req.GetResponsePolicyRule().GetRuleName())
++	if err != nil {
++		return nil, err
++	}
++	obj := proto.CloneOf(req.GetResponsePolicyRule())
++	if err := checkRule(obj); err != nil {
++		return nil, err
++	}
++	obj.Kind = PtrTo("dns#responsePolicyRule")
++	if err := s.storage.Create(ctx, name.String(), obj); err != nil {
++		if apierrors.IsAlreadyExists(err) {
++			return nil, status.Errorf(codes.AlreadyExists, "The resource 'entity.responsePolicyRule' named '%s' already exists", name.Name)
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++// replace writes rule over the stored one, keeping its name and kind.
++func (s *responsePolicyRulesService) replace(ctx context.Context, name *responsePolicyRuleName, rule *pb.ResponsePolicyRule) (*pb.ResponsePolicyRule, error) {
++	existing := &pb.ResponsePolicyRule{}
++	if err := s.storage.Get(ctx, name.String(), existing); err != nil {
++		if apierrors.IsNotFound(err) {
++			return nil, ruleNotFound(name)
++		}
++		return nil, err
++	}
++	if err := checkRule(rule); err != nil {
++		return nil, err
++	}
++	rule.RuleName = existing.RuleName
++	rule.Kind = existing.Kind
++	if err := s.storage.Update(ctx, name.String(), rule); err != nil {
++		return nil, err
++	}
++	return rule, nil
++}
++
++func (s *responsePolicyRulesService) UpdateResponsePolicyRule(ctx context.Context, req *pb.UpdateResponsePolicyRuleRequest) (*pb.ResponsePolicyRulesUpdateResponse, error) {
++	name, err := s.ruleName(ctx, req.GetProject(), req.GetResponsePolicy(), req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	updated, err := s.replace(ctx, name, proto.CloneOf(req.GetResponsePolicyRule()))
++	if err != nil {
++		return nil, err
++	}
++	return &pb.ResponsePolicyRulesUpdateResponse{ResponsePolicyRule: updated}, nil
++}
++
++// PatchResponsePolicyRule changes the fields the request sets.
++func (s *responsePolicyRulesService) PatchResponsePolicyRule(ctx context.Context, req *pb.PatchResponsePolicyRuleRequest) (*pb.ResponsePolicyRulesPatchResponse, error) {
++	name, err := s.ruleName(ctx, req.GetProject(), req.GetResponsePolicy(), req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	existing := &pb.ResponsePolicyRule{}
++	if err := s.storage.Get(ctx, name.String(), existing); err != nil {
++		if apierrors.IsNotFound(err) {
++			return nil, ruleNotFound(name)
++		}
++		return nil, err
++	}
++	patch := req.GetResponsePolicyRule()
++	updated := proto.CloneOf(existing)
++	if patch.DnsName != nil {
++		updated.DnsName = patch.DnsName
++	}
++	if patch.Behavior != nil {
++		updated.Behavior = patch.Behavior
++	}
++	if patch.LocalData != nil {
++		updated.LocalData = patch.LocalData
++	}
++	updated, err = s.replace(ctx, name, updated)
++	if err != nil {
++		return nil, err
++	}
++	return &pb.ResponsePolicyRulesPatchResponse{ResponsePolicyRule: updated}, nil
++}
++
++func (s *responsePolicyRulesService) DeleteResponsePolicyRule(ctx context.Context, req *pb.DeleteResponsePolicyRuleRequest) (*emptypb.Empty, error) {
++	name, err := s.ruleName(ctx, req.GetProject(), req.GetResponsePolicy(), req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	if err := s.storage.Delete(ctx, name.String(), &pb.ResponsePolicyRule{}); err != nil {
++		if apierrors.IsNotFound(err) {
++			return nil, ruleNotFound(name)
++		}
++		return nil, err
++	}
++	return &emptypb.Empty{}, nil
++}
++
++func (s *responsePolicyRulesService) ListResponsePolicyRules(ctx context.Context, req *pb.ListResponsePolicyRulesRequest) (*pb.ResponsePolicyRulesListResponse, error) {
++	policyName, err := s.parseResponsePolicyName("projects/" + req.GetProject() + "/responsePolicies/" + req.GetResponsePolicy())
++	if err != nil {
++		return nil, err
++	}
++	prefix := policyName.String() + "/rules/"
++	out := &pb.ResponsePolicyRulesListResponse{}
++	kind := (&pb.ResponsePolicyRule{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: prefix}, func(obj proto.Message) error {
++		out.ResponsePolicyRules = append(out.ResponsePolicyRules, obj.(*pb.ResponsePolicyRule))
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return out, nil
++}
+diff --git a/mockgcp/mockdns/service.go b/mockgcp/mockdns/service.go
+index 9d010b616..0bff7e450 100644
+--- a/mockgcp/mockdns/service.go
++++ b/mockgcp/mockdns/service.go
+@@ -39,11 +39,12 @@ type MockService struct {
+ 
+ 	operations *dnsOperations
+ 
+-	managedZonesService       *managedZonesService
+-	resourceRecordSetsService *resourceRecordSetsService
+-	policiesService           *policiesService
+-	responsePoliciesService   *responsePoliciesService
+-	changesServer             *changesServer
++	managedZonesService        *managedZonesService
++	resourceRecordSetsService  *resourceRecordSetsService
++	policiesService            *policiesService
++	responsePoliciesService    *responsePoliciesService
++	responsePolicyRulesService *responsePolicyRulesService
++	changesServer              *changesServer
+ }
+ 
+ // New creates a dnsService.
+@@ -57,6 +58,7 @@ func New(env *common.MockEnvironment, storage storage.Storage) mockgcpregistry.M
+ 	s.managedZonesService = &managedZonesService{MockService: s}
+ 	s.policiesService = &policiesService{MockService: s}
+ 	s.responsePoliciesService = &responsePoliciesService{MockService: s}
++	s.responsePolicyRulesService = &responsePolicyRulesService{MockService: s}
+ 	s.changesServer = &changesServer{MockService: s}
+ 	return s
+ }
+@@ -71,6 +73,7 @@ func (s *MockService) Register(grpcServer *grpc.Server) {
+ 	pb.RegisterResourceRecordSetsServerServer(grpcServer, s.resourceRecordSetsService)
+ 	pb.RegisterPoliciesServerServer(grpcServer, s.policiesService)
+ 	pb.RegisterResponsePoliciesServerServer(grpcServer, s.responsePoliciesService)
++	pb.RegisterResponsePolicyRulesServerServer(grpcServer, s.responsePolicyRulesService)
+ 	pb.RegisterChangesServerServer(grpcServer, s.changesServer)
+ }
+ 
+@@ -81,6 +84,7 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 		pb.RegisterManagedZoneOperationsServerHandler,
+ 		pb.RegisterPoliciesServerHandler,
+ 		pb.RegisterResponsePoliciesServerHandler,
++		pb.RegisterResponsePolicyRulesServerHandler,
+ 		pb.RegisterChangesServerHandler,
+ 	)
+ 

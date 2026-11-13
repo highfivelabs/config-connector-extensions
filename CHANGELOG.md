@@ -14,6 +14,10 @@ has been released yet; each release moves its entries out of
   `status.externalRef` keeps it. Live pending a Firestore database in the
   live-test project (`E2E_FIRESTORE_DATABASE`). The operator's role gains
   `firestore.gcp.hfl.dev`.
+- **`dns.gcp.hfl.dev/v1beta1` `DNSResponsePolicyRule`**, a stable copy of
+  Config Connector's alpha, Terraform-based response policy rule (decision
+  13), with upstream's fields and a controller written here. Live pending
+  `roles/dns.admin` for the live-test account (`E2E_DNS_ADMIN=true`).
 - **`aiplatform.gcp.hfl.dev/v1beta1` `AIPlatformReasoningEngine`**, a
   stable copy of Config Connector's alpha Vertex AI Agent Engine (decision
   26), with upstream's fields. The API assigns the engine's ID at create;
