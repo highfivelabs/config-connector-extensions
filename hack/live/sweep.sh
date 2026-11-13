@@ -565,6 +565,20 @@ while read -r name made; do
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
 
+# Disks (the resource policy attachment test makes them), by name, before
+# the resource policies they hold; then the resource policies.
+rows="$("${G[@]}" compute disks list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,zone.basename())')"
+while read -r name zone; do
+  [[ -n "${name}" ]] || continue
+  act "disk" "${name} ${zone}" "${G[@]}" compute disks delete "${name}" --zone="${zone}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute resource-policies list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "resource policy" "${name} ${region}" "${G[@]}" compute resource-policies delete "${name}" --region="${region}"
+done <<<"${rows}"
 # Managed instance groups (the per-instance config tests make a regional
 # one), by name; deleting a group deletes its instances. Then any instance
 # and instance template of a run left behind, before their subnets.

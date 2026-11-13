@@ -8,6 +8,9 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeDiskResourcePolicyAttachment`**, a
+  stable copy of Config Connector's alpha attachment of a resource policy
+  to a zonal disk (decision 26), with upstream's fields.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionPerInstanceConfig`**, a
   stable copy of Config Connector's alpha per-instance config of a
   regional managed instance group (decision 26), with upstream's fields.

@@ -491,6 +491,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | --- | --- | ---: | :-: |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
+| ComputeDiskResourcePolicyAttachment | (not a create) no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com | n/a | false |
 | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 15 | false |
 | ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
@@ -525,15 +526,15 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
@@ -548,8 +549,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
