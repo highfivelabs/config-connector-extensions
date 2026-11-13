@@ -8,6 +8,9 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionAutoscaler`**, a stable
+  kind for Config Connector's alpha regional autoscaler, which has types
+  but no controller upstream (decision 26), with upstream's fields.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
   Config Connector's alpha zonal autoscaler (decision 26), with upstream's
   fields.
