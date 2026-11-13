@@ -45,6 +45,7 @@ import (
 	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
 	artifactregistryv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
+	chroniclev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1alpha1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
@@ -66,6 +67,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/dns"
@@ -149,6 +151,7 @@ var Kinds = []kind{
 	{gvk: datacatalogv1beta1.DataCatalogTagGVK, crdName: "datacatalogtags.datacatalog.gcp.hfl.dev", model: datacatalog.NewTagModel},
 	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
 	{gvk: servicemanagementv1alpha1.EndpointsServiceGVK, crdName: "endpointsservices.servicemanagement.gcp.hfl.dev", model: servicemanagement.NewEndpointsServiceModel},
+	{gvk: chroniclev1alpha1.ChronicleRuleDeploymentGVK, crdName: "chronicleruledeployments.chronicle.gcp.hfl.dev", model: chronicle.NewRuleDeploymentModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -169,6 +172,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		spannerv1beta1.AddToScheme,
 		datacatalogv1beta1.AddToScheme,
 		aiplatformv1beta1.AddToScheme,
+		chroniclev1alpha1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,

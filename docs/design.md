@@ -277,6 +277,23 @@ PR; the parent is one of `organizationRef`, `folderRef` and `projectRef`
 is written here. mockgcp patch 0044 serves the bindings.
 `docs/kinds/IAMPolicyBinding.md` has the rest.
 
+Then `ChronicleRuleDeployment` (`chronicle.gcp.hfl.dev/v1alpha1`,
+2026-11-13), hand-written: the API has no Discovery document at the
+pinned discovery-artifact-manager commit (nor at its head), and a rule's
+deployment is a singleton with get and patch only, which is not a
+discokind shape. Config Connector has `ChronicleRule` (alpha, at the pin)
+but no deployment kind, so ours takes Terraform's name
+(`google_chronicle_rule_deployment`, decision 18) for the catalog's
+`secops-rules` module, at `v1alpha1` (decision 26's last sentence). Its
+`ruleRef` is Config Connector's own `ChronicleRuleRef`, by import. As
+Terraform, there is no create or delete: the object patches the fields
+it sets, and deleting it leaves the deployment. It speaks REST JSON to
+`<location>-chronicle.googleapis.com` (Terraform's host) rather than
+`cloud.google.com/go/chronicle` v1.5.0, which lacks the customizable run
+frequencies and `scheduleCustomizations`. mockgcp has no Chronicle, so a
+fake serves it (`docs/fake-cloud.md`); live skips, needing a SecOps
+instance. `docs/kinds/ChronicleRuleDeployment.md` has the rest.
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check
@@ -1952,7 +1969,6 @@ To raise confidence in `ArtifactRegistryRepository`:
     rollouts that split traffic between configurations (Terraform has
     none either); the API's own reading of the configuration, which the
     fake does not parse.
-
 39. `IAMPolicyBinding`: a live run (needs a principal access boundary
     policy, which lives under an organization, that `cce-live-tests` may
     bind, and `iam.policyBindings.*` on the project;
@@ -1960,6 +1976,17 @@ To raise confidence in `ArtifactRegistryRepository`:
     against the binding's parent and of a condition's attributes, which
     the fake does not make; `ACCESS` policies, which the fake does not
     serve.
+40. `ChronicleRuleDeployment`: a live run (needs a Google SecOps instance
+    in or bound to the live-test project, `chronicle.googleapis.com` on
+    and `roles/chronicle.editor` for `cce-live-tests`;
+    `E2E_CHRONICLE_INSTANCE=<location>/<instance>`), and with it the
+    sweeper's Chronicle section (the test deletes its rules itself; no
+    live run has made any); whether `<location>-chronicle.googleapis.com`
+    (Terraform's host) is the right host for every location; the API's
+    coercion of legacy run frequencies, which only Terraform's diff
+    suppression (copied) tells us; whether an archive and a disable in
+    one patch would do (the controller sends them in two, disable
+    first).
 
 33. `ComputeVPNTunnel`: a rotated shared secret is not applied (the API
     takes it only at insert; make a new tunnel); the API's checks of a
