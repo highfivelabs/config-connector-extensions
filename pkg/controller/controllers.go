@@ -154,6 +154,7 @@ var Kinds = []kind{
 	{gvk: servicemanagementv1alpha1.EndpointsServiceGVK, crdName: "endpointsservices.servicemanagement.gcp.hfl.dev", model: servicemanagement.NewEndpointsServiceModel},
 	{gvk: chroniclev1alpha1.ChronicleRuleDeploymentGVK, crdName: "chronicleruledeployments.chronicle.gcp.hfl.dev", model: chronicle.NewRuleDeploymentModel},
 	{gvk: chroniclev1beta1.ChronicleRuleGVK, crdName: "chroniclerules.chronicle.gcp.hfl.dev", model: chronicle.NewRuleModel},
+	{gvk: chroniclev1beta1.ChronicleReferenceListGVK, crdName: "chroniclereferencelists.chronicle.gcp.hfl.dev", model: chronicle.NewReferenceListModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
