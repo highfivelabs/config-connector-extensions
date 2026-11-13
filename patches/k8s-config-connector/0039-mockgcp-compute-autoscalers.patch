@@ -1,0 +1,293 @@
+config-connector-extensions patch 0039: mockgcp serves zonal Compute Engine autoscalers.
+
+mockcompute registered no Autoscalers server, so every autoscaler request
+was a 404 from the mux (found writing ComputeAutoscaler). Get, list,
+insert, patch (the fields set), update (replace) and delete; like the API,
+the target group must exist, the target and zone come back as full URLs,
+and the policy's defaults are filled in (mode ON, a 60 s cool-down, CPU
+utilization 0.6 when no signal is set, predictive method NONE).
+
+diff --git a/mockgcp/mockcompute/autoscalersv1.go b/mockgcp/mockcompute/autoscalersv1.go
+new file mode 100644
+--- /dev/null
++++ b/mockgcp/mockcompute/autoscalersv1.go
+@@ -0,0 +1,258 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// +tool:mockgcp-support
++// proto.service: google.cloud.compute.v1.Autoscalers
++// proto.message: google.cloud.compute.v1.Autoscaler
++
++package mockcompute
++
++import (
++	"context"
++	"fmt"
++	"strings"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/projects"
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++// AutoscalersV1 serves zonal autoscalers. Like the API, it checks that the
++// target group exists, keeps the target and zone as full URLs, and fills
++// the policy's defaults (mode ON, a 60 s cool-down, CPU utilization 0.6
++// when no signal is set, predictive method NONE).
++type AutoscalersV1 struct {
++	*MockService
++	pb.UnimplementedAutoscalersServer
++}
++
++type zonalAutoscalerName struct {
++	Project *projects.ProjectData
++	Zone    string
++	Name    string
++}
++
++func (n *zonalAutoscalerName) String() string {
++	return "projects/" + n.Project.ID + "/zones/" + n.Zone + "/autoscalers/" + n.Name
++}
++
++func (s *MockService) newZonalAutoscalerName(project, zone, name string) (*zonalAutoscalerName, error) {
++	p, err := s.Projects.GetProjectByID(project)
++	if err != nil {
++		return nil, err
++	}
++	return &zonalAutoscalerName{Project: p, Zone: zone, Name: name}, nil
++}
++
++func autoscalerDefaults(obj *pb.Autoscaler) {
++	if obj.AutoscalingPolicy == nil {
++		obj.AutoscalingPolicy = &pb.AutoscalingPolicy{}
++	}
++	p := obj.AutoscalingPolicy
++	if p.Mode == nil {
++		p.Mode = PtrTo("ON")
++	}
++	if p.CoolDownPeriodSec == nil {
++		p.CoolDownPeriodSec = PtrTo(int32(60))
++	}
++	if p.CpuUtilization == nil && p.LoadBalancingUtilization == nil && len(p.CustomMetricUtilizations) == 0 && len(p.ScalingSchedules) == 0 {
++		p.CpuUtilization = &pb.AutoscalingPolicyCpuUtilization{UtilizationTarget: PtrTo(0.6)}
++	}
++	if p.CpuUtilization != nil && p.CpuUtilization.PredictiveMethod == nil {
++		p.CpuUtilization.PredictiveMethod = PtrTo("NONE")
++	}
++}
++
++// target is the autoscaler's target group as the API returns it: a full
++// URL, after checking that the group exists in the zone.
++func (s *AutoscalersV1) target(ctx context.Context, name *zonalAutoscalerName, target string) (string, error) {
++	path := target
++	if i := strings.Index(path, "projects/"); i >= 0 {
++		path = path[i:]
++	} else {
++		path = fmt.Sprintf("projects/%s/zones/%s/instanceGroupManagers/%s", name.Project.ID, name.Zone, path)
++	}
++	igm, err := s.parseZonalIGMName(path)
++	if err != nil {
++		return "", status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.target': '%s'.", target)
++	}
++	if err := s.storage.Get(ctx, igm.String(), &pb.InstanceGroupManager{}); err != nil {
++		return "", status.Errorf(codes.NotFound, "The resource '%s' was not found", igm.String())
++	}
++	return BuildComputeSelfLink(ctx, igm.String()), nil
++}
++
++func (s *AutoscalersV1) Get(ctx context.Context, req *pb.GetAutoscalerRequest) (*pb.Autoscaler, error) {
++	name, err := s.newZonalAutoscalerName(req.GetProject(), req.GetZone(), req.GetAutoscaler())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++	obj := &pb.Autoscaler{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++func (s *AutoscalersV1) List(ctx context.Context, req *pb.ListAutoscalersRequest) (*pb.AutoscalerList, error) {
++	name, err := s.newZonalAutoscalerName(req.GetProject(), req.GetZone(), "")
++	if err != nil {
++		return nil, err
++	}
++	out := &pb.AutoscalerList{}
++	kind := (&pb.Autoscaler{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: name.String()}, func(obj proto.Message) error {
++		out.Items = append(out.Items, obj.(*pb.Autoscaler))
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (s *AutoscalersV1) Insert(ctx context.Context, req *pb.InsertAutoscalerRequest) (*pb.Operation, error) {
++	name, err := s.newZonalAutoscalerName(req.GetProject(), req.GetZone(), req.GetAutoscalerResource().GetName())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++
++	obj := proto.CloneOf(req.GetAutoscalerResource())
++	target, err := s.target(ctx, name, obj.GetTarget())
++	if err != nil {
++		return nil, err
++	}
++	obj.Target = PtrTo(target)
++	id := s.generateID()
++	obj.Id = &id
++	obj.Kind = PtrTo("compute#autoscaler")
++	obj.SelfLink = PtrTo(BuildComputeSelfLink(ctx, fqn))
++	obj.CreationTimestamp = PtrTo(s.nowString())
++	obj.Zone = PtrTo(BuildComputeSelfLink(ctx, fmt.Sprintf("projects/%s/zones/%s", name.Project.ID, name.Zone)))
++	obj.Status = PtrTo("ACTIVE")
++	autoscalerDefaults(obj)
++
++	if err := s.storage.Create(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo("compute.autoscalers.insert"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startZonalLRO(ctx, name.Project.ID, name.Zone, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++// write replaces the stored autoscaler's fields with those of the request
++// (update) or merges them in (patch), keeping what the API owns.
++func (s *AutoscalersV1) write(ctx context.Context, project, zone, autoscaler string, in *pb.Autoscaler, merge bool, opType string) (*pb.Operation, error) {
++	if autoscaler == "" {
++		autoscaler = in.GetName()
++	}
++	name, err := s.newZonalAutoscalerName(project, zone, autoscaler)
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++	existing := &pb.Autoscaler{}
++	if err := s.storage.Get(ctx, fqn, existing); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	var obj *pb.Autoscaler
++	if merge {
++		obj = proto.CloneOf(existing)
++		if in.Description != nil {
++			obj.Description = in.Description
++		}
++		if in.AutoscalingPolicy != nil {
++			obj.AutoscalingPolicy = proto.CloneOf(in.AutoscalingPolicy)
++		}
++		if in.Target != nil {
++			obj.Target = in.Target
++		}
++	} else {
++		obj = proto.CloneOf(in)
++	}
++	target, err := s.target(ctx, name, obj.GetTarget())
++	if err != nil {
++		return nil, err
++	}
++	obj.Target = PtrTo(target)
++	obj.Name = existing.Name
++	obj.Id = existing.Id
++	obj.Kind = existing.Kind
++	obj.SelfLink = existing.SelfLink
++	obj.CreationTimestamp = existing.CreationTimestamp
++	obj.Zone = existing.Zone
++	obj.Status = existing.Status
++	autoscalerDefaults(obj)
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startZonalLRO(ctx, name.Project.ID, name.Zone, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++func (s *AutoscalersV1) Patch(ctx context.Context, req *pb.PatchAutoscalerRequest) (*pb.Operation, error) {
++	return s.write(ctx, req.GetProject(), req.GetZone(), req.GetAutoscaler(), req.GetAutoscalerResource(), true, "compute.autoscalers.patch")
++}
++
++func (s *AutoscalersV1) Update(ctx context.Context, req *pb.UpdateAutoscalerRequest) (*pb.Operation, error) {
++	return s.write(ctx, req.GetProject(), req.GetZone(), req.GetAutoscaler(), req.GetAutoscalerResource(), false, "compute.autoscalers.update")
++}
++
++func (s *AutoscalersV1) Delete(ctx context.Context, req *pb.DeleteAutoscalerRequest) (*pb.Operation, error) {
++	name, err := s.newZonalAutoscalerName(req.GetProject(), req.GetZone(), req.GetAutoscaler())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++	deleted := &pb.Autoscaler{}
++	if err := s.storage.Delete(ctx, fqn, deleted); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      deleted.Id,
++		TargetLink:    deleted.SelfLink,
++		OperationType: PtrTo("compute.autoscalers.delete"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startZonalLRO(ctx, name.Project.ID, name.Zone, op, func() (proto.Message, error) {
++		return deleted, nil
++	})
++}
+diff --git a/mockgcp/mockcompute/service.go b/mockgcp/mockcompute/service.go
+--- a/mockgcp/mockcompute/service.go
++++ b/mockgcp/mockcompute/service.go
+@@ -149,6 +149,7 @@
+ 	pb.RegisterInstanceTemplatesServer(grpcServer, &InstanceTemplatesV1{MockService: s})
+ 
+ 	pb.RegisterInstanceGroupManagersServer(grpcServer, &instanceGroupManagers{MockService: s})
++	pb.RegisterAutoscalersServer(grpcServer, &AutoscalersV1{MockService: s})
+ 	pb.RegisterRegionInstanceGroupManagersServer(grpcServer, &regionInstanceGroupManagers{MockService: s})
+ 	pb.RegisterInstanceGroupsServer(grpcServer, &InstanceGroups{MockService: s})
+ 
+@@ -282,6 +283,9 @@
+ 		return nil, err
+ 	}
+ 	if err := pb.RegisterNodeTemplatesHandler(ctx, mux.ServeMux, conn); err != nil {
++		return nil, err
++	}
++	if err := pb.RegisterAutoscalersHandler(ctx, mux.ServeMux, conn); err != nil {
+ 		return nil, err
+ 	}
+ 

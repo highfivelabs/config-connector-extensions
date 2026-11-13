@@ -107,6 +107,7 @@ var Kinds = []kind{
 	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
 	{gvk: computev1alpha1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
+	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
 	{gvk: computev1beta1.ComputeDiskResourcePolicyAttachmentGVK, crdName: "computediskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeDiskResourcePolicyAttachmentModel},
 	{gvk: computev1beta1.ComputeRegionPerInstanceConfigGVK, crdName: "computeregionperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputeRegionPerInstanceConfigModel},
 	{gvk: computev1alpha1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
