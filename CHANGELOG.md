@@ -23,6 +23,13 @@ has been released yet; each release moves its entries out of
   (`google_apigee_dns_zone`). Config Connector has no kind for it, so it
   starts at `v1alpha1`. The API cannot change a zone: every field is
   immutable. Live pending an Apigee organization.
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionAutoscaler`**, a stable
+  kind for Config Connector's alpha regional autoscaler, which has types
+  but no controller upstream (decision 26), with upstream's fields.
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionDiskResourcePolicyAttachment`**,
+  a resource policy (a snapshot schedule) attached to a regional disk, with
+  the fields of Config Connector's Terraform-based alpha kind (decision
+  26); the controller is our zonal attachment's, for `regionDisks`.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputePerInstanceConfig`**, a stable
   per-instance config of a zonal managed instance group (decision 26), with
   the fields of Config Connector's Terraform-based alpha kind; adapted from

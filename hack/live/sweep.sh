@@ -345,9 +345,11 @@ while read -r name region zone; do
   [[ -n "${name}" ]] || continue
   act "network endpoint group" "${name} ${region:-${zone:-global}}" "${G[@]}" compute network-endpoint-groups delete "${name}" "$(scope "${region}" "${zone}")"
 done <<<"${rows}"
-# Autoscalers (the ComputeAutoscaler test's), by name, before the managed
-# instance groups they scale; gcloud has no autoscaler commands, so through
-# the API's aggregated list (selfLinks are full URLs).
+# Autoscalers (the ComputeAutoscaler and ComputeRegionAutoscaler tests'),
+# by name, before the managed instance groups they scale; gcloud has no
+# autoscaler commands, so through the API's aggregated list, which holds
+# zonal and regional autoscalers under zones/* and regions/* keys (selfLinks
+# are full URLs, so one delete serves both).
 cbase="https://compute.googleapis.com/compute/v1/"
 rows="$(disco_api GET "${cbase}projects/${project}/aggregated/autoscalers?maxResults=500" \
   | jq -r '.items[]?.autoscalers[]? | "\(.name) \(.creationTimestamp) \(.selfLink)"')"
@@ -605,13 +607,15 @@ while read -r name made; do
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
 
-# Disks (the resource policy attachment test makes them), by name, before
-# the resource policies they hold; then the resource policies.
+# Disks, zonal and regional (the resource policy attachment tests make
+# them), by name, before the resource policies they hold; then the
+# resource policies. (Commas, not tabs: a regional disk has no zone, and
+# read would shift an empty field.)
 rows="$("${G[@]}" compute disks list --verbosity=error \
-  --filter="$(cfilter)" --format='value(name,zone.basename())')"
-while read -r name zone; do
+  --filter="$(cfilter)" --format='csv[no-heading](name,region.basename(),zone.basename())')"
+while IFS=, read -r name region zone; do
   [[ -n "${name}" ]] || continue
-  act "disk" "${name} ${zone}" "${G[@]}" compute disks delete "${name}" --zone="${zone}"
+  act "disk" "${name} ${region}${zone}" "${G[@]}" compute disks delete "${name}" "$(scope "${region}" "${zone}")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute resource-policies list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"

@@ -182,7 +182,9 @@ patches:
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0039-mockgcp-compute-autoscalers.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0040-mockgcp-compute-create-instances-redistribution.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0041-mockgcp-compute-region-autoscalers.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0042-mockgcp-compute-zonal-per-instance-configs.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0043-mockgcp-compute-region-disk-operations.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -423,11 +425,25 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_identity.go, apis/compute/v1alpha1/computeautoscaler_identity_test.go]}
   - here: [pkg/controller/direct/compute/autoscaler_controller.go, pkg/controller/direct/compute/autoscaler_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeautoscaler_controller.go, pkg/controller/direct/compute/computeautoscaler_mapper.go]}
+  - here: [apis/compute/v1beta1/computeregionautoscaler_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_types.go]}
+  - here: [apis/compute/v1beta1/computeregionautoscaler_identity.go, apis/compute/v1beta1/computeregionautoscaler_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_identity.go, apis/compute/v1alpha1/computeautoscaler_identity_test.go]}
+  - here: [pkg/controller/direct/compute/regionautoscaler_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeregionautoscaler_mapper.go]}
+  - here: [pkg/controller/direct/compute/regionautoscaler_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeautoscaler_controller.go]}
   - here: [apis/compute/v1beta1/computediskresourcepolicyattachment_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_types.go]}
   - here: [apis/compute/v1beta1/computediskresourcepolicyattachment_identity.go, apis/compute/v1beta1/computediskresourcepolicyattachment_identity_test.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_identity.go, apis/compute/v1alpha1/computediskresourcepolicyattachment_identity_test.go]}
   - here: [pkg/controller/direct/compute/diskresourcepolicyattachment_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computediskresourcepolicyattachment_controller.go]}
+  - here: [apis/compute/v1beta1/computeregiondiskresourcepolicyattachment_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_types.go, pkg/clients/generated/apis/compute/v1alpha1/computeregiondiskresourcepolicyattachment_types.go]}
+  - here: [apis/compute/v1beta1/computeregiondiskresourcepolicyattachment_identity.go, apis/compute/v1beta1/computeregiondiskresourcepolicyattachment_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_identity.go, apis/compute/v1alpha1/computediskresourcepolicyattachment_identity_test.go]}
+  - here: [pkg/controller/direct/compute/regiondiskresourcepolicyattachment_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computediskresourcepolicyattachment_controller.go]}
   - here: [apis/compute/v1beta1/computeregionperinstanceconfig_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeregionperinstanceconfig_types.go]}
