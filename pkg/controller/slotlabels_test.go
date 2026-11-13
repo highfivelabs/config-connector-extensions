@@ -54,6 +54,7 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"CertificateManagerCertificateIssuanceConfig":    slotguard.Spec,
 	"BackupDRManagementServer":                       slotguard.Spec,
 	"NetworkSecurityDNSThreatDetector":               slotguard.Spec,
+	"NetworkSecurityAuthzPolicy":                     slotguard.Spec,
 	"GKEBackupBackupPlan":                            slotguard.Spec,
 	"GKEBackupRestorePlan":                           slotguard.Spec,
 	"GKEBackupBackupChannel":                         slotguard.Spec,
