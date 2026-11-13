@@ -17,6 +17,13 @@ has been released yet; each release moves its entries out of
   at its own host) and `query` (`setDefault`, a query parameter). Unlike
   Terraform's `set_default`, `setDefault` has no default. Live pending a KMS
   key the Discovery Engine service agent may use.
+- **`servicemanagement.gcp.hfl.dev/v1alpha1` `EndpointsService`**, a Cloud
+  Endpoints service (`google_endpoints_service`): the managed service, its
+  OpenAPI or gRPC configuration, and the rollout of that configuration to
+  all traffic; a changed configuration is submitted and rolled out again.
+  Config Connector has no kind for it, so it starts at `v1alpha1`.
+  `IAMBinding` and `IAMMember` name it by `name`. The operator's role gains
+  `servicemanagement.gcp.hfl.dev`.
 - **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
   `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
   `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure

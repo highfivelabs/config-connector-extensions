@@ -37,8 +37,9 @@
 # project, or its sweepLocation's), by name, through the API, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
 # name, where the account may list them, and BigQuery datasets, by name,
-# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true). A failed list
-# or delete fails the sweep.
+# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), and Cloud
+# Endpoints services, by name, where the project has Service Management.
+# A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -675,6 +676,29 @@ for key in ${keys}; do
   fi
   act "project metadata key" "${key}" "${G[@]}" compute project-info remove-metadata --keys="${key}"
 done
+
+# Cloud Endpoints services (EndpointsService), by the run's name: services
+# are named <run ID>-<base>.endpoints.<project>.cloud.goog, through the
+# API (gcloud lists by consumer too). A deleted service is not listed (the
+# API keeps its name for 30 days). A 403 (Service Management off in the
+# project, or not the account's) means no test made one.
+sm_api() { # sm_api METHOD PATH
+  curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    "https://servicemanagement.googleapis.com/v1/$2"
+}
+if out="$(sm_api GET "services?producerProjectId=${project}&pageSize=500")"; then
+  names="$(jq -r '.services[]?.serviceName' <<<"${out}")"
+  for name in ${names}; do
+    [[ "${name}" == *".endpoints.${project}.cloud.goog" ]] || continue
+    by_run "${name%%.*}" || continue
+    act "endpoints service" "${name}" "${G[@]}" endpoints services delete "${name}" --async
+  done
+elif jq -e '.error.code == 403' >/dev/null 2>&1 <<<"${out}"; then
+  echo "  no Service Management for the account in ${project}: no endpoints services to sweep"
+else
+  echo "  FAILED to list endpoints services: ${out}" >&2
+  failed=$((failed + 1))
+fi
 
 if [[ "${mode}" == "list" ]]; then
   echo "sweep: ${found} live-test resource(s) in ${project}"
