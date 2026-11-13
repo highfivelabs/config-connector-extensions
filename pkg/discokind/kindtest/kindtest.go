@@ -91,7 +91,7 @@ func Run(t *testing.T, kindName string) {
 	if s := setups[kindName]; s != nil {
 		s(t, env)
 	}
-	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL}
+	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL, LocationHost: k.LocationHost}
 	if !mockenv.Live() {
 		api.PollInterval = 200 * time.Millisecond
 	}

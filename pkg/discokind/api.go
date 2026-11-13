@@ -37,6 +37,9 @@ type API struct {
 	// PollInterval is how long Wait sleeps between reads of an operation
 	// (default 2s).
 	PollInterval time.Duration
+	// LocationHost sends a name in a location other than global to that
+	// location's host (Kind.LocationHost, LocationBaseURL).
+	LocationHost bool
 }
 
 // Get reads a resource.
@@ -46,7 +49,11 @@ func (a *API) Get(ctx context.Context, name string) (map[string]any, error) {
 
 // Do sends one request and decodes the answer.
 func (a *API) Do(ctx context.Context, method, path string, query map[string]string, body map[string]any) (map[string]any, error) {
-	u := a.BaseURL + path
+	base := a.BaseURL
+	if a.LocationHost {
+		base = LocationBaseURL(base, path)
+	}
+	u := base + path
 	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		u = path
 	}

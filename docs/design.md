@@ -242,6 +242,21 @@ the catalog's `apigee` module: the API cannot patch a zone, so every field
 is immutable; its `organization` is the Apigee organization (a project's
 ID), and it skips live until the live-test project has an Apigee
 organization.
+Then (2026-11-13) a collection with no create: `DiscoveryEngineCmekConfig`
+(`v1alpha1`, no Config Connector kind; Terraform's name, decision 18;
+the catalog's `ai-applications` module). Discovery Engine makes a CMEK
+config with `cmekConfigs.patch`, which takes no update mask, so
+`hack/discokind` reads a collection with patch and no create as
+`PatchCreates` (create and update both patch the spec's body, with no
+mask when the method takes none). Three `kinds.yaml` fields came with it:
+`locationHost` (Discovery Engine serves `us` and `eu` only at
+`https://<location>-discoveryengine.googleapis.com/`, which the Discovery
+document does not say; the fake refuses a location at another host, as the
+API does), `query` (patch's `setDefault` is a spec field sent as a query
+parameter with every write; the API never returns it, so it is never a
+difference) and, in the sweeper's list, the location's host. It skips
+live: it needs the API on and a KMS key the project's Discovery Engine
+service agent may use, an IAM grant the live tests may not make.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N

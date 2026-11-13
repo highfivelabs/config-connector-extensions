@@ -90,6 +90,13 @@ type Config struct {
 	// collection in, for a collection that has no global location
 	// (default global); the kind's live fixtures use it.
 	SweepLocation string `json:"sweepLocation,omitempty"`
+	// LocationHost: the API serves a location other than global only at
+	// https://<location>-<host>/ (Discovery Engine's us and eu), which
+	// the Discovery document does not say.
+	LocationHost bool `json:"locationHost,omitempty"`
+	// Query are the patch method's query parameters that are spec fields
+	// (a CMEK config's setDefault), sent with every write.
+	Query []string `json:"query,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -115,8 +122,9 @@ type Method struct {
 }
 
 type Param struct {
-	Location string `json:"location"`
-	Type     string `json:"type"`
+	Location    string `json:"location"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
 }
 
 type Schema struct {
@@ -286,6 +294,12 @@ type built struct {
 	updatable   bool
 	insertStyle bool
 	updatePUT   bool
+	// patchCreates: no create method; patch makes the resource
+	// (discokind.Kind.PatchCreates), without an update mask when the
+	// method takes none (patchNoMask).
+	patchCreates bool
+	patchNoMask  bool
+	query        map[string]*Param // c.Query's parameters
 	schema      *Schema
 	output      []string
 	sweep       string // the collection under a project, for the sweeper
@@ -339,17 +353,38 @@ func build(c *Config, d *Discovery) (*built, error) {
 		create = r.Methods["insert"]
 		k.insertStyle = true
 	}
-	if create == nil || get == nil || del == nil {
-		return nil, fmt.Errorf("%s lacks create (or insert), get or delete", c.Resource)
-	}
 	patch := r.Methods["patch"]
+	if create == nil && patch != nil {
+		// No create: patch makes the resource (Discovery Engine's CMEK
+		// configs), and takes the ID in the name.
+		create = patch
+		k.patchCreates = true
+		k.patchNoMask = patch.Parameters["updateMask"] == nil
+	}
+	if create == nil || get == nil || del == nil {
+		return nil, fmt.Errorf("%s lacks create (or insert, or a patch that makes it), get or delete", c.Resource)
+	}
+	k.query = map[string]*Param{}
+	for _, q := range c.Query {
+		p := (*Param)(nil)
+		if patch != nil {
+			p = patch.Parameters[q]
+		}
+		if p == nil || p.Location != "query" || (p.Type != "boolean" && p.Type != "string") {
+			return nil, fmt.Errorf("query %s: not a boolean or string query parameter of %s.patch", q, c.Resource)
+		}
+		if create != patch && create.Parameters[q] == nil {
+			return nil, fmt.Errorf("query %s: %s.create does not take it", q, c.Resource)
+		}
+		k.query[q] = p
+	}
 	if patch == nil && k.insertStyle && r.Methods["update"] != nil {
 		patch = r.Methods["update"]
 		k.updatePUT = true
 	}
 	k.updatable = patch != nil
 	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(create), isLRO(patch), isLRO(del)
-	if !k.insertStyle {
+	if !k.insertStyle && !k.patchCreates {
 		// The ID parameter: a query parameter named ...Id, but not
 		// requestId (an idempotency key some APIs take beside the ID).
 		// Sorted, so a run does not depend on map order.

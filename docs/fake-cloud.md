@@ -378,3 +378,12 @@ Cloud Build v2 connections, API Gateway configs and gateways and the
 Dataplex kinds never became Ready on the fake cloud
 (`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
 
+
+A collection with no create (`PatchCreates`, Discovery Engine's CMEK
+configs): a patch of a missing name makes the resource, as the API's
+does. A `locationHost` kind's location other than `global` is served only
+at `https://<location>-<host>/`; at another host the fake answers 400, as
+the API does. What it cannot show for `DiscoveryEngineCmekConfig`: that
+the KMS key exists, is in the config's location and is usable by the
+Discovery Engine service agent; `setDefault` (it never sets `isDefault`);
+and the API's refusal to delete a config a data store uses.

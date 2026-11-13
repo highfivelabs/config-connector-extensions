@@ -60,7 +60,9 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 	if err != nil {
 		return nil, err
 	}
-	return &adapter{kind: m.kind, api: &API{HTTP: httpClient, BaseURL: m.kind.BaseURL}, name: name, desired: body}, nil
+	api := &API{HTTP: httpClient, BaseURL: m.kind.BaseURL, LocationHost: m.kind.LocationHost}
+	spec, _, _ := unstructured.NestedMap(u.Object, "spec")
+	return &adapter{kind: m.kind, api: api, name: name, desired: body, query: m.kind.QueryOf(spec)}, nil
 }
 
 // AdapterForURL is not supported: these kinds are not exported.
@@ -101,10 +103,14 @@ func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructure
 }
 
 // Body is the request body a spec asks for: the spec without the parent
-// reference, the fields that make up the name and resourceID.
+// reference, the fields that make up the name, the query parameters
+// (Query) and resourceID.
 func (k *Kind) Body(spec map[string]any) map[string]any {
 	body := runtime.DeepCopyJSON(spec)
 	delete(body, "resourceID")
+	for _, f := range k.Query {
+		delete(body, f)
+	}
 	for _, p := range k.Parents {
 		delete(body, RefField(p))
 	}
@@ -187,7 +193,10 @@ type adapter struct {
 	api     *API
 	name    string
 	desired map[string]any
-	actual  map[string]any
+	// query is the spec's query parameters (Kind.Query), sent with every
+	// write.
+	query  map[string]string
+	actual map[string]any
 }
 
 var _ directbase.Adapter = &adapter{}
@@ -218,6 +227,17 @@ func (k *Kind) softDeleted(obj map[string]any) bool {
 func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) error {
 	log := klog.FromContext(ctx)
 	log.V(2).Info("creating", "kind", a.kind.GVK.Kind, "name", a.name)
+	if a.kind.PatchCreates {
+		// No create method: patch makes the resource.
+		if err := a.patch(ctx, a.desired); err != nil {
+			return fmt.Errorf("creating %s %s: %w", a.kind.GVK.Kind, a.name, err)
+		}
+		got, err := a.api.Get(ctx, a.name)
+		if err != nil {
+			return fmt.Errorf("reading %s %s after create: %w", a.kind.GVK.Kind, a.name, err)
+		}
+		return op.UpdateStatus(ctx, a.status(got), nil)
+	}
 	coll := CollectionOf(a.name)
 	id := a.name[len(coll)+1:]
 	query := map[string]string{}
@@ -254,6 +274,16 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 			return fmt.Errorf("%s %s: %s differ from the cloud, and the API cannot change them in place; delete and recreate the object", a.kind.GVK.Kind, a.name, strings.Join(mask, ", "))
 		}
 		klog.FromContext(ctx).V(2).Info("updating", "kind", a.kind.GVK.Kind, "name", a.name, "mask", mask)
+		if a.kind.PatchCreates || a.kind.PatchNoMask {
+			if err := a.patch(ctx, a.desired); err != nil {
+				return fmt.Errorf("updating %s %s: %w", a.kind.GVK.Kind, a.name, err)
+			}
+			got, err := a.api.Get(ctx, a.name)
+			if err != nil {
+				return fmt.Errorf("reading %s %s after update: %w", a.kind.GVK.Kind, a.name, err)
+			}
+			return op.UpdateStatus(ctx, a.status(got), nil)
+		}
 		body := map[string]any{}
 		for _, f := range mask {
 			if v, ok := a.desired[f]; ok {
@@ -278,6 +308,12 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 		if a.kind.UpdatePUT {
 			method = http.MethodPut
 		}
+		if len(a.query) > 0 && query == nil {
+			query = map[string]string{}
+		}
+		for k, v := range a.query {
+			query[k] = v
+		}
 		resp, err := a.api.Do(ctx, method, a.name, query, body)
 		if err != nil {
 			return fmt.Errorf("updating %s %s: %w", a.kind.GVK.Kind, a.name, err)
@@ -292,6 +328,37 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 		}
 	}
 	return op.UpdateStatus(ctx, a.status(got), nil)
+}
+
+// patch sends body to the resource's name, with the spec's query
+// parameters and an update mask of the fields it sets, or, when the API's
+// patch takes none (PatchNoMask), as it is. It waits for the operation
+// when patch answers one.
+func (a *adapter) patch(ctx context.Context, body map[string]any) error {
+	query := map[string]string{}
+	for k, v := range a.query {
+		query[k] = v
+	}
+	if !a.kind.PatchNoMask {
+		fields := make([]string, 0, len(body))
+		for f := range body {
+			fields = append(fields, f)
+		}
+		sort.Strings(fields)
+		if len(fields) > 0 {
+			query["updateMask"] = strings.Join(fields, ",")
+		}
+	}
+	resp, err := a.api.Do(ctx, http.MethodPatch, a.name, query, body)
+	if err != nil {
+		return err
+	}
+	if a.kind.UpdateLRO {
+		if _, err := a.api.Wait(ctx, resp); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Diff is the top-level fields whose desired value the actual object does

@@ -8,6 +8,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`discoveryengine.gcp.hfl.dev/v1alpha1` `DiscoveryEngineCmekConfig`**,
+  generated from Discovery: the Cloud KMS key Vertex AI Search encrypts a
+  location's data with (`google_discovery_engine_cmek_config`). Config
+  Connector has no kind for it, so it starts at `v1alpha1`. The API has no
+  create; `hack/discokind` now generates such a collection, patching to
+  make it (`PatchCreates`), and learned `locationHost` (a location served
+  at its own host) and `query` (`setDefault`, a query parameter). Unlike
+  Terraform's `set_default`, `setDefault` has no default. Live pending a KMS
+  key the Discovery Engine service agent may use.
 - **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
   `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
   `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure

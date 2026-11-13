@@ -81,3 +81,35 @@ func TestDiff(t *testing.T) {
 		}
 	}
 }
+
+func TestLocationBaseURL(t *testing.T) {
+	base := "https://discoveryengine.googleapis.com/v1/"
+	for name, want := range map[string]string{
+		"projects/p/locations/us/cmekConfigs/c":     "https://us-discoveryengine.googleapis.com/v1/",
+		"projects/p/locations/eu/cmekConfigs/c":     "https://eu-discoveryengine.googleapis.com/v1/",
+		"projects/p/locations/global/cmekConfigs/c": base,
+		"operations/x": base,
+	} {
+		if got := LocationBaseURL(base, name); got != want {
+			t.Errorf("LocationBaseURL(%q) = %q, want %q", name, got, want)
+		}
+	}
+	// The fake cloud's own URLs are left alone.
+	if got := LocationBaseURL("http://127.0.0.1:1/v1/", "projects/p/locations/us/x/y"); got != "http://127.0.0.1:1/v1/" {
+		t.Errorf("LocationBaseURL of a non-https base = %q", got)
+	}
+}
+
+func TestQuery(t *testing.T) {
+	k := &Kind{Name: "{parent}/locations/{location}/cmekConfigs/{id}", Parents: []string{"project"}, Query: []string{"setDefault"}}
+	spec := map[string]any{"projectRef": map[string]any{"external": "p"}, "location": "us", "kmsKey": "k", "setDefault": true}
+	if body := k.Body(spec); !reflect.DeepEqual(body, map[string]any{"kmsKey": "k"}) {
+		t.Errorf("Body = %v: a query field is not a body field", body)
+	}
+	if q := k.QueryOf(spec); !reflect.DeepEqual(q, map[string]string{"setDefault": "true"}) {
+		t.Errorf("QueryOf = %v", q)
+	}
+	if q := k.QueryOf(map[string]any{"kmsKey": "k"}); len(q) != 0 {
+		t.Errorf("QueryOf an unset field = %v", q)
+	}
+}

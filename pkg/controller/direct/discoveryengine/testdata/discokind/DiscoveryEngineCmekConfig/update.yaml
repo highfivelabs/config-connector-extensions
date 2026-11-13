@@ -1,0 +1,10 @@
+apiVersion: discoveryengine.gcp.hfl.dev/v1alpha1
+kind: DiscoveryEngineCmekConfig
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us
+  kmsKey: projects/${PROJECT}/locations/us/keyRings/cce-discoveryengine/cryptoKeys/cce-cmek-2
+  setDefault: false

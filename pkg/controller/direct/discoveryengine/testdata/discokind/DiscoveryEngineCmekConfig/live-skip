@@ -1,0 +1,1 @@
+a CMEK config needs discoveryengine.googleapis.com on and a Cloud KMS key in the us multi-region that the project's Discovery Engine service agent (service-<number>@gcp-sa-discoveryengine.iam.gserviceaccount.com) holds roles/cloudkms.cryptoKeyEncrypterDecrypter on; the live tests may not enable APIs or grant IAM; live: pending that key, its grant and the API in the test project

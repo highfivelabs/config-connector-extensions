@@ -78,10 +78,13 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 		return c.Next.RoundTrip(req)
 	}
 	for _, k := range c.Kinds {
-		if !strings.HasPrefix(full, k.BaseURL) {
+		path, ok, wrongHost := kindPath(k, full)
+		if !ok {
 			continue
 		}
-		path := strings.TrimPrefix(full, k.BaseURL)
+		if wrongHost {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("Incorrect API endpoint used: %s is served at its location's host", path))
+		}
 		if strings.HasPrefix(path, opPrefix) && req.Method == http.MethodGet {
 			return c.getOp(req, k.BaseURL+path)
 		}
@@ -123,6 +126,38 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 		}
 		return errorResponse(req, http.StatusConflict, "ALREADY_EXISTS", fmt.Sprintf("%s already exists", name))
 	}
+	body = newObject(k, name, id, body)
+	c.objects[key] = body
+	if k.CreateLRO {
+		return c.doneOp(req, k, name, body)
+	}
+	return jsonResponse(req, http.StatusOK, body)
+}
+
+// kindPath is full's path under k's BaseURL, and whether full is k's. A
+// LocationHost kind's location other than global is served only at
+// https://<location>-<host>/ (discokind.LocationBaseURL): at another host
+// the real API refuses it, and so does the fake (wrongHost).
+func kindPath(k *discokind.Kind, full string) (path string, ok, wrongHost bool) {
+	if strings.HasPrefix(full, k.BaseURL) {
+		path = strings.TrimPrefix(full, k.BaseURL)
+		return path, true, k.LocationHost && discokind.LocationBaseURL(k.BaseURL, path) != k.BaseURL
+	}
+	if !k.LocationHost || !strings.HasPrefix(k.BaseURL, "https://") {
+		return "", false, false
+	}
+	rest := strings.TrimPrefix(full, "https://")
+	loc, hostRest, found := strings.Cut(rest, "-")
+	if !found || !strings.HasPrefix("https://"+hostRest, k.BaseURL) {
+		return "", false, false
+	}
+	path = strings.TrimPrefix("https://"+hostRest, k.BaseURL)
+	return path, true, discokind.LocationOf(path) != loc
+}
+
+// newObject is the stored resource a create (or, for a PatchCreates kind,
+// a patch of a missing name) makes from its body.
+func newObject(k *discokind.Kind, name, id string, body map[string]any) map[string]any {
 	for _, f := range k.Output {
 		delete(body, f)
 	}
@@ -151,11 +186,7 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 			body[f] = etag(body)
 		}
 	}
-	c.objects[key] = body
-	if k.CreateLRO {
-		return c.doneOp(req, k, name, body)
-	}
-	return jsonResponse(req, http.StatusOK, body)
+	return body
 }
 
 func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (*http.Response, error) {
@@ -163,6 +194,19 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	obj, ok := c.objects[key]
+	if !ok && k.PatchCreates && req.Method == http.MethodPatch {
+		// No create method: patch makes the resource.
+		body, err := readBody(req)
+		if err != nil {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
+		}
+		obj = newObject(k, name, name[strings.LastIndex(name, "/")+1:], body)
+		c.objects[key] = obj
+		if k.UpdateLRO {
+			return c.doneOp(req, k, name, obj)
+		}
+		return jsonResponse(req, http.StatusOK, obj)
+	}
 	if !ok {
 		return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s was not found", name))
 	}

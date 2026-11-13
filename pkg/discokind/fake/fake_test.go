@@ -208,3 +208,74 @@ func TestCustomMethodsReachNext(t *testing.T) {
 		t.Errorf("get %s: %v, %v", name, got, err)
 	}
 }
+
+// A collection with no create (Discovery Engine's CMEK configs): patch to
+// a missing name makes the resource, and a location other than global is
+// served only at its own host, as the real API does.
+func TestPatchCreatesAtLocationHost(t *testing.T) {
+	ctx := context.Background()
+	k := &discokind.Kind{
+		BaseURL: "https://example.googleapis.com/v1/", Name: "{parent}/locations/{location}/widgets/{id}",
+		Parents: []string{"project"}, Updatable: true, PatchCreates: true, PatchNoMask: true, LocationHost: true,
+		UpdateLRO: true, DeleteLRO: true,
+		Output:       []string{"state"},
+		FakeDefaults: map[string]any{"state": "ACTIVE"},
+	}
+	cloud := &http.Client{Transport: New(unreachable{}, []*discokind.Kind{k})}
+	api := &discokind.API{HTTP: cloud, BaseURL: k.BaseURL, LocationHost: true, PollInterval: time.Millisecond}
+	name := "projects/p/locations/us/widgets/w1"
+	if _, err := api.Get(ctx, name); !direct.IsNotFound(err) {
+		t.Fatalf("before the patch: %v, want 404", err)
+	}
+	op, err := api.Do(ctx, http.MethodPatch, name, map[string]string{"setDefault": "true"}, map[string]any{"color": "red", "size": 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.Wait(ctx, op); err != nil {
+		t.Fatal(err)
+	}
+	got, err := api.Get(ctx, name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got["name"] != name || got["color"] != "red" || got["state"] != "ACTIVE" {
+		t.Errorf("made by patch: %v", got)
+	}
+	// A second patch changes what its body sets.
+	op, err = api.Do(ctx, http.MethodPatch, name, nil, map[string]any{"color": "blue"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.Wait(ctx, op); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ = api.Get(ctx, name); got["color"] != "blue" || got["state"] != "ACTIVE" {
+		t.Errorf("after the second patch: %v", got)
+	}
+	// The global host does not serve location us.
+	global := &discokind.API{HTTP: cloud, BaseURL: k.BaseURL}
+	if _, err := global.Get(ctx, name); !direct.HasHTTPCode(err, 400) {
+		t.Errorf("location us at the global host: %v, want 400", err)
+	}
+	// Nor another location's host.
+	if _, err := global.Get(ctx, "https://eu-example.googleapis.com/v1/"+name); !direct.HasHTTPCode(err, 400) {
+		t.Errorf("location us at the eu host: %v, want 400", err)
+	}
+	op, err = api.Do(ctx, http.MethodDelete, name, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.Wait(ctx, op); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.Get(ctx, name); !direct.IsNotFound(err) {
+		t.Errorf("after delete: %v, want 404", err)
+	}
+	// A kind with a create method still answers 404 to a patch of a
+	// missing name.
+	std := &discokind.Kind{BaseURL: "https://other.googleapis.com/v1/", Name: "{parent}/widgets/{id}", Parents: []string{"project"}, IDParam: "widgetId", Updatable: true}
+	sapi := &discokind.API{HTTP: &http.Client{Transport: New(unreachable{}, []*discokind.Kind{std})}, BaseURL: std.BaseURL}
+	if _, err := sapi.Do(ctx, http.MethodPatch, "projects/p/widgets/w", nil, map[string]any{"color": "red"}); !direct.IsNotFound(err) {
+		t.Errorf("patching a missing widget of a kind with create: %v, want 404", err)
+	}
+}

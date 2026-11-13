@@ -556,3 +556,16 @@
   resource: organizations.dnsZones
   terraform: google_apigee_dns_zone
   note: "A private DNS zone an Apigee organization peers with a VPC network; organization is the Apigee organization's name (its project's ID), not a Google Cloud organization."
+
+- kind: DiscoveryEngineCmekConfig
+  group: discoveryengine.gcp.hfl.dev
+  version: v1alpha1
+  discovery: discoveryengine.v1
+  resource: projects.locations.cmekConfigs
+  parents: [project]
+  terraform: google_discovery_engine_cmek_config
+  locationHost: true
+  query: [setDefault]
+  sweepLocation: us
+  fakeDefaults: {state: ACTIVE}
+  note: "A Cloud KMS key that Vertex AI Search (Discovery Engine) encrypts a location's data with; location is us or eu, served at that location's host. The API has no create: patch makes the config. Terraform's set_default defaults to true; here setDefault is sent only when the spec sets it."

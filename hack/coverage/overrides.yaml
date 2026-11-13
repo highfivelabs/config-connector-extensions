@@ -162,6 +162,7 @@ no_resource:
   ProjectDefaultServiceAccounts: what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method)
   ComputeRegionNetworkEndpoint: an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints
   ComputeRouterRoutePolicy: a route policy of a Cloud Router, written with routers.patchRoutePolicy
+  DiscoveryEngineCmekConfig: a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method)
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
   SecretManagerSecretVersion: a secret version, written with secrets.addVersion
   ServiceIdentity: a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)
