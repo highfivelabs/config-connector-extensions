@@ -422,10 +422,14 @@ it for every resource (patch 0018).
 ## The Chronicle fake (`pkg/controller/direct/chronicle/fake`)
 
 mockgcp does not serve the Chronicle API (`<location>-chronicle.googleapis.com`,
-and `chronicle.googleapis.com`), which `ChronicleRuleDeployment` calls, so a
+and `chronicle.googleapis.com`), which `ChronicleRule` and `ChronicleRuleDeployment` call, so a
 small in-memory fake does, in front of mockgcp and behind the generated
 kinds' fake (in `pkg/test/mockenv` and both fake-cloud binaries). It serves
-an instance's rules (create, get, delete) and each rule's deployment (get;
+an instance's rules (create, which assigns an ID `ru_<uuid>`; get; patch of
+`text` and `scope` with an update mask, a new text making a new
+`revisionId`, `etag`, `displayName` (the word after `rule`) and a
+`compilationState` of `SUCCEEDED`; delete, which takes the deployment
+with it) and each rule's deployment (get;
 patch with an update mask of `enabled`, `alerting`, `archived` and
 `runFrequency`, with `scheduleCustomizations` going with `runFrequency`). A
 new rule's deployment is disabled, not alerting and not archived, as the
@@ -433,8 +437,9 @@ API's is. It refuses to archive an enabled deployment and to change an
 archived one's `enabled`, `alerting` or `runFrequency`; archiving turns
 alerting off and sets `archiveTime`; a change of alerting sets
 `lastAlertStatusChangeTime`. It does not show: SecOps instances (any
-instance ID is taken), the rule language (a rule's text is kept, not
-parsed), the API's coercion of legacy run frequencies (`LIVE` and `HOURLY`
+instance ID is taken), the rule language (a rule's text is kept, never
+compiled), data access scopes (any scope is taken), retrohunts and
+detections (so a rule's delete never needs `force`), the API's coercion of legacy run frequencies (`LIVE` and `HOURLY`
 are kept as sent), whether a run frequency suits the rule, chained rules
 (`producerRules` and `consumerRules` stay empty), detections and
 permissions. A new fake was chosen over a mockgcp patch because mockgcp has

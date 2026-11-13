@@ -16,16 +16,20 @@
 // Package fake is the fake cloud for the Chronicle API
 // (<location>-chronicle.googleapis.com and chronicle.googleapis.com),
 // which mockgcp does not serve: an in-memory store in front of mockgcp, as
-// pkg/discokind/fake is, serving what ChronicleRuleDeployment's controller
-// and test call: an instance's rules (create, get, delete) and a rule's
-// deployment (get, patch with an update mask), which comes with the rule.
+// pkg/discokind/fake is, serving what ChronicleRule's and
+// ChronicleRuleDeployment's controllers and tests call: an instance's rules
+// (create, get, patch of text and scope with an update mask, delete) and a
+// rule's deployment (get, patch with an update mask), which comes with the
+// rule and goes with it.
 //
 // What it cannot show (docs/fake-cloud.md): SecOps instances (any
 // instance ID is taken), the rule language (a rule's text is kept, never
-// parsed), the API's coercion of legacy run frequencies (LIVE and HOURLY
-// are kept as sent), whether a run frequency suits the rule, chained
-// rules (producerRules and consumerRules stay empty), detections and
-// permissions.
+// compiled: its display name is the word after "rule", and it always
+// compiles), data access scopes (any scope is taken), retrohunts and
+// detections (so a delete never needs force), the API's coercion of legacy
+// run frequencies (LIVE and HOURLY are kept as sent), whether a run
+// frequency suits the rule, chained rules (producerRules and consumerRules
+// stay empty), and permissions.
 package fake
 
 import (
@@ -34,6 +38,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -85,6 +90,8 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 			return notFound(req, path)
 		}
 		return jsonResponse(req, http.StatusOK, r)
+	case len(parts) == 8 && req.Method == http.MethodPatch:
+		return c.patchRule(req, path)
 	case len(parts) == 8 && req.Method == http.MethodDelete:
 		if _, ok := c.rules[path]; !ok {
 			return notFound(req, path)
@@ -114,7 +121,11 @@ func (c *Cloud) createRule(req *http.Request, parent string) (*http.Response, er
 	}
 	name := parent + "/ru_" + uuid.NewString()
 	now := time.Now().UTC().Format(time.RFC3339Nano)
-	rule := map[string]any{"name": name, "text": body["text"], "revisionId": "v_" + fmt.Sprint(time.Now().UnixNano()), "revisionCreateTime": now}
+	rule := map[string]any{"name": name, "createTime": now}
+	setRuleText(rule, body["text"].(string), now)
+	if scope, ok := body["scope"].(string); ok && scope != "" {
+		rule["scope"] = scope
+	}
 	c.rules[name] = rule
 	// A new rule's deployment: not running, not alerting, not archived.
 	c.deps[name] = map[string]any{
@@ -125,6 +136,69 @@ func (c *Cloud) createRule(req *http.Request, parent string) (*http.Response, er
 		"executionState": "DEFAULT",
 	}
 	return jsonResponse(req, http.StatusOK, rule)
+}
+
+// ruleNameRE is the word after "rule" in a rule's text, its display name.
+var ruleNameRE = regexp.MustCompile(`(?m)^\s*rule\s+([A-Za-z_][A-Za-z0-9_]*)`)
+
+// setRuleText sets a rule's text and what the API derives from it: a new
+// revision, the display name, the compilation state and the etag.
+func setRuleText(rule map[string]any, text, now string) {
+	rule["text"] = text
+	rule["revisionId"] = fmt.Sprintf("v_%d_%09d", time.Now().Unix(), time.Now().Nanosecond())
+	rule["revisionCreateTime"] = now
+	rule["compilationState"] = "SUCCEEDED"
+	rule["etag"] = uuid.NewString()
+	if m := ruleNameRE.FindStringSubmatch(text); m != nil {
+		rule["displayName"] = m[1]
+	}
+}
+
+// ruleFields are the rule's fields an update mask may name.
+var ruleFields = map[string]bool{"text": true, "scope": true}
+
+func (c *Cloud) patchRule(req *http.Request, name string) (*http.Response, error) {
+	cur, ok := c.rules[name]
+	if !ok {
+		return notFound(req, name)
+	}
+	body := map[string]any{}
+	if err := readJSON(req, &body); err != nil {
+		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
+	}
+	var mask []string
+	if m := req.URL.Query().Get("updateMask"); m != "" {
+		mask = strings.Split(m, ",")
+	} else {
+		for f, v := range body {
+			if ruleFields[f] && v != "" {
+				mask = append(mask, f)
+			}
+		}
+	}
+	next := map[string]any{}
+	for k, v := range cur {
+		next[k] = v
+	}
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	for _, f := range mask {
+		if !ruleFields[f] {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("invalid update mask field %q", f))
+		}
+		v, _ := body[f].(string)
+		switch {
+		case f == "text" && strings.TrimSpace(v) == "":
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", "a rule needs text")
+		case f == "text":
+			setRuleText(next, v, now)
+		case v == "":
+			delete(next, f)
+		default:
+			next[f] = v
+		}
+	}
+	c.rules[name] = next
+	return jsonResponse(req, http.StatusOK, next)
 }
 
 func (c *Cloud) patchDeployment(req *http.Request, rule string) (*http.Response, error) {
