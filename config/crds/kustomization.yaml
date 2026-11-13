@@ -77,6 +77,7 @@ resources:
 - iam.gcp.hfl.dev_iamdenypolicies.yaml
 - iam.gcp.hfl.dev_iammembers.yaml
 - iam.gcp.hfl.dev_iamoauthclients.yaml
+- iam.gcp.hfl.dev_iampolicybindings.yaml
 - iam.gcp.hfl.dev_iamprincipalaccessboundarypolicies.yaml
 - iam.gcp.hfl.dev_iamworkforcepoolproviderkeys.yaml
 - iam.gcp.hfl.dev_iamworkforcepoolproviderscimtenants.yaml

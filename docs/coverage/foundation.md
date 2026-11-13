@@ -521,6 +521,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMDenyPolicy | (not a create) an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted) | n/a | false |
 | IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMOauthClient | iam.googleapis.com/OauthClient | 8 | false |
+| IAMPolicyBinding | (not a create) an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted) | n/a | false |
 | IAMPrincipalAccessBoundaryPolicy | (not a create) no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com | n/a | false |
 | IAMWorkforcePoolProviderKey | iam.googleapis.com/WorkforcePoolProviderKey | 3 | false |
 | IAMWorkforcePoolProviderScimTenant | iam.googleapis.com/WorkforcePoolProviderScimTenant | 4 | false |
@@ -562,9 +563,9 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only

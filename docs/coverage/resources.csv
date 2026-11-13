@@ -791,6 +791,7 @@ hypercomputecluster.googleapis.com,hypercomputecluster.googleapis.com/Cluster,61
 iam.googleapis.com,iam.googleapis.com/IAMBinding,0,,0,IAMBinding,0,0,false,"outside-denominator; one role binding in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/IAMDenyPolicy,0,,0,IAMDenyPolicy,0,0,false,"outside-denominator; an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
+iam.googleapis.com,iam.googleapis.com/IAMPolicyBinding,0,,0,IAMPolicyBinding,0,0,true,"outside-denominator; an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMPrincipalAccessBoundaryPolicy,0,,0,IAMPrincipalAccessBoundaryPolicy,0,0,false,outside-denominator; no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,IAMOauthClient,8,0,false,api=v1:projects.locations.oauthClients; ours-spec-fields-unmatched=3/10
 iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
