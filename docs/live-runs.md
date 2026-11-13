@@ -162,7 +162,10 @@ runs before then.
    `mockenv.Project`, and deletes everything it makes, abandoned
    resources included.
 2. The sweeper knows its resource type (`hack/live/sweep.sh`), and the
-   service account has the role it needs.
+   service account has the role it needs. `task check:static` parses
+   every shell script with `bash -n` and refuses conflict markers
+   (`hack/check-shell.sh`): run `bash -n hack/live/sweep.sh` after any
+   conflict merge, since nothing else runs the sweeper before a live run.
 3. `task test-live PROJECT=$GCP_PROJECT KINDS=<package>` on an offload VM.
 4. A row in the kind's `docs/kinds` file. A difference between mock and live is fixed where
    it belongs: in our controller (with a test), or in mockgcp (a patch in
