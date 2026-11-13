@@ -341,6 +341,19 @@ and host as the deployment; the Chronicle fake gained rule patch.
 `ChronicleRuleDeployment`'s `ruleRef` by `name` finds ours first, then
 Config Connector's. `docs/kinds/ChronicleRule.md` has the rest.
 
+Then `ChronicleReferenceList` (`chronicle.gcp.hfl.dev/v1beta1`,
+2026-11-13), the third kind `secops-rules` needs
+(`google_chronicle_reference_list`), for the same reason: Config
+Connector's is alpha with no instance field. Types copied with `instance`
+added; upstream's identity, leaf types and observed state imported. The
+ID is the user's (`referenceListId`; `resourceID` or `metadata.name`),
+letters, digits and underscores only (a CEL pattern; a `metadata.name`
+with a hyphen needs `resourceID`). The API has no delete for a reference
+list, so deleting the object leaves it, as Terraform does, and a new
+object with the same ID takes it back (find, then patch). Reads use the
+full view, the only one with the entries. `docs/kinds/ChronicleReferenceList.md`
+has the rest.
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check
@@ -2025,7 +2038,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     against the binding's parent and of a condition's attributes, which
     the fake does not make; `ACCESS` policies, which the fake does not
     serve.
-40. `ChronicleRuleDeployment` and `ChronicleRule`: a live run (needs a Google SecOps instance
+40. `ChronicleRuleDeployment`, `ChronicleRule` and `ChronicleReferenceList`: a live run (needs a Google SecOps instance
     in or bound to the live-test project, `chronicle.googleapis.com` on
     and `roles/chronicle.editor` for `cce-live-tests`;
     `E2E_CHRONICLE_INSTANCE=<location>/<instance>`), and with it the

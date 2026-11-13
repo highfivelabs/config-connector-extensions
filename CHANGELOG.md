@@ -32,6 +32,16 @@ has been released yet; each release moves its entries out of
   Config Connector has no kind for it, so it starts at `v1alpha1`.
   `IAMBinding` and `IAMMember` name it by `name`. The operator's role gains
   `servicemanagement.gcp.hfl.dev`.
+- **`chronicle.gcp.hfl.dev/v1beta1` `ChronicleReferenceList`**, a Google
+  SecOps (Chronicle) reference list in an instance
+  (`google_chronicle_reference_list`): its description, entries, syntax
+  type and scope. Config Connector 1.160.0's kind is alpha with no
+  instance field, so it always fails with "cannot resolve instance"; ours
+  keeps the name and carries `instance` (decision 26). The list's ID
+  (`resourceID`, or `metadata.name`) takes letters, digits and
+  underscores only. The API cannot delete a reference list, so deleting
+  the object leaves it, as Terraform does; a new object with the same ID
+  takes it back. Live pending a SecOps instance.
 - **`chronicle.gcp.hfl.dev/v1beta1` `ChronicleRule`**, a Google SecOps
   (Chronicle) detection rule in an instance (`google_chronicle_rule`).
   Config Connector 1.160.0's `ChronicleRule` is alpha and has no instance

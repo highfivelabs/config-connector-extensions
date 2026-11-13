@@ -16,11 +16,13 @@
 // Package fake is the fake cloud for the Chronicle API
 // (<location>-chronicle.googleapis.com and chronicle.googleapis.com),
 // which mockgcp does not serve: an in-memory store in front of mockgcp, as
-// pkg/discokind/fake is, serving what ChronicleRule's and
-// ChronicleRuleDeployment's controllers and tests call: an instance's rules
-// (create, get, patch of text and scope with an update mask, delete) and a
-// rule's deployment (get, patch with an update mask), which comes with the
-// rule and goes with it.
+// pkg/discokind/fake is, serving what ChronicleRule's,
+// ChronicleRuleDeployment's and ChronicleReferenceList's controllers and
+// tests call: an instance's rules (create, get, patch of text and scope
+// with an update mask, delete), a rule's deployment (get, patch with an
+// update mask), which comes with the rule and goes with it, and an
+// instance's reference lists (create with an ID, get, patch with an update
+// mask; the API has no delete for them).
 //
 // What it cannot show (docs/fake-cloud.md): SecOps instances (any
 // instance ID is taken), the rule language (a rule's text is kept, never
@@ -58,11 +60,12 @@ type Cloud struct {
 	mu    sync.Mutex
 	rules map[string]map[string]any // by name
 	deps  map[string]map[string]any // by rule name
+	lists map[string]map[string]any // reference lists, by name
 }
 
 // New is the fake in front of next.
 func New(next http.RoundTripper) *Cloud {
-	return &Cloud{Next: next, rules: map[string]map[string]any{}, deps: map[string]map[string]any{}}
+	return &Cloud{Next: next, rules: map[string]map[string]any{}, deps: map[string]map[string]any{}, lists: map[string]map[string]any{}}
 }
 
 func isChronicle(host string) bool {
@@ -77,9 +80,13 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 	defer c.mu.Unlock()
 	path := strings.TrimPrefix(req.URL.Path, "/v1/")
 	parts := strings.Split(path, "/")
-	// projects/p/locations/l/instances/i/rules[/r[/deployment]]
-	if len(parts) < 7 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "instances" || parts[6] != "rules" {
+	// projects/p/locations/l/instances/i/rules[/r[/deployment]] or
+	// projects/p/locations/l/instances/i/referenceLists[/l]
+	if len(parts) < 7 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "instances" || (parts[6] != "rules" && parts[6] != "referenceLists") {
 		return errorResponse(req, http.StatusNotFound, "NOT_FOUND", "the Chronicle fake does not serve "+path)
+	}
+	if parts[6] == "referenceLists" {
+		return c.referenceLists(req, path, parts)
 	}
 	switch {
 	case len(parts) == 7 && req.Method == http.MethodPost:
@@ -199,6 +206,101 @@ func (c *Cloud) patchRule(req *http.Request, name string) (*http.Response, error
 	}
 	c.rules[name] = next
 	return jsonResponse(req, http.StatusOK, next)
+}
+
+// listIDRE is what a reference list's ID may be: it starts with a letter
+// and has only letters, digits and underscores, shorter than 256.
+var listIDRE = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]{0,254}$`)
+
+// listFields are the reference list's fields an update mask may name, in
+// either spelling.
+var listFields = map[string]string{"description": "description", "entries": "entries", "syntaxType": "syntaxType", "syntax_type": "syntaxType", "scopeInfo": "scopeInfo", "scope_info": "scopeInfo"}
+
+var syntaxTypes = map[string]bool{"REFERENCE_LIST_SYNTAX_TYPE_PLAIN_TEXT_STRING": true, "REFERENCE_LIST_SYNTAX_TYPE_REGEX": true, "REFERENCE_LIST_SYNTAX_TYPE_CIDR": true}
+
+// referenceLists serves an instance's reference lists: create, get and
+// patch. The API has no delete for them.
+func (c *Cloud) referenceLists(req *http.Request, path string, parts []string) (*http.Response, error) {
+	switch {
+	case len(parts) == 7 && req.Method == http.MethodPost:
+		id := req.URL.Query().Get("referenceListId")
+		if !listIDRE.MatchString(id) {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("invalid reference list ID %q: it starts with a letter and has only letters, numbers and underscores", id))
+		}
+		name := path + "/" + id
+		if _, ok := c.lists[name]; ok {
+			return errorResponse(req, http.StatusConflict, "ALREADY_EXISTS", name+" already exists")
+		}
+		body := map[string]any{}
+		if err := readJSON(req, &body); err != nil {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
+		}
+		if d, _ := body["description"].(string); d == "" {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", "a reference list needs a description")
+		}
+		if st, _ := body["syntaxType"].(string); !syntaxTypes[st] {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("invalid syntax type %q", st))
+		}
+		list := map[string]any{"name": name, "displayName": id, "ruleAssociationsCount": 0}
+		for _, f := range []string{"description", "entries", "syntaxType", "scopeInfo"} {
+			if v, ok := body[f]; ok {
+				list[f] = v
+			}
+		}
+		list["revisionCreateTime"] = time.Now().UTC().Format(time.RFC3339Nano)
+		c.lists[name] = list
+		return jsonResponse(req, http.StatusOK, list)
+	case len(parts) == 8 && req.Method == http.MethodGet:
+		l, ok := c.lists[path]
+		if !ok {
+			return notFound(req, path)
+		}
+		return jsonResponse(req, http.StatusOK, l)
+	case len(parts) == 8 && req.Method == http.MethodPatch:
+		cur, ok := c.lists[path]
+		if !ok {
+			return notFound(req, path)
+		}
+		body := map[string]any{}
+		if err := readJSON(req, &body); err != nil {
+			return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
+		}
+		var mask []string
+		if m := req.URL.Query().Get("updateMask"); m != "" {
+			mask = strings.Split(m, ",")
+		} else {
+			for f := range body {
+				if _, ok := listFields[f]; ok {
+					mask = append(mask, f)
+				}
+			}
+		}
+		next := map[string]any{}
+		for k, v := range cur {
+			next[k] = v
+		}
+		for _, f := range mask {
+			field, ok := listFields[f]
+			if !ok {
+				return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("invalid update mask field %q", f))
+			}
+			v, set := body[field]
+			if field == "syntaxType" {
+				if st, _ := v.(string); !syntaxTypes[st] {
+					return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("invalid syntax type %q", st))
+				}
+			}
+			if !set {
+				delete(next, field)
+				continue
+			}
+			next[field] = v
+		}
+		next["revisionCreateTime"] = time.Now().UTC().Format(time.RFC3339Nano)
+		c.lists[path] = next
+		return jsonResponse(req, http.StatusOK, next)
+	}
+	return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("the Chronicle fake does not serve %s %s (the API has no reference list delete)", req.Method, path))
 }
 
 func (c *Cloud) patchDeployment(req *http.Request, rule string) (*http.Response, error) {

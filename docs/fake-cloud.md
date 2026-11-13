@@ -429,7 +429,12 @@ an instance's rules (create, which assigns an ID `ru_<uuid>`; get; patch of
 `text` and `scope` with an update mask, a new text making a new
 `revisionId`, `etag`, `displayName` (the word after `rule`) and a
 `compilationState` of `SUCCEEDED`; delete, which takes the deployment
-with it) and each rule's deployment (get;
+with it), an instance's reference lists (create with `referenceListId`,
+which must start with a letter and have only letters, digits and
+underscores, a second create of one ID refused with `ALREADY_EXISTS`;
+get, always with the entries; patch with an update mask of
+`description`, `entries`, `syntaxType` and `scopeInfo`, in either
+spelling; no delete, as the API has none) and each rule's deployment (get;
 patch with an update mask of `enabled`, `alerting`, `archived` and
 `runFrequency`, with `scheduleCustomizations` going with `runFrequency`). A
 new rule's deployment is disabled, not alerting and not archived, as the

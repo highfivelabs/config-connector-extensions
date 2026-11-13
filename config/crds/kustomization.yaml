@@ -13,6 +13,7 @@ resources:
 - biglake.gcp.hfl.dev_biglakecatalogs.yaml
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
+- chronicle.gcp.hfl.dev_chroniclereferencelists.yaml
 - chronicle.gcp.hfl.dev_chronicleruledeployments.yaml
 - chronicle.gcp.hfl.dev_chroniclerules.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildconnections.yaml
