@@ -54,6 +54,21 @@ nothing for the project's principals; the folder's binding runs on the
 fake only. The sweeper deletes the project's bindings whose ID carries a
 run ID, behind the same switch.
 
+**An access policy, bound to a resource** (2026-11-13, for the catalog's
+`geap-agent-gateway` module). `target.resource` binds an access policy to
+the resource it applies to: an organization, folder or project
+(`//cloudresourcemanager.googleapis.com/projects/...`) or a resource in
+it, such as an agent gateway. `target` takes exactly one of
+`principalSet` and `resource` (CEL). With `policyKind: ACCESS`,
+`policyRef.name` names an `IAMAccessPolicy`; otherwise an
+`IAMPrincipalAccessBoundaryPolicy`. `policyRef.external` takes either
+policy's resource name. A binding being deleted takes its name from
+`status.externalRef` and resolves neither its parent nor its policy, so a
+policy deleted with it does not hold it (and the policy's delete waits for
+the binding). `TestIAMPolicyBindingOfAnAccessPolicy` binds a project's
+policy to the project and to an agent gateway and deletes all three at
+once; it skips live (no access policy role for the live-test account).
+
 ## Live runs
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
