@@ -1,0 +1,17 @@
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityAuthzPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  target:
+    resources:
+    - projects/${PROJECT}/locations/us-central1/agentGateways/${KIND_NAME}-gateway
+  action: CUSTOM
+  customProvider:
+    authzExtension:
+      resources:
+      - projects/${PROJECT}/locations/us-central1/authzExtensions/${KIND_NAME}-model-armor
+  description: changed by a config-connector-extensions test

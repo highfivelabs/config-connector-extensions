@@ -419,6 +419,24 @@
   note: "How a Secure Web Proxy inspects TLS: the CA pool that issues its interception certificates."
   sweepLocation: us-central1
 
+# The catalog's geap-agent-gateway module (2026-11-13): fabric's iap_config
+# and model_armor_config bind a NetworkServicesAuthzExtension to the agent
+# gateway through an authorization policy whose target is the gateway.
+# Config Connector's NetworkSecurityAuthzPolicy is alpha and takes every
+# target as a forwarding rule (ForwardingRuleRef), so it cannot name an
+# agent gateway; ours takes target.resources as the API's names (a
+# forwarding rule, a Secure Web Proxy gateway or an agent gateway), a
+# stable equivalent (decision 26).
+- kind: NetworkSecurityAuthzPolicy
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.authzPolicies
+  parents: [project]
+  terraform: google_network_security_authz_policy
+  note: "An authorization policy: allow, deny or delegate (to IAP or an authorization extension) the requests a forwarding rule, a Secure Web Proxy or an agent gateway receives."
+  sweepLocation: us-central1
+
 - kind: GKEBackupBackupPlan
   group: gkebackup.gcp.hfl.dev
   version: v1beta1

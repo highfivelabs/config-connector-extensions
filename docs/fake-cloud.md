@@ -408,6 +408,15 @@ and which fields go with which type. It makes no Cloud Router or Cloud
 NAT, and a gateway is ready at once, where a real one takes minutes. The
 live run shows these.
 
+`NetworkSecurityAuthzPolicy` (2026-11-13): mockgcp keeps what an
+authorization policy's spec says and checks none of what the real API
+does: that the target resources exist and are all forwarding rules,
+Secure Web Proxy gateways or agent gateways of one kind, that
+`loadBalancingScheme` is left out for an agent gateway and set for
+forwarding rules, that the authorization extension exists and shares the
+target's scheme, and which rules go with which action. A live run shows
+these.
+
 ## Service Management's fake (`pkg/controller/direct/servicemanagement/fake`)
 
 mockgcp does not serve Service Management (`servicemanagement.googleapis.com`),
