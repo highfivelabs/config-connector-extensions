@@ -257,7 +257,10 @@ second set of fixtures, so both types are tested. A Secure Web Proxy
 makes a Cloud Router with a Cloud NAT (`swg-autogen-router-...`) in its
 network, which the API keeps after the last gateway goes; ours keeps it
 too, as Terraform does by default, and the live test and the sweeper
-delete it. `docs/kinds/NetworkServicesGateway.md` has the rest.
+delete it. It skips live until `networkservices.googleapis.com` is on in
+the live-test project (it is off; the live-test account already has the
+permissions through `roles/compute.networkAdmin`).
+`docs/kinds/NetworkServicesGateway.md` has the rest.
 
 Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written rather than generated: a Cloud Endpoints service

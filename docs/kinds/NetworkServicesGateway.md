@@ -57,3 +57,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | `07da533` | PASS | SKIP | `networkservices.googleapis.com` is off in `hfl-dev-514205`: the sweep before the tests was refused listing gateways (403, run `cce-11130710-28b7`), so no test ran. The test skips live (`live-skip`, both cases) until the API is on; `cce-live-tests` already has `networkservices.gateways.*` through `roles/compute.networkAdmin` | none |

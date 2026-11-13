@@ -286,8 +286,14 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
 # Network Services gateways (NetworkServicesGateway) before the loop
 # deletes the gateway security policies a Secure Web Proxy uses (a policy
 # in use cannot go), in us-central1 (a Secure Web Proxy's) and global (an
-# OPEN_MESH gateway's), by the run's name.
-for loc in us-central1 global; do
+# OPEN_MESH gateway's), by the run's name. While the kind's test skips
+# live (its live-skip: the API is off in the project, and listing is then
+# a 403), no test made one: left alone, as the discokind loop does.
+gw_locs="us-central1 global"
+if compgen -G "${HERE}/../../pkg/controller/direct/networkservices/testdata/discokind/NetworkServicesGateway/live-skip" >/dev/null; then
+  gw_locs=""
+fi
+for loc in ${gw_locs}; do
   rows="$(disco_api GET "https://networkservices.googleapis.com/v1/projects/${project}/locations/${loc}/gateways?pageSize=1000" \
     | jq -r '.gateways[]? | "\(.name) \(.createTime // "-")"')"
   while read -r name made; do
