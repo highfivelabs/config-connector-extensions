@@ -180,6 +180,9 @@ patches:
   - {file: patches/k8s-config-connector/0032-mockgcp-compute-network-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0033-mockgcp-compute-vpn-tunnels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0034-mockgcp-serviceusage-public-services.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0039-mockgcp-compute-autoscalers.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0040-mockgcp-compute-create-instances-redistribution.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
 # "What is copied, from where": here (our paths) and from (Config Connector's
@@ -413,6 +416,44 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/firestore/firestorebackupschedule_controller.go, pkg/controller/direct/firestore/client.go]}
   - here: [pkg/controller/direct/firestore/backupschedule_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/firestore/mapper.generated.go]}
+  - here: [apis/compute/v1beta1/computeautoscaler_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_types.go]}
+  - here: [apis/compute/v1beta1/computeautoscaler_identity.go, apis/compute/v1beta1/computeautoscaler_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeautoscaler_identity.go, apis/compute/v1alpha1/computeautoscaler_identity_test.go]}
+  - here: [pkg/controller/direct/compute/autoscaler_controller.go, pkg/controller/direct/compute/autoscaler_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeautoscaler_controller.go, pkg/controller/direct/compute/computeautoscaler_mapper.go]}
+  - here: [apis/compute/v1beta1/computediskresourcepolicyattachment_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_types.go]}
+  - here: [apis/compute/v1beta1/computediskresourcepolicyattachment_identity.go, apis/compute/v1beta1/computediskresourcepolicyattachment_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computediskresourcepolicyattachment_identity.go, apis/compute/v1alpha1/computediskresourcepolicyattachment_identity_test.go]}
+  - here: [pkg/controller/direct/compute/diskresourcepolicyattachment_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computediskresourcepolicyattachment_controller.go]}
+  - here: [apis/compute/v1beta1/computeregionperinstanceconfig_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeregionperinstanceconfig_types.go]}
+  - here: [apis/compute/v1beta1/computeregionperinstanceconfig_identity.go, apis/compute/v1beta1/computeregionperinstanceconfig_identity_test.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/computeregionperinstanceconfig_identity.go, apis/compute/v1alpha1/computeregionperinstanceconfig_identity_test.go]}
+  - here: [pkg/controller/direct/compute/regionperinstanceconfig_controller.go, pkg/controller/direct/compute/regionperinstanceconfig_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computeregionperinstanceconfig_controller.go, pkg/controller/direct/compute/computeregionperinstanceconfig_mapper.go, pkg/controller/direct/compute/mapper.generated.go]}
+  - here: [apis/spanner/v1beta1/groupversion_info.go, apis/spanner/v1beta1/doc.go]
+    from: {pin: k8s-config-connector, paths: [apis/spanner/v1alpha1/groupversion_info.go, apis/spanner/v1alpha1/doc.go]}
+  - here: [apis/spanner/v1beta1/spannerinstanceconfig_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/spanner/v1alpha1/spannerinstanceconfig_types.go]}
+  - here: [apis/spanner/v1beta1/spannerinstanceconfig_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/spanner/v1alpha1/spannerinstanceconfig_identity.go]}
+  - here: [pkg/controller/direct/spanner/instanceconfig_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/spanner/spannerinstanceconfig_controller.go, pkg/controller/direct/spanner/client.go]}
+  - here: [pkg/controller/direct/spanner/instanceconfig_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/spanner/spannerinstanceconfig_mapper.go]}
+  - here: [apis/datacatalog/v1beta1/groupversion_info.go, apis/datacatalog/v1beta1/doc.go]
+    from: {pin: k8s-config-connector, paths: [apis/datacatalog/v1alpha1/groupversion_info.go, apis/datacatalog/v1alpha1/doc.go]}
+  - here: [apis/datacatalog/v1beta1/datacatalogtag_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/datacatalog/v1alpha1/datacatalogtag_types.go]}
+  - here: [apis/datacatalog/v1beta1/datacatalogtag_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/datacatalog/v1alpha1/datacatalogtag_identity.go]}
+  - here: [pkg/controller/direct/datacatalog/tag_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/datacatalog/datacatalogtag_controller.go]}
+  - here: [pkg/controller/direct/datacatalog/tag_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/datacatalog/mapper_tag.go, pkg/controller/direct/datacatalog/mapper.generated.go]}
   - here: [apis/aiplatform/v1beta1/groupversion_info.go, apis/aiplatform/v1beta1/doc.go]
     from: {pin: k8s-config-connector, paths: [apis/aiplatform/v1alpha1/groupversion_info.go, apis/aiplatform/v1alpha1/doc.go]}
   - here: [apis/aiplatform/v1beta1/aiplatformreasoningengine_types.go]

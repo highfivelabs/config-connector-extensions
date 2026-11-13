@@ -335,13 +335,15 @@ composer.googleapis.com,composer.googleapis.com/Environment,82,ComposerEnvironme
 composer.googleapis.com,composer.googleapis.com/EnvironmentUserWorkloadsConfigMap,2,ComposerUserWorkloadsConfigMap,2,,0,0,false,api=v1:projects.locations.environments.userWorkloadsConfigMaps; official-spec-fields-unmatched=2/3
 composer.googleapis.com,composer.googleapis.com/EnvironmentUserWorkloadsSecret,2,ComposerUserWorkloadsSecret,2,,0,0,false,api=v1:projects.locations.environments.userWorkloadsSecrets; official-spec-fields-unmatched=2/3
 compute.googleapis.com,compute.googleapis.com/Address,15,ComputeAddress,13,,0,2,false,api=v1:addresses; official-spec-fields-unmatched=2/13
-compute.googleapis.com,compute.googleapis.com/Autoscaler,25,ComputeAutoscaler,18,,0,7,false,api=v1:autoscalers; official-spec-fields-unmatched=13/30
+compute.googleapis.com,compute.googleapis.com/Autoscaler,25,ComputeAutoscaler,18,ComputeAutoscaler,0,7,false,api=v1:autoscalers; official-spec-fields-unmatched=13/30; ours-spec-fields-unmatched=13/30
 compute.googleapis.com,compute.googleapis.com/BackendBucket,21,ComputeBackendBucket,19,,0,2,false,api=v1:backendBuckets; official-spec-fields-unmatched=2/20
 compute.googleapis.com,compute.googleapis.com/BackendService,135,ComputeBackendService,84,,0,51,false,api=v1:backendServices; official-spec-fields-unmatched=13/96
+compute.googleapis.com,compute.googleapis.com/ComputeDiskResourcePolicyAttachment,0,,0,ComputeDiskResourcePolicyAttachment,0,0,false,outside-denominator; no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeNetworkEndpoint,0,,0,ComputeNetworkEndpoint,0,0,false,outside-denominator; no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeProjectDefaultNetworkTier,0,,0,ComputeProjectDefaultNetworkTier,0,0,false,"outside-denominator; a project's default network tier, written with projects.setDefaultNetworkTier (it always exists)"
 compute.googleapis.com,compute.googleapis.com/ComputeProjectMetadataItem,0,,0,ComputeProjectMetadataItem,0,0,false,"outside-denominator; one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method)"
 compute.googleapis.com,compute.googleapis.com/ComputeRegionNetworkEndpoint,0,,0,ComputeRegionNetworkEndpoint,0,0,false,"outside-denominator; an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints"
+compute.googleapis.com,compute.googleapis.com/ComputeRegionPerInstanceConfig,0,,0,ComputeRegionPerInstanceConfig,0,0,false,outside-denominator; no API resource named like regionperinstanceconfig/computeregionperinstanceconfig in compute.googleapis.com
 compute.googleapis.com,compute.googleapis.com/ComputeRouterRoutePolicy,0,,0,ComputeRouterRoutePolicy,0,0,false,"outside-denominator; a route policy of a Cloud Router, written with routers.patchRoutePolicy"
 compute.googleapis.com,compute.googleapis.com/CrossSiteNetwork,2,,0,ComputeCrossSiteNetwork,2,0,false,api=v1:crossSiteNetworks; ours-spec-fields-unmatched=2/3
 compute.googleapis.com,compute.googleapis.com/Disk,48,ComputeDisk,27,,0,21,false,api=v1:disks; official-spec-fields-unmatched=8/33
@@ -383,7 +385,7 @@ compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,Comp
 compute.googleapis.com,compute.googleapis.com/PacketMirroring,12,ComputePacketMirroring,12,,0,0,false,api=v1:packetMirrorings; official-spec-fields-unmatched=5/16
 compute.googleapis.com,compute.googleapis.com/PublicAdvertisedPrefix,7,,0,ComputePublicAdvertisedPrefix,7,0,false,api=v1:publicAdvertisedPrefixes; ours-spec-fields-unmatched=2/8
 compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,ComputePublicDelegatedPrefix,15,0,false,api=v1:publicDelegatedPrefixes; ours-spec-fields-unmatched=3/17
-compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,,0,7,false,api=v1:regionAutoscalers
+compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,ComputeAutoscaler,0,7,false,api=v1:regionAutoscalers; ours-spec-fields-unmatched=13/30
 compute.googleapis.com,compute.googleapis.com/RegionBackendBucket,21,,0,ComputeRegionBackendBucket,21,0,false,api=v1:regionBackendBuckets; ours-spec-fields-unmatched=3/23
 compute.googleapis.com,compute.googleapis.com/RegionBackendService,135,ComputeBackendService,84,,0,51,false,api=v1:regionBackendServices; official-spec-fields-unmatched=13/96
 compute.googleapis.com,compute.googleapis.com/RegionCommitment,49,,0,,0,49,false,api=v1:regionCommitments
@@ -486,6 +488,7 @@ contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/DocumentLink,15,
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/DocumentSchema,17,ContentWarehouseDocumentSchema,16,,0,1,false,api=v1:google.cloud.contentwarehouse.v1.DocumentSchemaService.CreateDocumentSchema; recursive-cut=1; official-spec-fields-unmatched=9/24
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/RuleSet,28,ContentWarehouseRuleSet,27,,0,1,false,api=v1:google.cloud.contentwarehouse.v1.RuleSetService.CreateRuleSet; official-spec-fields-unmatched=3/29
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/SynonymSet,3,ContentWarehouseSynonymSet,3,,0,0,false,api=v1:google.cloud.contentwarehouse.v1.SynonymSetService.CreateSynonymSet; official-spec-fields-unmatched=3/5
+datacatalog.googleapis.com,datacatalog.googleapis.com/DataCatalogTag,0,,0,DataCatalogTag,0,0,false,outside-denominator; no API resource named like tag/datacatalogtag in datacatalog.googleapis.com
 datacatalog.googleapis.com,datacatalog.googleapis.com/Taxonomy,4,DataCatalogTaxonomy,4,,0,0,false,api=v1:projects.locations.taxonomies; official-spec-fields-unmatched=3/6
 datacatalog.googleapis.com,datacatalog.googleapis.com/TaxonomyPolicyTag,4,DataCatalogPolicyTag,4,,0,0,false,api=v1:projects.locations.taxonomies.policyTags; official-spec-fields-unmatched=2/5
 dataflow.googleapis.com,dataflow.googleapis.com/ConfigStoreSetting,3,,0,,0,3,false,api=v1b3:folders.locations.configStoreSettings
@@ -1139,7 +1142,7 @@ servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceNetwork
 serviceusage.googleapis.com,serviceusage.googleapis.com/ServiceIdentity,0,,0,ServiceIdentity,0,0,false,"outside-denominator; a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it)"
 spanner.googleapis.com,spanner.googleapis.com/Instance,29,SpannerInstance,13,,0,16,false,api=v1:projects.instances; request-wrapper=CreateInstanceRequest; official-spec-fields-unmatched=2/14
 spanner.googleapis.com,spanner.googleapis.com/InstanceBackup,3,,0,,0,3,false,api=v1:projects.instances.backups
-spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9
+spanner.googleapis.com,spanner.googleapis.com/InstanceConfig,10,SpannerInstanceConfig,8,SpannerInstanceConfig,0,2,false,api=v1:projects.instanceConfigs; request-wrapper=CreateInstanceConfigRequest; official-spec-fields-unmatched=2/9; ours-spec-fields-unmatched=2/9
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabase,6,SpannerDatabase,1,,0,5,false,api=v1:projects.instances.databases; request-wrapper=CreateDatabaseRequest; official-spec-fields-unmatched=6/7
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabaseBackupSchedule,7,SpannerBackupSchedule,7,,0,0,false,api=v1:projects.instances.databases.backupSchedules; official-spec-fields-unmatched=3/9
 spanner.googleapis.com,spanner.googleapis.com/InstanceDatabaseSession,3,,0,,0,3,false,api=v1:projects.instances.databases.sessions; request-wrapper=CreateSessionRequest
