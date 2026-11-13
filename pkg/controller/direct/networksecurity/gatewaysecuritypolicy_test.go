@@ -33,7 +33,7 @@ func init() {
 }
 
 // gatewaySecurityPolicy makes the policy a rule's fixtures name
-// (${NAME}-gsp, us-central1), since the API refuses a rule whose policy does not
+// (${KIND_NAME}-gsp, us-central1), since the API refuses a rule whose policy does not
 // exist. Live only: the fake does not check. It is deleted after the
 // test's own rule (t.Cleanup runs last-in first-out); the sweeper deletes
 // a run's rules before its policies (hack/live/sweep.sh).

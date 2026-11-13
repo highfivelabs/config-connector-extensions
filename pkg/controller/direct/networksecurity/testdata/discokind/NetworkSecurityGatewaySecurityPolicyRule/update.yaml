@@ -6,7 +6,7 @@ spec:
   projectRef:
     external: ${PROJECT}
   location: us-central1
-  gatewaySecurityPolicy: ${NAME}-gsp
+  gatewaySecurityPolicy: ${KIND_NAME}-gsp
   basicProfile: DENY
   enabled: false
   priority: 20

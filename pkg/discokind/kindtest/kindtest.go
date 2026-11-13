@@ -24,8 +24,10 @@
 // The fixtures are YAML with placeholders: ${PROJECT} (mockenv.Project),
 // ${NAME} (mockenv.Name of the kind's lower-case name: the run ID prefixes
 // it live), ${ID} (${NAME} without dashes, for IDs that take none),
-// ${RUN_ID}, and ${ORGANIZATION} (E2E_ORGANIZATION live, 123456789 in the
-// fake).
+// ${RUN_ID}, ${ORGANIZATION} (E2E_ORGANIZATION live, 123456789 in the
+// fake), and ${KIND_NAME} (${NAME} of the first object, also in the
+// abandoned object's fixture, whose ${NAME} ends in -kept: for a parent a
+// Setup makes once for both).
 //
 // The test: the object becomes Ready and the cloud holds what its spec
 // says; a forced resync writes nothing; the update's spec is patched in
@@ -79,10 +81,10 @@ func Run(t *testing.T, kindName string) {
 		}
 	}
 	base := strings.ToLower(kindName)
-	create := load(t, filepath.Join(dir, "create.yaml"), base)
+	create := load(t, filepath.Join(dir, "create.yaml"), base, base)
 	var update *unstructured.Unstructured
 	if _, err := os.Stat(filepath.Join(dir, "update.yaml")); err == nil {
-		update = load(t, filepath.Join(dir, "update.yaml"), base)
+		update = load(t, filepath.Join(dir, "update.yaml"), base, base)
 	}
 
 	env := mockenv.New(t, namespace)
@@ -233,7 +235,7 @@ func Run(t *testing.T, kindName string) {
 	})
 
 	t.Run("abandon keeps the resource", func(t *testing.T) {
-		kept := load(t, filepath.Join(dir, "create.yaml"), base+"-kept")
+		kept := load(t, filepath.Join(dir, "create.yaml"), base+"-kept", base)
 		kept.SetAnnotations(map[string]string{k8s.DeletionPolicyAnnotation: k8s.DeletionPolicyAbandon})
 		if err := env.Kube.Create(env.Ctx, kept); err != nil {
 			t.Fatal(err)
@@ -251,8 +253,9 @@ func Run(t *testing.T, kindName string) {
 	})
 }
 
-// load reads a fixture with its placeholders filled for base.
-func load(t *testing.T, path, base string) *unstructured.Unstructured {
+// load reads a fixture with its placeholders filled for base, the object's
+// name, and kindBase, the kind's.
+func load(t *testing.T, path, base, kindBase string) *unstructured.Unstructured {
 	t.Helper()
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -269,6 +272,7 @@ func load(t *testing.T, path, base string) *unstructured.Unstructured {
 		"${ID}", strings.ReplaceAll(name, "-", ""),
 		"${RUN_ID}", mockenv.RunID,
 		"${ORGANIZATION}", org,
+		"${KIND_NAME}", mockenv.Name(kindBase),
 	).Replace(string(b))
 	u := &unstructured.Unstructured{}
 	if err := yaml.Unmarshal([]byte(s), &u.Object); err != nil {
