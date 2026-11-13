@@ -253,8 +253,10 @@ func TestChronicleReferenceList(t *testing.T) {
 		}
 		env.WaitReady(listGVK, ns, "hosts-again")
 		waitValues(t, "cce-test-d.invalid")
-		if w := writes()[before:]; len(w) != 1 || w[0] != "PATCH entries" {
-			t.Errorf("taking the list back wrote %q, want one PATCH of entries", w)
+		// The new object has the first description, which an earlier step
+		// changed, and new entries: one patch of both.
+		if w := writes()[before:]; len(w) != 1 || w[0] != "PATCH description,entries" {
+			t.Errorf("taking the list back wrote %q, want one PATCH of description and entries", w)
 		}
 		if err := env.Kube.Delete(env.Ctx, again); err != nil {
 			t.Fatal(err)
