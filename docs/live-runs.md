@@ -114,6 +114,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/logging.logWriter` | project | the offload VM |
 | `roles/storage.objectAdmin` | bucket `$OFFLOAD_BUCKET` | the offload VM (checkout in, log out) |
 | `roles/iam.serviceAccountUser` | itself | the offload VM |
+| `roles/iam.accessPolicyAdmin` | project | `IAMAccessPolicy` (not granted: the test skips live) |
 | `roles/storage.admin` | project | `StorageBucketObject` (the test's bucket and its objects) |
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
