@@ -186,6 +186,17 @@ answers a resource path a request sent (`projects/P/regions/R/subnetworks/S`)
 with its full URL, so the controller's comparison takes the two as one
 (`sameComputeURL`); without it a network attachment's `subnetworks` would
 differ on every resync.
+A generated kind's delete takes the resource's name from
+`status.externalRef` and does not resolve its parent again (2026-11-13,
+`IAMBinding`'s rule, `pkg/iampolicy.Resolve`): a parent object deleted
+first, when everything is deleted at once, held the delete on "referenced
+Project ... not found". An object that never had a resource goes without
+a call (`TestComputeNetworkAttachmentWithItsParent`). The catalog's stuck
+`net-vpc` attachment ("reference ComputeSubnetwork ... is not found") was
+Config Connector's alpha `ComputeNetworkAttachment`, whose
+`subnetworkRefs` its directbase resolves before every delete; ours takes
+the subnet's URL in `subnetworks` and never reads a subnet object, so a
+chart that uses ours (as `net-address` does) does not stick.
 Then five foundation (tier 1)
 gaps of the same shape (2026-11-12): Resource
 Manager's `ResourceManagerCapabilityConfig` (an organization, folder or
