@@ -371,6 +371,17 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "selfLink", "updateTime"},
 	},
 	{
+		GVK:       networkservicesv1beta1.NetworkServicesAuthzExtensionGVK,
+		CRDName:   "networkservicesauthzextensions.networkservices.gcp.hfl.dev",
+		BaseURL:   "https://networkservices.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/authzExtensions/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "authzExtensionId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
 		GVK:       resourcemanagerv1alpha1.ResourceManagerCapabilityConfigGVK,
 		CRDName:   "resourcemanagercapabilityconfigs.resourcemanager.gcp.hfl.dev",
 		BaseURL:   "https://cloudresourcemanager.googleapis.com/v3/",

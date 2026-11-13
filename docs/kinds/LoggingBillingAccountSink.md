@@ -15,6 +15,17 @@ apiVersion: logging.gcp.hfl.dev/v1alpha1
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
+**Destination forms** (2026-11-13). A Cloud Storage bucket is taken as
+`projects/_/buckets/<name>` (a bucket's name is global), `projects/<p>/buckets/<name>`,
+the bare name, `gs://<name>`, `storage.googleapis.com/<name>` (Terraform's
+and fabric's form), or a `StorageBucket` object by `name`; a log bucket as
+`projects/<p>/locations/<l>/buckets/<b>` with or without
+`logging.googleapis.com/`; BigQuery and Pub/Sub with or without their
+service prefix. The controller drops the prefix and gives a bare bucket
+name `projects/_/` before the reference is validated, and the API gets
+`storage.googleapis.com/<name>` (`TestLoggingBillingAccountSinkDestinations`,
+on the fake).
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

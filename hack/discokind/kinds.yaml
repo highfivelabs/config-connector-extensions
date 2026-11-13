@@ -290,6 +290,20 @@
   immutable: [addresses, allPorts, allowGlobalAccess, envoyHeaders, ipVersion, network, ports, routingMode, scope, subnetwork]
   note: "A gateway: an OPEN_MESH gateway's listener, or a Secure Web Proxy (SECURE_WEB_GATEWAY) in a VPC network."
   sweepLocation: us-central1
+# The catalog's geap-agent-gateway module (2026-11-13): an authorization
+# extension that delegates to a Google service (IAP or Model Armor) by its
+# service field. Config Connector's NetworkServicesAuthzExtension is alpha,
+# requires a backend service and has no service field, so ours is a stable
+# equivalent with the API's whole field set (decision 26).
+- kind: NetworkServicesAuthzExtension
+  group: networkservices.gcp.hfl.dev
+  version: v1beta1
+  discovery: networkservices.v1
+  resource: projects.locations.authzExtensions
+  parents: [project]
+  terraform: google_network_services_authz_extension
+  note: "An authorization extension: a callout a load balancer or an agent gateway makes to a backend service or a Google service (iap.googleapis.com, Model Armor) before it allows a request."
+  sweepLocation: us-central1
 # Foundation (tier 1) gaps with this shape, 2026-11-12: Resource Manager's
 # capability configs and boundaries, and Network Connectivity's PSC
 # authorization policies, automated DNS records and spoke gateway routes.
