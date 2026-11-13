@@ -27,3 +27,21 @@ import (
 func TestNetworkSecurityDNSThreatDetector(t *testing.T) {
 	kindtest.Run(t, "NetworkSecurityDNSThreatDetector")
 }
+
+// TestNetworkSecurityGatewaySecurityPolicy runs testdata/discokind/NetworkSecurityGatewaySecurityPolicy/ on the fake cloud, or live.
+func TestNetworkSecurityGatewaySecurityPolicy(t *testing.T) {
+	kindtest.Run(t, "NetworkSecurityGatewaySecurityPolicy")
+}
+
+// TestNetworkSecurityGatewaySecurityPolicyRule runs testdata/discokind/NetworkSecurityGatewaySecurityPolicyRule/ on the fake cloud, or live.
+func TestNetworkSecurityGatewaySecurityPolicyRule(t *testing.T) {
+	kindtest.Run(t, "NetworkSecurityGatewaySecurityPolicyRule")
+}
+
+// TestNetworkSecurityTLSInspectionPolicy runs testdata/discokind/NetworkSecurityTLSInspectionPolicy/ on the fake cloud, or live.
+func TestNetworkSecurityTLSInspectionPolicy(t *testing.T) {
+	kindtest.Run(t, "NetworkSecurityTLSInspectionPolicy")
+}
+
+// TestNetworkSecurityURLList runs testdata/discokind/NetworkSecurityURLList/ on the fake cloud, or live.
+func TestNetworkSecurityURLList(t *testing.T) { kindtest.Run(t, "NetworkSecurityURLList") }

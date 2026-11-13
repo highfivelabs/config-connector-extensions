@@ -1,0 +1,14 @@
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityGatewaySecurityPolicyRule
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  gatewaySecurityPolicy: ${KIND_NAME}-gsp
+  basicProfile: ALLOW
+  enabled: true
+  priority: 10
+  sessionMatcher: host() == 'example.com'
+  description: made by a config-connector-extensions test

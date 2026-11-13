@@ -65,7 +65,7 @@ func TestFixturesMatchTheirCRDs(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s := strings.NewReplacer("${PROJECT}", "mock-project", "${NAME}", "cce-11111111-abcd-kind", "${ID}", "cce11111111abcdkind", "${RUN_ID}", "cce-11111111-abcd", "${ORGANIZATION}", "123456789").Replace(string(b))
+			s := strings.NewReplacer("${PROJECT}", "mock-project", "${NAME}", "cce-11111111-abcd-kind", "${ID}", "cce11111111abcdkind", "${RUN_ID}", "cce-11111111-abcd", "${ORGANIZATION}", "123456789", "${KIND_NAME}", "cce-11111111-abcd-kind").Replace(string(b))
 			obj := map[string]any{}
 			if err := yaml.Unmarshal([]byte(s), &obj); err != nil {
 				t.Fatal(err)
