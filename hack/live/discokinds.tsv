@@ -42,6 +42,7 @@ LoggingSavedQuery	https://logging.googleapis.com/v2/	projects/{project}/location
 LookerInstance	https://looker.googleapis.com/v1/	projects/{project}/locations/global/instances	instances	-
 NetworkConnectivityAutomatedDnsRecord	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/automatedDnsRecords	automatedDnsRecords	-
 NetworkConnectivityPscAuthorizationPolicy	https://networkconnectivity.googleapis.com/v1/	projects/{project}/locations/global/pscAuthorizationPolicies	pscAuthorizationPolicies	-
+NetworkSecurityAuthzPolicy	https://networksecurity.googleapis.com/v1/	projects/{project}/locations/us-central1/authzPolicies	authzPolicies	-
 NetworkSecurityDNSThreatDetector	https://networksecurity.googleapis.com/v1/	projects/{project}/locations/global/dnsThreatDetectors	dnsThreatDetectors	-
 NetworkSecurityGatewaySecurityPolicy	https://networksecurity.googleapis.com/v1/	projects/{project}/locations/us-central1/gatewaySecurityPolicies	gatewaySecurityPolicies	-
 NetworkSecurityTLSInspectionPolicy	https://networksecurity.googleapis.com/v1/	projects/{project}/locations/us-central1/tlsInspectionPolicies	tlsInspectionPolicies	-

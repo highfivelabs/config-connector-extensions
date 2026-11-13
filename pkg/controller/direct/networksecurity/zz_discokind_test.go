@@ -23,6 +23,9 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind/kindtest"
 )
 
+// TestNetworkSecurityAuthzPolicy runs testdata/discokind/NetworkSecurityAuthzPolicy/ on the fake cloud, or live.
+func TestNetworkSecurityAuthzPolicy(t *testing.T) { kindtest.Run(t, "NetworkSecurityAuthzPolicy") }
+
 // TestNetworkSecurityDNSThreatDetector runs testdata/discokind/NetworkSecurityDNSThreatDetector/ on the fake cloud, or live.
 func TestNetworkSecurityDNSThreatDetector(t *testing.T) {
 	kindtest.Run(t, "NetworkSecurityDNSThreatDetector")

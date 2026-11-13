@@ -97,6 +97,7 @@ resources:
 - networkconnectivity.gcp.hfl.dev_networkconnectivitypscauthorizationpolicies.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
+- networksecurity.gcp.hfl.dev_networksecurityauthzpolicies.yaml
 - networksecurity.gcp.hfl.dev_networksecuritydnsthreatdetectors.yaml
 - networksecurity.gcp.hfl.dev_networksecuritygatewaysecuritypolicies.yaml
 - networksecurity.gcp.hfl.dev_networksecuritygatewaysecuritypolicyrules.yaml

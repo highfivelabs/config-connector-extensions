@@ -289,6 +289,25 @@ API's whole field set (`service`, `timeout`, `failOpen`, `metadata`,
 live as `NetworkServicesGateway` does (`networkservices.googleapis.com` is
 off in the live-test project).
 
+Then `NetworkSecurityAuthzPolicy` (`networksecurity.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the same module: fabric's `iap_config` and
+`model_armor_config` bind a `NetworkServicesAuthzExtension` to the agent
+gateway through an authorization policy whose target is the gateway
+(`google_network_security_authz_policy`, `action: CUSTOM`,
+`customProvider.authzExtension`). The API takes it: `target.resources` is
+"forwarding rules, Secure Web Proxy gateways or agent gateways", and
+`target.loadBalancingScheme` must be left out for an agent gateway.
+Config Connector's kind is alpha and its `target.resources` are
+`ForwardingRuleRef`s, which it validates as forwarding rules
+(`ForwardingRuleRef.ValidateExternal`), so it cannot name an agent
+gateway; no open upstream pull request changes that (checked 2026-11-13).
+Ours keeps the name at `v1beta1` (decision 26) with the API's whole field
+set; `target.resources` and `customProvider.authzExtension.resources` are
+the API's resource names (`projects/P/locations/L/agentGateways/G`).
+`policyProfile` is immutable. It skips live as
+`NetworkServicesAuthzExtension` does: an agent gateway needs
+`networkservices.googleapis.com`, off in the live-test project.
+
 Then `ComputeInterconnectAttachment` (`compute.gcp.hfl.dev/v1beta1`,
 2026-11-13), generated, for the catalog's VPN and interconnect ports:
 Config Connector's `v1beta1` kind lacks the candidate Cloud Router and
@@ -504,7 +523,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine` and `SpannerInstanceConfig`. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, `NetworkSecurityAuthzPolicy`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine` and `SpannerInstanceConfig`. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the

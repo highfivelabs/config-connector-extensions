@@ -514,6 +514,17 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "updateTime"},
 	},
 	{
+		GVK:       networksecurityv1beta1.NetworkSecurityAuthzPolicyGVK,
+		CRDName:   "networksecurityauthzpolicies.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/authzPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "authzPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
 		GVK:       gkebackupv1beta1.GKEBackupBackupPlanGVK,
 		CRDName:   "gkebackupbackupplans.gkebackup.gcp.hfl.dev",
 		BaseURL:   "https://gkebackup.googleapis.com/v1/",

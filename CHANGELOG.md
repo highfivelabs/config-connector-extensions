@@ -8,6 +8,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityAuthzPolicy`**,
+  generated from Discovery: an authorization policy
+  (`google_network_security_authz_policy`) whose `target.resources` may
+  name an agent gateway (`projects/P/locations/L/agentGateways/G`), a
+  Secure Web Proxy gateway or forwarding rules, so an agent gateway can
+  delegate to a `NetworkServicesAuthzExtension` (IAP, Model Armor) with
+  `action: CUSTOM`. Config Connector's alpha kind takes only forwarding
+  rules as targets; ours keeps the name at `v1beta1` (decision 26).
 - **`networkservices.gcp.hfl.dev/v1beta1` `NetworkServicesAuthzExtension`**,
   generated from Discovery: an authorization extension that a load
   balancer or an agent gateway calls before it allows a request
