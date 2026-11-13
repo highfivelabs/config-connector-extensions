@@ -118,6 +118,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
+| `roles/spanner.admin` | project | `SpannerInstanceConfig` (not granted yet, and `spanner.googleapis.com` is off: the test skips live without `E2E_SPANNER=true`) |
 | `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
@@ -345,6 +346,15 @@ test makes a policy of its own through the API, with rules that answer a
 name, switch to `bypassResponsePolicy` and are abandoned, and the sweeper
 deletes a policy's rules before the policy.
 
+`SpannerInstanceConfig` (package `spanner`) waits on Spanner in the
+project: `spanner.googleapis.com` is not on in `$GCP_PROJECT` and
+`cce-live-tests` has no Spanner role (checked 2026-11-12). Until both are
+(the API, and `roles/spanner.admin`), a live `spanner` run skips the test
+and the sweeper leaves instance configurations alone. With them:
+`E2E_SPANNER=true task test-live PROJECT=$GCP_PROJECT KINDS=spanner`.
+The test makes user-managed configurations only (no instance), which cost
+nothing; the sweeper deletes those whose ID carries a run ID after
+`custom-`.
 `DataCatalogTag` (package `datacatalog`) waits on Data Catalog in the
 project: `datacatalog.googleapis.com` is not on in `$GCP_PROJECT` and
 `cce-live-tests` has no Data Catalog role (checked 2026-11-12). Until both
