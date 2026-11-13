@@ -369,3 +369,22 @@ kind's `fakeDefaults`. It does not check required fields, enum values,
 cross-field rules or permissions, and fills in no other defaults: that is
 the live run's job (`docs/testing.md`).
 
+## Service Management's fake (`pkg/controller/direct/servicemanagement/fake`)
+
+mockgcp does not serve Service Management (`servicemanagement.googleapis.com`),
+which `EndpointsService` calls, so a small in-memory fake does, in front of
+mockgcp and behind the generated kinds' fake (in `pkg/test/mockenv` and both
+fake-cloud binaries). It serves services (create, get, list, delete,
+undelete), `configs:submit`, configurations (get, list), rollouts (create)
+and the active configuration (`services/{name}/config`); every operation is
+finished at once. A deleted service answers 404 and holds its name (a
+create answers 409) until it is undeleted, as the API keeps a deleted
+service for 30 days. A configuration's ID is `<date>r<n>`, its `title` is
+the OpenAPI document's `info.title` and its `endpoints` are the document's
+`x-google-endpoints`. It does not show: the API's reading of the
+configuration (no OpenAPI or gRPC validation, no check that the document's
+`host` is the service's name, no `apis`), DNS, permissions, rollouts that
+split traffic (it takes one configuration at 100%), and how long a rollout
+takes. A new fake was chosen over a mockgcp patch because mockgcp has no
+Service Management protos or service to extend, as the generated kinds'
+fake was.
