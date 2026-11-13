@@ -118,6 +118,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.networkAdmin` | project | `ComputeRegionNetworkEndpoint`, `ComputeRouterRoutePolicy` (the tests' networks, groups and routers); `NetworkSecurityAddressGroup` (the role has `networksecurity.addressGroups.*`); `NetworkSecuritySecurityProfile` and `NetworkSecuritySecurityProfileGroup` (a project's needed no other role, runs `cce-11092339-c43e` and `cce-11092345-9b77`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
+| `roles/apigee.admin` | project | `ApigeeNATAddress` (not granted, and no Apigee organization exists: the test skips live without `E2E_APIGEE_INSTANCE`) |
 | `roles/spanner.admin` | project | `SpannerInstanceConfig` (not granted yet, and `spanner.googleapis.com` is off: the test skips live without `E2E_SPANNER=true`) |
 | `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
@@ -345,6 +346,15 @@ sweeper unbinds and deletes policies whose name carries a run ID.
 test makes a policy of its own through the API, with rules that answer a
 name, switch to `bypassResponsePolicy` and are abandoned, and the sweeper
 deletes a policy's rules before the policy.
+
+`ApigeeNATAddress` (package `apigee`) waits on Apigee: a NAT address
+belongs to an Apigee instance, which needs a provisioned Apigee
+organization (billed, and an hour or more to make), and the live-test
+service account needs `roles/apigee.admin`; `$GCP_PROJECT` has neither
+(`apigee.googleapis.com` off, checked 2026-11-12). No test makes an
+organization or an instance. With one: `E2E_APIGEE_INSTANCE=organizations/O/instances/I
+task test-live PROJECT=$GCP_PROJECT KINDS=apigee`; the sweeper then
+deletes that instance's NAT addresses whose name carries a run ID.
 
 `SpannerInstanceConfig` (package `spanner`) waits on Spanner in the
 project: `spanner.googleapis.com` is not on in `$GCP_PROJECT` and
