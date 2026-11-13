@@ -33,6 +33,11 @@ spec's actions (defaults `NONE` and `REPLACE`).
 CONDITION_NOT_MET otherwise, run `cce-11122245-f5ea`), as a stateful
 regional group has it; patch 0040 makes mockgcp refuse it too.
 
+A deleted config stays listed, marked `DELETING` or `UNAPPLIED_DELETION`,
+until its instance is next updated (as upstream, the controller applies
+the update only with `removeInstanceStateOnDestroy`); the object is gone
+at once, and the fake removes the config at once.
+
 The test makes its own group (a network, a subnet, an e2-micro template
 and a regional group of size 0, redistribution off) through the API, then: create, a resync
 that writes nothing, a change of preserved metadata (one update, one
@@ -47,3 +52,4 @@ One row per run.
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-12 | `b514499` | PASS | FAIL | create: 412 CONDITION_NOT_MET "CreateInstances can be used only when instance redistribution is disabled (set to NONE)": the test's group redistributed (fixed in the test; mockgcp now refuses it, patch 0040) (run `cce-11122245-f5ea`) | 1 network and subnet, 1 template, 1 regional group of size 0; nothing left after the sweep |
+| 2026-11-12 | `41012d9` | PASS | FAIL | every step but delete passed live; after deletePerInstanceConfigs the API keeps the config, marked for deletion, until the instance is next updated, and the test waited for it to vanish (the test now takes a marked config as deleted) (run `cce-11122342-3e0c`) | 1 network and subnet, 1 template, 1 regional group with 2 e2-micro VMs (10 GB pd-standard); all deleted by the test |

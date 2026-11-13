@@ -283,12 +283,18 @@ func TestComputeRegionPerInstanceConfig(t *testing.T) {
 		}
 	})
 
+	// The API keeps a deleted config, marked DELETING or
+	// UNAPPLIED_DELETION, until its instance is next updated (run
+	// cce-11122342-3e0c); the fake removes it at once. Either is a delete.
 	t.Run("delete deletes the config", func(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "db-0")); err != nil {
 			t.Fatal(err)
 		}
 		env.WaitGone(&computev1beta1.ComputeRegionPerInstanceConfig{ObjectMeta: metav1.ObjectMeta{Namespace: "example", Name: "db-0"}})
-		waitFor(t, func() bool { _, ok := configs()[db]; return !ok })
+		waitFor(t, func() bool {
+			c, ok := configs()[db]
+			return !ok || c.GetStatus() == "DELETING" || c.GetStatus() == "UNAPPLIED_DELETION"
+		})
 	})
 
 	t.Run("abandon keeps the config", func(t *testing.T) {
