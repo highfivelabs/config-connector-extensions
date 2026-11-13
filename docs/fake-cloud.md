@@ -188,8 +188,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   boundary policy the fake holds; the binding's policy kind defaults to
   it and its `policyUid` is the policy's. It checks no permissions, does
   not check the principal set against the parent or the condition's
-  attributes, and serves neither `ACCESS` policies nor
-  `searchTargetPolicyBindings`.
+  attributes, and does not serve `searchTargetPolicyBindings`. Patch 0046
+  adds access policies (patch 0045) bound to `target.resource`, the
+  binding's kind defaulting to `ACCESS`; a principal access boundary
+  policy still needs a principal set.
 - **IAM access policies in mockgcp** (patch 0045, ours, for
   `IAMAccessPolicy`). Create, get, list, update of the whole policy (the
   API's update has no mask; a stale etag is refused) and delete under any
