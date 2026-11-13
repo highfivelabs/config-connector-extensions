@@ -119,6 +119,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule` (and the test's global policy) |
 | `roles/dns.admin` | project | `DNSResponsePolicy` (not granted yet: the test skips live without `E2E_DNS_ADMIN=true`) |
 | `roles/spanner.admin` | project | `SpannerInstanceConfig` (not granted yet, and `spanner.googleapis.com` is off: the test skips live without `E2E_SPANNER=true`) |
+| `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
@@ -340,6 +341,10 @@ them needs the API and the role). With them:
 The test binds a policy to two networks of its own, unbinds one,
 deletes it (unbinding first) and abandons and then acquires another; the
 sweeper unbinds and deletes policies whose name carries a run ID.
+`DNSResponsePolicyRule` (the same package) waits on the same switch; its
+test makes a policy of its own through the API, with rules that answer a
+name, switch to `bypassResponsePolicy` and are abandoned, and the sweeper
+deletes a policy's rules before the policy.
 
 `SpannerInstanceConfig` (package `spanner`) waits on Spanner in the
 project: `spanner.googleapis.com` is not on in `$GCP_PROJECT` and
@@ -350,6 +355,15 @@ and the sweeper leaves instance configurations alone. With them:
 The test makes user-managed configurations only (no instance), which cost
 nothing; the sweeper deletes those whose ID carries a run ID after
 `custom-`.
+`DataCatalogTag` (package `datacatalog`) waits on Data Catalog in the
+project: `datacatalog.googleapis.com` is not on in `$GCP_PROJECT` and
+`cce-live-tests` has no Data Catalog role (checked 2026-11-12). Until both
+are (the API, and `roles/datacatalog.admin`), a live `datacatalog` run
+skips the test and the sweeper leaves Data Catalog alone. With them:
+`E2E_DATA_CATALOG=true task test-live PROJECT=$GCP_PROJECT KINDS=datacatalog`.
+The test makes a tag template, an entry group and an entry of its own
+(free), then the tag; the sweeper deletes entry groups (with their entries
+and tags) and tag templates whose ID carries a run ID.
 `AIPlatformReasoningEngine` (package `aiplatform`) waits on Vertex AI in
 the project: `aiplatform.googleapis.com` is not on in `$GCP_PROJECT` and
 `cce-live-tests` has no Vertex AI role (checked 2026-11-12). Until both

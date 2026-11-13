@@ -486,6 +486,7 @@ contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/DocumentLink,15,
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/DocumentSchema,17,ContentWarehouseDocumentSchema,16,,0,1,false,api=v1:google.cloud.contentwarehouse.v1.DocumentSchemaService.CreateDocumentSchema; recursive-cut=1; official-spec-fields-unmatched=9/24
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/RuleSet,28,ContentWarehouseRuleSet,27,,0,1,false,api=v1:google.cloud.contentwarehouse.v1.RuleSetService.CreateRuleSet; official-spec-fields-unmatched=3/29
 contentwarehouse.googleapis.com,contentwarehouse.googleapis.com/SynonymSet,3,ContentWarehouseSynonymSet,3,,0,0,false,api=v1:google.cloud.contentwarehouse.v1.SynonymSetService.CreateSynonymSet; official-spec-fields-unmatched=3/5
+datacatalog.googleapis.com,datacatalog.googleapis.com/DataCatalogTag,0,,0,DataCatalogTag,0,0,false,outside-denominator; no API resource named like tag/datacatalogtag in datacatalog.googleapis.com
 datacatalog.googleapis.com,datacatalog.googleapis.com/Taxonomy,4,DataCatalogTaxonomy,4,,0,0,false,api=v1:projects.locations.taxonomies; official-spec-fields-unmatched=3/6
 datacatalog.googleapis.com,datacatalog.googleapis.com/TaxonomyPolicyTag,4,DataCatalogPolicyTag,4,,0,0,false,api=v1:projects.locations.taxonomies.policyTags; official-spec-fields-unmatched=2/5
 dataflow.googleapis.com,dataflow.googleapis.com/ConfigStoreSetting,3,,0,,0,3,false,api=v1b3:folders.locations.configStoreSettings
@@ -670,7 +671,7 @@ dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,,0,8,false,api=v1:ou
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,50,DNSRecordSet,43,,0,7,false,api=v1:resourceRecordSets; official-spec-fields-unmatched=5/48
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5
-dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9
+dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,DNSResponsePolicyRule,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=3/9
 documentai.googleapis.com,documentai.googleapis.com/Processor,5,DocumentAIProcessor,3,,0,2,false,api=v1:projects.locations.processors; official-spec-fields-unmatched=3/6
 documentai.googleapis.com,documentai.googleapis.com/Schema,3,,0,,0,3,false,api=v1:projects.locations.schemas
 documentai.googleapis.com,documentai.googleapis.com/SchemaSchemaVersion,19,,0,,0,19,false,api=v1:projects.locations.schemas.schemaVersions

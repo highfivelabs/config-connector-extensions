@@ -50,12 +50,14 @@ resources:
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
+- datacatalog.gcp.hfl.dev_datacatalogtags.yaml
 - dataplex.gcp.hfl.dev_dataplexaspecttypes.yaml
 - dataplex.gcp.hfl.dev_dataplexassets.yaml
 - dataplex.gcp.hfl.dev_dataplexdatascans.yaml
 - dataplex.gcp.hfl.dev_dataplexlakes.yaml
 - dataplex.gcp.hfl.dev_dataplexzones.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicies.yaml
+- dns.gcp.hfl.dev_dnsresponsepolicyrules.yaml
 - gkebackup.gcp.hfl.dev_gkebackupbackupchannels.yaml
 - gkebackup.gcp.hfl.dev_gkebackupbackupplans.yaml
 - gkebackup.gcp.hfl.dev_gkebackuprestorechannels.yaml
