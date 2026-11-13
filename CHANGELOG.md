@@ -8,6 +8,11 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`spanner.gcp.hfl.dev/v1beta1` `SpannerInstanceConfig`**, a stable copy
+  of Config Connector's alpha user-managed Spanner instance configuration
+  (decision 26), with upstream's fields; the fields the API cannot update
+  are immutable. Live pending Spanner in the live-test project
+  (`E2E_SPANNER=true`).
 - **`datacatalog.gcp.hfl.dev/v1beta1` `DataCatalogTag`**, a stable copy of
   Config Connector's alpha Data Catalog tag (decision 26), with upstream's
   fields. The API assigns the tag's ID at create; `status.externalRef`

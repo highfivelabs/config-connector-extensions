@@ -96,6 +96,7 @@ resources:
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - securitycenter.gcp.hfl.dev_securitycentermuteconfigs.yaml
 - serviceusage.gcp.hfl.dev_serviceidentities.yaml
+- spanner.gcp.hfl.dev_spannerinstanceconfigs.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
 - sqladmin.gcp.hfl.dev_sqladminbackups.yaml
 - storage.gcp.hfl.dev_storagebucketobjects.yaml
