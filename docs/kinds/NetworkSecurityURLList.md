@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `9edb8cb` | PASS | PASS | none: create, a resync with no write, changed values patched, delete, abandon, in us-central1 (run `cce-11130311-56bc`) | 2 URL lists (free); deleted by the test |

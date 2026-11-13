@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `9edb8cb` | PASS | PASS | none: create, a resync with no write, a changed description patched, delete, abandon, in us-central1 (run `cce-11130311-56bc`); an earlier run's sweep failed listing the global location, which these collections lack (`sweepLocation`, design.md 2.4) | 2 policies (free; no gateway); deleted by the test |

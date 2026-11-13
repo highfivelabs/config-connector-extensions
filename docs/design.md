@@ -231,7 +231,10 @@ sweeper deletes a run's rules before the discokind loop deletes its
 policies. These collections have no `global` location (listing it is a
 400, run `cce-11130256-843f`), so `kinds.yaml` gained `sweepLocation`:
 the sweeper lists them in `us-central1`, where their live fixtures make
-them. Config Connector's alpha types reference the TLS inspection
+them. The policy, its rule and the URL list pass live (runs
+`cce-11130311-56bc`, `cce-11130336-5f6f`); the rule's fixtures name the
+policy by `${KIND_NAME}`, a placeholder that stays the first object's
+`${NAME}` in the abandoned object's fixture too. Config Connector's alpha types reference the TLS inspection
 policy and CA pool; ours take their paths, as discokind does. A TLS
 inspection policy skips live (it needs a CA pool). And `ApigeeDnsZone`
 (`v1alpha1`, no Config Connector kind; Terraform's name, decision 18) for

@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `06ed894` | PASS | PASS | none: create, a resync with no write, a changed profile, priority and matcher patched, delete, abandon, in a policy the test's Setup made (run `cce-11130336-5f6f`); run `cce-11130311-56bc` found the abandoned rule naming a policy no Setup made (fixed: `${KIND_NAME}`) | 1 policy (free) and 2 rules; deleted by the test |
