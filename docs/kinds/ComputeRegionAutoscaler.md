@@ -47,3 +47,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | `6deeafd` | PASS | PASS | none: create on a regional group, a resync with no write (the policy's defaults all set in the spec), one patch for a changed CPU target, the CRD refusing a change of target, delete, abandon (run `cce-11130243-25ef`); the sweep and `task live-list` found 0 left | 2 regional groups with 1 e2-micro VM each (10 GB pd-standard), 1 template, 1 network and subnet; all deleted by the test |
