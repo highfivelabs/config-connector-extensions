@@ -412,6 +412,19 @@ edit `third_party/`, then regenerate the patch from
 `hack/upstream.sh` to check it applies. Two patches must not touch the
 same file unless they apply in order.
 
+**Every worktree has its own `third_party/`.** It is gitignored, so a
+new `git worktree` has none, and one copied or linked from another
+checkout holds that checkout's patches, not this branch's. After
+`git worktree add`, and after every merge of `main` that changes
+`patches/` or the pin, run `GOFLAGS=-p=2 nice hack/upstream.sh` in the
+worktree (it fetches the pin when missing, then resets it and applies
+this branch's patches), and `hack/upstream.sh --check` before trusting a
+local build. Never symlink `third_party` to another checkout's: a build
+there compiles against the other branch's mockgcp and passes or fails
+for the wrong reason. A long-lived worktree whose branch has merged
+(for example `.worktrees/server-id`) is behind `main`'s patches until it
+is moved to `main` and `hack/upstream.sh` runs again.
+
 **Generated code.** `GOFLAGS=-p=2 nice hack/generate.sh` (controller-gen
 v0.16.5) rewrites the CRDs, deepcopy and `config/crds/kustomization.yaml`.
 controller-gen panics on type aliases: use the aliased type

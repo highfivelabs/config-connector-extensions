@@ -41,6 +41,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
@@ -114,11 +115,20 @@ func TestComputeNetworkFirewallPolicyRule(t *testing.T) {
 		}
 		return obj
 	}
+	// tryUpdate reads the object, changes it and writes it, reading again
+	// when the controller wrote the object in between ("the object has
+	// been modified"); it returns the write's last error.
+	tryUpdate := func(t *testing.T, name string, change func(*computev1beta1.ComputeNetworkFirewallPolicyRule)) error {
+		t.Helper()
+		return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			o := getObj(t, name)
+			change(o)
+			return env.Kube.Update(env.Ctx, o)
+		})
+	}
 	update := func(t *testing.T, name string, change func(*computev1beta1.ComputeNetworkFirewallPolicyRule)) {
 		t.Helper()
-		o := getObj(t, name)
-		change(o)
-		if err := env.Kube.Update(env.Ctx, o); err != nil {
+		if err := tryUpdate(t, name, change); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -368,14 +378,14 @@ func TestComputeNetworkFirewallPolicyRule(t *testing.T) {
 	})
 
 	t.Run("the priority and the policy cannot change", func(t *testing.T) {
-		o := getObj(t, health)
-		o.Spec.Priority = 1001
-		if err := env.Kube.Update(env.Ctx, o); err == nil || !strings.Contains(err.Error(), "priority is immutable") {
+		err := tryUpdate(t, health, func(o *computev1beta1.ComputeNetworkFirewallPolicyRule) { o.Spec.Priority = 1001 })
+		if err == nil || !strings.Contains(err.Error(), "priority is immutable") {
 			t.Errorf("changing the priority: err = %v", err)
 		}
-		o = getObj(t, health)
-		o.Spec.FirewallPolicyRef = kcccomputev1beta1.ComputeNetworkFirewallPolicyRef{External: "projects/" + mockenv.Project + "/global/firewallPolicies/other"}
-		if err := env.Kube.Update(env.Ctx, o); err == nil || !strings.Contains(err.Error(), "firewallPolicyRef is immutable") {
+		err = tryUpdate(t, health, func(o *computev1beta1.ComputeNetworkFirewallPolicyRule) {
+			o.Spec.FirewallPolicyRef = kcccomputev1beta1.ComputeNetworkFirewallPolicyRef{External: "projects/" + mockenv.Project + "/global/firewallPolicies/other"}
+		})
+		if err == nil || !strings.Contains(err.Error(), "firewallPolicyRef is immutable") {
 			t.Errorf("changing the policy: err = %v", err)
 		}
 	})
