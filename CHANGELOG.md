@@ -217,6 +217,13 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`LoggingBillingAccountSink` took a Cloud Storage bucket only as
+  `projects/<p>/buckets/<name>` or `projects/_/buckets/<name>`**: a bucket's
+  bare name, `gs://<name>` and `storage.googleapis.com/<name>` (Terraform's
+  form) were refused by the reference's validation, as were the
+  `logging.googleapis.com/`, `bigquery.googleapis.com/` and
+  `pubsub.googleapis.com/` prefixes. Each is now taken; a `StorageBucket`
+  object by `name` works as before.
 - **A generated kind (`hack/discokind`) waited forever to be deleted when
   the parent object its `projectRef`, `folderRef` or `organizationRef`
   names by `name` was already gone** (everything deleted at once): its

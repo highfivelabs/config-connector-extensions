@@ -28,7 +28,9 @@ package logging
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	loggingv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/logging/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/common"
@@ -50,6 +52,35 @@ import (
 
 func init() {
 	registry.RegisterModel(krm.LoggingBillingAccountSinkGVK, NewBillingAccountSinkModel)
+}
+
+// normalizeSinkDestination puts a destination's external in the form its
+// reference type validates, from the forms a log sink's destination is
+// written in (Terraform's destination, fabric's, gcloud's): a service
+// prefix (storage.googleapis.com/, logging.googleapis.com/,
+// bigquery.googleapis.com/, pubsub.googleapis.com/) is dropped, and a
+// Cloud Storage bucket's bare name, or gs://name, becomes
+// projects/_/buckets/name (a bucket's name is global, so its project is
+// not needed). A bucket named by a StorageBucket object (name) is resolved
+// by the reference itself. The mapper adds the service prefix back.
+func normalizeSinkDestination(d *loggingv1beta1.LogSinkDestination) {
+	trim := func(ext, prefix string) string { return strings.TrimPrefix(ext, prefix) }
+	if r := d.StorageBucketRef; r != nil && r.External != "" {
+		ext := trim(trim(r.External, "storage.googleapis.com/"), "gs://")
+		if !strings.Contains(ext, "/") {
+			ext = "projects/_/buckets/" + ext
+		}
+		r.External = ext
+	}
+	if r := d.LoggingLogBucketRef; r != nil && r.External != "" {
+		r.External = trim(r.External, "logging.googleapis.com/")
+	}
+	if r := d.BigQueryDatasetRef; r != nil && r.External != "" {
+		r.External = trim(r.External, "bigquery.googleapis.com/")
+	}
+	if r := d.PubSubTopicRef; r != nil && r.External != "" {
+		r.External = trim(r.External, "pubsub.googleapis.com/")
+	}
 }
 
 func NewBillingAccountSinkModel(ctx context.Context, config *config.ControllerConfig) (directbase.Model, error) {
@@ -82,6 +113,7 @@ func (m *billingAccountSinkModel) AdapterForObject(ctx context.Context, op *dire
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	normalizeSinkDestination(&obj.Spec.Destination)
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}
