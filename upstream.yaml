@@ -316,6 +316,8 @@ copied:
     from: {written_here: true}
   - here: [apis/serviceusage/v1alpha1/serviceidentity_identity.go, hack/scaffold/serviceusage/overlay.proto]
     from: {written_here: true}
+  - here: [apis/servicemanagement/v1alpha1/groupversion_info.go, pkg/controller/direct/servicemanagement/endpointsservice_controller.go]
+    from: {written_here: true}
   - here: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]}
   - here: [apis/networksecurity/v1alpha1/groupversion_info.go, apis/networksecurity/v1alpha1/doc.go]
