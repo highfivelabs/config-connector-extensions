@@ -121,7 +121,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/apigee.admin` | project | `ApigeeNATAddress` (not granted, and no Apigee organization exists: the test skips live without `E2E_APIGEE_INSTANCE`) |
 | `roles/spanner.admin` | project | `SpannerInstanceConfig` (not granted yet, and `spanner.googleapis.com` is off: the test skips live without `E2E_SPANNER=true`) |
 | `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
-| `roles/chronicle.editor` | project | `ChronicleRule`, `ChronicleRuleDeployment` (not granted, and the project has no Google SecOps instance: the test skips live without `E2E_CHRONICLE_INSTANCE`) |
+| `roles/chronicle.editor` | project | `ChronicleRule`, `ChronicleRuleDeployment`, `ChronicleReferenceList` (not granted, and the project has no Google SecOps instance: the test skips live without `E2E_CHRONICLE_INSTANCE`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
 | `roles/servicemanagement.admin` | project | `EndpointsService` (not granted: run `cce-11130544-c338` was refused `servicemanagement.services.list`; the test skips live without `E2E_SERVICE_MANAGEMENT=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
@@ -414,7 +414,7 @@ The test makes two services, `<run ID>-echo` and `<run ID>-kept`
 name for 30 days, and every name carries the run ID); the sweeper deletes
 services whose name carries a run ID.
 
-`ChronicleRule` and `ChronicleRuleDeployment` (package `chronicle`) wait on a Google SecOps
+`ChronicleRule`, `ChronicleRuleDeployment` and `ChronicleReferenceList` (package `chronicle`) wait on a Google SecOps
 (Chronicle) instance, which `$GCP_PROJECT` does not have (an instance is
 provisioned with a SecOps subscription, not by an API call), and on
 `roles/chronicle.editor` for `cce-live-tests`. Until both exist, a live
@@ -423,7 +423,10 @@ Chronicle section. With them:
 `E2E_CHRONICLE_INSTANCE=<location>/<instance ID> task test-live PROJECT=$GCP_PROJECT KINDS=chronicle`.
 The test makes two rules of its own (named after the run ID, matching
 nothing) and deletes them; before the first live run the sweeper should
-learn to delete rules whose name carries a run ID.
+learn to delete rules whose name carries a run ID. The reference list
+test leaves one list per run (`cce_hosts` with the run ID): the API has no
+delete for a reference list, so neither the test nor a sweeper can remove
+it.
 
 `ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
 `roles/compute.networkAdmin` has `compute.vpnTunnels.*`,

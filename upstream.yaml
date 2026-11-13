@@ -320,6 +320,10 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/chronicle/v1alpha1/chroniclerule_types.go]}
   - here: [apis/chronicle/v1beta1/groupversion_info.go, pkg/controller/direct/chronicle/rule_controller.go]
     from: {written_here: true}
+  - here: [apis/chronicle/v1beta1/chroniclereferencelist_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/chronicle/v1alpha1/chroniclereferencelist_types.go]}
+  - here: [pkg/controller/direct/chronicle/referencelist_controller.go]
+    from: {written_here: true}
   - here: [apis/serviceusage/v1alpha1/serviceidentity_identity.go, hack/scaffold/serviceusage/overlay.proto]
     from: {written_here: true}
   - here: [apis/servicemanagement/v1alpha1/groupversion_info.go, pkg/controller/direct/servicemanagement/endpointsservice_controller.go]
