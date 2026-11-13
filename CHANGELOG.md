@@ -136,6 +136,13 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **The fake cloud answered 404 to an IAM policy read or write on a
+  generated kind** (Cloud Build v2 connections, API Gateway configs and
+  gateways, Dataplex lakes, zones, aspect types and data scans): the
+  generated kinds' fake (`pkg/discokind/fake`) took `name:getIamPolicy`
+  for an object's name. Custom methods now reach mockgcp, which serves
+  the policy verbs for every resource, so `IAMBinding` and `IAMMember`
+  on these kinds become Ready in `bin/fakecloud` and `bin/fakegcp`.
 - **Two `IAMMember` or `IAMBinding` objects on one BigQuery dataset could
   lose a member**: the access list is read, checked and patched in three
   calls, and two writers in one manager could both pass the check. Writes

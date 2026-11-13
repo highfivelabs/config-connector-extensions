@@ -369,6 +369,15 @@ kind's `fakeDefaults`. It does not check required fields, enum values,
 cross-field rules or permissions, and fills in no other defaults: that is
 the live run's job (`docs/testing.md`).
 
+A custom method on an object (`name:verb`) is not the collection's: the
+fake passes it to mockgcp, which serves `:getIamPolicy` and
+`:setIamPolicy` for every resource (patch 0018). Before 2026-11-13 the
+fake took `.../lakes/l:getIamPolicy` for an object called
+`l:getIamPolicy` and answered 404, so `IAMBinding` and `IAMMember` on
+Cloud Build v2 connections, API Gateway configs and gateways and the
+Dataplex kinds never became Ready on the fake cloud
+(`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
+
 ## Service Management's fake (`pkg/controller/direct/servicemanagement/fake`)
 
 mockgcp does not serve Service Management (`servicemanagement.googleapis.com`),
@@ -387,4 +396,6 @@ configuration (no OpenAPI or gRPC validation, no check that the document's
 split traffic (it takes one configuration at 100%), and how long a rollout
 takes. A new fake was chosen over a mockgcp patch because mockgcp has no
 Service Management protos or service to extend, as the generated kinds'
-fake was.
+fake was. As there, a custom IAM method on a service (`:getIamPolicy`,
+`:setIamPolicy`, `:testIamPermissions`) goes on to mockgcp, which serves
+it for every resource (patch 0018).

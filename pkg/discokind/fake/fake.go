@@ -68,6 +68,15 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 			return c.getOp(req, full)
 		}
 	}
+	// A custom method on an object (name:verb, such as :getIamPolicy and
+	// :setIamPolicy) is not the standard collection's: the fake does not
+	// serve it, and mockgcp serves the IAM verbs for every resource
+	// (patch 0018). Without this, a kind's name pattern matched
+	// ".../lakes/l:getIamPolicy" as an object called "l:getIamPolicy" and
+	// answered 404.
+	if last := full[strings.LastIndex(full, "/")+1:]; strings.Contains(last, ":") {
+		return c.Next.RoundTrip(req)
+	}
 	for _, k := range c.Kinds {
 		if !strings.HasPrefix(full, k.BaseURL) {
 			continue
