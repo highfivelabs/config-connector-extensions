@@ -44,11 +44,10 @@ end-to-end test on `pkg/test/mockenv` (a real kube-apiserver, Config
 Connector's direct reconciler, and mockgcp) covering create, update,
 delete and `deletion-policy: abandon`. If mockgcp lacks the API, extend it
 with a patch in `patches/k8s-config-connector/` and say whether the patch
-should go upstream. Patches apply in file-name order. A patch that only
-adds files, or touches files no other patch touches, is named by what it
-does, without a number (`mockgcp-dns-response-policies.patch`): it sorts
-after the numbered ones and needs no renumbering when a sibling merges
-first. Only a patch that must apply after another takes the next number. Write the test so it also runs live (names
+should go upstream. Patches apply in file-name order. Every patch is
+numbered: it takes the next number from `main` (`task upstream:yaml-check`
+reads only numbered names and refuses an unnumbered patch; design.md
+decision 29). If a sibling merges first, renumber yours. Write the test so it also runs live (names
 from `mockenv.Name`, labels from `mockenv.Labels()`, everything it makes
 deleted): a kind is done after one live run is recorded in its own file
 in `docs/kinds/` (`docs/kinds/README.md`). A kind's pull request adds or

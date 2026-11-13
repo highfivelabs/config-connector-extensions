@@ -1863,7 +1863,8 @@ Notes on what was built from this table:
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
-deprecated upstream and is not built.
+deprecated upstream and is not built; the catalog maps it to an Artifact
+Registry `gcr.io` repository (decision 30).
 
 ### 6.6 Field gaps on large Terraform-based kinds (proposed 2026-11-10)
 
@@ -2338,6 +2339,37 @@ To raise confidence in `ArtifactRegistryRepository`:
     kind for at all still start at `v1alpha1`; when they move up is the
     first half of question 6, still open.
 
+27. **Our own kinds are promoted to `v1beta1` once they pass live**
+    (the builder, 2026-11-13, answering the first half of section 10
+    question 6: "Q6 yes" and "promote those three"). A kind of ours for a
+    gap Config Connector has no kind for (`ComputeRouterRoutePolicy`,
+    `ComputeRegionNetworkEndpoint`, `StorageBucketObject`, `IAMMember`
+    and the rest) moves from `v1alpha1` to `v1beta1` once it has passed
+    live once and its schema has had no breaking change since, the same
+    way as `IAMBinding` (decision 24). `ComputeRouter`, `LoggingSettings`
+    and `SecurityCenterMuteConfig` are promoted first, to unblock the
+    catalog's VPN, folder and organization charts.
+
+28. **A service's generated kinds' tests get their own package** (the
+    builder, 2026-11-13, answering section 10 question 8: "Q8 yes, split
+    the tests"). `hack/discokind` writes them to
+    `pkg/controller/direct/<service>/discokindtest`, fixtures beside them,
+    so the generated and hand-written halves run in parallel; no timeout
+    changes.
+
+29. **Every patch is numbered** (the builder, 2026-11-13: "patches: the
+    guard wins (always numbered), fix CONTRIBUTING.md"). `task
+    upstream:yaml-check` reads only numbered names, so a new patch takes
+    the next number from `main`, whatever files it touches;
+    `CONTRIBUTING.md` and `docs/handoff.md` say so.
+
+30. **Container Registry maps to Artifact Registry; no kind is built**
+    (the builder, 2026-11-13: "Container Registry: map to Artifact
+    Registry"). Google's Container Registry is shut down. The catalog maps
+    Terraform's `google_container_registry` to an Artifact Registry
+    `gcr.io` repository (Config Connector's `ArtifactRegistryRepository`)
+    rather than a kind here.
+
 ## 9. The operator: Config Connector's identity, per namespace
 
 The goal: install the CRDs and run the managers so that a gap kind acts
@@ -2606,39 +2638,10 @@ moves to section 8.
    `resourceRef` to Config Connector's object, for example
    `KMSCryptoKeyFields` for `keyAccessJustificationsPolicy`; the fields
    keep the API's names. Not needed until the first such PR.
-6. **Which version do our kinds take, and when are they promoted?**
-   (2026-11-12.) The catalog's charts refuse `v1alpha1` kinds (decision
-   24), and most of ours are `v1alpha1`, including ones that pass live
-   and that its modules need: `ComputeRouterRoutePolicy`,
-   `StorageBucketObject`, `ComputeRegionNetworkEndpoint`,
-   `ComputeRegionNetworkFirewallPolicyAssociation` (catalog
-   `docs/coverage/resource-types.csv` counts these as "none" or "alpha",
-   which keeps four to six modules each blocked). Decision 13 makes our
-   copies of alpha-only foundation kinds stable (`v1beta1`); it does not
-   say whether that reaches beyond foundation areas (Backup for GKE, for
-   instance, which two GKE modules use), nor when a kind of ours that
-   started at `v1alpha1` moves up. Recommendation: a kind is `v1beta1`
-   once it has passed live once and its schema has had no breaking
-   change since; copies of upstream alpha-only kinds outside the
-   foundation stay out of scope until a module needs one, and are then
-   built as `v1beta1` under decision 13's reasoning. Until answered, new
-   kinds stay `v1alpha1` except decision 13's.
-   **Second half answered 2026-11-12** (decision 26, the coordinator's
-   direction): a copy of a Config Connector alpha-only kind is `v1beta1`.
-   **First half open**: whether and when our own `v1alpha1` kinds for
-   gaps with no Config Connector kind (`ComputeRouterRoutePolicy`,
-   `ComputeRegionNetworkEndpoint`, `StorageBucketObject`, `IAMMember`
-   and the rest) move to `v1beta1` once they pass live; none is promoted
-   until the builder answers.
-   **Now blocking catalog ports** (2026-11-13, the catalog's VPN and
-   folder ports): `ComputeRouter` (its peers already carry
-   `importPolicies`, `exportPolicies`, MD5 keys and
-   `customLearnedIpRanges`, which Config Connector's `ComputeRouterPeer`
-   lacks; decision 14 built it at `v1alpha1`), `LoggingSettings`
-   (folder and organization) and `SecurityCenterMuteConfig` (folder and
-   organization). Each would serve as built at `v1beta1`. Recommendation
-   unchanged; promoting these three first would unblock the VPN, folder
-   and organization charts.
+6. Answered 2026-11-13: our own `v1alpha1` kinds move to `v1beta1`
+   once they pass live, and `ComputeRouter`, `LoggingSettings` and
+   `SecurityCenterMuteConfig` are promoted first (decision 27; the second
+   half was decision 26).
 
 7. **Field gaps on Config Connector kinds the catalog's folder,
    organization and logging ports found** (2026-11-13). Decision 19 says a
@@ -2670,15 +2673,5 @@ moves to section 8.
      agents), it needs naming: recommendation, the catalog names the
      Terraform resource and it is built here under decision 18.
 
-8. **The `compute` package's tests reach `go test`'s ten-minute limit**
-   (2026-11-13). `pkg/controller/direct/compute` holds 19 generated kinds'
-   tests and 27 hand-written ones, each starting an envtest that installs
-   every CRD; it takes 550 to 600 s on an offload VM and times out on a
-   GitHub runner on most runs (PRs #111, #114, #116 needed reruns or
-   failed four times). The rule is to rerun, never to raise the timeout.
-   Every new compute kind and every new CRD makes it worse.
-   Recommendation: `hack/discokind` writes a service's generated kinds'
-   tests to their own package (`pkg/controller/direct/<service>/discokindtest`,
-   fixtures beside them), so the generated and hand-written halves run in
-   parallel; no timeout changes. A mechanical change for every service;
-   it needs the builder's yes because it moves every fixture.
+8. Answered 2026-11-13: yes, split the generated kinds' tests into
+   their own package (decision 28).
