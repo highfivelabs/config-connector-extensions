@@ -319,6 +319,12 @@ PR; the parent is one of `organizationRef`, `folderRef` and `projectRef`
 `IAMPrincipalAccessBoundaryPolicy` or a policy's name, and the controller
 is written here. mockgcp patch 0044 serves the bindings.
 `docs/kinds/IAMPolicyBinding.md` has the rest.
+An `IAMPolicyBinding` also binds an access policy to a resource
+(2026-11-13, for `geap-agent-gateway`): `target.resource` (on
+`cloud.google.com/go/iam` v1.14.0) beside `principalSet`, and, with
+`policyKind: ACCESS`, `policyRef.name` names an `IAMAccessPolicy`;
+mockgcp patch 0046. The kind stays `v1alpha1` (Config Connector has no
+released kind; decision 26's last sentence).
 
 Then `IAMAccessPolicy` (`iam.gcp.hfl.dev/v1beta1`, 2026-11-13),
 hand-written, for the catalog's `geap-agent-gateway` module

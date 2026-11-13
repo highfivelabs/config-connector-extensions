@@ -59,20 +59,31 @@ func (m *modelPolicyBinding) AdapterForObject(ctx context.Context, op *directbas
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	i, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
-	}
-	policy, err := resolvePolicyBindingPolicy(ctx, op.Reader, obj)
-	if err != nil {
-		return nil, err
+	id := &krm.IAMPolicyBindingIdentity{}
+	var policy string
+	if ext := direct.ValueOf(obj.Status.ExternalRef); !obj.GetDeletionTimestamp().IsZero() && ext != "" {
+		// Deleting a binding that was made: its name is in status, and the
+		// delete needs no policy, so a policy or parent object deleted with
+		// it (everything deleted at once) does not hold the delete.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		i, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			return nil, err
+		}
+		id = i.(*krm.IAMPolicyBindingIdentity)
+		if policy, err = resolvePolicyBindingPolicy(ctx, op.Reader, obj); err != nil {
+			return nil, err
+		}
 	}
 	gcpClient, err := m.client(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &PolicyBindingAdapter{
-		id:        i.(*krm.IAMPolicyBindingIdentity),
+		id:        id,
 		gcpClient: gcpClient,
 		desired:   obj,
 		policy:    policy,
@@ -80,8 +91,9 @@ func (m *modelPolicyBinding) AdapterForObject(ctx context.Context, op *directbas
 }
 
 // resolvePolicyBindingPolicy is the policy's resource name: policyRef's
-// external, or the status.externalRef of the IAMPrincipalAccessBoundaryPolicy
-// it names.
+// external, or the status.externalRef of the policy object it names, an
+// IAMAccessPolicy when policyKind is ACCESS, else an
+// IAMPrincipalAccessBoundaryPolicy.
 func resolvePolicyBindingPolicy(ctx context.Context, reader client.Reader, obj *krm.IAMPolicyBinding) (string, error) {
 	ref := obj.Spec.PolicyRef
 	if ref == nil {
@@ -97,14 +109,18 @@ func resolvePolicyBindingPolicy(ctx context.Context, reader client.Reader, obj *
 	if ns == "" {
 		ns = obj.GetNamespace()
 	}
+	gvk := krmv1beta1.IAMPrincipalAccessBoundaryPolicyGVK
+	if direct.ValueOf(obj.Spec.PolicyKind) == "ACCESS" {
+		gvk = krmv1beta1.IAMAccessPolicyGVK
+	}
 	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(krmv1beta1.IAMPrincipalAccessBoundaryPolicyGVK)
+	u.SetGroupVersionKind(gvk)
 	if err := reader.Get(ctx, types.NamespacedName{Namespace: ns, Name: ref.Name}, u); err != nil {
-		return "", fmt.Errorf("reading spec.policyRef IAMPrincipalAccessBoundaryPolicy %s/%s: %w", ns, ref.Name, err)
+		return "", fmt.Errorf("reading spec.policyRef %s %s/%s: %w", gvk.Kind, ns, ref.Name, err)
 	}
 	external, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
 	if external == "" {
-		return "", fmt.Errorf("spec.policyRef IAMPrincipalAccessBoundaryPolicy %s/%s is not ready (no status.externalRef)", ns, ref.Name)
+		return "", fmt.Errorf("spec.policyRef %s %s/%s is not ready (no status.externalRef)", gvk.Kind, ns, ref.Name)
 	}
 	return external, nil
 }

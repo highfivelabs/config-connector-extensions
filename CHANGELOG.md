@@ -15,6 +15,12 @@ has been released yet; each release moves its entries out of
   can delegate to IAP (`iap.googleapis.com`) or Model Armor. Config
   Connector's alpha kind requires a backend service and has no `service`
   field; ours keeps the name at `v1beta1` (decision 26).
+- **`IAMPolicyBinding` binds an access policy to a resource**:
+  `spec.target.resource` (the organization, folder, project or a resource
+  in it, such as an agent gateway), beside `principalSet` (exactly one);
+  with `policyKind: ACCESS`, `policyRef.name` names an `IAMAccessPolicy`.
+  A binding's delete no longer waits on a policy or parent object deleted
+  with it.
 - **`iam.gcp.hfl.dev/v1beta1` `IAMAccessPolicy`**, an IAM v3 access policy
   of an organization, folder or project
   (`google_iam_projects_access_policy` and its organization and folder
