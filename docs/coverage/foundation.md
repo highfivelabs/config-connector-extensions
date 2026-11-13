@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 38.9% | 16.5% | 44.5% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.3% | 29.5% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.3% | 29.4% |
 
 By service:
 
@@ -33,7 +33,7 @@ By service:
 | foundation | `vpcaccess.googleapis.com` | 1 | 10 | 100.0% | 0.0% | 0.0% |
 | foundation | `essentialcontacts.googleapis.com` | 3 | 9 | 100.0% | 0.0% | 0.0% |
 | foundation | `servicenetworking.googleapis.com` | 2 | 4 | 100.0% | 0.0% | 0.0% |
-| security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 6.7% | 19.9% |
+| security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 6.9% | 19.7% |
 | security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 0.0% | 28.7% |
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 0.0% | 51.3% |
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 0.0% | 48.1% |
@@ -526,40 +526,44 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
-| LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
+| LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
+| NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
+| NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
+| NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only
@@ -831,8 +835,8 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `networksecurity.googleapis.com/FirewallEndpoint` | NetworkSecurityFirewallEndpoint (alpha) | - | 14 | 5 | 0 | 9 | - |
 | security | `networksecurity.googleapis.com/FirewallEndpointAssociation` | NetworkSecurityFirewallEndpointAssociation (alpha) | - | 6 | 6 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/FirewallEndpointWildfireVerdictChangeRequest` | - | - | 3 | 0 | 0 | 3 | - |
-| security | `networksecurity.googleapis.com/GatewaySecurityPolicy` | NetworkSecurityGatewaySecurityPolicy (alpha) | - | 3 | 3 | 0 | 0 | - |
-| security | `networksecurity.googleapis.com/GatewaySecurityPolicyRule` | NetworkSecurityGatewaySecurityPolicyRule (alpha) | - | 8 | 8 | 0 | 0 | - |
+| security | `networksecurity.googleapis.com/GatewaySecurityPolicy` | NetworkSecurityGatewaySecurityPolicy (alpha) | NetworkSecurityGatewaySecurityPolicy | 3 | 3 | 0 | 0 | - |
+| security | `networksecurity.googleapis.com/GatewaySecurityPolicyRule` | NetworkSecurityGatewaySecurityPolicyRule (alpha) | NetworkSecurityGatewaySecurityPolicyRule | 8 | 8 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/InterceptDeployment` | NetworkSecurityInterceptDeployment (alpha) | - | 5 | 5 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/InterceptDeploymentGroup` | NetworkSecurityInterceptDeploymentGroup (alpha) | - | 4 | 4 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/InterceptEndpointGroup` | NetworkSecurityInterceptEndpointGroup (alpha) | - | 4 | 4 | 0 | 0 | - |
@@ -846,8 +850,8 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `networksecurity.googleapis.com/SecurityProfile` | - | NetworkSecuritySecurityProfile | 37 | 0 | 15 | 22 | 6 |
 | security | `networksecurity.googleapis.com/SecurityProfileGroup` | - | NetworkSecuritySecurityProfileGroup | 8 | 0 | 7 | 1 | 6 |
 | security | `networksecurity.googleapis.com/ServerTlsPolicy` | NetworkSecurityServerTLSPolicy | - | 11 | 7 | 0 | 4 | - |
-| security | `networksecurity.googleapis.com/TlsInspectionPolicy` | NetworkSecurityTLSInspectionPolicy (alpha) | - | 9 | 8 | 0 | 1 | - |
-| security | `networksecurity.googleapis.com/UrlList` | NetworkSecurityURLList (alpha) | - | 3 | 3 | 0 | 0 | - |
+| security | `networksecurity.googleapis.com/TlsInspectionPolicy` | NetworkSecurityTLSInspectionPolicy (alpha) | NetworkSecurityTLSInspectionPolicy | 9 | 8 | 1 | 0 | - |
+| security | `networksecurity.googleapis.com/UrlList` | NetworkSecurityURLList (alpha) | NetworkSecurityURLList | 3 | 3 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/projects.locations.addressGroups` | NetworkSecurityAddressGroup (alpha) | NetworkSecurityAddressGroup | 7 | 7 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/projects.locations.firewallEndpoints` | NetworkSecurityFirewallEndpoint (alpha) | - | 14 | 5 | 0 | 9 | - |
 | security | `networksecurity.googleapis.com/projects.locations.firewallEndpoints.wildfireVerdictChangeRequests` | - | - | 3 | 0 | 0 | 3 | - |
