@@ -1,0 +1,11 @@
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityTLSInspectionPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  caPool: projects/${PROJECT}/locations/us-central1/caPools/${NAME}-pool
+  minTlsVersion: TLS_1_1
+  description: changed

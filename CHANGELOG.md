@@ -8,6 +8,21 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
+  `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
+  `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure
+  Web Proxy's policy, its rules, URL lists and TLS inspection policy
+  (`google_network_security_gateway_security_policy`, `_rule`,
+  `google_network_security_url_lists`,
+  `google_network_security_tls_inspection_policy`). Config Connector's are
+  alpha only, so ours are stable equivalents (decision 26). Other resources
+  are named by their paths (a TLS inspection policy, a CA pool), not by
+  references.
+- **`apigee.gcp.hfl.dev/v1alpha1` `ApigeeDnsZone`**, generated from
+  Discovery: a private DNS zone an Apigee organization peers with
+  (`google_apigee_dns_zone`). Config Connector has no kind for it, so it
+  starts at `v1alpha1`. The API cannot change a zone: every field is
+  immutable. Live pending an Apigee organization.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
   Config Connector's alpha zonal autoscaler (decision 26), with upstream's
   fields.

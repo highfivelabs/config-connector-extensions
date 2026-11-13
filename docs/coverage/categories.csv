@@ -1,5 +1,5 @@
 category,services,resources_total,resources_official,resources_ours_beyond,attributes_total,attributes_official,attributes_ours_beyond,attributes_uncovered,pct_official,pct_ours_beyond,pct_uncovered
 platform-foundation,16,150,101,32,3121,1215,516,1390,38.9,16.5,44.5
-security-adjacent,14,82,69,5,1406,945,46,415,67.2,3.3,29.5
-application,56,549,342,15,24523,9780,345,14398,39.9,1.4,58.7
+security-adjacent,14,82,69,5,1406,945,47,414,67.2,3.3,29.4
+application,56,549,342,16,24523,9780,350,14393,39.9,1.4,58.7
 other,125,463,227,0,14539,3577,0,10962,24.6,0.0,75.4

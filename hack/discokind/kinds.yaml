@@ -328,6 +328,42 @@
   terraform: google_network_security_dns_threat_detector
   note: "DNS threat detection for a project's VPC networks."
 
+- kind: NetworkSecurityGatewaySecurityPolicy
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.gatewaySecurityPolicies
+  parents: [project]
+  terraform: google_network_security_gateway_security_policy
+  note: "A Secure Web Proxy's policy: the rules a gateway applies to its traffic."
+
+- kind: NetworkSecurityGatewaySecurityPolicyRule
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.gatewaySecurityPolicies.rules
+  parents: [project]
+  terraform: google_network_security_gateway_security_policy_rule
+  note: "A rule of a Secure Web Proxy's gateway security policy: allow or deny traffic a session and application matcher selects."
+
+- kind: NetworkSecurityURLList
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.urlLists
+  parents: [project]
+  terraform: google_network_security_url_lists
+  note: "A list of hostnames and URLs a gateway security policy rule can match."
+
+- kind: NetworkSecurityTLSInspectionPolicy
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.tlsInspectionPolicies
+  parents: [project]
+  terraform: google_network_security_tls_inspection_policy
+  note: "How a Secure Web Proxy inspects TLS: the CA pool that issues its interception certificates."
+
 - kind: GKEBackupBackupPlan
   group: gkebackup.gcp.hfl.dev
   version: v1beta1
@@ -507,3 +543,11 @@
   parents: [project]
   terraform: google_dataplex_datascan
   note: "A Dataplex data quality or data profile scan."
+
+- kind: ApigeeDnsZone
+  group: apigee.gcp.hfl.dev
+  version: v1alpha1
+  discovery: apigee.v1
+  resource: organizations.dnsZones
+  terraform: google_apigee_dns_zone
+  note: "A private DNS zone an Apigee organization peers with a VPC network; organization is the Apigee organization's name (its project's ID), not a Google Cloud organization."

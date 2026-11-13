@@ -1,0 +1,10 @@
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityURLList
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  values: [example.com, www.example.org/path]
+  description: changed
