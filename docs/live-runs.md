@@ -123,6 +123,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
 | `roles/chronicle.editor` | project | `ChronicleRuleDeployment` (not granted, and the project has no Google SecOps instance: the test skips live without `E2E_CHRONICLE_INSTANCE`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
+| `roles/servicemanagement.admin` | project | `EndpointsService` (not granted: run `cce-11130544-c338` was refused `servicemanagement.services.list`; the test skips live without `E2E_SERVICE_MANAGEMENT=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
@@ -387,6 +388,20 @@ the test and the sweeper leaves reasoning engines alone. With them:
 The test makes an engine with no code (sessions and memory only), which
 costs nothing while idle; the sweeper deletes engines in `us-central1`
 whose display name carries a run ID.
+
+`EndpointsService` (package `servicemanagement`) waits on Service
+Management for the account: run `cce-11130544-c338` (2026-11-13) was
+refused `servicemanagement.services.list` on `$GCP_PROJECT` (403), so
+`cce-live-tests` has no Service Management role, and whether
+`servicemanagement.googleapis.com` is on was not reached. Until the
+account has `roles/servicemanagement.admin` (and the API is on), a live
+`servicemanagement` run skips the test, and the sweeper takes a 403 on
+the list as nothing to sweep. With them:
+`E2E_SERVICE_MANAGEMENT=true task test-live PROJECT=$GCP_PROJECT KINDS=servicemanagement`.
+The test makes two services, `<run ID>-echo` and `<run ID>-kept`
+`.endpoints.$GCP_PROJECT.cloud.goog` (free; a deleted service holds its
+name for 30 days, and every name carries the run ID); the sweeper deletes
+services whose name carries a run ID.
 
 `ChronicleRuleDeployment` (package `chronicle`) waits on a Google SecOps
 (Chronicle) instance, which `$GCP_PROJECT` does not have (an instance is

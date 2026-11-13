@@ -243,6 +243,20 @@ is immutable; its `organization` is the Apigee organization (a project's
 ID), and it skips live until the live-test project has an Apigee
 organization.
 
+Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
+2026-11-13), hand-written rather than generated: a Cloud Endpoints service
+is three Service Management calls (create the service, submit a
+configuration, roll it out), which is not a discokind shape, and Config
+Connector has no Service Management code to copy. It is Terraform's
+`google_endpoints_service` (decision 18; Config Connector has no kind) for
+the catalog's `endpoints` module, at `v1alpha1` (decision 26's last
+sentence). Its group is the API's (`servicemanagement`), as every group here
+is named after its API, not the product. A configuration is submitted and
+rolled out again only when the files change (`status.configDigest`) or
+another configuration was rolled out by hand. mockgcp has no Service
+Management, so a fake in front of it serves the calls
+(`docs/fake-cloud.md`). `docs/kinds/EndpointsService.md` has the rest.
+
 Then `ChronicleRuleDeployment` (`chronicle.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written: the API has no Discovery document at the
 pinned discovery-artifact-manager commit (nor at its head), and a rule's
@@ -1925,6 +1939,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
     pending the test folder); a regional kind, which the API has no rule
     calls for; `targetSecureTags`, which no test sets.
+38. `EndpointsService`: a live run (needs `roles/servicemanagement.admin`
+    for `cce-live-tests` and `servicemanagement.googleapis.com` on;
+    `E2E_SERVICE_MANAGEMENT=true`; run `cce-11130544-c338` was refused
+    the list); whether the API answers a get of a missing or deleted
+    service with 404 or 403, which `Find` takes alike; a gRPC service (no test makes a
+    descriptor set; only the OpenAPI path runs); the undelete of a name
+    held by a service deleted within 30 days, which only the fake shows;
+    rollouts that split traffic between configurations (Terraform has
+    none either); the API's own reading of the configuration, which the
+    fake does not parse.
 39. `ChronicleRuleDeployment`: a live run (needs a Google SecOps instance
     in or bound to the live-test project, `chronicle.googleapis.com` on
     and `roles/chronicle.editor` for `cce-live-tests`;

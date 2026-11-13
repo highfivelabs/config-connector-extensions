@@ -378,6 +378,28 @@ Cloud Build v2 connections, API Gateway configs and gateways and the
 Dataplex kinds never became Ready on the fake cloud
 (`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
 
+## Service Management's fake (`pkg/controller/direct/servicemanagement/fake`)
+
+mockgcp does not serve Service Management (`servicemanagement.googleapis.com`),
+which `EndpointsService` calls, so a small in-memory fake does, in front of
+mockgcp and behind the generated kinds' fake (in `pkg/test/mockenv` and both
+fake-cloud binaries). It serves services (create, get, list, delete,
+undelete), `configs:submit`, configurations (get, list), rollouts (create)
+and the active configuration (`services/{name}/config`); every operation is
+finished at once. A deleted service answers 404 and holds its name (a
+create answers 409) until it is undeleted, as the API keeps a deleted
+service for 30 days. A configuration's ID is `<date>r<n>`, its `title` is
+the OpenAPI document's `info.title` and its `endpoints` are the document's
+`x-google-endpoints`. It does not show: the API's reading of the
+configuration (no OpenAPI or gRPC validation, no check that the document's
+`host` is the service's name, no `apis`), DNS, permissions, rollouts that
+split traffic (it takes one configuration at 100%), and how long a rollout
+takes. A new fake was chosen over a mockgcp patch because mockgcp has no
+Service Management protos or service to extend, as the generated kinds'
+fake was. As there, a custom IAM method on a service (`:getIamPolicy`,
+`:setIamPolicy`, `:testIamPermissions`) goes on to mockgcp, which serves
+it for every resource (patch 0018).
+
 ## The Chronicle fake (`pkg/controller/direct/chronicle/fake`)
 
 mockgcp does not serve the Chronicle API (`<location>-chronicle.googleapis.com`,
@@ -398,4 +420,3 @@ are kept as sent), whether a run frequency suits the rule, chained rules
 (`producerRules` and `consumerRules` stay empty), detections and
 permissions. A new fake was chosen over a mockgcp patch because mockgcp has
 no Chronicle service to extend.
-
