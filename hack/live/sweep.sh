@@ -328,9 +328,11 @@ while read -r name region zone; do
   [[ -n "${name}" ]] || continue
   act "network endpoint group" "${name} ${region:-${zone:-global}}" "${G[@]}" compute network-endpoint-groups delete "${name}" "$(scope "${region}" "${zone}")"
 done <<<"${rows}"
-# Autoscalers (the ComputeAutoscaler test's), by name, before the managed
-# instance groups they scale; gcloud has no autoscaler commands, so through
-# the API's aggregated list (selfLinks are full URLs).
+# Autoscalers (the ComputeAutoscaler and ComputeRegionAutoscaler tests'),
+# by name, before the managed instance groups they scale; gcloud has no
+# autoscaler commands, so through the API's aggregated list, which holds
+# zonal and regional autoscalers under zones/* and regions/* keys (selfLinks
+# are full URLs, so one delete serves both).
 cbase="https://compute.googleapis.com/compute/v1/"
 rows="$(disco_api GET "${cbase}projects/${project}/aggregated/autoscalers?maxResults=500" \
   | jq -r '.items[]?.autoscalers[]? | "\(.name) \(.creationTimestamp) \(.selfLink)"')"

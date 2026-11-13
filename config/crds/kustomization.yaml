@@ -37,6 +37,7 @@ resources:
 - compute.gcp.hfl.dev_computeprojectmetadataitems.yaml
 - compute.gcp.hfl.dev_computepublicadvertisedprefixes.yaml
 - compute.gcp.hfl.dev_computepublicdelegatedprefixes.yaml
+- compute.gcp.hfl.dev_computeregionautoscalers.yaml
 - compute.gcp.hfl.dev_computeregionbackendbuckets.yaml
 - compute.gcp.hfl.dev_computeregioncompositehealthchecks.yaml
 - compute.gcp.hfl.dev_computeregiondiskresourcepolicyattachments.yaml

@@ -8,6 +8,9 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionAutoscaler`**, a stable
+  kind for Config Connector's alpha regional autoscaler, which has types
+  but no controller upstream (decision 26), with upstream's fields.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionDiskResourcePolicyAttachment`**,
   a resource policy (a snapshot schedule) attached to a regional disk, with
   the fields of Config Connector's Terraform-based alpha kind (decision

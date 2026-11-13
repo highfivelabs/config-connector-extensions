@@ -387,7 +387,7 @@ compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,Comp
 compute.googleapis.com,compute.googleapis.com/PacketMirroring,12,ComputePacketMirroring,12,,0,0,false,api=v1:packetMirrorings; official-spec-fields-unmatched=5/16
 compute.googleapis.com,compute.googleapis.com/PublicAdvertisedPrefix,7,,0,ComputePublicAdvertisedPrefix,7,0,false,api=v1:publicAdvertisedPrefixes; ours-spec-fields-unmatched=2/8
 compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,ComputePublicDelegatedPrefix,15,0,false,api=v1:publicDelegatedPrefixes; ours-spec-fields-unmatched=3/17
-compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,ComputeAutoscaler,0,7,false,api=v1:regionAutoscalers; ours-spec-fields-unmatched=13/30
+compute.googleapis.com,compute.googleapis.com/RegionAutoscaler,25,ComputeAutoscaler;ComputeRegionAutoscaler,18,ComputeAutoscaler;ComputeRegionAutoscaler,0,7,false,api=v1:regionAutoscalers
 compute.googleapis.com,compute.googleapis.com/RegionBackendBucket,21,,0,ComputeRegionBackendBucket,21,0,false,api=v1:regionBackendBuckets; ours-spec-fields-unmatched=3/23
 compute.googleapis.com,compute.googleapis.com/RegionBackendService,135,ComputeBackendService,84,,0,51,false,api=v1:regionBackendServices; official-spec-fields-unmatched=13/96
 compute.googleapis.com,compute.googleapis.com/RegionCommitment,49,,0,,0,49,false,api=v1:regionCommitments
