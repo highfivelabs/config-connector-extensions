@@ -5,6 +5,7 @@ resources:
 - aiplatform.gcp.hfl.dev_aiplatformreasoningengines.yaml
 - apigateway.gcp.hfl.dev_apigatewayapiconfigs.yaml
 - apigateway.gcp.hfl.dev_apigatewaygateways.yaml
+- apigee.gcp.hfl.dev_apigeenataddresses.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
 - backupdr.gcp.hfl.dev_backupdrmanagementservers.yaml
