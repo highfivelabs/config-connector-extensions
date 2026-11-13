@@ -286,6 +286,18 @@ API's whole field set (`service`, `timeout`, `failOpen`, `metadata`,
 live as `NetworkServicesGateway` does (`networkservices.googleapis.com` is
 off in the live-test project).
 
+Then `ComputeInterconnectAttachment` (`compute.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the catalog's VPN and interconnect ports:
+Config Connector's `v1beta1` kind lacks the candidate Cloud Router and
+customer router addresses (`candidateCloudRouterIpAddress`,
+`candidateCustomerRouterIpAddress`, and their IPv6 forms), so ours keeps
+the name at `v1beta1` with the API's whole field set (decisions 19 and 26,
+as `NetworkServicesGateway`). The fields Terraform's
+`google_compute_interconnect_attachment` forces a new attachment for are
+immutable. It skips live: the live-test project has no Dedicated
+Interconnect. Its test adds to the `compute` package's time (section 10,
+question 8).
+
 Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written rather than generated: a Cloud Endpoints service
 is three Service Management calls (create the service, submit a
@@ -2596,3 +2608,55 @@ moves to section 8.
    `ComputeRegionNetworkEndpoint`, `StorageBucketObject`, `IAMMember`
    and the rest) move to `v1beta1` once they pass live; none is promoted
    until the builder answers.
+   **Now blocking catalog ports** (2026-11-13, the catalog's VPN and
+   folder ports): `ComputeRouter` (its peers already carry
+   `importPolicies`, `exportPolicies`, MD5 keys and
+   `customLearnedIpRanges`, which Config Connector's `ComputeRouterPeer`
+   lacks; decision 14 built it at `v1alpha1`), `LoggingSettings`
+   (folder and organization) and `SecurityCenterMuteConfig` (folder and
+   organization). Each would serve as built at `v1beta1`. Recommendation
+   unchanged; promoting these three first would unblock the VPN, folder
+   and organization charts.
+
+7. **Field gaps on Config Connector kinds the catalog's folder,
+   organization and logging ports found** (2026-11-13). Decision 19 says a
+   field gap is our own kind in our group, owning the whole object.
+   - `LoggingLogSink.interceptChildren` (a folder's or organization's sink
+     that intercepts its children's logs). Config Connector's kind lacks
+     it. Recommendation: our own `LoggingLogSink` at `v1beta1` (decisions
+     19 and 26, as `NetworkServicesGateway`) with a folder, organization or
+     project parent, hand-written after `LoggingBillingAccountSink` (a
+     sink's create takes the name in the body and `uniqueWriterIdentity`
+     as a parameter, which is not a `hack/discokind` shape).
+   - `Folder.deletionProtection`. This is not an API field: Terraform's
+     `google_folder.deletion_protection` is a client-side guard.
+     Recommendation: no kind; the catalog maps it to
+     `cnrm.cloud.google.com/deletion-policy: abandon` (which keeps the
+     folder) or, for "refuse to delete", to Bundt's own deletion guard.
+   - Config Connector's `OrgPolicyPolicy` cannot be deleted once the
+     folder or organization object it names is gone (the parent-gone rule
+     of PRs #109 and #111). It is Config Connector's controller, which
+     this repository does not run and does not patch (patches change the
+     pinned code we build, not the operator Config Connector runs).
+     Recommendation: our own `OrgPolicyPolicy` (`orgpolicy.gcp.hfl.dev`,
+     `v1beta1`, decision 19) only if the catalog cannot order deletes; until
+     then, the catalog deletes policies before their parents, and the
+     catalog's notes say so.
+   - A "service-agents config" for folders and organizations: our
+     `ServiceIdentity` already takes a folder or organization. If the
+     catalog means something else (a resource that configures service
+     agents), it needs naming: recommendation, the catalog names the
+     Terraform resource and it is built here under decision 18.
+
+8. **The `compute` package's tests reach `go test`'s ten-minute limit**
+   (2026-11-13). `pkg/controller/direct/compute` holds 19 generated kinds'
+   tests and 27 hand-written ones, each starting an envtest that installs
+   every CRD; it takes 550 to 600 s on an offload VM and times out on a
+   GitHub runner on most runs (PRs #111, #114, #116 needed reruns or
+   failed four times). The rule is to rerun, never to raise the timeout.
+   Every new compute kind and every new CRD makes it worse.
+   Recommendation: `hack/discokind` writes a service's generated kinds'
+   tests to their own package (`pkg/controller/direct/<service>/discokindtest`,
+   fixtures beside them), so the generated and hand-written halves run in
+   parallel; no timeout changes. A mechanical change for every service;
+   it needs the builder's yes because it moves every fixture.

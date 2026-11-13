@@ -28,6 +28,7 @@ resources:
 - compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
+- compute.gcp.hfl.dev_computeinterconnectattachments.yaml
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
 - compute.gcp.hfl.dev_computenetworkattachments.yaml
 - compute.gcp.hfl.dev_computenetworkendpoints.yaml

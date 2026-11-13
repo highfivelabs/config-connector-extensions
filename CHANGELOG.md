@@ -15,6 +15,13 @@ has been released yet; each release moves its entries out of
   can delegate to IAP (`iap.googleapis.com`) or Model Armor. Config
   Connector's alpha kind requires a backend service and has no `service`
   field; ours keeps the name at `v1beta1` (decision 26).
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeInterconnectAttachment`**,
+  generated from Discovery: a VLAN attachment
+  (`google_compute_interconnect_attachment`) with the API's whole field
+  set, including `candidateCloudRouterIpAddress` and
+  `candidateCustomerRouterIpAddress` (and their IPv6 forms), which Config
+  Connector's `v1beta1` kind lacks. Same name (decisions 19 and 26). Live
+  pending a Dedicated Interconnect.
 - **`IAMPolicyBinding` binds an access policy to a resource**:
   `spec.target.resource` (the organization, folder, project or a resource
   in it, such as an agent gateway), beside `principalSet` (exactly one);

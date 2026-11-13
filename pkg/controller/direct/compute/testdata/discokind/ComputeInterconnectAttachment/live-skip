@@ -1,0 +1,1 @@
+needs a Dedicated Interconnect (a physical connection) in the live-test project, which it does not have; the attachment's API checks the interconnect exists
