@@ -456,6 +456,9 @@ if [[ "${E2E_SPANNER:-}" == true ]]; then
   for name in ${rows}; do
     by_run "${name#custom-}" || continue
     act "Spanner instance config" "${name}" "${G[@]}" spanner instance-configs delete "${name}"
+  done
+fi
+
 # Data Catalog entry groups (deleted with force, their entries and tags
 # with them) and tag templates (the DataCatalogTag test's), by the run's
 # name with its dashes as underscores (their IDs take no dashes), only
@@ -479,6 +482,9 @@ if [[ "${E2E_DATA_CATALOG:-}" == true ]]; then
     leaf="${name##*/}"
     by_run "${leaf//_/-}" || continue
     act "Data Catalog tag template" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+fi
+
 # Vertex AI reasoning engines (the AIPlatformReasoningEngine test's), by
 # the run's display name (the ID is the API's), only where the live-test
 # account has Vertex AI (E2E_VERTEX_AI=true: aiplatform.googleapis.com on
@@ -558,6 +564,28 @@ while read -r name made; do
   fi
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
+
+# Managed instance groups (the per-instance config tests make a regional
+# one), by name; deleting a group deletes its instances. Then any instance
+# and instance template of a run left behind, before their subnets.
+# (Commas, not tabs: a regional group has no zone, and read would shift an
+# empty field.)
+rows="$("${G[@]}" compute instance-groups managed list --verbosity=error \
+  --filter="$(cfilter)" --format='csv[no-heading](name,region.basename(),zone.basename())')"
+while IFS=, read -r name region zone; do
+  [[ -n "${name}" ]] || continue
+  act "managed instance group" "${name} ${region:-${zone}}" "${G[@]}" compute instance-groups managed delete "${name}" "$(scope "${region}" "${zone}")"
+done <<<"${rows}"
+rows="$("${G[@]}" compute instances list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,zone.basename())')"
+while read -r name zone; do
+  [[ -n "${name}" ]] || continue
+  act "instance" "${name} ${zone}" "${G[@]}" compute instances delete "${name}" --zone="${zone}"
+done <<<"${rows}"
+names="$("${G[@]}" compute instance-templates list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
+for name in ${names}; do
+  act "instance template" "${name}" "${G[@]}" compute instance-templates delete "${name}" --global
+done
 
 # Subnets (a live test's Setup makes them for the network attachments and
 # instance templates it tests), by name, before their networks.

@@ -44,6 +44,7 @@ resources:
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyassociations.yaml
 - compute.gcp.hfl.dev_computeregionnetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeregionnotificationendpoints.yaml
+- compute.gcp.hfl.dev_computeregionperinstanceconfigs.yaml
 - compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
