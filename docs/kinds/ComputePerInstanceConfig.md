@@ -52,3 +52,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | `19f3801` | PASS | PASS | none: createInstances on a zonal group with preserved metadata, a resync with no write, one update and one apply for changed metadata, the CRD refusing a change of group, delete, abandon (run `cce-11130243-a782`) | 1 network and subnet, 1 template, 1 zonal group with 2 e2-micro VMs (10 GB pd-standard); all deleted by the test, the run's sweep matched nothing |
