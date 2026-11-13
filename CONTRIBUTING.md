@@ -33,7 +33,7 @@ credentials on the first run (factory `taskfiles/README.md`).
 
 ```sh
 task upstream      # once: Config Connector at the pin (~650 MB) plus patches/
-task check         # pin, go.mod pins, generated files, gofmt, vet, SPDX lines, build, tests
+task check         # pin, go.mod pins, generated files, gofmt, vet, SPDX lines, bash -n of the shell scripts, build, tests
 task operator-e2e  # the operator on a fresh kind cluster with the in-cluster fake cloud
 task fake-cloud-up && task fake-cloud-test && task fake-cloud-down
                    # Config Connector's manager and ours against mockgcp on kind
