@@ -5,6 +5,7 @@ resources:
 - aiplatform.gcp.hfl.dev_aiplatformreasoningengines.yaml
 - apigateway.gcp.hfl.dev_apigatewayapiconfigs.yaml
 - apigateway.gcp.hfl.dev_apigatewaygateways.yaml
+- apigee.gcp.hfl.dev_apigeednszones.yaml
 - apigee.gcp.hfl.dev_apigeenataddresses.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
@@ -91,8 +92,12 @@ resources:
 - networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritydnsthreatdetectors.yaml
+- networksecurity.gcp.hfl.dev_networksecuritygatewaysecuritypolicies.yaml
+- networksecurity.gcp.hfl.dev_networksecuritygatewaysecuritypolicyrules.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofilegroups.yaml
 - networksecurity.gcp.hfl.dev_networksecuritysecurityprofiles.yaml
+- networksecurity.gcp.hfl.dev_networksecuritytlsinspectionpolicies.yaml
+- networksecurity.gcp.hfl.dev_networksecurityurllists.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentconnectivitytemplates.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentgateways.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml

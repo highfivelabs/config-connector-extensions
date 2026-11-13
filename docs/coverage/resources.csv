@@ -101,7 +101,7 @@ apigee.googleapis.com,apigee.googleapis.com/DeveloperApp,11,,0,,0,11,false,api=v
 apigee.googleapis.com,apigee.googleapis.com/DeveloperAppKey,10,,0,,0,10,false,api=v1:organizations.developers.apps.keys
 apigee.googleapis.com,apigee.googleapis.com/DeveloperAppKeyCreate,10,,0,,0,10,false,api=v1:organizations.developers.apps.keys.create
 apigee.googleapis.com,apigee.googleapis.com/DeveloperSubscription,3,,0,,0,3,false,api=v1:organizations.developers.subscriptions
-apigee.googleapis.com,apigee.googleapis.com/DnsZone,5,,0,,0,5,false,api=v1:organizations.dnsZones
+apigee.googleapis.com,apigee.googleapis.com/DnsZone,5,,0,ApigeeDnsZone,5,0,false,api=v1:organizations.dnsZones; ours-spec-fields-unmatched=2/6
 apigee.googleapis.com,apigee.googleapis.com/EndpointAttachment,3,ApigeeEndpointAttachment,3,,0,0,false,api=v1:organizations.endpointAttachments; official-spec-fields-unmatched=2/4
 apigee.googleapis.com,apigee.googleapis.com/Envgroup,2,ApigeeEnvgroup,2,,0,0,false,api=v1:organizations.envgroups; official-spec-fields-unmatched=2/3
 apigee.googleapis.com,apigee.googleapis.com/EnvgroupAttachment,2,ApigeeEnvgroupAttachment,2,,0,0,false,api=v1:organizations.envgroups.attachments; official-spec-fields-unmatched=2/3
@@ -968,8 +968,8 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,
 networksecurity.googleapis.com,networksecurity.googleapis.com/FirewallEndpoint,14,NetworkSecurityFirewallEndpoint,5,,0,9,false,api=v1:organizations.locations.firewallEndpoints; official-spec-fields-unmatched=4/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/FirewallEndpointAssociation,6,NetworkSecurityFirewallEndpointAssociation,6,,0,0,false,api=v1:projects.locations.firewallEndpointAssociations; official-spec-fields-unmatched=3/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/FirewallEndpointWildfireVerdictChangeRequest,3,,0,,0,3,false,api=v1:organizations.locations.firewallEndpoints.wildfireVerdictChangeRequests
-networksecurity.googleapis.com,networksecurity.googleapis.com/GatewaySecurityPolicy,3,NetworkSecurityGatewaySecurityPolicy,3,,0,0,false,api=v1:projects.locations.gatewaySecurityPolicies; official-spec-fields-unmatched=3/5
-networksecurity.googleapis.com,networksecurity.googleapis.com/GatewaySecurityPolicyRule,8,NetworkSecurityGatewaySecurityPolicyRule,8,,0,0,false,api=v1:projects.locations.gatewaySecurityPolicies.rules; official-spec-fields-unmatched=2/9
+networksecurity.googleapis.com,networksecurity.googleapis.com/GatewaySecurityPolicy,3,NetworkSecurityGatewaySecurityPolicy,3,NetworkSecurityGatewaySecurityPolicy,0,0,false,api=v1:projects.locations.gatewaySecurityPolicies; official-spec-fields-unmatched=3/5; ours-spec-fields-unmatched=3/5
+networksecurity.googleapis.com,networksecurity.googleapis.com/GatewaySecurityPolicyRule,8,NetworkSecurityGatewaySecurityPolicyRule,8,NetworkSecurityGatewaySecurityPolicyRule,0,0,false,api=v1:projects.locations.gatewaySecurityPolicies.rules; official-spec-fields-unmatched=2/9; ours-spec-fields-unmatched=4/11
 networksecurity.googleapis.com,networksecurity.googleapis.com/InterceptDeployment,5,NetworkSecurityInterceptDeployment,5,,0,0,false,api=v1:projects.locations.interceptDeployments; official-spec-fields-unmatched=3/7
 networksecurity.googleapis.com,networksecurity.googleapis.com/InterceptDeploymentGroup,4,NetworkSecurityInterceptDeploymentGroup,4,,0,0,false,api=v1:projects.locations.interceptDeploymentGroups; official-spec-fields-unmatched=3/6
 networksecurity.googleapis.com,networksecurity.googleapis.com/InterceptEndpointGroup,4,NetworkSecurityInterceptEndpointGroup,4,,0,0,false,api=v1:projects.locations.interceptEndpointGroups; official-spec-fields-unmatched=3/6
@@ -983,8 +983,8 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/SacRealm,3,Network
 networksecurity.googleapis.com,networksecurity.googleapis.com/SecurityProfile,37,,0,NetworkSecuritySecurityProfile,15,22,false,api=v1:organizations.locations.securityProfiles; ours-spec-fields-unmatched=4/18
 networksecurity.googleapis.com,networksecurity.googleapis.com/SecurityProfileGroup,8,,0,NetworkSecuritySecurityProfileGroup,7,1,false,api=v1:organizations.locations.securityProfileGroups; ours-spec-fields-unmatched=4/10
 networksecurity.googleapis.com,networksecurity.googleapis.com/ServerTlsPolicy,11,NetworkSecurityServerTLSPolicy,7,,0,4,false,api=v1:projects.locations.serverTlsPolicies; official-spec-fields-unmatched=3/9
-networksecurity.googleapis.com,networksecurity.googleapis.com/TlsInspectionPolicy,9,NetworkSecurityTLSInspectionPolicy,8,,0,1,false,api=v1:projects.locations.tlsInspectionPolicies; official-spec-fields-unmatched=3/10
-networksecurity.googleapis.com,networksecurity.googleapis.com/UrlList,3,NetworkSecurityURLList,3,,0,0,false,api=v1:projects.locations.urlLists; official-spec-fields-unmatched=3/5
+networksecurity.googleapis.com,networksecurity.googleapis.com/TlsInspectionPolicy,9,NetworkSecurityTLSInspectionPolicy,8,NetworkSecurityTLSInspectionPolicy,1,0,false,api=v1:projects.locations.tlsInspectionPolicies; official-spec-fields-unmatched=3/10; ours-spec-fields-unmatched=3/11
+networksecurity.googleapis.com,networksecurity.googleapis.com/UrlList,3,NetworkSecurityURLList,3,NetworkSecurityURLList,0,0,false,api=v1:projects.locations.urlLists; official-spec-fields-unmatched=3/5; ours-spec-fields-unmatched=3/5
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.addressGroups,7,NetworkSecurityAddressGroup,7,NetworkSecurityAddressGroup,0,0,false,api=v1:projects.locations.addressGroups; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=4/10
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.firewallEndpoints,14,NetworkSecurityFirewallEndpoint,5,,0,9,false,api=v1:projects.locations.firewallEndpoints; official-spec-fields-unmatched=4/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.firewallEndpoints.wildfireVerdictChangeRequests,3,,0,,0,3,false,api=v1:projects.locations.firewallEndpoints.wildfireVerdictChangeRequests
@@ -1136,7 +1136,7 @@ serviceconsumermanagement.googleapis.com,serviceconsumermanagement.googleapis.co
 servicedirectory.googleapis.com,servicedirectory.googleapis.com/Namespace,2,ServiceDirectoryNamespace,2,,0,0,false,api=v1:projects.locations.namespaces; official-spec-fields-unmatched=3/3
 servicedirectory.googleapis.com,servicedirectory.googleapis.com/NamespaceService,2,ServiceDirectoryService,1,,0,1,false,api=v1:projects.locations.namespaces.services; official-spec-fields-unmatched=2/2
 servicedirectory.googleapis.com,servicedirectory.googleapis.com/NamespaceServiceEndpoint,5,ServiceDirectoryEndpoint,4,,0,1,false,api=v1:projects.locations.namespaces.services.endpoints; official-spec-fields-unmatched=2/5
-servicemanagement.googleapis.com,servicemanagement.googleapis.com/Service,2,,0,,0,2,false,api=v1:services
+servicemanagement.googleapis.com,servicemanagement.googleapis.com/Service,2,,0,EndpointsService,0,2,false,api=v1:services; ours-spec-fields-unmatched=5/5
 servicemanagement.googleapis.com,servicemanagement.googleapis.com/ServiceConfig,274,,0,,0,274,false,api=v1:services.configs; recursive-cut=4
 servicemanagement.googleapis.com,servicemanagement.googleapis.com/ServiceRollout,7,,0,,0,7,false,api=v1:services.rollouts
 servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceConnection,2,ServiceNetworkingConnection,2,,0,0,false,api=v1:services.connections; official-spec-fields-unmatched=1/3

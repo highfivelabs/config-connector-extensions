@@ -31,9 +31,10 @@
 # E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
 # Center mute configs of the project, by name, where it is active
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
-# where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
+# where the project has Cloud DNS (E2E_DNS_ADMIN=true), gateway security
+# policy rules in the project's us-central1 policies, by name, and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
-# project), by name, through the API, and the project's GKE Hub fleet
+# project, or its sweepLocation's), by name, through the API, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
 # name, where the account may list them, and BigQuery datasets, by name,
 # where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), and Cloud
@@ -235,6 +236,22 @@ for kind in securityProfileGroups securityProfiles; do
     act "${kind%s}" "${name}" ns_delete "${name}"
   done <<<"${rows}"
 done
+# Gateway security policy rules (NetworkSecurityGatewaySecurityPolicyRule,
+# a discokind kind under a policy, so not in discokinds.tsv): a run's
+# rules in every policy in us-central1 (gateway security policies have no
+# global location), before the discokind loop below deletes the run's
+# policies (a policy with rules cannot go).
+rows="$(ns_api GET "projects/${project}/locations/us-central1/gatewaySecurityPolicies?pageSize=1000" \
+  | jq -r '.gatewaySecurityPolicies[]?.name')"
+while read -r policy; do
+  [[ -n "${policy}" ]] || continue
+  rules="$(ns_api GET "${policy}/rules?pageSize=1000" | jq -r '.gatewaySecurityPolicyRules[]? | "\(.name) \(.createTime)"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    by_run "${name##*/}" "${made}" || continue
+    act "gateway security policy rule" "${name}" ns_delete "${name}"
+  done <<<"${rules}"
+done <<<"${rows}"
 # The discokind kinds (hack/live/discokinds.tsv, generated): each
 # collection under the project, by the run's name; an ID that takes no
 # dashes (cce11091530a3f2...) is read as the run's name with them. A

@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	apigatewayv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigateway/v1beta1"
+	apigeev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1alpha1"
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
 	biglakev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/biglake/v1beta1"
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
@@ -435,6 +436,50 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "updateTime"},
 	},
 	{
+		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyGVK,
+		CRDName:   "networksecuritygatewaysecuritypolicies.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gatewaySecurityPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewaySecurityPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyRuleGVK,
+		CRDName:   "networksecuritygatewaysecuritypolicyrules.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gatewaySecurityPolicies/{gatewaySecurityPolicy}/rules/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewaySecurityPolicyRuleId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityURLListGVK,
+		CRDName:   "networksecurityurllists.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/urlLists/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "urlListId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityTLSInspectionPolicyGVK,
+		CRDName:   "networksecuritytlsinspectionpolicies.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/tlsInspectionPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "tlsInspectionPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
 		GVK:       gkebackupv1beta1.GKEBackupBackupPlanGVK,
 		CRDName:   "gkebackupbackupplans.gkebackup.gcp.hfl.dev",
 		BaseURL:   "https://gkebackup.googleapis.com/v1/",
@@ -654,6 +699,16 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"createTime", "dataDiscoveryResult", "dataDocumentationResult", "dataProfileResult", "dataQualityResult", "executionStatus", "name", "state", "type", "uid", "updateTime"},
 	},
+	{
+		GVK:       apigeev1alpha1.ApigeeDnsZoneGVK,
+		CRDName:   "apigeednszones.apigee.gcp.hfl.dev",
+		BaseURL:   "https://apigee.googleapis.com/v1/",
+		Name:      "organizations/{organization}/dnsZones/{id}",
+		IDParam:   "dnsZoneId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"createTime", "state", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -677,6 +732,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	clouddeployv1beta1.AddToScheme,
 	cloudfunctions2v1beta1.AddToScheme,
 	dataplexv1beta1.AddToScheme,
+	apigeev1alpha1.AddToScheme,
 }
 
 func init() {
