@@ -199,6 +199,9 @@ func startCluster(t *testing.T) *cluster {
 			// provider.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_iamworkloadidentitypools.iam.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_iamworkloadidentitypoolproviders.iam.cnrm.cloud.google.com.yaml"),
+			// A Project a generated kind's projectRef names by name, deleted
+			// with the kind (TestComputeNetworkAttachmentWithItsParent).
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_projects.resourcemanager.cnrm.cloud.google.com.yaml"),
 			// ChronicleRuleDeployment's rule.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_chroniclerules.chronicle.cnrm.cloud.google.com.yaml"),
 		},
