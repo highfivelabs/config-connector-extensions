@@ -1,0 +1,267 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: networkservicesauthzextensions.networkservices.gcp.hfl.dev
+spec:
+  group: networkservices.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: NetworkServicesAuthzExtension
+    listKind: NetworkServicesAuthzExtensionList
+    plural: networkservicesauthzextensions
+    shortNames:
+    - hflnetworkservicesauthzextension
+    - hflnetworkservicesauthzextensions
+    singular: networkservicesauthzextension
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: 'NetworkServicesAuthzExtension is a networkservices.v1 resource
+          (https://networkservices.googleapis.com/v1/{parent}/locations/{location}/authzExtensions/{id}),
+          from its Discovery document networkservices.v1 (hack/discokind). Terraform''s
+          google_network_services_authz_extension. An authorization extension: a callout
+          a load balancer or an agent gateway makes to a backend service or a Google
+          service (iap.googleapis.com, Model Armor) before it allows a request.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              authority:
+                description: Optional. The `:authority` header in the gRPC request
+                  sent from Envoy to the extension service. It is required when the
+                  `service` field points to a backend service.
+                type: string
+              description:
+                description: Optional. A human-readable description of the resource.
+                type: string
+              failOpen:
+                description: 'Optional. Determines how the proxy behaves if the call
+                  to the extension fails or times out. When set to `TRUE`, request
+                  or response processing continues without error. Any subsequent extensions
+                  in the extension chain are also executed. When set to `FALSE` or
+                  the default setting of `FALSE` is used, one of the following happens:
+                  * If response headers have not been delivered to the downstream
+                  client, a generic 500 error is returned to the client. The error
+                  response can be tailored by configuring a custom error response
+                  in the load balancer. * If response headers have been delivered,
+                  then the HTTP stream to the downstream client is reset.'
+                type: boolean
+              forwardAttributes:
+                description: Optional. List of the Envoy attributes to forward to
+                  the extension server. The attributes provided here are included
+                  as part of the `ProcessingRequest.attributes` field (of type `map`),
+                  where the keys are the attribute names. Refer to the [documentation](https://cloud.google.com/service-extensions/docs/cel-matcher-language-reference#attributes)
+                  for the names of attributes that can be forwarded. If omitted, no
+                  attributes are sent. Each element is a string indicating the attribute
+                  name.
+                items:
+                  type: string
+                type: array
+              forwardHeaders:
+                description: Optional. List of the HTTP headers to forward to the
+                  extension (from the client). If omitted, all headers are sent. Each
+                  element is a string indicating the header name.
+                items:
+                  type: string
+                type: array
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Set of labels associated with the `AuthzExtension`
+                  resource. The format must comply with [the requirements for labels](/compute/docs/labeling-resources#requirements)
+                  for Google Cloud resources.
+                type: object
+              loadBalancingScheme:
+                description: |-
+                  Optional. All backend services and forwarding rules referenced by this
+                  extension must share the same load balancing scheme. The supported values
+                  are `INTERNAL_MANAGED` and `EXTERNAL_MANAGED`. You can omit this field for
+                  `AuthzExtensions` resources that don't reference a backend service. For
+                  more information, see [Backend services
+                  overview](https://cloud.google.com/load-balancing/docs/backend-service).
+
+                  One of LOAD_BALANCING_SCHEME_UNSPECIFIED, INTERNAL_MANAGED, EXTERNAL_MANAGED.
+                type: string
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/authzExtensions/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              metadata:
+                description: 'Optional. The metadata provided here is included as
+                  part of the `metadata_context` (of type `google.protobuf.Struct`)
+                  in the `ProcessingRequest` message sent to the extension server.
+                  The metadata is available under the namespace `com.google.authz_extension.`.
+                  The following variables are supported in the metadata Struct: `{forwarding_rule_id}`
+                  - substituted with the forwarding rule''s fully qualified resource
+                  name.'
+                x-kubernetes-preserve-unknown-fields: true
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              service:
+                description: 'Required. The reference to the service that runs the
+                  extension. To configure a callout extension: For global AuthzExtension,
+                  `service` must be a fully-qualified reference to a [backend service](https://cloud.google.com/compute/docs/reference/rest/v1/backendServices)
+                  in the format: `https://www.googleapis.com/compute/v1/projects/{project}/global/backendServices/{backendService}`.
+                  For regional AuthzExtension, `service` must be a fully-qualified
+                  reference to one of the following: * a [backend service](https://cloud.google.com/compute/docs/reference/rest/v1/backendServices)
+                  in the format: `https://www.googleapis.com/compute/v1/projects/{project}/regions/{region}/backendServices/{backendService}`.
+                  * a fully qualified domain name that can be resolved by the Google
+                  Cloud DNS. * `iap.googleapis.com` and it can only be referenced
+                  by an AuthzPolicy with the policyProfile set to REQUEST_AUTHZ. *
+                  `modelarmor..rep.googleapis.com` and it can only be referenced by
+                  an AuthzPolicy with the policyProfile set to CONTENT_AUTHZ.'
+                type: string
+              timeout:
+                description: Required. Specifies the timeout for each individual message
+                  on the stream. The timeout must be between 10-10000 milliseconds.
+                type: string
+              wireFormat:
+                description: |-
+                  Optional. The format of communication supported by the callout extension.
+                  This field is supported only for regional `AuthzExtension` resources. If
+                  not specified, the default value `EXT_PROC_GRPC` is used. Global
+                  `AuthzExtension` resources use the `EXT_PROC_GRPC` wire format.
+
+                  One of WIRE_FORMAT_UNSPECIFIED, EXT_PROC_GRPC, EXT_AUTHZ_GRPC.
+                type: string
+            required:
+            - location
+            - projectRef
+            - service
+            - timeout
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/authzExtensions/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The timestamp when the resource was
+                      created.
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp when the resource was
+                      updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
