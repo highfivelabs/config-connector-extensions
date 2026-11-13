@@ -997,7 +997,7 @@ networkservices.googleapis.com,networkservices.googleapis.com/AgentGateway,13,,0
 networkservices.googleapis.com,networkservices.googleapis.com/AuthzExtension,12,NetworkServicesAuthzExtension,10,,0,2,false,api=v1:projects.locations.authzExtensions; official-spec-fields-unmatched=4/13
 networkservices.googleapis.com,networkservices.googleapis.com/EndpointPolicy,11,NetworkServicesEndpointPolicy,10,,0,1,false,api=v1:projects.locations.endpointPolicies; official-spec-fields-unmatched=3/12
 networkservices.googleapis.com,networkservices.googleapis.com/ExtensionBinding,52,,0,,0,52,false,api=v1:projects.locations.extensionBindings
-networkservices.googleapis.com,networkservices.googleapis.com/Gateway,17,NetworkServicesGateway,7,,0,10,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/9
+networkservices.googleapis.com,networkservices.googleapis.com/Gateway,17,NetworkServicesGateway,7,NetworkServicesGateway,10,0,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=3/19
 networkservices.googleapis.com,networkservices.googleapis.com/GrpcRoute,24,NetworkServicesGRPCRoute,21,,0,3,false,api=v1:projects.locations.grpcRoutes; official-spec-fields-unmatched=3/23
 networkservices.googleapis.com,networkservices.googleapis.com/HttpRoute,76,NetworkServicesHTTPRoute,57,,0,19,false,api=v1:projects.locations.httpRoutes; official-spec-fields-unmatched=3/59
 networkservices.googleapis.com,networkservices.googleapis.com/LbEdgeExtension,19,NetworkServicesLBEdgeExtension,14,,0,5,false,api=v1:projects.locations.lbEdgeExtensions; official-spec-fields-unmatched=4/17

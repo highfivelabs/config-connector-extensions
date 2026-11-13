@@ -40,6 +40,7 @@ import (
 	networkconnectivityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkconnectivity/v1alpha1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	networkservicesv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1alpha1"
+	networkservicesv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 )
@@ -346,6 +347,17 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networkservicesv1beta1.NetworkServicesGatewayGVK,
+		CRDName:   "networkservicesgateways.networkservices.gcp.hfl.dev",
+		BaseURL:   "https://networkservices.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gateways/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewayId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "selfLink", "updateTime"},
 	},
 	{
 		GVK:       resourcemanagerv1alpha1.ResourceManagerCapabilityConfigGVK,
@@ -719,6 +731,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	computev1beta1.AddToScheme,
 	lookerv1alpha1.AddToScheme,
 	networkservicesv1alpha1.AddToScheme,
+	networkservicesv1beta1.AddToScheme,
 	resourcemanagerv1alpha1.AddToScheme,
 	networkconnectivityv1alpha1.AddToScheme,
 	certificatemanagerv1beta1.AddToScheme,

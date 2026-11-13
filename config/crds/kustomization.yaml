@@ -102,6 +102,7 @@ resources:
 - networksecurity.gcp.hfl.dev_networksecurityurllists.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentconnectivitytemplates.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentgateways.yaml
+- networkservices.gcp.hfl.dev_networkservicesgateways.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagercapabilityconfigs.yaml

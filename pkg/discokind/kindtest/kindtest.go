@@ -20,6 +20,7 @@
 //	testdata/discokind/<Kind>/create.yaml   the object to create
 //	testdata/discokind/<Kind>/update.yaml   optional: the same object with a changed spec
 //	testdata/discokind/<Kind>/live-skip     optional: why it cannot run live (one line)
+//	testdata/discokind/<Kind>/<case>/...    optional: another set, for RunCase
 //
 // The fixtures are YAML with placeholders: ${PROJECT} (mockenv.Project),
 // ${NAME} (mockenv.Name of the kind's lower-case name: the run ID prefixes
@@ -69,18 +70,37 @@ var setups = map[string]Setup{}
 func RegisterSetup(kind string, s Setup) { setups[kind] = s }
 
 // Run is the test of one kind.
-func Run(t *testing.T, kindName string) {
+func Run(t *testing.T, kindName string) { run(t, kindName, "") }
+
+// RunCase is the same test of a kind with a second set of fixtures, in
+// testdata/discokind/<Kind>/<caseName>/, for a kind whose resource has
+// shapes one set cannot cover (a gateway's two types). Its objects are
+// named <kind>-<caseName>, and its Setup is the one registered as
+// "<Kind>/<caseName>", if any.
+func RunCase(t *testing.T, kindName, caseName string) {
+	if caseName == "" {
+		t.Fatal("RunCase needs a case name")
+	}
+	run(t, kindName, caseName)
+}
+
+func run(t *testing.T, kindName, caseName string) {
 	k := discokind.ByKind(kindName)
 	if k == nil {
 		t.Fatalf("no discokind kind %s (hack/discokind/kinds.yaml)", kindName)
 	}
-	dir := filepath.Join("testdata", "discokind", kindName)
+	dir := filepath.Join("testdata", "discokind", kindName, caseName)
 	if mockenv.Live() {
 		if b, err := os.ReadFile(filepath.Join(dir, "live-skip")); err == nil {
 			t.Skip(strings.TrimSpace(string(b)))
 		}
 	}
 	base := strings.ToLower(kindName)
+	setupKey := kindName
+	if caseName != "" {
+		base += "-" + caseName
+		setupKey += "/" + caseName
+	}
 	create := load(t, filepath.Join(dir, "create.yaml"), base, base)
 	var update *unstructured.Unstructured
 	if _, err := os.Stat(filepath.Join(dir, "update.yaml")); err == nil {
@@ -88,7 +108,7 @@ func Run(t *testing.T, kindName string) {
 	}
 
 	env := mockenv.New(t, namespace)
-	if s := setups[kindName]; s != nil {
+	if s := setups[setupKey]; s != nil {
 		s(t, env)
 	}
 	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL}

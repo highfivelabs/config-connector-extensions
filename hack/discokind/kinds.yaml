@@ -254,6 +254,25 @@
   parents: [project]
   terraform: google_network_services_agent_connectivity_template
   note: "The network access an agent gateway provides."
+
+# Config Connector's v1beta1 NetworkServicesGateway (at 1.160.0) cannot
+# make a SECURE_WEB_GATEWAY: it lacks network, subnetwork,
+# gatewaySecurityPolicy, certificateUrls, labels and routingMode, and
+# requires scope. Ours keeps the name (decision 18) at v1beta1 (decision
+# 26's stable equivalent) with the API's full field set, for the
+# catalog's net-swp module (2026-11-13). The immutable fields are
+# Terraform's (google_network_services_gateway forces a new gateway for
+# each); allPorts and allowGlobalAccess are taken as ports is.
+- kind: NetworkServicesGateway
+  group: networkservices.gcp.hfl.dev
+  version: v1beta1
+  discovery: networkservices.v1
+  resource: projects.locations.gateways
+  parents: [project]
+  terraform: google_network_services_gateway
+  immutable: [addresses, allPorts, allowGlobalAccess, envoyHeaders, ipVersion, network, ports, routingMode, scope, subnetwork]
+  note: "A gateway: an OPEN_MESH gateway's listener, or a Secure Web Proxy (SECURE_WEB_GATEWAY) in a VPC network."
+  sweepLocation: us-central1
 # Foundation (tier 1) gaps with this shape, 2026-11-12: Resource Manager's
 # capability configs and boundaries, and Network Connectivity's PSC
 # authorization policies, automated DNS records and spoke gateway routes.

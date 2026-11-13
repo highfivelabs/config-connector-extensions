@@ -8,6 +8,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`networkservices.gcp.hfl.dev/v1beta1` `NetworkServicesGateway`**,
+  generated from Discovery: a gateway of either type, `OPEN_MESH` or
+  `SECURE_WEB_GATEWAY` (a Secure Web Proxy), with the API's whole field
+  set (`google_network_services_gateway`). Config Connector's `v1beta1`
+  kind cannot make a Secure Web Proxy (no `network`, `subnetwork`,
+  `gatewaySecurityPolicy`, `certificateUrls`, `labels` or `routingMode`,
+  and `scope` required), so ours is a stable equivalent with the same
+  name (decision 26). The Cloud Router a Secure Web Proxy makes is left
+  for whoever deletes the network, as Terraform leaves it by default.
 - **`iam.gcp.hfl.dev/v1alpha1` `IAMPolicyBinding`**: an IAM v3 policy
   binding, a principal access boundary policy bound to the principals of
   an organization, folder or project (`google_iam_projects_policy_binding`,

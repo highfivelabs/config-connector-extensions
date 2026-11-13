@@ -1,0 +1,314 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: networkservicesgateways.networkservices.gcp.hfl.dev
+spec:
+  group: networkservices.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: NetworkServicesGateway
+    listKind: NetworkServicesGatewayList
+    plural: networkservicesgateways
+    shortNames:
+    - hflnetworkservicesgateway
+    - hflnetworkservicesgateways
+    singular: networkservicesgateway
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: 'NetworkServicesGateway is a networkservices.v1 resource (https://networkservices.googleapis.com/v1/{parent}/locations/{location}/gateways/{id}),
+          from its Discovery document networkservices.v1 (hack/discokind). Terraform''s
+          google_network_services_gateway. A gateway: an OPEN_MESH gateway''s listener,
+          or a Secure Web Proxy (SECURE_WEB_GATEWAY) in a VPC network.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              addresses:
+                description: 'Optional. Zero or one IPv4 or IPv6 address on which
+                  the Gateway will receive the traffic. When no address is provided,
+                  an IP from the subnetwork is allocated This field only applies to
+                  gateways of type ''SECURE_WEB_GATEWAY''. Gateways of type ''OPEN_MESH''
+                  listen on 0.0.0.0 for IPv4 and :: for IPv6.'
+                items:
+                  type: string
+                type: array
+                x-kubernetes-validations:
+                - message: addresses is immutable
+                  rule: self == oldSelf
+              allPorts:
+                description: Optional. If true, the Gateway will listen on all ports.
+                  This is mutually exclusive with the `ports` field. This field only
+                  applies to gateways of type 'SECURE_WEB_GATEWAY'.
+                type: boolean
+                x-kubernetes-validations:
+                - message: allPorts is immutable
+                  rule: self == oldSelf
+              allowGlobalAccess:
+                description: Optional. If true, the gateway will allow traffic from
+                  clients outside of the region where the gateway is located. This
+                  field is configurable only for gateways of type SECURE_WEB_GATEWAY.
+                type: boolean
+                x-kubernetes-validations:
+                - message: allowGlobalAccess is immutable
+                  rule: self == oldSelf
+              certificateUrls:
+                description: Optional. A fully-qualified Certificates URL reference.
+                  The proxy presents a Certificate (selected based on SNI) when establishing
+                  a TLS connection. This feature only applies to gateways of type
+                  'SECURE_WEB_GATEWAY'.
+                items:
+                  type: string
+                type: array
+              description:
+                description: Optional. A free-text description of the resource. Max
+                  length 1024 characters.
+                type: string
+              envoyHeaders:
+                description: |-
+                  Optional. Determines if envoy will insert internal debug headers into
+                  upstream requests. Other Envoy headers may still be injected. By default,
+                  envoy will not insert any debug headers.
+
+                  One of ENVOY_HEADERS_UNSPECIFIED, NONE, DEBUG_HEADERS.
+                type: string
+                x-kubernetes-validations:
+                - message: envoyHeaders is immutable
+                  rule: self == oldSelf
+              gatewaySecurityPolicy:
+                description: 'Optional. A fully-qualified GatewaySecurityPolicy URL
+                  reference. Defines how a server should apply security policy to
+                  inbound (VM to Proxy) initiated connections. For example: `projects/*/locations/*/gatewaySecurityPolicies/swg-policy`.
+                  This policy is specific to gateways of type ''SECURE_WEB_GATEWAY''.'
+                type: string
+              ipVersion:
+                description: |-
+                  Optional. The IP Version that will be used by this gateway. Valid options
+                  are IPV4 or IPV6. Default is IPV4.
+
+                  One of IP_VERSION_UNSPECIFIED, IPV4, IPV6.
+                type: string
+                x-kubernetes-validations:
+                - message: ipVersion is immutable
+                  rule: self == oldSelf
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Set of label tags associated with the Gateway
+                  resource.
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/gateways/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              network:
+                description: 'Optional. The relative resource name identifying the
+                  VPC network that is using this configuration. For example: `projects/*/global/networks/network-1`.
+                  Currently, this field is specific to gateways of type ''SECURE_WEB_GATEWAY''.'
+                type: string
+                x-kubernetes-validations:
+                - message: network is immutable
+                  rule: self == oldSelf
+              ports:
+                description: 'Required. One or more port numbers (1-65535), on which
+                  the Gateway will receive traffic. The proxy binds to the specified
+                  ports. Gateways of type ''SECURE_WEB_GATEWAY'' are limited to 5
+                  ports. Gateways of type ''OPEN_MESH'' listen on 0.0.0.0 for IPv4
+                  and :: for IPv6 and support multiple ports.'
+                items:
+                  format: int32
+                  type: integer
+                type: array
+                x-kubernetes-validations:
+                - message: ports is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              routingMode:
+                description: |-
+                  Optional. The routing mode of the Gateway. This field is configurable only
+                  for gateways of type SECURE_WEB_GATEWAY. This field is required for
+                  gateways of type SECURE_WEB_GATEWAY.
+
+                  One of EXPLICIT_ROUTING_MODE, NEXT_HOP_ROUTING_MODE.
+                type: string
+                x-kubernetes-validations:
+                - message: routingMode is immutable
+                  rule: self == oldSelf
+              scope:
+                description: Optional. Scope determines how configuration across multiple
+                  Gateway instances are merged. The configuration for multiple Gateway
+                  instances with the same scope will be merged as presented as a single
+                  configuration to the proxy/load balancer. Max length 64 characters.
+                  Scope should start with a letter and can only have letters, numbers,
+                  hyphens.
+                type: string
+                x-kubernetes-validations:
+                - message: scope is immutable
+                  rule: self == oldSelf
+              serverTlsPolicy:
+                description: Optional. A fully-qualified ServerTLSPolicy URL reference.
+                  Specifies how TLS traffic is terminated. If empty, TLS termination
+                  is disabled.
+                type: string
+              subnetwork:
+                description: 'Optional. The relative resource name identifying the
+                  subnetwork in which this SWG is allocated. For example: `projects/*/regions/us-central1/subnetworks/network-1`
+                  Currently, this field is specific to gateways of type ''SECURE_WEB_GATEWAY".'
+                type: string
+                x-kubernetes-validations:
+                - message: subnetwork is immutable
+                  rule: self == oldSelf
+              type:
+                description: |-
+                  Immutable. The type of the customer managed gateway. This field is
+                  required. If unspecified, an error is returned.
+
+                  One of TYPE_UNSPECIFIED, OPEN_MESH, SECURE_WEB_GATEWAY.
+                type: string
+                x-kubernetes-validations:
+                - message: type is immutable
+                  rule: self == oldSelf
+            required:
+            - location
+            - ports
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/gateways/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The timestamp when the resource was
+                      created.
+                    type: string
+                  selfLink:
+                    description: Output only. Server-defined URL of this resource
+                    type: string
+                  updateTime:
+                    description: Output only. The timestamp when the resource was
+                      updated.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -145,7 +145,7 @@ netapp.googleapis.com,11,7,0,179,54,0,125,30.2,0.0,69.8
 networkconnectivity.googleapis.com,14,11,3,153,92,23,38,60.1,15.0,24.8
 networkmanagement.googleapis.com,4,2,0,76,42,0,34,55.3,0.0,44.7
 networksecurity.googleapis.com,31,25,3,432,317,30,85,73.4,6.9,19.7
-networkservices.googleapis.com,21,14,2,356,193,28,135,54.2,7.9,37.9
+networkservices.googleapis.com,21,14,2,356,193,38,125,54.2,10.7,35.1
 notebooks.googleapis.com,5,5,0,133,122,0,11,91.7,0.0,8.3
 observability.googleapis.com,3,0,0,10,0,0,10,0.0,0.0,100.0
 oracledatabase.googleapis.com,13,4,0,518,125,0,393,24.1,0.0,75.9
