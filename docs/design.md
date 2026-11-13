@@ -262,6 +262,19 @@ the live-test project (it is off; the live-test account already has the
 permissions through `roles/compute.networkAdmin`).
 `docs/kinds/NetworkServicesGateway.md` has the rest.
 
+Then `NetworkServicesAuthzExtension` (`networkservices.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the catalog's `geap-agent-gateway` module
+(`google_network_services_authz_extension`): an agent gateway's
+authorization goes to IAP or Model Armor through an extension's `service`
+(`iap.googleapis.com`, a Model Armor endpoint). Config Connector's kind is
+alpha, requires a backend service and has no `service` field, so it cannot
+delegate to either; ours keeps the name at `v1beta1` (decision 26) with the
+API's whole field set (`service`, `timeout`, `failOpen`, `metadata`,
+`forwardHeaders`, `forwardAttributes`, `wireFormat`, `authority`,
+`loadBalancingScheme`, `labels`). Every field patches in place. It skips
+live as `NetworkServicesGateway` does (`networkservices.googleapis.com` is
+off in the live-test project).
+
 Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written rather than generated: a Cloud Endpoints service
 is three Service Management calls (create the service, submit a
