@@ -121,6 +121,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/apigee.admin` | project | `ApigeeNATAddress` (not granted, and no Apigee organization exists: the test skips live without `E2E_APIGEE_INSTANCE`) |
 | `roles/spanner.admin` | project | `SpannerInstanceConfig` (not granted yet, and `spanner.googleapis.com` is off: the test skips live without `E2E_SPANNER=true`) |
 | `roles/datacatalog.admin` | project | `DataCatalogTag` (not granted yet, and `datacatalog.googleapis.com` is off: the test skips live without `E2E_DATA_CATALOG=true`) |
+| `roles/chronicle.editor` | project | `ChronicleRuleDeployment` (not granted, and the project has no Google SecOps instance: the test skips live without `E2E_CHRONICLE_INSTANCE`) |
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
@@ -386,6 +387,17 @@ the test and the sweeper leaves reasoning engines alone. With them:
 The test makes an engine with no code (sessions and memory only), which
 costs nothing while idle; the sweeper deletes engines in `us-central1`
 whose display name carries a run ID.
+
+`ChronicleRuleDeployment` (package `chronicle`) waits on a Google SecOps
+(Chronicle) instance, which `$GCP_PROJECT` does not have (an instance is
+provisioned with a SecOps subscription, not by an API call), and on
+`roles/chronicle.editor` for `cce-live-tests`. Until both exist, a live
+`chronicle` run skips the test, makes nothing, and the sweeper needs no
+Chronicle section. With them:
+`E2E_CHRONICLE_INSTANCE=<location>/<instance ID> task test-live PROJECT=$GCP_PROJECT KINDS=chronicle`.
+The test makes two rules of its own (named after the run ID, matching
+nothing) and deletes them; before the first live run the sweeper should
+learn to delete rules whose name carries a run ID.
 
 `ComputeVPNTunnel` (package `compute`) needs nothing new: the account's
 `roles/compute.networkAdmin` has `compute.vpnTunnels.*`,

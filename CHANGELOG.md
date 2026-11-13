@@ -8,6 +8,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`chronicle.gcp.hfl.dev/v1alpha1` `ChronicleRuleDeployment`**, the
+  deployment of a Google SecOps (Chronicle) rule
+  (`google_chronicle_rule_deployment`): whether the rule runs, alerts or is
+  archived, its run frequency and schedule. The deployment comes with the
+  rule, so the object sets it and deleting the object leaves it, as
+  Terraform does. `ruleRef` takes Config Connector's `ChronicleRule` or an
+  external rule name. Config Connector has no kind for it, so it starts at
+  `v1alpha1`. Live pending a SecOps instance. The operator's role gains
+  `chronicle.gcp.hfl.dev`.
 - **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
   `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
   `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure

@@ -308,6 +308,8 @@ copied:
       - apis/serviceusage/v1alpha1/types.generated.go
       - pkg/controller/direct/serviceusage/mapper.generated.go
     from: {written_here: true}
+  - here: [apis/chronicle/v1alpha1/groupversion_info.go, pkg/controller/direct/chronicle/ruledeployment_controller.go]
+    from: {written_here: true}
   - here: [apis/serviceusage/v1alpha1/serviceidentity_identity.go, hack/scaffold/serviceusage/overlay.proto]
     from: {written_here: true}
   - here: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]

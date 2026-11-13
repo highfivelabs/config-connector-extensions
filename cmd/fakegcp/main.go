@@ -39,6 +39,7 @@ import (
 
 	// The discokind kinds register with pkg/controller.
 	_ "github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	chroniclefake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 	discofake "github.com/highfivelabs/config-connector-extensions/pkg/discokind/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/fakecloud"
@@ -77,8 +78,8 @@ func run(ctx context.Context, addr string, projects []string) error {
 			klog.Errorf("mockgcp gRPC server: %v", err)
 		}
 	}()
-	// The discokind kinds' collections in front of mockgcp.
-	cloud := discofake.New(mock, discokind.Kinds())
+	// The discokind kinds' collections and the Chronicle API in front of mockgcp.
+	cloud := discofake.New(chroniclefake.New(mock), discokind.Kinds())
 	httpClient := &http.Client{Transport: cloud}
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	for _, p := range projects {

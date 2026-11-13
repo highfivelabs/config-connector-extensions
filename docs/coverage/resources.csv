@@ -240,6 +240,7 @@ ces.googleapis.com,ces.googleapis.com/AppGuardrail,51,,0,,0,51,false,api=v1:proj
 ces.googleapis.com,ces.googleapis.com/AppTool,249,,0,,0,249,false,api=v1:projects.locations.apps.tools; recursive-cut=30
 ces.googleapis.com,ces.googleapis.com/AppToolset,55,,0,,0,55,false,api=v1:projects.locations.apps.toolsets
 ces.googleapis.com,ces.googleapis.com/AppVersion,3,,0,,0,3,false,api=v1:projects.locations.apps.versions
+chronicle.googleapis.com,chronicle.googleapis.com/ChronicleRuleDeployment,0,,0,ChronicleRuleDeployment,0,0,false,outside-denominator; no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com
 chronicle.googleapis.com,chronicle.googleapis.com/DataAccessLabel,3,ChronicleDataAccessLabel,3,,0,0,false,api=v1:google.cloud.chronicle.v1.DataAccessControlService.CreateDataAccessLabel; official-spec-fields-unmatched=3/5
 chronicle.googleapis.com,chronicle.googleapis.com/DataAccessScope,13,ChronicleDataAccessScope,13,,0,0,false,api=v1:google.cloud.chronicle.v1.DataAccessControlService.CreateDataAccessScope; official-spec-fields-unmatched=3/15
 chronicle.googleapis.com,chronicle.googleapis.com/DataTable,10,ChronicleDataTable,10,,0,0,false,api=v1:google.cloud.chronicle.v1.DataTableService.CreateDataTable; official-spec-fields-unmatched=3/12

@@ -378,3 +378,24 @@ Cloud Build v2 connections, API Gateway configs and gateways and the
 Dataplex kinds never became Ready on the fake cloud
 (`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
 
+## The Chronicle fake (`pkg/controller/direct/chronicle/fake`)
+
+mockgcp does not serve the Chronicle API (`<location>-chronicle.googleapis.com`,
+and `chronicle.googleapis.com`), which `ChronicleRuleDeployment` calls, so a
+small in-memory fake does, in front of mockgcp and behind the generated
+kinds' fake (in `pkg/test/mockenv` and both fake-cloud binaries). It serves
+an instance's rules (create, get, delete) and each rule's deployment (get;
+patch with an update mask of `enabled`, `alerting`, `archived` and
+`runFrequency`, with `scheduleCustomizations` going with `runFrequency`). A
+new rule's deployment is disabled, not alerting and not archived, as the
+API's is. It refuses to archive an enabled deployment and to change an
+archived one's `enabled`, `alerting` or `runFrequency`; archiving turns
+alerting off and sets `archiveTime`; a change of alerting sets
+`lastAlertStatusChangeTime`. It does not show: SecOps instances (any
+instance ID is taken), the rule language (a rule's text is kept, not
+parsed), the API's coercion of legacy run frequencies (`LIVE` and `HOURLY`
+are kept as sent), whether a run frequency suits the rule, chained rules
+(`producerRules` and `consumerRules` stay empty), detections and
+permissions. A new fake was chosen over a mockgcp patch because mockgcp has
+no Chronicle service to extend.
+
