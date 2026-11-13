@@ -46,6 +46,7 @@ import (
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
 	dnsv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
@@ -62,6 +63,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/dns"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
@@ -129,6 +131,7 @@ var Kinds = []kind{
 	{gvk: dnsv1beta1.DNSResponsePolicyRuleGVK, crdName: "dnsresponsepolicyrules.dns.gcp.hfl.dev", model: dns.NewResponsePolicyRuleModel},
 	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
+	{gvk: datacatalogv1beta1.DataCatalogTagGVK, crdName: "datacatalogtags.datacatalog.gcp.hfl.dev", model: datacatalog.NewTagModel},
 	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
 }
 
@@ -146,6 +149,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,
 		dnsv1beta1.AddToScheme,
+		datacatalogv1beta1.AddToScheme,
 		aiplatformv1beta1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
