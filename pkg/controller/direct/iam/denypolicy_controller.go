@@ -18,7 +18,9 @@
 // pkg/controller/direct/iam/iamdenypolicy/iamdenypolicy_controller.go
 // (UPSTREAM.md). Changed: status.externalRef is written (upstream sets it on
 // the typed copy only, so it never reaches the object), also when nothing
-// changed; the model is returned to our manager instead of registered with
+// changed; an object being deleted is deleted by status.externalRef without
+// resolving its parent reference, and one with neither goes without a call;
+// the model is returned to our manager instead of registered with
 // Config Connector's registry; the model and adapter are named for the kind,
 // in this package beside the other IAM kinds; our KRM types (stable,
 // iam.gcp.hfl.dev/v1beta1, docs/design.md decision 13).
@@ -74,9 +76,32 @@ func (m *denyPolicyModel) AdapterForObject(ctx context.Context, op *directbase.A
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
-	id, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
+	ext := direct.ValueOf(obj.Status.ExternalRef)
+	var id *krm.IAMDenyPolicyIdentity
+	switch deleting := !obj.GetDeletionTimestamp().IsZero(); {
+	case deleting && ext != "":
+		// Deleting a policy that was made or acquired: its name is in status,
+		// and the parts of a name cannot change, so the parent is not
+		// resolved. A parent object already gone or going (everything deleted
+		// at once) would otherwise hold the delete forever (the generated
+		// kinds' rule, pkg/discokind).
+		id = &krm.IAMDenyPolicyIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	default:
+		got, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			if deleting {
+				// Never made or acquired (no status.externalRef) and its
+				// parent cannot be resolved: there is nothing of ours to
+				// delete.
+				klog.FromContext(ctx).Info("deleting IAMDenyPolicy without a call: no status.externalRef and the parent cannot be resolved", "error", err.Error())
+				return &denyPolicyAdapter{desired: obj}, nil
+			}
+			return nil, err
+		}
+		id = got.(*krm.IAMDenyPolicyIdentity)
 	}
 
 	// Get gcp client
@@ -85,7 +110,7 @@ func (m *denyPolicyModel) AdapterForObject(ctx context.Context, op *directbase.A
 		return nil, err
 	}
 	return &denyPolicyAdapter{
-		id:        id.(*krm.IAMDenyPolicyIdentity),
+		id:        id,
 		gcpClient: gcpClient,
 		desired:   obj,
 	}, nil
@@ -105,6 +130,10 @@ type denyPolicyAdapter struct {
 var _ directbase.Adapter = &denyPolicyAdapter{}
 
 func (a *denyPolicyAdapter) Find(ctx context.Context) (bool, error) {
+	if a.id == nil {
+		// Deleting an object that never had a policy (AdapterForObject).
+		return false, nil
+	}
 	log := klog.FromContext(ctx)
 	log.V(2).Info("getting IAMDenyPolicy", "name", a.id.String())
 

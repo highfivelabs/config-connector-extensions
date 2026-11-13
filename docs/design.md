@@ -197,6 +197,9 @@ Config Connector's alpha `ComputeNetworkAttachment`, whose
 `subnetworkRefs` its directbase resolves before every delete; ours takes
 the subnet's URL in `subnetworks` and never reads a subnet object, so a
 chart that uses ours (as `net-address` does) does not stick.
+The hand-written `IAMDenyPolicy` takes the same rule (2026-11-13,
+`docs/kinds/IAMDenyPolicy.md`): its Folder object deleted first held its
+delete on "referenced Folder ... not found".
 Then five foundation (tier 1)
 gaps of the same shape (2026-11-12): Resource
 Manager's `ResourceManagerCapabilityConfig` (an organization, folder or
