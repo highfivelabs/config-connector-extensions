@@ -427,9 +427,15 @@ fi
 # has Cloud DNS for the live-test service account (E2E_DNS_ADMIN=true:
 # dns.googleapis.com on and roles/dns.admin); without it the
 # DNSResponsePolicy test does not run live and there is nothing to sweep.
-# A policy is unbound from its networks before it is deleted, as the
-# controller does.
+# A policy's rules (DNSResponsePolicyRule's) go first, since a policy with
+# rules cannot be deleted; then it is unbound from its networks, as the
+# controller does, and deleted.
 dns_rp_delete() { # dns_rp_delete NAME
+  local rules r
+  rules="$("${G[@]}" dns response-policies rules list "$1" --verbosity=error --format='value(ruleName)')" || return 1
+  for r in ${rules}; do
+    "${G[@]}" dns response-policies rules delete "${r}" --response-policy="$1" || return 1
+  done
   "${G[@]}" dns response-policies update "$1" --networks="" &&
     "${G[@]}" dns response-policies delete "$1"
 }
@@ -438,6 +444,48 @@ if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   for name in ${rows}; do
     by_run "${name}" || continue
     act "DNS response policy" "${name}" dns_rp_delete "${name}"
+  done
+fi
+
+# Data Catalog entry groups (deleted with force, their entries and tags
+# with them) and tag templates (the DataCatalogTag test's), by the run's
+# name with its dashes as underscores (their IDs take no dashes), only
+# where the live-test account has Data Catalog (E2E_DATA_CATALOG=true:
+# datacatalog.googleapis.com on and roles/datacatalog.admin); without it
+# the test does not run live. Tag templates have no list call, so they
+# are found with a catalog search.
+if [[ "${E2E_DATA_CATALOG:-}" == true ]]; then
+  dcbase="https://datacatalog.googleapis.com/v1"
+  rows="$(disco_api GET "${dcbase}/projects/${project}/locations/us-central1/entryGroups?pageSize=1000" | jq -r '.entryGroups[]? | .name')"
+  for name in ${rows}; do
+    leaf="${name##*/}"
+    by_run "${leaf//_/-}" || continue
+    act "Data Catalog entry group" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+  rows="$(curl -sS --fail-with-body -X POST -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    -H "Content-Type: application/json" "${dcbase}/catalog:search" \
+    -d "{\"scope\":{\"includeProjectIds\":[\"${project}\"]},\"query\":\"type=tag_template\",\"pageSize\":500}" \
+    | jq -r '.results[]? | .relativeResourceName')"
+  for name in ${rows}; do
+    leaf="${name##*/}"
+    by_run "${leaf//_/-}" || continue
+    act "Data Catalog tag template" "${name}" disco_api DELETE "${dcbase}/${name}?force=true"
+  done
+fi
+
+# Vertex AI reasoning engines (the AIPlatformReasoningEngine test's), by
+# the run's display name (the ID is the API's), only where the live-test
+# account has Vertex AI (E2E_VERTEX_AI=true: aiplatform.googleapis.com on
+# and roles/aiplatform.user); without it the test does not run live.
+if [[ "${E2E_VERTEX_AI:-}" == true ]]; then
+  for region in us-central1; do
+    rebase="https://${region}-aiplatform.googleapis.com/v1/projects/${project}/locations/${region}/reasoningEngines"
+    rows="$(disco_api GET "${rebase}?pageSize=100" | jq -r '.reasoningEngines[]? | "\(.name) \(.displayName) \(.createTime)"')"
+    while read -r name display made; do
+      [[ -n "${name}" ]] || continue
+      by_run "${display}" "${made}" || continue
+      act "reasoning engine" "${name}" disco_api DELETE "https://${region}-aiplatform.googleapis.com/v1/${name}"
+    done <<<"${rows}"
   done
 fi
 
