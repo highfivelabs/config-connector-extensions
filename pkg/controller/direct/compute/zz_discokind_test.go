@@ -41,6 +41,11 @@ func TestComputeGlobalVmExtensionPolicy(t *testing.T) {
 	kindtest.Run(t, "ComputeGlobalVmExtensionPolicy")
 }
 
+// TestComputeInterconnectAttachment runs testdata/discokind/ComputeInterconnectAttachment/ on the fake cloud, or live.
+func TestComputeInterconnectAttachment(t *testing.T) {
+	kindtest.Run(t, "ComputeInterconnectAttachment")
+}
+
 // TestComputeInterconnectGroup runs testdata/discokind/ComputeInterconnectGroup/ on the fake cloud, or live.
 func TestComputeInterconnectGroup(t *testing.T) { kindtest.Run(t, "ComputeInterconnectGroup") }
 

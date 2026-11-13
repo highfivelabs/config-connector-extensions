@@ -219,6 +219,23 @@
   terraform: google_compute_network_attachment
   note: "Subnets of a consumer's network that Private Service Connect producers attach interfaces to."
 
+# The catalog's VPN and interconnect ports (2026-11-13): Config Connector's
+# ComputeInterconnectAttachment (v1beta1) lacks the candidate Cloud Router
+# and customer router addresses (candidateCloudRouterIpAddress,
+# candidateCustomerRouterIpAddress and their IPv6 forms), so ours is a
+# stable equivalent with the API's whole field set (decisions 19 and 26, as
+# NetworkServicesGateway). Immutable as Terraform's
+# google_compute_interconnect_attachment forces a new attachment for them.
+- kind: ComputeInterconnectAttachment
+  group: compute.gcp.hfl.dev
+  version: v1beta1
+  discovery: compute.v1
+  resource: interconnectAttachments
+  parents: [project]
+  terraform: google_compute_interconnect_attachment
+  immutable: [interconnect, type, router, edgeAvailabilityDomain, candidateSubnets, candidateIpv6Subnets, candidateCloudRouterIpAddress, candidateCloudRouterIpv6Address, candidateCustomerRouterIpAddress, candidateCustomerRouterIpv6Address, vlanTag8021q, ipsecInternalAddresses, encryption, subnetLength, pairingKey, l2Forwarding]
+  note: "A VLAN attachment: an interconnect's connection to a Cloud Router, with the router and customer addresses chosen from candidates."
+
 - kind: ComputeRegionInstanceTemplate
   group: compute.gcp.hfl.dev
   version: v1alpha1

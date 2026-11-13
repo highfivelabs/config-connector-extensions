@@ -273,6 +273,18 @@ the live-test project (it is off; the live-test account already has the
 permissions through `roles/compute.networkAdmin`).
 `docs/kinds/NetworkServicesGateway.md` has the rest.
 
+Then `ComputeInterconnectAttachment` (`compute.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the catalog's VPN and interconnect ports:
+Config Connector's `v1beta1` kind lacks the candidate Cloud Router and
+customer router addresses (`candidateCloudRouterIpAddress`,
+`candidateCustomerRouterIpAddress`, and their IPv6 forms), so ours keeps
+the name at `v1beta1` with the API's whole field set (decisions 19 and 26,
+as `NetworkServicesGateway`). The fields Terraform's
+`google_compute_interconnect_attachment` forces a new attachment for are
+immutable. It skips live: the live-test project has no Dedicated
+Interconnect. Its test adds to the `compute` package's time (section 10,
+question 8).
+
 Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
 2026-11-13), hand-written rather than generated: a Cloud Endpoints service
 is three Service Management calls (create the service, submit a
