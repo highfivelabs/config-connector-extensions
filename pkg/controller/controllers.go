@@ -57,6 +57,7 @@ import (
 	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
+	servicemanagementv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/servicemanagement/v1alpha1"
 	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
 	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
@@ -75,6 +76,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/securitycenter"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/servicemanagement"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/serviceusage"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/spanner"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
@@ -145,6 +147,7 @@ var Kinds = []kind{
 	{gvk: spannerv1beta1.SpannerInstanceConfigGVK, crdName: "spannerinstanceconfigs.spanner.gcp.hfl.dev", model: spanner.NewInstanceConfigModel, labels: slotguard.Spec},
 	{gvk: datacatalogv1beta1.DataCatalogTagGVK, crdName: "datacatalogtags.datacatalog.gcp.hfl.dev", model: datacatalog.NewTagModel},
 	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
+	{gvk: servicemanagementv1alpha1.EndpointsServiceGVK, crdName: "endpointsservices.servicemanagement.gcp.hfl.dev", model: servicemanagement.NewEndpointsServiceModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -168,6 +171,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,
+		servicemanagementv1alpha1.AddToScheme,
 		resourcemanagerv1alpha1.AddToScheme,
 		networksecurityv1alpha1.AddToScheme,
 		securitycenterv1alpha1.AddToScheme,

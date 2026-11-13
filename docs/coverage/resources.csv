@@ -1136,7 +1136,7 @@ serviceconsumermanagement.googleapis.com,serviceconsumermanagement.googleapis.co
 servicedirectory.googleapis.com,servicedirectory.googleapis.com/Namespace,2,ServiceDirectoryNamespace,2,,0,0,false,api=v1:projects.locations.namespaces; official-spec-fields-unmatched=3/3
 servicedirectory.googleapis.com,servicedirectory.googleapis.com/NamespaceService,2,ServiceDirectoryService,1,,0,1,false,api=v1:projects.locations.namespaces.services; official-spec-fields-unmatched=2/2
 servicedirectory.googleapis.com,servicedirectory.googleapis.com/NamespaceServiceEndpoint,5,ServiceDirectoryEndpoint,4,,0,1,false,api=v1:projects.locations.namespaces.services.endpoints; official-spec-fields-unmatched=2/5
-servicemanagement.googleapis.com,servicemanagement.googleapis.com/Service,2,,0,,0,2,false,api=v1:services
+servicemanagement.googleapis.com,servicemanagement.googleapis.com/Service,2,,0,EndpointsService,0,2,false,api=v1:services; ours-spec-fields-unmatched=5/5
 servicemanagement.googleapis.com,servicemanagement.googleapis.com/ServiceConfig,274,,0,,0,274,false,api=v1:services.configs; recursive-cut=4
 servicemanagement.googleapis.com,servicemanagement.googleapis.com/ServiceRollout,7,,0,,0,7,false,api=v1:services.rollouts
 servicenetworking.googleapis.com,servicenetworking.googleapis.com/ServiceConnection,2,ServiceNetworkingConnection,2,,0,0,false,api=v1:services.connections; official-spec-fields-unmatched=1/3

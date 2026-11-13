@@ -59,6 +59,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	smfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/servicemanagement/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 	discofake "github.com/highfivelabs/config-connector-extensions/pkg/discokind/fake"
 )
@@ -235,8 +236,8 @@ func startCluster(t *testing.T) *cluster {
 		// (config/tests/samples/create/harness.go).
 		mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
 		// The discokind kinds' collections are served by their own fake
-		// (pkg/discokind/fake), in front of mockgcp.
-		requests = &recorder{inner: discofake.New(mockCloud, discokind.Kinds())}
+		// (pkg/discokind/fake), and Service Management by its own, in front of mockgcp.
+		requests = &recorder{inner: discofake.New(smfake.New(mockCloud), discokind.Kinds())}
 	}
 	gcpHTTP := &http.Client{Transport: requests}
 	if !Live() {
