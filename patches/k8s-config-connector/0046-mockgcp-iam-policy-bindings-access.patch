@@ -1,0 +1,86 @@
+config-connector-extensions patch 0046: mockgcp binds IAM v3 access policies.
+
+For iam.gcp.hfl.dev IAMPolicyBinding's resource target. Written here:
+mockiam/policybindings.go (patch 0044) took principal access boundary
+policies only, bound to a principal set. A binding may now name an access
+policy the fake holds (patch 0045), bound to a resource (target.resource,
+cloud.google.com/go/iam v1.14.0); its policy kind defaults to ACCESS and
+its policy uid is the policy's. A principal access boundary policy still
+needs a principal set, an access policy a resource. Upstream candidate:
+yes. Numbered: it edits mockiam/policybindings.go after 0044, and needs
+0045's parseAccessPolicyName.
+
+diff --git a/mockgcp/mockiam/policybindings.go b/mockgcp/mockiam/policybindings.go
+index d6fa0f8..37b4fd0 100644
+--- a/mockgcp/mockiam/policybindings.go
++++ b/mockgcp/mockiam/policybindings.go
+@@ -127,35 +127,52 @@ func (s *IAMV3PolicyBindingsServer) CreatePolicyBinding(ctx context.Context, req
+ 	if obj == nil {
+ 		obj = &pb.PolicyBinding{}
+ 	}
+-	if obj.GetTarget().GetPrincipalSet() == "" {
+-		return nil, status.Errorf(codes.InvalidArgument, "target.principal_set is required")
+-	}
+ 	if obj.GetPolicy() == "" {
+ 		return nil, status.Errorf(codes.InvalidArgument, "policy is required")
+ 	}
+-	// Only principal access boundary policies are served here.
+-	policy, err := parsePABName(obj.GetPolicy())
+-	if err != nil {
+-		return nil, status.Errorf(codes.InvalidArgument, "policy %q is not a principal access boundary policy", obj.GetPolicy())
+-	}
+-	pab := &pb.PrincipalAccessBoundaryPolicy{}
+-	if err := s.storage.Get(ctx, policy, pab); err != nil {
+-		if status.Code(err) == codes.NotFound {
+-			return nil, status.Errorf(codes.NotFound, "Policy %q was not found.", policy)
++	// The bound policy: a principal access boundary policy, which binds to
++	// a principal set, or an access policy (patch 0046), which binds to a
++	// resource.
++	var policyUID string
++	var kind pb.PolicyBinding_PolicyKind
++	if pabName, err := parsePABName(obj.GetPolicy()); err == nil {
++		pab := &pb.PrincipalAccessBoundaryPolicy{}
++		if err := s.storage.Get(ctx, pabName, pab); err != nil {
++			if status.Code(err) == codes.NotFound {
++				return nil, status.Errorf(codes.NotFound, "Policy %q was not found.", pabName)
++			}
++			return nil, err
+ 		}
+-		return nil, err
++		if obj.GetTarget().GetPrincipalSet() == "" {
++			return nil, status.Errorf(codes.InvalidArgument, "target.principal_set is required for a principal access boundary policy")
++		}
++		policyUID, kind = pab.GetUid(), pb.PolicyBinding_PRINCIPAL_ACCESS_BOUNDARY
++	} else if apName, _, err := parseAccessPolicyName(obj.GetPolicy()); err == nil {
++		ap := &pb.AccessPolicy{}
++		if err := s.storage.Get(ctx, apName, ap); err != nil {
++			if status.Code(err) == codes.NotFound {
++				return nil, status.Errorf(codes.NotFound, "Policy %q was not found.", apName)
++			}
++			return nil, err
++		}
++		if obj.GetTarget().GetResource() == "" {
++			return nil, status.Errorf(codes.InvalidArgument, "target.resource is required for an access policy")
++		}
++		policyUID, kind = ap.GetUid(), pb.PolicyBinding_ACCESS
++	} else {
++		return nil, status.Errorf(codes.InvalidArgument, "policy %q is neither a principal access boundary policy nor an access policy", obj.GetPolicy())
+ 	}
+ 	switch obj.GetPolicyKind() {
+ 	case pb.PolicyBinding_POLICY_KIND_UNSPECIFIED:
+-		obj.PolicyKind = pb.PolicyBinding_PRINCIPAL_ACCESS_BOUNDARY
+-	case pb.PolicyBinding_PRINCIPAL_ACCESS_BOUNDARY:
++		obj.PolicyKind = kind
++	case kind:
+ 	default:
+-		return nil, status.Errorf(codes.InvalidArgument, "policy_kind %v does not match the policy's kind PRINCIPAL_ACCESS_BOUNDARY", obj.GetPolicyKind())
++		return nil, status.Errorf(codes.InvalidArgument, "policy_kind %v does not match the policy's kind %v", obj.GetPolicyKind(), kind)
+ 	}
+ 	now := time.Now()
+ 	obj.Name = fqn
+ 	obj.Uid = uuid.NewString()
+-	obj.PolicyUid = pab.GetUid()
++	obj.PolicyUid = policyUID
+ 	obj.CreateTime = timestamppb.New(now)
+ 	obj.UpdateTime = timestamppb.New(now)
+ 	obj.Etag = policyBindingEtag(obj)

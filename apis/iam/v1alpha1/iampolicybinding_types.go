@@ -98,9 +98,12 @@ type IAMPolicyBindingSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="policyKind is immutable"
 	PolicyKind *string `json:"policyKind,omitempty"`
 
-	// Required. Immutable. The policy to be bound: an IAMPrincipalAccessBoundaryPolicy
-	//  (iam.gcp.hfl.dev) by name, or a policy's resource name as external
-	//  (organizations/{organization}/locations/global/principalAccessBoundaryPolicies/{id}).
+	// Required. Immutable. The policy to be bound: by name, an
+	//  IAMAccessPolicy (iam.gcp.hfl.dev) when policyKind is ACCESS, else an
+	//  IAMPrincipalAccessBoundaryPolicy; or a policy's resource name as
+	//  external
+	//  (organizations/{organization}/locations/global/principalAccessBoundaryPolicies/{id},
+	//  {organizations|folders|projects}/{id}/locations/{location}/accessPolicies/{id}).
 	//  The binding parent and the policy must belong to the same organization.
 	// +kcc:proto:field=google.iam.v3.PolicyBinding.policy
 	// +required
@@ -128,17 +131,22 @@ type IAMPolicyBindingSpec struct {
 // PolicyBindingPolicyRef is the policy a binding binds.
 // +kubebuilder:validation:XValidation:rule="has(self.external) != has(self.name)",message="exactly one of external and name is required"
 type PolicyBindingPolicyRef struct {
-	// A policy's resource name, organizations/{organization}/locations/global/principalAccessBoundaryPolicies/{id}.
+	// A policy's resource name: a principal access boundary policy's,
+	// organizations/{organization}/locations/global/principalAccessBoundaryPolicies/{id},
+	// or an access policy's,
+	// {organizations|folders|projects}/{id}/locations/{location}/accessPolicies/{id}.
 	External string `json:"external,omitempty"`
 
-	// The name of an IAMPrincipalAccessBoundaryPolicy (iam.gcp.hfl.dev).
+	// The name of an IAMAccessPolicy (iam.gcp.hfl.dev) when policyKind is
+	// ACCESS, else of an IAMPrincipalAccessBoundaryPolicy.
 	Name string `json:"name,omitempty"`
 
-	// The namespace of the IAMPrincipalAccessBoundaryPolicy; the binding's when left out.
+	// The namespace of the policy object; the binding's when left out.
 	Namespace string `json:"namespace,omitempty"`
 }
 
 // +kcc:proto=google.iam.v3.PolicyBinding.Target
+// +kubebuilder:validation:XValidation:rule="has(self.principalSet) != has(self.resource)",message="target takes exactly one of principalSet and resource"
 type PolicyBinding_Target struct {
 	// Immutable. The full resource name that's used for principal access
 	//  boundary policy bindings. The principal set must be directly parented
@@ -150,6 +158,15 @@ type PolicyBinding_Target struct {
 	//  //iam.googleapis.com/locations/global/workforcePools/POOL_ID.
 	// +kcc:proto:field=google.iam.v3.PolicyBinding.Target.principal_set
 	PrincipalSet *string `json:"principalSet,omitempty"`
+
+	// Immutable. The full resource name that's used for access policy
+	//  bindings: the resource the policy applies to. Examples:
+	//  //cloudresourcemanager.googleapis.com/organizations/ORGANIZATION_ID,
+	//  //cloudresourcemanager.googleapis.com/folders/FOLDER_ID,
+	//  //cloudresourcemanager.googleapis.com/projects/PROJECT_NUMBER or
+	//  PROJECT_ID, or a resource in the project, such as an agent gateway.
+	// +kcc:proto:field=google.iam.v3.PolicyBinding.Target.resource
+	Resource *string `json:"resource,omitempty"`
 }
 
 // +kcc:proto=google.type.Expr

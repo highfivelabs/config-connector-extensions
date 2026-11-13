@@ -72,6 +72,9 @@ func PolicyBinding_Target_FromProto(mapCtx *direct.MapContext, in *iamv3pb.Polic
 	if v := in.GetPrincipalSet(); v != "" {
 		out.PrincipalSet = &v
 	}
+	if v := in.GetResource(); v != "" {
+		out.Resource = &v
+	}
 	return out
 }
 
@@ -82,6 +85,9 @@ func PolicyBinding_Target_ToProto(mapCtx *direct.MapContext, in *krm.PolicyBindi
 	out := &iamv3pb.PolicyBinding_Target{}
 	if in.PrincipalSet != nil {
 		out.Target = &iamv3pb.PolicyBinding_Target_PrincipalSet{PrincipalSet: *in.PrincipalSet}
+	}
+	if in.Resource != nil {
+		out.Target = &iamv3pb.PolicyBinding_Target_Resource{Resource: *in.Resource}
 	}
 	return out
 }
