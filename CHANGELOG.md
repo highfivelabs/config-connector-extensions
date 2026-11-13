@@ -197,6 +197,16 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **A generated kind (`hack/discokind`) waited forever to be deleted when
+  the parent object its `projectRef`, `folderRef` or `organizationRef`
+  names by `name` was already gone** (everything deleted at once): its
+  delete resolved the parent again and failed with "referenced Project ...
+  not found". The delete now takes the resource's name from
+  `status.externalRef` (the parts of a name cannot change) and does not
+  resolve the parent; `deletion-policy: abandon` still keeps the resource.
+  An object being deleted that never had a resource (no
+  `status.externalRef`) and whose parent cannot be resolved goes without
+  a call. Every generated kind, `ComputeNetworkAttachment` included.
 - **`IAMBinding` and `IAMMember` waited forever to be deleted when the
   object they name was being deleted too** (a namespace or a release
   deleted at once): the binding's delete stuck on "reference ... is not
