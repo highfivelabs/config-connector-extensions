@@ -8,6 +8,10 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`compute.gcp.hfl.dev/v1beta1` `ComputeRegionDiskResourcePolicyAttachment`**,
+  a resource policy (a snapshot schedule) attached to a regional disk, with
+  the fields of Config Connector's Terraform-based alpha kind (decision
+  26); the controller is our zonal attachment's, for `regionDisks`.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
   Config Connector's alpha zonal autoscaler (decision 26), with upstream's
   fields.
