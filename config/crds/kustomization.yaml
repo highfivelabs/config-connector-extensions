@@ -31,6 +31,7 @@ resources:
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyassociations.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicyrules.yaml
+- compute.gcp.hfl.dev_computeperinstanceconfigs.yaml
 - compute.gcp.hfl.dev_computeprojectdefaultnetworktiers.yaml
 - compute.gcp.hfl.dev_computeprojectmetadataitems.yaml
 - compute.gcp.hfl.dev_computepublicadvertisedprefixes.yaml

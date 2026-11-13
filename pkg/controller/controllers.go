@@ -110,6 +110,7 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
 	{gvk: computev1beta1.ComputeDiskResourcePolicyAttachmentGVK, crdName: "computediskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeDiskResourcePolicyAttachmentModel},
 	{gvk: computev1beta1.ComputeRegionPerInstanceConfigGVK, crdName: "computeregionperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputeRegionPerInstanceConfigModel},
+	{gvk: computev1beta1.ComputePerInstanceConfigGVK, crdName: "computeperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputePerInstanceConfigModel},
 	{gvk: computev1alpha1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
 	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
 	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},

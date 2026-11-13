@@ -8,6 +8,10 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`compute.gcp.hfl.dev/v1beta1` `ComputePerInstanceConfig`**, a stable
+  per-instance config of a zonal managed instance group (decision 26), with
+  the fields of Config Connector's Terraform-based alpha kind; adapted from
+  our `ComputeRegionPerInstanceConfig`.
 - **`compute.gcp.hfl.dev/v1beta1` `ComputeAutoscaler`**, a stable copy of
   Config Connector's alpha zonal autoscaler (decision 26), with upstream's
   fields.
