@@ -151,6 +151,14 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`IAMBinding` and `IAMMember` waited forever to be deleted when the
+  object they name was being deleted too** (a namespace or a release
+  deleted at once): the binding's delete stuck on "reference ... is not
+  ready" while the parent, an `APIGatewayAPI` for example, was going. A
+  parent that is gone, or being deleted without `deletion-policy: abandon`,
+  takes the policy with it, so the binding's delete now succeeds without a
+  call; one kept with abandon still has the binding removed.
+
 - **The fake cloud answered 404 to an IAM policy read or write on a
   generated kind** (Cloud Build v2 connections, API Gateway configs and
   gateways, Dataplex lakes, zones, aspect types and data scans): the

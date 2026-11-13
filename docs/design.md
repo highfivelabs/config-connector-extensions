@@ -1625,7 +1625,9 @@ Notes on what was built from this table:
   lower-cased), in any order. A referenced object that is missing is "not
   found", one whose Ready condition is not True is "not ready", and the
   reconciler waits and retries; while the binding is being deleted, a
-  missing object means there is nothing to remove. A kind that is not in
+  missing object, or one being deleted without `deletion-policy: abandon`
+  (2026-11-13; `docs/kinds/IAMBinding.md`), means there is nothing to
+  remove. A kind that is not in
   the table is refused with the list of kinds.
   Kinds in the table (2026-11-09): `Project`, `Folder`, `Organization`,
   `IAMServiceAccount`, `StorageBucket`, `SecretManagerSecret` (global and
