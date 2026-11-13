@@ -12,8 +12,9 @@ apiVersion: chronicle.gcp.hfl.dev/v1alpha1
 
 ## Notes
 
-The spec: `ruleRef` (a Config Connector `ChronicleRule` by `name` once it
-has `status.externalRef`, or `external`
+The spec: `ruleRef` (a `ChronicleRule` by `name` once it has
+`status.externalRef`: ours, `chronicle.gcp.hfl.dev/v1beta1`, first, then
+Config Connector's; or `external`
 `projects/{project}/locations/{location}/instances/{instance}/rules/{rule}`,
 without a revision), immutable (CEL); then `enabled`, `alerting`,
 `archived`, `runFrequency` (`LIVE`, `HOURLY`, `DAILY`, `LIVE_CUSTOMIZABLE`,
@@ -36,7 +37,8 @@ multi-event rule, as `LIVE` for a single-event one); as Terraform does,
 those count as matching, and `status.observedState.runFrequency` holds
 the stored value. A rule that does not exist has no deployment: the
 object is not Ready, with "does the rule exist?". Delete leaves the
-deployment as it is, as Terraform's `exclude_delete` does; it does not
+deployment as it is, and needs no rule (a rule object deleted with it does
+not hold it), as Terraform's `exclude_delete` does; it does not
 disable the rule first. `status.observedState` has `runFrequency`,
 `archiveTime`, `executionState`, `producerRules`, `consumerRules` and
 `lastAlertStatusChangeTime`.

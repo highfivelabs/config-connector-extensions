@@ -46,6 +46,7 @@ import (
 	artifactregistryv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	chroniclev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1alpha1"
+	chroniclev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
@@ -152,6 +153,7 @@ var Kinds = []kind{
 	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
 	{gvk: servicemanagementv1alpha1.EndpointsServiceGVK, crdName: "endpointsservices.servicemanagement.gcp.hfl.dev", model: servicemanagement.NewEndpointsServiceModel},
 	{gvk: chroniclev1alpha1.ChronicleRuleDeploymentGVK, crdName: "chronicleruledeployments.chronicle.gcp.hfl.dev", model: chronicle.NewRuleDeploymentModel},
+	{gvk: chroniclev1beta1.ChronicleRuleGVK, crdName: "chroniclerules.chronicle.gcp.hfl.dev", model: chronicle.NewRuleModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -173,6 +175,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		datacatalogv1beta1.AddToScheme,
 		aiplatformv1beta1.AddToScheme,
 		chroniclev1alpha1.AddToScheme,
+		chroniclev1beta1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,

@@ -39,11 +39,16 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	krm "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1alpha1"
+	krmv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 )
 
@@ -73,30 +78,75 @@ func (m *ruleDeploymentModel) AdapterForObject(ctx context.Context, op *directba
 	if obj.Spec.RuleRef == nil {
 		return nil, fmt.Errorf("spec.ruleRef is required")
 	}
-	ref := obj.Spec.RuleRef.DeepCopy()
-	if err := ref.Normalize(ctx, op.Reader, obj.GetNamespace()); err != nil {
-		return nil, err
-	}
-	rule := &kccchroniclev1alpha1.ChronicleRuleIdentity{}
-	if err := rule.FromExternal(ref.External); err != nil {
-		return nil, err
-	}
-	if strings.Contains(rule.Rule, "@") {
-		return nil, fmt.Errorf("spec.ruleRef %q names a revision; a deployment belongs to the rule (%s)", ref.External, strings.SplitN(rule.Rule, "@", 2)[0])
-	}
-	name := rule.String() + "/deployment"
-	if ext := obj.Status.ExternalRef; ext != nil && *ext != "" && *ext != name {
-		return nil, fmt.Errorf("cannot change ChronicleRuleDeployment identity (old=%q, new=%q)", *ext, name)
-	}
 	httpClient, err := m.config.NewAuthenticatedHTTPClient(ctx)
 	if err != nil {
 		return nil, err
+	}
+	ext := ""
+	if obj.Status.ExternalRef != nil {
+		ext = *obj.Status.ExternalRef
+	}
+	if !obj.GetDeletionTimestamp().IsZero() {
+		// Delete leaves the deployment, so it needs no rule: a rule object
+		// deleted with this one (everything deleted at once) does not hold
+		// it. With no status.externalRef, Find finds nothing.
+		location := ""
+		if id := (&kccchroniclev1alpha1.ChronicleRuleIdentity{}); ext != "" && id.FromExternal(strings.TrimSuffix(ext, "/deployment")) == nil {
+			location = id.Location
+		}
+		return &ruleDeploymentAdapter{api: &discokind.API{HTTP: httpClient, BaseURL: BaseURL(location)}, name: ext, desired: &obj.Spec}, nil
+	}
+	external, err := resolveRuleRef(ctx, op.Reader, obj.GetNamespace(), obj.Spec.RuleRef)
+	if err != nil {
+		return nil, err
+	}
+	rule := &kccchroniclev1alpha1.ChronicleRuleIdentity{}
+	if err := rule.FromExternal(external); err != nil {
+		return nil, err
+	}
+	if strings.Contains(rule.Rule, "@") {
+		return nil, fmt.Errorf("spec.ruleRef %q names a revision; a deployment belongs to the rule (%s)", external, strings.SplitN(rule.Rule, "@", 2)[0])
+	}
+	name := rule.String() + "/deployment"
+	if ext != "" && ext != name {
+		return nil, fmt.Errorf("cannot change ChronicleRuleDeployment identity (old=%q, new=%q)", ext, name)
 	}
 	return &ruleDeploymentAdapter{
 		api:     &discokind.API{HTTP: httpClient, BaseURL: BaseURL(rule.Location)},
 		name:    name,
 		desired: &obj.Spec,
 	}, nil
+}
+
+// resolveRuleRef is the rule's name. A ruleRef by name finds our
+// ChronicleRule (chronicle.gcp.hfl.dev) first, then Config Connector's
+// (whose alpha kind cannot resolve an instance, so it never has an
+// externalRef).
+func resolveRuleRef(ctx context.Context, reader client.Reader, namespace string, in *kccchroniclev1alpha1.ChronicleRuleRef) (string, error) {
+	ref := in.DeepCopy()
+	if ref.External == "" && ref.Name != "" {
+		key := types.NamespacedName{Namespace: ref.Namespace, Name: ref.Name}
+		if key.Namespace == "" {
+			key.Namespace = namespace
+		}
+		ours := &unstructured.Unstructured{}
+		ours.SetGroupVersionKind(krmv1beta1.ChronicleRuleGVK)
+		err := reader.Get(ctx, key, ours)
+		switch {
+		case err == nil:
+			ext, _, _ := unstructured.NestedString(ours.Object, "status", "externalRef")
+			if ext == "" {
+				return "", k8s.NewReferenceNotReadyError(krmv1beta1.ChronicleRuleGVK, key)
+			}
+			return ext, nil
+		case !apierrors.IsNotFound(err):
+			return "", fmt.Errorf("reading ChronicleRule %v: %w", key, err)
+		}
+	}
+	if err := ref.Normalize(ctx, reader, namespace); err != nil {
+		return "", err
+	}
+	return ref.External, nil
 }
 
 func (m *ruleDeploymentModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
@@ -115,6 +165,10 @@ var _ directbase.Adapter = &ruleDeploymentAdapter{}
 // Find reads the deployment. A rule that does not exist has none: Create
 // then fails with a message that says so.
 func (a *ruleDeploymentAdapter) Find(ctx context.Context) (bool, error) {
+	if a.name == "" {
+		// Being deleted, never set (AdapterForObject).
+		return false, nil
+	}
 	got, err := a.api.Get(ctx, a.name)
 	if err != nil {
 		if direct.IsNotFound(err) {

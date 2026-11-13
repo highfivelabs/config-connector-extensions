@@ -313,6 +313,23 @@ frequencies and `scheduleCustomizations`. mockgcp has no Chronicle, so a
 fake serves it (`docs/fake-cloud.md`); live skips, needing a SecOps
 instance. `docs/kinds/ChronicleRuleDeployment.md` has the rest.
 
+Then `ChronicleRule` (`chronicle.gcp.hfl.dev/v1beta1`, 2026-11-13),
+hand-written for the catalog's `secops-rules` module
+(`google_chronicle_rule`). Config Connector 1.160.0 has the kind at
+`v1alpha1` with no instance field: its identity is
+`projects/{project}/locations/{location}/instances/{instance}/rules/{rule}`,
+but `getIdentityFromChronicleRuleSpec` leaves the instance empty and fails
+with "cannot resolve instance for ChronicleRule", so no object of it can
+become Ready. Ours keeps the name (decision 18) at `v1beta1` (decision 26),
+copies upstream's types with `instance` added, and imports upstream's
+identity and observed state. The API assigns a rule's ID (`ru_...`):
+create records it in `status.externalRef`, and `spec.resourceID` acquires a
+rule that exists (a missing one is not Ready; the ID cannot be chosen).
+`deletionPolicy` (`DEFAULT`, `FORCE`) is Terraform's. The same REST client
+and host as the deployment; the Chronicle fake gained rule patch.
+`ChronicleRuleDeployment`'s `ruleRef` by `name` finds ours first, then
+Config Connector's. `docs/kinds/ChronicleRule.md` has the rest.
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check
@@ -1997,7 +2014,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     against the binding's parent and of a condition's attributes, which
     the fake does not make; `ACCESS` policies, which the fake does not
     serve.
-40. `ChronicleRuleDeployment`: a live run (needs a Google SecOps instance
+40. `ChronicleRuleDeployment` and `ChronicleRule`: a live run (needs a Google SecOps instance
     in or bound to the live-test project, `chronicle.googleapis.com` on
     and `roles/chronicle.editor` for `cce-live-tests`;
     `E2E_CHRONICLE_INSTANCE=<location>/<instance>`), and with it the
