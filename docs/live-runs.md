@@ -314,6 +314,17 @@ but the run's own service account for a minute or two; folder and
 organization policies run on the fake only. The sweeper deletes
 policies whose ID carries a run ID.
 
+`IAMPolicyBinding` (package `iam`) waits on a principal access boundary
+policy: one lives under an organization (a run never makes one), and
+`cce-live-tests` needs `iam.principalaccessboundarypolicies.bind` on it
+and `iam.policyBindings.*` on the project. Until then a live `iam` run
+skips the test and the sweeper leaves policy bindings alone. With them:
+`E2E_IAM_POLICY_BINDING_POLICY=organizations/{org}/locations/global/principalAccessBoundaryPolicies/{id}
+task test-live PROJECT=$GCP_PROJECT KINDS=iam`. The test binds that policy
+to the run's project with a condition no real principal meets, so the
+boundary changes nothing; the sweeper deletes the project's bindings
+whose ID carries a run ID.
+
 `LoggingBillingAccountSink` (package `logging`) waits on billing account
 access: the live-test service account needs `roles/logging.configWriter`
 (or `logging.sinks.*`) on a billing account, which only the builder can

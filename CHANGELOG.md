@@ -8,6 +8,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`iam.gcp.hfl.dev/v1alpha1` `IAMPolicyBinding`**: an IAM v3 policy
+  binding, a principal access boundary policy bound to the principals of
+  an organization, folder or project (`google_iam_projects_policy_binding`,
+  `google_iam_folders_policy_binding`, `google_iam_organizations_policy_binding`).
+  The policy is an `IAMPrincipalAccessBoundaryPolicy` by name or a
+  policy's resource name. Config Connector has no released kind, so it
+  starts at `v1alpha1`. Live pending an organization's principal access
+  boundary policy the live-test account may bind.
 - **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityGatewaySecurityPolicy`,
   `NetworkSecurityGatewaySecurityPolicyRule`, `NetworkSecurityURLList` and
   `NetworkSecurityTLSInspectionPolicy`**, generated from Discovery: a Secure

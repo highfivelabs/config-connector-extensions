@@ -179,6 +179,17 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   `enforcementVersion` to `1` when unset (the real API's latest version
   is assumed), checks no permissions, and stores any rule: no check of
   the resource names, the 500-resource limit or the effect.
+- **IAM policy bindings in mockgcp** (patch 0044, ours, for
+  `IAMPolicyBinding`). Create, get, list, update with a mask (display
+  name, annotations, condition; any other path is refused as immutable)
+  and delete under any organization, folder or project and location, on
+  REST paths added by hand as patch 0030's; every write answers a
+  finished operation. The bound policy must be a principal access
+  boundary policy the fake holds; the binding's policy kind defaults to
+  it and its `policyUid` is the policy's. It checks no permissions, does
+  not check the principal set against the parent or the condition's
+  attributes, and serves neither `ACCESS` policies nor
+  `searchTargetPolicyBindings`.
 - **IAM deny policies in mockgcp** (upstream's, unpatched, for
   `IAMDenyPolicy`). It serves create, get, list, a whole-policy update
   that must carry the current etag, and delete, under a project's number
