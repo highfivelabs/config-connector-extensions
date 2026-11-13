@@ -32,6 +32,16 @@ has been released yet; each release moves its entries out of
   Config Connector has no kind for it, so it starts at `v1alpha1`.
   `IAMBinding` and `IAMMember` name it by `name`. The operator's role gains
   `servicemanagement.gcp.hfl.dev`.
+- **`chronicle.gcp.hfl.dev/v1beta1` `ChronicleRule`**, a Google SecOps
+  (Chronicle) detection rule in an instance (`google_chronicle_rule`).
+  Config Connector 1.160.0's `ChronicleRule` is alpha and has no instance
+  field, so it always fails with "cannot resolve instance"; ours keeps the
+  name and carries `instance` (decision 26). The API assigns the rule's ID:
+  `status.externalRef` records it, and `spec.resourceID` acquires a rule
+  that exists. `deletionPolicy: FORCE` deletes a rule's retrohunts and
+  detections with it. `ChronicleRuleDeployment`'s `ruleRef` by `name` now
+  finds ours first, and its delete no longer waits on a rule deleted with
+  it. Live pending a SecOps instance.
 - **`chronicle.gcp.hfl.dev/v1alpha1` `ChronicleRuleDeployment`**, the
   deployment of a Google SecOps (Chronicle) rule
   (`google_chronicle_rule_deployment`): whether the rule runs, alerts or is
