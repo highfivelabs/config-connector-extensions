@@ -12,6 +12,10 @@ has been released yet; each release moves its entries out of
   a resource policy (a snapshot schedule) attached to a regional disk, with
   the fields of Config Connector's Terraform-based alpha kind (decision
   26); the controller is our zonal attachment's, for `regionDisks`.
+- **`compute.gcp.hfl.dev/v1beta1` `ComputePerInstanceConfig`**, a stable
+  per-instance config of a zonal managed instance group (decision 26), with
+  the fields of Config Connector's Terraform-based alpha kind; adapted from
+  our `ComputeRegionPerInstanceConfig`.
 - **`apigee.gcp.hfl.dev/v1beta1` `ApigeeNATAddress`**, a stable copy of
   Config Connector's alpha Apigee NAT address (decision 26), with
   upstream's fields (`instanceId`, `resourceID`, both immutable) and

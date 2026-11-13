@@ -498,6 +498,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeNetworkEndpoint | (not a create) no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com | n/a | false |
 | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 12 | false |
 | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | compute.googleapis.com/OrganizationSecurityPolicy | 0 | false |
+| ComputePerInstanceConfig | (not a create) no API resource named like perinstanceconfig/computeperinstanceconfig in compute.googleapis.com | n/a | false |
 | ComputeProjectDefaultNetworkTier | (not a create) a project's default network tier, written with projects.setDefaultNetworkTier (it always exists) | n/a | false |
 | ComputeProjectMetadataItem | (not a create) one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method) | n/a | false |
 | ComputePublicAdvertisedPrefix | compute.googleapis.com/PublicAdvertisedPrefix | 7 | false |
