@@ -1,0 +1,242 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: endpointsservices.servicemanagement.gcp.hfl.dev
+spec:
+  group: servicemanagement.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: EndpointsService
+    listKind: EndpointsServiceList
+    plural: endpointsservices
+    shortNames:
+    - hflendpointsservice
+    - hflendpointsservices
+    singular: endpointsservice
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: EndpointsService is the Schema for the EndpointsService API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'EndpointsServiceSpec is a Cloud Endpoints service: a Service
+              Management managed service, its configuration and the rollout that serves
+              it, as Terraform''s google_endpoints_service makes them.'
+            properties:
+              grpcConfig:
+                description: The service's gRPC service configuration (YAML). Goes
+                  with protocOutputBase64. A change submits a new configuration and
+                  rolls it out.
+                type: string
+              openapiConfig:
+                description: The service's OpenAPI document (YAML or JSON). Its host
+                  must be the service's name. A change submits a new configuration
+                  and rolls it out.
+                type: string
+              projectRef:
+                description: The project that produces the service. Immutable.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              protocOutputBase64:
+                description: The protoc output (a FileDescriptorSet, protoc --include_imports
+                  --descriptor_set_out), base64-encoded. Goes with grpcConfig.
+                type: string
+              resourceID:
+                description: The service's name, a DNS name such as my-api.endpoints.my-project.cloud.goog.
+                  If not given, metadata.name is used. Immutable.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            required:
+            - projectRef
+            type: object
+            x-kubernetes-validations:
+            - message: exactly one of openapiConfig and grpcConfig is required
+              rule: has(self.openapiConfig) != has(self.grpcConfig)
+            - message: grpcConfig and protocOutputBase64 go together
+              rule: has(self.grpcConfig) == has(self.protocOutputBase64)
+          status:
+            description: EndpointsServiceStatus defines the config connector machine
+              state of EndpointsService
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              configDigest:
+                description: The SHA-256 of the configuration files last submitted
+                  and rolled out, so a spec change is noticed.
+                type: string
+              externalRef:
+                description: The service's name, services/{serviceName}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              observedState:
+                description: ObservedState is the state of the resource as most recently
+                  observed in GCP.
+                properties:
+                  apis:
+                    description: The APIs the configuration serves.
+                    items:
+                      description: EndpointsServiceAPI is an API the service serves.
+                      properties:
+                        methods:
+                          description: The API's methods.
+                          items:
+                            description: EndpointsServiceMethod is a method of an
+                              API.
+                            properties:
+                              name:
+                                description: The method's simple name.
+                                type: string
+                              requestType:
+                                description: The request's type URL.
+                                type: string
+                              responseType:
+                                description: The response's type URL.
+                                type: string
+                              syntax:
+                                description: SYNTAX_PROTO2 or SYNTAX_PROTO3.
+                                type: string
+                            type: object
+                          type: array
+                        name:
+                          description: The API's fully qualified name.
+                          type: string
+                        syntax:
+                          description: SYNTAX_PROTO2 or SYNTAX_PROTO3.
+                          type: string
+                        version:
+                          description: The API's version.
+                          type: string
+                      type: object
+                    type: array
+                  configID:
+                    description: The ID of the configuration the service serves (2026-11-13r0).
+                    type: string
+                  dnsAddress:
+                    description: 'The address at which the service can be found: the
+                      configuration''s name.'
+                    type: string
+                  endpoints:
+                    description: The network endpoints the configuration declares.
+                    items:
+                      description: EndpointsServiceEndpoint is a network endpoint
+                        of the service.
+                      properties:
+                        address:
+                          description: The endpoint's target, an IP address or a host
+                            name.
+                          type: string
+                        name:
+                          description: The endpoint's canonical name.
+                          type: string
+                      type: object
+                    type: array
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

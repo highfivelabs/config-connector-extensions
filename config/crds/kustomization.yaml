@@ -102,6 +102,7 @@ resources:
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - securitycenter.gcp.hfl.dev_securitycentermuteconfigs.yaml
+- servicemanagement.gcp.hfl.dev_endpointsservices.yaml
 - serviceusage.gcp.hfl.dev_serviceidentities.yaml
 - spanner.gcp.hfl.dev_spannerinstanceconfigs.yaml
 - sql.gcp.hfl.dev_sqlusers.yaml
