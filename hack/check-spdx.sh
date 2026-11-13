@@ -12,7 +12,8 @@ cd "${ROOT}"
 missing=0
 while IFS= read -r f; do
   [[ -f "${f}" ]] || continue
-  if ! head -n 25 "${f}" | grep -q 'SPDX-License-Identifier: Apache-2.0'; then
+  # grep without -q reads all its input: no SIGPIPE for head under pipefail.
+  if ! head -n 25 "${f}" | grep 'SPDX-License-Identifier: Apache-2.0' >/dev/null; then
     echo "no SPDX-License-Identifier line: ${f}" >&2
     missing=$((missing + 1))
   fi
