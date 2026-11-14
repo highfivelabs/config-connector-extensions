@@ -20,12 +20,17 @@ package compute_test
 // stateful regional managed instance group (the catalog's compute-mig
 // module) keeps one named VM with preserved metadata. The test makes the
 // group itself through the API (a network, a subnet, an e2-micro instance
-// template and a regional group of size 0, redistribution off); the
-// config then creates its instance (createInstances), and deleting the
-// group at the end deletes the instances.
+// template and a regional group of picGroupSize, redistribution off); a
+// config then names one of the group's instances
+// (updatePerInstanceConfigs), and the group keeps its size: the catalog's
+// live run in hfl-dev-514205 found a config made with createInstances
+// growing the group past its targetSize. Deleting the group at the end
+// deletes the instances.
 
 import (
 	"fmt"
+	"path"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -45,7 +50,50 @@ import (
 
 const picRegion = "us-central1"
 
-// newStatefulGroup makes a regional managed instance group of size 0 on an
+// picGroupSize is the test groups' targetSize: an instance for the test's
+// config and one for its abandoned one.
+const picGroupSize = 2
+
+// groupInstances is the names of the group's picGroupSize instances, from
+// list: live, the ones the group made for its targetSize, waited for; on
+// the fake, which makes no instances, fake.
+func groupInstances(t *testing.T, list func() ([]string, error), fake []string) []string {
+	t.Helper()
+	if !mockenv.Live() {
+		return fake
+	}
+	deadline := time.Now().Add(mockenv.Timeout())
+	for {
+		names, err := list()
+		if err == nil && len(names) >= picGroupSize {
+			sort.Strings(names)
+			return names[:picGroupSize]
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("the group's instances: %v (err %v), want %d", names, err, picGroupSize)
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
+// instanceNames lists a managed instance list's instance names.
+func instanceNames[T interface{ GetInstance() string }](next func() (T, error)) ([]string, error) {
+	var out []string
+	for {
+		mi, err := next()
+		if err == iterator.Done {
+			return out, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		if u := mi.GetInstance(); u != "" {
+			out = append(out, path.Base(u))
+		}
+	}
+}
+
+// newStatefulGroup makes a regional managed instance group of picGroupSize on an
 // e2-micro template in a network of its own, and deletes them when the
 // test ends (the group first, which deletes its instances). It returns the
 // group's name.
@@ -132,10 +180,10 @@ func newStatefulGroup(t *testing.T, env *mockenv.Env, base string) string {
 			Name:             mockenv.Ptr(group),
 			BaseInstanceName: mockenv.Ptr(group),
 			InstanceTemplate: mockenv.Ptr("projects/" + mockenv.Project + "/global/instanceTemplates/" + template),
-			TargetSize:       mockenv.Ptr(int32(0)),
-			// createInstances, which a per-instance config is made with,
-			// needs redistribution off (412 CONDITION_NOT_MET otherwise,
-			// run cce-11122245-f5ea), as a stateful group has it.
+			TargetSize:       mockenv.Ptr(int32(picGroupSize)),
+			// A stateful group has redistribution off (createInstances,
+			// which configs were made with until 2026-11-14, needs it: 412
+			// CONDITION_NOT_MET otherwise, run cce-11122245-f5ea).
 			UpdatePolicy: &pb.InstanceGroupManagerUpdatePolicy{InstanceRedistributionType: mockenv.Ptr("NONE")},
 		},
 	})
@@ -167,6 +215,22 @@ func TestComputeRegionPerInstanceConfig(t *testing.T) {
 	}
 	t.Cleanup(func() { groups.Close() })
 	group := newStatefulGroup(t, env, "pic-group")
+	instances := groupInstances(t, func() ([]string, error) {
+		it := groups.ListManagedInstances(env.Ctx, &pb.ListManagedInstancesRegionInstanceGroupManagersRequest{
+			Project: mockenv.Project, Region: picRegion, InstanceGroupManager: group,
+		})
+		return instanceNames(it.Next)
+	}, []string{mockenv.Name("db-0"), mockenv.Name("db-1")})
+	// The instance each config names.
+	instanceFor := map[string]string{"db-0": instances[0], "db-1": instances[1]}
+	targetSize := func(t *testing.T) int32 {
+		t.Helper()
+		g, err := groups.Get(env.Ctx, &pb.GetRegionInstanceGroupManagerRequest{Project: mockenv.Project, Region: picRegion, InstanceGroupManager: group})
+		if err != nil {
+			t.Fatalf("reading the group: %v", err)
+		}
+		return g.GetTargetSize()
+	}
 
 	configs := func() map[string]*pb.PerInstanceConfig {
 		out := map[string]*pb.PerInstanceConfig{}
@@ -211,7 +275,7 @@ func TestComputeRegionPerInstanceConfig(t *testing.T) {
 				ProjectRef:                    refs.ProjectRef{External: mockenv.Project},
 				Region:                        picRegion,
 				RegionInstanceGroupManagerRef: computev1beta1.ComputeRegionInstanceGroupManagerRef{External: fmt.Sprintf("projects/%s/regions/%s/instanceGroupManagers/%s", mockenv.Project, picRegion, group)},
-				ResourceID:                    mockenv.Ptr(mockenv.Name(name)),
+				ResourceID:                    mockenv.Ptr(instanceFor[name]),
 				MinimalAction:                 mockenv.Ptr("NONE"),
 				MostDisruptiveAllowedAction:   mockenv.Ptr("REFRESH"),
 				PreservedState: &computev1beta1.RegionperinstanceconfigPreservedState{
@@ -220,13 +284,13 @@ func TestComputeRegionPerInstanceConfig(t *testing.T) {
 			},
 		}
 	}
-	db := mockenv.Name("db-0")
+	db := instanceFor["db-0"]
 
 	if err := env.Kube.Create(env.Ctx, newConfig("db-0", "primary")); err != nil {
 		t.Fatal(err)
 	}
 
-	t.Run("create makes the instance with its preserved metadata", func(t *testing.T) {
+	t.Run("create writes the config and keeps the group's size", func(t *testing.T) {
 		env.WaitReady(gvk, "example", "db-0")
 		c, ok := configs()[db]
 		if !ok {
@@ -235,8 +299,17 @@ func TestComputeRegionPerInstanceConfig(t *testing.T) {
 		if got := c.GetPreservedState().GetMetadata()["role"]; got != "primary" {
 			t.Errorf("preserved metadata role = %q, want primary", got)
 		}
-		if n := writes("createInstances"); n != 1 {
-			t.Errorf("createInstances calls = %d, want 1", n)
+		if n := writes("createInstances"); n != 0 {
+			t.Errorf("createInstances calls = %d, want 0: it adds an instance and raises targetSize", n)
+		}
+		if n := writes("updatePerInstanceConfigs"); n != 1 {
+			t.Errorf("updatePerInstanceConfigs calls = %d, want 1", n)
+		}
+		if n := writes("applyUpdatesToInstances"); n != 1 {
+			t.Errorf("applyUpdatesToInstances calls = %d, want 1", n)
+		}
+		if got := targetSize(t); got != picGroupSize {
+			t.Errorf("the group's targetSize = %d after the config, want %d", got, picGroupSize)
 		}
 	})
 
@@ -311,8 +384,8 @@ func TestComputeRegionPerInstanceConfig(t *testing.T) {
 			t.Fatal(err)
 		}
 		env.WaitGone(&computev1beta1.ComputeRegionPerInstanceConfig{ObjectMeta: metav1.ObjectMeta{Namespace: "example", Name: "db-1"}})
-		if _, ok := configs()[mockenv.Name("db-1")]; !ok {
-			t.Errorf("after abandon, the per-instance config %s is gone, want it kept", mockenv.Name("db-1"))
+		if _, ok := configs()[instanceFor["db-1"]]; !ok {
+			t.Errorf("after abandon, the per-instance config %s is gone, want it kept", instanceFor["db-1"])
 		}
 	})
 }

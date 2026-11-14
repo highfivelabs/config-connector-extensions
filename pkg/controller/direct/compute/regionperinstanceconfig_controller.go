@@ -158,22 +158,9 @@ func (a *ComputeRegionPerInstanceConfigAdapter) Create(ctx context.Context, crea
 	}
 	desiredPb.Name = direct.LazyPtr(a.id.Name)
 
-	req := &pb.CreateInstancesRegionInstanceGroupManagerRequest{
-		Project:              a.id.Project,
-		Region:               a.id.Region,
-		InstanceGroupManager: a.id.RegionInstanceGroupManager,
-		RegionInstanceGroupManagersCreateInstancesRequestResource: &pb.RegionInstanceGroupManagersCreateInstancesRequest{
-			Instances: []*pb.PerInstanceConfig{desiredPb},
-		},
-	}
-	op, err := a.regionalClient.CreateInstances(ctx, req)
-	if err != nil {
+	if err := a.upsert(ctx, desiredPb); err != nil {
 		return fmt.Errorf("creating ComputeRegionPerInstanceConfig %s: %w", a.id.String(), err)
 	}
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("waiting for creation of ComputeRegionPerInstanceConfig %s: %w", a.id.String(), err)
-	}
-
 	return a.updateStatus(ctx, createOp)
 }
 
@@ -200,6 +187,23 @@ func (a *ComputeRegionPerInstanceConfigAdapter) Update(ctx context.Context, upda
 
 	structuredreporting.ReportDiff(ctx, diffs)
 
+	if err := a.upsert(ctx, desiredPb); err != nil {
+		return err
+	}
+	return a.updateStatus(ctx, updateOp)
+}
+
+// upsert writes the config with updatePerInstanceConfigs, which inserts
+// or patches it by name, and applies it to its instance with
+// applyUpdatesToInstances when the group has one by that name, for create
+// and update alike. Create never uses createInstances: that makes a new
+// instance and raises the group's targetSize (the catalog's live run in
+// hfl-dev-514205: the group grew past its targetSize and stayed there).
+// The pinned Terraform provider's google_compute_region_per_instance_config
+// calls createInstances on create and updatePerInstanceConfigs on update;
+// using the latter for both is the builder's choice (2026-11-14), so a
+// config never changes the group's size.
+func (a *ComputeRegionPerInstanceConfigAdapter) upsert(ctx context.Context, desiredPb *pb.PerInstanceConfig) error {
 	req := &pb.UpdatePerInstanceConfigsRegionInstanceGroupManagerRequest{
 		Project:              a.id.Project,
 		Region:               a.id.Region,
@@ -216,8 +220,14 @@ func (a *ComputeRegionPerInstanceConfigAdapter) Update(ctx context.Context, upda
 		return fmt.Errorf("waiting for update of ComputeRegionPerInstanceConfig %s: %w", a.id.String(), err)
 	}
 
-	// Instance name in applyUpdatesToInstances request must include zone
+	// The instance in applyUpdatesToInstances is its URL (with its zone).
 	instanceURL, err := a.findInstanceURL(ctx)
+	if errors.Is(err, errNotInGroup) {
+		// No instance by that name in the group yet: the config is
+		// stored, and the group uses it when it makes one.
+		klog.FromContext(ctx).V(2).Info("no instance to apply the config to yet", "name", a.id.String())
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -248,8 +258,7 @@ func (a *ComputeRegionPerInstanceConfigAdapter) Update(ctx context.Context, upda
 	if err := applyOp.Wait(ctx); err != nil {
 		return fmt.Errorf("waiting for applyUpdatesToInstances of ComputeRegionPerInstanceConfig %s: %w", a.id.String(), err)
 	}
-
-	return a.updateStatus(ctx, updateOp)
+	return nil
 }
 
 func (a *ComputeRegionPerInstanceConfigAdapter) findInstanceURL(ctx context.Context) (string, error) {
@@ -273,7 +282,7 @@ func (a *ComputeRegionPerInstanceConfigAdapter) findInstanceURL(ctx context.Cont
 			return item.GetInstance(), nil
 		}
 	}
-	return "", fmt.Errorf("could not find instance %q in managed instances of %s", a.id.Name, a.id.ParentString())
+	return "", fmt.Errorf("instance %q in %s: %w", a.id.Name, a.id.ParentString(), errNotInGroup)
 }
 
 func (a *ComputeRegionPerInstanceConfigAdapter) Delete(ctx context.Context, deleteOp *directbase.DeleteOperation) (bool, error) {
