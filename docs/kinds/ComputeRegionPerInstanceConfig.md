@@ -8,7 +8,7 @@ apiVersion: compute.gcp.hfl.dev/v1beta1
 
 **Gap it fills.** one named instance of a regional managed instance group, with its preserved state (stateful disks, IPs, metadata), as a stable kind; Config Connector's `ComputeRegionPerInstanceConfig` is alpha only (decision 26). Terraform's `google_compute_region_per_instance_config`, which the catalog's `compute-mig` module uses (rank 69 of its `blocked-kinds.md`)
 
-**Source.** hand-written, not generated: copied from Config Connector's direct `ComputeRegionPerInstanceConfig` (types, identity, mapper, controller; `UPSTREAM.md`). A per-instance config has no create, get or delete of its own: it is made with the group's `createInstances`, changed with `updatePerInstanceConfigs` and `applyUpdatesToInstances`, removed with `deletePerInstanceConfigs`, and found by listing the group's configs, so `hack/discokind` cannot express it.
+**Source.** hand-written, not generated: copied from Config Connector's direct `ComputeRegionPerInstanceConfig` (types, identity, mapper, controller; `UPSTREAM.md`). A per-instance config has no create, get or delete of its own: it is written with the group's `updatePerInstanceConfigs` (made and changed alike), applied to its instance with `applyUpdatesToInstances`, removed with `deletePerInstanceConfigs`, and found by listing the group's configs, so `hack/discokind` cannot express it.
 
 ## Notes
 
@@ -22,16 +22,24 @@ first four are immutable (CEL). A referenced `ComputeInstanceGroupManager`
 is read unstructured and converted, since our manager's scheme has only
 our groups.
 
-As upstream does, create calls `createInstances`, which adds the named
-instance to the group (the group's target size grows by one); Terraform
-calls `updatePerInstanceConfigs` instead and leaves the size alone. An
-update writes the config and then applies it to the instance with the
-spec's actions (defaults `NONE` and `REPLACE`).
+Create and update both write the config with
+`updatePerInstanceConfigs`, then apply it to the group's instance of that
+name with the spec's actions (defaults `NONE` and `REPLACE`), when the
+group has one. Create used, as upstream does, `createInstances` until 2026-11-14, which makes
+a new instance and raises the group's target size: the catalog's live run
+in hfl-dev-514205 found the group past its `targetSize`, and it stayed
+there. The pinned Terraform provider also calls `createInstances` on
+create (and `updatePerInstanceConfigs` on update); using
+`updatePerInstanceConfigs` for both is the builder's choice, so a config
+never changes the group's size and names an instance the group already
+has. Patch 0048 makes mockgcp's `createInstances` raise the target size,
+as the API does, and the test checks it stays put.
 
 `createInstances` works only on a group whose
 `updatePolicy.instanceRedistributionType` is `NONE` (the API answers 412
-CONDITION_NOT_MET otherwise, run `cce-11122245-f5ea`), as a stateful
-regional group has it; patch 0040 makes mockgcp refuse it too.
+CONDITION_NOT_MET otherwise, run `cce-11122245-f5ea`); patch 0040 makes
+mockgcp refuse it too. The test's group keeps redistribution off, as a
+stateful regional group has it.
 
 A deleted config stays listed, marked `DELETING` or `UNAPPLIED_DELETION`,
 until its instance is next updated (as upstream, the controller applies

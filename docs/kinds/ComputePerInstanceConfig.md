@@ -8,7 +8,7 @@ apiVersion: compute.gcp.hfl.dev/v1beta1
 
 **Gap it fills.** one named instance of a zonal managed instance group, with its preserved state (stateful disks, IPs, metadata), as a stable kind; Config Connector's `ComputePerInstanceConfig` is a Terraform-based alpha kind only (decision 26). Terraform's `google_compute_per_instance_config`, which the catalog's `compute-mig` module uses (rank 55 of its `blocked-kinds.md`)
 
-**Source.** hand-written, not generated: adapted from our `ComputeRegionPerInstanceConfig` (itself copied from Config Connector's direct regional kind; `UPSTREAM.md`), with the zonal group's methods for the regional group's and the field names of Config Connector's Terraform-based `ComputePerInstanceConfig`. A per-instance config has no create, get or delete of its own: it is made with the group's `createInstances`, changed with `updatePerInstanceConfigs` and `applyUpdatesToInstances`, removed with `deletePerInstanceConfigs`, and found by listing the group's configs, so `hack/discokind` cannot express it.
+**Source.** hand-written, not generated: adapted from our `ComputeRegionPerInstanceConfig` (itself copied from Config Connector's direct regional kind; `UPSTREAM.md`), with the zonal group's methods for the regional group's and the field names of Config Connector's Terraform-based `ComputePerInstanceConfig`. A per-instance config has no create, get or delete of its own: it is written with the group's `updatePerInstanceConfigs` (made and changed alike), applied to its instance with `applyUpdatesToInstances`, removed with `deletePerInstanceConfigs`, and found by listing the group's configs, so `hack/discokind` cannot express it.
 
 ## Notes
 
@@ -23,13 +23,18 @@ regional kind's (the same JSON). A referenced `ComputeInstanceGroupManager`
 is read unstructured and converted, since our manager's scheme has only
 our groups.
 
-As the regional kind does, create calls `createInstances`, which adds the
-named instance to the group (the group's target size grows by one);
-Terraform calls `updatePerInstanceConfigs` instead and leaves the size
-alone. An update writes the config and then applies it to the instance
-with the spec's actions (defaults `NONE` and `REPLACE`). A zonal group has
-no instance redistribution, so the regional kind's `NONE` requirement
-does not apply.
+Create and update both write the config with
+`updatePerInstanceConfigs`, then apply it to the group's instance of that
+name with the spec's actions (defaults `NONE` and `REPLACE`), when the
+group has one. Create used `createInstances` until 2026-11-14, which makes
+a new instance and raises the group's target size: the catalog's live run
+in hfl-dev-514205 found the group past its `targetSize`, and it stayed
+there. The pinned Terraform provider also calls `createInstances` on
+create (and `updatePerInstanceConfigs` on update); using
+`updatePerInstanceConfigs` for both is the builder's choice, so a config
+never changes the group's size and names an instance the group already
+has. Patch 0048 makes mockgcp's `createInstances` raise the target size,
+as the API does, and the test checks it stays put.
 
 mockgcp served per-instance configs for regional groups only; patch 0042
 adds the zonal group's six methods, as the regional ones behave.
