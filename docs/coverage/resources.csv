@@ -248,9 +248,9 @@ chronicle.googleapis.com,chronicle.googleapis.com/DataTableRow,3,,0,,0,3,false,a
 chronicle.googleapis.com,chronicle.googleapis.com/Feed,394,,0,,0,394,false,api=v1:google.cloud.chronicle.v1.FeedsService.CreateFeed; recursive-cut=1
 chronicle.googleapis.com,chronicle.googleapis.com/FindingsRefinement,7,ChronicleFindingsRefinement,7,,0,0,false,api=v1:google.cloud.chronicle.v1.FindingsRefinementService.CreateFindingsRefinement; official-spec-fields-unmatched=3/9
 chronicle.googleapis.com,chronicle.googleapis.com/NativeDashboard,33,ChronicleNativeDashboard,33,,0,0,false,api=v1:google.cloud.chronicle.v1.NativeDashboardService.CreateNativeDashboard; official-spec-fields-unmatched=4/37
-chronicle.googleapis.com,chronicle.googleapis.com/ReferenceList,5,ChronicleReferenceList;ChronicleWatchlist,4,,0,1,false,api=v1:google.cloud.chronicle.v1.ReferenceListService.CreateReferenceList
+chronicle.googleapis.com,chronicle.googleapis.com/ReferenceList,5,ChronicleReferenceList;ChronicleWatchlist,4,ChronicleReferenceList,0,1,false,api=v1:google.cloud.chronicle.v1.ReferenceListService.CreateReferenceList; ours-spec-fields-unmatched=5/8
 chronicle.googleapis.com,chronicle.googleapis.com/Retrohunt,2,,0,,0,2,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRetrohunt
-chronicle.googleapis.com,chronicle.googleapis.com/Rule,4,ChronicleRule,4,,0,0,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRule; official-spec-fields-unmatched=3/6
+chronicle.googleapis.com,chronicle.googleapis.com/Rule,4,ChronicleRule,4,ChronicleRule,0,0,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRule; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=5/7
 cloudasset.googleapis.com,cloudasset.googleapis.com/Feed,11,AssetFeed;CloudAssetFolderFeed;CloudAssetOrganizationFeed;CloudAssetProjectFeed,11,,0,0,false,api=v1:feeds; request-wrapper=CreateFeedRequest
 cloudasset.googleapis.com,cloudasset.googleapis.com/SavedQuery,15,AssetSavedQuery,15,,0,0,false,api=v1:savedQueries; official-spec-fields-unmatched=4/18
 cloudbilling.googleapis.com,cloudbilling.googleapis.com/BillingAccount,3,BillingAccount,2,,0,1,false,api=v1:billingAccounts; official-spec-fields-unmatched=2/4
@@ -372,7 +372,7 @@ compute.googleapis.com,compute.googleapis.com/InstanceTemplate,150,ComputeInstan
 compute.googleapis.com,compute.googleapis.com/InstantSnapshot,5,,0,,0,5,false,api=v1:instantSnapshots
 compute.googleapis.com,compute.googleapis.com/InstantSnapshotGroup,3,,0,,0,3,false,api=v1:instantSnapshotGroups
 compute.googleapis.com,compute.googleapis.com/Interconnect,25,ComputeInterconnect,16,,0,9,false,api=v1:interconnects; official-spec-fields-unmatched=3/18
-compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,36,ComputeInterconnectAttachment,13,,0,23,false,api=v1:interconnectAttachments; official-spec-fields-unmatched=2/14
+compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,36,ComputeInterconnectAttachment,13,ComputeInterconnectAttachment,19,4,false,api=v1:interconnectAttachments; official-spec-fields-unmatched=2/14; ours-spec-fields-unmatched=6/37
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachmentGroup,5,,0,,0,5,false,api=v1:interconnectAttachmentGroups
 compute.googleapis.com,compute.googleapis.com/InterconnectGroup,4,,0,ComputeInterconnectGroup,4,0,false,api=v1:interconnectGroups; ours-spec-fields-unmatched=3/6
 compute.googleapis.com,compute.googleapis.com/License,16,,0,,0,16,false,api=v1:licenses
@@ -730,7 +730,7 @@ firebaserules.googleapis.com,firebaserules.googleapis.com/Release,2,,0,,0,2,fals
 firebaserules.googleapis.com,firebaserules.googleapis.com/Ruleset,3,,0,,0,3,false,api=v1:projects.rulesets
 firebasestorage.googleapis.com,firebasestorage.googleapis.com/DefaultBucket,3,FirebaseStorageBucket,1,,0,2,false,api=v1beta:projects.defaultBucket; official-spec-fields-unmatched=2/2
 firestore.googleapis.com,firestore.googleapis.com/Database,13,FirestoreDatabase,5,,0,8,false,api=v1:projects.databases; official-spec-fields-unmatched=2/6
-firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,3,FirestoreBackupSchedule,3,,0,0,false,api=v1:projects.databases.backupSchedules; official-spec-fields-unmatched=1/4
+firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,3,FirestoreBackupSchedule,3,FirestoreBackupSchedule,0,0,false,api=v1:projects.databases.backupSchedules; official-spec-fields-unmatched=1/4; ours-spec-fields-unmatched=1/4
 firestore.googleapis.com,firestore.googleapis.com/DatabaseChangeStream,4,,0,,0,4,false,api=v1:projects.databases.changeStreams
 firestore.googleapis.com,firestore.googleapis.com/DatabaseCollectionGroupIndex,17,FirestoreIndex,5,,0,12,false,api=v1:projects.databases.collectionGroups.indexes; official-spec-fields-unmatched=2/6
 firestore.googleapis.com,firestore.googleapis.com/DatabaseUserCred,1,,0,,0,1,false,api=v1:projects.databases.userCreds
@@ -788,6 +788,7 @@ healthcare.googleapis.com,healthcare.googleapis.com/DatasetFhirStoreFhir,3,,0,,0
 healthcare.googleapis.com,healthcare.googleapis.com/DatasetHl7V2Store,30,HealthcareHL7V2Store,6,,0,24,false,api=v1:projects.locations.datasets.hl7V2Stores; recursive-cut=1; official-spec-fields-unmatched=4/9
 healthcare.googleapis.com,healthcare.googleapis.com/DatasetHl7V2StoreMessage,2,,0,,0,2,false,api=v1:projects.locations.datasets.hl7V2Stores.messages; request-wrapper=CreateMessageRequest
 hypercomputecluster.googleapis.com,hypercomputecluster.googleapis.com/Cluster,61,HypercomputeClusterCluster,60,,0,1,false,api=v1:projects.locations.clusters; official-spec-fields-unmatched=8/67
+iam.googleapis.com,iam.googleapis.com/IAMAccessPolicy,0,,0,IAMAccessPolicy,0,0,false,outside-denominator; no API resource named like accesspolicy/iamaccesspolicy in iam.googleapis.com
 iam.googleapis.com,iam.googleapis.com/IAMBinding,0,,0,IAMBinding,0,0,false,"outside-denominator; one role binding in another resource's IAM policy, written with setIamPolicy"
 iam.googleapis.com,iam.googleapis.com/IAMDenyPolicy,0,,0,IAMDenyPolicy,0,0,false,"outside-denominator; an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outside-denominator; one member of one role in another resource's IAM policy, written with setIamPolicy"
@@ -963,7 +964,7 @@ networkmanagement.googleapis.com,networkmanagement.googleapis.com/VpcFlowLogsCon
 networkmanagement.googleapis.com,networkmanagement.googleapis.com/projects.locations.vpcFlowLogsConfigs,15,NetworkManagementVPCFlowLogsConfig,11,,0,4,false,api=v1:projects.locations.vpcFlowLogsConfigs; official-spec-fields-unmatched=3/13
 networksecurity.googleapis.com,networksecurity.googleapis.com/AddressGroup,7,,0,NetworkSecurityAddressGroup,7,0,false,api=v1:organizations.locations.addressGroups; ours-spec-fields-unmatched=4/10
 networksecurity.googleapis.com,networksecurity.googleapis.com/AuthorizationPolicy,11,NetworkSecurityAuthorizationPolicy,10,,0,1,false,api=v1:projects.locations.authorizationPolicies; official-spec-fields-unmatched=3/12
-networksecurity.googleapis.com,networksecurity.googleapis.com/AuthzPolicy,183,NetworkSecurityAuthzPolicy,178,,0,5,false,api=v1:projects.locations.authzPolicies; official-spec-fields-unmatched=7/184
+networksecurity.googleapis.com,networksecurity.googleapis.com/AuthzPolicy,183,NetworkSecurityAuthzPolicy,178,NetworkSecurityAuthzPolicy,5,0,false,api=v1:projects.locations.authzPolicies; official-spec-fields-unmatched=7/184; ours-spec-fields-unmatched=3/185
 networksecurity.googleapis.com,networksecurity.googleapis.com/BackendAuthenticationConfig,6,NetworkSecurityBackendAuthenticationConfig,6,,0,0,false,api=v1:projects.locations.backendAuthenticationConfigs; official-spec-fields-unmatched=3/8
 networksecurity.googleapis.com,networksecurity.googleapis.com/ClientTlsPolicy,8,NetworkSecurityClientTLSPolicy,7,,0,1,false,api=v1:projects.locations.clientTlsPolicies; official-spec-fields-unmatched=3/9
 networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,4,NetworkSecurityDNSThreatDetector,4,NetworkSecurityDNSThreatDetector,0,0,false,api=v1:projects.locations.dnsThreatDetectors; official-spec-fields-unmatched=4/7; ours-spec-fields-unmatched=3/6
@@ -994,7 +995,7 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations
 networksecurity.googleapis.com,networksecurity.googleapis.com/projects.locations.securityProfiles,37,NetworkSecuritySecurityProfile,15,NetworkSecuritySecurityProfile,0,22,false,api=v1:projects.locations.securityProfiles; official-spec-fields-unmatched=3/17; ours-spec-fields-unmatched=4/18
 networkservices.googleapis.com,networkservices.googleapis.com/AgentConnectivityTemplate,15,,0,NetworkServicesAgentConnectivityTemplate,15,0,false,api=v1:projects.locations.agentConnectivityTemplates; ours-spec-fields-unmatched=5/18
 networkservices.googleapis.com,networkservices.googleapis.com/AgentGateway,13,,0,NetworkServicesAgentGateway,13,0,false,api=v1:projects.locations.agentGateways; ours-spec-fields-unmatched=4/16
-networkservices.googleapis.com,networkservices.googleapis.com/AuthzExtension,12,NetworkServicesAuthzExtension,10,,0,2,false,api=v1:projects.locations.authzExtensions; official-spec-fields-unmatched=4/13
+networkservices.googleapis.com,networkservices.googleapis.com/AuthzExtension,12,NetworkServicesAuthzExtension,10,NetworkServicesAuthzExtension,2,0,false,api=v1:projects.locations.authzExtensions; official-spec-fields-unmatched=4/13; ours-spec-fields-unmatched=3/14
 networkservices.googleapis.com,networkservices.googleapis.com/EndpointPolicy,11,NetworkServicesEndpointPolicy,10,,0,1,false,api=v1:projects.locations.endpointPolicies; official-spec-fields-unmatched=3/12
 networkservices.googleapis.com,networkservices.googleapis.com/ExtensionBinding,52,,0,,0,52,false,api=v1:projects.locations.extensionBindings
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,17,NetworkServicesGateway,7,NetworkServicesGateway,10,0,false,api=v1:projects.locations.gateways; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=3/19

@@ -1,0 +1,80 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// SPDX-License-Identifier: Apache-2.0
+
+// Modified by High Five Labs for config-connector-extensions: copied from Config Connector
+// apis/firestore/v1alpha1/firestorebackupschedule_identity_test.go (UPSTREAM.md) for our
+// stable kind (docs/design.md decision 26). Changed: the package.
+
+package v1beta1
+
+import (
+	"testing"
+)
+
+func TestFirestoreBackupScheduleIdentity_FromExternal(t *testing.T) {
+	tests := []struct {
+		name    string
+		ref     string
+		wantErr bool
+		want    *FirestoreBackupScheduleIdentity
+	}{
+		{
+			name: "valid reference",
+			ref:  "projects/my-project/databases/my-database/backupSchedules/my-schedule",
+			want: &FirestoreBackupScheduleIdentity{
+				Project:        "my-project",
+				Database:       "my-database",
+				BackupSchedule: "my-schedule",
+			},
+		},
+		{
+			name:    "invalid reference format",
+			ref:     "invalid/format",
+			wantErr: true,
+		},
+		{
+			name: "full url",
+			ref:  "https://firestore.googleapis.com/projects/my-project/databases/my-database/backupSchedules/my-schedule",
+			want: &FirestoreBackupScheduleIdentity{
+				Project:        "my-project",
+				Database:       "my-database",
+				BackupSchedule: "my-schedule",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := &FirestoreBackupScheduleIdentity{}
+			err := i.FromExternal(tt.ref)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FromExternal() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				if i.Project != tt.want.Project {
+					t.Errorf("Project = %v, want %v", i.Project, tt.want.Project)
+				}
+				if i.Database != tt.want.Database {
+					t.Errorf("Database = %v, want %v", i.Database, tt.want.Database)
+				}
+				if i.BackupSchedule != tt.want.BackupSchedule {
+					t.Errorf("BackupSchedule = %v, want %v", i.BackupSchedule, tt.want.BackupSchedule)
+				}
+			}
+		})
+	}
+}
