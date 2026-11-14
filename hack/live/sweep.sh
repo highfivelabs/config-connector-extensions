@@ -354,15 +354,17 @@ while IFS=$'\t' read -r dkind base coll field soft; do
     act "${dkind}" "${name}" disco_delete "${base}" "${name}"
   done <<<"${rows}"
 done <"${HERE}/discokinds.tsv"
-# API Gateway and BigLake, whose kinds' generated tests skip live (their
-# fixtures' live-skip, so the loop above leaves them alone) while
-# TestAPIGatewayDeleteGatewayAndConfigTogether and
-# TestBigLakeCatalogMissingIs403 make them live: by the run's name, a run's
+# API Gateway and BigLake, which the loop above leaves alone (their
+# kinds' generated tests skip live, or their collections sit under a
+# parent) while TestAPIGatewayDeleteGatewayAndConfigTogether, the
+# TestBigLake*MissingIs403 tests and the BigLakeDatabase and BigLakeTable
+# kind tests make them live: by the run's name, a run's
 # gateways in us-central1 (a config a gateway serves cannot go), then every
 # config of a run's API (APIGatewayAPIConfig, under an API) and the API
 # (Config Connector's APIGatewayAPI; one with configs cannot go: "has
-# nested resources"), and a run's BigLake catalogs in us. A 403 on a list
-# (the API off, or not the account's) means no test made one.
+# nested resources"), and a run's BigLake catalogs in us, with their
+# databases and tables. A 403 on a list (the API off, or not the
+# account's) means no test made one.
 ag="https://apigateway.googleapis.com/v1/"
 sweep_list() { # sweep_list URL FIELD: "name createTime" rows, none on a 403
   local out
@@ -400,6 +402,18 @@ while read -r name made; do
   # A catalog ID has no dashes (cce11141216dd17...): read as the run's name.
   id="$(sed -E 's/^cce([0-9]{8})([0-9a-f]{4})/cce-\1-\2-/' <<<"${name##*/}")"
   by_run "${id}" "${made}" || continue
+  # Its tables, then its databases, first (the BigLakeDatabase and
+  # BigLakeTable tests make them only in a run's catalogs).
+  dbs="$(sweep_list "${bl}${name}/databases?pageSize=1000" databases)" || failed=$((failed + 1))
+  while read -r db _; do
+    [[ -n "${db}" ]] || continue
+    tables="$(sweep_list "${bl}${db}/tables?pageSize=1000" tables)" || failed=$((failed + 1))
+    while read -r table _; do
+      [[ -n "${table}" ]] || continue
+      act "BigLake table" "${table}" disco_delete "${bl}" "${table}"
+    done <<<"${tables}"
+    act "BigLake database" "${db}" disco_delete "${bl}" "${db}"
+  done <<<"${dbs}"
   act "BigLake catalog" "${name}" disco_delete "${bl}" "${name}"
 done <<<"${rows}"
 # The project's fleet, when a live GKEHubRolloutSequence test made it (it

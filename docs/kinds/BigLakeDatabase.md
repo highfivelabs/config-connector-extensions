@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `5b524b3` | PASS | PASS | run `cce-11141503-ceba`: `TestBigLakeDatabaseLive` (the kind test on fixtures whose Setup makes the catalogs: create through BigLake's 403 for a missing database, resync writes nothing, a changed `hiveOptions.parameters` reaches the cloud, delete, abandon) and `TestBigLakeDatabaseMissingIs403` (a catalog, then a database through the 403; deleted behind the controller's back it reads 403, the object goes not Ready, no second create). Before (catalog repository run `cat-11141340-9f1f`): "Permission 'biglake.databases.get' denied" and the database never made. With `missingIs403` off the same tests fail on the fake (the read before the create stays a denial) | 3 catalogs, 3 databases (deleted); sweep empty |

@@ -1,1 +1,1 @@
-a database needs its catalog, which this test does not make (the API is on and the live-test account has roles/biglake.admin); live: pending
+live: the case live (TestBigLakeDatabaseLive), whose Setup makes the catalogs, and TestBigLakeDatabaseMissingIs403; this set runs on the fake

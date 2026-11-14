@@ -6,9 +6,10 @@ spec:
   projectRef:
     external: ${PROJECT}
   location: us
-  catalog: ${NAME}-catalog
+  catalog: ${ID}cat
+  resourceID: ${ID}
   type: HIVE
   hiveOptions:
-    locationUri: gs://${NAME}-bucket/db
+    locationUri: gs://${ID}/db
     parameters:
       owner: cce-changed
