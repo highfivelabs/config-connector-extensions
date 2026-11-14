@@ -14,6 +14,7 @@
 # location the live sweeper lists, for a collection with no global one;
 # the live fixtures use it); nameInBody (create also sends the full name
 # as the body's name, beside the ID parameter, for an API that needs it);
+# missingIs403 (the API answers a get of a missing resource 403, not 404);
 # getQuery (query parameters every get sends, such as view: FULL).
 
 - kind: LoggingSavedQuery
@@ -512,6 +513,8 @@
   parents: [project]
   terraform: google_biglake_catalog
   note: "A BigLake Metastore catalog."
+  sweepLocation: us
+  missingIs403: true
 
 - kind: BigLakeDatabase
   group: biglake.gcp.hfl.dev

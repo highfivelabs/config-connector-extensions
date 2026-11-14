@@ -19,7 +19,9 @@
 // delete), in front of mockgcp. It is generated from the same Kind
 // descriptors as the controller, so a new kind needs no mockgcp patch.
 //
-// Two switches, off by default, make deletes behave as API Gateway's do
+// A kind with Kind.MissingIs403 answers 403 PERMISSION_DENIED, not 404,
+// for a name it does not hold, as BigLake does for a catalog. Two
+// switches, off by default, make deletes behave as API Gateway's do
 // (SetDeleteDelay, SetRefuseInUse): an operation that takes a while, the
 // resource still there until it ends, and a resource another one names
 // (a config its gateway serves) or that holds others refused in the
@@ -315,6 +317,11 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 			return c.doneOp(req, k, name, obj)
 		}
 		return jsonResponse(req, http.StatusOK, obj)
+	}
+	if !ok && k.MissingIs403 {
+		// As BigLake answers for a catalog that does not exist, even to an
+		// admin (the catalog's live runs).
+		return errorResponse(req, http.StatusForbidden, "PERMISSION_DENIED", fmt.Sprintf("Permission denied on resource '%s' (or it may not exist).", name))
 	}
 	if !ok {
 		return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s was not found", name))

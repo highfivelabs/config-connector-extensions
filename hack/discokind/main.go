@@ -101,6 +101,10 @@ type Config struct {
 	// the request body, beside the ID parameter (Cloud Functions v2
 	// refuses one without it: "Invalid resource name ''").
 	NameInBody bool `json:"nameInBody,omitempty"`
+	// MissingIs403: the API answers a get of a resource that does not
+	// exist 403 PERMISSION_DENIED rather than 404 (BigLake catalogs), which
+	// the Discovery document does not say (Kind.MissingIs403).
+	MissingIs403 bool `json:"missingIs403,omitempty"`
 	// GetQuery are query parameters every get of the resource sends
 	// (Kind.GetQuery): API Gateway's view FULL, without which a config's
 	// source files are left out.

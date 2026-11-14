@@ -135,6 +135,12 @@ func run(t *testing.T, kindName, caseName string) {
 		if direct.IsNotFound(err) {
 			return true
 		}
+		if k.MissingIs403 && direct.HasHTTPCode(err, http.StatusForbidden) {
+			// The API's answer for a name it does not hold
+			// (Kind.MissingIs403); the test's account can read the
+			// resource while it exists.
+			return true
+		}
 		if err != nil {
 			t.Fatalf("reading %s: %v", name, err)
 		}
