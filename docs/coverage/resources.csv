@@ -196,7 +196,7 @@ beyondcorp.googleapis.com,beyondcorp.googleapis.com/SecurityGateway,13,,0,,0,13,
 beyondcorp.googleapis.com,beyondcorp.googleapis.com/SecurityGatewayApplication,18,,0,,0,18,false,api=v1:projects.locations.securityGateways.applications
 biglake.googleapis.com,biglake.googleapis.com/Catalog,0,BigLakeCatalog,0,BigLakeCatalog,0,0,false,api=v1:projects.locations.catalogs; official-spec-fields-unmatched=3/3; ours-spec-fields-unmatched=3/3
 biglake.googleapis.com,biglake.googleapis.com/CatalogDatabase,3,BigLakeDatabase,3,BigLakeDatabase,0,0,false,api=v1:projects.locations.catalogs.databases; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=4/7
-biglake.googleapis.com,biglake.googleapis.com/CatalogDatabaseTable,7,BigLakeTable,7,,0,0,false,api=v1:projects.locations.catalogs.databases.tables; official-spec-fields-unmatched=2/9
+biglake.googleapis.com,biglake.googleapis.com/CatalogDatabaseTable,7,BigLakeTable,7,BigLakeTable,0,0,false,api=v1:projects.locations.catalogs.databases.tables; official-spec-fields-unmatched=2/9; ours-spec-fields-unmatched=6/13
 bigquery.googleapis.com,bigquery.googleapis.com/Dataset,40,BigQueryDataset;BigQueryDatasetAccess,26,,0,14,false,api=v2:datasets
 bigquery.googleapis.com,bigquery.googleapis.com/Job,254,BigQueryJob,58,,0,196,false,api=v2:jobs; recursive-cut=9; official-spec-fields-unmatched=4/62
 bigquery.googleapis.com,bigquery.googleapis.com/Routine,60,BigQueryRoutine,9,,0,51,false,api=v2:routines; recursive-cut=12; official-spec-fields-unmatched=6/15

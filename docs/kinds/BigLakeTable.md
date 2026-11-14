@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `5b524b3` | PASS | PASS | run `cce-11141503-ceba`, first run: `TestBigLakeTable` (catalog and database made by the Setup; create through BigLake's 403 for a missing table, resync writes nothing, a changed `hiveOptions.parameters` reaches the cloud, delete, abandon) and `TestBigLakeTableMissingIs403` (a catalog, a database, then a table through the 403; deleted behind the controller's back it reads 403, not Ready, no second create). Config Connector's own `BigLakeTable` failed "biglake.tables.get denied" in catalog repository run `cat-11141340-9f1f`. The table's `locationUri` bucket need not exist | 3 catalogs, 3 databases, 3 tables (deleted); sweep empty |
