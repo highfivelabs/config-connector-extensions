@@ -129,6 +129,8 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
+| `roles/apigateway.admin` | project | `APIGatewayAPIConfig`, `APIGatewayGateway` (`TestAPIGatewayDeleteGatewayAndConfigTogether`, with its API) |
+| `roles/biglake.admin` | project | `BigLakeCatalog` (`TestBigLakeCatalogMissingIs403`) |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
 | `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
 
@@ -139,7 +141,7 @@ with the roles the live-test account in the previous dev project was given on 20
 APIs enabled for it: `artifactregistry`, `secretmanager`, `sqladmin`,
 `cloudresourcemanager`, `run`, `networksecurity` (2026-11-09, for
 `NetworkSecurityAddressGroup`; the sweeper lists address groups, so it
-needs the API on); `compute`, `iam` and `storage` were already on. A new kind that needs another role or API adds it
+needs the API on), `apigateway` and `biglake` (by 2026-11-14); `compute`, `iam` and `storage` were already on. A new kind that needs another role or API adds it
 here, and to the account, in the same change.
 
 ### The slot move, live

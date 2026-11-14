@@ -37,7 +37,8 @@
 # Services gateways (us-central1 and global) and the Cloud Routers a Secure
 # Web Proxy makes in a run's network, by name, and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
-# project, or its sweepLocation's), by name, through the API, and the project's GKE Hub fleet
+# project, or its sweepLocation's), by name, through the API, API Gateway
+# gateways, APIs and configs and BigLake catalogs, by name, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
 # name, where the account may list them, and BigQuery datasets, by name,
 # where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), and Cloud
@@ -353,6 +354,52 @@ while IFS=$'\t' read -r dkind base coll field soft; do
     act "${dkind}" "${name}" disco_delete "${base}" "${name}"
   done <<<"${rows}"
 done <"${HERE}/discokinds.tsv"
+# API Gateway and BigLake, whose kinds' generated tests skip live (their
+# fixtures' live-skip, so the loop above leaves them alone) while
+# TestAPIGatewayDeleteGatewayAndConfigTogether and
+# TestBigLakeCatalogMissingIs403 make them live: by the run's name, a run's
+# gateways in us-central1 (a config a gateway serves cannot go), then every
+# config of a run's API (APIGatewayAPIConfig, under an API) and the API
+# (Config Connector's APIGatewayAPI; one with configs cannot go: "has
+# nested resources"), and a run's BigLake catalogs in us. A 403 on a list
+# (the API off, or not the account's) means no test made one.
+ag="https://apigateway.googleapis.com/v1/"
+sweep_list() { # sweep_list URL FIELD: "name createTime" rows, none on a 403
+  local out
+  if out="$(disco_api GET "$1")"; then
+    jq -r --arg f "$2" '.[$f][]? | "\(.name) \(.createTime // "-")"' <<<"${out}"
+  elif ! jq -e '.error.code == 403' >/dev/null 2>&1 <<<"${out}"; then
+    echo "  FAILED to list $1: ${out}" >&2
+    return 1
+  fi
+}
+rows="$(sweep_list "${ag}projects/${project}/locations/us-central1/gateways?pageSize=1000" gateways)" || failed=$((failed + 1))
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  [[ "${made}" != "-" ]] || made=""
+  by_run "${name##*/}" "${made}" || continue
+  act "API Gateway gateway" "${name}" disco_delete "${ag}" "${name}"
+done <<<"${rows}"
+rows="$(sweep_list "${ag}projects/${project}/locations/global/apis?pageSize=1000" apis)" || failed=$((failed + 1))
+while read -r agapi made; do
+  [[ -n "${agapi}" ]] || continue
+  [[ "${made}" != "-" ]] || made=""
+  by_run "${agapi##*/}" "${made}" || continue
+  configs="$(disco_api GET "${ag}${agapi}/configs?pageSize=1000" | jq -r '.apiConfigs[]?.name')"
+  while read -r config; do
+    [[ -n "${config}" ]] || continue
+    act "API Gateway config" "${config}" disco_delete "${ag}" "${config}"
+  done <<<"${configs}"
+  act "API Gateway API" "${agapi}" disco_delete "${ag}" "${agapi}"
+done <<<"${rows}"
+bl="https://biglake.googleapis.com/v1/"
+rows="$(sweep_list "${bl}projects/${project}/locations/us/catalogs?pageSize=1000" catalogs)" || failed=$((failed + 1))
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  [[ "${made}" != "-" ]] || made=""
+  by_run "${name##*/}" "${made}" || continue
+  act "BigLake catalog" "${name}" disco_delete "${bl}" "${name}"
+done <<<"${rows}"
 # The project's fleet, when a live GKEHubRolloutSequence test made it (it
 # then carries the run's labels; pkg/controller/direct/gkehub/fleet_test.go),
 # after the rollout sequences that name it. A fleet without our labels is

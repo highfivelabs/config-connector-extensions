@@ -400,6 +400,20 @@ Cloud Build v2 connections, API Gateway configs and gateways and the
 Dataplex kinds never became Ready on the fake cloud
 (`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
 
+A kind with `missingIs403` (`BigLakeCatalog`, 2026-11-14) answers 403
+PERMISSION_DENIED, not 404, for a name the fake does not hold, as BigLake
+does for a catalog that does not exist, even to an admin. Two switches on
+`mockenv.Env.Disco`, off by default, make deletes behave as API
+Gateway's do (`TestAPIGatewayDeleteGatewayAndConfigTogether`):
+`SetDeleteDelay` makes a delete that answers an operation take that long,
+the resource still there until it ends; `SetRefuseInUse` makes a delete
+fail FAILED_PRECONDITION, in its operation, while another resource names
+the one deleted in a top-level field (a gateway's `apiConfig`) or holds
+resources under its name, and leaves the resource FAILED. The fake
+ignores a get's `view` (API Gateway's `FULL`): it always answers with
+every field, where the real API leaves a config's source files out
+without it.
+
 A collection with no create (`PatchCreates`, Discovery Engine's CMEK
 configs): a patch of a missing name makes the resource, as the API's
 does. A `locationHost` kind's location other than `global` is served only
