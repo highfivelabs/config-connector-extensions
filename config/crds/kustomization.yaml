@@ -68,6 +68,7 @@ resources:
 - dataplex.gcp.hfl.dev_dataplexdatascans.yaml
 - dataplex.gcp.hfl.dev_dataplexlakes.yaml
 - dataplex.gcp.hfl.dev_dataplexzones.yaml
+- discoveryengine.gcp.hfl.dev_discoveryenginecmekconfigs.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicies.yaml
 - dns.gcp.hfl.dev_dnsresponsepolicyrules.yaml
 - firestore.gcp.hfl.dev_firestorebackupschedules.yaml

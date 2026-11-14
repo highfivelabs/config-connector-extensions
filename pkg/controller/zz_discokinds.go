@@ -32,6 +32,7 @@ import (
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	dataplexv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dataplex/v1beta1"
+	discoveryenginev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/discoveryengine/v1alpha1"
 	gkebackupv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkebackup/v1beta1"
 	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
@@ -755,6 +756,20 @@ var discoKinds = []*discokind.Kind{
 		Updatable: false,
 		Output:    []string{"createTime", "state", "updateTime"},
 	},
+	{
+		GVK:          discoveryenginev1alpha1.DiscoveryEngineCmekConfigGVK,
+		CRDName:      "discoveryenginecmekconfigs.discoveryengine.gcp.hfl.dev",
+		BaseURL:      "https://discoveryengine.googleapis.com/v1/",
+		Name:         "{parent}/locations/{location}/cmekConfigs/{id}",
+		Parents:      []string{"project"},
+		PatchCreates: true, PatchNoMask: true,
+		LocationHost: true,
+		Query:        []string{"setDefault"},
+		CreateLRO:    true, UpdateLRO: true, DeleteLRO: true,
+		Updatable:    true,
+		Output:       []string{"isDefault", "kmsKeyVersion", "lastRotationTimestampMicros", "notebooklmState", "state"},
+		FakeDefaults: map[string]any{"state": "ACTIVE"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -780,6 +795,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	cloudfunctions2v1beta1.AddToScheme,
 	dataplexv1beta1.AddToScheme,
 	apigeev1alpha1.AddToScheme,
+	discoveryenginev1alpha1.AddToScheme,
 }
 
 func init() {

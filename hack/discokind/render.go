@@ -297,6 +297,16 @@ func (k *built) typesFile() []byte {
 	head.WriteString("// Immutable. The resource's ID, the last part of its name. When unset,\n// metadata.name is used.\n// +optional\n")
 	head.WriteString("// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"resourceID is immutable\"\n")
 	head.WriteString("ResourceID *string `json:\"resourceID,omitempty\"`\n\n")
+	for _, q := range c.Query {
+		p := k.query[q]
+		head.WriteString(comment(p.Description))
+		head.WriteString("//\n// Sent with every write as the query parameter " + q + "; the API does not\n// return it, so a change alone is not a difference.\n// +optional\n")
+		t := "*string"
+		if p.Type == "boolean" {
+			t = "*bool"
+		}
+		fmt.Fprintf(&head, "%s %s `json:\"%s,omitempty\"`\n\n", goName(q), t, q)
+	}
 	b.WriteString(head.String())
 	b.WriteString(strings.TrimPrefix(specBody, "type "+c.Kind+"Spec struct {\n"))
 	b.WriteString("\n")
@@ -430,6 +440,15 @@ func registryFile(kinds []*built) []byte {
 		if k.insertStyle {
 			fmt.Fprintf(&b, "InsertStyle: true, UpdatePUT: %v,\n", k.updatePUT)
 		}
+		if k.patchCreates {
+			fmt.Fprintf(&b, "PatchCreates: true, PatchNoMask: %v,\n", k.patchNoMask)
+		}
+		if c.LocationHost {
+			b.WriteString("LocationHost: true,\n")
+		}
+		if len(c.Query) > 0 {
+			fmt.Fprintf(&b, "Query: %#v,\n", c.Query)
+		}
 		if c.NameInBody {
 			b.WriteString("NameInBody: true,\n")
 		}
@@ -527,7 +546,11 @@ func sweepFile(kinds []*built) []byte {
 		if k.insertStyle {
 			field = "items"
 		}
-		fmt.Fprintf(&b, "%s\t%s\t%s\t%s\t%s\n", k.c.Kind, k.baseURL, coll, field, soft)
+		base := k.baseURL
+		if loc := k.c.SweepLocation; k.c.LocationHost && loc != "" && loc != "global" {
+			base = "https://" + loc + "-" + strings.TrimPrefix(base, "https://")
+		}
+		fmt.Fprintf(&b, "%s\t%s\t%s\t%s\t%s\n", k.c.Kind, base, coll, field, soft)
 	}
 	return b.Bytes()
 }

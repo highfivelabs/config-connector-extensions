@@ -67,6 +67,23 @@ type Kind struct {
 	// UpdatePUT: the API changes a resource with update (PUT, the whole
 	// resource) rather than patch.
 	UpdatePUT bool
+	// PatchCreates: the API has no create method; patch, sent to the
+	// resource's name, makes the resource as well as changing it (Discovery
+	// Engine's CMEK configs). Create and update both patch the spec's whole
+	// body.
+	PatchCreates bool
+	// PatchNoMask: the API's patch takes no update mask; the body is every
+	// field the spec sets.
+	PatchNoMask bool
+	// LocationHost: the API serves a location other than global at
+	// https://<location>-<host>/ (Discovery Engine's us and eu); BaseURL's
+	// own host serves global and names without a location
+	// (LocationBaseURL).
+	LocationHost bool
+	// Query are spec fields that are the write methods' query parameters,
+	// not body fields (a CMEK config's setDefault). The API never returns
+	// them, so they are sent with every write and never compared.
+	Query []string
 	// NameInBody: create also sends the resource's full name as the body's
 	// name, beside the ID parameter, as Terraform does for the kind; the
 	// API refuses a create without it (Cloud Functions v2: "Invalid
@@ -117,6 +134,41 @@ func CollectionOf(name string) string {
 // ParentOf is the name of the collection's parent.
 func ParentOf(name string) string {
 	return CollectionOf(CollectionOf(name))
+}
+
+// LocationOf is the location segment of a resource or operation name
+// (".../locations/us/..."), or "".
+func LocationOf(name string) string {
+	parts := strings.Split(name, "/")
+	for i := 0; i+1 < len(parts); i++ {
+		if parts[i] == "locations" {
+			return parts[i+1]
+		}
+	}
+	return ""
+}
+
+// LocationBaseURL is base with its host prefixed by the name's location
+// ("https://discoveryengine.googleapis.com/v1/" for
+// projects/p/locations/us/... is "https://us-discoveryengine.googleapis.com/v1/"),
+// or base itself for global and for a name without a location.
+func LocationBaseURL(base, name string) string {
+	loc := LocationOf(name)
+	if loc == "" || loc == "global" || !strings.HasPrefix(base, "https://") {
+		return base
+	}
+	return "https://" + loc + "-" + strings.TrimPrefix(base, "https://")
+}
+
+// QueryOf is the query parameters a spec sets (Query), as strings.
+func (k *Kind) QueryOf(spec map[string]any) map[string]string {
+	out := map[string]string{}
+	for _, f := range k.Query {
+		if v, ok := spec[f]; ok && v != nil {
+			out[f] = fmt.Sprint(v)
+		}
+	}
+	return out
 }
 
 // RefField is the spec field of a parent kind.

@@ -41,6 +41,9 @@ type API struct {
 	// Some APIs allow only a few reads a minute (Dataplex: 10 a minute per
 	// user and region), and an operation can take minutes.
 	PollInterval, MaxPollInterval time.Duration
+	// LocationHost sends a name in a location other than global to that
+	// location's host (Kind.LocationHost, LocationBaseURL).
+	LocationHost bool
 }
 
 // Get reads a resource.
@@ -50,7 +53,11 @@ func (a *API) Get(ctx context.Context, name string) (map[string]any, error) {
 
 // Do sends one request and decodes the answer.
 func (a *API) Do(ctx context.Context, method, path string, query map[string]string, body map[string]any) (map[string]any, error) {
-	u := a.BaseURL + path
+	base := a.BaseURL
+	if a.LocationHost {
+		base = LocationBaseURL(base, path)
+	}
+	u := base + path
 	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		u = path
 	}
