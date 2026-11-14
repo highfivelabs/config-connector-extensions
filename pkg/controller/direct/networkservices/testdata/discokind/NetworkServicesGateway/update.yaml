@@ -1,0 +1,17 @@
+apiVersion: networkservices.gcp.hfl.dev/v1beta1
+kind: NetworkServicesGateway
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  type: SECURE_WEB_GATEWAY
+  ports: [443]
+  routingMode: EXPLICIT_ROUTING_MODE
+  network: projects/${PROJECT}/global/networks/${KIND_NAME}-net
+  subnetwork: projects/${PROJECT}/regions/us-central1/subnetworks/${KIND_NAME}-subnet
+  gatewaySecurityPolicy: projects/${PROJECT}/locations/us-central1/gatewaySecurityPolicies/${KIND_NAME}-gsp
+  labels:
+    purpose: swg-changed
+  description: changed

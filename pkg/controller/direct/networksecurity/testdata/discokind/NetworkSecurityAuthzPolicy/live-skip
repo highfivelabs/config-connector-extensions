@@ -1,0 +1,1 @@
+needs an agent gateway and an authorization extension, so networkservices.googleapis.com on in the live-test project (off in hfl-dev-514205, as for NetworkServicesAuthzExtension and NetworkServicesGateway)

@@ -55,6 +55,9 @@ func TestFixturesMatchTheirCRDs(t *testing.T) {
 		schemas[crd.Spec.Names.Kind] = crd.Spec.Versions[0].Schema.OpenAPIV3Schema
 	}
 	fixtures, _ := filepath.Glob(filepath.Join(root, "pkg/controller/direct/*/testdata/discokind/*/*.yaml"))
+	// A kind's other fixture sets (kindtest.RunCase).
+	cases, _ := filepath.Glob(filepath.Join(root, "pkg/controller/direct/*/testdata/discokind/*/*/*.yaml"))
+	fixtures = append(fixtures, cases...)
 	if len(fixtures) == 0 {
 		t.Fatal("no fixtures found")
 	}

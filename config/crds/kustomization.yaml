@@ -13,6 +13,9 @@ resources:
 - biglake.gcp.hfl.dev_biglakecatalogs.yaml
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
+- chronicle.gcp.hfl.dev_chroniclereferencelists.yaml
+- chronicle.gcp.hfl.dev_chronicleruledeployments.yaml
+- chronicle.gcp.hfl.dev_chroniclerules.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildconnections.yaml
 - cloudbuild.gcp.hfl.dev_cloudbuildrepositories.yaml
 - clouddeploy.gcp.hfl.dev_clouddeployautomations.yaml
@@ -25,6 +28,7 @@ resources:
 - compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml
+- compute.gcp.hfl.dev_computeinterconnectattachments.yaml
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
 - compute.gcp.hfl.dev_computenetworkattachments.yaml
 - compute.gcp.hfl.dev_computenetworkendpoints.yaml
@@ -73,10 +77,12 @@ resources:
 - gkebackup.gcp.hfl.dev_gkebackuprestoreplans.yaml
 - gkehub.gcp.hfl.dev_gkehubmembershiprbacrolebindings.yaml
 - gkehub.gcp.hfl.dev_gkehubrolloutsequences.yaml
+- iam.gcp.hfl.dev_iamaccesspolicies.yaml
 - iam.gcp.hfl.dev_iambindings.yaml
 - iam.gcp.hfl.dev_iamdenypolicies.yaml
 - iam.gcp.hfl.dev_iammembers.yaml
 - iam.gcp.hfl.dev_iamoauthclients.yaml
+- iam.gcp.hfl.dev_iampolicybindings.yaml
 - iam.gcp.hfl.dev_iamprincipalaccessboundarypolicies.yaml
 - iam.gcp.hfl.dev_iamworkforcepoolproviderkeys.yaml
 - iam.gcp.hfl.dev_iamworkforcepoolproviderscimtenants.yaml
@@ -92,6 +98,7 @@ resources:
 - networkconnectivity.gcp.hfl.dev_networkconnectivitypscauthorizationpolicies.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml
 - networksecurity.gcp.hfl.dev_networksecurityaddressgroups.yaml
+- networksecurity.gcp.hfl.dev_networksecurityauthzpolicies.yaml
 - networksecurity.gcp.hfl.dev_networksecuritydnsthreatdetectors.yaml
 - networksecurity.gcp.hfl.dev_networksecuritygatewaysecuritypolicies.yaml
 - networksecurity.gcp.hfl.dev_networksecuritygatewaysecuritypolicyrules.yaml
@@ -101,6 +108,8 @@ resources:
 - networksecurity.gcp.hfl.dev_networksecurityurllists.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentconnectivitytemplates.yaml
 - networkservices.gcp.hfl.dev_networkservicesagentgateways.yaml
+- networkservices.gcp.hfl.dev_networkservicesauthzextensions.yaml
+- networkservices.gcp.hfl.dev_networkservicesgateways.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagercapabilityconfigs.yaml

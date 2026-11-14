@@ -1,0 +1,230 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: chronicleruledeployments.chronicle.gcp.hfl.dev
+spec:
+  group: chronicle.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ChronicleRuleDeployment
+    listKind: ChronicleRuleDeploymentList
+    plural: chronicleruledeployments
+    shortNames:
+    - hflchronicleruledeployment
+    - hflchronicleruledeployments
+    singular: chronicleruledeployment
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ChronicleRuleDeployment is the Schema for the ChronicleRuleDeployment
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ChronicleRuleDeploymentSpec is the deployment of a Google
+              SecOps (Chronicle) rule: whether it runs, alerts or is archived, and
+              how often it runs, as Terraform''s google_chronicle_rule_deployment
+              sets them. The deployment exists as long as its rule does; the object
+              sets it and deleting the object leaves it as it is.'
+            properties:
+              alerting:
+                description: Whether the rule's detections are alerts. Left out, the
+                  deployment keeps what it has.
+                type: boolean
+              archived:
+                description: Whether the rule is archived. Archiving needs the rule
+                  disabled (enabled false), and the API turns alerting off; an archived
+                  rule's enabled, alerting and runFrequency cannot change until it
+                  is unarchived (the controller unarchives before it changes them).
+                type: boolean
+              enabled:
+                description: Whether the rule runs continuously against incoming data.
+                  Left out, the deployment keeps what it has.
+                type: boolean
+              ruleRef:
+                description: 'The rule whose deployment this is: a Config Connector
+                  ChronicleRule, or external "projects/{project}/locations/{location}/instances/{instance}/rules/{rule}",
+                  the rule''s ID without a revision. Immutable.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ChronicleRule
+                      resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/instances/{{instanceID}}/rules/{{ruleID}}".
+                    type: string
+                  name:
+                    description: The name of a ChronicleRule resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ChronicleRule resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: ruleRef is immutable
+                  rule: self == oldSelf
+              runFrequency:
+                description: How often the rule runs. LIVE and HOURLY are legacy values
+                  the API may store as LIVE_CUSTOMIZABLE and HOURLY_CUSTOMIZABLE (and
+                  HOURLY or DAILY as LIVE for a single-event rule); as Terraform does,
+                  the stored value is taken to match (status.observedState.runFrequency
+                  has it).
+                enum:
+                - LIVE
+                - HOURLY
+                - DAILY
+                - LIVE_CUSTOMIZABLE
+                - HOURLY_CUSTOMIZABLE
+                type: string
+              scheduleCustomizations:
+                description: The schedule of a customizable run frequency (LIVE_CUSTOMIZABLE,
+                  HOURLY_CUSTOMIZABLE).
+                properties:
+                  ensureEnrichmentCompleteness:
+                    description: Whether to add delays and runs so that enrichment
+                      is complete, at the cost of more late-arriving detections.
+                    type: boolean
+                  lateArrivingDataAdjustment:
+                    description: How long to delay the rule's first run for late-arriving
+                      data, a duration such as "3600s".
+                    type: string
+                type: object
+            required:
+            - ruleRef
+            type: object
+            x-kubernetes-validations:
+            - message: 'an archived rule is not enabled: set enabled to false to archive
+                it'
+              rule: '!(has(self.archived) && self.archived && has(self.enabled) &&
+                self.enabled)'
+            - message: 'an archived rule does not alert: the API turns alerting off
+                when it archives a rule'
+              rule: '!(has(self.archived) && self.archived && has(self.alerting) &&
+                self.alerting)'
+          status:
+            description: ChronicleRuleDeploymentStatus defines the config connector
+              machine state of ChronicleRuleDeployment
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The deployment's name, projects/{project}/locations/{location}/instances/{instance}/rules/{rule}/deployment.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              observedState:
+                description: ObservedState is the state of the resource as most recently
+                  observed in GCP.
+                properties:
+                  archiveTime:
+                    description: When the deployment was last archived; empty unless
+                      it is archived.
+                    type: string
+                  consumerRules:
+                    description: The rules that take this rule's detections (chained
+                      rules).
+                    items:
+                      type: string
+                    type: array
+                  executionState:
+                    description: DEFAULT, LIMITED or PAUSED.
+                    type: string
+                  lastAlertStatusChangeTime:
+                    description: When the deployment's alerting last changed.
+                    type: string
+                  producerRules:
+                    description: The rules this rule takes detections from (chained
+                      rules).
+                    items:
+                      type: string
+                    type: array
+                  runFrequency:
+                    description: The run frequency the API stores (it may differ from
+                      a legacy spec.runFrequency).
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

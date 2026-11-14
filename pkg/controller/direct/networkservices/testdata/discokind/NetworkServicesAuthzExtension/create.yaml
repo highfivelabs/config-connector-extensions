@@ -1,0 +1,12 @@
+apiVersion: networkservices.gcp.hfl.dev/v1beta1
+kind: NetworkServicesAuthzExtension
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  service: iap.googleapis.com
+  timeout: 1s
+  failOpen: false
+  description: made by a config-connector-extensions test

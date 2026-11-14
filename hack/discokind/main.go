@@ -97,6 +97,10 @@ type Config struct {
 	// Query are the patch method's query parameters that are spec fields
 	// (a CMEK config's setDefault), sent with every write.
 	Query []string `json:"query,omitempty"`
+	// NameInBody: the API's create also needs the resource's full name in
+	// the request body, beside the ID parameter (Cloud Functions v2
+	// refuses one without it: "Invalid resource name ''").
+	NameInBody bool `json:"nameInBody,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -300,9 +304,9 @@ type built struct {
 	patchCreates bool
 	patchNoMask  bool
 	query        map[string]*Param // c.Query's parameters
-	schema      *Schema
-	output      []string
-	sweep       string // the collection under a project, for the sweeper
+	schema       *Schema
+	output       []string
+	sweep        string // the collection under a project, for the sweeper
 }
 
 func findRes(d *Discovery, path string) *DRes {

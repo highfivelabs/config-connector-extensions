@@ -38,7 +38,12 @@ type Ref struct {
 }
 
 // ErrGone is returned by Resolve when the object a reference names does
-// not exist: a binding being deleted has nothing left to remove.
+// not exist, or is being deleted and takes its resource with it (it has a
+// deletion timestamp and no deletion-policy abandon): a binding being
+// deleted has nothing left to remove, since the policy goes with the
+// resource. Deleting everything at once (a namespace, a release) would
+// otherwise leave the binding waiting on a parent that never becomes
+// Ready again.
 type ErrGone struct{ Err error }
 
 func (e *ErrGone) Error() string { return e.Err.Error() }
@@ -47,7 +52,10 @@ func (e *ErrGone) Unwrap() error { return e.Err }
 // Resolve finds the resource type and the full name of the resource a
 // reference names. An object that is missing or not Ready yet is a
 // reference error, which the reconciler waits on and retries (wrapped in
-// ErrGone when it is missing).
+// ErrGone when it is missing or being deleted with its resource). An object
+// being deleted with deletion-policy abandon leaves its resource, and the
+// binding on it, behind: it is resolved as it is, Ready or not, so that a
+// binding being deleted still removes itself.
 func Resolve(ctx context.Context, reader client.Reader, defaultNamespace string, ref Ref) (*ResourceType, string, error) {
 	t, ok := Lookup(ref.Kind)
 	if !ok {
@@ -91,7 +99,12 @@ func Resolve(ctx context.Context, reader client.Reader, defaultNamespace string,
 	if obj == nil {
 		return nil, "", &ErrGone{k8s.NewReferenceNotFoundError(candidates[0], key)}
 	}
-	if !ready(obj) {
+	deleting := obj.GetDeletionTimestamp() != nil
+	abandoned := obj.GetAnnotations()[k8s.DeletionPolicyAnnotation] == k8s.DeletionPolicyAbandon
+	if deleting && !abandoned {
+		return nil, "", &ErrGone{k8s.NewReferenceNotReadyError(obj.GroupVersionKind(), key)}
+	}
+	if !deleting && !ready(obj) {
 		return nil, "", k8s.NewReferenceNotReadyError(obj.GroupVersionKind(), key)
 	}
 	parts := ObjectParts{Location: nestedString(obj, "spec", "location")}

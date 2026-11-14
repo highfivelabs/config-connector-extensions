@@ -58,7 +58,8 @@ sys.exit(0 if ok and st.get("observedGeneration")==o["metadata"]["generation"] e
 }
 
 step "kind cluster ${CLUSTER}"
-if ! kind get clusters | grep -qx "${CLUSTER}"; then
+# grep without -q reads all its input: no SIGPIPE for kind under pipefail.
+if ! kind get clusters | grep -x "${CLUSTER}" >/dev/null; then
   kind create cluster --name "${CLUSTER}" --kubeconfig "${KUBECONFIG}" --wait 60s
 else
   kind export kubeconfig --name "${CLUSTER}" --kubeconfig "${KUBECONFIG}"

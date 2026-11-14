@@ -10,15 +10,15 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 16.5% | 44.5% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.3% | 29.4% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 17.1% | 43.9% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.7% | 29.1% |
 
 By service:
 
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 16.2% | 43.4% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 19.0% | 40.6% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 66.5% | 9.5% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 0.0% | 70.5% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -33,7 +33,7 @@ By service:
 | foundation | `vpcaccess.googleapis.com` | 1 | 10 | 100.0% | 0.0% | 0.0% |
 | foundation | `essentialcontacts.googleapis.com` | 3 | 9 | 100.0% | 0.0% | 0.0% |
 | foundation | `servicenetworking.googleapis.com` | 2 | 4 | 100.0% | 0.0% | 0.0% |
-| security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 6.9% | 19.7% |
+| security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 8.1% | 18.5% |
 | security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 0.0% | 28.7% |
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 0.0% | 51.3% |
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 0.0% | 48.1% |
@@ -76,7 +76,7 @@ What these numbers miss, for the foundation:
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 7 / 57 (0.0%) | none |
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 159 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
-| 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 34 / 85 (51.8%) | none for the fields |
+| 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 15 / 85 (51.8%) | none for the fields |
 | 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found. |
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 7 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
@@ -231,12 +231,12 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** field, **size** S, **modules** 5 (net-vpn-ha, net-vpn-static, net-vpn-dynamic, net-ipsec-over-interconnect, net-vlan-attachment).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `compute.googleapis.com/VpnTunnel`: 15 / 7 / 2 of 24; ComputeVPNTunnel, ComputeVPNTunnel (ours)
-  - `compute.googleapis.com/InterconnectAttachment`: 13 / 0 / 23 of 36; ComputeInterconnectAttachment
+  - `compute.googleapis.com/InterconnectAttachment`: 13 / 19 / 4 of 36; ComputeInterconnectAttachment, ComputeInterconnectAttachment (ours)
   - `compute.googleapis.com/Interconnect`: 16 / 0 / 9 of 25; ComputeInterconnect (alpha)
 - **Missing, whole resources:** `cipherSuite` on `ComputeVPNTunnel`; `candidateIpv6Subnets`, `candidateCloudRouterIpv6Address`, `candidateCustomerRouterIpv6Address`, `l2Forwarding`, `partnerMetadata` on `ComputeInterconnectAttachment`; `applicationAwareInterconnect` on `ComputeInterconnect`.
 - **Missing, attributes that matter:** The measured lists; `cipherSuite` (IKE phase 1 and 2 algorithms) and the IPv6 candidates matter.
   - uncovered in `compute.googleapis.com/VpnTunnel` (measured): `params.resourceManagerTags{}`, `sharedSecretHash`
-  - uncovered in `compute.googleapis.com/InterconnectAttachment` (measured): `candidateCloudRouterIpAddress`, `candidateCloudRouterIpv6Address`, `candidateCustomerRouterIpAddress`, `candidateCustomerRouterIpv6Address`, `candidateIpv6Subnets[]`, `cloudRouterIpv6InterfaceId`, `customerRouterIpv6InterfaceId`, `l2Forwarding.applianceMappings{}.applianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerApplianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerVlanTags[]` and 13 more
+  - uncovered in `compute.googleapis.com/InterconnectAttachment` (measured): `l2Forwarding.applianceMappings{}.applianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerApplianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerVlanTags[]`, `l2Forwarding.applianceMappings{}.name`
   - uncovered in `compute.googleapis.com/Interconnect` (measured): `aaiEnabled`, `applicationAwareInterconnect.bandwidthPercentagePolicy.bandwidthPercentages[].percentage`, `applicationAwareInterconnect.bandwidthPercentagePolicy.bandwidthPercentages[].trafficClass`, `applicationAwareInterconnect.profileDescription`, `applicationAwareInterconnect.shapeAveragePercentages[].percentage`, `applicationAwareInterconnect.shapeAveragePercentages[].trafficClass`, `applicationAwareInterconnect.strictPriorityPolicy`, `params.resourceManagerTags{}`, `subzone`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #11260 (2026-08-21) moves `ComputeInterconnectAttachment` to the identity and refs pattern (a step to direct).
 - **Build:** `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, built 2026-11-10): Config Connector's direct types and mapper copied, a whole tunnel made by insert with every field but labels immutable (`docs/design.md` 6.6, the create-only pattern; patch 0033). The interconnect attachment and interconnect fields are next (decision 19); track #11260.
@@ -490,9 +490,11 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | Kind | Resource | Ours beyond official | From an open PR |
 | --- | --- | ---: | :-: |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
+| ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
 | ComputeDiskResourcePolicyAttachment | (not a create) no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com | n/a | false |
 | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 15 | false |
+| ComputeInterconnectAttachment | compute.googleapis.com/InterconnectAttachment | 19 | false |
 | ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
 | ComputeNetworkEndpoint | (not a create) no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com | n/a | false |
@@ -517,10 +519,12 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | DiscoveryEngineCmekConfig | (not a create) a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method) | n/a | false |
 | GKEHubMembershipRBACRoleBinding | gkehub.googleapis.com/MembershipRbacrolebinding | 6 | false |
 | GKEHubRolloutSequence | gkehub.googleapis.com/RolloutSequence | 8 | false |
+| IAMAccessPolicy | (not a create) no API resource named like accesspolicy/iamaccesspolicy in iam.googleapis.com | n/a | false |
 | IAMBinding | (not a create) one role binding in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMDenyPolicy | (not a create) an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted) | n/a | false |
 | IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMOauthClient | iam.googleapis.com/OauthClient | 8 | false |
+| IAMPolicyBinding | (not a create) an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted) | n/a | false |
 | IAMPrincipalAccessBoundaryPolicy | (not a create) no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com | n/a | false |
 | IAMWorkforcePoolProviderKey | iam.googleapis.com/WorkforcePoolProviderKey | 3 | false |
 | IAMWorkforcePoolProviderScimTenant | iam.googleapis.com/WorkforcePoolProviderScimTenant | 4 | false |
@@ -529,41 +533,42 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
@@ -719,7 +724,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/GlobalAddress` | ComputeAddress | - | 15 | 13 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/GlobalPublicDelegatedPrefix` | - | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/Interconnect` | ComputeInterconnect (alpha) | - | 25 | 16 | 0 | 9 | 10 |
-| foundation | `compute.googleapis.com/InterconnectAttachment` | ComputeInterconnectAttachment | - | 36 | 13 | 0 | 23 | 10 |
+| foundation | `compute.googleapis.com/InterconnectAttachment` | ComputeInterconnectAttachment | ComputeInterconnectAttachment | 36 | 13 | 19 | 4 | 10 |
 | foundation | `compute.googleapis.com/InterconnectAttachmentGroup` | - | - | 5 | 0 | 0 | 5 | 7 |
 | foundation | `compute.googleapis.com/InterconnectGroup` | - | ComputeInterconnectGroup | 4 | 0 | 4 | 0 | 7 |
 | foundation | `compute.googleapis.com/Network` | ComputeNetwork | - | 14 | 9 | 0 | 5 | 16 |
@@ -829,7 +834,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `networkconnectivity.googleapis.com/Transport` | NetworkConnectivityTransport (alpha) | - | 13 | 10 | 0 | 3 | - |
 | security | `networksecurity.googleapis.com/AddressGroup` | - | NetworkSecurityAddressGroup | 7 | 0 | 7 | 0 | 6 |
 | security | `networksecurity.googleapis.com/AuthorizationPolicy` | NetworkSecurityAuthorizationPolicy | - | 11 | 10 | 0 | 1 | - |
-| security | `networksecurity.googleapis.com/AuthzPolicy` | NetworkSecurityAuthzPolicy (alpha) | - | 183 | 178 | 0 | 5 | - |
+| security | `networksecurity.googleapis.com/AuthzPolicy` | NetworkSecurityAuthzPolicy (alpha) | NetworkSecurityAuthzPolicy | 183 | 178 | 5 | 0 | - |
 | security | `networksecurity.googleapis.com/BackendAuthenticationConfig` | NetworkSecurityBackendAuthenticationConfig (alpha) | - | 6 | 6 | 0 | 0 | - |
 | security | `networksecurity.googleapis.com/ClientTlsPolicy` | NetworkSecurityClientTLSPolicy | - | 8 | 7 | 0 | 1 | - |
 | security | `networksecurity.googleapis.com/DnsThreatDetector` | NetworkSecurityDNSThreatDetector (alpha) | NetworkSecurityDNSThreatDetector | 4 | 4 | 0 | 0 | - |

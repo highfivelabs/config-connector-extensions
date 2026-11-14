@@ -27,12 +27,15 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
+# (E2E_IAM_DENY_ADMIN=true), IAM v3 policy bindings on the project, by
+# name, where E2E_IAM_POLICY_BINDING_POLICY is set, log sinks of the billing account in
 # E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
 # Center mute configs of the project, by name, where it is active
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
 # where the project has Cloud DNS (E2E_DNS_ADMIN=true), gateway security
-# policy rules in the project's us-central1 policies, by name, and the discokind
+# policy rules in the project's us-central1 policies, by name, Network
+# Services gateways (us-central1 and global) and the Cloud Routers a Secure
+# Web Proxy makes in a run's network, by name, and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
 # project, or its sweepLocation's), by name, through the API, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
@@ -281,6 +284,26 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
   done
   return 1
 }
+# Network Services gateways (NetworkServicesGateway) before the loop
+# deletes the gateway security policies a Secure Web Proxy uses (a policy
+# in use cannot go), in us-central1 (a Secure Web Proxy's) and global (an
+# OPEN_MESH gateway's), by the run's name. While the kind's test skips
+# live (its live-skip: the API is off in the project, and listing is then
+# a 403), no test made one: left alone, as the discokind loop does.
+gw_locs="us-central1 global"
+if compgen -G "${HERE}/../../pkg/controller/direct/networkservices/testdata/discokind/NetworkServicesGateway/live-skip" >/dev/null; then
+  gw_locs=""
+fi
+for loc in ${gw_locs}; do
+  rows="$(disco_api GET "https://networkservices.googleapis.com/v1/projects/${project}/locations/${loc}/gateways?pageSize=1000" \
+    | jq -r '.gateways[]? | "\(.name) \(.createTime // "-")"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    act "Network Services gateway" "${name}" disco_delete "https://networkservices.googleapis.com/v1/" "${name}"
+  done <<<"${rows}"
+done
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   # A kind whose test never runs live (its fixtures' live-skip) makes
@@ -395,6 +418,17 @@ while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "address" "${name} ${region:-global}" "${G[@]}" compute addresses delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
+# The Cloud Routers a Secure Web Proxy makes (swg-autogen-router-..., with
+# a Cloud NAT) in a run's network: the API keeps them after the last
+# gateway goes, and the network cannot go while they are there. Found by
+# their network's name (the run's), after the gateways above.
+rows="$("${G[@]}" compute routers list --verbosity=error \
+  --filter='name~^swg-autogen-router-' --format='value(name,region.basename(),network.basename())')"
+while read -r name region net; do
+  [[ -n "${name}" ]] || continue
+  by_run "${net}" || continue
+  act "Cloud Router" "${name} ${region}" "${G[@]}" compute routers delete "${name}" --region="${region}"
+done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
@@ -421,6 +455,37 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
+  done <<<"${rows}"
+fi
+
+# IAM v3 policy bindings on the project, by the run's name, only where the
+# live-test service account may bind a principal access boundary policy
+# (E2E_IAM_POLICY_BINDING_POLICY names it); without it the IAMPolicyBinding
+# test does not run live and there is nothing to sweep.
+if [[ -n "${E2E_IAM_POLICY_BINDING_POLICY:-}" ]]; then
+  iam3_api() { # iam3_api METHOD NAME
+    curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+      "https://iam.googleapis.com/v3/$2"
+  }
+  iam3_delete() { # iam3_delete NAME: delete and wait for the operation
+    local op fin
+    op="$(iam3_api DELETE "$1" | jq -r '.name')" || return 1
+    for _ in $(seq 1 60); do
+      fin="$(iam3_api GET "${op}" | jq -r '.done // false')" || return 1
+      if [[ "${fin}" == true ]]; then
+        iam3_api GET "${op}" | jq -e 'has("error") | not' >/dev/null
+        return
+      fi
+      sleep 5
+    done
+    return 1
+  }
+  rows="$(iam3_api GET "projects/${project}/locations/global/policyBindings?pageSize=1000" \
+    | jq -r '.policyBindings[]? | "\(.name) \(.createTime)"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    by_run "${name##*/}" "${made}" || continue
+    act "policy binding" "${name}" iam3_delete "${name}"
   done <<<"${rows}"
 fi
 

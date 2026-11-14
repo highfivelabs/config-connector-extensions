@@ -449,6 +449,9 @@ func registryFile(kinds []*built) []byte {
 		if len(c.Query) > 0 {
 			fmt.Fprintf(&b, "Query: %#v,\n", c.Query)
 		}
+		if c.NameInBody {
+			b.WriteString("NameInBody: true,\n")
+		}
 		fmt.Fprintf(&b, "CreateLRO: %v, UpdateLRO: %v, DeleteLRO: %v,\nUpdatable: %v,\n", k.createLRO, k.updateLRO, k.deleteLRO, k.updatable)
 		if len(k.output) > 0 {
 			fmt.Fprintf(&b, "Output: %#v,\n", k.output)

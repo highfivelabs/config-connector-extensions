@@ -45,6 +45,8 @@ import (
 	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
 	artifactregistryv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
+	chroniclev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1alpha1"
+	chroniclev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
@@ -66,6 +68,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/dns"
@@ -134,6 +137,8 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeRouterGVK, crdName: "computerouters.compute.gcp.hfl.dev", model: compute.NewRouterModel},
 	{gvk: iamv1beta1.IAMDenyPolicyGVK, crdName: "iamdenypolicies.iam.gcp.hfl.dev", model: iam.NewDenyPolicyModel},
 	{gvk: iamv1beta1.IAMPrincipalAccessBoundaryPolicyGVK, crdName: "iamprincipalaccessboundarypolicies.iam.gcp.hfl.dev", model: iam.NewPrincipalAccessBoundaryPolicyModel},
+	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
+	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyAssociationGVK, crdName: "computeorganizationsecuritypolicyassociations.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyAssociationModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyRuleGVK, crdName: "computeorganizationsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewOrganizationSecurityPolicyRuleModel},
@@ -148,6 +153,9 @@ var Kinds = []kind{
 	{gvk: datacatalogv1beta1.DataCatalogTagGVK, crdName: "datacatalogtags.datacatalog.gcp.hfl.dev", model: datacatalog.NewTagModel},
 	{gvk: aiplatformv1beta1.AIPlatformReasoningEngineGVK, crdName: "aiplatformreasoningengines.aiplatform.gcp.hfl.dev", model: aiplatform.NewAIPlatformReasoningEngineModel, labels: slotguard.Spec},
 	{gvk: servicemanagementv1alpha1.EndpointsServiceGVK, crdName: "endpointsservices.servicemanagement.gcp.hfl.dev", model: servicemanagement.NewEndpointsServiceModel},
+	{gvk: chroniclev1alpha1.ChronicleRuleDeploymentGVK, crdName: "chronicleruledeployments.chronicle.gcp.hfl.dev", model: chronicle.NewRuleDeploymentModel},
+	{gvk: chroniclev1beta1.ChronicleRuleGVK, crdName: "chroniclerules.chronicle.gcp.hfl.dev", model: chronicle.NewRuleModel},
+	{gvk: chroniclev1beta1.ChronicleReferenceListGVK, crdName: "chroniclereferencelists.chronicle.gcp.hfl.dev", model: chronicle.NewReferenceListModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -168,6 +176,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		spannerv1beta1.AddToScheme,
 		datacatalogv1beta1.AddToScheme,
 		aiplatformv1beta1.AddToScheme,
+		chroniclev1alpha1.AddToScheme,
+		chroniclev1beta1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,

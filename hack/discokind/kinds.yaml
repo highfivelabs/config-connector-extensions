@@ -12,7 +12,8 @@
 # immutable (top-level fields the API cannot patch, beyond those its
 # descriptions call Immutable); skip {field: why}; note; sweepLocation (the
 # location the live sweeper lists, for a collection with no global one;
-# the live fixtures use it).
+# the live fixtures use it); nameInBody (create also sends the full name
+# as the body's name, beside the ID parameter, for an API that needs it).
 
 - kind: LoggingSavedQuery
   group: logging.gcp.hfl.dev
@@ -219,6 +220,23 @@
   terraform: google_compute_network_attachment
   note: "Subnets of a consumer's network that Private Service Connect producers attach interfaces to."
 
+# The catalog's VPN and interconnect ports (2026-11-13): Config Connector's
+# ComputeInterconnectAttachment (v1beta1) lacks the candidate Cloud Router
+# and customer router addresses (candidateCloudRouterIpAddress,
+# candidateCustomerRouterIpAddress and their IPv6 forms), so ours is a
+# stable equivalent with the API's whole field set (decisions 19 and 26, as
+# NetworkServicesGateway). Immutable as Terraform's
+# google_compute_interconnect_attachment forces a new attachment for them.
+- kind: ComputeInterconnectAttachment
+  group: compute.gcp.hfl.dev
+  version: v1beta1
+  discovery: compute.v1
+  resource: interconnectAttachments
+  parents: [project]
+  terraform: google_compute_interconnect_attachment
+  immutable: [interconnect, type, router, edgeAvailabilityDomain, candidateSubnets, candidateIpv6Subnets, candidateCloudRouterIpAddress, candidateCloudRouterIpv6Address, candidateCustomerRouterIpAddress, candidateCustomerRouterIpv6Address, vlanTag8021q, ipsecInternalAddresses, encryption, subnetLength, pairingKey, l2Forwarding]
+  note: "A VLAN attachment: an interconnect's connection to a Cloud Router, with the router and customer addresses chosen from candidates."
+
 - kind: ComputeRegionInstanceTemplate
   group: compute.gcp.hfl.dev
   version: v1alpha1
@@ -254,6 +272,39 @@
   parents: [project]
   terraform: google_network_services_agent_connectivity_template
   note: "The network access an agent gateway provides."
+
+# Config Connector's v1beta1 NetworkServicesGateway (at 1.160.0) cannot
+# make a SECURE_WEB_GATEWAY: it lacks network, subnetwork,
+# gatewaySecurityPolicy, certificateUrls, labels and routingMode, and
+# requires scope. Ours keeps the name (decision 18) at v1beta1 (decision
+# 26's stable equivalent) with the API's full field set, for the
+# catalog's net-swp module (2026-11-13). The immutable fields are
+# Terraform's (google_network_services_gateway forces a new gateway for
+# each); allPorts and allowGlobalAccess are taken as ports is.
+- kind: NetworkServicesGateway
+  group: networkservices.gcp.hfl.dev
+  version: v1beta1
+  discovery: networkservices.v1
+  resource: projects.locations.gateways
+  parents: [project]
+  terraform: google_network_services_gateway
+  immutable: [addresses, allPorts, allowGlobalAccess, envoyHeaders, ipVersion, network, ports, routingMode, scope, subnetwork]
+  note: "A gateway: an OPEN_MESH gateway's listener, or a Secure Web Proxy (SECURE_WEB_GATEWAY) in a VPC network."
+  sweepLocation: us-central1
+# The catalog's geap-agent-gateway module (2026-11-13): an authorization
+# extension that delegates to a Google service (IAP or Model Armor) by its
+# service field. Config Connector's NetworkServicesAuthzExtension is alpha,
+# requires a backend service and has no service field, so ours is a stable
+# equivalent with the API's whole field set (decision 26).
+- kind: NetworkServicesAuthzExtension
+  group: networkservices.gcp.hfl.dev
+  version: v1beta1
+  discovery: networkservices.v1
+  resource: projects.locations.authzExtensions
+  parents: [project]
+  terraform: google_network_services_authz_extension
+  note: "An authorization extension: a callout a load balancer or an agent gateway makes to a backend service or a Google service (iap.googleapis.com, Model Armor) before it allows a request."
+  sweepLocation: us-central1
 # Foundation (tier 1) gaps with this shape, 2026-11-12: Resource Manager's
 # capability configs and boundaries, and Network Connectivity's PSC
 # authorization policies, automated DNS records and spoke gateway routes.
@@ -367,6 +418,24 @@
   parents: [project]
   terraform: google_network_security_tls_inspection_policy
   note: "How a Secure Web Proxy inspects TLS: the CA pool that issues its interception certificates."
+  sweepLocation: us-central1
+
+# The catalog's geap-agent-gateway module (2026-11-13): fabric's iap_config
+# and model_armor_config bind a NetworkServicesAuthzExtension to the agent
+# gateway through an authorization policy whose target is the gateway.
+# Config Connector's NetworkSecurityAuthzPolicy is alpha and takes every
+# target as a forwarding rule (ForwardingRuleRef), so it cannot name an
+# agent gateway; ours takes target.resources as the API's names (a
+# forwarding rule, a Secure Web Proxy gateway or an agent gateway), a
+# stable equivalent (decision 26).
+- kind: NetworkSecurityAuthzPolicy
+  group: networksecurity.gcp.hfl.dev
+  version: v1beta1
+  discovery: networksecurity.v1
+  resource: projects.locations.authzPolicies
+  parents: [project]
+  terraform: google_network_security_authz_policy
+  note: "An authorization policy: allow, deny or delegate (to IAP or an authorization extension) the requests a forwarding rule, a Secure Web Proxy or an agent gateway receives."
   sweepLocation: us-central1
 
 - kind: GKEBackupBackupPlan
@@ -503,6 +572,10 @@
   parents: [project]
   terraform: google_cloudfunctions2_function
   note: "A Cloud Run functions (2nd gen) function."
+  # The API refuses a create without the full name in the body (the
+  # catalog's live run, 2026-11-13); Terraform sends it too.
+  nameInBody: true
+  sweepLocation: us-central1
 
 - kind: DataplexLake
   group: dataplex.gcp.hfl.dev

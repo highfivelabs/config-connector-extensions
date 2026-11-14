@@ -84,6 +84,11 @@ type Kind struct {
 	// not body fields (a CMEK config's setDefault). The API never returns
 	// them, so they are sent with every write and never compared.
 	Query []string
+	// NameInBody: create also sends the resource's full name as the body's
+	// name, beside the ID parameter, as Terraform does for the kind; the
+	// API refuses a create without it (Cloud Functions v2: "Invalid
+	// resource name '' for pattern projects/*/locations/*/functions/*").
+	NameInBody bool
 	// Output are the API's read-only top-level fields that go to
 	// status.observedState (name goes to status.externalRef instead).
 	Output []string
