@@ -400,10 +400,15 @@ Cloud Build v2 connections, API Gateway configs and gateways and the
 Dataplex kinds never became Ready on the fake cloud
 (`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
 
-A kind with `missingIs403` (`BigLakeCatalog`, 2026-11-14) answers 403
+Every BigLake kind (`BigLakeCatalog`, `BigLakeDatabase`, `BigLakeTable`,
+2026-11-14), and any kind with `missingIs403`, answers 403
 PERMISSION_DENIED, not 404, for a name the fake does not hold, as BigLake
-does for a catalog that does not exist, even to an admin. It does not
-check a catalog ID's characters (letters, digits and underscores only:
+does for a catalog, database or table that does not exist, even to an
+admin. The fake answers so for every kind under
+`biglake.googleapis.com/` whatever the kind's `missingIs403` says, as the
+cloud does, so a BigLake kind without it fails its test on the fake
+(`TestBigLake*MissingIs403`). It does not check that a database's
+catalog or a table's database exists, nor a BigLake ID's characters (letters, digits and underscores only:
 run `cce-11141216-dd17` was refused one with dashes), so the fixtures use
 `${ID}`. Two switches on
 `mockenv.Env.Disco`, off by default, make deletes behave as API

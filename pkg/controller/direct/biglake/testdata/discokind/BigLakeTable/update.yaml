@@ -1,0 +1,20 @@
+apiVersion: biglake.gcp.hfl.dev/v1beta1
+kind: BigLakeTable
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us
+  catalog: ${ID}cat
+  database: ${ID}db
+  resourceID: ${ID}
+  type: HIVE
+  hiveOptions:
+    tableType: EXTERNAL_TABLE
+    parameters:
+      owner: cce-changed
+    storageDescriptor:
+      locationUri: gs://${ID}/table
+      inputFormat: org.apache.hadoop.mapred.TextInputFormat
+      outputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat

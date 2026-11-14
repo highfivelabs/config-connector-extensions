@@ -28,3 +28,6 @@ func TestBigLakeCatalog(t *testing.T) { kindtest.Run(t, "BigLakeCatalog") }
 
 // TestBigLakeDatabase runs testdata/discokind/BigLakeDatabase/ on the fake cloud, or live.
 func TestBigLakeDatabase(t *testing.T) { kindtest.Run(t, "BigLakeDatabase") }
+
+// TestBigLakeTable runs testdata/discokind/BigLakeTable/ on the fake cloud, or live.
+func TestBigLakeTable(t *testing.T) { kindtest.Run(t, "BigLakeTable") }

@@ -19,8 +19,11 @@
 // delete), in front of mockgcp. It is generated from the same Kind
 // descriptors as the controller, so a new kind needs no mockgcp patch.
 //
-// A kind with Kind.MissingIs403 answers 403 PERMISSION_DENIED, not 404,
-// for a name it does not hold, as BigLake does for a catalog. Two
+// BigLake (every kind under biglake.googleapis.com) and any kind with
+// Kind.MissingIs403 answer 403 PERMISSION_DENIED, not 404, for a name the
+// fake does not hold, as BigLake does for a missing catalog, database or
+// table. The fake answers so for BigLake whatever the kind says, as the
+// cloud does: a BigLake kind without missingIs403 fails its test. Two
 // switches, off by default, make deletes behave as API Gateway's do
 // (SetDeleteDelay, SetRefuseInUse): an operation that takes a while, the
 // resource still there until it ends, and a resource another one names
@@ -300,6 +303,23 @@ func newObject(k *discokind.Kind, name, id string, body map[string]any) map[stri
 	return body
 }
 
+// missing403APIs are the APIs that answer 403, not 404, for a resource
+// that does not exist, whichever kind serves them.
+var missing403APIs = []string{"https://biglake.googleapis.com/"}
+
+// missingIs403: the fake answers k's missing names 403 (the package doc).
+func missingIs403(k *discokind.Kind) bool {
+	if k.MissingIs403 {
+		return true
+	}
+	for _, base := range missing403APIs {
+		if strings.HasPrefix(k.BaseURL, base) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (*http.Response, error) {
 	key := k.BaseURL + name
 	c.mu.Lock()
@@ -318,9 +338,9 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		}
 		return jsonResponse(req, http.StatusOK, obj)
 	}
-	if !ok && k.MissingIs403 {
-		// As BigLake answers for a catalog that does not exist, even to an
-		// admin (the catalog's live runs).
+	if !ok && missingIs403(k) {
+		// As BigLake answers for a catalog, database or table that does not
+		// exist, even to an admin (the catalog's live runs).
 		return errorResponse(req, http.StatusForbidden, "PERMISSION_DENIED", fmt.Sprintf("Permission denied on resource '%s' (or it may not exist).", name))
 	}
 	if !ok {

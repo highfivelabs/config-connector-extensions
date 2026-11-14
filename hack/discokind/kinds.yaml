@@ -524,6 +524,17 @@
   parents: [project]
   terraform: google_biglake_database
   note: "A database in a BigLake Metastore catalog."
+  missingIs403: true
+
+- kind: BigLakeTable
+  group: biglake.gcp.hfl.dev
+  version: v1beta1
+  discovery: biglake.v1
+  resource: projects.locations.catalogs.databases.tables
+  parents: [project]
+  terraform: google_biglake_table
+  note: "A table in a BigLake Metastore database. Config Connector's own BigLakeTable (bigquerybiglake.cnrm.cloud.google.com) reads BigLake's 403 for a missing table as a denial and never creates one."
+  missingIs403: true
 
 - kind: CloudBuildConnection
   group: cloudbuild.gcp.hfl.dev

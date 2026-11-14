@@ -8,6 +8,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`biglake.gcp.hfl.dev/v1beta1` `BigLakeTable`**, generated from
+  Discovery: a table in a BigLake Metastore database
+  (`google_biglake_table`). Config Connector's own `BigLakeTable`
+  (`bigquerybiglake.cnrm.cloud.google.com`) takes BigLake's 403 for a
+  table that does not exist yet for a denial and never makes it; ours
+  takes that 403 before its create as not found (`missingIs403`). A
+  workload moves a table to ours by acquiring it (`resourceID`) and
+  abandoning Config Connector's object.
 - **`discoveryengine.gcp.hfl.dev/v1alpha1` `DiscoveryEngineCmekConfig`**,
   generated from Discovery: the Cloud KMS key Vertex AI Search encrypts a
   location's data with (`google_discovery_engine_cmek_config`). Config
@@ -247,6 +255,11 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`BigLakeDatabase` was never made**: BigLake answers 403, not 404, for
+  a database that does not exist, and the read before the create took
+  it for a denial ("Permission 'biglake.databases.get' denied"). It now
+  reads that 403 as not found until the database is made, as
+  `BigLakeCatalog` does.
 - **`IAMDenyPolicy` waited forever to be deleted when the Project, Folder
   or Organization object its `projectRef`, `folderRef` or
   `organizationRef` names by `name` was already gone**: its delete

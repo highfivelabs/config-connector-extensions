@@ -1,1 +1,1 @@
-covered live by TestBigLakeCatalogMissingIs403 (a create through BigLake's 403 for a missing catalog, then a 403 once made is a denial)
+covered live by TestBigLakeCatalogMissingIs403, and by the BigLakeDatabase and BigLakeTable tests' catalogs (a create through BigLake's 403 for a missing catalog, then a 403 once made is a denial)
