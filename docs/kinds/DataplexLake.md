@@ -30,3 +30,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `64f375e` | PASS | PASS | none; and `TestDataplexLakeRefusedForQuota`: a create refused once and reads refused three times by the test (429) on top of the real quota, then a delete refused twice: Ready and gone, with QuotaExhausted events and no UpdateFailed or DeleteFailed (run `cce-11140351-e560`) | 3 lakes in us-central1 (the test's, the abandoned one, the quota test's); all deleted |

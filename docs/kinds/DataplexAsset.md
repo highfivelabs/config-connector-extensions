@@ -36,3 +36,5 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `64f375e` | PASS | FAIL | the asset went Ready and ACTIVE, but the API answers `resourceSpec.name` with the bare bucket name, so every reconcile patched it (run `cce-11140351-e560`); fixed in `01b38fa` | 2 assets, 2 zones, 2 lakes, 2 buckets in us-central1; all deleted |
+| 2026-11-14 | `01b38fa` | PASS | PASS | none: Ready, a resync with no write, an update, delete, abandon (run `cce-11140437-02dc`) | 2 assets, 2 zones, 2 lakes, 2 buckets in us-central1; all deleted, the run's sweep matched nothing |

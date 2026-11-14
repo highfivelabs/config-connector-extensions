@@ -51,3 +51,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `64f375e` | PASS | SKIP | `TestIAMAccessPolicyRefusedForQuota` passes on the fake (four refused reads, then Ready; two refused reads on delete, then gone; no UpdateFailed or DeleteFailed); live skipped: no access policy role (run `cce-11140351-e031`) | none |

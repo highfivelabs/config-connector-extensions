@@ -30,3 +30,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `64f375e` | PASS | PASS | none (run `cce-11140351-e560`) | 2 zones and their 2 lakes (setup) in us-central1; all deleted |
