@@ -1,0 +1,48 @@
+config-connector-extensions patch 0048: mockgcp's createInstances raises
+the group's targetSize.
+
+The API adds each instance createInstances makes to the managed instance
+group's target size, so the group keeps it; mockgcp stored the
+per-instance configs and left targetSize alone. The catalog's live run in
+hfl-dev-514205 found ComputePerInstanceConfig calling createInstances,
+which grew the group past its targetSize; on the fake nothing showed it.
+Now createInstances raises targetSize by the number of instances, for
+regional groups (instancegroupmanager.go, after 0040) and zonal ones
+(0042's zonalperinstanceconfigs.go). Upstream candidate: the regional
+half, yes.
+
+
+diff --git a/mockgcp/mockcompute/instancegroupmanager.go b/mockgcp/mockcompute/instancegroupmanager.go
+index 8402950c..ab52761f 100644
+--- a/mockgcp/mockcompute/instancegroupmanager.go
++++ b/mockgcp/mockcompute/instancegroupmanager.go
+@@ -374,6 +374,12 @@ func (s *regionInstanceGroupManagers) CreateInstances(ctx context.Context, req *
+ 			return nil, err
+ 		}
+ 	}
++	// Each instance created is one more the group keeps: createInstances
++	// raises targetSize (config-connector-extensions patch 0048).
++	igm.TargetSize = PtrTo(igm.GetTargetSize() + int32(len(res.GetInstances())))
++	if err := s.storage.Update(ctx, fqn, igm); err != nil {
++		return nil, err
++	}
+ 
+ 	op := &pb.Operation{
+ 		TargetId:      igm.Id,
+diff --git a/mockgcp/mockcompute/zonalperinstanceconfigs.go b/mockgcp/mockcompute/zonalperinstanceconfigs.go
+index 44822114..2f0bd568 100644
+--- a/mockgcp/mockcompute/zonalperinstanceconfigs.go
++++ b/mockgcp/mockcompute/zonalperinstanceconfigs.go
+@@ -67,6 +67,12 @@ func (s *instanceGroupManagers) CreateInstances(ctx context.Context, req *pb.Cre
+ 			return nil, err
+ 		}
+ 	}
++	// Each instance created is one more the group keeps: createInstances
++	// raises targetSize (config-connector-extensions patch 0048).
++	igm.TargetSize = PtrTo(igm.GetTargetSize() + int32(len(req.GetInstanceGroupManagersCreateInstancesRequestResource().GetInstances())))
++	if err := s.storage.Update(ctx, name.String(), igm); err != nil {
++		return nil, err
++	}
+ 	return s.zonalIGMOperation(ctx, name, igm, "compute.instanceGroupManagers.createInstances")
+ }
+ 

@@ -159,22 +159,9 @@ func (a *ComputePerInstanceConfigAdapter) Create(ctx context.Context, createOp *
 	}
 	desiredPb.Name = direct.LazyPtr(a.id.Name)
 
-	req := &pb.CreateInstancesInstanceGroupManagerRequest{
-		Project:              a.id.Project,
-		Zone:                 a.id.Zone,
-		InstanceGroupManager: a.id.InstanceGroupManager,
-		InstanceGroupManagersCreateInstancesRequestResource: &pb.InstanceGroupManagersCreateInstancesRequest{
-			Instances: []*pb.PerInstanceConfig{desiredPb},
-		},
-	}
-	op, err := a.zonalClient.CreateInstances(ctx, req)
-	if err != nil {
+	if err := a.upsert(ctx, desiredPb); err != nil {
 		return fmt.Errorf("creating ComputePerInstanceConfig %s: %w", a.id.String(), err)
 	}
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("waiting for creation of ComputePerInstanceConfig %s: %w", a.id.String(), err)
-	}
-
 	return a.updateStatus(ctx, createOp)
 }
 
@@ -201,6 +188,23 @@ func (a *ComputePerInstanceConfigAdapter) Update(ctx context.Context, updateOp *
 
 	structuredreporting.ReportDiff(ctx, diffs)
 
+	if err := a.upsert(ctx, desiredPb); err != nil {
+		return err
+	}
+	return a.updateStatus(ctx, updateOp)
+}
+
+// upsert writes the config with updatePerInstanceConfigs, which inserts
+// or patches it by name, and applies it to its instance with
+// applyUpdatesToInstances when the group has one by that name, for create
+// and update alike. Create never uses createInstances: that makes a new
+// instance and raises the group's targetSize (the catalog's live run in
+// hfl-dev-514205: the group grew past its targetSize and stayed there).
+// The pinned Terraform provider's google_compute_per_instance_config
+// calls createInstances on create and updatePerInstanceConfigs on update;
+// using the latter for both is the builder's choice (2026-11-14), so a
+// config never changes the group's size.
+func (a *ComputePerInstanceConfigAdapter) upsert(ctx context.Context, desiredPb *pb.PerInstanceConfig) error {
 	req := &pb.UpdatePerInstanceConfigsInstanceGroupManagerRequest{
 		Project:              a.id.Project,
 		Zone:                 a.id.Zone,
@@ -217,8 +221,14 @@ func (a *ComputePerInstanceConfigAdapter) Update(ctx context.Context, updateOp *
 		return fmt.Errorf("waiting for update of ComputePerInstanceConfig %s: %w", a.id.String(), err)
 	}
 
-	// Instance name in applyUpdatesToInstances request must include zone
+	// The instance in applyUpdatesToInstances is its URL (with its zone).
 	instanceURL, err := a.findInstanceURL(ctx)
+	if errors.Is(err, errNotInGroup) {
+		// No instance by that name in the group yet: the config is
+		// stored, and the group uses it when it makes one.
+		klog.FromContext(ctx).V(2).Info("no instance to apply the config to yet", "name", a.id.String())
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -249,8 +259,7 @@ func (a *ComputePerInstanceConfigAdapter) Update(ctx context.Context, updateOp *
 	if err := applyOp.Wait(ctx); err != nil {
 		return fmt.Errorf("waiting for applyUpdatesToInstances of ComputePerInstanceConfig %s: %w", a.id.String(), err)
 	}
-
-	return a.updateStatus(ctx, updateOp)
+	return nil
 }
 
 func (a *ComputePerInstanceConfigAdapter) findInstanceURL(ctx context.Context) (string, error) {
@@ -274,7 +283,7 @@ func (a *ComputePerInstanceConfigAdapter) findInstanceURL(ctx context.Context) (
 			return item.GetInstance(), nil
 		}
 	}
-	return "", fmt.Errorf("could not find instance %q in managed instances of %s", a.id.Name, a.id.ParentString())
+	return "", fmt.Errorf("instance %q in %s: %w", a.id.Name, a.id.ParentString(), errNotInGroup)
 }
 
 func (a *ComputePerInstanceConfigAdapter) Delete(ctx context.Context, deleteOp *directbase.DeleteOperation) (bool, error) {
@@ -376,3 +385,6 @@ func compareComputePerInstanceConfig(ctx context.Context, actual, desired *pb.Pe
 	}
 	return diffs, nil
 }
+
+// errNotInGroup: the group has no instance by the config's name.
+var errNotInGroup = errors.New("no such instance in the managed instance group")
