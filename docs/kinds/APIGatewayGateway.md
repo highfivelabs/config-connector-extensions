@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `c5ee837` | PASS | PASS | run `cce-11141216-dd17`, `TestAPIGatewayDeleteGatewayAndConfigTogether` (the kind test skips live): a config and the gateway serving it, deleted at once, are both gone from the cloud before their finalizers go (the config's delete waits for the gateway's and is tried again while in use), and their API then deletes at the first try. Before (catalog live run): both deletes returned before their operations, the config stayed FAILED, its API "has nested resources". The config, read with `view=FULL`, became Ready and stayed so | 1 API, 1 config, 1 gateway (deleted); sweep empty |
