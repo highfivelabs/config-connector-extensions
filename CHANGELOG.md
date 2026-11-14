@@ -6,6 +6,18 @@ has been released yet; each release moves its entries out of
 
 ## Unreleased
 
+### Fixed
+
+- **Deleting a BigLake catalog, database and table at once** no longer
+  holds the database's and table's finalizers. BigLake's catalog delete
+  takes the database and table along, and they then answer 403, as
+  BigLake does for anything missing. A generated kind with
+  `missingIs403` now takes a 403 on the read or the delete, while
+  deleting, for gone when a listing proves it: the resource's
+  collection, or, when that answers 403 too, a parent's, lists without
+  it. A real denial still keeps the finalizer (`docs/design.md`,
+  decision 32).
+
 ### Added
 
 - **`biglake.gcp.hfl.dev/v1beta1` `BigLakeTable`**, generated from

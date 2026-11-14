@@ -407,7 +407,13 @@ does for a catalog, database or table that does not exist, even to an
 admin. The fake answers so for every kind under
 `biglake.googleapis.com/` whatever the kind's `missingIs403` says, as the
 cloud does, so a BigLake kind without it fails its test on the fake
-(`TestBigLake*MissingIs403`). It does not check that a database's
+(`TestBigLake*MissingIs403`). Deleting a BigLake resource deletes the
+resources under its name with it, as the cloud's catalog delete does
+(catalog repository run `cat-11141549-4cb0`, 2026-11-14), and a list of
+a collection whose parent is such a resource the fake does not hold
+answers 403 (a deleted catalog's databases). `SetDeny` on
+`mockenv.Env.Disco` makes one name answer 403 while it is still held, a
+real denial (`TestBigLakeDeleteDenied`). It does not check that a database's
 catalog or a table's database exists, nor a BigLake ID's characters (letters, digits and underscores only:
 run `cce-11141216-dd17` was refused one with dashes), so the fixtures use
 `${ID}`. Two switches on

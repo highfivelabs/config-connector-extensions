@@ -102,8 +102,12 @@ type Kind struct {
 	// acquired the resource (no status.externalRef), the controller reads
 	// such a 403 as not found and creates it, as Terraform does (it never
 	// reads before a create); a real denial then fails the create. Once the
-	// object has a resource, a 403 is a denial, as for any kind: an update
-	// or a delete never takes it for a resource gone.
+	// object has a resource, a 403 is a denial, as for any kind, on update;
+	// while deleting, a 403 on the read or the delete counts as gone only
+	// when a listing proves the resource, or a parent of it, gone
+	// (GoneAfter403): a catalog's delete takes its databases and tables
+	// along, and they then answer 403 (catalog repository run
+	// cat-11141549-4cb0).
 	MissingIs403 bool
 	// GetQuery are query parameters every get of the resource sends: API
 	// Gateway's view=FULL, without which a config's get leaves out its

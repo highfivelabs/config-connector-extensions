@@ -183,7 +183,11 @@ catalog repository's live run `cat-11141340-9f1f`, 2026-11-14: BigLake
 answers a missing database or table 403 as it does a missing catalog): the read before a create takes that 403 as not found
 only while the object has never made or acquired its resource (no
 `status.externalRef`), and a real denial then fails the create; once
-made, a 403 is a denial on update and delete as for any kind. Terraform
+made, a 403 is a denial on update as for any kind. While deleting, a 403
+on the read or on the delete counts as gone only when a listing proves
+it (decision 32, 2026-11-14: a catalog's delete takes its databases and
+tables along, and in the catalog repository's run `cat-11141549-4cb0`
+their finalizers then held on the 403 for 30 minutes). Terraform
 has no special handling here because it never reads before a create.
 `getQuery` sends query parameters with every get (`view: FULL` for API
 Gateway configs, whose source files a get leaves out otherwise).
@@ -2439,6 +2443,46 @@ To raise confidence in `ArtifactRegistryRepository`:
     not end the wait. A quota that never comes back (a project's CPUs)
     is then only an event and a log line, never a failed condition, as
     the builder asked ("never mark the object failed").
+32. **A 403 while deleting a `missingIs403` kind counts as gone only
+    when a listing proves it** (2026-11-14). The catalog repository's
+    live run `cat-11141549-4cb0` deleted its `biglake-catalog` chart at
+    once: BigLake's catalog delete took the database and table along,
+    and their reads and deletes then answered 403, which BigLake gives
+    for a missing resource even to an admin. `Find` took that 403 for a
+    denial while deleting, and both finalizers held for 30 minutes; a
+    Bundt component's delete would do the same. Now, while deleting, a
+    403 on the read before the delete or on the delete itself starts a
+    proof (`GoneAfter403`, `pkg/discokind/gone403.go`): the resource's
+    collection is listed, and the resource is gone if the list does not
+    show it. When that listing answers 403 too (a database's tables
+    after its catalog went), the parent's collection is listed, and so
+    on up while the parent is itself a `missingIs403` resource of the
+    same API; the resource is gone when an ancestor is missing from its
+    collection's listing (the project's catalogs list without the
+    catalog). It stays a denial, and the finalizer stays, when a
+    listing still shows the resource or its ancestor, or when the
+    listings answer 403 all the way up. An item with `deleteTime` set
+    counts as gone. **Why a listing, not the parent's read:** a 403 on
+    the parent's get is as ambiguous as the child's (BigLake answers 403
+    for a missing catalog too), so "the parent also answers 403" would
+    take an account denied every BigLake read for a parent gone, and
+    drop finalizers over resources still there. A listing that succeeds
+    is a positive answer from the API about what exists, from the same
+    role (`roles/biglake.admin` and `roles/biglake.editor` hold the
+    `list` permissions), and at the top it is the project's own
+    collection. Simpler rules were rejected: taking every 403 while
+    deleting for gone hides a real denial and leaks the resource when
+    the delete permission is taken away; giving up the finalizer after
+    a timeout leaks it too, only later. The cost is one to three list
+    calls after a 403 while deleting, none otherwise. Tested on the
+    fake, where a BigLake delete now takes the resources under its name
+    along and a list under a gone parent answers 403:
+    `TestBigLakeDeleteAllAtOnce` (fake and live; it fails in a test
+    build with the fix off, `go test -tags cce_delete403_off`) and
+    `TestBigLakeDeleteDenied` (fake only: a denied table its database
+    still lists keeps its finalizer until the denial is lifted; a table
+    deleted behind the controller's back, its database still there, is
+    proven gone by its own collection).
 
 ## 9. The operator: Config Connector's identity, per namespace
 

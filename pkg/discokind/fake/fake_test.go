@@ -298,3 +298,53 @@ func TestNameInBody(t *testing.T) {
 		t.Errorf("a create with the name in the body: %v", err)
 	}
 }
+
+// TestBigLakeCascade: deleting a BigLake catalog deletes its databases and
+// tables (catalog repository run cat-11141549-4cb0); they, and a list
+// under the gone catalog, then answer 403. SetDeny answers 403 for a name
+// the fake holds.
+func TestBigLakeCascade(t *testing.T) {
+	ctx := context.Background()
+	base := "https://biglake.googleapis.com/v1/"
+	cat := &discokind.Kind{BaseURL: base, Name: "{parent}/locations/{location}/catalogs/{id}", Parents: []string{"project"}, IDParam: "catalogId", MissingIs403: true}
+	db := &discokind.Kind{BaseURL: base, Name: "{parent}/locations/{location}/catalogs/{catalog}/databases/{id}", Parents: []string{"project"}, IDParam: "databaseId", MissingIs403: true}
+	tbl := &discokind.Kind{BaseURL: base, Name: "{parent}/locations/{location}/catalogs/{catalog}/databases/{database}/tables/{id}", Parents: []string{"project"}, IDParam: "tableId", MissingIs403: true}
+	fake := New(unreachable{}, []*discokind.Kind{cat, db, tbl})
+	api := &discokind.API{HTTP: &http.Client{Transport: fake}, BaseURL: base}
+	c, d, tb := "projects/p/locations/us/catalogs/c", "projects/p/locations/us/catalogs/c/databases/d", "projects/p/locations/us/catalogs/c/databases/d/tables/t"
+	for _, m := range []struct{ coll, param, id string }{
+		{"projects/p/locations/us/catalogs", "catalogId", "c"},
+		{c + "/databases", "databaseId", "d"},
+		{d + "/tables", "tableId", "t"},
+	} {
+		if _, err := api.Do(ctx, http.MethodPost, m.coll, map[string]string{m.param: m.id}, map[string]any{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	fake.SetDeny(tbl, tb, true)
+	if _, err := api.Get(ctx, tb); !direct.HasHTTPCode(err, http.StatusForbidden) {
+		t.Errorf("a denied table: %v, want 403", err)
+	}
+	if list, err := api.Get(ctx, d+"/tables"); err != nil {
+		t.Errorf("listing a denied table's database: %v", err)
+	} else if items, _ := list["tables"].([]any); len(items) != 1 {
+		t.Errorf("listing a denied table's database: %v, want the table", list)
+	}
+	fake.SetDeny(tbl, tb, false)
+	if _, err := api.Get(ctx, tb); err != nil {
+		t.Errorf("the table, no longer denied: %v", err)
+	}
+	if _, err := api.Do(ctx, http.MethodDelete, c, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range []string{c, d, tb, c + "/databases", d + "/tables"} {
+		if _, err := api.Get(ctx, n); !direct.HasHTTPCode(err, http.StatusForbidden) {
+			t.Errorf("%s after the catalog's delete: %v, want 403", n, err)
+		}
+	}
+	if list, err := api.Get(ctx, "projects/p/locations/us/catalogs"); err != nil {
+		t.Errorf("listing the catalogs: %v", err)
+	} else if items, _ := list["catalogs"].([]any); len(items) != 0 {
+		t.Errorf("listing the catalogs: %v, want none", list)
+	}
+}

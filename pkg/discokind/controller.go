@@ -93,7 +93,8 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 	}
 	api := &API{HTTP: httpClient, BaseURL: m.kind.BaseURL, LocationHost: m.kind.LocationHost, GetQuery: m.kind.GetQuery}
 	spec, _, _ := unstructured.NestedMap(u.Object, "spec")
-	return &adapter{kind: m.kind, api: api, name: name, desired: body, query: m.kind.QueryOf(spec), recorded: ext != ""}, nil
+	deleting := !u.GetDeletionTimestamp().IsZero()
+	return &adapter{kind: m.kind, api: api, name: name, desired: body, query: m.kind.QueryOf(spec), recorded: ext != "", deleting: deleting}, nil
 }
 
 // AdapterForURL is not supported: these kinds are not exported.
@@ -231,6 +232,8 @@ type adapter struct {
 	// recorded: the object has made or acquired its resource
 	// (status.externalRef is set).
 	recorded bool
+	// deleting: the object is being deleted (it has a deletion timestamp).
+	deleting bool
 }
 
 var _ directbase.Adapter = &adapter{}
@@ -251,6 +254,19 @@ func (a *adapter) Find(ctx context.Context) (bool, error) {
 			// one: create it. A real denial fails the create.
 			klog.FromContext(ctx).V(2).Info("reading 403 before a create as not found", "kind", a.kind.GVK.Kind, "name", a.name)
 			return false, nil
+		}
+		if a.deleting && a.goneOn403(err) {
+			// Deleting, and the read answers 403: gone only when a listing
+			// proves it (GoneAfter403); else a denial, and the finalizer stays.
+			gone, why, perr := a.GoneAfter403(ctx)
+			if perr != nil {
+				return false, fmt.Errorf("getting %s %s: %w; and proving it gone: %v", a.kind.GVK.Kind, a.name, err, perr)
+			}
+			if gone {
+				klog.FromContext(ctx).Info("deleting: the read answered 403 and the resource is gone", "kind", a.kind.GVK.Kind, "name", a.name, "proof", why)
+				return false, nil
+			}
+			return false, fmt.Errorf("getting %s %s: %w (not taken for gone: %s)", a.kind.GVK.Kind, a.name, err, why)
 		}
 		return false, fmt.Errorf("getting %s %s: %w", a.kind.GVK.Kind, a.name, err)
 	}
@@ -604,6 +620,19 @@ func (a *adapter) deleteOnce(ctx context.Context) error {
 	if err != nil {
 		if direct.IsNotFound(err) {
 			return nil
+		}
+		if a.goneOn403(err) {
+			// The resource went between the read and the delete (its parent's
+			// delete took it along): gone only when a listing proves it.
+			gone, why, perr := a.GoneAfter403(ctx)
+			if perr != nil {
+				return fmt.Errorf("%w; and proving it gone: %v", err, perr)
+			}
+			if gone {
+				klog.FromContext(ctx).Info("the delete answered 403 and the resource is gone", "kind", a.kind.GVK.Kind, "name", a.name, "proof", why)
+				return nil
+			}
+			return fmt.Errorf("%w (not taken for gone: %s)", err, why)
 		}
 		return err
 	}
