@@ -58,7 +58,7 @@ cloudsupport.googleapis.com,3,1,0,17,2,0,15,11.8,0.0,88.2
 cloudtasks.googleapis.com,2,1,0,50,12,0,38,24.0,0.0,76.0
 commerceproducer.googleapis.com,2,1,0,85,81,0,4,95.3,0.0,4.7
 composer.googleapis.com,3,3,0,86,82,0,4,95.3,0.0,4.7
-compute.googleapis.com,95,69,16,3437,1738,282,1417,50.6,8.2,41.2
+compute.googleapis.com,95,69,16,3437,1738,301,1398,50.6,8.8,40.7
 confidentialcomputing.googleapis.com,1,0,0,0,0,0,0,0.0,0.0,0.0
 config.googleapis.com,3,2,0,40,21,0,19,52.5,0.0,47.5
 configdelivery.googleapis.com,4,4,0,26,21,0,5,80.8,0.0,19.2
@@ -144,8 +144,8 @@ monitoring.googleapis.com,12,9,0,2082,952,0,1130,45.7,0.0,54.3
 netapp.googleapis.com,11,7,0,179,54,0,125,30.2,0.0,69.8
 networkconnectivity.googleapis.com,14,11,3,153,92,23,38,60.1,15.0,24.8
 networkmanagement.googleapis.com,4,2,0,76,42,0,34,55.3,0.0,44.7
-networksecurity.googleapis.com,31,25,3,432,317,30,85,73.4,6.9,19.7
-networkservices.googleapis.com,21,14,2,356,193,38,125,54.2,10.7,35.1
+networksecurity.googleapis.com,31,25,3,432,317,35,80,73.4,8.1,18.5
+networkservices.googleapis.com,21,14,2,356,193,40,123,54.2,11.2,34.6
 notebooks.googleapis.com,5,5,0,133,122,0,11,91.7,0.0,8.3
 observability.googleapis.com,3,0,0,10,0,0,10,0.0,0.0,100.0
 oracledatabase.googleapis.com,13,4,0,518,125,0,393,24.1,0.0,75.9
