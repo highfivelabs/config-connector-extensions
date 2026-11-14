@@ -28,6 +28,8 @@ package controller
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
+	"time"
 
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/deletiondefender"
@@ -209,6 +211,37 @@ type Options struct {
 	// Slot is the version slot this manager is (--slot, HFL_SLOT); empty
 	// turns the slot guard off (pkg/slotguard).
 	Slot string
+	// QuotaBackoff is the first wait after the cloud refuses an object's
+	// reconcile for quota (HTTP 429, RESOURCE_EXHAUSTED); each refusal in a
+	// row doubles it, up to QuotaBackoffMax, with jitter (QuotaWait).
+	// Zero means DefaultQuotaBackoff and DefaultQuotaBackoffMax.
+	QuotaBackoff, QuotaBackoffMax time.Duration
+}
+
+// DefaultQuotaBackoff and DefaultQuotaBackoffMax bound the wait after a
+// refusal for quota. The tightest quotas met so far are per minute
+// (Dataplex: 10 requests a minute per user and region; IAM
+// GetAccessPolicy: 5 a minute per project), so the first wait is a good
+// part of a minute and the waits reach several minutes.
+const (
+	DefaultQuotaBackoff    = 15 * time.Second
+	DefaultQuotaBackoffMax = 10 * time.Minute
+)
+
+// QuotaWait is the wait before the next try after refusals refusals for
+// quota in a row (0 for the first): base doubled each time up to max, half
+// of it fixed and half random (so objects refused together do not all try
+// again together).
+func QuotaWait(base, max time.Duration, refusals int) time.Duration {
+	d := base
+	for i := 0; i < refusals && d < max; i++ {
+		d *= 2
+	}
+	if d > max {
+		d = max
+	}
+	half := d / 2
+	return half + rand.N(d-half+1)
 }
 
 // AddToManager adds a direct controller and a deletion defender for every
@@ -225,6 +258,19 @@ func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.Controll
 		JitterGenerator:    jitter.NewDefaultGenerator(nil, nil),
 		SkipNameValidation: cfg.SkipNameValidation,
 	}
+	quotaBase, quotaMax := opts.QuotaBackoff, opts.QuotaBackoffMax
+	if quotaBase <= 0 {
+		quotaBase = DefaultQuotaBackoff
+	}
+	if quotaMax <= 0 {
+		quotaMax = DefaultQuotaBackoffMax
+	}
+	if quotaMax < quotaBase {
+		quotaMax = quotaBase
+	}
+	// A refusal for quota requeues and never marks the object failed
+	// (patch 0047).
+	deps.QuotaBackoff = func(refusals int) time.Duration { return QuotaWait(quotaBase, quotaMax, refusals) }
 	var guard *slotguard.Guard
 	if opts.Slot != "" {
 		if err := slotguard.Validate(opts.Slot); err != nil {

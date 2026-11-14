@@ -2387,6 +2387,24 @@ To raise confidence in `ArtifactRegistryRepository`:
     `gcr.io` repository (Config Connector's `ArtifactRegistryRepository`)
     rather than a kind here.
 
+31. **A refusal for quota requeues and never marks an object failed**
+    (the builder, 2026-11-14, after the catalog's live runs in
+    hfl-dev-514205: Dataplex's 10 requests a minute per user and region
+    refused `DataplexLake`, `DataplexZone` and `DataplexAsset`, an asset
+    never went Ready and deletes stalled for more than 25 minutes; IAM's
+    `GetAccessPolicy`, 5 a minute per project, refused
+    `IAMAccessPolicy`). Patch 0047 makes the direct reconciler, for an
+    HTTP 429 or gRPC `RESOURCE_EXHAUSTED` from any step (find, create,
+    update, delete), leave the status alone, record a `QuotaExhausted`
+    event and requeue after `QuotaWait`: 15 s doubling to 10 min, half of
+    it fixed and half random (`pkg/controller`). The workqueue's own
+    backoff started at 250 ms, which a per-minute quota refused again. A
+    discokind operation is read less often as it goes on (2 s, half as
+    long again each time, up to 30 s), and a read refused for quota does
+    not end the wait. A quota that never comes back (a project's CPUs)
+    is then only an event and a log line, never a failed condition, as
+    the builder asked ("never mark the object failed").
+
 ## 9. The operator: Config Connector's identity, per namespace
 
 The goal: install the CRDs and run the managers so that a gap kind acts

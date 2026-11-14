@@ -585,6 +585,7 @@
   parents: [project]
   terraform: google_dataplex_lake
   note: "A Dataplex lake: a domain of data across projects and buckets."
+  sweepLocation: us-central1
 
 - kind: DataplexZone
   group: dataplex.gcp.hfl.dev

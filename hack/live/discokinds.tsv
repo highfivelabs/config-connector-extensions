@@ -31,7 +31,7 @@ ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
 DataplexAspectType	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/aspectTypes	aspectTypes	-
 DataplexDataScan	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/dataScans	dataScans	-
-DataplexLake	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/lakes	lakes	-
+DataplexLake	https://dataplex.googleapis.com/v1/	projects/{project}/locations/us-central1/lakes	lakes	-
 DiscoveryEngineCmekConfig	https://us-discoveryengine.googleapis.com/v1/	projects/{project}/locations/us/cmekConfigs	cmekConfigs	-
 GKEBackupBackupChannel	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/backupChannels	backupChannels	-
 GKEBackupBackupPlan	https://gkebackup.googleapis.com/v1/	projects/{project}/locations/global/backupPlans	backupPlans	-

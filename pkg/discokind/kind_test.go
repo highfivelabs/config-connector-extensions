@@ -52,13 +52,14 @@ func TestName(t *testing.T) {
 
 func TestDiff(t *testing.T) {
 	actual := map[string]any{
-		"displayName": "d",
-		"size":        "42", // an int64, as the API writes it
-		"ratio":       0.5,
-		"labels":      map[string]any{"a": "1", "b": "2"},
-		"list":        []any{map[string]any{"x": "1", "y": "default"}},
-		"createTime":  "2026-01-01T00:00:00Z",
-		"subnetworks": []any{"https://www.googleapis.com/compute/v1/projects/p/regions/r/subnetworks/s"},
+		"displayName":  "d",
+		"size":         "42", // an int64, as the API writes it
+		"ratio":        0.5,
+		"labels":       map[string]any{"a": "1", "b": "2"},
+		"list":         []any{map[string]any{"x": "1", "y": "default"}},
+		"createTime":   "2026-01-01T00:00:00Z",
+		"subnetworks":  []any{"https://www.googleapis.com/compute/v1/projects/p/regions/r/subnetworks/s"},
+		"resourceSpec": map[string]any{"name": "b1", "type": "STORAGE_BUCKET", "readAccessMode": "DIRECT"},
 	}
 	for _, c := range []struct {
 		desired map[string]any
@@ -75,6 +76,10 @@ func TestDiff(t *testing.T) {
 		{map[string]any{"subnetworks": []any{"https://www.googleapis.com/compute/v1/projects/p/regions/r/subnetworks/s"}}, nil},
 		{map[string]any{"subnetworks": []any{"projects/p/regions/r/subnetworks/t"}}, []string{"subnetworks"}},
 		{map[string]any{"subnetworks": []any{"regions/r/subnetworks/s"}}, []string{"subnetworks"}},
+		// Dataplex answers a bucket's path with its bare name.
+		{map[string]any{"resourceSpec": map[string]any{"name": "projects/p/buckets/b1", "type": "STORAGE_BUCKET"}}, nil},
+		{map[string]any{"resourceSpec": map[string]any{"name": "projects/p/buckets/b2"}}, []string{"resourceSpec"}},
+		{map[string]any{"resourceSpec": map[string]any{"name": "b1"}}, nil},
 	} {
 		if got := Diff(c.desired, actual); !reflect.DeepEqual(got, c.want) {
 			t.Errorf("Diff(%v) = %v, want %v", c.desired, got, c.want)
