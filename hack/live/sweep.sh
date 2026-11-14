@@ -304,6 +304,30 @@ for loc in ${gw_locs}; do
     act "Network Services gateway" "${name}" disco_delete "https://networkservices.googleapis.com/v1/" "${name}"
   done <<<"${rows}"
 done
+# Dataplex zones and their assets (DataplexZone, DataplexAsset, under a
+# lake, so not in discokinds.tsv) before the loop below deletes the run's
+# lakes (a lake with zones cannot go): every zone of a run's lake in
+# us-central1, the tests' region, its assets first.
+dp="https://dataplex.googleapis.com/v1/"
+if ! compgen -G "${HERE}/../../pkg/controller/direct/dataplex/testdata/discokind/DataplexLake/live-skip" >/dev/null; then
+  lakes="$(disco_api GET "${dp}projects/${project}/locations/us-central1/lakes?pageSize=1000" \
+    | jq -r '.lakes[]? | "\(.name) \(.createTime // "-")"')"
+  while read -r lake made; do
+    [[ -n "${lake}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${lake##*/}" "${made}" || continue
+    zones="$(disco_api GET "${dp}${lake}/zones?pageSize=1000" | jq -r '.zones[]?.name')"
+    while read -r zone; do
+      [[ -n "${zone}" ]] || continue
+      assets="$(disco_api GET "${dp}${zone}/assets?pageSize=1000" | jq -r '.assets[]?.name')"
+      while read -r asset; do
+        [[ -n "${asset}" ]] || continue
+        act "Dataplex asset" "${asset}" disco_delete "${dp}" "${asset}"
+      done <<<"${assets}"
+      act "Dataplex zone" "${zone}" disco_delete "${dp}" "${zone}"
+    done <<<"${zones}"
+  done <<<"${lakes}"
+fi
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   # A kind whose test never runs live (its fixtures' live-skip) makes

@@ -1,0 +1,207 @@
+config-connector-extensions patch 0047: the direct reconciler requeues a
+refusal for quota and never marks the object failed.
+
+A cloud API's refusal for quota (HTTP 429, gRPC RESOURCE_EXHAUSTED) says
+"not now", not "this object is wrong". The direct reconciler treated it as
+any other error: UpdateFailed or DeleteFailed (Ready False), then the
+workqueue's backoff from 250 ms, which against a per-minute quota made
+more refused requests (live: DataplexLake, DataplexZone and DataplexAsset
+under Dataplex's 10 requests a minute per user and region; IAMAccessPolicy
+under GetAccessPolicy's 5 a minute per project). With Deps.QuotaBackoff
+set, handleUpdateFailed and handleDeleteFailed leave the status alone for
+such an error, and Reconcile requeues the object after
+QuotaBackoff(refusals in a row), records a QuotaExhausted warning event,
+and forgets the count on the next success. Unset, nothing changes.
+directbase/quota.go is new: IsQuotaExhausted (googleapi.Error 429,
+apierror.APIError, a gRPC status) and the per-object count.
+Upstream candidate: yes.
+
+diff --git a/pkg/controller/direct/directbase/directbase_controller.go b/pkg/controller/direct/directbase/directbase_controller.go
+index 71b04b1d..443b134d 100644
+--- a/pkg/controller/direct/directbase/directbase_controller.go
++++ b/pkg/controller/direct/directbase/directbase_controller.go
+@@ -103,6 +103,7 @@ func NewReconciler(mgr manager.Manager, immediateReconcileRequests chan event.Ge
+ 		iamDeps:            deps.IAMAdapterDeps,
+ 		SkipNameValidation: deps.SkipNameValidation,
+ 		rateLimiter:        ratelimiter.NewDynamicRateLimiter(),
++		quotaBackoff:       deps.QuotaBackoff,
+ 	}
+ 	return &r, nil
+ }
+@@ -164,6 +165,15 @@ type Deps struct {
+ 	IAMAdapterDeps *IAMAdapterDeps
+ 
+ 	SkipNameValidation bool
++
++	// QuotaBackoff, when set, is the wait before the next try of an object
++	// whose reconcile the cloud refused for quota (HTTP 429, gRPC
++	// RESOURCE_EXHAUSTED), given how many such refusals came before it in a
++	// row (0 for the first). Such a refusal then never marks the object
++	// failed: no UpdateFailed or DeleteFailed condition or event, only a
++	// QuotaExhausted event and a requeue. Unset, a refusal for quota is a
++	// failure like any other. config-connector-extensions patch 0047.
++	QuotaBackoff func(refusals int) time.Duration
+ }
+ 
+ // TODO(kcc-team): we want to remove these in the future
+@@ -200,6 +210,9 @@ type DirectReconciler struct {
+ 	SkipNameValidation bool
+ 
+ 	rateLimiter *ratelimiter.DynamicRateLimiter
++
++	quotaBackoff  func(refusals int) time.Duration
++	quotaRefusals quotaRefusals
+ }
+ 
+ type reconcileContext struct {
+@@ -272,6 +285,18 @@ func (r *DirectReconciler) Reconcile(ctx context.Context, request reconcile.Requ
+ 	if err != nil {
+ 		reconcileErr = err
+ 
++		// 0. Refused for quota (Deps.QuotaBackoff): the status was left as it
++		// was; try again later, deleting or not.
++		var refused *quotaRefusedError
++		if errors.As(err, &refused) {
++			delay := r.quotaRefusals.next(request.NamespacedName, r.quotaBackoff)
++			logger.Info("the cloud refused for quota; trying again later",
++				"resource", request.NamespacedName, "retryAfter", delay, "error", refused.err.Error())
++			r.Recorder.Eventf(obj, corev1.EventTypeWarning, "QuotaExhausted",
++				"the cloud refused for quota; trying again in %v: %v", delay.Round(time.Second), refused.err)
++			return reconcile.Result{RequeueAfter: delay}, nil
++		}
++
+ 		// 1. Deletion error: do NOT apply custom ceiling or "0" halt.
+ 		// Return err so controller-runtime uses standard workqueue rate limiting to retry deletion.
+ 		if obj.GetDeletionTimestamp() != nil {
+@@ -314,6 +339,7 @@ func (r *DirectReconciler) Reconcile(ctx context.Context, request reconcile.Requ
+ 
+ 	// Reconcile succeeded: clear failure counter (standard controller-runtime Forget)
+ 	r.rateLimiter.Forget(request.NamespacedName)
++	r.quotaRefusals.forget(request.NamespacedName)
+ 
+ 	if requeue {
+ 		return reconcile.Result{Requeue: true}, nil
+@@ -553,6 +579,10 @@ func (r *reconcileContext) handleUpToDate(ctx context.Context, u *unstructured.U
+ func (r *reconcileContext) handleUpdateFailed(ctx context.Context, policy *unstructured.Unstructured, origErr error) error {
+ 	logger := log.FromContext(ctx)
+ 
++	if r.Reconciler.quotaBackoff != nil && IsQuotaExhausted(origErr) {
++		return &quotaRefusedError{err: origErr}
++	}
++
+ 	resource, err := toK8sResource(policy)
+ 	if err != nil {
+ 		logger.Error(err, "error converting to k8s resource while handling event",
+@@ -573,6 +603,10 @@ func (r *reconcileContext) handleDeleted(ctx context.Context, policy *unstructur
+ func (r *reconcileContext) handleDeleteFailed(ctx context.Context, policy *unstructured.Unstructured, origErr error) error {
+ 	logger := log.FromContext(ctx)
+ 
++	if r.Reconciler.quotaBackoff != nil && IsQuotaExhausted(origErr) {
++		return &quotaRefusedError{err: origErr}
++	}
++
+ 	resource, err := toK8sResource(policy)
+ 	if err != nil {
+ 		logger.Error(err, "error converting to k8s resource while handling event",
+diff --git a/pkg/controller/direct/directbase/quota.go b/pkg/controller/direct/directbase/quota.go
+new file mode 100644
+index 00000000..9d3eef46
+--- /dev/null
++++ b/pkg/controller/direct/directbase/quota.go
+@@ -0,0 +1,96 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package directbase
++
++// A cloud API's refusal for quota (HTTP 429, gRPC RESOURCE_EXHAUSTED) says
++// "not now", not "this object is wrong". With Deps.QuotaBackoff set, such a
++// refusal does not mark the object failed: the reconciler leaves its
++// status alone and tries again after a wait that grows with each refusal
++// in a row. config-connector-extensions patch 0047.
++
++import (
++	"errors"
++	"net/http"
++	"sync"
++	"time"
++
++	"github.com/googleapis/gax-go/v2/apierror"
++	"google.golang.org/api/googleapi"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"k8s.io/apimachinery/pkg/types"
++)
++
++// IsQuotaExhausted reports whether err, or an error it wraps, is a cloud
++// API's refusal for quota: HTTP 429 or gRPC RESOURCE_EXHAUSTED.
++func IsQuotaExhausted(err error) bool {
++	if err == nil {
++		return false
++	}
++	var ge *googleapi.Error
++	if errors.As(err, &ge) && ge.Code == http.StatusTooManyRequests {
++		return true
++	}
++	var ae *apierror.APIError
++	if errors.As(err, &ae) {
++		if ae.HTTPCode() == http.StatusTooManyRequests {
++			return true
++		}
++		if s := ae.GRPCStatus(); s != nil && s.Code() == codes.ResourceExhausted {
++			return true
++		}
++	}
++	var gs interface{ GRPCStatus() *status.Status }
++	if errors.As(err, &gs) {
++		if s := gs.GRPCStatus(); s != nil && s.Code() == codes.ResourceExhausted {
++			return true
++		}
++	}
++	return false
++}
++
++// quotaRefusedError is a reconcile that the cloud refused for quota; the
++// object's status was left as it was.
++type quotaRefusedError struct {
++	err error
++}
++
++func (e *quotaRefusedError) Error() string { return "refused for quota: " + e.err.Error() }
++
++func (e *quotaRefusedError) Unwrap() error { return e.err }
++
++// quotaRefusals counts each object's refusals for quota in a row.
++type quotaRefusals struct {
++	mu sync.Mutex
++	n  map[types.NamespacedName]int
++}
++
++// next is the wait before the object's next try, given backoff.
++func (q *quotaRefusals) next(nn types.NamespacedName, backoff func(int) time.Duration) time.Duration {
++	q.mu.Lock()
++	defer q.mu.Unlock()
++	if q.n == nil {
++		q.n = map[types.NamespacedName]int{}
++	}
++	n := q.n[nn]
++	q.n[nn]++
++	return backoff(n)
++}
++
++func (q *quotaRefusals) forget(nn types.NamespacedName) {
++	q.mu.Lock()
++	defer q.mu.Unlock()
++	delete(q.n, nn)
++}

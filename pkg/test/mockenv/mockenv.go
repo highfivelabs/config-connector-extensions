@@ -26,11 +26,13 @@ package mockenv
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -82,18 +84,100 @@ type Env struct {
 	mockSQLErr error
 }
 
-// recorder keeps the method and URL of every request to the fake cloud.
+// recorder keeps the method and URL of every request to the fake cloud,
+// and answers the ones a quota refusal (RefuseForQuota) takes.
 type recorder struct {
-	inner http.RoundTripper
-	mu    sync.Mutex
-	urls  []string
+	inner   http.RoundTripper
+	mu      sync.Mutex
+	urls    []string
+	refusal []*quotaRefusal
 }
 
 func (r *recorder) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.mu.Lock()
 	r.urls = append(r.urls, req.Method+" "+req.URL.String())
+	refusals := slices.Clone(r.refusal)
 	r.mu.Unlock()
+	refused := false
+	for _, q := range refusals {
+		if refused = q.take(req); refused {
+			break
+		}
+	}
+	if refused {
+		if req.Body != nil {
+			req.Body.Close()
+		}
+		return &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Status:     "429 Too Many Requests",
+			Header:     http.Header{"Content-Type": {"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(quotaRefusalBody)),
+			Request:    req,
+		}, nil
+	}
 	return r.inner.RoundTrip(req)
+}
+
+// quotaRefusalBody is what a Google API answers over a per-minute quota.
+const quotaRefusalBody = `{"error":{"code":429,"message":"Quota exceeded for quota metric 'Requests' and limit 'Requests per minute' (refused by the test, pkg/test/mockenv RefuseForQuota).","status":"RESOURCE_EXHAUSTED"}}`
+
+type quotaRefusal struct {
+	match       func(*http.Request) bool
+	mu          sync.Mutex
+	left, taken int
+}
+
+// take reports whether req is refused, counting it.
+func (q *quotaRefusal) take(req *http.Request) bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	if q.left == 0 || !q.match(req) {
+		return false
+	}
+	q.left--
+	q.taken++
+	return true
+}
+
+// RefuseForQuota makes the next n requests that match, by the controllers
+// or the test, answer 429 RESOURCE_EXHAUSTED, as an API over its quota
+// does, without reaching the cloud (fake or real). It returns how many it
+// has refused so far.
+func (e *Env) RefuseForQuota(n int, match func(*http.Request) bool) (refused func() int) {
+	q := &quotaRefusal{match: match, left: n}
+	recs := []*recorder{e.requests}
+	for _, r := range e.slotRequests {
+		recs = append(recs, r)
+	}
+	for _, r := range recs {
+		r.mu.Lock()
+		r.refusal = append(r.refusal, q)
+		r.mu.Unlock()
+	}
+	return func() int {
+		q.mu.Lock()
+		defer q.mu.Unlock()
+		return q.taken
+	}
+}
+
+// Events is the reasons of the Kubernetes events about the object named
+// name in namespace, oldest first.
+func (e *Env) Events(namespace, name string) []string {
+	e.T.Helper()
+	list := &corev1.EventList{}
+	if err := e.Kube.List(e.Ctx, list, client.InNamespace(namespace)); err != nil {
+		e.T.Fatal(err)
+	}
+	slices.SortFunc(list.Items, func(a, b corev1.Event) int { return a.CreationTimestamp.Compare(b.CreationTimestamp.Time) })
+	var out []string
+	for _, ev := range list.Items {
+		if ev.InvolvedObject.Name == name {
+			out = append(out, ev.Reason)
+		}
+	}
+	return out
 }
 
 // Requests is every request made to the fake cloud so far, as
@@ -284,7 +368,14 @@ func (c *cluster) startManager(t *testing.T, slot, namespace string, rec *record
 	// Several Envs in one test binary register the same controller names;
 	// each has its own manager, so the names never meet.
 	cfg := &config.ControllerConfig{HTTPClient: gcpHTTP, SkipNameValidation: true}
-	if err := controller.AddToManager(ctx, mgr, cfg, controller.Options{Slot: slot}); err != nil {
+	ctrlOpts := controller.Options{Slot: slot}
+	if !Live() {
+		// The fake cloud has no quota; a test's own refusals
+		// (RefuseForQuota) are tried again quickly. Live, the manager
+		// waits as it does in a cluster.
+		ctrlOpts.QuotaBackoff, ctrlOpts.QuotaBackoffMax = 200*time.Millisecond, 2*time.Second
+	}
+	if err := controller.AddToManager(ctx, mgr, cfg, ctrlOpts); err != nil {
 		t.Fatal(err)
 	}
 	// Stop the manager before envtest (cleanups run last-registered first),

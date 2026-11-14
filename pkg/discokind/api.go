@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,9 +35,12 @@ import (
 type API struct {
 	HTTP    *http.Client
 	BaseURL string
-	// PollInterval is how long Wait sleeps between reads of an operation
-	// (default 2s).
-	PollInterval time.Duration
+	// PollInterval is how long Wait sleeps before its first read of an
+	// operation (default 2s); each later wait is half as long again, up to
+	// MaxPollInterval (default 30s, or PollInterval when that is longer).
+	// Some APIs allow only a few reads a minute (Dataplex: 10 a minute per
+	// user and region), and an operation can take minutes.
+	PollInterval, MaxPollInterval time.Duration
 }
 
 // Get reads a resource.
@@ -95,11 +99,56 @@ func (a *API) Do(ctx context.Context, method, path string, query map[string]stri
 }
 
 // Wait polls a long-running operation until it is done, and returns its
-// response, or its error as a *googleapi.Error.
+// response, or its error as a *googleapi.Error. It reads less often as
+// the operation goes on (PollInterval, MaxPollInterval), and a read
+// refused for quota (429) does not end it.
 func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, error) {
 	interval := a.PollInterval
 	if interval == 0 {
 		interval = 2 * time.Second
+	}
+	maxInterval := a.MaxPollInterval
+	if maxInterval == 0 {
+		maxInterval = 30 * time.Second
+	}
+	if maxInterval < interval {
+		maxInterval = interval
+	}
+	// next is the wait before the next read: half as long again each time,
+	// and twice as long after a read refused for quota.
+	next := func(refused bool) time.Duration {
+		d := interval
+		if refused {
+			interval *= 2
+		} else {
+			interval += interval / 2
+		}
+		if interval > maxInterval {
+			interval = maxInterval
+		}
+		return d
+	}
+	// read reads the operation again at url after a wait; a read the API
+	// refuses for quota (429) is tried again after a longer one, as long
+	// as ctx allows: the operation goes on in the cloud regardless.
+	read := func(url string) (map[string]any, error) {
+		refused := false
+		for {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(next(refused)):
+			}
+			got, err := a.Get(ctx, url)
+			if err != nil && isQuota(err) {
+				refused = true
+				continue
+			}
+			if err != nil {
+				return nil, fmt.Errorf("reading operation %s: %w", url, err)
+			}
+			return got, nil
+		}
 	}
 	for {
 		// A Compute Engine operation: status DONE, errors in error.errors,
@@ -120,14 +169,9 @@ func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, erro
 			if self == "" {
 				return nil, fmt.Errorf("a compute operation without a selfLink: %v", op)
 			}
-			select {
-			case <-ctx.Done():
-				return nil, ctx.Err()
-			case <-time.After(interval):
-			}
 			var err error
-			if op, err = a.Get(ctx, self); err != nil {
-				return nil, fmt.Errorf("reading operation %s: %w", self, err)
+			if op, err = read(self); err != nil {
+				return nil, err
 			}
 			continue
 		}
@@ -144,20 +188,19 @@ func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, erro
 		if name == "" {
 			return nil, fmt.Errorf("an operation without a name: %v", op)
 		}
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-time.After(interval):
-		}
 		var err error
-		if op, err = a.Get(ctx, name); err != nil {
-			return nil, fmt.Errorf("reading operation %s: %w", name, err)
+		if op, err = read(name); err != nil {
+			return nil, err
 		}
 	}
 }
 
-// grpcToHTTP maps an operation error's google.rpc.Code to the HTTP status
-// the same error has in a REST answer.
+// isQuota reports whether err is an API's refusal for quota (HTTP 429).
+func isQuota(err error) bool {
+	var ge *googleapi.Error
+	return errors.As(err, &ge) && ge.Code == http.StatusTooManyRequests
+}
+
 func grpcToHTTP(code int) int {
 	switch code {
 	case 3, 9, 11: // INVALID_ARGUMENT, FAILED_PRECONDITION, OUT_OF_RANGE
