@@ -20,8 +20,11 @@ package compute_test
 // instance group (the catalog's compute-mig module) keeps one named VM with
 // preserved metadata. The test makes the group itself through the API (a
 // network, a subnet, an e2-micro instance template and a zonal group of
-// size 0); the config then creates its instance (createInstances), and
-// deleting the group at the end deletes the instances.
+// picGroupSize); a config then names one of the group's instances
+// (updatePerInstanceConfigs), and the group keeps its size: the catalog's
+// live run in hfl-dev-514205 found a config made with createInstances
+// growing the group past its targetSize. Deleting the group at the end
+// deletes the instances.
 
 import (
 	"fmt"
@@ -131,7 +134,7 @@ func newZonalStatefulGroup(t *testing.T, env *mockenv.Env, base string) string {
 			Name:             mockenv.Ptr(group),
 			BaseInstanceName: mockenv.Ptr(group),
 			InstanceTemplate: mockenv.Ptr("projects/" + mockenv.Project + "/global/instanceTemplates/" + template),
-			TargetSize:       mockenv.Ptr(int32(0)),
+			TargetSize:       mockenv.Ptr(int32(picGroupSize)),
 		},
 	})
 	if err == nil {
@@ -162,6 +165,22 @@ func TestComputePerInstanceConfig(t *testing.T) {
 	}
 	t.Cleanup(func() { groups.Close() })
 	group := newZonalStatefulGroup(t, env, "zpic-group")
+	instances := groupInstances(t, func() ([]string, error) {
+		it := groups.ListManagedInstances(env.Ctx, &pb.ListManagedInstancesInstanceGroupManagersRequest{
+			Project: mockenv.Project, Zone: picZone, InstanceGroupManager: group,
+		})
+		return instanceNames(it.Next)
+	}, []string{mockenv.Name("zdb-0"), mockenv.Name("zdb-1")})
+	// The instance each config names.
+	instanceFor := map[string]string{"zdb-0": instances[0], "zdb-1": instances[1]}
+	targetSize := func(t *testing.T) int32 {
+		t.Helper()
+		g, err := groups.Get(env.Ctx, &pb.GetInstanceGroupManagerRequest{Project: mockenv.Project, Zone: picZone, InstanceGroupManager: group})
+		if err != nil {
+			t.Fatalf("reading the group: %v", err)
+		}
+		return g.GetTargetSize()
+	}
 
 	configs := func() map[string]*pb.PerInstanceConfig {
 		out := map[string]*pb.PerInstanceConfig{}
@@ -206,7 +225,7 @@ func TestComputePerInstanceConfig(t *testing.T) {
 				ProjectRef:                  refs.ProjectRef{External: mockenv.Project},
 				Zone:                        picZone,
 				InstanceGroupManagerRef:     computev1beta1.ComputeInstanceGroupManagerRef{External: fmt.Sprintf("projects/%s/zones/%s/instanceGroupManagers/%s", mockenv.Project, picZone, group)},
-				ResourceID:                  mockenv.Ptr(mockenv.Name(name)),
+				ResourceID:                  mockenv.Ptr(instanceFor[name]),
 				MinimalAction:               mockenv.Ptr("NONE"),
 				MostDisruptiveAllowedAction: mockenv.Ptr("REFRESH"),
 				PreservedState: &computev1beta1.RegionperinstanceconfigPreservedState{
@@ -215,13 +234,13 @@ func TestComputePerInstanceConfig(t *testing.T) {
 			},
 		}
 	}
-	db := mockenv.Name("zdb-0")
+	db := instanceFor["zdb-0"]
 
 	if err := env.Kube.Create(env.Ctx, newConfig("zdb-0", "primary")); err != nil {
 		t.Fatal(err)
 	}
 
-	t.Run("create makes the instance with its preserved metadata", func(t *testing.T) {
+	t.Run("create writes the config and keeps the group's size", func(t *testing.T) {
 		env.WaitReady(gvk, "example", "zdb-0")
 		c, ok := configs()[db]
 		if !ok {
@@ -230,8 +249,17 @@ func TestComputePerInstanceConfig(t *testing.T) {
 		if got := c.GetPreservedState().GetMetadata()["role"]; got != "primary" {
 			t.Errorf("preserved metadata role = %q, want primary", got)
 		}
-		if n := writes("createInstances"); n != 1 {
-			t.Errorf("createInstances calls = %d, want 1", n)
+		if n := writes("createInstances"); n != 0 {
+			t.Errorf("createInstances calls = %d, want 0: it adds an instance and raises targetSize", n)
+		}
+		if n := writes("updatePerInstanceConfigs"); n != 1 {
+			t.Errorf("updatePerInstanceConfigs calls = %d, want 1", n)
+		}
+		if n := writes("applyUpdatesToInstances"); n != 1 {
+			t.Errorf("applyUpdatesToInstances calls = %d, want 1", n)
+		}
+		if got := targetSize(t); got != picGroupSize {
+			t.Errorf("the group's targetSize = %d after the config, want %d", got, picGroupSize)
 		}
 	})
 
@@ -307,8 +335,8 @@ func TestComputePerInstanceConfig(t *testing.T) {
 			t.Fatal(err)
 		}
 		env.WaitGone(&computev1beta1.ComputePerInstanceConfig{ObjectMeta: metav1.ObjectMeta{Namespace: "example", Name: "zdb-1"}})
-		if _, ok := configs()[mockenv.Name("zdb-1")]; !ok {
-			t.Errorf("after abandon, the per-instance config %s is gone, want it kept", mockenv.Name("zdb-1"))
+		if _, ok := configs()[instanceFor["zdb-1"]]; !ok {
+			t.Errorf("after abandon, the per-instance config %s is gone, want it kept", instanceFor["zdb-1"])
 		}
 	})
 }
