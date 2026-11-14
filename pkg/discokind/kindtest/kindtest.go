@@ -127,7 +127,11 @@ func run(t *testing.T, kindName, caseName string) {
 		return n
 	}
 	gone := func(name string) bool {
-		got, err := api.Get(env.Ctx, name)
+		var got map[string]any
+		err := RetryQuota(func() (err error) {
+			got, err = api.Get(env.Ctx, name)
+			return err
+		})
 		if direct.IsNotFound(err) {
 			return true
 		}
@@ -142,10 +146,13 @@ func run(t *testing.T, kindName, caseName string) {
 			if name == "" || gone(name) {
 				return
 			}
-			op, err := api.Do(env.Ctx, http.MethodDelete, name, nil, nil)
-			if err == nil && k.DeleteLRO {
-				_, err = api.Wait(env.Ctx, op)
-			}
+			err := RetryQuota(func() error {
+				op, err := api.Do(env.Ctx, http.MethodDelete, name, nil, nil)
+				if err == nil && k.DeleteLRO {
+					_, err = api.Wait(env.Ctx, op)
+				}
+				return err
+			})
 			if err != nil && !direct.IsNotFound(err) {
 				t.Errorf("cleanup: deleting %s: %v", name, err)
 			}
@@ -173,7 +180,7 @@ func run(t *testing.T, kindName, caseName string) {
 				ready, msg := mockenv.Ready(get(objName))
 				t.Fatalf("the cloud's %s does not hold the spec: differs in %v (err %v)\nwant %v\ngot  %v\nthe object's Ready: %v %q", name, discokind.Diff(want, got), err, want, got, ready, msg)
 			}
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(pollEvery())
 		}
 	}
 	spec := func(u *unstructured.Unstructured) map[string]any {
@@ -275,6 +282,36 @@ func run(t *testing.T, kindName, caseName string) {
 
 // load reads a fixture with its placeholders filled for base, the object's
 // name, and kindBase, the kind's.
+// pollEvery is how often the test reads the cloud while it waits: live,
+// slowly, since some APIs allow only a few reads a minute (Dataplex: 10 per
+// user and region), and the controller reads with the same account.
+func pollEvery() time.Duration {
+	if mockenv.Live() {
+		return 10 * time.Second
+	}
+	return 500 * time.Millisecond
+}
+
+// RetryQuota runs f until it returns anything but a refusal for quota
+// (429), waiting longer each time, for at most mockenv.Timeout().
+func RetryQuota(f func() error) error {
+	wait := 15 * time.Second
+	if !mockenv.Live() {
+		wait = 100 * time.Millisecond
+	}
+	deadline := time.Now().Add(mockenv.Timeout())
+	for {
+		err := f()
+		if !direct.HasHTTPCode(err, http.StatusTooManyRequests) || time.Now().After(deadline) {
+			return err
+		}
+		time.Sleep(wait)
+		if wait < 2*time.Minute {
+			wait *= 2
+		}
+	}
+}
+
 func load(t *testing.T, path, base, kindBase string) *unstructured.Unstructured {
 	t.Helper()
 	b, err := os.ReadFile(path)
