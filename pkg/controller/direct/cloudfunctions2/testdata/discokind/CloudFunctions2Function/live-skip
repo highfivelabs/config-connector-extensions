@@ -1,0 +1,1 @@
+the project's Cloud Build service account (the compute default) lacks a permission a function's build needs (run cce-11140351-32bb: the create was accepted with the name in the body, then the build failed: "missing permission on the build service account"); live: pending roles/cloudbuild.builds.builder for it, then delete this file (setup_test.go makes the source)

@@ -30,9 +30,17 @@ function). Afterwards it deletes the buckets, the copies Cloud Functions
 keeps of the source in the project's `gcf-v2-sources-*` bucket, and the
 functions' images in the `gcf-artifacts` repository.
 
+Live stays skipped until the project's build service account (the compute
+default service account) can build: run `cce-11140351-32bb` (2026-11-14)
+had the create accepted with the name in the body, and the build then
+failed for a missing permission on the build service account. With
+`roles/cloudbuild.builds.builder` granted to it, delete the fixtures'
+`live-skip` and run the kind live.
+
 ## Live runs
 
 One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `64f375e` | PASS | FAIL | the create was accepted (the name in the body fixed the 400); the build failed: "Could not build the function due to a missing permission on the build service account" (run `cce-11140351-32bb`); the test skips live until the role is granted | 1 function (build failed; deleted by the run's sweep), 2 source buckets (deleted), its source copy in gcf-v2-sources-* (deleted) |
