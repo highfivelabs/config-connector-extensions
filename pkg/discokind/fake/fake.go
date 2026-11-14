@@ -23,7 +23,13 @@
 // Kind.MissingIs403 answer 403 PERMISSION_DENIED, not 404, for a name the
 // fake does not hold, as BigLake does for a missing catalog, database or
 // table. The fake answers so for BigLake whatever the kind says, as the
-// cloud does: a BigLake kind without missingIs403 fails its test. Two
+// cloud does: a BigLake kind without missingIs403 fails its test. A list
+// of a collection whose parent is such a resource the fake does not hold
+// answers 403 too. Deleting a BigLake resource deletes the resources under
+// its name with it (a catalog's databases and tables, a database's
+// tables), as the cloud does (catalog repository run cat-11141549-4cb0);
+// they then answer 403. SetDeny makes a name answer 403 while it is held:
+// a real denial, which a delete must not take for a resource gone. Two
 // switches, off by default, make deletes behave as API Gateway's do
 // (SetDeleteDelay, SetRefuseInUse): an operation that takes a while, the
 // resource still there until it ends, and a resource another one names
@@ -67,6 +73,22 @@ type Cloud struct {
 	// deleting are the delete operations still running, by the
 	// resource's key.
 	deleting map[string]*pendingDelete
+	// denied are names (BaseURL + name) every request for which answers
+	// 403 (SetDeny).
+	denied map[string]bool
+}
+
+// SetDeny makes every request for the resource name of k (its get, patch
+// and delete) answer 403 PERMISSION_DENIED while on is set, whether or
+// not the fake holds it: a real denial.
+func (c *Cloud) SetDeny(k *discokind.Kind, name string, on bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if on {
+		c.denied[k.BaseURL+name] = true
+	} else {
+		delete(c.denied, k.BaseURL+name)
+	}
 }
 
 // pendingDelete is a delete operation that ends at at: it then removes
@@ -129,6 +151,34 @@ func (c *Cloud) remove(k *discokind.Kind, key string) {
 		return
 	}
 	delete(c.objects, key)
+	c.cascade(k, key)
+}
+
+// cascade deletes the resources under key's name when k's API deletes
+// them with their parent (cascadeAPIs) (c.mu held).
+func (c *Cloud) cascade(k *discokind.Kind, key string) {
+	if !cascades(k) {
+		return
+	}
+	for other := range c.objects {
+		if strings.HasPrefix(other, key+"/") {
+			delete(c.objects, other)
+		}
+	}
+}
+
+// cascadeAPIs are the APIs whose delete of a resource deletes the
+// resources under its name with it: BigLake's catalog delete takes its
+// databases and tables (catalog repository run cat-11141549-4cb0).
+var cascadeAPIs = []string{"https://biglake.googleapis.com/"}
+
+func cascades(k *discokind.Kind) bool {
+	for _, base := range cascadeAPIs {
+		if strings.HasPrefix(k.BaseURL, base) {
+			return true
+		}
+	}
+	return false
 }
 
 // inUse says why the resource at key cannot go: another resource names it
@@ -159,7 +209,7 @@ func (c *Cloud) inUse(k *discokind.Kind, key, name string) string {
 
 // New is a fake for kinds in front of next.
 func New(next http.RoundTripper, kinds []*discokind.Kind) *Cloud {
-	return &Cloud{Next: next, Kinds: kinds, objects: map[string]map[string]any{}, ops: map[string]map[string]any{}, deleting: map[string]*pendingDelete{}}
+	return &Cloud{Next: next, Kinds: kinds, objects: map[string]map[string]any{}, ops: map[string]map[string]any{}, deleting: map[string]*pendingDelete{}, denied: map[string]bool{}}
 }
 
 const opPrefix = "operations/discokind-"
@@ -320,10 +370,27 @@ func missingIs403(k *discokind.Kind) bool {
 	return false
 }
 
+// missing403Resource: name is a resource of one of the fake's kinds at
+// k's API that answers 403 when missing (a database's catalog).
+func (c *Cloud) missing403Resource(k *discokind.Kind, name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, other := range c.Kinds {
+		if other.BaseURL == k.BaseURL && missingIs403(other) && other.NameRegexp().MatchString(name) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (*http.Response, error) {
 	key := k.BaseURL + name
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.denied[key] {
+		return errorResponse(req, http.StatusForbidden, "PERMISSION_DENIED", fmt.Sprintf("Permission denied on resource '%s' (or it may not exist).", name))
+	}
 	obj, ok := c.objects[key]
 	if !ok && k.PatchCreates && req.Method == http.MethodPatch {
 		// No create method: patch makes the resource.
@@ -442,6 +509,7 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 			answer = obj
 		} else {
 			delete(c.objects, key)
+			c.cascade(k, key)
 		}
 		if k.DeleteLRO {
 			return c.doneOp(req, k, name, map[string]any{})
@@ -454,6 +522,10 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 func (c *Cloud) list(req *http.Request, k *discokind.Kind, coll string) (*http.Response, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if parent := discokind.CollectionOf(coll); c.missing403Resource(k, parent) && c.objects[k.BaseURL+parent] == nil {
+		// As BigLake answers a list of a deleted catalog's databases.
+		return errorResponse(req, http.StatusForbidden, "PERMISSION_DENIED", fmt.Sprintf("Permission denied on resource '%s' (or it may not exist).", parent))
+	}
 	var items []any
 	var keys []string
 	for key := range c.objects {

@@ -199,8 +199,10 @@ func testMissingIs403(t *testing.T, kindName, base string, setup func(env *mocke
 		t.Errorf("the controller sent %d creates for a %s it had made, after a 403", n, kindName)
 	}
 
-	// Leave without a delete call (abandon reads nothing either): a delete
-	// would read the same 403 and, rightly, keep the finalizer.
+	// Leave without a delete call (abandon reads nothing either). A delete
+	// would read the same 403 and go only once its collection's listing
+	// proves the resource gone (TestBigLakeDeleteDenied,
+	// TestBigLakeDeleteAllAtOnce).
 	if err := env.Kube.Get(env.Ctx, client.ObjectKeyFromObject(u), u); err != nil {
 		t.Fatal(err)
 	}
