@@ -90,6 +90,10 @@ type Config struct {
 	// collection in, for a collection that has no global location
 	// (default global); the kind's live fixtures use it.
 	SweepLocation string `json:"sweepLocation,omitempty"`
+	// NameInBody: the API's create also needs the resource's full name in
+	// the request body, beside the ID parameter (Cloud Functions v2
+	// refuses one without it: "Invalid resource name ''").
+	NameInBody bool `json:"nameInBody,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
