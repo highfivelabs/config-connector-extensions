@@ -1,0 +1,276 @@
+config-connector-extensions patch 0041: mockgcp serves regional Compute Engine autoscalers.
+
+mockcompute registered no RegionAutoscalers server, so every regional
+autoscaler request was a 404 from the mux (found writing
+ComputeRegionAutoscaler). Get, list, insert, patch (the fields set),
+update (replace) and delete, as patch 0039 serves zonal ones: the target
+regional group must exist, the target and region come back as full URLs,
+and the policy's defaults are filled in (autoscalerDefaults, 0039).
+
+diff --git a/mockgcp/mockcompute/regionautoscalersv1.go b/mockgcp/mockcompute/regionautoscalersv1.go
+new file mode 100644
+--- /dev/null
++++ b/mockgcp/mockcompute/regionautoscalersv1.go
+@@ -0,0 +1,241 @@
++// Copyright 2026 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++// +tool:mockgcp-support
++// proto.service: google.cloud.compute.v1.RegionAutoscalers
++// proto.message: google.cloud.compute.v1.Autoscaler
++
++package mockcompute
++
++import (
++	"context"
++	"fmt"
++	"strings"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/projects"
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++// RegionAutoscalersV1 serves regional autoscalers, as AutoscalersV1 serves
++// zonal ones: the target group must exist in the region, target and
++// region come back as full URLs, and the policy's defaults are filled in
++// (autoscalerDefaults).
++type RegionAutoscalersV1 struct {
++	*MockService
++	pb.UnimplementedRegionAutoscalersServer
++}
++
++type regionalAutoscalerName struct {
++	Project *projects.ProjectData
++	Region  string
++	Name    string
++}
++
++func (n *regionalAutoscalerName) String() string {
++	return "projects/" + n.Project.ID + "/regions/" + n.Region + "/autoscalers/" + n.Name
++}
++
++func (s *MockService) newRegionalAutoscalerName(project, region, name string) (*regionalAutoscalerName, error) {
++	p, err := s.Projects.GetProjectByID(project)
++	if err != nil {
++		return nil, err
++	}
++	return &regionalAutoscalerName{Project: p, Region: region, Name: name}, nil
++}
++
++// target is the autoscaler's target group as the API returns it: a full
++// URL, after checking that the regional group exists.
++func (s *RegionAutoscalersV1) target(ctx context.Context, name *regionalAutoscalerName, target string) (string, error) {
++	path := target
++	if i := strings.Index(path, "projects/"); i >= 0 {
++		path = path[i:]
++	} else {
++		path = fmt.Sprintf("projects/%s/regions/%s/instanceGroupManagers/%s", name.Project.ID, name.Region, path)
++	}
++	igm, err := s.parseRegionalIGMName(path)
++	if err != nil {
++		return "", status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.target': '%s'.", target)
++	}
++	if err := s.storage.Get(ctx, igm.String(), &pb.InstanceGroupManager{}); err != nil {
++		return "", status.Errorf(codes.NotFound, "The resource '%s' was not found", igm.String())
++	}
++	return BuildComputeSelfLink(ctx, igm.String()), nil
++}
++
++func (s *RegionAutoscalersV1) Get(ctx context.Context, req *pb.GetRegionAutoscalerRequest) (*pb.Autoscaler, error) {
++	name, err := s.newRegionalAutoscalerName(req.GetProject(), req.GetRegion(), req.GetAutoscaler())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++	obj := &pb.Autoscaler{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++func (s *RegionAutoscalersV1) List(ctx context.Context, req *pb.ListRegionAutoscalersRequest) (*pb.RegionAutoscalerList, error) {
++	name, err := s.newRegionalAutoscalerName(req.GetProject(), req.GetRegion(), "")
++	if err != nil {
++		return nil, err
++	}
++	out := &pb.RegionAutoscalerList{}
++	kind := (&pb.Autoscaler{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: name.String()}, func(obj proto.Message) error {
++		out.Items = append(out.Items, obj.(*pb.Autoscaler))
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func (s *RegionAutoscalersV1) Insert(ctx context.Context, req *pb.InsertRegionAutoscalerRequest) (*pb.Operation, error) {
++	name, err := s.newRegionalAutoscalerName(req.GetProject(), req.GetRegion(), req.GetAutoscalerResource().GetName())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++
++	obj := proto.CloneOf(req.GetAutoscalerResource())
++	target, err := s.target(ctx, name, obj.GetTarget())
++	if err != nil {
++		return nil, err
++	}
++	obj.Target = PtrTo(target)
++	id := s.generateID()
++	obj.Id = &id
++	obj.Kind = PtrTo("compute#autoscaler")
++	obj.SelfLink = PtrTo(BuildComputeSelfLink(ctx, fqn))
++	obj.CreationTimestamp = PtrTo(s.nowString())
++	obj.Region = PtrTo(BuildComputeSelfLink(ctx, fmt.Sprintf("projects/%s/regions/%s", name.Project.ID, name.Region)))
++	obj.Zone = nil
++	obj.Status = PtrTo("ACTIVE")
++	autoscalerDefaults(obj)
++
++	if err := s.storage.Create(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo("compute.regionAutoscalers.insert"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, name.Project.ID, name.Region, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++// write replaces the stored autoscaler's fields with those of the request
++// (update) or merges them in (patch), keeping what the API owns.
++func (s *RegionAutoscalersV1) write(ctx context.Context, project, region, autoscaler string, in *pb.Autoscaler, merge bool, opType string) (*pb.Operation, error) {
++	if autoscaler == "" {
++		autoscaler = in.GetName()
++	}
++	name, err := s.newRegionalAutoscalerName(project, region, autoscaler)
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++	existing := &pb.Autoscaler{}
++	if err := s.storage.Get(ctx, fqn, existing); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	var obj *pb.Autoscaler
++	if merge {
++		obj = proto.CloneOf(existing)
++		if in.Description != nil {
++			obj.Description = in.Description
++		}
++		if in.AutoscalingPolicy != nil {
++			obj.AutoscalingPolicy = proto.CloneOf(in.AutoscalingPolicy)
++		}
++		if in.Target != nil {
++			obj.Target = in.Target
++		}
++	} else {
++		obj = proto.CloneOf(in)
++	}
++	target, err := s.target(ctx, name, obj.GetTarget())
++	if err != nil {
++		return nil, err
++	}
++	obj.Target = PtrTo(target)
++	obj.Name = existing.Name
++	obj.Id = existing.Id
++	obj.Kind = existing.Kind
++	obj.SelfLink = existing.SelfLink
++	obj.CreationTimestamp = existing.CreationTimestamp
++	obj.Region = existing.Region
++	obj.Zone = nil
++	obj.Status = existing.Status
++	autoscalerDefaults(obj)
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, name.Project.ID, name.Region, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++func (s *RegionAutoscalersV1) Patch(ctx context.Context, req *pb.PatchRegionAutoscalerRequest) (*pb.Operation, error) {
++	return s.write(ctx, req.GetProject(), req.GetRegion(), req.GetAutoscaler(), req.GetAutoscalerResource(), true, "compute.regionAutoscalers.patch")
++}
++
++func (s *RegionAutoscalersV1) Update(ctx context.Context, req *pb.UpdateRegionAutoscalerRequest) (*pb.Operation, error) {
++	return s.write(ctx, req.GetProject(), req.GetRegion(), req.GetAutoscaler(), req.GetAutoscalerResource(), false, "compute.regionAutoscalers.update")
++}
++
++func (s *RegionAutoscalersV1) Delete(ctx context.Context, req *pb.DeleteRegionAutoscalerRequest) (*pb.Operation, error) {
++	name, err := s.newRegionalAutoscalerName(req.GetProject(), req.GetRegion(), req.GetAutoscaler())
++	if err != nil {
++		return nil, err
++	}
++	fqn := name.String()
++	deleted := &pb.Autoscaler{}
++	if err := s.storage.Delete(ctx, fqn, deleted); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      deleted.Id,
++		TargetLink:    deleted.SelfLink,
++		OperationType: PtrTo("compute.regionAutoscalers.delete"),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, name.Project.ID, name.Region, op, func() (proto.Message, error) {
++		return deleted, nil
++	})
++}
+diff --git a/mockgcp/mockcompute/service.go b/mockgcp/mockcompute/service.go
+--- a/mockgcp/mockcompute/service.go
++++ b/mockgcp/mockcompute/service.go
+@@ -150,6 +150,7 @@
+ 
+ 	pb.RegisterInstanceGroupManagersServer(grpcServer, &instanceGroupManagers{MockService: s})
+ 	pb.RegisterAutoscalersServer(grpcServer, &AutoscalersV1{MockService: s})
++	pb.RegisterRegionAutoscalersServer(grpcServer, &RegionAutoscalersV1{MockService: s})
+ 	pb.RegisterRegionInstanceGroupManagersServer(grpcServer, &regionInstanceGroupManagers{MockService: s})
+ 	pb.RegisterInstanceGroupsServer(grpcServer, &InstanceGroups{MockService: s})
+ 
+@@ -286,6 +287,9 @@
+ 		return nil, err
+ 	}
+ 	if err := pb.RegisterAutoscalersHandler(ctx, mux.ServeMux, conn); err != nil {
++		return nil, err
++	}
++	if err := pb.RegisterRegionAutoscalersHandler(ctx, mux.ServeMux, conn); err != nil {
+ 		return nil, err
+ 	}
+ 

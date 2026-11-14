@@ -179,6 +179,28 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   `enforcementVersion` to `1` when unset (the real API's latest version
   is assumed), checks no permissions, and stores any rule: no check of
   the resource names, the 500-resource limit or the effect.
+- **IAM policy bindings in mockgcp** (patch 0044, ours, for
+  `IAMPolicyBinding`). Create, get, list, update with a mask (display
+  name, annotations, condition; any other path is refused as immutable)
+  and delete under any organization, folder or project and location, on
+  REST paths added by hand as patch 0030's; every write answers a
+  finished operation. The bound policy must be a principal access
+  boundary policy the fake holds; the binding's policy kind defaults to
+  it and its `policyUid` is the policy's. It checks no permissions, does
+  not check the principal set against the parent or the condition's
+  attributes, and does not serve `searchTargetPolicyBindings`. Patch 0046
+  adds access policies (patch 0045) bound to `target.resource`, the
+  binding's kind defaulting to `ACCESS`; a principal access boundary
+  policy still needs a principal set.
+- **IAM access policies in mockgcp** (patch 0045, ours, for
+  `IAMAccessPolicy`). Create, get, list, update of the whole policy (the
+  API's update has no mask; a stale etag is refused) and delete under any
+  organization, folder or project and location, on REST paths added by
+  hand as patches 0030 and 0044 do; every write answers a finished
+  operation. A rule needs an effect, principals and permissions. A policy
+  a binding names is refused deletion unless `force` is set. It checks no
+  permissions, nor whether principals, permissions and conditions are
+  valid, and serves neither `searchPolicyBindings` nor `validateOnly`.
 - **IAM deny policies in mockgcp** (upstream's, unpatched, for
   `IAMDenyPolicy`). It serves create, get, list, a whole-policy update
   that must carry the current etag, and delete, under a project's number
@@ -369,3 +391,81 @@ kind's `fakeDefaults`. It does not check required fields, enum values,
 cross-field rules or permissions, and fills in no other defaults: that is
 the live run's job (`docs/testing.md`).
 
+A custom method on an object (`name:verb`) is not the collection's: the
+fake passes it to mockgcp, which serves `:getIamPolicy` and
+`:setIamPolicy` for every resource (patch 0018). Before 2026-11-13 the
+fake took `.../lakes/l:getIamPolicy` for an object called
+`l:getIamPolicy` and answered 404, so `IAMBinding` and `IAMMember` on
+Cloud Build v2 connections, API Gateway configs and gateways and the
+Dataplex kinds never became Ready on the fake cloud
+(`TestDiscokindPolicy*` in `pkg/controller/direct/iam`).
+
+`NetworkServicesGateway` (2026-11-13): the fake keeps what a gateway's
+spec says and checks none of what the real API does for a Secure Web
+Proxy: that the network, the subnet, an active proxy-only subnet in the
+region and the gateway security policy exist, that `routingMode` is set,
+and which fields go with which type. It makes no Cloud Router or Cloud
+NAT, and a gateway is ready at once, where a real one takes minutes. The
+live run shows these.
+
+`NetworkSecurityAuthzPolicy` (2026-11-13): mockgcp keeps what an
+authorization policy's spec says and checks none of what the real API
+does: that the target resources exist and are all forwarding rules,
+Secure Web Proxy gateways or agent gateways of one kind, that
+`loadBalancingScheme` is left out for an agent gateway and set for
+forwarding rules, that the authorization extension exists and shares the
+target's scheme, and which rules go with which action. A live run shows
+these.
+
+## Service Management's fake (`pkg/controller/direct/servicemanagement/fake`)
+
+mockgcp does not serve Service Management (`servicemanagement.googleapis.com`),
+which `EndpointsService` calls, so a small in-memory fake does, in front of
+mockgcp and behind the generated kinds' fake (in `pkg/test/mockenv` and both
+fake-cloud binaries). It serves services (create, get, list, delete,
+undelete), `configs:submit`, configurations (get, list), rollouts (create)
+and the active configuration (`services/{name}/config`); every operation is
+finished at once. A deleted service answers 404 and holds its name (a
+create answers 409) until it is undeleted, as the API keeps a deleted
+service for 30 days. A configuration's ID is `<date>r<n>`, its `title` is
+the OpenAPI document's `info.title` and its `endpoints` are the document's
+`x-google-endpoints`. It does not show: the API's reading of the
+configuration (no OpenAPI or gRPC validation, no check that the document's
+`host` is the service's name, no `apis`), DNS, permissions, rollouts that
+split traffic (it takes one configuration at 100%), and how long a rollout
+takes. A new fake was chosen over a mockgcp patch because mockgcp has no
+Service Management protos or service to extend, as the generated kinds'
+fake was. As there, a custom IAM method on a service (`:getIamPolicy`,
+`:setIamPolicy`, `:testIamPermissions`) goes on to mockgcp, which serves
+it for every resource (patch 0018).
+
+## The Chronicle fake (`pkg/controller/direct/chronicle/fake`)
+
+mockgcp does not serve the Chronicle API (`<location>-chronicle.googleapis.com`,
+and `chronicle.googleapis.com`), which `ChronicleRule` and `ChronicleRuleDeployment` call, so a
+small in-memory fake does, in front of mockgcp and behind the generated
+kinds' fake (in `pkg/test/mockenv` and both fake-cloud binaries). It serves
+an instance's rules (create, which assigns an ID `ru_<uuid>`; get; patch of
+`text` and `scope` with an update mask, a new text making a new
+`revisionId`, `etag`, `displayName` (the word after `rule`) and a
+`compilationState` of `SUCCEEDED`; delete, which takes the deployment
+with it), an instance's reference lists (create with `referenceListId`,
+which must start with a letter and have only letters, digits and
+underscores, a second create of one ID refused with `ALREADY_EXISTS`;
+get, always with the entries; patch with an update mask of
+`description`, `entries`, `syntaxType` and `scopeInfo`, in either
+spelling; no delete, as the API has none) and each rule's deployment (get;
+patch with an update mask of `enabled`, `alerting`, `archived` and
+`runFrequency`, with `scheduleCustomizations` going with `runFrequency`). A
+new rule's deployment is disabled, not alerting and not archived, as the
+API's is. It refuses to archive an enabled deployment and to change an
+archived one's `enabled`, `alerting` or `runFrequency`; archiving turns
+alerting off and sets `archiveTime`; a change of alerting sets
+`lastAlertStatusChangeTime`. It does not show: SecOps instances (any
+instance ID is taken), the rule language (a rule's text is kept, never
+compiled), data access scopes (any scope is taken), retrohunts and
+detections (so a rule's delete never needs `force`), the API's coercion of legacy run frequencies (`LIVE` and `HOURLY`
+are kept as sent), whether a run frequency suits the rule, chained rules
+(`producerRules` and `consumerRules` stay empty), detections and
+permissions. A new fake was chosen over a mockgcp patch because mockgcp has
+no Chronicle service to extend.

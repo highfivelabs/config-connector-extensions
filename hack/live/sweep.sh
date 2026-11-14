@@ -27,17 +27,22 @@
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
-# (E2E_IAM_DENY_ADMIN=true), log sinks of the billing account in
+# (E2E_IAM_DENY_ADMIN=true), IAM v3 policy bindings on the project, by
+# name, where E2E_IAM_POLICY_BINDING_POLICY is set, log sinks of the billing account in
 # E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
 # Center mute configs of the project, by name, where it is active
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
-# where the project has Cloud DNS (E2E_DNS_ADMIN=true), and the discokind
+# where the project has Cloud DNS (E2E_DNS_ADMIN=true), gateway security
+# policy rules in the project's us-central1 policies, by name, Network
+# Services gateways (us-central1 and global) and the Cloud Routers a Secure
+# Web Proxy makes in a run's network, by name, and the discokind
 # kinds in hack/live/discokinds.tsv (their global collection in the
-# project), by name, through the API, and the project's GKE Hub fleet
+# project, or its sweepLocation's), by name, through the API, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
 # name, where the account may list them, and BigQuery datasets, by name,
-# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true). A failed list
-# or delete fails the sweep.
+# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), and Cloud
+# Endpoints services, by name, where the project has Service Management.
+# A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -234,6 +239,22 @@ for kind in securityProfileGroups securityProfiles; do
     act "${kind%s}" "${name}" ns_delete "${name}"
   done <<<"${rows}"
 done
+# Gateway security policy rules (NetworkSecurityGatewaySecurityPolicyRule,
+# a discokind kind under a policy, so not in discokinds.tsv): a run's
+# rules in every policy in us-central1 (gateway security policies have no
+# global location), before the discokind loop below deletes the run's
+# policies (a policy with rules cannot go).
+rows="$(ns_api GET "projects/${project}/locations/us-central1/gatewaySecurityPolicies?pageSize=1000" \
+  | jq -r '.gatewaySecurityPolicies[]?.name')"
+while read -r policy; do
+  [[ -n "${policy}" ]] || continue
+  rules="$(ns_api GET "${policy}/rules?pageSize=1000" | jq -r '.gatewaySecurityPolicyRules[]? | "\(.name) \(.createTime)"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    by_run "${name##*/}" "${made}" || continue
+    act "gateway security policy rule" "${name}" ns_delete "${name}"
+  done <<<"${rules}"
+done <<<"${rows}"
 # The discokind kinds (hack/live/discokinds.tsv, generated): each
 # collection under the project, by the run's name; an ID that takes no
 # dashes (cce11091530a3f2...) is read as the run's name with them. A
@@ -263,6 +284,26 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
   done
   return 1
 }
+# Network Services gateways (NetworkServicesGateway) before the loop
+# deletes the gateway security policies a Secure Web Proxy uses (a policy
+# in use cannot go), in us-central1 (a Secure Web Proxy's) and global (an
+# OPEN_MESH gateway's), by the run's name. While the kind's test skips
+# live (its live-skip: the API is off in the project, and listing is then
+# a 403), no test made one: left alone, as the discokind loop does.
+gw_locs="us-central1 global"
+if compgen -G "${HERE}/../../pkg/controller/direct/networkservices/testdata/discokind/NetworkServicesGateway/live-skip" >/dev/null; then
+  gw_locs=""
+fi
+for loc in ${gw_locs}; do
+  rows="$(disco_api GET "https://networkservices.googleapis.com/v1/projects/${project}/locations/${loc}/gateways?pageSize=1000" \
+    | jq -r '.gateways[]? | "\(.name) \(.createTime // "-")"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    act "Network Services gateway" "${name}" disco_delete "https://networkservices.googleapis.com/v1/" "${name}"
+  done <<<"${rows}"
+done
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   # A kind whose test never runs live (its fixtures' live-skip) makes
@@ -328,9 +369,11 @@ while read -r name region zone; do
   [[ -n "${name}" ]] || continue
   act "network endpoint group" "${name} ${region:-${zone:-global}}" "${G[@]}" compute network-endpoint-groups delete "${name}" "$(scope "${region}" "${zone}")"
 done <<<"${rows}"
-# Autoscalers (the ComputeAutoscaler test's), by name, before the managed
-# instance groups they scale; gcloud has no autoscaler commands, so through
-# the API's aggregated list (selfLinks are full URLs).
+# Autoscalers (the ComputeAutoscaler and ComputeRegionAutoscaler tests'),
+# by name, before the managed instance groups they scale; gcloud has no
+# autoscaler commands, so through the API's aggregated list, which holds
+# zonal and regional autoscalers under zones/* and regions/* keys (selfLinks
+# are full URLs, so one delete serves both).
 cbase="https://compute.googleapis.com/compute/v1/"
 rows="$(disco_api GET "${cbase}projects/${project}/aggregated/autoscalers?maxResults=500" \
   | jq -r '.items[]?.autoscalers[]? | "\(.name) \(.creationTimestamp) \(.selfLink)"')"
@@ -375,6 +418,17 @@ while read -r name region; do
   [[ -n "${name}" ]] || continue
   act "address" "${name} ${region:-global}" "${G[@]}" compute addresses delete "${name}" "$(scope "${region}" "")"
 done <<<"${rows}"
+# The Cloud Routers a Secure Web Proxy makes (swg-autogen-router-..., with
+# a Cloud NAT) in a run's network: the API keeps them after the last
+# gateway goes, and the network cannot go while they are there. Found by
+# their network's name (the run's), after the gateways above.
+rows="$("${G[@]}" compute routers list --verbosity=error \
+  --filter='name~^swg-autogen-router-' --format='value(name,region.basename(),network.basename())')"
+while read -r name region net; do
+  [[ -n "${name}" ]] || continue
+  by_run "${net}" || continue
+  act "Cloud Router" "${name} ${region}" "${G[@]}" compute routers delete "${name}" --region="${region}"
+done <<<"${rows}"
 rows="$("${G[@]}" compute routers list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
@@ -401,6 +455,37 @@ if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
+  done <<<"${rows}"
+fi
+
+# IAM v3 policy bindings on the project, by the run's name, only where the
+# live-test service account may bind a principal access boundary policy
+# (E2E_IAM_POLICY_BINDING_POLICY names it); without it the IAMPolicyBinding
+# test does not run live and there is nothing to sweep.
+if [[ -n "${E2E_IAM_POLICY_BINDING_POLICY:-}" ]]; then
+  iam3_api() { # iam3_api METHOD NAME
+    curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+      "https://iam.googleapis.com/v3/$2"
+  }
+  iam3_delete() { # iam3_delete NAME: delete and wait for the operation
+    local op fin
+    op="$(iam3_api DELETE "$1" | jq -r '.name')" || return 1
+    for _ in $(seq 1 60); do
+      fin="$(iam3_api GET "${op}" | jq -r '.done // false')" || return 1
+      if [[ "${fin}" == true ]]; then
+        iam3_api GET "${op}" | jq -e 'has("error") | not' >/dev/null
+        return
+      fi
+      sleep 5
+    done
+    return 1
+  }
+  rows="$(iam3_api GET "projects/${project}/locations/global/policyBindings?pageSize=1000" \
+    | jq -r '.policyBindings[]? | "\(.name) \(.createTime)"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    by_run "${name##*/}" "${made}" || continue
+    act "policy binding" "${name}" iam3_delete "${name}"
   done <<<"${rows}"
 fi
 
@@ -588,13 +673,15 @@ while read -r name made; do
   act "Cloud Storage bucket" "gs://${name}" "${G[@]}" storage rm -r "gs://${name}"
 done <<<"${rows}"
 
-# Disks (the resource policy attachment test makes them), by name, before
-# the resource policies they hold; then the resource policies.
+# Disks, zonal and regional (the resource policy attachment tests make
+# them), by name, before the resource policies they hold; then the
+# resource policies. (Commas, not tabs: a regional disk has no zone, and
+# read would shift an empty field.)
 rows="$("${G[@]}" compute disks list --verbosity=error \
-  --filter="$(cfilter)" --format='value(name,zone.basename())')"
-while read -r name zone; do
+  --filter="$(cfilter)" --format='csv[no-heading](name,region.basename(),zone.basename())')"
+while IFS=, read -r name region zone; do
   [[ -n "${name}" ]] || continue
-  act "disk" "${name} ${zone}" "${G[@]}" compute disks delete "${name}" --zone="${zone}"
+  act "disk" "${name} ${region}${zone}" "${G[@]}" compute disks delete "${name}" "$(scope "${region}" "${zone}")"
 done <<<"${rows}"
 rows="$("${G[@]}" compute resource-policies list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
@@ -603,7 +690,7 @@ while read -r name region; do
   act "resource policy" "${name} ${region}" "${G[@]}" compute resource-policies delete "${name}" --region="${region}"
 done <<<"${rows}"
 # Managed instance groups (the per-instance config tests make a regional
-# one), by name; deleting a group deletes its instances. Then any instance
+# and a zonal one), by name; deleting a group deletes its instances. Then any instance
 # and instance template of a run left behind, before their subnets.
 # (Commas, not tabs: a regional group has no zone, and read would shift an
 # empty field.)
@@ -654,6 +741,29 @@ for key in ${keys}; do
   fi
   act "project metadata key" "${key}" "${G[@]}" compute project-info remove-metadata --keys="${key}"
 done
+
+# Cloud Endpoints services (EndpointsService), by the run's name: services
+# are named <run ID>-<base>.endpoints.<project>.cloud.goog, through the
+# API (gcloud lists by consumer too). A deleted service is not listed (the
+# API keeps its name for 30 days). A 403 (Service Management off in the
+# project, or not the account's) means no test made one.
+sm_api() { # sm_api METHOD PATH
+  curl -sS --fail-with-body -X "$1" -H "Authorization: Bearer $("${G[@]}" auth print-access-token)" \
+    "https://servicemanagement.googleapis.com/v1/$2"
+}
+if out="$(sm_api GET "services?producerProjectId=${project}&pageSize=500")"; then
+  names="$(jq -r '.services[]?.serviceName' <<<"${out}")"
+  for name in ${names}; do
+    [[ "${name}" == *".endpoints.${project}.cloud.goog" ]] || continue
+    by_run "${name%%.*}" || continue
+    act "endpoints service" "${name}" "${G[@]}" endpoints services delete "${name}" --async
+  done
+elif jq -e '.error.code == 403' >/dev/null 2>&1 <<<"${out}"; then
+  echo "  no Service Management for the account in ${project}: no endpoints services to sweep"
+else
+  echo "  FAILED to list endpoints services: ${out}" >&2
+  failed=$((failed + 1))
+fi
 
 if [[ "${mode}" == "list" ]]; then
   echo "sweep: ${found} live-test resource(s) in ${project}"

@@ -19,11 +19,9 @@ After the VPN tunnel PR (foundation item 10's `ComputeVPNTunnel`, the
 first field gap under decision 19): thirty-eight kinds (`docs/kinds/`,
 `task kinds`),
 mockgcp patches 0001 to 0035 (`UPSTREAM.md` and `upstream.yaml`, which
-must agree: `task upstream:yaml-check`; a new patch that touches no file another patch touches is named
-without a number, `CONTRIBUTING.md`; only an ordered one takes the next
-number from `main`; but `task upstream:yaml-check` reads only numbered
-names from `UPSTREAM.md` and refuses an unnumbered patch, so for now every
-patch is numbered, found 2026-11-12 with 0035), the live-test switch and the Taskfile (`docs/live-runs.md`,
+must agree: `task upstream:yaml-check`; every patch is numbered, taking the next number from `main`, since `task
+upstream:yaml-check` reads only numbered names: design.md decision 29,
+the builder, 2026-11-13), the live-test switch and the Taskfile (`docs/live-runs.md`,
 factory's `taskfiles/README.md` for the shared `go:*` tasks; use `task`,
 not `make`). Every built kind passes
 live but `LoggingSettings`, `ServiceIdentity`,
@@ -412,6 +410,19 @@ edit `third_party/`, then regenerate the patch from
 `hack/upstream.sh` to check it applies. Two patches must not touch the
 same file unless they apply in order.
 
+**Every worktree has its own `third_party/`.** It is gitignored, so a
+new `git worktree` has none, and one copied or linked from another
+checkout holds that checkout's patches, not this branch's. After
+`git worktree add`, and after every merge of `main` that changes
+`patches/` or the pin, run `GOFLAGS=-p=2 nice hack/upstream.sh` in the
+worktree (it fetches the pin when missing, then resets it and applies
+this branch's patches), and `hack/upstream.sh --check` before trusting a
+local build. Never symlink `third_party` to another checkout's: a build
+there compiles against the other branch's mockgcp and passes or fails
+for the wrong reason. A long-lived worktree whose branch has merged
+(for example `.worktrees/server-id`) is behind `main`'s patches until it
+is moved to `main` and `hack/upstream.sh` runs again.
+
 **Generated code.** `GOFLAGS=-p=2 nice hack/generate.sh` (controller-gen
 v0.16.5) rewrites the CRDs, deepcopy and `config/crds/kustomization.yaml`.
 controller-gen panics on type aliases: use the aliased type
@@ -430,8 +441,8 @@ go several to a PR), `agent/<short-name>`, cut from the latest `main`, in
 your own `git worktree`, never a checkout another agent uses; if it needs
 an unmerged sibling, say so and the coordinator merges first. A kind's
 notes and live rows go in its own `docs/kinds/<Kind>.md`, not in
-design.md 6.5, the README or the live-runs ledger, and a patch that
-touches no other patch's files is named, not numbered (`CONTRIBUTING.md`).
+design.md 6.5, the README or the live-runs ledger, and every patch is
+numbered (design.md decision 29).
 What still conflicts: UPSTREAM's patch table and `upstream.yaml`,
 `hack/live/sweep.sh` and `pkg/controller/controllers.go` for hand-written
 kinds; when main

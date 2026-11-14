@@ -166,8 +166,16 @@ func moreTypes() []*ResourceType {
 		// No Config Connector kind: external only.
 		mixin("WorkbenchInstance", "notebooks.googleapis.com", "v2", false,
 			loc+`/instances/[^/]+`, nil, nil),
+		// Ours (servicemanagement.gcp.hfl.dev); Config Connector has none.
 		mixin("EndpointsService", "servicemanagement.googleapis.com", "v1", true,
-			`services/[^/]+`, nil, nil),
+			`services/[^/]+`,
+			[]schema.GroupVersionKind{gvk("servicemanagement.gcp.hfl.dev", "v1alpha1", "EndpointsService")},
+			func(o ObjectParts) (string, error) {
+				if o.ExternalRef != "" {
+					return o.ExternalRef, nil
+				}
+				return "services/" + o.ID, nil
+			}),
 		mixin("IAPTunnelInstance", "iap.googleapis.com", "v1", true,
 			`projects/[^/]+/iap_tunnel/zones/[^/]+/instances/[^/]+`, nil, nil),
 		mixin("IAPWebCloudRunService", "iap.googleapis.com", "v1", true,

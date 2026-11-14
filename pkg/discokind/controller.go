@@ -49,12 +49,32 @@ var _ directbase.Model = &model{}
 
 func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForObjectOperation) (directbase.Adapter, error) {
 	u := op.GetUnstructured()
-	name, body, err := m.kind.resolve(ctx, op.Reader, u)
-	if err != nil {
-		return nil, err
-	}
-	if ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ext != "" && ext != name {
-		return nil, fmt.Errorf("cannot change %s identity (old=%q, new=%q)", m.kind.GVK.Kind, ext, name)
+	ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
+	var name string
+	var body map[string]any
+	switch deleting := !u.GetDeletionTimestamp().IsZero(); {
+	case deleting && ext != "":
+		// Deleting a resource that was made or acquired: its name is in
+		// status, and the parts of a name cannot change, so the parent is not
+		// resolved. A parent object already gone or going (everything deleted
+		// at once) would otherwise hold the delete forever (IAMBinding's rule,
+		// pkg/iampolicy.Resolve).
+		name = ext
+	default:
+		var err error
+		name, body, err = m.kind.resolve(ctx, op.Reader, u)
+		if err != nil {
+			if deleting {
+				// Never made or acquired (no status.externalRef) and its parent
+				// cannot be resolved: there is nothing of ours to delete.
+				klog.FromContext(ctx).Info("deleting without a call: no status.externalRef and the parent cannot be resolved", "kind", m.kind.GVK.Kind, "error", err.Error())
+				return &adapter{kind: m.kind}, nil
+			}
+			return nil, err
+		}
+		if ext != "" && ext != name {
+			return nil, fmt.Errorf("cannot change %s identity (old=%q, new=%q)", m.kind.GVK.Kind, ext, name)
+		}
 	}
 	httpClient, err := m.config.NewAuthenticatedHTTPClient(ctx)
 	if err != nil {
@@ -193,6 +213,10 @@ type adapter struct {
 var _ directbase.Adapter = &adapter{}
 
 func (a *adapter) Find(ctx context.Context) (bool, error) {
+	if a.name == "" {
+		// Deleting an object that never had a resource (AdapterForObject).
+		return false, nil
+	}
 	got, err := a.api.Get(ctx, a.name)
 	if err != nil {
 		if direct.IsNotFound(err) {

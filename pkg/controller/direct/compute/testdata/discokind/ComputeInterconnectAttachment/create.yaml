@@ -1,0 +1,17 @@
+apiVersion: compute.gcp.hfl.dev/v1beta1
+kind: ComputeInterconnectAttachment
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  type: DEDICATED
+  interconnect: projects/${PROJECT}/global/interconnects/${NAME}-ic
+  router: projects/${PROJECT}/regions/us-central1/routers/${NAME}-router
+  vlanTag8021q: 1001
+  candidateSubnets: [169.254.10.0/29]
+  candidateCloudRouterIpAddress: 169.254.10.1/29
+  candidateCustomerRouterIpAddress: 169.254.10.2/29
+  adminEnabled: true
+  description: made by a config-connector-extensions test

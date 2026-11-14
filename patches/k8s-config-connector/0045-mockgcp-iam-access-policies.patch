@@ -1,0 +1,345 @@
+config-connector-extensions patch 0045: mockgcp serves IAM v3 access policies.
+
+For iam.gcp.hfl.dev IAMAccessPolicy. Written here:
+mockiam/accesspolicies.go registers the AccessPolicies gRPC server and, as
+patches 0030 and 0044 do (mockgcp has no generated HTTP gateway for
+google.iam.v3), adds the REST paths
+(/v3/{organizations,folders,projects}/*/locations/*/accessPolicies) to the
+mux by hand, calling the server's methods. Create, get, list, update (the
+whole policy: the API's update has no mask) and delete; create, update and
+delete answer a finished operation. A rule needs an effect, principals and
+permissions. A policy a binding names cannot be deleted without force. The
+etag is computed; an update with a stale etag is refused. Not served:
+searchPolicyBindings, validateOnly. Needs cloud.google.com/go/iam v1.14.0
+(apiv3 has access policies from then). Upstream candidate: yes.
+Numbered: it edits mockiam/service.go after 0006, 0007, 0010, 0030 and 0044.
+
+diff --git a/mockgcp/mockiam/service.go b/mockgcp/mockiam/service.go
+index dfa31d0..80bfe75 100644
+--- a/mockgcp/mockiam/service.go
++++ b/mockgcp/mockiam/service.go
+@@ -72,6 +72,7 @@ func (s *MockService) Register(grpcServer *grpc.Server) {
+ 	pbv2.RegisterPoliciesServer(grpcServer, &IAMV2PoliciesServer{MockService: s})
+ 	pbv3.RegisterPrincipalAccessBoundaryPoliciesServer(grpcServer, &IAMV3PrincipalAccessBoundaryPoliciesServer{MockService: s})
+ 	pbv3.RegisterPolicyBindingsServer(grpcServer, &IAMV3PolicyBindingsServer{MockService: s})
++	pbv3.RegisterAccessPoliciesServer(grpcServer, &IAMV3AccessPoliciesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolNamespacesServer(grpcServer, &WorkloadIdentityPoolNamespacesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolManagedIdentitiesServer(grpcServer, &WorkloadIdentityPoolManagedIdentitiesServer{MockService: s})
+ 	pbwip.RegisterWorkloadIdentityPoolProviderKeysServer(grpcServer, &WorkloadIdentityPoolProviderKeysServer{MockService: s})
+@@ -86,6 +87,7 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 		pbwip.RegisterWorkloadIdentityPoolProviderKeysHandler,
+ 		s.registerPrincipalAccessBoundaryPoliciesHTTP,
+ 		s.registerPolicyBindingsHTTP,
++		s.registerAccessPoliciesHTTP,
+ 		s.operations.RegisterOperationsPath("/v3/{prefix=**}/operations/{name}"),
+ 		s.operations.RegisterOperationsPath("/v1/{prefix=**}/operations/{name}"))
+ 	if err != nil {
+diff --git a/mockgcp/mockiam/accesspolicies.go b/mockgcp/mockiam/accesspolicies.go
+new file mode 100644
+index 00000000..13f139f4
+--- /dev/null
++++ b/mockgcp/mockiam/accesspolicies.go
+@@ -0,0 +1,303 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockiam
++
++// Written by High Five Labs (config-connector-extensions patch 0045): IAM v3
++// access policies of an organization, folder or project, which mockgcp did
++// not serve. As with the principal access boundary policies (patch 0030),
++// the REST paths are added to the mux by hand (registerAccessPoliciesHTTP)
++// and call the gRPC server's methods directly. Create, update and delete
++// answer a finished operation. Update replaces the policy (the API's update
++// has no mask). A policy that a binding names cannot be deleted without
++// force.
++
++import (
++	"context"
++	"crypto/md5"
++	"encoding/base64"
++	"fmt"
++	"io"
++	"net/http"
++	"strings"
++	"time"
++
++	pb "cloud.google.com/go/iam/apiv3/iampb"
++	"github.com/google/uuid"
++	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
++	longrunningpb "google.golang.org/genproto/googleapis/longrunning"
++	"google.golang.org/grpc"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/encoding/protojson"
++	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/types/known/emptypb"
++	"google.golang.org/protobuf/types/known/timestamppb"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/httpmux"
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/pkg/storage"
++)
++
++type IAMV3AccessPoliciesServer struct {
++	*MockService
++	pb.UnimplementedAccessPoliciesServer
++}
++
++// parseAccessPolicyName checks
++// {organizations|folders|projects}/{id}/locations/{location}/accessPolicies/{policy}
++// and returns the name and its parent.
++func parseAccessPolicyName(name string) (string, string, error) {
++	i := strings.Index(name, "/accessPolicies/")
++	if i < 0 || name[i+len("/accessPolicies/"):] == "" || strings.Contains(name[i+len("/accessPolicies/"):], "/") {
++		return "", "", status.Errorf(codes.InvalidArgument, "name %q is not an access policy name", name)
++	}
++	parent, err := parsePolicyBindingParent(name[:i])
++	if err != nil {
++		return "", "", err
++	}
++	return name, parent, nil
++}
++
++func accessPolicyEtag(obj *pb.AccessPolicy) string {
++	c := proto.CloneOf(obj)
++	c.Etag = ""
++	b, _ := proto.MarshalOptions{Deterministic: true}.Marshal(c)
++	sum := md5.Sum(b)
++	return "W/\"" + base64.StdEncoding.EncodeToString(sum[:]) + "\""
++}
++
++func (s *IAMV3AccessPoliciesServer) GetAccessPolicy(ctx context.Context, req *pb.GetAccessPolicyRequest) (*pb.AccessPolicy, error) {
++	fqn, _, err := parseAccessPolicyName(req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	obj := &pb.AccessPolicy{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "Requested entity was not found.")
++		}
++		return nil, err
++	}
++	return obj, nil
++}
++
++func (s *IAMV3AccessPoliciesServer) ListAccessPolicies(ctx context.Context, req *pb.ListAccessPoliciesRequest) (*pb.ListAccessPoliciesResponse, error) {
++	parent, err := parsePolicyBindingParent(req.GetParent())
++	if err != nil {
++		return nil, err
++	}
++	response := &pb.ListAccessPoliciesResponse{}
++	kind := (&pb.AccessPolicy{}).ProtoReflect().Descriptor()
++	if err := s.storage.List(ctx, kind, storage.ListOptions{Prefix: parent + "/accessPolicies/"}, func(obj proto.Message) error {
++		response.AccessPolicies = append(response.AccessPolicies, obj.(*pb.AccessPolicy))
++		return nil
++	}); err != nil {
++		return nil, err
++	}
++	return response, nil
++}
++
++// checkAccessPolicy refuses what the API refuses that a test can make: a
++// rule without an effect, principals or permissions.
++func checkAccessPolicy(obj *pb.AccessPolicy) error {
++	for i, r := range obj.GetDetails().GetRules() {
++		if r.GetEffect() == pb.AccessPolicyRule_EFFECT_UNSPECIFIED {
++			return status.Errorf(codes.InvalidArgument, "details.rules[%d].effect is required", i)
++		}
++		if len(r.GetPrincipals()) == 0 {
++			return status.Errorf(codes.InvalidArgument, "details.rules[%d].principals is required", i)
++		}
++		if len(r.GetOperation().GetPermissions()) == 0 {
++			return status.Errorf(codes.InvalidArgument, "details.rules[%d].operation.permissions is required", i)
++		}
++	}
++	return nil
++}
++
++func (s *IAMV3AccessPoliciesServer) CreateAccessPolicy(ctx context.Context, req *pb.CreateAccessPolicyRequest) (*longrunningpb.Operation, error) {
++	parent, err := parsePolicyBindingParent(req.GetParent())
++	if err != nil {
++		return nil, err
++	}
++	if req.GetAccessPolicyId() == "" {
++		return nil, status.Errorf(codes.InvalidArgument, "access_policy_id is required")
++	}
++	fqn := parent + "/accessPolicies/" + req.GetAccessPolicyId()
++	obj := proto.CloneOf(req.GetAccessPolicy())
++	if obj == nil {
++		obj = &pb.AccessPolicy{}
++	}
++	if err := checkAccessPolicy(obj); err != nil {
++		return nil, err
++	}
++	now := time.Now()
++	obj.Name = fqn
++	obj.Uid = uuid.NewString()
++	obj.CreateTime = timestamppb.New(now)
++	obj.UpdateTime = timestamppb.New(now)
++	obj.Etag = accessPolicyEtag(obj)
++	if err := s.storage.Create(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.AlreadyExists {
++			return nil, status.Errorf(codes.AlreadyExists, "Access policy %q already exists.", fqn)
++		}
++		return nil, err
++	}
++	md := &pb.OperationMetadata{CreateTime: timestamppb.New(now), EndTime: timestamppb.New(now), Target: fqn, Verb: "create", ApiVersion: "v3"}
++	return s.operations.DoneLRO(ctx, parent, md, obj)
++}
++
++func (s *IAMV3AccessPoliciesServer) UpdateAccessPolicy(ctx context.Context, req *pb.UpdateAccessPolicyRequest) (*longrunningpb.Operation, error) {
++	fqn, parent, err := parseAccessPolicyName(req.GetAccessPolicy().GetName())
++	if err != nil {
++		return nil, err
++	}
++	obj := &pb.AccessPolicy{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	in := req.GetAccessPolicy()
++	if in.GetEtag() != "" && in.GetEtag() != obj.GetEtag() {
++		return nil, status.Errorf(codes.Aborted, "The etag does not match the access policy's.")
++	}
++	if err := checkAccessPolicy(in); err != nil {
++		return nil, err
++	}
++	obj.DisplayName = in.GetDisplayName()
++	obj.Annotations = in.GetAnnotations()
++	obj.Details = in.GetDetails()
++	now := time.Now()
++	obj.UpdateTime = timestamppb.New(now)
++	obj.Etag = accessPolicyEtag(obj)
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	md := &pb.OperationMetadata{CreateTime: timestamppb.New(now), EndTime: timestamppb.New(now), Target: fqn, Verb: "update", ApiVersion: "v3"}
++	return s.operations.DoneLRO(ctx, parent, md, obj)
++}
++
++func (s *IAMV3AccessPoliciesServer) DeleteAccessPolicy(ctx context.Context, req *pb.DeleteAccessPolicyRequest) (*longrunningpb.Operation, error) {
++	fqn, parent, err := parseAccessPolicyName(req.GetName())
++	if err != nil {
++		return nil, err
++	}
++	if !req.GetForce() {
++		bound := false
++		kind := (&pb.PolicyBinding{}).ProtoReflect().Descriptor()
++		if err := s.storage.List(ctx, kind, storage.ListOptions{}, func(obj proto.Message) error {
++			if obj.(*pb.PolicyBinding).GetPolicy() == fqn {
++				bound = true
++			}
++			return nil
++		}); err != nil {
++			return nil, err
++		}
++		if bound {
++			return nil, status.Errorf(codes.FailedPrecondition, "Access policy %q is bound by a policy binding; delete the binding first or set force.", fqn)
++		}
++	}
++	deleted := &pb.AccessPolicy{}
++	if err := s.storage.Delete(ctx, fqn, deleted); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "Requested entity was not found.")
++		}
++		return nil, err
++	}
++	now := time.Now()
++	md := &pb.OperationMetadata{CreateTime: timestamppb.New(now), EndTime: timestamppb.New(now), Target: fqn, Verb: "delete", ApiVersion: "v3"}
++	return s.operations.DoneLRO(ctx, parent, md, &emptypb.Empty{})
++}
++
++// registerAccessPoliciesHTTP adds the v3 REST paths, for each parent.
++func (s *MockService) registerAccessPoliciesHTTP(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
++	srv := &IAMV3AccessPoliciesServer{MockService: s}
++	write := func(w http.ResponseWriter, r *http.Request, msg proto.Message, err error) {
++		if err != nil {
++			runtime.HTTPError(r.Context(), mux, &runtime.JSONPb{}, w, r, err)
++			return
++		}
++		b, err := httpmux.MarshalAsJSON(msg)
++		if err != nil {
++			runtime.HTTPError(r.Context(), mux, &runtime.JSONPb{}, w, r, err)
++			return
++		}
++		w.Header().Set("Content-Type", "application/json")
++		w.WriteHeader(http.StatusOK)
++		w.Write(b)
++	}
++	body := func(r *http.Request) (*pb.AccessPolicy, error) {
++		b, err := io.ReadAll(r.Body)
++		if err != nil {
++			return nil, status.Errorf(codes.InvalidArgument, "reading body: %v", err)
++		}
++		obj := &pb.AccessPolicy{}
++		if len(b) > 0 {
++			if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(b, obj); err != nil {
++				return nil, status.Errorf(codes.InvalidArgument, "parsing body: %v", err)
++			}
++		}
++		return obj, nil
++	}
++	for _, kind := range []string{"organizations", "folders", "projects"} {
++		kind := kind
++		coll := "/v3/" + kind + "/{parent}/locations/{loc}/accessPolicies"
++		parentOf := func(p map[string]string) string {
++			return fmt.Sprintf("%s/%s/locations/%s", kind, p["parent"], p["loc"])
++		}
++		nameOf := func(p map[string]string) string { return parentOf(p) + "/accessPolicies/" + p["id"] }
++		for _, h := range []struct {
++			method, path string
++			fn           func(w http.ResponseWriter, r *http.Request, p map[string]string)
++		}{
++			{"POST", coll, func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++				obj, err := body(r)
++				if err != nil {
++					write(w, r, nil, err)
++					return
++				}
++				op, err := srv.CreateAccessPolicy(r.Context(), &pb.CreateAccessPolicyRequest{
++					Parent: parentOf(p), AccessPolicyId: r.URL.Query().Get("accessPolicyId"), AccessPolicy: obj,
++				})
++				write(w, r, op, err)
++			}},
++			{"GET", coll, func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++				resp, err := srv.ListAccessPolicies(r.Context(), &pb.ListAccessPoliciesRequest{Parent: parentOf(p)})
++				write(w, r, resp, err)
++			}},
++			{"GET", coll + "/{id}", func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++				obj, err := srv.GetAccessPolicy(r.Context(), &pb.GetAccessPolicyRequest{Name: nameOf(p)})
++				write(w, r, obj, err)
++			}},
++			{"PATCH", coll + "/{id}", func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++				obj, err := body(r)
++				if err != nil {
++					write(w, r, nil, err)
++					return
++				}
++				obj.Name = nameOf(p)
++				op, err := srv.UpdateAccessPolicy(r.Context(), &pb.UpdateAccessPolicyRequest{AccessPolicy: obj})
++				write(w, r, op, err)
++			}},
++			{"DELETE", coll + "/{id}", func(w http.ResponseWriter, r *http.Request, p map[string]string) {
++				op, err := srv.DeleteAccessPolicy(r.Context(), &pb.DeleteAccessPolicyRequest{Name: nameOf(p), Force: r.URL.Query().Get("force") == "true"})
++				write(w, r, op, err)
++			}},
++		} {
++			if err := mux.HandlePath(h.method, h.path, h.fn); err != nil {
++				return err
++			}
++		}
++	}
++	return nil
++}

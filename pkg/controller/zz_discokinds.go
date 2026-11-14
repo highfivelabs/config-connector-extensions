@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	apigatewayv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigateway/v1beta1"
+	apigeev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1alpha1"
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
 	biglakev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/biglake/v1beta1"
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
@@ -39,6 +40,7 @@ import (
 	networkconnectivityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkconnectivity/v1alpha1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	networkservicesv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1alpha1"
+	networkservicesv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 )
@@ -303,6 +305,17 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"connectionEndpoints", "creationTimestamp", "fingerprint", "id", "kind", "network", "region", "selfLink", "selfLinkWithId"},
 	},
 	{
+		GVK:         computev1beta1.ComputeInterconnectAttachmentGVK,
+		CRDName:     "computeinterconnectattachments.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/interconnectAttachments/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"attachmentGroup", "cloudRouterIpAddress", "cloudRouterIpv6Address", "configurationConstraints", "creationTimestamp", "customerRouterIpAddress", "customerRouterIpv6Address", "dataplaneVersion", "googleReferenceId", "id", "kind", "operationalStatus", "privateInterconnectInfo", "region", "remoteService", "satisfiesPzs", "selfLink", "state"},
+	},
+	{
 		GVK:         computev1alpha1.ComputeRegionInstanceTemplateGVK,
 		CRDName:     "computeregioninstancetemplates.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",
@@ -342,6 +355,28 @@ var discoKinds = []*discokind.Kind{
 		Name:      "{parent}/locations/{location}/agentConnectivityTemplates/{id}",
 		Parents:   []string{"project"},
 		IDParam:   "agentConnectivityTemplateId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networkservicesv1beta1.NetworkServicesGatewayGVK,
+		CRDName:   "networkservicesgateways.networkservices.gcp.hfl.dev",
+		BaseURL:   "https://networkservices.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gateways/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewayId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "selfLink", "updateTime"},
+	},
+	{
+		GVK:       networkservicesv1beta1.NetworkServicesAuthzExtensionGVK,
+		CRDName:   "networkservicesauthzextensions.networkservices.gcp.hfl.dev",
+		BaseURL:   "https://networkservices.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/authzExtensions/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "authzExtensionId",
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
@@ -431,6 +466,61 @@ var discoKinds = []*discokind.Kind{
 		Parents:   []string{"project"},
 		IDParam:   "dnsThreatDetectorId",
 		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyGVK,
+		CRDName:   "networksecuritygatewaysecuritypolicies.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gatewaySecurityPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewaySecurityPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyRuleGVK,
+		CRDName:   "networksecuritygatewaysecuritypolicyrules.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/gatewaySecurityPolicies/{gatewaySecurityPolicy}/rules/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "gatewaySecurityPolicyRuleId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityURLListGVK,
+		CRDName:   "networksecurityurllists.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/urlLists/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "urlListId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityTLSInspectionPolicyGVK,
+		CRDName:   "networksecuritytlsinspectionpolicies.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/tlsInspectionPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "tlsInspectionPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       networksecurityv1beta1.NetworkSecurityAuthzPolicyGVK,
+		CRDName:   "networksecurityauthzpolicies.networksecurity.gcp.hfl.dev",
+		BaseURL:   "https://networksecurity.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/authzPolicies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "authzPolicyId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
 	},
@@ -654,6 +744,16 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"createTime", "dataDiscoveryResult", "dataDocumentationResult", "dataProfileResult", "dataQualityResult", "executionStatus", "name", "state", "type", "uid", "updateTime"},
 	},
+	{
+		GVK:       apigeev1alpha1.ApigeeDnsZoneGVK,
+		CRDName:   "apigeednszones.apigee.gcp.hfl.dev",
+		BaseURL:   "https://apigee.googleapis.com/v1/",
+		Name:      "organizations/{organization}/dnsZones/{id}",
+		IDParam:   "dnsZoneId",
+		CreateLRO: true, UpdateLRO: false, DeleteLRO: true,
+		Updatable: false,
+		Output:    []string{"createTime", "state", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -664,6 +764,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	computev1beta1.AddToScheme,
 	lookerv1alpha1.AddToScheme,
 	networkservicesv1alpha1.AddToScheme,
+	networkservicesv1beta1.AddToScheme,
 	resourcemanagerv1alpha1.AddToScheme,
 	networkconnectivityv1alpha1.AddToScheme,
 	certificatemanagerv1beta1.AddToScheme,
@@ -677,6 +778,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	clouddeployv1beta1.AddToScheme,
 	cloudfunctions2v1beta1.AddToScheme,
 	dataplexv1beta1.AddToScheme,
+	apigeev1alpha1.AddToScheme,
 }
 
 func init() {

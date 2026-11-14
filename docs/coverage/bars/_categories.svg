@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="230" viewBox="0 0 640 230" role="img" aria-label="Coverage by category: Platform foundation official 38.9%, ours beyond official 16.5%, uncovered 44.5%, Terraform google-beta 59.9% (L1 46.7%), an estimate; Security-adjacent official 67.2%, ours beyond official 3.3%, uncovered 29.5%, Terraform google-beta 85.6% (L1 79.2%), an estimate; Application official 39.9%, ours beyond official 1.4%, uncovered 58.7%, Terraform google-beta 42.3% (L1 37.4%), an estimate; Other official 24.6%, ours beyond official 0.0%, uncovered 75.4%, Terraform google-beta 29.0% (L1 27.8%), an estimate;">
-<title>Coverage by category: Platform foundation official 38.9%, ours beyond official 16.5%, uncovered 44.5%, Terraform google-beta 59.9% (L1 46.7%), an estimate; Security-adjacent official 67.2%, ours beyond official 3.3%, uncovered 29.5%, Terraform google-beta 85.6% (L1 79.2%), an estimate; Application official 39.9%, ours beyond official 1.4%, uncovered 58.7%, Terraform google-beta 42.3% (L1 37.4%), an estimate; Other official 24.6%, ours beyond official 0.0%, uncovered 75.4%, Terraform google-beta 29.0% (L1 27.8%), an estimate;</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="230" viewBox="0 0 640 230" role="img" aria-label="Coverage by category: Platform foundation official 38.9%, ours beyond official 17.1%, uncovered 43.9%, Terraform google-beta 59.9% (L1 46.7%), an estimate; Security-adjacent official 67.2%, ours beyond official 3.7%, uncovered 29.1%, Terraform google-beta 85.6% (L1 79.2%), an estimate; Application official 39.9%, ours beyond official 1.5%, uncovered 58.6%, Terraform google-beta 42.3% (L1 37.4%), an estimate; Other official 24.6%, ours beyond official 0.0%, uncovered 75.4%, Terraform google-beta 29.0% (L1 27.8%), an estimate;">
+<title>Coverage by category: Platform foundation official 38.9%, ours beyond official 17.1%, uncovered 43.9%, Terraform google-beta 59.9% (L1 46.7%), an estimate; Security-adjacent official 67.2%, ours beyond official 3.7%, uncovered 29.1%, Terraform google-beta 85.6% (L1 79.2%), an estimate; Application official 39.9%, ours beyond official 1.5%, uncovered 58.6%, Terraform google-beta 42.3% (L1 37.4%), an estimate; Other official 24.6%, ours beyond official 0.0%, uncovered 75.4%, Terraform google-beta 29.0% (L1 27.8%), an estimate;</title>
 <rect x="0.5" y="0.5" width="639" height="229" rx="4" fill="#ffffff" stroke="#d0d7de"/>
 <clipPath id="c0"><rect x="10" y="21" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Platform foundation (16 services, 3121 attributes): <tspan fill="#0969da">38.9%</tspan> / <tspan fill="#1a7f37">16.5%</tspan> / <tspan fill="#57606a">44.5%</tspan>   <tspan fill="#7b42bc">Terraform 59.9% (L1 46.7%)</tspan></text>
+<text x="10" y="16" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Platform foundation (16 services, 3121 attributes): <tspan fill="#0969da">38.9%</tspan> / <tspan fill="#1a7f37">17.1%</tspan> / <tspan fill="#57606a">43.9%</tspan>   <tspan fill="#7b42bc">Terraform 59.9% (L1 46.7%)</tspan></text>
 <clipPath id="t0"><rect x="10" y="39" width="620" height="10" rx="3"/></clipPath>
 <g clip-path="url(#t0)">
 <rect x="10" y="39" width="620" height="10" fill="#d0d7de"/>
@@ -12,10 +12,10 @@
 <g clip-path="url(#c0)">
 <rect x="10" y="21" width="620" height="14" fill="#d0d7de"/>
 <rect x="10" y="21" width="241.36" height="14" fill="#2f81f7"/>
-<rect x="251.36" y="21" width="102.51" height="14" fill="#2da44e"/>
+<rect x="251.36" y="21" width="106.28" height="14" fill="#2da44e"/>
 </g>
 <clipPath id="c1"><rect x="10" y="77" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Security-adjacent (14 services, 1406 attributes): <tspan fill="#0969da">67.2%</tspan> / <tspan fill="#1a7f37">3.3%</tspan> / <tspan fill="#57606a">29.5%</tspan>   <tspan fill="#7b42bc">Terraform 85.6% (L1 79.2%)</tspan></text>
+<text x="10" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Security-adjacent (14 services, 1406 attributes): <tspan fill="#0969da">67.2%</tspan> / <tspan fill="#1a7f37">3.7%</tspan> / <tspan fill="#57606a">29.1%</tspan>   <tspan fill="#7b42bc">Terraform 85.6% (L1 79.2%)</tspan></text>
 <clipPath id="t1"><rect x="10" y="95" width="620" height="10" rx="3"/></clipPath>
 <g clip-path="url(#t1)">
 <rect x="10" y="95" width="620" height="10" fill="#d0d7de"/>
@@ -25,10 +25,10 @@
 <g clip-path="url(#c1)">
 <rect x="10" y="77" width="620" height="14" fill="#d0d7de"/>
 <rect x="10" y="77" width="416.71" height="14" fill="#2f81f7"/>
-<rect x="426.71" y="77" width="20.28" height="14" fill="#2da44e"/>
+<rect x="426.71" y="77" width="22.93" height="14" fill="#2da44e"/>
 </g>
 <clipPath id="c2"><rect x="10" y="133" width="620" height="14" rx="3"/></clipPath>
-<text x="10" y="128" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Application (56 services, 24523 attributes): <tspan fill="#0969da">39.9%</tspan> / <tspan fill="#1a7f37">1.4%</tspan> / <tspan fill="#57606a">58.7%</tspan>   <tspan fill="#7b42bc">Terraform 42.3% (L1 37.4%)</tspan></text>
+<text x="10" y="128" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Application (56 services, 24523 attributes): <tspan fill="#0969da">39.9%</tspan> / <tspan fill="#1a7f37">1.5%</tspan> / <tspan fill="#57606a">58.6%</tspan>   <tspan fill="#7b42bc">Terraform 42.3% (L1 37.4%)</tspan></text>
 <clipPath id="t2"><rect x="10" y="151" width="620" height="10" rx="3"/></clipPath>
 <g clip-path="url(#t2)">
 <rect x="10" y="151" width="620" height="10" fill="#d0d7de"/>
@@ -38,7 +38,7 @@
 <g clip-path="url(#c2)">
 <rect x="10" y="133" width="620" height="14" fill="#d0d7de"/>
 <rect x="10" y="133" width="247.26" height="14" fill="#2f81f7"/>
-<rect x="257.26" y="133" width="8.72" height="14" fill="#2da44e"/>
+<rect x="257.26" y="133" width="9.15" height="14" fill="#2da44e"/>
 </g>
 <clipPath id="c3"><rect x="10" y="189" width="620" height="14" rx="3"/></clipPath>
 <text x="10" y="184" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Other (125 services, 14539 attributes): <tspan fill="#0969da">24.6%</tspan> / <tspan fill="#1a7f37">0.0%</tspan> / <tspan fill="#57606a">75.4%</tspan>   <tspan fill="#7b42bc">Terraform 29.0% (L1 27.8%)</tspan></text>

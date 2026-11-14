@@ -42,6 +42,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
@@ -242,6 +243,99 @@ func TestIAMDenyPolicy(t *testing.T) {
 				t.Errorf("%s: after delete, reading the deny policy: %v, want not found", c.name, err)
 			}
 		}
+	})
+
+	// The case: everything deleted at once (a namespace, a release), and the
+	// Folder object the policy's folderRef names goes first. The delete takes
+	// the policy's name from status.externalRef and does not resolve the
+	// folder again. Nothing here runs Folder's controller, so the Folder
+	// object is gone as soon as it is deleted.
+	t.Run("the folder object deleted first, the policy still deletes", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("a live run never touches a folder (docs/live-runs.md)")
+		}
+		folderGVK := schema.GroupVersionKind{Group: "resourcemanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "Folder"}
+		folder := func(t *testing.T, name string) *unstructured.Unstructured {
+			t.Helper()
+			u := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+				"resourceID":      "123456",
+				"displayName":     "guardrails",
+				"organizationRef": map[string]any{"external": "organizations/987654"},
+			}}}
+			u.SetGroupVersionKind(folderGVK)
+			u.SetNamespace(namespace)
+			u.SetName(name)
+			if err := env.Kube.Create(env.Ctx, u); err != nil {
+				t.Fatal(err)
+			}
+			return u
+		}
+		onFolder := func(t *testing.T, name, folderObj string) *iamv1beta1.IAMDenyPolicy {
+			t.Helper()
+			o := newPolicy(name, "iam.googleapis.com/roles.delete")
+			o.Spec.ProjectRef = nil
+			o.Spec.ResourceID = nil
+			o.Spec.FolderRef = &refsv1beta1.FolderRefDeprecated{Name: folderObj}
+			if err := env.Kube.Create(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			return o
+		}
+
+		t.Run("made, then its folder object deleted", func(t *testing.T) {
+			name := "folder-gone"
+			f := folder(t, name+"-folder")
+			onFolder(t, name, name+"-folder")
+			want := policyName("folders/123456", name)
+			env.WaitReady(denyGVK, namespace, name)
+			if _, err := get(want); err != nil {
+				t.Fatalf("reading the deny policy: %v", err)
+			}
+			if err := env.Kube.Delete(env.Ctx, f); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(f)
+			if err := env.Kube.Delete(env.Ctx, getObj(t, name)); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(&iamv1beta1.IAMDenyPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+			if _, err := get(want); !direct.IsNotFound(err) {
+				t.Errorf("after delete, reading the deny policy: %v, want not found", err)
+			}
+		})
+
+		t.Run("abandoned, its folder object deleted first, the policy stays", func(t *testing.T) {
+			name := "folder-gone-kept"
+			f := folder(t, name+"-folder")
+			o := onFolder(t, name, name+"-folder")
+			want := policyName("folders/123456", name)
+			t.Cleanup(func() {
+				op, err := cloud.DeletePolicy(env.Ctx, &pb.DeletePolicyRequest{Name: want})
+				if err == nil {
+					_, err = op.Wait(env.Ctx)
+				}
+				if err != nil && !direct.IsNotFound(err) {
+					t.Errorf("deleting deny policy %s: %v", want, err)
+				}
+			})
+			env.WaitReady(denyGVK, namespace, name)
+			o = getObj(t, name)
+			o.Annotations = map[string]string{k8s.DeletionPolicyAnnotation: k8s.DeletionPolicyAbandon}
+			if err := env.Kube.Update(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			if err := env.Kube.Delete(env.Ctx, f); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(f)
+			if err := env.Kube.Delete(env.Ctx, getObj(t, name)); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(&iamv1beta1.IAMDenyPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+			if _, err := get(want); err != nil {
+				t.Errorf("after abandon, reading the deny policy: %v, want it kept", err)
+			}
+		})
 	})
 
 	t.Run("a changed parent is refused", func(t *testing.T) {

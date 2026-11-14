@@ -1,0 +1,666 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computeinterconnectattachments.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeInterconnectAttachment
+    listKind: ComputeInterconnectAttachmentList
+    plural: computeinterconnectattachments
+    shortNames:
+    - hflcomputeinterconnectattachment
+    - hflcomputeinterconnectattachments
+    singular: computeinterconnectattachment
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: 'ComputeInterconnectAttachment is a compute.v1 resource (https://compute.googleapis.com/compute/v1/{parent}/regions/{region}/interconnectAttachments/{id}),
+          from its Discovery document compute.v1 (hack/discokind). Terraform''s google_compute_interconnect_attachment.
+          A VLAN attachment: an interconnect''s connection to a Cloud Router, with
+          the router and customer addresses chosen from candidates.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              adminEnabled:
+                description: Determines whether this Attachment will carry packets.
+                  Not present for PARTNER_PROVIDER.
+                type: boolean
+              bandwidth:
+                description: |-
+                  Provisioned bandwidth capacity for the interconnect attachment. For
+                  attachments of type DEDICATED, the user can set the bandwidth.
+                  For attachments of type PARTNER, the Google Partner that is operating
+                  the interconnect must set the bandwidth.
+                  Output only for PARTNER type, mutable for PARTNER_PROVIDER and DEDICATED,
+                  and can take one of the following values:
+                  - BPS_50M: 50 Mbit/s
+                  - BPS_100M: 100 Mbit/s
+                  - BPS_200M: 200 Mbit/s
+                  - BPS_300M: 300 Mbit/s
+                  - BPS_400M: 400 Mbit/s
+                  - BPS_500M: 500 Mbit/s
+                  - BPS_1G: 1 Gbit/s
+                  - BPS_2G: 2 Gbit/s
+                  - BPS_5G: 5 Gbit/s
+                  - BPS_10G: 10 Gbit/s
+                  - BPS_20G: 20 Gbit/s
+                  - BPS_50G: 50 Gbit/s
+                  - BPS_100G: 100 Gbit/s
+                  - BPS_400G: 400 Gbit/s
+
+                  One of BPS_100G, BPS_100M, BPS_10G, BPS_1G, BPS_200M, BPS_20G, BPS_2G, BPS_300M, BPS_400G, BPS_400M, BPS_500M, BPS_50G, BPS_50M, BPS_5G.
+                type: string
+              candidateCloudRouterIpAddress:
+                description: Single IPv4 address + prefix length to be configured
+                  on the cloud router interface for this interconnect attachment.
+                  - Both candidate_cloud_router_ip_address and candidate_customer_router_ip_address
+                  fields must be set or both must be unset. - Prefix length of both
+                  candidate_cloud_router_ip_address and candidate_customer_router_ip_address
+                  must be the same. - Max prefix length is 31.
+                type: string
+                x-kubernetes-validations:
+                - message: candidateCloudRouterIpAddress is immutable
+                  rule: self == oldSelf
+              candidateCloudRouterIpv6Address:
+                description: Single IPv6 address + prefix length to be configured
+                  on the cloud router interface for this interconnect attachment.
+                  - Both candidate_cloud_router_ipv6_address and candidate_customer_router_ipv6_address
+                  fields must be set or both must be unset. - Prefix length of both
+                  candidate_cloud_router_ipv6_address and candidate_customer_router_ipv6_address
+                  must be the same. - Max prefix length is 126.
+                type: string
+                x-kubernetes-validations:
+                - message: candidateCloudRouterIpv6Address is immutable
+                  rule: self == oldSelf
+              candidateCustomerRouterIpAddress:
+                description: Single IPv4 address + prefix length to be configured
+                  on the customer router interface for this interconnect attachment.
+                type: string
+                x-kubernetes-validations:
+                - message: candidateCustomerRouterIpAddress is immutable
+                  rule: self == oldSelf
+              candidateCustomerRouterIpv6Address:
+                description: Single IPv6 address + prefix length to be configured
+                  on the customer router interface for this interconnect attachment.
+                type: string
+                x-kubernetes-validations:
+                - message: candidateCustomerRouterIpv6Address is immutable
+                  rule: self == oldSelf
+              candidateIpv6Subnets:
+                description: This field is not available.
+                items:
+                  type: string
+                type: array
+                x-kubernetes-validations:
+                - message: candidateIpv6Subnets is immutable
+                  rule: self == oldSelf
+              candidateSubnets:
+                description: Input only. Up to 16 candidate prefixes that can be used
+                  to restrict the allocation of cloudRouterIpAddress and customerRouterIpAddress
+                  for this attachment. All prefixes must be within link-local address
+                  space (169.254.0.0/16) and must be /29 or shorter (/28, /27, etc).
+                  Google will attempt to select an unused /29 from the supplied candidate
+                  prefix(es). The request will fail if all possible /29s are in use
+                  on Google's edge. If not supplied, Google will randomly select an
+                  unused /29 from all of link-local space.
+                items:
+                  type: string
+                type: array
+                x-kubernetes-validations:
+                - message: candidateSubnets is immutable
+                  rule: self == oldSelf
+              cloudRouterIpv6InterfaceId:
+                description: This field is not available.
+                type: string
+              customerRouterIpv6InterfaceId:
+                description: This field is not available.
+                type: string
+              description:
+                description: An optional description of this resource.
+                type: string
+              edgeAvailabilityDomain:
+                description: |-
+                  Input only. Desired availability domain for the attachment. Only available
+                  for type
+                  PARTNER, at creation time, and can take one of the following values:
+                  - AVAILABILITY_DOMAIN_ANY
+                  - AVAILABILITY_DOMAIN_1
+                  - AVAILABILITY_DOMAIN_2
+                  For improved reliability, customers should configure a pair of attachments,
+                  one per availability domain. The selected availability domain will be
+                  provided to the Partner via the pairing key, so that the provisioned
+                  circuit will lie in the specified domain. If not specified, the value will
+                  default to AVAILABILITY_DOMAIN_ANY.
+
+                  One of AVAILABILITY_DOMAIN_1, AVAILABILITY_DOMAIN_2, AVAILABILITY_DOMAIN_ANY.
+                type: string
+                x-kubernetes-validations:
+                - message: edgeAvailabilityDomain is immutable
+                  rule: self == oldSelf
+              encryption:
+                description: |-
+                  Indicates the user-supplied encryption option of this VLAN attachment
+                  (interconnectAttachment). Can only be specified at attachment creation
+                  for PARTNER or DEDICATED attachments.
+                  Possible values are:
+                  - NONE - This is the default value, which means that the
+                  VLAN attachment carries unencrypted traffic. VMs are able to send
+                  traffic to, or receive traffic from, such a VLAN attachment.
+                  - IPSEC - The VLAN attachment carries only encrypted
+                  traffic that is encrypted by an IPsec device, such as an HA VPN gateway or
+                  third-party IPsec VPN. VMs cannot directly send traffic to, or receive
+                  traffic from, such a VLAN attachment. To use *HA VPN over Cloud
+                  Interconnect*, the VLAN attachment must be created with this
+                  option.
+
+                  One of IPSEC, NONE.
+                type: string
+                x-kubernetes-validations:
+                - message: encryption is immutable
+                  rule: self == oldSelf
+              interconnect:
+                description: URL of the underlying Interconnect object that this attachment's
+                  traffic will traverse through.
+                type: string
+                x-kubernetes-validations:
+                - message: interconnect is immutable
+                  rule: self == oldSelf
+              ipsecInternalAddresses:
+                description: A list of URLs of addresses that have been reserved for
+                  the VLAN attachment. Used only for the VLAN attachment that has
+                  the encryption option as IPSEC. The addresses must be regional internal
+                  IP address ranges. When creating an HA VPN gateway over the VLAN
+                  attachment, if the attachment is configured to use a regional internal
+                  IP address, then the VPN gateway's IP address is allocated from
+                  the IP address range specified here. For example, if the HA VPN
+                  gateway's interface 0 is paired to this VLAN attachment, then a
+                  regional internal IP address for the VPN gateway interface 0 will
+                  be allocated from the IP address specified for this VLAN attachment.
+                  If this field is not specified when creating the VLAN attachment,
+                  then later on when creating an HA VPN gateway on this VLAN attachment,
+                  the HA VPN gateway's IP address is allocated from the regional external
+                  IP address pool.
+                items:
+                  type: string
+                type: array
+                x-kubernetes-validations:
+                - message: ipsecInternalAddresses is immutable
+                  rule: self == oldSelf
+              l2Forwarding:
+                description: L2 Interconnect Attachment related config. This field
+                  is required if the type is L2_DEDICATED. The configuration specifies
+                  how VLAN tags (like dot1q, qinq, or dot1ad) within L2 packets are
+                  mapped to the destination appliances IP addresses. The packet is
+                  then encapsulated with the appliance IP address and sent to the
+                  edge appliance.
+                properties:
+                  applianceMappings:
+                    description: Optional. A map of VLAN tags to appliances and optional
+                      inner mapping rules. If VLANs are not explicitly mapped to any
+                      appliance, the defaultApplianceIpAddress is used. Each VLAN
+                      tag can be a single number or a range of numbers in the range
+                      of 1 to 4094, e.g., "1" or "4001-4094". Non-empty and non-overlapping
+                      VLAN tag ranges are enforced, and violating operations will
+                      be rejected. The VLAN tags in the Ethernet header must use an
+                      ethertype value of 0x88A8 or 0x8100.
+                    x-kubernetes-preserve-unknown-fields: true
+                  defaultApplianceIpAddress:
+                    description: Optional. A single IPv4 or IPv6 address used as the
+                      default destination IP when there is no VLAN mapping result
+                      found. Unset field (null-value) indicates the unmatched packet
+                      should be dropped.
+                    type: string
+                  geneveHeader:
+                    description: Optional. It represents the structure of a Geneve
+                      (Generic Network Virtualization Encapsulation) header, as defined
+                      in RFC8926. It encapsulates packets from various protocols (e.g.,
+                      Ethernet, IPv4, IPv6) for use in network virtualization environments.
+                    properties:
+                      vni:
+                        description: Optional. VNI is a 24-bit unique virtual network
+                          identifier, from 0 to 16,777,215.
+                        format: int64
+                        type: integer
+                    type: object
+                  network:
+                    description: Required. Resource URL of the network to which this
+                      attachment belongs.
+                    type: string
+                  tunnelEndpointIpAddress:
+                    description: Required. A single IPv4 or IPv6 address. This address
+                      will be used as the source IP address for packets sent to the
+                      appliances, and must be used as the destination IP address for
+                      packets that should be sent out through this attachment.
+                    type: string
+                required:
+                - network
+                - tunnelEndpointIpAddress
+                type: object
+                x-kubernetes-validations:
+                - message: l2Forwarding is immutable
+                  rule: self == oldSelf
+              labelFingerprint:
+                description: A fingerprint for the labels being applied to this InterconnectAttachment,
+                  which is essentially a hash of the labels set used for optimistic
+                  locking. The fingerprint is initially generated by Compute Engine
+                  and changes after every request to modify or update labels. You
+                  must always provide an up-to-date fingerprint hash in order to update
+                  or change labels, otherwise the request will fail with error412
+                  conditionNotMet. To see the latest fingerprint, make a get() request
+                  to retrieve an InterconnectAttachment.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels for this resource. These can only be added or
+                  modified by thesetLabels method. Each label key/value pair must
+                  comply withRFC1035. Label values may be empty.
+                type: object
+              mtu:
+                description: Maximum Transmission Unit (MTU), in bytes, of packets
+                  passing through this interconnect attachment. Valid values are 1440,
+                  1460, 1500, and 8896. If not specified, the value will default to
+                  1440.
+                format: int32
+                type: integer
+              pairingKey:
+                description: '[Output only for type PARTNER. Input only for PARTNER_PROVIDER.
+                  Not present for DEDICATED]. The opaque identifier of a PARTNER attachment
+                  used to initiate provisioning with a selected partner. Of the form
+                  "XXXXX/region/domain"'
+                type: string
+                x-kubernetes-validations:
+                - message: pairingKey is immutable
+                  rule: self == oldSelf
+              params:
+                description: Input only. [Input Only] Additional params passed with
+                  the request, but not persisted as part of resource payload.
+                properties:
+                  resourceManagerTags:
+                    additionalProperties:
+                      type: string
+                    description: 'Tag keys/values directly bound to this resource.
+                      Tag keys and values have the same definition as resource manager
+                      tags. The field is allowed for INSERT only. The keys/values
+                      to set on the resource should be specified in either ID { :
+                      } or Namespaced format { : }. For example the following are
+                      valid inputs: * {"tagKeys/333" : "tagValues/444", "tagKeys/123"
+                      : "tagValues/456"} * {"123/environment" : "production", "345/abc"
+                      : "xyz"} Note: * Invalid combinations of ID & namespaced format
+                      is not supported. For instance: {"123/environment" : "tagValues/444"}
+                      is invalid. * Inconsistent format is not supported. For instance:
+                      {"tagKeys/333" : "tagValues/444", "123/env" : "prod"} is invalid.'
+                    type: object
+                type: object
+              partnerAsn:
+                description: Optional BGP ASN for the router supplied by a Layer 3
+                  Partner if they configured BGP on behalf of the customer. Output
+                  only for PARTNER type, input only for PARTNER_PROVIDER, not available
+                  for DEDICATED.
+                format: int64
+                type: integer
+              partnerMetadata:
+                description: Informational metadata about Partner attachments from
+                  Partners to display to customers. Output only for PARTNER type,
+                  mutable for PARTNER_PROVIDER, not available for DEDICATED.
+                properties:
+                  interconnectName:
+                    description: Plain text name of the Interconnect this attachment
+                      is connected to, as displayed in the Partner's portal. For instance
+                      "Chicago 1". This value may be validated to match approved Partner
+                      values.
+                    type: string
+                  partnerName:
+                    description: Plain text name of the Partner providing this attachment.
+                      This value may be validated to match approved Partner values.
+                    type: string
+                  portalUrl:
+                    description: URL of the Partner's portal for this Attachment.
+                      Partners may customise this to be a deep link to the specific
+                      resource on the Partner portal. This value may be validated
+                      to match approved Partner values.
+                    type: string
+                type: object
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              region:
+                description: Immutable. The region, part of the resource's name ({parent}/regions/{region}/interconnectAttachments/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: region is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              router:
+                description: URL of the Cloud Router to be used for dynamic routing.
+                  This router must be in the same region as this InterconnectAttachment.
+                  The InterconnectAttachment will automatically connect the Interconnect
+                  to the network & region within which the Cloud Router is configured.
+                type: string
+                x-kubernetes-validations:
+                - message: router is immutable
+                  rule: self == oldSelf
+              stackType:
+                description: |-
+                  The stack type for this interconnect attachment to identify whether the
+                  IPv6 feature is enabled or not. If not specified, IPV4_ONLY
+                  will be used.
+                  This field can be both set at interconnect attachments creation and
+                  update interconnect attachment operations.
+
+                  One of IPV4_IPV6, IPV4_ONLY.
+                type: string
+              subnetLength:
+                description: 'Input only. Length of the IPv4 subnet mask. Allowed
+                  values: - 29 (default) - 30 The default value is 29, except for
+                  Cross-Cloud Interconnect connections that use an InterconnectRemoteLocation
+                  with a constraints.subnetLengthRange.min equal to 30. For example,
+                  connections that use an Azure remote location fall into this category.
+                  In these cases, the default value is 30, and requesting 29 returns
+                  an error. Where both 29 and 30 are allowed, 29 is preferred, because
+                  it gives Google Cloud Support more debugging visibility.'
+                format: int32
+                type: integer
+                x-kubernetes-validations:
+                - message: subnetLength is immutable
+                  rule: self == oldSelf
+              type:
+                description: |-
+                  The type of interconnect attachment this is, which can take one of the
+                  following values:
+                  - DEDICATED: an attachment to a Dedicated Interconnect.
+                  - PARTNER: an attachment to a Partner Interconnect, created by the
+                  customer.
+                  - PARTNER_PROVIDER: an attachment to a Partner Interconnect, created by
+                  the partner.
+                  - L2_DEDICATED: a L2 attachment to a Dedicated Interconnect.
+
+                  One of DEDICATED, L2_DEDICATED, PARTNER, PARTNER_PROVIDER.
+                type: string
+                x-kubernetes-validations:
+                - message: type is immutable
+                  rule: self == oldSelf
+              vlanTag8021q:
+                description: The IEEE 802.1Q VLAN tag for this attachment, in the
+                  range 2-4093. Only specified at creation time.
+                format: int32
+                type: integer
+                x-kubernetes-validations:
+                - message: vlanTag8021q is immutable
+                  rule: self == oldSelf
+            required:
+            - projectRef
+            - region
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/regions/{region}/interconnectAttachments/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  attachmentGroup:
+                    description: Output only. [Output Only] URL of the AttachmentGroup
+                      that includes this Attachment.
+                    type: string
+                  cloudRouterIpAddress:
+                    description: Output only. [Output Only] IPv4 address + prefix
+                      length to be configured on Cloud Router Interface for this interconnect
+                      attachment.
+                    type: string
+                  cloudRouterIpv6Address:
+                    description: Output only. [Output Only] IPv6 address + prefix
+                      length to be configured on Cloud Router Interface for this interconnect
+                      attachment.
+                    type: string
+                  configurationConstraints:
+                    description: Output only. [Output Only] Constraints for this attachment,
+                      if any. The attachment does not work if these constraints are
+                      not met.
+                    properties:
+                      bgpMd5:
+                        description: 'Output only. [Output Only] Whether the attachment''s
+                          BGP session requires/allows/disallows BGP MD5 authentication.
+                          This can take one of the following values: MD5_OPTIONAL,
+                          MD5_REQUIRED, MD5_UNSUPPORTED. For example, a Cross-Cloud
+                          Interconnect connection to a remote cloud provider that
+                          requires BGP MD5 authentication has the interconnectRemoteLocation
+                          attachment_configuration_constraints.bgp_md5 field set to
+                          MD5_REQUIRED, and that property is propagated to the attachment.
+                          Similarly, if BGP MD5 is MD5_UNSUPPORTED, an error is returned
+                          if MD5 is requested.'
+                        type: string
+                      bgpPeerAsnRanges:
+                        description: 'Output only. [Output Only] List of ASN ranges
+                          that the remote location is known to support. Formatted
+                          as an array of inclusive ranges {min: min-value, max: max-value}.
+                          For example, [{min: 123, max: 123}, {min: 64512, max: 65534}]
+                          allows the peer ASN to be 123 or anything in the range 64512-65534.
+                          This field is only advisory. Although the API accepts other
+                          ranges, these are the ranges that we recommend.'
+                        items:
+                          properties:
+                            max:
+                              format: int64
+                              type: integer
+                            min:
+                              format: int64
+                              type: integer
+                          type: object
+                        type: array
+                    type: object
+                  creationTimestamp:
+                    description: Output only. [Output Only] Creation timestamp inRFC3339
+                      text format.
+                    type: string
+                  customerRouterIpAddress:
+                    description: Output only. [Output Only] IPv4 address + prefix
+                      length to be configured on the customer router subinterface
+                      for this interconnect attachment.
+                    type: string
+                  customerRouterIpv6Address:
+                    description: Output only. [Output Only] IPv6 address + prefix
+                      length to be configured on the customer router subinterface
+                      for this interconnect attachment.
+                    type: string
+                  dataplaneVersion:
+                    description: Output only. [Output Only] Dataplane version for
+                      this InterconnectAttachment. This field is only present for
+                      Dataplane version 2 and higher. Absence of this field in the
+                      API output indicates that the Dataplane is version 1.
+                    format: int32
+                    type: integer
+                  googleReferenceId:
+                    description: Output only. [Output Only] Google reference ID, to
+                      be used when raising support tickets with Google or otherwise
+                      to debug backend connectivity issues. [Deprecated] This field
+                      is not used.
+                    type: string
+                  id:
+                    description: Output only. [Output Only] The unique identifier
+                      for the resource. This identifier is defined by the server.
+                    type: string
+                  kind:
+                    description: Output only. [Output Only] Type of the resource.
+                      Alwayscompute#interconnectAttachment for interconnect attachments.
+                    type: string
+                  operationalStatus:
+                    description: 'Output only. [Output Only] The current status of
+                      whether or not this interconnect attachment is functional, which
+                      can take one of the following values: - OS_ACTIVE: The attachment
+                      has been turned up and is ready to use. - OS_UNPROVISIONED:
+                      The attachment is not ready to use yet, because turnup is not
+                      complete.'
+                    type: string
+                  privateInterconnectInfo:
+                    description: Output only. [Output Only] Information specific to
+                      an InterconnectAttachment. This property is populated if the
+                      interconnect that this is attached to is of type DEDICATED.
+                    properties:
+                      tag8021q:
+                        description: '[Output Only] 802.1q encapsulation tag to be
+                          used for traffic between Google and the customer, going
+                          to and from this network and region.'
+                        format: int64
+                        type: integer
+                    type: object
+                  region:
+                    description: Output only. [Output Only] URL of the region where
+                      the regional interconnect attachment resides. You must specify
+                      this field as part of the HTTP request URL. It is not settable
+                      as a field in the request body.
+                    type: string
+                  remoteService:
+                    description: 'Output only. [Output Only] If the attachment is
+                      on a Cross-Cloud Interconnect connection, this field contains
+                      the interconnect''s remote location service provider. Example
+                      values: "Amazon Web Services" "Microsoft Azure". The field is
+                      set only for attachments on Cross-Cloud Interconnect connections.
+                      Its value is copied from the InterconnectRemoteLocation remoteService
+                      field.'
+                    type: string
+                  satisfiesPzs:
+                    description: Output only. [Output Only] Reserved for future use.
+                    type: boolean
+                  selfLink:
+                    description: Output only. [Output Only] Server-defined URL for
+                      the resource.
+                    type: string
+                  state:
+                    description: 'Output only. [Output Only] The current state of
+                      this attachment''s functionality. Enum values ACTIVE and UNPROVISIONED
+                      are shared by DEDICATED/PRIVATE, PARTNER, and PARTNER_PROVIDER
+                      interconnect attachments, while enum values PENDING_PARTNER,
+                      PARTNER_REQUEST_RECEIVED, and PENDING_CUSTOMER are used for
+                      only PARTNER and PARTNER_PROVIDER interconnect attachments.
+                      This state can take one of the following values: - ACTIVE: The
+                      attachment has been turned up and is ready to use. - UNPROVISIONED:
+                      The attachment is not ready to use yet, because turnup is not
+                      complete. - PENDING_PARTNER: A newly-created PARTNER attachment
+                      that has not yet been configured on the Partner side. - PARTNER_REQUEST_RECEIVED:
+                      A PARTNER attachment is in the process of provisioning after
+                      a PARTNER_PROVIDER attachment was created that references it.
+                      - PENDING_CUSTOMER: A PARTNER or PARTNER_PROVIDER attachment
+                      that is waiting for a customer to activate it. - DEFUNCT: The
+                      attachment was deleted externally and is no longer functional.
+                      This could be because the associated Interconnect was removed,
+                      or because the other side of a Partner attachment was deleted.'
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

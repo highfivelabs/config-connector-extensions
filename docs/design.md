@@ -186,6 +186,20 @@ answers a resource path a request sent (`projects/P/regions/R/subnetworks/S`)
 with its full URL, so the controller's comparison takes the two as one
 (`sameComputeURL`); without it a network attachment's `subnetworks` would
 differ on every resync.
+A generated kind's delete takes the resource's name from
+`status.externalRef` and does not resolve its parent again (2026-11-13,
+`IAMBinding`'s rule, `pkg/iampolicy.Resolve`): a parent object deleted
+first, when everything is deleted at once, held the delete on "referenced
+Project ... not found". An object that never had a resource goes without
+a call (`TestComputeNetworkAttachmentWithItsParent`). The catalog's stuck
+`net-vpc` attachment ("reference ComputeSubnetwork ... is not found") was
+Config Connector's alpha `ComputeNetworkAttachment`, whose
+`subnetworkRefs` its directbase resolves before every delete; ours takes
+the subnet's URL in `subnetworks` and never reads a subnet object, so a
+chart that uses ours (as `net-address` does) does not stick.
+The hand-written `IAMDenyPolicy` takes the same rule (2026-11-13,
+`docs/kinds/IAMDenyPolicy.md`): its Folder object deleted first held its
+delete on "referenced Folder ... not found".
 Then five foundation (tier 1)
 gaps of the same shape (2026-11-12): Resource
 Manager's `ResourceManagerCapabilityConfig` (an organization, folder or
@@ -220,6 +234,194 @@ but has no kind, so it takes that name (decision 18) and starts at
 `v1alpha1` (decision 26's last sentence; question 6's first half). The
 API cannot patch a repository, so every field is immutable. Live waits,
 as the connection's does, on a test GitHub app.
+Then (2026-11-12) the catalog's `net-swp` module's four Secure Web Proxy
+kinds, Config Connector alpha-only and so `v1beta1` (decision 26):
+`NetworkSecurityGatewaySecurityPolicy`,
+`NetworkSecurityGatewaySecurityPolicyRule` (the catalog listed it with no
+kind; upstream added its alpha kind before our pin),
+`NetworkSecurityURLList` and `NetworkSecurityTLSInspectionPolicy`; a rule's
+live test makes its policy first (`gatewaysecuritypolicy_test.go`), and the
+sweeper deletes a run's rules before the discokind loop deletes its
+policies. These collections have no `global` location (listing it is a
+400, run `cce-11130256-843f`), so `kinds.yaml` gained `sweepLocation`:
+the sweeper lists them in `us-central1`, where their live fixtures make
+them. The policy, its rule and the URL list pass live (runs
+`cce-11130311-56bc`, `cce-11130336-5f6f`); the rule's fixtures name the
+policy by `${KIND_NAME}`, a placeholder that stays the first object's
+`${NAME}` in the abandoned object's fixture too. Config Connector's alpha types reference the TLS inspection
+policy and CA pool; ours take their paths, as discokind does. A TLS
+inspection policy skips live (it needs a CA pool). And `ApigeeDnsZone`
+(`v1alpha1`, no Config Connector kind; Terraform's name, decision 18) for
+the catalog's `apigee` module: the API cannot patch a zone, so every field
+is immutable; its `organization` is the Apigee organization (a project's
+ID), and it skips live until the live-test project has an Apigee
+organization.
+
+Then `NetworkServicesGateway` (`networkservices.gcp.hfl.dev/v1beta1`,
+2026-11-13), the gateway a Secure Web Proxy is, for the catalog's
+`net-swp` module. Config Connector's kind is `v1beta1`, but at 1.160.0 it
+cannot make a `SECURE_WEB_GATEWAY`: it lacks `network`, `subnetwork`,
+`gatewaySecurityPolicy`, `certificateUrls`, `labels` and `routingMode`,
+and requires `scope`. Ours keeps the name (decision 18) at `v1beta1`, as
+a stable equivalent under decision 26, generated with the API's whole
+field set for both types (`OPEN_MESH` and `SECURE_WEB_GATEWAY`). The
+fields Terraform's `google_network_services_gateway` forces a new gateway
+for are immutable here. `kindtest.RunCase` runs a kind's test with a
+second set of fixtures, so both types are tested. A Secure Web Proxy
+makes a Cloud Router with a Cloud NAT (`swg-autogen-router-...`) in its
+network, which the API keeps after the last gateway goes; ours keeps it
+too, as Terraform does by default, and the live test and the sweeper
+delete it. It skips live until `networkservices.googleapis.com` is on in
+the live-test project (it is off; the live-test account already has the
+permissions through `roles/compute.networkAdmin`).
+`docs/kinds/NetworkServicesGateway.md` has the rest.
+
+Then `NetworkServicesAuthzExtension` (`networkservices.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the catalog's `geap-agent-gateway` module
+(`google_network_services_authz_extension`): an agent gateway's
+authorization goes to IAP or Model Armor through an extension's `service`
+(`iap.googleapis.com`, a Model Armor endpoint). Config Connector's kind is
+alpha, requires a backend service and has no `service` field, so it cannot
+delegate to either; ours keeps the name at `v1beta1` (decision 26) with the
+API's whole field set (`service`, `timeout`, `failOpen`, `metadata`,
+`forwardHeaders`, `forwardAttributes`, `wireFormat`, `authority`,
+`loadBalancingScheme`, `labels`). Every field patches in place. It skips
+live as `NetworkServicesGateway` does (`networkservices.googleapis.com` is
+off in the live-test project).
+
+Then `NetworkSecurityAuthzPolicy` (`networksecurity.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the same module: fabric's `iap_config` and
+`model_armor_config` bind a `NetworkServicesAuthzExtension` to the agent
+gateway through an authorization policy whose target is the gateway
+(`google_network_security_authz_policy`, `action: CUSTOM`,
+`customProvider.authzExtension`). The API takes it: `target.resources` is
+"forwarding rules, Secure Web Proxy gateways or agent gateways", and
+`target.loadBalancingScheme` must be left out for an agent gateway.
+Config Connector's kind is alpha and its `target.resources` are
+`ForwardingRuleRef`s, which it validates as forwarding rules
+(`ForwardingRuleRef.ValidateExternal`), so it cannot name an agent
+gateway; no open upstream pull request changes that (checked 2026-11-13).
+Ours keeps the name at `v1beta1` (decision 26) with the API's whole field
+set; `target.resources` and `customProvider.authzExtension.resources` are
+the API's resource names (`projects/P/locations/L/agentGateways/G`).
+`policyProfile` is immutable. It skips live as
+`NetworkServicesAuthzExtension` does: an agent gateway needs
+`networkservices.googleapis.com`, off in the live-test project.
+
+Then `ComputeInterconnectAttachment` (`compute.gcp.hfl.dev/v1beta1`,
+2026-11-13), generated, for the catalog's VPN and interconnect ports:
+Config Connector's `v1beta1` kind lacks the candidate Cloud Router and
+customer router addresses (`candidateCloudRouterIpAddress`,
+`candidateCustomerRouterIpAddress`, and their IPv6 forms), so ours keeps
+the name at `v1beta1` with the API's whole field set (decisions 19 and 26,
+as `NetworkServicesGateway`). The fields Terraform's
+`google_compute_interconnect_attachment` forces a new attachment for are
+immutable. It skips live: the live-test project has no Dedicated
+Interconnect. Its test adds to the `compute` package's time (section 10,
+question 8).
+
+Then `EndpointsService` (`servicemanagement.gcp.hfl.dev/v1alpha1`,
+2026-11-13), hand-written rather than generated: a Cloud Endpoints service
+is three Service Management calls (create the service, submit a
+configuration, roll it out), which is not a discokind shape, and Config
+Connector has no Service Management code to copy. It is Terraform's
+`google_endpoints_service` (decision 18; Config Connector has no kind) for
+the catalog's `endpoints` module, at `v1alpha1` (decision 26's last
+sentence). Its group is the API's (`servicemanagement`), as every group here
+is named after its API, not the product. A configuration is submitted and
+rolled out again only when the files change (`status.configDigest`) or
+another configuration was rolled out by hand. mockgcp has no Service
+Management, so a fake in front of it serves the calls
+(`docs/fake-cloud.md`). `docs/kinds/EndpointsService.md` has the rest.
+
+Then `IAMPolicyBinding` (`iam.gcp.hfl.dev/v1alpha1`, 2026-11-13),
+hand-written: an IAM v3 policy binding, which binds a principal access
+boundary policy to the principals of an organization, folder or project
+(Terraform's `google_iam_{organizations,folders,projects}_policy_binding`;
+the catalog's `geap-agent-gateway` module needs the project's, proposed
+there as `IamProjectsPolicyBinding`). IAM v3 has no Discovery document at
+the pinned discovery-artifact-manager commit nor at its master
+(2026-11-13), so `hack/discokind` cannot generate it. Upstream, read
+2026-11-13: no release or `master` has it; open PR #14133 (last updated
+2026-10-29) generates `IAMPolicyBinding` types, identity, reference and
+mapper for an organization's binding, with no controller. The kind takes
+that name (decision 18; decision 12 already kept `IAMPolicyBinding` free
+for it) and, as Config Connector has released no kind, starts at
+`v1alpha1` (decision 26's last sentence). The types are copied from the
+PR; the parent is one of `organizationRef`, `folderRef` and `projectRef`
+(decision 18), the policy a `policyRef` to our
+`IAMPrincipalAccessBoundaryPolicy` or a policy's name, and the controller
+is written here. mockgcp patch 0044 serves the bindings.
+`docs/kinds/IAMPolicyBinding.md` has the rest.
+An `IAMPolicyBinding` also binds an access policy to a resource
+(2026-11-13, for `geap-agent-gateway`): `target.resource` (on
+`cloud.google.com/go/iam` v1.14.0) beside `principalSet`, and, with
+`policyKind: ACCESS`, `policyRef.name` names an `IAMAccessPolicy`;
+mockgcp patch 0046. The kind stays `v1alpha1` (Config Connector has no
+released kind; decision 26's last sentence).
+
+Then `IAMAccessPolicy` (`iam.gcp.hfl.dev/v1beta1`, 2026-11-13),
+hand-written, for the catalog's `geap-agent-gateway` module
+(`google_iam_projects_access_policy`, the policy an agent gateway's access
+rules are). Config Connector has the kind at `v1alpha1` with an
+organization parent only and no controller; ours keeps the name at
+`v1beta1` (decision 26) with an organization, folder or project parent
+(decision 18), and imports upstream's `AccessPolicyDetails` and observed
+state. IAM v3 has no Discovery document at the pin, so it is not
+generated. `cloud.google.com/go/iam` moved from v1.11.0 to v1.14.0, the
+first with access policies in `apiv3` (no other module moved). The API's
+update replaces the policy (no update mask), so any difference sends the
+whole spec. mockgcp patch 0045 serves the policies; a policy a binding
+names is refused deletion without force, as the API does. Live skips: the
+live-test account has no access policy role. `docs/kinds/IAMAccessPolicy.md`
+has the rest.
+
+Then `ChronicleRuleDeployment` (`chronicle.gcp.hfl.dev/v1alpha1`,
+2026-11-13), hand-written: the API has no Discovery document at the
+pinned discovery-artifact-manager commit (nor at its head), and a rule's
+deployment is a singleton with get and patch only, which is not a
+discokind shape. Config Connector has `ChronicleRule` (alpha, at the pin)
+but no deployment kind, so ours takes Terraform's name
+(`google_chronicle_rule_deployment`, decision 18) for the catalog's
+`secops-rules` module, at `v1alpha1` (decision 26's last sentence). Its
+`ruleRef` is Config Connector's own `ChronicleRuleRef`, by import. As
+Terraform, there is no create or delete: the object patches the fields
+it sets, and deleting it leaves the deployment. It speaks REST JSON to
+`<location>-chronicle.googleapis.com` (Terraform's host) rather than
+`cloud.google.com/go/chronicle` v1.5.0, which lacks the customizable run
+frequencies and `scheduleCustomizations`. mockgcp has no Chronicle, so a
+fake serves it (`docs/fake-cloud.md`); live skips, needing a SecOps
+instance. `docs/kinds/ChronicleRuleDeployment.md` has the rest.
+
+Then `ChronicleRule` (`chronicle.gcp.hfl.dev/v1beta1`, 2026-11-13),
+hand-written for the catalog's `secops-rules` module
+(`google_chronicle_rule`). Config Connector 1.160.0 has the kind at
+`v1alpha1` with no instance field: its identity is
+`projects/{project}/locations/{location}/instances/{instance}/rules/{rule}`,
+but `getIdentityFromChronicleRuleSpec` leaves the instance empty and fails
+with "cannot resolve instance for ChronicleRule", so no object of it can
+become Ready. Ours keeps the name (decision 18) at `v1beta1` (decision 26),
+copies upstream's types with `instance` added, and imports upstream's
+identity and observed state. The API assigns a rule's ID (`ru_...`):
+create records it in `status.externalRef`, and `spec.resourceID` acquires a
+rule that exists (a missing one is not Ready; the ID cannot be chosen).
+`deletionPolicy` (`DEFAULT`, `FORCE`) is Terraform's. The same REST client
+and host as the deployment; the Chronicle fake gained rule patch.
+`ChronicleRuleDeployment`'s `ruleRef` by `name` finds ours first, then
+Config Connector's. `docs/kinds/ChronicleRule.md` has the rest.
+
+Then `ChronicleReferenceList` (`chronicle.gcp.hfl.dev/v1beta1`,
+2026-11-13), the third kind `secops-rules` needs
+(`google_chronicle_reference_list`), for the same reason: Config
+Connector's is alpha with no instance field. Types copied with `instance`
+added; upstream's identity, leaf types and observed state imported. The
+ID is the user's (`referenceListId`; `resourceID` or `metadata.name`),
+letters, digits and underscores only (a CEL pattern; a `metadata.name`
+with a hyphen needs `resourceID`). The API has no delete for a reference
+list, so deleting the object leaves it, as Terraform does, and a new
+object with the same ID takes it back (find, then patch). Reads use the
+full view, the only one with the entries. `docs/kinds/ChronicleReferenceList.md`
+has the rest.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -321,7 +523,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine` and `SpannerInstanceConfig`. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, `NetworkSecurityAuthzPolicy`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine` and `SpannerInstanceConfig`. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the
@@ -1589,7 +1791,9 @@ Notes on what was built from this table:
   lower-cased), in any order. A referenced object that is missing is "not
   found", one whose Ready condition is not True is "not ready", and the
   reconciler waits and retries; while the binding is being deleted, a
-  missing object means there is nothing to remove. A kind that is not in
+  missing object, or one being deleted without `deletion-policy: abandon`
+  (2026-11-13; `docs/kinds/IAMBinding.md`), means there is nothing to
+  remove. A kind that is not in
   the table is refused with the list of kinds.
   Kinds in the table (2026-11-09): `Project`, `Folder`, `Organization`,
   `IAMServiceAccount`, `StorageBucket`, `SecretManagerSecret` (global and
@@ -1659,7 +1863,8 @@ Notes on what was built from this table:
 Below the top ten, each needed by one module (Looker instances, Endpoints
 services, Cloud Build v2 repositories, regional instance templates, and
 others in the inventory): not ranked here yet. Container Registry is
-deprecated upstream and is not built.
+deprecated upstream and is not built; the catalog maps it to an Artifact
+Registry `gcr.io` repository (decision 30).
 
 ### 6.6 Field gaps on large Terraform-based kinds (proposed 2026-11-10)
 
@@ -1886,6 +2091,34 @@ To raise confidence in `ArtifactRegistryRepository`:
     rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
     pending the test folder); a regional kind, which the API has no rule
     calls for; `targetSecureTags`, which no test sets.
+38. `EndpointsService`: a live run (needs `roles/servicemanagement.admin`
+    for `cce-live-tests` and `servicemanagement.googleapis.com` on;
+    `E2E_SERVICE_MANAGEMENT=true`; run `cce-11130544-c338` was refused
+    the list); whether the API answers a get of a missing or deleted
+    service with 404 or 403, which `Find` takes alike; a gRPC service (no test makes a
+    descriptor set; only the OpenAPI path runs); the undelete of a name
+    held by a service deleted within 30 days, which only the fake shows;
+    rollouts that split traffic between configurations (Terraform has
+    none either); the API's own reading of the configuration, which the
+    fake does not parse.
+39. `IAMPolicyBinding`: a live run (needs a principal access boundary
+    policy, which lives under an organization, that `cce-live-tests` may
+    bind, and `iam.policyBindings.*` on the project;
+    `E2E_IAM_POLICY_BINDING_POLICY`); the API's checks of a principal set
+    against the binding's parent and of a condition's attributes, which
+    the fake does not make; `ACCESS` policies, which the fake does not
+    serve.
+40. `ChronicleRuleDeployment`, `ChronicleRule` and `ChronicleReferenceList`: a live run (needs a Google SecOps instance
+    in or bound to the live-test project, `chronicle.googleapis.com` on
+    and `roles/chronicle.editor` for `cce-live-tests`;
+    `E2E_CHRONICLE_INSTANCE=<location>/<instance>`), and with it the
+    sweeper's Chronicle section (the test deletes its rules itself; no
+    live run has made any); whether `<location>-chronicle.googleapis.com`
+    (Terraform's host) is the right host for every location; the API's
+    coercion of legacy run frequencies, which only Terraform's diff
+    suppression (copied) tells us; whether an archive and a disable in
+    one patch would do (the controller sends them in two, disable
+    first).
 
 33. `ComputeVPNTunnel`: a rotated shared secret is not applied (the API
     takes it only at insert; make a new tunnel); the API's checks of a
@@ -2105,6 +2338,37 @@ To raise confidence in `ArtifactRegistryRepository`:
     upstream promotes. Our own kinds for gaps Config Connector has no
     kind for at all still start at `v1alpha1`; when they move up is the
     first half of question 6, still open.
+
+27. **Our own kinds are promoted to `v1beta1` once they pass live**
+    (the builder, 2026-11-13, answering the first half of section 10
+    question 6: "Q6 yes" and "promote those three"). A kind of ours for a
+    gap Config Connector has no kind for (`ComputeRouterRoutePolicy`,
+    `ComputeRegionNetworkEndpoint`, `StorageBucketObject`, `IAMMember`
+    and the rest) moves from `v1alpha1` to `v1beta1` once it has passed
+    live once and its schema has had no breaking change since, the same
+    way as `IAMBinding` (decision 24). `ComputeRouter`, `LoggingSettings`
+    and `SecurityCenterMuteConfig` are promoted first, to unblock the
+    catalog's VPN, folder and organization charts.
+
+28. **A service's generated kinds' tests get their own package** (the
+    builder, 2026-11-13, answering section 10 question 8: "Q8 yes, split
+    the tests"). `hack/discokind` writes them to
+    `pkg/controller/direct/<service>/discokindtest`, fixtures beside them,
+    so the generated and hand-written halves run in parallel; no timeout
+    changes.
+
+29. **Every patch is numbered** (the builder, 2026-11-13: "patches: the
+    guard wins (always numbered), fix CONTRIBUTING.md"). `task
+    upstream:yaml-check` reads only numbered names, so a new patch takes
+    the next number from `main`, whatever files it touches;
+    `CONTRIBUTING.md` and `docs/handoff.md` say so.
+
+30. **Container Registry maps to Artifact Registry; no kind is built**
+    (the builder, 2026-11-13: "Container Registry: map to Artifact
+    Registry"). Google's Container Registry is shut down. The catalog maps
+    Terraform's `google_container_registry` to an Artifact Registry
+    `gcr.io` repository (Config Connector's `ArtifactRegistryRepository`)
+    rather than a kind here.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -2374,27 +2638,40 @@ moves to section 8.
    `resourceRef` to Config Connector's object, for example
    `KMSCryptoKeyFields` for `keyAccessJustificationsPolicy`; the fields
    keep the API's names. Not needed until the first such PR.
-6. **Which version do our kinds take, and when are they promoted?**
-   (2026-11-12.) The catalog's charts refuse `v1alpha1` kinds (decision
-   24), and most of ours are `v1alpha1`, including ones that pass live
-   and that its modules need: `ComputeRouterRoutePolicy`,
-   `StorageBucketObject`, `ComputeRegionNetworkEndpoint`,
-   `ComputeRegionNetworkFirewallPolicyAssociation` (catalog
-   `docs/coverage/resource-types.csv` counts these as "none" or "alpha",
-   which keeps four to six modules each blocked). Decision 13 makes our
-   copies of alpha-only foundation kinds stable (`v1beta1`); it does not
-   say whether that reaches beyond foundation areas (Backup for GKE, for
-   instance, which two GKE modules use), nor when a kind of ours that
-   started at `v1alpha1` moves up. Recommendation: a kind is `v1beta1`
-   once it has passed live once and its schema has had no breaking
-   change since; copies of upstream alpha-only kinds outside the
-   foundation stay out of scope until a module needs one, and are then
-   built as `v1beta1` under decision 13's reasoning. Until answered, new
-   kinds stay `v1alpha1` except decision 13's.
-   **Second half answered 2026-11-12** (decision 26, the coordinator's
-   direction): a copy of a Config Connector alpha-only kind is `v1beta1`.
-   **First half open**: whether and when our own `v1alpha1` kinds for
-   gaps with no Config Connector kind (`ComputeRouterRoutePolicy`,
-   `ComputeRegionNetworkEndpoint`, `StorageBucketObject`, `IAMMember`
-   and the rest) move to `v1beta1` once they pass live; none is promoted
-   until the builder answers.
+6. Answered 2026-11-13: our own `v1alpha1` kinds move to `v1beta1`
+   once they pass live, and `ComputeRouter`, `LoggingSettings` and
+   `SecurityCenterMuteConfig` are promoted first (decision 27; the second
+   half was decision 26).
+
+7. **Field gaps on Config Connector kinds the catalog's folder,
+   organization and logging ports found** (2026-11-13). Decision 19 says a
+   field gap is our own kind in our group, owning the whole object.
+   - `LoggingLogSink.interceptChildren` (a folder's or organization's sink
+     that intercepts its children's logs). Config Connector's kind lacks
+     it. Recommendation: our own `LoggingLogSink` at `v1beta1` (decisions
+     19 and 26, as `NetworkServicesGateway`) with a folder, organization or
+     project parent, hand-written after `LoggingBillingAccountSink` (a
+     sink's create takes the name in the body and `uniqueWriterIdentity`
+     as a parameter, which is not a `hack/discokind` shape).
+   - `Folder.deletionProtection`. This is not an API field: Terraform's
+     `google_folder.deletion_protection` is a client-side guard.
+     Recommendation: no kind; the catalog maps it to
+     `cnrm.cloud.google.com/deletion-policy: abandon` (which keeps the
+     folder) or, for "refuse to delete", to Bundt's own deletion guard.
+   - Config Connector's `OrgPolicyPolicy` cannot be deleted once the
+     folder or organization object it names is gone (the parent-gone rule
+     of PRs #109 and #111). It is Config Connector's controller, which
+     this repository does not run and does not patch (patches change the
+     pinned code we build, not the operator Config Connector runs).
+     Recommendation: our own `OrgPolicyPolicy` (`orgpolicy.gcp.hfl.dev`,
+     `v1beta1`, decision 19) only if the catalog cannot order deletes; until
+     then, the catalog deletes policies before their parents, and the
+     catalog's notes say so.
+   - A "service-agents config" for folders and organizations: our
+     `ServiceIdentity` already takes a folder or organization. If the
+     catalog means something else (a resource that configures service
+     agents), it needs naming: recommendation, the catalog names the
+     Terraform resource and it is built here under decision 18.
+
+8. Answered 2026-11-13: yes, split the generated kinds' tests into
+   their own package (decision 28).

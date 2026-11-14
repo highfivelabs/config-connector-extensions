@@ -55,6 +55,9 @@ func TestFixturesMatchTheirCRDs(t *testing.T) {
 		schemas[crd.Spec.Names.Kind] = crd.Spec.Versions[0].Schema.OpenAPIV3Schema
 	}
 	fixtures, _ := filepath.Glob(filepath.Join(root, "pkg/controller/direct/*/testdata/discokind/*/*.yaml"))
+	// A kind's other fixture sets (kindtest.RunCase).
+	cases, _ := filepath.Glob(filepath.Join(root, "pkg/controller/direct/*/testdata/discokind/*/*/*.yaml"))
+	fixtures = append(fixtures, cases...)
 	if len(fixtures) == 0 {
 		t.Fatal("no fixtures found")
 	}
@@ -65,7 +68,7 @@ func TestFixturesMatchTheirCRDs(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s := strings.NewReplacer("${PROJECT}", "mock-project", "${NAME}", "cce-11111111-abcd-kind", "${ID}", "cce11111111abcdkind", "${RUN_ID}", "cce-11111111-abcd", "${ORGANIZATION}", "123456789").Replace(string(b))
+			s := strings.NewReplacer("${PROJECT}", "mock-project", "${NAME}", "cce-11111111-abcd-kind", "${ID}", "cce11111111abcdkind", "${RUN_ID}", "cce-11111111-abcd", "${ORGANIZATION}", "123456789", "${KIND_NAME}", "cce-11111111-abcd-kind").Replace(string(b))
 			obj := map[string]any{}
 			if err := yaml.Unmarshal([]byte(s), &obj); err != nil {
 				t.Fatal(err)

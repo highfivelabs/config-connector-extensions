@@ -1,0 +1,1 @@
+a TLS inspection policy needs a Certificate Authority Service CA pool in its region that the Network Security service agent may request certificates from, which the live-test project does not have; live: pending a CA pool

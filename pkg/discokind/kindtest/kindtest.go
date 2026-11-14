@@ -20,12 +20,15 @@
 //	testdata/discokind/<Kind>/create.yaml   the object to create
 //	testdata/discokind/<Kind>/update.yaml   optional: the same object with a changed spec
 //	testdata/discokind/<Kind>/live-skip     optional: why it cannot run live (one line)
+//	testdata/discokind/<Kind>/<case>/...    optional: another set, for RunCase
 //
 // The fixtures are YAML with placeholders: ${PROJECT} (mockenv.Project),
 // ${NAME} (mockenv.Name of the kind's lower-case name: the run ID prefixes
 // it live), ${ID} (${NAME} without dashes, for IDs that take none),
-// ${RUN_ID}, and ${ORGANIZATION} (E2E_ORGANIZATION live, 123456789 in the
-// fake).
+// ${RUN_ID}, ${ORGANIZATION} (E2E_ORGANIZATION live, 123456789 in the
+// fake), and ${KIND_NAME} (${NAME} of the first object, also in the
+// abandoned object's fixture, whose ${NAME} ends in -kept: for a parent a
+// Setup makes once for both).
 //
 // The test: the object becomes Ready and the cloud holds what its spec
 // says; a forced resync writes nothing; the update's spec is patched in
@@ -67,26 +70,45 @@ var setups = map[string]Setup{}
 func RegisterSetup(kind string, s Setup) { setups[kind] = s }
 
 // Run is the test of one kind.
-func Run(t *testing.T, kindName string) {
+func Run(t *testing.T, kindName string) { run(t, kindName, "") }
+
+// RunCase is the same test of a kind with a second set of fixtures, in
+// testdata/discokind/<Kind>/<caseName>/, for a kind whose resource has
+// shapes one set cannot cover (a gateway's two types). Its objects are
+// named <kind>-<caseName>, and its Setup is the one registered as
+// "<Kind>/<caseName>", if any.
+func RunCase(t *testing.T, kindName, caseName string) {
+	if caseName == "" {
+		t.Fatal("RunCase needs a case name")
+	}
+	run(t, kindName, caseName)
+}
+
+func run(t *testing.T, kindName, caseName string) {
 	k := discokind.ByKind(kindName)
 	if k == nil {
 		t.Fatalf("no discokind kind %s (hack/discokind/kinds.yaml)", kindName)
 	}
-	dir := filepath.Join("testdata", "discokind", kindName)
+	dir := filepath.Join("testdata", "discokind", kindName, caseName)
 	if mockenv.Live() {
 		if b, err := os.ReadFile(filepath.Join(dir, "live-skip")); err == nil {
 			t.Skip(strings.TrimSpace(string(b)))
 		}
 	}
 	base := strings.ToLower(kindName)
-	create := load(t, filepath.Join(dir, "create.yaml"), base)
+	setupKey := kindName
+	if caseName != "" {
+		base += "-" + caseName
+		setupKey += "/" + caseName
+	}
+	create := load(t, filepath.Join(dir, "create.yaml"), base, base)
 	var update *unstructured.Unstructured
 	if _, err := os.Stat(filepath.Join(dir, "update.yaml")); err == nil {
-		update = load(t, filepath.Join(dir, "update.yaml"), base)
+		update = load(t, filepath.Join(dir, "update.yaml"), base, base)
 	}
 
 	env := mockenv.New(t, namespace)
-	if s := setups[kindName]; s != nil {
+	if s := setups[setupKey]; s != nil {
 		s(t, env)
 	}
 	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL}
@@ -233,7 +255,7 @@ func Run(t *testing.T, kindName string) {
 	})
 
 	t.Run("abandon keeps the resource", func(t *testing.T) {
-		kept := load(t, filepath.Join(dir, "create.yaml"), base+"-kept")
+		kept := load(t, filepath.Join(dir, "create.yaml"), base+"-kept", base)
 		kept.SetAnnotations(map[string]string{k8s.DeletionPolicyAnnotation: k8s.DeletionPolicyAbandon})
 		if err := env.Kube.Create(env.Ctx, kept); err != nil {
 			t.Fatal(err)
@@ -251,8 +273,9 @@ func Run(t *testing.T, kindName string) {
 	})
 }
 
-// load reads a fixture with its placeholders filled for base.
-func load(t *testing.T, path, base string) *unstructured.Unstructured {
+// load reads a fixture with its placeholders filled for base, the object's
+// name, and kindBase, the kind's.
+func load(t *testing.T, path, base, kindBase string) *unstructured.Unstructured {
 	t.Helper()
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -269,6 +292,7 @@ func load(t *testing.T, path, base string) *unstructured.Unstructured {
 		"${ID}", strings.ReplaceAll(name, "-", ""),
 		"${RUN_ID}", mockenv.RunID,
 		"${ORGANIZATION}", org,
+		"${KIND_NAME}", mockenv.Name(kindBase),
 	).Replace(string(b))
 	u := &unstructured.Unstructured{}
 	if err := yaml.Unmarshal([]byte(s), &u.Object); err != nil {

@@ -33,6 +33,10 @@ etag (the read-modify-write then repeats) and patches with `If-Match`.
 fake (`TestIAMMember`, "a BigQuery dataset"); live pending BigQuery for
 the live-test account (`E2E_BIGQUERY_ADMIN=true`, `docs/live-runs.md`).
 
+A parent being deleted (2026-11-13): as `IAMBinding`'s (see `IAMBinding.md`):
+the delete succeeds without a call when the parent is gone or being
+deleted with its resource.
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

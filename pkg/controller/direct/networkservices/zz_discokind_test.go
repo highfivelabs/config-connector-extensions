@@ -30,3 +30,11 @@ func TestNetworkServicesAgentConnectivityTemplate(t *testing.T) {
 
 // TestNetworkServicesAgentGateway runs testdata/discokind/NetworkServicesAgentGateway/ on the fake cloud, or live.
 func TestNetworkServicesAgentGateway(t *testing.T) { kindtest.Run(t, "NetworkServicesAgentGateway") }
+
+// TestNetworkServicesAuthzExtension runs testdata/discokind/NetworkServicesAuthzExtension/ on the fake cloud, or live.
+func TestNetworkServicesAuthzExtension(t *testing.T) {
+	kindtest.Run(t, "NetworkServicesAuthzExtension")
+}
+
+// TestNetworkServicesGateway runs testdata/discokind/NetworkServicesGateway/ on the fake cloud, or live.
+func TestNetworkServicesGateway(t *testing.T) { kindtest.Run(t, "NetworkServicesGateway") }

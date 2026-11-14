@@ -65,8 +65,9 @@ func conditionOf(c *krm.IAMCondition) *iampolicy.Condition {
 }
 
 // resolveResource finds the resource a binding is on. While the binding is
-// being deleted, a resource that is gone leaves nothing to remove: gone is
-// true and the error nil.
+// being deleted, a resource that is gone, or whose object is being deleted
+// with it, leaves nothing to remove: gone is true and the error nil, and
+// Delete makes no call.
 func resolveResource(ctx context.Context, op *directbase.AdapterForObjectOperation, ref iampolicy.Ref) (t *iampolicy.ResourceType, name string, gone bool, err error) {
 	t, name, err = iampolicy.Resolve(ctx, op.Reader, op.GetUnstructured().GetNamespace(), ref)
 	if err != nil && op.IsDeleting() {

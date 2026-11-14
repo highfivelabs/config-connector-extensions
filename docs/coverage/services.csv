@@ -8,7 +8,7 @@ alertcenter.googleapis.com,1,0,0,1,0,0,1,0.0,0.0,100.0
 alloydb.googleapis.com,4,4,0,112,63,0,49,56.2,0.0,43.8
 analyticshub.googleapis.com,3,3,0,42,28,0,14,66.7,0.0,33.3
 apigateway.googleapis.com,3,3,0,21,17,4,0,81.0,19.0,0.0
-apigee.googleapis.com,55,9,0,478,81,0,397,16.9,0.0,83.1
+apigee.googleapis.com,55,9,1,478,81,5,392,16.9,1.0,82.0
 apihub.googleapis.com,14,11,0,342,187,0,155,54.7,0.0,45.3
 apikeys.googleapis.com,1,1,0,11,9,0,2,81.8,0.0,18.2
 apim.googleapis.com,2,0,0,5,0,0,5,0.0,0.0,100.0
@@ -58,7 +58,7 @@ cloudsupport.googleapis.com,3,1,0,17,2,0,15,11.8,0.0,88.2
 cloudtasks.googleapis.com,2,1,0,50,12,0,38,24.0,0.0,76.0
 commerceproducer.googleapis.com,2,1,0,85,81,0,4,95.3,0.0,4.7
 composer.googleapis.com,3,3,0,86,82,0,4,95.3,0.0,4.7
-compute.googleapis.com,95,69,16,3437,1738,282,1417,50.6,8.2,41.2
+compute.googleapis.com,95,69,16,3437,1738,301,1398,50.6,8.8,40.7
 confidentialcomputing.googleapis.com,1,0,0,0,0,0,0,0.0,0.0,0.0
 config.googleapis.com,3,2,0,40,21,0,19,52.5,0.0,47.5
 configdelivery.googleapis.com,4,4,0,26,21,0,5,80.8,0.0,19.2
@@ -144,8 +144,8 @@ monitoring.googleapis.com,12,9,0,2082,952,0,1130,45.7,0.0,54.3
 netapp.googleapis.com,11,7,0,179,54,0,125,30.2,0.0,69.8
 networkconnectivity.googleapis.com,14,11,3,153,92,23,38,60.1,15.0,24.8
 networkmanagement.googleapis.com,4,2,0,76,42,0,34,55.3,0.0,44.7
-networksecurity.googleapis.com,31,25,3,432,317,29,86,73.4,6.7,19.9
-networkservices.googleapis.com,21,14,2,356,193,28,135,54.2,7.9,37.9
+networksecurity.googleapis.com,31,25,3,432,317,35,80,73.4,8.1,18.5
+networkservices.googleapis.com,21,14,2,356,193,40,123,54.2,11.2,34.6
 notebooks.googleapis.com,5,5,0,133,122,0,11,91.7,0.0,8.3
 observability.googleapis.com,3,0,0,10,0,0,10,0.0,0.0,100.0
 oracledatabase.googleapis.com,13,4,0,518,125,0,393,24.1,0.0,75.9
@@ -176,7 +176,7 @@ securitycentermanagement.googleapis.com,2,2,0,22,22,0,0,100.0,0.0,0.0
 securityposture.googleapis.com,2,2,0,63,59,0,4,93.7,0.0,6.3
 serviceconsumermanagement.googleapis.com,1,0,0,1,0,0,1,0.0,0.0,100.0
 servicedirectory.googleapis.com,3,3,0,9,7,0,2,77.8,0.0,22.2
-servicemanagement.googleapis.com,3,0,0,283,0,0,283,0.0,0.0,100.0
+servicemanagement.googleapis.com,3,0,1,283,0,0,283,0.0,0.0,100.0
 servicenetworking.googleapis.com,2,2,0,4,4,0,0,100.0,0.0,0.0
 spanner.googleapis.com,7,5,0,80,34,0,46,42.5,0.0,57.5
 speech.googleapis.com,2,2,0,9,4,0,5,44.4,0.0,55.6

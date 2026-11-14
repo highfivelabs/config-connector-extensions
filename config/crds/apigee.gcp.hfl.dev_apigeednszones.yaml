@@ -1,0 +1,175 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: apigeednszones.apigee.gcp.hfl.dev
+spec:
+  group: apigee.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ApigeeDnsZone
+    listKind: ApigeeDnsZoneList
+    plural: apigeednszones
+    shortNames:
+    - hflapigeednszone
+    - hflapigeednszones
+    singular: apigeednszone
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ApigeeDnsZone is a apigee.v1 resource (https://apigee.googleapis.com/v1/organizations/{organization}/dnsZones/{id}),
+          from its Discovery document apigee.v1 (hack/discokind). Terraform's google_apigee_dns_zone.
+          A private DNS zone an Apigee organization peers with a VPC network; organization
+          is the Apigee organization's name (its project's ID), not a Google Cloud
+          organization.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              description:
+                description: Required. Description of the resource. String of at most
+                  1024 characters associated with this resource for the user's convenience.
+                type: string
+                x-kubernetes-validations:
+                - message: description is immutable
+                  rule: self == oldSelf
+              domain:
+                description: Required. The domain name for hosts in this private zone,
+                  for instance "example.com.".
+                type: string
+                x-kubernetes-validations:
+                - message: domain is immutable
+                  rule: self == oldSelf
+              organization:
+                description: Immutable. The organization, part of the resource's name
+                  (organizations/{organization}/dnsZones/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: organization is immutable
+                  rule: self == oldSelf
+              peeringConfig:
+                description: DNS PEERING zone configuration.
+                properties:
+                  targetNetworkId:
+                    description: Required. The VPC network where the records for that
+                      private DNS zone's namespace are available. Apigee will be performing
+                      DNS peering with this VPC network.
+                    type: string
+                  targetProjectId:
+                    description: Required. The ID of the project that contains the
+                      producer VPC network.
+                    type: string
+                required:
+                - targetNetworkId
+                - targetProjectId
+                type: object
+                x-kubernetes-validations:
+                - message: peeringConfig is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+            required:
+            - description
+            - domain
+            - organization
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, organizations/{organization}/dnsZones/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The time that this resource was created
+                      on the server.
+                    type: string
+                  state:
+                    description: Output only. State of the DNS Peering. Values other
+                      than `ACTIVE` mean the resource is not ready to use.
+                    type: string
+                  updateTime:
+                    description: Output only. The time that this resource was updated
+                      on the server.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
