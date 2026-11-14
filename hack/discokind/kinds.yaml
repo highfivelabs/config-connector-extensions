@@ -12,7 +12,8 @@
 # immutable (top-level fields the API cannot patch, beyond those its
 # descriptions call Immutable); skip {field: why}; note; sweepLocation (the
 # location the live sweeper lists, for a collection with no global one;
-# the live fixtures use it).
+# the live fixtures use it); nameInBody (create also sends the full name
+# as the body's name, beside the ID parameter, for an API that needs it).
 
 - kind: LoggingSavedQuery
   group: logging.gcp.hfl.dev
@@ -571,6 +572,10 @@
   parents: [project]
   terraform: google_cloudfunctions2_function
   note: "A Cloud Run functions (2nd gen) function."
+  # The API refuses a create without the full name in the body (the
+  # catalog's live run, 2026-11-13); Terraform sends it too.
+  nameInBody: true
+  sweepLocation: us-central1
 
 - kind: DataplexLake
   group: dataplex.gcp.hfl.dev

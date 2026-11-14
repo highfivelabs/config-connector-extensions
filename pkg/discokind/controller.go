@@ -252,6 +252,10 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 		body["name"] = id
 	} else if a.kind.IDParam != "" {
 		query[a.kind.IDParam] = id
+		if a.kind.NameInBody {
+			body = runtime.DeepCopyJSON(a.desired)
+			body["name"] = a.name
+		}
 	}
 	resp, err := a.api.Do(ctx, http.MethodPost, coll, query, body)
 	if err != nil {

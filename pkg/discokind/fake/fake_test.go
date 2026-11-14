@@ -208,3 +208,22 @@ func TestCustomMethodsReachNext(t *testing.T) {
 		t.Errorf("get %s: %v, %v", name, got, err)
 	}
 }
+
+// A kind whose API needs the full name in the create's body (Cloud
+// Functions v2): the fake refuses a create without it, as the API did in
+// the catalog's live run: an invalid, empty resource name.
+func TestNameInBody(t *testing.T) {
+	ctx := context.Background()
+	k := &discokind.Kind{
+		BaseURL: "https://example.googleapis.com/v2/", Name: "{parent}/locations/{location}/functions/{id}",
+		Parents: []string{"project"}, IDParam: "functionId", NameInBody: true,
+	}
+	api := &discokind.API{HTTP: &http.Client{Transport: New(unreachable{}, []*discokind.Kind{k})}, BaseURL: k.BaseURL, PollInterval: time.Millisecond}
+	coll := "projects/p/locations/us-central1/functions"
+	if _, err := api.Do(ctx, http.MethodPost, coll, map[string]string{"functionId": "f1"}, map[string]any{"description": "d"}); !direct.HasHTTPCode(err, 400) {
+		t.Errorf("a create without the name in the body: err = %v, want 400", err)
+	}
+	if _, err := api.Do(ctx, http.MethodPost, coll, map[string]string{"functionId": "f1"}, map[string]any{"name": coll + "/f1", "description": "d"}); err != nil {
+		t.Errorf("a create with the name in the body: %v", err)
+	}
+}

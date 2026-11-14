@@ -164,7 +164,9 @@ secrets in status. Compute Engine's shape is covered too
 (`InsertStyle`, 2026-11-11): insert with the ID as the body's name, a
 patch that merges the fields sent with the read fingerprint (or an update
 that replaces the resource), and compute operations polled at their
-`selfLink`. The
+`selfLink`. A kind marked `nameInBody` in `kinds.yaml` also sends its
+full name as the create's body `name` (Cloud Functions v2 refuses a
+create without it; 2026-11-14). The
 first kinds: `LoggingSavedQuery`, `IAMOauthClient`,
 `IAMWorkforcePoolProviderKey` (2026-11-11); then
 `IAMWorkforcePoolProviderScimTenant`, `GKEHubMembershipRBACRoleBinding`,
