@@ -46,10 +46,14 @@ func TestBigLakeCatalogMissingIs403(t *testing.T) {
 	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL}
 	gvk := biglakev1beta1.BigLakeCatalogGVK
 
+	// A catalog ID takes letters, digits and underscores only (run
+	// cce-11141216-dd17); the sweeper reads the run's name without dashes.
+	id := strings.ReplaceAll(mockenv.Name("biglakecatalog-403"), "-", "")
 	u := &unstructured.Unstructured{Object: map[string]any{
 		"spec": map[string]any{
 			"projectRef": map[string]any{"external": mockenv.Project},
 			"location":   "us",
+			"resourceID": id,
 		},
 	}}
 	u.SetGroupVersionKind(gvk)
@@ -80,7 +84,7 @@ func TestBigLakeCatalogMissingIs403(t *testing.T) {
 	posts := func() int {
 		n := 0
 		for _, r := range env.Requests() {
-			if strings.HasPrefix(r, http.MethodPost+" ") && strings.Contains(r, "catalogId="+u.GetName()) {
+			if strings.HasPrefix(r, http.MethodPost+" ") && strings.Contains(r, "catalogId="+id) {
 				n++
 			}
 		}

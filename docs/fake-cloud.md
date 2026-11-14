@@ -402,7 +402,10 @@ Dataplex kinds never became Ready on the fake cloud
 
 A kind with `missingIs403` (`BigLakeCatalog`, 2026-11-14) answers 403
 PERMISSION_DENIED, not 404, for a name the fake does not hold, as BigLake
-does for a catalog that does not exist, even to an admin. Two switches on
+does for a catalog that does not exist, even to an admin. It does not
+check a catalog ID's characters (letters, digits and underscores only:
+run `cce-11141216-dd17` was refused one with dashes), so the fixtures use
+`${ID}`. Two switches on
 `mockenv.Env.Disco`, off by default, make deletes behave as API
 Gateway's do (`TestAPIGatewayDeleteGatewayAndConfigTogether`):
 `SetDeleteDelay` makes a delete that answers an operation take that long,

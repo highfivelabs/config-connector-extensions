@@ -397,7 +397,9 @@ rows="$(sweep_list "${bl}projects/${project}/locations/us/catalogs?pageSize=1000
 while read -r name made; do
   [[ -n "${name}" ]] || continue
   [[ "${made}" != "-" ]] || made=""
-  by_run "${name##*/}" "${made}" || continue
+  # A catalog ID has no dashes (cce11141216dd17...): read as the run's name.
+  id="$(sed -E 's/^cce([0-9]{8})([0-9a-f]{4})/cce-\1-\2-/' <<<"${name##*/}")"
+  by_run "${id}" "${made}" || continue
   act "BigLake catalog" "${name}" disco_delete "${bl}" "${name}"
 done <<<"${rows}"
 # The project's fleet, when a live GKEHubRolloutSequence test made it (it
