@@ -22,7 +22,11 @@ builds, the diff it computes, the status it writes. It cannot show what
 the real API refuses or adds: required fields and enum values, cross-field
 rules, defaults it fills in, eventual consistency, permissions, quotas.
 For the generated kinds that is everything beyond the shape of the
-collection.
+collection. What our code does when a quota refuses it can be shown:
+`env.RefuseForQuota(n, match)` (`pkg/test/mockenv`) answers the next `n`
+matching requests 429 `RESOURCE_EXHAUSTED` in front of the fake or the
+real cloud, and `env.Events` lists an object's event reasons
+(`TestDataplexLakeRefusedForQuota`, `TestIAMAccessPolicyRefusedForQuota`).
 
 ## 2. Live where the fake gives no signal, sampled over time
 

@@ -37,6 +37,11 @@ mockgcp patch 0045 serves the policies (`docs/fake-cloud.md`). What the
 fake cannot show: whether principals, permissions and conditions are
 valid, what a policy denies, and permissions.
 
+IAM allows `GetAccessPolicy` 5 times a minute per project. A refusal for
+quota (429) requeues the policy after a growing wait and never marks it
+failed (`docs/design.md` decision 31; `TestIAMAccessPolicyRefusedForQuota`
+on the fake).
+
 Live is pending: the live-test account has no access policy role
 (`roles/iam.accessPolicyAdmin`), so the test skips live.
 
