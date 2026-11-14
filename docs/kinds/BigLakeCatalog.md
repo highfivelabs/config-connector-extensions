@@ -22,3 +22,4 @@ One row per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | `ea6bc6a` | PASS | PASS | run `cce-11141253-209c`, `TestBigLakeCatalogMissingIs403` (the kind test skips live): the catalog is made although BigLake answers the read before the create 403, not 404 (it does for any missing catalog, even to an admin); deleted behind the controller's back it reads 403, the object goes not Ready with it and no second create is sent. A catalog ID takes letters, digits and underscores only (run `cce-11141216-dd17` was refused one with dashes; the fake does not check). Before (catalog live run): the 403 was taken for a denial and the catalog never made | 1 catalog (deleted); sweep empty |

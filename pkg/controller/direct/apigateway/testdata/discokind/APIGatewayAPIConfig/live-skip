@@ -1,1 +1,1 @@
-an API config needs its API (and a gateway its config), which this test does not make, and the API Gateway API is not on in the live-test project; live: pending both
+kept skipped so a live run makes one API Gateway set, not three: TestAPIGatewayDeleteGatewayAndConfigTogether makes an API, a config and a gateway live and deletes them together

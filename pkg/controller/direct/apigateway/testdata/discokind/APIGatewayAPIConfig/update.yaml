@@ -11,4 +11,4 @@ spec:
   openapiDocuments:
   - document:
       path: openapi.yaml
-      contents: b3BlbmFwaTogMy4wLjAK
+      contents: c3dhZ2dlcjogIjIuMCIKaW5mbzoKICB0aXRsZTogY2NlLXRlc3QKICB2ZXJzaW9uOiAxLjAuMApzY2hlbWVzOgotIGh0dHBzCnByb2R1Y2VzOgotIGFwcGxpY2F0aW9uL2pzb24KcGF0aHM6CiAgL2hlbGxvOgogICAgZ2V0OgogICAgICBvcGVyYXRpb25JZDogaGVsbG8KICAgICAgeC1nb29nbGUtYmFja2VuZDoKICAgICAgICBhZGRyZXNzOiBodHRwczovL2V4YW1wbGUuY29tCiAgICAgIHJlc3BvbnNlczoKICAgICAgICAiMjAwIjoKICAgICAgICAgIGRlc2NyaXB0aW9uOiBPSwo=

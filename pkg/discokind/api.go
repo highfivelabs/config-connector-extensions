@@ -44,11 +44,14 @@ type API struct {
 	// LocationHost sends a name in a location other than global to that
 	// location's host (Kind.LocationHost, LocationBaseURL).
 	LocationHost bool
+	// GetQuery are query parameters Get sends (Kind.GetQuery); an
+	// operation's read sends none.
+	GetQuery map[string]string
 }
 
 // Get reads a resource.
 func (a *API) Get(ctx context.Context, name string) (map[string]any, error) {
-	return a.Do(ctx, http.MethodGet, name, nil, nil)
+	return a.Do(ctx, http.MethodGet, name, a.GetQuery, nil)
 }
 
 // Do sends one request and decodes the answer.
@@ -146,7 +149,7 @@ func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, erro
 				return nil, ctx.Err()
 			case <-time.After(next(refused)):
 			}
-			got, err := a.Get(ctx, url)
+			got, err := a.Do(ctx, http.MethodGet, url, nil, nil)
 			if err != nil && isQuota(err) {
 				refused = true
 				continue
@@ -186,7 +189,11 @@ func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, erro
 			if e, ok := op["error"].(map[string]any); ok {
 				code, _ := e["code"].(float64)
 				msg, _ := e["message"].(string)
-				return nil, &googleapi.Error{Code: grpcToHTTP(int(code)), Message: msg}
+				// Body as an HTTP error's, with the gRPC status's name, so a
+				// caller can tell FAILED_PRECONDITION from another 400 (InUse).
+				httpCode := grpcToHTTP(int(code))
+				body, _ := json.Marshal(map[string]any{"error": map[string]any{"code": httpCode, "message": msg, "status": grpcName(int(code))}})
+				return nil, &googleapi.Error{Code: httpCode, Message: msg, Body: string(body)}
 			}
 			resp, _ := op["response"].(map[string]any)
 			return resp, nil
@@ -206,6 +213,17 @@ func (a *API) Wait(ctx context.Context, op map[string]any) (map[string]any, erro
 func isQuota(err error) bool {
 	var ge *googleapi.Error
 	return errors.As(err, &ge) && ge.Code == http.StatusTooManyRequests
+}
+
+// grpcName is a gRPC status code's name (FAILED_PRECONDITION).
+func grpcName(code int) string {
+	names := []string{"OK", "CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND",
+		"ALREADY_EXISTS", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "ABORTED",
+		"OUT_OF_RANGE", "UNIMPLEMENTED", "INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED"}
+	if code >= 0 && code < len(names) {
+		return names[code]
+	}
+	return "UNKNOWN"
 }
 
 func grpcToHTTP(code int) int {

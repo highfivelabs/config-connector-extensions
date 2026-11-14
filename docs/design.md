@@ -166,7 +166,25 @@ patch that merges the fields sent with the read fingerprint (or an update
 that replaces the resource), and compute operations polled at their
 `selfLink`. A kind marked `nameInBody` in `kinds.yaml` also sends its
 full name as the create's body `name` (Cloud Functions v2 refuses a
-create without it; 2026-11-14). The
+create without it; 2026-11-14). Two more found by the catalog's live
+runs (2026-11-14): a method answers a long-running operation when its
+response is `Operation`, `GoogleLongrunningOperation` or an API's own
+copy of it under another name (API Gateway's `ApigatewayOperation`, by
+its fields); the generator had missed that one, so API Gateway's deletes
+dropped the finalizer before their operations ended, a config deleted
+beside its gateway failed "in use" in the cloud and stayed there, FAILED,
+and its API could not go. A delete now waits for its operation, and one
+refused because the resource is still in use (FAILED_PRECONDITION, "in
+use", "nested resources") is tried again for up to ten minutes before
+the reconciler's own retries take over. `missingIs403` marks a kind whose
+API answers 403, not 404, for a resource that does not exist
+(`BigLakeCatalog`): the read before a create takes that 403 as not found
+only while the object has never made or acquired its resource (no
+`status.externalRef`), and a real denial then fails the create; once
+made, a 403 is a denial on update and delete as for any kind. Terraform
+has no special handling here because it never reads before a create.
+`getQuery` sends query parameters with every get (`view: FULL` for API
+Gateway configs, whose source files a get leaves out otherwise). The
 first kinds: `LoggingSavedQuery`, `IAMOauthClient`,
 `IAMWorkforcePoolProviderKey` (2026-11-11); then
 `IAMWorkforcePoolProviderScimTenant`, `GKEHubMembershipRBACRoleBinding`,

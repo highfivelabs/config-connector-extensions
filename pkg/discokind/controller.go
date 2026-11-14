@@ -17,17 +17,21 @@ package discokind
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	billingv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/billing/v1alpha1"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"google.golang.org/api/googleapi"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -54,6 +58,12 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 	var name string
 	var body map[string]any
 	switch deleting := !u.GetDeletionTimestamp().IsZero(); {
+	case deleting && k8s.HasAbandonAnnotation(u):
+		// Abandoning: the reconciler makes no call, so read nothing either.
+		// directbase reads (Find) before it looks at the policy, and a read
+		// that fails (BigLake's 403 for a catalog deleted behind our back,
+		// Kind.MissingIs403) would otherwise hold the finalizer forever.
+		return &adapter{kind: m.kind}, nil
 	case deleting && ext != "":
 		// Deleting a resource that was made or acquired: its name is in
 		// status, and the parts of a name cannot change, so the parent is not
@@ -81,9 +91,9 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 	if err != nil {
 		return nil, err
 	}
-	api := &API{HTTP: httpClient, BaseURL: m.kind.BaseURL, LocationHost: m.kind.LocationHost}
+	api := &API{HTTP: httpClient, BaseURL: m.kind.BaseURL, LocationHost: m.kind.LocationHost, GetQuery: m.kind.GetQuery}
 	spec, _, _ := unstructured.NestedMap(u.Object, "spec")
-	return &adapter{kind: m.kind, api: api, name: name, desired: body, query: m.kind.QueryOf(spec)}, nil
+	return &adapter{kind: m.kind, api: api, name: name, desired: body, query: m.kind.QueryOf(spec), recorded: ext != ""}, nil
 }
 
 // AdapterForURL is not supported: these kinds are not exported.
@@ -218,6 +228,9 @@ type adapter struct {
 	// write.
 	query  map[string]string
 	actual map[string]any
+	// recorded: the object has made or acquired its resource
+	// (status.externalRef is set).
+	recorded bool
 }
 
 var _ directbase.Adapter = &adapter{}
@@ -230,6 +243,13 @@ func (a *adapter) Find(ctx context.Context) (bool, error) {
 	got, err := a.api.Get(ctx, a.name)
 	if err != nil {
 		if direct.IsNotFound(err) {
+			return false, nil
+		}
+		if a.kind.MissingIs403 && !a.recorded && direct.HasHTTPCode(err, http.StatusForbidden) {
+			// The API answers 403 for a resource that does not exist
+			// (Kind.MissingIs403), and this object has never made or acquired
+			// one: create it. A real denial fails the create.
+			klog.FromContext(ctx).V(2).Info("reading 403 before a create as not found", "kind", a.kind.GVK.Kind, "name", a.name)
 			return false, nil
 		}
 		return false, fmt.Errorf("getting %s %s: %w", a.kind.GVK.Kind, a.name, err)
@@ -540,20 +560,81 @@ func (a *adapter) Export(ctx context.Context) (*unstructured.Unstructured, error
 	return nil, fmt.Errorf("%s does not support export", a.kind.GVK.Kind)
 }
 
+// DeleteRetryFor bounds how long Delete tries again a delete the API
+// refuses because the resource is still in use (InUse); after it, the
+// error goes back to the reconciler, which tries again later.
+var DeleteRetryFor = 10 * time.Minute
+
 func (a *adapter) Delete(ctx context.Context, op *directbase.DeleteOperation) (bool, error) {
+	// A delete the API refuses because something still uses the resource
+	// (an API Gateway config whose gateway is being deleted beside it) is
+	// tried again, less often each time, until it goes through or
+	// DeleteRetryFor passes. The finalizer stays until the delete, and its
+	// operation, ends.
+	wait := a.api.PollInterval
+	if wait <= 0 {
+		wait = 2 * time.Second
+	}
+	deadline := time.Now().Add(DeleteRetryFor)
+	for {
+		err := a.deleteOnce(ctx)
+		if err == nil {
+			return true, nil
+		}
+		if !InUse(err) || time.Now().Add(wait).After(deadline) {
+			return false, fmt.Errorf("deleting %s %s: %w", a.kind.GVK.Kind, a.name, err)
+		}
+		klog.FromContext(ctx).Info("delete refused while the resource is in use; trying again", "kind", a.kind.GVK.Kind, "name", a.name, "retryAfter", wait, "error", err.Error())
+		select {
+		case <-ctx.Done():
+			return false, fmt.Errorf("deleting %s %s: %w (last: %v)", a.kind.GVK.Kind, a.name, ctx.Err(), err)
+		case <-time.After(wait):
+		}
+		if wait += wait / 2; wait > 30*time.Second {
+			wait = 30 * time.Second
+		}
+	}
+}
+
+// deleteOnce sends the delete and, when it answers an operation, waits for
+// the operation to end: the resource is gone only then, and an operation
+// that fails (an API Gateway config still in use) is the delete's error.
+func (a *adapter) deleteOnce(ctx context.Context) error {
 	resp, err := a.api.Do(ctx, http.MethodDelete, a.name, nil, nil)
 	if err != nil {
 		if direct.IsNotFound(err) {
-			return true, nil
+			return nil
 		}
-		return false, fmt.Errorf("deleting %s %s: %w", a.kind.GVK.Kind, a.name, err)
+		return err
 	}
 	if a.kind.DeleteLRO {
 		if _, err := a.api.Wait(ctx, resp); err != nil && !direct.IsNotFound(err) {
-			return false, fmt.Errorf("deleting %s %s: %w", a.kind.GVK.Kind, a.name, err)
+			return err
 		}
 	}
-	return true, nil
+	return nil
+}
+
+// inUseRE matches what APIs say when a resource cannot go while another
+// uses it or it holds others: API Gateway's "config is in use" and "has
+// nested resources".
+var inUseRE = regexp.MustCompile(`(?i)\bin use\b|is used by|nested resources`)
+
+// InUse reports whether err is an API's refusal to delete a resource that
+// is still in use or still holds others: FAILED_PRECONDITION, or a
+// message that says so. A delete refused so goes through once the user or
+// the child is gone.
+func InUse(err error) bool {
+	var ge *googleapi.Error
+	if !errors.As(err, &ge) {
+		return false
+	}
+	switch ge.Code {
+	case http.StatusBadRequest, http.StatusConflict, http.StatusPreconditionFailed:
+	default:
+		return false
+	}
+	return strings.Contains(ge.Body, `"FAILED_PRECONDITION"`) || inUseRE.MatchString(ge.Message)
 }
 
 // CloudLabels are the found resource's labels, for the slot guard

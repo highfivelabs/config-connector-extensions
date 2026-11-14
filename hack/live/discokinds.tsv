@@ -3,9 +3,9 @@
 # kind, base URL, collection (location global or the kind's sweepLocation,
 # region us-central1, zone us-central1-a), the list answer's field,
 # soft-delete field=value.
-APIGatewayGateway	https://apigateway.googleapis.com/v1/	projects/{project}/locations/global/gateways	gateways	-
+APIGatewayGateway	https://apigateway.googleapis.com/v1/	projects/{project}/locations/us-central1/gateways	gateways	-
 BackupDRManagementServer	https://backupdr.googleapis.com/v1/	projects/{project}/locations/global/managementServers	managementServers	-
-BigLakeCatalog	https://biglake.googleapis.com/v1/	projects/{project}/locations/global/catalogs	catalogs	-
+BigLakeCatalog	https://biglake.googleapis.com/v1/	projects/{project}/locations/us/catalogs	catalogs	-
 CertificateManagerCertificateIssuanceConfig	https://certificatemanager.googleapis.com/v1/	projects/{project}/locations/global/certificateIssuanceConfigs	certificateIssuanceConfigs	-
 CloudBuildConnection	https://cloudbuild.googleapis.com/v2/	projects/{project}/locations/global/connections	connections	-
 CloudDeployDeployPolicy	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/deployPolicies	deployPolicies	-

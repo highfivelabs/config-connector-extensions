@@ -96,6 +96,20 @@ type Kind struct {
 	// when the resource is deleted but still answers a get (an OAuth
 	// client's state DELETED); such a resource counts as gone.
 	SoftDelete *FieldValue
+	// MissingIs403: the API answers a get of a resource that does not
+	// exist 403 PERMISSION_DENIED, not 404, even to an admin of it (BigLake
+	// catalogs, found by the catalog's live runs). Before it has made or
+	// acquired the resource (no status.externalRef), the controller reads
+	// such a 403 as not found and creates it, as Terraform does (it never
+	// reads before a create); a real denial then fails the create. Once the
+	// object has a resource, a 403 is a denial, as for any kind: an update
+	// or a delete never takes it for a resource gone.
+	MissingIs403 bool
+	// GetQuery are query parameters every get of the resource sends: API
+	// Gateway's view=FULL, without which a config's get leaves out its
+	// source files (openapiDocuments), which the spec sets, so the spec
+	// and the cloud would always differ.
+	GetQuery map[string]string
 	// FakeDefaults are values of read-only fields the fake cloud sets on
 	// create (state: ACTIVE), where the real API sets them.
 	FakeDefaults map[string]any

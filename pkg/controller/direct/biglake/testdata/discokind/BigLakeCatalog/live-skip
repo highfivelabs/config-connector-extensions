@@ -1,1 +1,1 @@
-the BigLake API is not on in the live-test project and the live-test account has no BigLake role (a database also needs its catalog, which this test does not make); live: pending both
+covered live by TestBigLakeCatalogMissingIs403 (a create through BigLake's 403 for a missing catalog, then a 403 once made is a denial)

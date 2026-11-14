@@ -111,7 +111,7 @@ func run(t *testing.T, kindName, caseName string) {
 	if s := setups[setupKey]; s != nil {
 		s(t, env)
 	}
-	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL, LocationHost: k.LocationHost}
+	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL, LocationHost: k.LocationHost, GetQuery: k.GetQuery}
 	if !mockenv.Live() {
 		api.PollInterval = 200 * time.Millisecond
 	}
@@ -133,6 +133,12 @@ func run(t *testing.T, kindName, caseName string) {
 			return err
 		})
 		if direct.IsNotFound(err) {
+			return true
+		}
+		if k.MissingIs403 && direct.HasHTTPCode(err, http.StatusForbidden) {
+			// The API's answer for a name it does not hold
+			// (Kind.MissingIs403); the test's account can read the
+			// resource while it exists.
 			return true
 		}
 		if err != nil {

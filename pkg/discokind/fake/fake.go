@@ -19,6 +19,14 @@
 // delete), in front of mockgcp. It is generated from the same Kind
 // descriptors as the controller, so a new kind needs no mockgcp patch.
 //
+// A kind with Kind.MissingIs403 answers 403 PERMISSION_DENIED, not 404,
+// for a name it does not hold, as BigLake does for a catalog. Two
+// switches, off by default, make deletes behave as API Gateway's do
+// (SetDeleteDelay, SetRefuseInUse): an operation that takes a while, the
+// resource still there until it ends, and a resource another one names
+// (a config its gateway serves) or that holds others refused in the
+// operation, FAILED_PRECONDITION, as the real API does.
+//
 // What it cannot show (docs/testing.md): the API's validation (required
 // fields, enum values, cross-field rules), defaults the API fills in
 // beyond Kind.FakeDefaults, and quotas. Those are what a live run is for.
@@ -49,17 +57,115 @@ type Cloud struct {
 	mu      sync.Mutex
 	objects map[string]map[string]any // by BaseURL + name
 	ops     map[string]map[string]any // by BaseURL + operation name
+
+	// deleteDelay and refuseInUse: SetDeleteDelay, SetRefuseInUse.
+	deleteDelay time.Duration
+	refuseInUse bool
+	// deleting are the delete operations still running, by the
+	// resource's key.
+	deleting map[string]*pendingDelete
+}
+
+// pendingDelete is a delete operation that ends at at: it then removes
+// the resource or, when refused is set, fails with it.
+type pendingDelete struct {
+	at      time.Time
+	op      map[string]any
+	k       *discokind.Kind
+	refused string
+}
+
+// SetDeleteDelay makes a delete of a kind whose delete answers an
+// operation (Kind.DeleteLRO, not Compute Engine's) take d: the operation
+// is not done, and the resource is still there, until d has passed.
+func (c *Cloud) SetDeleteDelay(d time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.deleteDelay = d
+}
+
+// SetRefuseInUse makes a delete fail FAILED_PRECONDITION while another
+// resource names it in a top-level field (a gateway's apiConfig) or holds
+// resources under its name: in the delete's operation for a kind whose
+// delete answers one (the operation fails, and the resource stays), else
+// at once.
+func (c *Cloud) SetRefuseInUse(on bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.refuseInUse = on
+}
+
+// settle ends the delete operations whose time has come (c.mu held).
+func (c *Cloud) settle() {
+	now := time.Now()
+	for key, p := range c.deleting {
+		if now.Before(p.at) {
+			continue
+		}
+		delete(c.deleting, key)
+		p.op["done"] = true
+		if p.refused != "" {
+			p.op["error"] = map[string]any{"code": 9, "message": p.refused} // FAILED_PRECONDITION
+			if obj, ok := c.objects[key]; ok && contains(p.k.Output, "state") {
+				obj["state"] = "FAILED"
+			}
+			continue
+		}
+		p.op["response"] = map[string]any{}
+		c.remove(p.k, key)
+	}
+}
+
+// remove deletes the resource at key, or marks it deleted (SoftDelete)
+// (c.mu held).
+func (c *Cloud) remove(k *discokind.Kind, key string) {
+	if k.SoftDelete != nil {
+		if obj, ok := c.objects[key]; ok {
+			obj[k.SoftDelete.Field] = k.SoftDelete.Value
+		}
+		return
+	}
+	delete(c.objects, key)
+}
+
+// inUse says why the resource at key cannot go: another resource names it
+// in a top-level field, or holds resources under its name; "" when
+// neither (c.mu held).
+func (c *Cloud) inUse(k *discokind.Kind, key, name string) string {
+	var keys []string
+	for other := range c.objects {
+		keys = append(keys, other)
+	}
+	sort.Strings(keys)
+	for _, other := range keys {
+		if other == key {
+			continue
+		}
+		if strings.HasPrefix(other, key+"/") {
+			return fmt.Sprintf("%s has nested resources", name)
+		}
+		for _, v := range c.objects[other] {
+			if s, ok := v.(string); ok && s == name {
+				user, _ := c.objects[other]["name"].(string)
+				return fmt.Sprintf("%s is in use by %s", name, user)
+			}
+		}
+	}
+	return ""
 }
 
 // New is a fake for kinds in front of next.
 func New(next http.RoundTripper, kinds []*discokind.Kind) *Cloud {
-	return &Cloud{Next: next, Kinds: kinds, objects: map[string]map[string]any{}, ops: map[string]map[string]any{}}
+	return &Cloud{Next: next, Kinds: kinds, objects: map[string]map[string]any{}, ops: map[string]map[string]any{}, deleting: map[string]*pendingDelete{}}
 }
 
 const opPrefix = "operations/discokind-"
 
 func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 	full := req.URL.Scheme + "://" + req.URL.Host + req.URL.Path
+	c.mu.Lock()
+	c.settle()
+	c.mu.Unlock()
 	if req.Method == http.MethodGet {
 		c.mu.Lock()
 		_, isOp := c.ops[full]
@@ -212,6 +318,11 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		}
 		return jsonResponse(req, http.StatusOK, obj)
 	}
+	if !ok && k.MissingIs403 {
+		// As BigLake answers for a catalog that does not exist, even to an
+		// admin (the catalog's live runs).
+		return errorResponse(req, http.StatusForbidden, "PERMISSION_DENIED", fmt.Sprintf("Permission denied on resource '%s' (or it may not exist).", name))
+	}
 	if !ok {
 		return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s was not found", name))
 	}
@@ -286,6 +397,25 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		if deleted {
 			return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s was not found", name))
 		}
+		if p, ok := c.deleting[key]; ok {
+			// Already being deleted: the same operation.
+			return jsonResponse(req, http.StatusOK, p.op)
+		}
+		refused := ""
+		if c.refuseInUse {
+			refused = c.inUse(k, key, name)
+		}
+		if k.DeleteLRO && !k.InsertStyle && (c.deleteDelay > 0 || refused != "") {
+			// The operation runs for deleteDelay; the resource stays until it
+			// ends, and goes then unless the delete was refused (settle).
+			op := map[string]any{"name": opPrefix + uuid.NewString(), "done": false}
+			c.ops[k.BaseURL+op["name"].(string)] = op
+			c.deleting[key] = &pendingDelete{at: time.Now().Add(c.deleteDelay), op: op, k: k, refused: refused}
+			return jsonResponse(req, http.StatusOK, op)
+		}
+		if refused != "" {
+			return errorResponse(req, http.StatusBadRequest, "FAILED_PRECONDITION", refused)
+		}
 		answer := map[string]any{}
 		if k.SoftDelete != nil {
 			obj[k.SoftDelete.Field] = k.SoftDelete.Value
@@ -347,6 +477,7 @@ func (c *Cloud) doneOp(req *http.Request, k *discokind.Kind, name string, respon
 func (c *Cloud) getOp(req *http.Request, key string) (*http.Response, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.settle()
 	op, ok := c.ops[key]
 	if !ok {
 		return errorResponse(req, http.StatusNotFound, "NOT_FOUND", "operation not found")

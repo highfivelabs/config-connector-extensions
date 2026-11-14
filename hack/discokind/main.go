@@ -101,6 +101,14 @@ type Config struct {
 	// the request body, beside the ID parameter (Cloud Functions v2
 	// refuses one without it: "Invalid resource name ''").
 	NameInBody bool `json:"nameInBody,omitempty"`
+	// MissingIs403: the API answers a get of a resource that does not
+	// exist 403 PERMISSION_DENIED rather than 404 (BigLake catalogs), which
+	// the Discovery document does not say (Kind.MissingIs403).
+	MissingIs403 bool `json:"missingIs403,omitempty"`
+	// GetQuery are query parameters every get of the resource sends
+	// (Kind.GetQuery): API Gateway's view FULL, without which a config's
+	// source files are left out.
+	GetQuery map[string]string `json:"getQuery,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -338,8 +346,32 @@ func singular(s string) string {
 	return s
 }
 
-func isLRO(m *Method) bool {
-	return m != nil && m.Response != nil && (m.Response.Ref == "Operation" || m.Response.Ref == "GoogleLongrunningOperation")
+// isLRO reports whether a method answers a long-running operation: the
+// schema Operation or GoogleLongrunningOperation, or an API's own copy of
+// google.longrunning.Operation under another name (API Gateway's
+// ApigatewayOperation), known by its fields done, name, error, metadata
+// and response. Missing one made API Gateway's deletes return before the
+// operation ended: the catalog's live run deleted a gateway and its config
+// together, the config's delete failed "in use" while the gateway was
+// still going, and the config stayed in the cloud, FAILED.
+func isLRO(d *Discovery, m *Method) bool {
+	if m == nil || m.Response == nil {
+		return false
+	}
+	ref := m.Response.Ref
+	if ref == "Operation" || ref == "GoogleLongrunningOperation" {
+		return true
+	}
+	s := d.Schemas[ref]
+	if s == nil || !strings.HasSuffix(ref, "Operation") {
+		return false
+	}
+	for _, f := range []string{"done", "name", "error", "metadata", "response"} {
+		if s.Properties[f] == nil {
+			return false
+		}
+	}
+	return s.Properties["done"].Type == "boolean"
 }
 
 func build(c *Config, d *Discovery) (*built, error) {
@@ -387,7 +419,7 @@ func build(c *Config, d *Discovery) (*built, error) {
 		k.updatePUT = true
 	}
 	k.updatable = patch != nil
-	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(create), isLRO(patch), isLRO(del)
+	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(d, create), isLRO(d, patch), isLRO(d, del)
 	if !k.insertStyle && !k.patchCreates {
 		// The ID parameter: a query parameter named ...Id, but not
 		// requestId (an idempotency key some APIs take beside the ID).
