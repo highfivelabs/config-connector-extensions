@@ -53,6 +53,15 @@ vars:
   # setup-envtest from controller-runtime's release-0.20 branch (the
   # controller-runtime Config Connector pins), as resolved on 2026-11-07.
   SETUP_ENVTEST: sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20250517180713-32e5e9e948a5
+  # test-mock's and test:pkgs' go test flags. The timeout is per package
+  # binary: Go's default of 10m is too short for
+  # pkg/controller/direct/compute, which runs its envtests one after another
+  # (525-587 s on GitHub's runner in November 2026); 30m is factory's
+  # go:test-envtest default. GO_TEST_P (environment or command line) caps
+  # how many packages, each with its own etcd and kube-apiserver, run at
+  # once; unset, Go runs one per CPU. hack/ci/gate.sh sets it on the
+  # offload VM, where 16 at once timed out starting envtest.
+  GO_TEST_FLAGS: -timeout {{.GO_TEST_TIMEOUT | default "30m"}}{{if .GO_TEST_P}} -p {{.GO_TEST_P}}{{end}}
 
 tasks:
   default:
@@ -154,7 +163,7 @@ tasks:
       - task: go:test-envtest
         vars:
           ENVTEST_K8S_VERSION: '{{.ENVTEST_K8S_VERSION}}'
-          CMD: E2E_GCP_TARGET=mock go test ./... -count=1
+          CMD: E2E_GCP_TARGET=mock go test ./... -count=1 {{.GO_TEST_FLAGS}}
 
   # The same end-to-end tests, each kind against the fake cloud and then a
   # real project (docs/live-runs.md): task test-live [PROJECT=<project>]
@@ -232,7 +241,7 @@ tasks:
       - task: go:test-envtest
         vars:
           ENVTEST_K8S_VERSION: '{{.ENVTEST_K8S_VERSION}}'
-          CMD: E2E_GCP_TARGET=mock go test {{.PKGS}} -count=1{{if .RUN}} -run '{{.RUN}}'{{end}}
+          CMD: E2E_GCP_TARGET=mock go test {{.PKGS}} -count=1 {{.GO_TEST_FLAGS}}{{if .RUN}} -run '{{.RUN}}'{{end}}
 
   # The version-slot move on the fake cloud (docs/design.md "Version
   # slots"): the slot guard's own tests, then two managers as two slots
