@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -368,7 +369,7 @@ func Subset(want, got any) bool {
 		return true
 	case string:
 		if g, ok := got.(string); ok {
-			return w == g || sameComputeURL(w, g)
+			return w == g || sameComputeURL(w, g) || sameBucket(w, g)
 		}
 		if got == nil {
 			return w == ""
@@ -383,6 +384,20 @@ func Subset(want, got any) bool {
 		}
 		return scalarString(w) == scalarString(got)
 	}
+}
+
+// bucketPathRE is a Cloud Storage bucket's resource path,
+// projects/P/buckets/B.
+var bucketPathRE = regexp.MustCompile(`^projects/[^/]+/buckets/([^/]+)$`)
+
+// sameBucket reports whether want, a bucket's path
+// (projects/P/buckets/B), names the bucket got names by its bare name:
+// Dataplex answers an asset's resourceSpec.name with the bare bucket name
+// whatever path it was sent (run cce-11140351-e560), which otherwise is
+// a difference on every reconcile, and a patch, forever.
+func sameBucket(want, got string) bool {
+	m := bucketPathRE.FindStringSubmatch(want)
+	return m != nil && m[1] == got
 }
 
 // computeURLPrefixes are the forms of a Compute Engine resource's URL

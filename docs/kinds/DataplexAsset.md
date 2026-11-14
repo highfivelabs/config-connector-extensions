@@ -24,6 +24,12 @@ as it goes on. The test reads the cloud every 10 s live and retries its
 own refused calls. Live, `setup_test.go` makes each asset's lake, zone (`RAW`, single region, discovery off) and Cloud Storage bucket in us-central1 first and deletes them afterwards, children first. The sweeper deletes a run's zones and assets before
 its lakes.
 
+Dataplex answers `resourceSpec.name` with the bucket's bare name whatever
+path was sent (`projects/P/buckets/B`); the controller counts the two as
+the same (`sameBucket` in `pkg/discokind`), where it used to see a
+difference and patch the asset on every reconcile (run
+`cce-11140351-e560`: Ready, but updated for 15 minutes).
+
 ## Live runs
 
 One row per run.
