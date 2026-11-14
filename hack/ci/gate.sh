@@ -34,6 +34,12 @@
 # check and e2e run on one offload Spot VM (16 vCPUs, 64 GB; on a quota
 # error 8 vCPUs, 32 GB, never smaller), against the repository's fake
 # cloud only, as ci.yml's jobs do: no credentials reach a test.
+# The VM's disk is CI_DISK_GB (default 150) of pd-ssd, where offload's
+# default is 50 GB: the restored Go cache alone is about 28 GB, and /tmp
+# (go test's binaries, every envtest's etcd) is on the same disk; at 50 GB
+# envtest failed with "no space left on device" (November 2026). The tests
+# run CI_TEST_P (default 8) packages at once (GO_TEST_P, Taskfile.yml), not
+# one per vCPU: with 16 at once, etcd and kube-apiserver timed out starting.
 #
 # The commit is checked out into a temporary worktree first, so the run
 # is of exactly SHA, whatever the working tree holds.
@@ -43,7 +49,8 @@
 # pushes SHA to the branch offload-ci/SHA, posts the status, and deletes
 # the branch; a failing run posts nothing there (the push is refused).
 #
-# Environment: CI_BASE (default origin/main), OFFLOAD (the offload command,
+# Environment: CI_BASE (default origin/main), CI_DISK_GB (default 150),
+# CI_TEST_P (default 8), OFFLOAD (the offload command,
 # default ../scripts/offload/offload beside this repository, else on PATH),
 # CI_NO_STATUS=1 (run, post nothing). Required, from the environment or the
 # git-ignored .env at the repository's root (.env.example): OFFLOAD_PROJECT
@@ -117,7 +124,7 @@ gover="$(sed -n -E 's/^toolchain go([0-9.]+).*/\1/p' "$SRC/go.mod")"
 [[ -n "$gover" ]] || gover="$(sed -n -E 's/^go ([0-9.]+).*/\1/p' "$SRC/go.mod")"
 [[ -n "$gover" ]] || die "no go version in go.mod"
 # task at hack/ci/tools.sh's pin, in bin/ci once the prep has run.
-task="env GOTOOLCHAIN=go$gover bin/ci/task"
+task="env GOTOOLCHAIN=go$gover GO_TEST_P=${CI_TEST_P:-8} bin/ci/task"
 echo "gate: Go $gover (go.mod), tools $(cd "$SRC" && hack/ci/tools.sh --pins)"
 
 start=$SECONDS
@@ -132,7 +139,7 @@ case "$mode" in
       --step-skippable "$task ci:check MODE=$mode GROUPS='$groups'")
     if [[ "$e2e" == true ]]; then steps+=(--step "$task operator-e2e"); what="$what, operator-e2e"; fi
     set +e
-    OFFLOAD_FALLBACK="${OFFLOAD_FALLBACK-8}" "$OFFLOAD" run --dir "$SRC" "${steps[@]}" </dev/null 2>&1 | tee "$TMP/log"
+    OFFLOAD_FALLBACK="${OFFLOAD_FALLBACK-8}" "$OFFLOAD" run --dir "$SRC" --disk "${CI_DISK_GB:-150}" "${steps[@]}" </dev/null 2>&1 | tee "$TMP/log"
     rc=${PIPESTATUS[0]}
     set -e
     id="$(sed -n -E 's/^offload: (off[a-z]*-[^ ]+) \(.*/\1/p' "$TMP/log" | head -n 1)"
