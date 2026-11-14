@@ -17,12 +17,15 @@ package discokind
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"google.golang.org/api/googleapi"
 )
 
 // operationServer answers reads of one operation: refused for quota
@@ -84,5 +87,34 @@ func TestWaitEndsWithItsContextWhileRefused(t *testing.T) {
 	_, err := api.Wait(ctx, map[string]any{"name": "projects/p/locations/us-central1/operations/op1"})
 	if err == nil || ctx.Err() == nil {
 		t.Fatalf("Wait = %v, want the context's end", err)
+	}
+}
+
+// An operation that fails FAILED_PRECONDITION (API Gateway's config still
+// in use by a gateway being deleted) is InUse, so the delete is tried
+// again; a denial or a plain bad request is not.
+func TestInUse(t *testing.T) {
+	failed := func(code int, msg string) error {
+		_, err := (&API{}).Wait(context.Background(), map[string]any{"name": "operations/op1", "done": true,
+			"error": map[string]any{"code": float64(code), "message": msg}})
+		return err
+	}
+	for _, c := range []struct {
+		err  error
+		want bool
+	}{
+		{failed(9, "Config is still used by a gateway"), true},
+		{failed(9, "anything"), true},
+		{failed(3, "API projects/p/locations/global/apis/a has nested resources"), true},
+		{failed(3, "invalid document"), false},
+		{failed(7, "Permission denied, or it is in use"), false},
+		{&googleapi.Error{Code: 400, Body: `{"error":{"code":400,"message":"x","status":"FAILED_PRECONDITION"}}`}, true},
+		{&googleapi.Error{Code: 409, Message: "resource is in use by projects/p/x"}, true},
+		{&googleapi.Error{Code: 404, Message: "in use"}, false},
+		{errors.New("in use"), false},
+	} {
+		if got := InUse(c.err); got != c.want {
+			t.Errorf("InUse(%v) = %v, want %v", c.err, got, c.want)
+		}
 	}
 }

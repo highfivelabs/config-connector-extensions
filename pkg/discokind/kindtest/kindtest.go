@@ -111,7 +111,7 @@ func run(t *testing.T, kindName, caseName string) {
 	if s := setups[setupKey]; s != nil {
 		s(t, env)
 	}
-	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL, LocationHost: k.LocationHost}
+	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL, LocationHost: k.LocationHost, GetQuery: k.GetQuery}
 	if !mockenv.Live() {
 		api.PollInterval = 200 * time.Millisecond
 	}

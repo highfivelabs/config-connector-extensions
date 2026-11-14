@@ -75,6 +75,10 @@ type Env struct {
 	// HTTP reaches the fake cloud; build Google API clients with
 	// option.WithHTTPClient(HTTP) to read what the controllers did.
 	HTTP *http.Client
+	// Disco is the discokind kinds' fake (pkg/discokind/fake), for a test
+	// that turns on its slow or refused deletes; nil against a real
+	// project.
+	Disco *discofake.Cloud
 
 	requests *recorder
 	// slotRequests are each slot's own requests (NewSlots).
@@ -316,6 +320,7 @@ func startCluster(t *testing.T) *cluster {
 	}
 
 	var requests *recorder
+	var disco *discofake.Cloud
 	if Live() {
 		// A real project, with the run's credentials; requests are still
 		// recorded, so the same checks on them hold.
@@ -330,7 +335,8 @@ func startCluster(t *testing.T) *cluster {
 		mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
 		// The discokind kinds' collections are served by their own fake
 		// (pkg/discokind/fake), and Service Management and the Chronicle API by their own, in front of mockgcp.
-		requests = &recorder{inner: discofake.New(chroniclefake.New(smfake.New(mockCloud)), discokind.Kinds())}
+		disco = discofake.New(chroniclefake.New(smfake.New(mockCloud)), discokind.Kinds())
+		requests = &recorder{inner: disco}
 	}
 	gcpHTTP := &http.Client{Transport: requests}
 	if !Live() {
@@ -338,7 +344,7 @@ func startCluster(t *testing.T) *cluster {
 		createMockProject(t, ctx, gcpHTTP, Project)
 	}
 	return &cluster{
-		Env:        &Env{T: t, Ctx: ctx, Kube: kube, HTTP: gcpHTTP, requests: requests},
+		Env:        &Env{T: t, Ctx: ctx, Kube: kube, HTTP: gcpHTTP, Disco: disco, requests: requests},
 		restConfig: restConfig,
 		scheme:     scheme,
 	}

@@ -13,7 +13,8 @@
 # descriptions call Immutable); skip {field: why}; note; sweepLocation (the
 # location the live sweeper lists, for a collection with no global one;
 # the live fixtures use it); nameInBody (create also sends the full name
-# as the body's name, beside the ID parameter, for an API that needs it).
+# as the body's name, beside the ID parameter, for an API that needs it);
+# getQuery (query parameters every get sends, such as view: FULL).
 
 - kind: LoggingSavedQuery
   group: logging.gcp.hfl.dev
@@ -491,6 +492,7 @@
   parents: [project]
   terraform: google_api_gateway_api_config
   note: "An API Gateway API's configuration: its OpenAPI or gRPC definition."
+  getQuery: {view: FULL}
 
 - kind: APIGatewayGateway
   group: apigateway.gcp.hfl.dev
@@ -500,6 +502,7 @@
   parents: [project]
   terraform: google_api_gateway_gateway
   note: "A regional API Gateway serving one API config."
+  sweepLocation: us-central1
 
 - kind: BigLakeCatalog
   group: biglake.gcp.hfl.dev

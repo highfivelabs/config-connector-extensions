@@ -96,6 +96,11 @@ type Kind struct {
 	// when the resource is deleted but still answers a get (an OAuth
 	// client's state DELETED); such a resource counts as gone.
 	SoftDelete *FieldValue
+	// GetQuery are query parameters every get of the resource sends: API
+	// Gateway's view=FULL, without which a config's get leaves out its
+	// source files (openapiDocuments), which the spec sets, so the spec
+	// and the cloud would always differ.
+	GetQuery map[string]string
 	// FakeDefaults are values of read-only fields the fake cloud sets on
 	// create (state: ACTIVE), where the real API sets them.
 	FakeDefaults map[string]any
