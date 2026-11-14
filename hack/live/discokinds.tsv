@@ -10,7 +10,7 @@ CertificateManagerCertificateIssuanceConfig	https://certificatemanager.googleapi
 CloudBuildConnection	https://cloudbuild.googleapis.com/v2/	projects/{project}/locations/global/connections	connections	-
 CloudDeployDeployPolicy	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/deployPolicies	deployPolicies	-
 CloudDeployTarget	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/targets	targets	-
-CloudFunctions2Function	https://cloudfunctions.googleapis.com/v2/	projects/{project}/locations/global/functions	functions	-
+CloudFunctions2Function	https://cloudfunctions.googleapis.com/v2/	projects/{project}/locations/us-central1/functions	functions	-
 ComputeCrossSiteNetwork	https://compute.googleapis.com/compute/v1/	projects/{project}/global/crossSiteNetworks	items	-
 ComputeGlobalNetworkEndpointGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/networkEndpointGroups	items	-
 ComputeGlobalPublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicDelegatedPrefixes	items	-

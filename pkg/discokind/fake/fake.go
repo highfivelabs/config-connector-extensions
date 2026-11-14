@@ -114,6 +114,11 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", "the resource's ID is required")
 	}
 	name := coll + "/" + id
+	if got, _ := body["name"].(string); k.NameInBody && got != name {
+		// As Cloud Functions v2 answers a create without the name in the
+		// body (the catalog's live run in hfl-dev-514205).
+		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("Invalid resource name '%s' for pattern %s", got, k.Name))
+	}
 	key := k.BaseURL + name
 	c.mu.Lock()
 	defer c.mu.Unlock()
