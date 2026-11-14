@@ -17,6 +17,12 @@ has been released yet; each release moves its entries out of
   at its own host) and `query` (`setDefault`, a query parameter). Unlike
   Terraform's `set_default`, `setDefault` has no default. Live pending a KMS
   key the Discovery Engine service agent may use.
+- **`firestore.gcp.hfl.dev/v1beta1` `FirestoreBackupSchedule`**, a stable
+  copy of Config Connector's alpha Firestore backup schedule (decision 26),
+  with upstream's fields. The API assigns the schedule's ID at create;
+  `status.externalRef` keeps it. Live pending a Firestore database in the
+  live-test project (`E2E_FIRESTORE_DATABASE`). The operator's role gains
+  `firestore.gcp.hfl.dev`.
 - **`networksecurity.gcp.hfl.dev/v1beta1` `NetworkSecurityAuthzPolicy`**,
   generated from Discovery: an authorization policy
   (`google_network_security_authz_policy`) whose `target.resources` may

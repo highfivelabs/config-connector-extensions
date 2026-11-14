@@ -28192,9 +28192,9 @@ firestore.googleapis.com,firestore.googleapis.com/Database,pointInTimeRecoveryEn
 firestore.googleapis.com,firestore.googleapis.com/Database,realtimeUpdatesMode,string,false,none,,
 firestore.googleapis.com,firestore.googleapis.com/Database,tags{},string,false,none,,
 firestore.googleapis.com,firestore.googleapis.com/Database,type,string,true,none,,
-firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,dailyRecurrence,object,false,official,spec.dailyRecurrence,
-firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,retention,string,false,official,spec.retention,
-firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,weeklyRecurrence.day,string,false,official,spec.weeklyRecurrence.day,
+firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,dailyRecurrence,object,false,both,spec.dailyRecurrence,spec.dailyRecurrence
+firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,retention,string,false,both,spec.retention,spec.retention
+firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,weeklyRecurrence.day,string,false,both,spec.weeklyRecurrence.day,spec.weeklyRecurrence.day
 firestore.googleapis.com,firestore.googleapis.com/DatabaseChangeStream,collectionGroupScope.collectionGroupId,string,true,none,,
 firestore.googleapis.com,firestore.googleapis.com/DatabaseChangeStream,databaseScope,object,false,none,,
 firestore.googleapis.com,firestore.googleapis.com/DatabaseChangeStream,name,string,false,none,,

@@ -731,7 +731,7 @@ firebaserules.googleapis.com,firebaserules.googleapis.com/Release,2,,0,,0,2,fals
 firebaserules.googleapis.com,firebaserules.googleapis.com/Ruleset,3,,0,,0,3,false,api=v1:projects.rulesets
 firebasestorage.googleapis.com,firebasestorage.googleapis.com/DefaultBucket,3,FirebaseStorageBucket,1,,0,2,false,api=v1beta:projects.defaultBucket; official-spec-fields-unmatched=2/2
 firestore.googleapis.com,firestore.googleapis.com/Database,13,FirestoreDatabase,5,,0,8,false,api=v1:projects.databases; official-spec-fields-unmatched=2/6
-firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,3,FirestoreBackupSchedule,3,,0,0,false,api=v1:projects.databases.backupSchedules; official-spec-fields-unmatched=1/4
+firestore.googleapis.com,firestore.googleapis.com/DatabaseBackupSchedule,3,FirestoreBackupSchedule,3,FirestoreBackupSchedule,0,0,false,api=v1:projects.databases.backupSchedules; official-spec-fields-unmatched=1/4; ours-spec-fields-unmatched=1/4
 firestore.googleapis.com,firestore.googleapis.com/DatabaseChangeStream,4,,0,,0,4,false,api=v1:projects.databases.changeStreams
 firestore.googleapis.com,firestore.googleapis.com/DatabaseCollectionGroupIndex,17,FirestoreIndex,5,,0,12,false,api=v1:projects.databases.collectionGroups.indexes; official-spec-fields-unmatched=2/6
 firestore.googleapis.com,firestore.googleapis.com/DatabaseUserCred,1,,0,,0,1,false,api=v1:projects.databases.userCreds
