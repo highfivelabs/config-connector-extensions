@@ -67,6 +67,11 @@ type Kind struct {
 	// UpdatePUT: the API changes a resource with update (PUT, the whole
 	// resource) rather than patch.
 	UpdatePUT bool
+	// NameInBody: create also sends the resource's full name as the body's
+	// name, beside the ID parameter, as Terraform does for the kind; the
+	// API refuses a create without it (Cloud Functions v2: "Invalid
+	// resource name '' for pattern projects/*/locations/*/functions/*").
+	NameInBody bool
 	// Output are the API's read-only top-level fields that go to
 	// status.observedState (name goes to status.externalRef instead).
 	Output []string
