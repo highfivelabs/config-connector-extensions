@@ -29,8 +29,6 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 )
 
 var ComputeVPNTunnelGVK = GroupVersion.WithKind("ComputeVPNTunnel")
@@ -109,7 +107,7 @@ type ComputeVPNTunnelSpec struct {
 	this project's or Config Connector's, by name, or by external. Immutable. */
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="routerRef is immutable"
-	RouterRef *computev1alpha1.ComputeRouterRef `json:"routerRef,omitempty"`
+	RouterRef *ComputeRouterRef `json:"routerRef,omitempty"`
 
 	/* Immutable. Shared secret used to set the secure session between the Cloud VPN
 	gateway and the peer VPN gateway. The API never returns it: a changed

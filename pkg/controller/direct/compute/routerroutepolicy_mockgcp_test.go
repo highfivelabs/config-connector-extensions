@@ -33,13 +33,11 @@ import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	hflcomputev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
-
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
-	hflcomputev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
-	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 func TestComputeRouterRoutePolicy(t *testing.T) {
@@ -49,7 +47,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		name      = "export-onprem"
 	)
 	router := mockenv.Name("vpn-router")
-	policyGVK := computev1alpha1.ComputeRouterRoutePolicyGVK
+	policyGVK := hflcomputev1beta1.ComputeRouterRoutePolicyGVK
 	env := mockenv.New(t, namespace)
 	routers, err := gcp.NewRoutersRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -81,7 +79,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 	r := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
 		"region": region, "networkRef": map[string]any{"external": network},
 	}}}
-	r.SetGroupVersionKind(computev1alpha1.ConfigConnectorComputeRouterGVK)
+	r.SetGroupVersionKind(hflcomputev1beta1.ConfigConnectorComputeRouterGVK)
 	r.SetNamespace(namespace)
 	r.SetName(router)
 	r.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
@@ -89,24 +87,24 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newPolicy := func(name string) *computev1alpha1.ComputeRouterRoutePolicy {
-		return &computev1alpha1.ComputeRouterRoutePolicy{
+	newPolicy := func(name string) *hflcomputev1beta1.ComputeRouterRoutePolicy {
+		return &hflcomputev1beta1.ComputeRouterRoutePolicy{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: computev1alpha1.ComputeRouterRoutePolicySpec{
+			Spec: hflcomputev1beta1.ComputeRouterRoutePolicySpec{
 				ProjectRef: &refsv1beta1.ProjectRef{External: mockenv.Project},
 				Region:     region,
-				RouterRef:  &computev1alpha1.ComputeRouterRef{Name: router},
+				RouterRef:  &hflcomputev1beta1.ComputeRouterRef{Name: router},
 				Type:       mockenv.Ptr("ROUTE_POLICY_TYPE_EXPORT"),
-				Terms: []computev1alpha1.RoutePolicyTerm{
+				Terms: []hflcomputev1beta1.RoutePolicyTerm{
 					{
 						Priority: 1,
-						Match:    &computev1alpha1.RoutePolicyExpr{Expression: "destination == '10.10.0.0/16'"},
-						Actions:  []computev1alpha1.RoutePolicyExpr{{Expression: "med.set(100)"}, {Expression: "accept()"}},
+						Match:    &hflcomputev1beta1.RoutePolicyExpr{Expression: "destination == '10.10.0.0/16'"},
+						Actions:  []hflcomputev1beta1.RoutePolicyExpr{{Expression: "med.set(100)"}, {Expression: "accept()"}},
 					},
 					{
 						Priority: 2,
-						Match:    &computev1alpha1.RoutePolicyExpr{Expression: "destination.inAnyRange(['10.0.0.0/8'])"},
-						Actions:  []computev1alpha1.RoutePolicyExpr{{Expression: "accept()"}},
+						Match:    &hflcomputev1beta1.RoutePolicyExpr{Expression: "destination.inAnyRange(['10.0.0.0/8'])"},
+						Actions:  []hflcomputev1beta1.RoutePolicyExpr{{Expression: "accept()"}},
 					},
 				},
 			},
@@ -131,9 +129,9 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T) *computev1alpha1.ComputeRouterRoutePolicy {
+	getObj := func(t *testing.T) *hflcomputev1beta1.ComputeRouterRoutePolicy {
 		t.Helper()
-		obj := &computev1alpha1.ComputeRouterRoutePolicy{}
+		obj := &hflcomputev1beta1.ComputeRouterRoutePolicy{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -200,7 +198,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, policy); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeRouterRoutePolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		env.WaitGone(&hflcomputev1beta1.ComputeRouterRoutePolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		_, err := routers.GetRoutePolicy(env.Ctx, &pb.GetRoutePolicyRouterRequest{
 			Project: mockenv.Project, Region: region, Router: router, Policy: mockenv.Ptr(name),
 		})
@@ -257,7 +255,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		env.WaitReady(hflcomputev1beta1.ComputeRouterGVK, namespace, "ours-router")
 
 		onOurs := newPolicy("on-ours")
-		onOurs.Spec.RouterRef = &computev1alpha1.ComputeRouterRef{Name: "ours-router"}
+		onOurs.Spec.RouterRef = &hflcomputev1beta1.ComputeRouterRef{Name: "ours-router"}
 		if err := env.Kube.Create(env.Ctx, onOurs); err != nil {
 			t.Fatal(err)
 		}
@@ -277,7 +275,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		dup := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
 			"region": region, "networkRef": map[string]any{"external": network},
 		}}}
-		dup.SetGroupVersionKind(computev1alpha1.ConfigConnectorComputeRouterGVK)
+		dup.SetGroupVersionKind(hflcomputev1beta1.ConfigConnectorComputeRouterGVK)
 		dup.SetNamespace(namespace)
 		dup.SetName("ours-router")
 		dup.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
@@ -285,7 +283,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 			t.Fatal(err)
 		}
 		both := newPolicy("both")
-		both.Spec.RouterRef = &computev1alpha1.ComputeRouterRef{Name: "ours-router"}
+		both.Spec.RouterRef = &hflcomputev1beta1.ComputeRouterRef{Name: "ours-router"}
 		if err := env.Kube.Create(env.Ctx, both); err != nil {
 			t.Fatal(err)
 		}
@@ -297,7 +295,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 		}
 		env.WaitReady(policyGVK, namespace, "both")
 
-		for _, p := range []*computev1alpha1.ComputeRouterRoutePolicy{onOurs, both} {
+		for _, p := range []*hflcomputev1beta1.ComputeRouterRoutePolicy{onOurs, both} {
 			if err := env.Kube.Delete(env.Ctx, p); err != nil {
 				t.Fatal(err)
 			}

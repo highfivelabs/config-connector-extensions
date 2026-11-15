@@ -38,7 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -50,15 +50,15 @@ const (
 // group is the regional network endpoint group the endpoints go in.
 var group = mockenv.Name("internet-backends")
 
-var gvk = computev1alpha1.ComputeRegionNetworkEndpointGVK
+var gvk = computev1beta1.ComputeRegionNetworkEndpointGVK
 
-func newEndpoint(name, fqdn string, port int32) *computev1alpha1.ComputeRegionNetworkEndpoint {
-	return &computev1alpha1.ComputeRegionNetworkEndpoint{
+func newEndpoint(name, fqdn string, port int32) *computev1beta1.ComputeRegionNetworkEndpoint {
+	return &computev1beta1.ComputeRegionNetworkEndpoint{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: computev1alpha1.ComputeRegionNetworkEndpointSpec{
+		Spec: computev1beta1.ComputeRegionNetworkEndpointSpec{
 			ProjectRef:                    &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Region:                        region,
-			RegionNetworkEndpointGroupRef: &computev1alpha1.ComputeRegionNetworkEndpointGroupRef{Name: group},
+			RegionNetworkEndpointGroupRef: &computev1beta1.ComputeRegionNetworkEndpointGroupRef{Name: group},
 			FQDN:                          mockenv.Ptr(fqdn),
 			Port:                          port,
 		},
@@ -103,7 +103,7 @@ func TestComputeRegionNetworkEndpoint(t *testing.T) {
 		}
 	})
 	g := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"region": region, "networkEndpointType": "INTERNET_FQDN_PORT"}}}
-	g.SetGroupVersionKind(computev1alpha1.ComputeRegionNetworkEndpointGroupGVK)
+	g.SetGroupVersionKind(computev1beta1.ComputeRegionNetworkEndpointGroupGVK)
 	g.SetNamespace(namespace)
 	g.SetName(group)
 	g.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
@@ -145,9 +145,9 @@ func TestComputeRegionNetworkEndpoint(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *computev1alpha1.ComputeRegionNetworkEndpoint {
+	getObj := func(t *testing.T, name string) *computev1beta1.ComputeRegionNetworkEndpoint {
 		t.Helper()
-		obj := &computev1alpha1.ComputeRegionNetworkEndpoint{}
+		obj := &computev1beta1.ComputeRegionNetworkEndpoint{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -220,7 +220,7 @@ func TestComputeRegionNetworkEndpoint(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, api); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeRegionNetworkEndpoint{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "api"}})
+		env.WaitGone(&computev1beta1.ComputeRegionNetworkEndpoint{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "api"}})
 		if e := cloudEndpoints(t); has(e, "api.example.com:443") || !has(e, "api2.example.com:443") {
 			t.Errorf("cloud endpoints after delete = %v, want only api2.example.com:443", e)
 		}

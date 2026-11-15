@@ -37,7 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
+	sqladminv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -54,10 +54,10 @@ func newCloudSQL(t *testing.T, env *mockenv.Env) (*sqladmin.Service, string) {
 	return svc, env.SQLInstance()
 }
 
-func newBackup(instance, name, description string) *sqladminv1alpha1.SQLAdminBackup {
-	return &sqladminv1alpha1.SQLAdminBackup{
+func newBackup(instance, name, description string) *sqladminv1beta1.SQLAdminBackup {
+	return &sqladminv1beta1.SQLAdminBackup{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
-		Spec: sqladminv1alpha1.SQLAdminBackupSpec{
+		Spec: sqladminv1beta1.SQLAdminBackupSpec{
 			ProjectRef:  &refsv1beta1.ProjectRef{External: mockenv.Project},
 			InstanceRef: &refsv1beta1.SQLInstanceRef{External: fmt.Sprintf("projects/%s/instances/%s", mockenv.Project, instance)},
 			Location:    mockenv.Ptr("us"),
@@ -113,7 +113,7 @@ func isNotFound(err error) bool {
 func TestSQLAdminBackup(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	cloud, instance := newCloudSQL(t, env)
-	gvk := sqladminv1alpha1.SQLAdminBackupGVK
+	gvk := sqladminv1beta1.SQLAdminBackupGVK
 
 	const name = "before-upgrade"
 	backup := newBackup(instance, name, "before the Postgres 17 upgrade")
@@ -209,7 +209,7 @@ func TestSQLAdminBackup(t *testing.T) {
 	})
 
 	t.Run("a backup cannot be changed", func(t *testing.T) {
-		obj := &sqladminv1alpha1.SQLAdminBackup{}
+		obj := &sqladminv1beta1.SQLAdminBackup{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -227,7 +227,7 @@ func TestSQLAdminBackup(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, backup); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&sqladminv1alpha1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		env.WaitGone(&sqladminv1beta1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		// Real Cloud SQL keeps a deleted run, with status DELETED
 		// (docs/live-runs.md); mockgcp does the same (patch 0015).
 		if run, err := cloud.BackupRuns.Get(mockenv.Project, instance, id).Context(env.Ctx).Do(); !isNotFound(err) {
@@ -254,7 +254,7 @@ func TestSQLAdminBackup(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, b); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&sqladminv1alpha1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: kept}})
+		env.WaitGone(&sqladminv1beta1.SQLAdminBackup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: kept}})
 		if _, err := cloud.BackupRuns.Get(mockenv.Project, instance, keptID).Context(env.Ctx).Do(); err != nil {
 			t.Errorf("the abandoned backup run is gone from the cloud: %v", err)
 		}

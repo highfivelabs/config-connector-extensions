@@ -1,16 +1,20 @@
 ---
 kinds: [NetworkSecurityAddressGroup]
-apiVersion: networksecurity.gcp.hfl.dev/v1alpha1
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
 ---
 # NetworkSecurityAddressGroup
 
-`networksecurity.gcp.hfl.dev/v1alpha1`
+`networksecurity.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** an address group (IP ranges that firewall policy rules name as `srcAddressGroups` or `destAddressGroups`) owned by an organization, for its hierarchical firewall policies, or by a project (Terraform's `google_network_security_address_group`, whose `parent` is either); Config Connector's `NetworkSecurityAddressGroup` (alpha) takes a project only
 
 **Source.** Config Connector's direct `NetworkSecurityAddressGroup`, with an organization parent
 
 ## Notes
+
+2026-11-15: moved from `networksecurity.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

@@ -47,7 +47,7 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/storage/v1beta1"
 )
 
 func init() {

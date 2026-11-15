@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	api "google.golang.org/api/sqladmin/v1beta4"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
 )
 
 // SQLAdminBackupSpec_ToAPI is the body of backupRuns.insert. The instance is
