@@ -114,12 +114,16 @@ func (m *logSinkModel) AdapterForObject(ctx context.Context, op *directbase.Adap
 			}
 			return &logSinkAdapter{id: id, gcpClient: gcpClient}, nil
 		}
-		if _, err := obj.GetIdentity(ctx, reader); err != nil {
+		id, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
 			// Never made or acquired (no status.externalRef) and its parent
 			// cannot be resolved: there is nothing of ours to delete.
 			klog.FromContext(ctx).Info("deleting LoggingLogSink without a call: no status.externalRef and the parent cannot be resolved", "error", err.Error())
 			return &logSinkAdapter{}, nil
 		}
+		// Find and Delete need only the name: the destination is not
+		// resolved, so one deleted at the same time does not hold this.
+		return &logSinkAdapter{id: id.(*krm.LoggingLogSinkIdentity), gcpClient: gcpClient}, nil
 	}
 
 	normalizeLogSinkDestination(&obj.Spec.Destination)
