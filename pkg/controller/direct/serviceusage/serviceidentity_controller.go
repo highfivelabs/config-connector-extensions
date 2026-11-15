@@ -22,7 +22,8 @@
 // google_organization_service_identity call it), and the status carries
 // the identity's name in externalRef so a changed parent is refused rather
 // than reported with the old email, and observedState through the generated
-// mapper (mapper.generated.go). Export is left out (no exporter here).
+// mapper (mapper.generated.go). Export is left out (no exporter here). An
+// operation the API answers already done is not read again (waitForOp).
 
 // Package serviceusage has the direct controller for this project's Service
 // Usage kind.
@@ -200,6 +201,16 @@ func (a *serviceIdentityAdapter) updateStatus(ctx context.Context, op directbase
 }
 
 func (a *serviceIdentityAdapter) waitForOp(ctx context.Context, op *gcp.Operation) (*gcp.Operation, error) {
+	// Written here: an operation that is already done is not read again.
+	// A folder's or organization's generateServiceIdentity answers one
+	// named operations/finished.DONE_OPERATION, which operations.get
+	// refuses (400, "Invalid operation id"; live run cce-11152217-c987).
+	if op.Done {
+		if op.Error != nil {
+			return op, fmt.Errorf("operation %q completed with error: %s", op.Name, op.Error.Message)
+		}
+		return op, nil
+	}
 	return common.WaitForOperation(ctx, 2*time.Second, func(current *gcp.Operation) (bool, error) {
 		if current.Done {
 			if current.Error != nil {

@@ -195,6 +195,7 @@ patches:
   - {file: patches/k8s-config-connector/0046-mockgcp-iam-policy-bindings-access.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0047-directbase-quota-requeue.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0048-mockgcp-compute-create-instances-target-size.patch, pin: k8s-config-connector, upstream_candidate: "the regional half"}
+  - {file: patches/k8s-config-connector/0051-mockgcp-serviceusage-identity-done-operation.patch, pin: k8s-config-connector, upstream_candidate: "with 0022"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 

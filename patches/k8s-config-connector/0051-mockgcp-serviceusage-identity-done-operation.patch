@@ -1,0 +1,38 @@
+config-connector-extensions patch 0051: mockgcp answers a folder's or
+organization's generateServiceIdentity with an operation already done.
+
+The live run of serviceusage.gcp.hfl.dev ServiceIdentity on 2026-11-15
+(run cce-11152217-c987, the test folder) found that the real API answers
+services.generateServiceIdentity for folders/{id}/services/{service} with
+an operation that is done, holds the identity, and is named
+operations/finished.DONE_OPERATION; operations.get refuses that name
+(400, "Invalid operation id"). Patch 0022's mock stored a normal
+operation that a get could read, so the fake never showed it. Now
+hierarchyidentity.go answers the same name, which no get finds. Applies
+after 0022. Upstream candidate: with 0022.
+
+diff --git a/mockgcp/mockserviceusage/hierarchyidentity.go b/mockgcp/mockserviceusage/hierarchyidentity.go
+--- a/mockgcp/mockserviceusage/hierarchyidentity.go	2026-11-15 16:54:01
++++ b/mockgcp/mockserviceusage/hierarchyidentity.go	2026-11-15 16:54:01
+@@ -32,6 +32,7 @@
+ 	"google.golang.org/genproto/googleapis/longrunning"
+ 	"google.golang.org/grpc/codes"
+ 	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
+ 	"google.golang.org/protobuf/types/known/anypb"
+ )
+ 
+@@ -71,5 +72,12 @@
+ 	if err := s.storage.Update(ctx, op.Name, op); err != nil {
+ 		return nil, true, err
+ 	}
+-	return op, true, nil
++	// config-connector-extensions patch 0051: the real API answers a
++	// folder's or organization's generateServiceIdentity with an operation
++	// that is already done and named operations/finished.DONE_OPERATION,
++	// which operations.get refuses (400, "Invalid operation id"). Answer
++	// the same name; there is no stored operation by it, so a get fails.
++	done := proto.Clone(op).(*longrunning.Operation)
++	done.Name = "operations/finished.DONE_OPERATION"
++	return done, true, nil
+ }
