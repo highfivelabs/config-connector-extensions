@@ -975,7 +975,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     attestation rules. The PR's proto has no attestation-rule methods; they
     are added from the IAM v1 API, and the proto's duplicate operation
     metadata is dropped.
-- `RunService` (`run.gcp.hfl.dev/v1alpha1`, decisions 10 and 11). Rechecked
+- `RunService` (`run.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; decisions 10 and 11). Rechecked
   2026-11-09: PR #14417 (`invokerIamDisabled`, head `9297537a`) and PR
   #7232 (GPUs) are open, review required, and change only Config
   Connector's Terraform fork; no direct `RunService` exists upstream.
@@ -1217,7 +1217,7 @@ Notes on what was built from this table:
   Live: pending, needs a test folder with `roles/logging.admin` and a
   KMS key (`docs/live-runs.md`).
 
-- `ServiceIdentity` (`serviceusage.gcp.hfl.dev/v1alpha1`, rank 7, and
+- `ServiceIdentity` (`serviceusage.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; rank 7, and
   `docs/coverage/foundation.md` item 1). A folder's or an organization's
   service agent: `folderRef` or `organizationRef` (exactly one, checked
   by the CRD), `resourceID` (the service; `metadata.name` by default);
@@ -1242,9 +1242,10 @@ Notes on what was built from this table:
   `google_organization_service_identity` were read for the request's
   path, not copied (Magic Modules hand-writes them; there is no product
   YAML to take behaviour from). Patch 0022: mockgcp serves the folder and
-  organization parents. Live: pending, needs the test folder
-  (`E2E_TEST_FOLDER`, `mockenv.TestFolder`); a live run never uses the
-  organization.
+  organization parents. Live: passes on the test folder (2026-11-15, run
+  `cce-11152310-b63f`, after a fix: the API answers an operation already
+  done, named `operations/finished.DONE_OPERATION`, that a get refuses;
+  patch 0051 fakes it); a live run never uses the organization.
 
 - `ComputeProjectDefaultNetworkTier` (`compute.gcp.hfl.dev/v1alpha1`,
   rank 10, and `docs/coverage/foundation.md` item 1). **Written here**
@@ -1863,6 +1864,20 @@ Notes on what was built from this table:
   resource type, with no change to the kind. `logSinkRef`,
   `sqlInstanceRef` and the other `memberFrom` sources of `IAMPolicyMember`
   are not offered; `members` takes the address.
+  `CloudFunctionsFunction` (Config Connector's 1st gen function,
+  `cloudfunctions.cnrm.cloud.google.com/v1beta1`) was added 2026-11-15
+  (the builder's RECPF answer, decision 34): by `name` its project,
+  `spec.region` (the resolver reads `spec.region` when a kind has no
+  `spec.location`) and `resourceID`, or by `external`; the Cloud Functions
+  v1 API's `:getIamPolicy` (GET) and `:setIamPolicy`, read from the v1 REST
+  reference and Terraform's `google_cloudfunctions_function_iam_*` (not
+  copied). `IAMPolicyMember` takes it too, so it is not a
+  `NotInIAMPolicyMember` row. Tested on the fake cloud
+  (`TestIAMOnCloudFunctionsFunction`: an `IAMBinding` and an `IAMMember`
+  by name, set, read back and removed) and for its name and URL
+  (`registry_test.go`); not run live: it needs a deployed 1st gen
+  function, and the policy verbs are the mixin `IAMBinding`'s live run
+  covers.
   Patch 0018: mockgcp serves Cloud Storage's `.../iam` paths from the
   store it already keeps for the `:getIamPolicy` verbs.
   Live: passes, on a secret and a bucket (`docs/live-runs.md`).
@@ -2443,10 +2458,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     `SQLAdminBackup` (`08fcc66`) and `StorageBucketObject` (`756c69f`).
     `RunService` (`aee1155`) passed too, but Config Connector has a
     `RunService`; ours is a field-gap kind (decision 19), which this
-    decision's wording does not name (section 10, question 9). The other
+    decision's wording did not name (section 10, question 9); decision 33
+    extends the rule to it, and it is `v1beta1` since 2026-11-15. The other
     `v1alpha1` kinds have no live pass yet, or wait on a prerequisite
-    (`LoggingBillingAccountSink`, `ServiceIdentity`,
-    `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`),
+    (`LoggingBillingAccountSink`, `ServiceIdentity` (passed live and
+    promoted 2026-11-15, decision 35), `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`),
     or failed their last run (`ComputeNetworkFirewallPolicyPacketMirroringRule`).
 
 28. **A service's generated kinds' tests get their own package** (the
@@ -2537,6 +2553,118 @@ To raise confidence in `ArtifactRegistryRepository`:
     still lists keeps its finalizer until the denial is lifted; a table
     deleted behind the controller's back, its database still there, is
     proven gone by its own collection).
+
+33. **Decision 27 covers our field-gap kinds** (the builder, 2026-11-15,
+    EXTQ6-1, answering section 10 question 9: "as recommended (Yes:
+    promote field-gap kinds under the same rule. The catalog's charts
+    refuse alpha kinds whatever gap a kind fills.)"). A kind of ours that
+    fills a field gap on a Config Connector kind (decision 19) moves to
+    `v1beta1` under decision 27's rule, as a kind for a missing resource
+    does. **Built 2026-11-15:** `RunService` (passed live at `aee1155`; its
+    CRD and `apis/run` are unchanged since, checked with `git log
+    aee1155..` on both) moved to `apis/run/v1beta1` with its schema
+    unchanged; the CRD serves `v1beta1` only (no conversion, no webhook),
+    the fake-cloud test checks that `v1alpha1` is refused, `pkg/controller`
+    tests its served version with the other promoted kinds, and
+    `CHANGELOG.md` has the upgrade. No other field-gap kind of ours
+    qualifies (checked 2026-11-15 against every `docs/kinds/` file of a
+    kind still `v1alpha1`): `ComputeRegionInstanceTemplate` (Config
+    Connector's template is global only) passed live at `ceda3f6`, but its
+    CRD changed since (`43177af`), so it needs another live pass first.
+    The same check found kinds that qualify under decision 27 itself but
+    are missing from its 2026-11-15 list, which read the ledger in
+    `docs/live-runs.md` rather than the kinds' own files: the hand-written
+    `ComputeNetworkFirewallPolicyPacketMirroringRule` (it failed at
+    `e24d9c6` and `64c9c42`, then passed at `78644ec`; CRD unchanged since)
+    and six generated kinds (CRDs unchanged since their passes):
+    `ComputeRegionHealthAggregationPolicy` and `LoggingSavedQuery`
+    (`e8a920c`), `ComputeRegionBackendBucket` and `LoggingLink`
+    (`81d7b24`), `GKEHubRolloutSequence` and `IAMOauthClient` (`e1e23f5`).
+    They are left for their own pull request (a generated kind's version
+    is set in `hack/discokind/kinds.yaml` and regenerated).
+    `ServiceIdentity`, a kind for a missing resource, passed live on
+    2026-11-15 and was promoted under decision 27 (decision 35).
+
+34. **IAMBinding and IAMMember take a `CloudFunctionsFunction`; AssetFeed's
+    parent comparison is fixed; Cloud Armor gets a stable association;
+    SCC v2 mute configs and project Security Health Analytics custom
+    modules are low priority** (the builder, 2026-11-15, RECPF, the parts
+    for this repository: "yes to config-connector-extensions' IAMBinding
+    taking CloudFunctionsFunction, AssetFeed's parent comparison fix, and
+    a stable Cloud Armor association; SCC v2 mute config and project SHA
+    module kinds at low priority."). The asks came from the catalog's
+    pull requests #215 and #216. **Built 2026-11-15** here: the IAM
+    resource table's `CloudFunctionsFunction` row (section 6.5, rank 2).
+    The `AssetFeed` fix and the Cloud Armor association are built in their
+    own pull request (branch `agent/r2-assetfeed-armor`), and
+    `LookerInstance`'s `secretKeyRef` (RECLOOK) in `agent/r2-looker-secret`;
+    their notes are there. The SCC v2 mute config and the project SHA
+    module kinds are not started.
+
+35. **One served version; the catalog's folder, organization and logging
+    gaps** (the builder, 2026-11-15, CCEQ, answering section 10 questions
+    4 and 7: "as recommended (Q4 keep one served version (decision 24).
+    Q7: our own LoggingLogSink (v1beta1); no Folder kind (deletion-policy
+    abandon or Bundt's guard); our own OrgPolicyPolicy only if the catalog
+    can't order deletes; build the service-agents config under decision
+    18. Artifact Registry URI change: none written.)").
+    - **Q4:** decision 24 stands as built: `IAMBinding`, and every kind
+      promoted since, serves one version; `v1alpha1` comes back (served,
+      not stored, deprecated) only if a cluster turns up with `v1alpha1`
+      objects that cannot be abandoned and re-created.
+    - **`LoggingLogSink`** (`logging.gcp.hfl.dev/v1beta1`, with
+      `interceptChildren` and a folder, organization or project parent):
+      built in its own pull request (branch `agent/r2-logsink`).
+    - **No `Folder` kind.** The catalog maps
+      `deletion_protection = true` to
+      `cnrm.cloud.google.com/deletion-policy: abandon`, or to Bundt's
+      deletion guard for "refuse to delete".
+    - **`OrgPolicyPolicy` is not built while the catalog can order
+      deletes.** What the catalog does today (its `folder` and
+      `organization` charts' READMEs, "Config Connector bugs", read
+      2026-11-15): it does not order them. The `folder` chart's README
+      says a component should delete its org policies before the folder;
+      its fake-cloud case leaves org policies out, so they are only
+      render-tested. The `organization` chart's policies name the
+      organization by `organizationRef.external`, never an object, so
+      they do not hit the bug (a policy on a custom constraint of the same
+      component still needs the constraint until it is gone). So the
+      order has to come from the catalog or from Bundt's delete order
+      (waves); if neither can give it, this repository builds
+      `OrgPolicyPolicy` (`orgpolicy.gcp.hfl.dev`, `v1beta1`, decision 19).
+    - **The service-agents config is our `ServiceIdentity`** (decision
+      18: Terraform's resource names the kind). Cloud Foundation Fabric's
+      `modules/folder` and `modules/organization` (v60.0.0, the catalog's
+      pin, `service-agents.tf`, read 2026-11-15) make one
+      `google_folder_service_identity` or
+      `google_organization_service_identity` per service in
+      `service_agents_config.services` when `create_agents` (default
+      true), and compute each agent's email from the module's own
+      `service-agents.yaml` and the folder's or organization's number
+      (the `service_agents` output). Those are exactly the resources
+      `serviceusage.gcp.hfl.dev` `ServiceIdentity` was built for (folder
+      or organization parent, `status.email`; section 6.5, rank 7), so
+      no new kind is built. `ServiceIdentity` ran live for the first time
+      on 2026-11-15 on the test folder: the first run
+      (`cce-11152217-c987`) failed because the API answers an operation
+      already done, named `operations/finished.DONE_OPERATION`, that
+      `operations.get` refuses, and the controller polled it; fixed (a done
+      operation is not read again; patch 0051 makes mockgcp answer the
+      same), the second (`cce-11152310-b63f`) passed. With its schema
+      unchanged, it moved to `v1beta1` under decision 27 the same day.
+      What the catalog needs: in each chart, a `ServiceIdentity` per
+      service with `folderRef` (the chart's `Folder`) or
+      `organizationRef.external`, when `create_agents`; the
+      `service_agents` output from `status.email` (or fabric's
+      `service-agents.yaml` templates); and its `variables.csv` rows
+      corrected (the organization row says "`ServiceIdentity` takes only
+      a project", which is Config Connector's kind, not ours).
+    - **Artifact Registry URI change:** nothing to build. The builder's
+      note says "none written", as the item did. Decision 21 (confirmed
+      2026-11-10) already says a remote `ArtifactRegistryRepository` whose
+      upstream URI changes is deleted and made again; that replacement is
+      not built (section 7, item 14: the object goes not Ready and the
+      repository keeps its URI).
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -2787,7 +2915,9 @@ moves to section 8.
    Terraform's `google_<resource>_iam_member` and `_iam_binding`
    (decision 12). The question had recommended keeping `IAMRoleMember`.
 
-4. **Should `IAMBinding` `v1alpha1` stay served, deprecated, beside
+4. Answered 2026-11-15 (CCEQ, decision 35): keep one served version
+   (decision 24). The question was:
+   **Should `IAMBinding` `v1alpha1` stay served, deprecated, beside
    `v1beta1`?** (2026-11-10, after decision 24). Decision 24 moved the
    kind and stopped serving `v1alpha1`. The alternative is a CRD with
    both versions (identical schemas, `conversion: None`, `v1beta1`
@@ -2813,7 +2943,11 @@ moves to section 8.
    (decision 27, "Built"); `LoggingSettings` and `SecurityCenterMuteConfig`
    still owe their first live run.
 
-7. **Field gaps on Config Connector kinds the catalog's folder,
+7. Answered 2026-11-15 (CCEQ, decision 35): our own `LoggingLogSink`
+   (`v1beta1`); no `Folder` kind; our own `OrgPolicyPolicy` only if the
+   catalog cannot order deletes; the service-agents config under decision
+   18 (it is our `ServiceIdentity`). The question was:
+   **Field gaps on Config Connector kinds the catalog's folder,
    organization and logging ports found** (2026-11-13). Decision 19 says a
    field gap is our own kind in our group, owning the whole object.
    - `LoggingLogSink.interceptChildren` (a folder's or organization's sink
@@ -2846,7 +2980,9 @@ moves to section 8.
 8. Answered 2026-11-13: yes, split the generated kinds' tests into
    their own package (decision 28).
 
-9. **Does decision 27 cover our field-gap kinds?** (2026-11-15.)
+9. Answered 2026-11-15 (EXTQ6-1, decision 33): yes, and `RunService`
+   is `v1beta1`. The question was:
+   **Does decision 27 cover our field-gap kinds?** (2026-11-15.)
    Decision 27 promotes "a kind of ours for a gap Config Connector has no
    kind for". `RunService` (`run.gcp.hfl.dev/v1alpha1`) is ours for a
    field gap: Config Connector has a `RunService`, and ours owns the
