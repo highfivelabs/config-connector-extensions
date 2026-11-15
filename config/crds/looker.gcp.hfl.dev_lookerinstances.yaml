@@ -300,15 +300,47 @@ spec:
                 description: Optional. Looker instance OAuth login settings.
                 properties:
                   clientId:
-                    description: Input only. Client ID from an external OAuth application.
-                      This is an input-only field, and thus will not be set in any
-                      responses.
+                    description: |-
+                      Input only. Client ID from an external OAuth application. This is an
+                      input-only field, and thus will not be set in any responses.
+
+                      The API never returns it: it is sent when the spec changes, and a
+                      change made in the cloud is not seen.
                     type: string
                   clientSecret:
-                    description: Input only. Client secret from an external OAuth
-                      application. This is an input-only field, and thus will not
-                      be set in any responses.
-                    type: string
+                    description: |-
+                      Input only. Client secret from an external OAuth application. This is an
+                      input-only field, and thus will not be set in any responses.
+
+                      Takes value, or valueFrom.secretKeyRef (name, key) of a Secret in the
+                      object's namespace, which the controller reads and sends; the API never
+                      returns it.
+                    properties:
+                      value:
+                        description: Value of the field. Cannot be used if 'valueFrom'
+                          is specified.
+                        type: string
+                      valueFrom:
+                        description: Source for the field's value. Cannot be used
+                          if 'value' is specified.
+                        properties:
+                          secretKeyRef:
+                            description: Reference to a value with the given key in
+                              the given Secret in the resource's namespace.
+                            properties:
+                              key:
+                                description: Key that identifies the value to be extracted.
+                                type: string
+                              name:
+                                description: Name of the Secret to extract a value
+                                  from.
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
                   sharedOauthClientEnabled:
                     description: Optional. Whether to use the shared OAuth client.
                       Instances specifying this field do not need to provide client_id
@@ -519,6 +551,12 @@ spec:
                 type: array
               externalRef:
                 description: The resource's name, {parent}/locations/{location}/instances/{id}.
+                type: string
+              inputVersion:
+                description: 'A digest of the input-only fields last sent (oauthConfig.clientId,
+                  oauthConfig.clientSecret): their values, and each Secret''s name,
+                  key and resourceVersion, never its value. The API never returns
+                  these fields, so they are sent again when it changes.'
                 type: string
               observedGeneration:
                 description: ObservedGeneration is the generation of the resource

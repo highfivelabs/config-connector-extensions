@@ -337,6 +337,8 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "egressPublicIp", "ingressPrivateIp", "ingressPublicIp", "lastDenyMaintenancePeriod", "lookerUri", "lookerVersion", "maintenanceSchedule", "name", "satisfiesPzi", "satisfiesPzs", "softDeleteReason", "state", "suspendedTime", "updateTime"},
+		Secrets:   []string{"oauthConfig.clientSecret"},
+		InputOnly: []string{"oauthConfig.clientId"},
 	},
 	{
 		GVK:       networkservicesv1alpha1.NetworkServicesAgentGatewayGVK,
