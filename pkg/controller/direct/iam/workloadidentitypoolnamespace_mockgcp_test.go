@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -45,19 +45,19 @@ const namespace = "example"
 // it with usePool (helpers_mockgcp_test.go).
 var pool = "app-pool"
 
-var gvk = iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK
+var gvk = iamv1beta1.IAMWorkloadIdentityPoolNamespaceGVK
 
 func cloudName(ns string) string {
 	return "projects/" + mockenv.Project + "/locations/global/workloadIdentityPools/" + pool + "/namespaces/" + ns
 }
 
-func newNamespace(name, description string) *iamv1alpha1.IAMWorkloadIdentityPoolNamespace {
-	return &iamv1alpha1.IAMWorkloadIdentityPoolNamespace{
+func newNamespace(name, description string) *iamv1beta1.IAMWorkloadIdentityPoolNamespace {
+	return &iamv1beta1.IAMWorkloadIdentityPoolNamespace{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceSpec{
+		Spec: iamv1beta1.IAMWorkloadIdentityPoolNamespaceSpec{
 			ProjectRef:              &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:                mockenv.Ptr("global"),
-			WorkloadIdentityPoolRef: &iamv1alpha1.IAMWorkloadIdentityPoolRef{Name: pool},
+			WorkloadIdentityPoolRef: &iamv1beta1.IAMWorkloadIdentityPoolRef{Name: pool},
 			Description:             mockenv.Ptr(description),
 		},
 	}
@@ -88,9 +88,9 @@ func TestWorkloadIdentityPoolNamespace(t *testing.T) {
 		}
 		return ns
 	}
-	getObj := func(t *testing.T, name string) *iamv1alpha1.IAMWorkloadIdentityPoolNamespace {
+	getObj := func(t *testing.T, name string) *iamv1beta1.IAMWorkloadIdentityPoolNamespace {
 		t.Helper()
-		obj := &iamv1alpha1.IAMWorkloadIdentityPoolNamespace{}
+		obj := &iamv1beta1.IAMWorkloadIdentityPoolNamespace{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -103,7 +103,7 @@ func TestWorkloadIdentityPoolNamespace(t *testing.T) {
 		"location":   "global",
 		"projectRef": map[string]any{"external": mockenv.Project},
 	}}}
-	p.SetGroupVersionKind(iamv1alpha1.IAMWorkloadIdentityPoolGVK)
+	p.SetGroupVersionKind(iamv1beta1.IAMWorkloadIdentityPoolGVK)
 	p.SetNamespace(namespace)
 	p.SetName(pool)
 	if err := env.Kube.Create(env.Ctx, p); err != nil {
@@ -191,7 +191,7 @@ func TestWorkloadIdentityPoolNamespace(t *testing.T) {
 
 	t.Run("a pool in another location is refused", func(t *testing.T) {
 		bad := newNamespace("elsewhere", "")
-		bad.Spec.WorkloadIdentityPoolRef = &iamv1alpha1.IAMWorkloadIdentityPoolRef{
+		bad.Spec.WorkloadIdentityPoolRef = &iamv1beta1.IAMWorkloadIdentityPoolRef{
 			External: "projects/" + mockenv.Project + "/locations/us-central1/workloadIdentityPools/" + pool,
 		}
 		if err := env.Kube.Create(env.Ctx, bad); err != nil {
@@ -210,7 +210,7 @@ func TestWorkloadIdentityPoolNamespace(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, obj); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&iamv1alpha1.IAMWorkloadIdentityPoolNamespace{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		env.WaitGone(&iamv1beta1.IAMWorkloadIdentityPoolNamespace{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		if ns := get(t, name); ns.State != "DELETED" || ns.ExpireTime == "" {
 			t.Errorf("cloud namespace after delete = %+v, want state DELETED with an expireTime", ns)
 		}

@@ -27,7 +27,7 @@ import (
 	pb "cloud.google.com/go/networksecurity/apiv1/networksecuritypb"
 	upstream "github.com/GoogleCloudPlatform/k8s-config-connector/apis/networksecurity/v1alpha1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
-	krm "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 )
 
 func NetworkSecurityAddressGroupObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.AddressGroup) *krm.NetworkSecurityAddressGroupObservedState {

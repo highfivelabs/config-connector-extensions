@@ -328,6 +328,22 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **Sixteen more of our kinds are `v1beta1`** (`docs/design.md`
+  decision 27: they passed live and their schemas have not changed since):
+  `ArtifactRegistryTag`, `ComputeProjectMetadataItem`,
+  `ComputeRegionNetworkEndpoint`, `ComputeRegionNetworkFirewallPolicy`,
+  `ComputeRegionNetworkFirewallPolicyAssociation`,
+  `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRouterRoutePolicy`,
+  `IAMMember`, `IAMWorkloadIdentityPoolNamespace`,
+  `IAMWorkloadIdentityPoolManagedIdentity`,
+  `IAMWorkloadIdentityPoolProviderKey`, `NetworkSecurityAddressGroup`,
+  `NetworkSecuritySecurityProfile`, `NetworkSecuritySecurityProfileGroup`,
+  `SQLAdminBackup` and `StorageBucketObject`, each in its own group.
+  Schemas are unchanged; the CRDs no longer serve `v1alpha1`, so change
+  the `apiVersion`. A cluster with `v1alpha1` objects of these kinds
+  upgrades as below: abandon and delete them, replace the CRD, apply them
+  again at `v1beta1`.
+
 - **`ComputeRouter`, `LoggingSettings` and `SecurityCenterMuteConfig` are
   `v1beta1`** (`docs/design.md` decision 27): `compute.gcp.hfl.dev/v1beta1`,
   `logging.gcp.hfl.dev/v1beta1` and `securitycenter.gcp.hfl.dev/v1beta1`.

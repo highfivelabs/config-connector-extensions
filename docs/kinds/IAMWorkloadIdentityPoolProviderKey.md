@@ -1,16 +1,20 @@
 ---
 kinds: [IAMWorkloadIdentityPoolProviderKey]
-apiVersion: iam.gcp.hfl.dev/v1alpha1
+apiVersion: iam.gcp.hfl.dev/v1beta1
 ---
 # IAMWorkloadIdentityPoolProviderKey
 
-`iam.gcp.hfl.dev/v1alpha1`
+`iam.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** a key for a workload identity pool provider, whose public half (in status) encrypts the provider's SAML assertions; in no Config Connector code, pull request or Terraform resource
 
 **Source.** written here from the IAM v1 API
 
 ## Notes
+
+2026-11-15: moved from `iam.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

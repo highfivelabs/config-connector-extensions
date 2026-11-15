@@ -31,7 +31,7 @@ import (
 	htransport "google.golang.org/api/transport/http"
 	"google.golang.org/protobuf/proto"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 )
 

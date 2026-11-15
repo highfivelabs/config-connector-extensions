@@ -37,13 +37,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 func TestComputeRegionNetworkFirewallPolicyAssociation(t *testing.T) {
-	policyGVK := computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK
-	assocGVK := computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociationGVK
+	policyGVK := computev1beta1.ComputeRegionNetworkFirewallPolicyGVK
+	assocGVK := computev1beta1.ComputeRegionNetworkFirewallPolicyAssociationGVK
 	env := mockenv.New(t, namespace)
 	policies, err := gcp.NewRegionNetworkFirewallPoliciesRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -90,19 +90,19 @@ func TestComputeRegionNetworkFirewallPolicyAssociation(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociation {
+	getObj := func(t *testing.T, name string) *computev1beta1.ComputeRegionNetworkFirewallPolicyAssociation {
 		t.Helper()
-		obj := &computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociation{}
+		obj := &computev1beta1.ComputeRegionNetworkFirewallPolicyAssociation{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
 		return obj
 	}
-	newAssociation := func(name, networkPath string) *computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociation {
-		return &computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociation{
+	newAssociation := func(name, networkPath string) *computev1beta1.ComputeRegionNetworkFirewallPolicyAssociation {
+		return &computev1beta1.ComputeRegionNetworkFirewallPolicyAssociation{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociationSpec{
-				FirewallPolicyRef: computev1alpha1.ComputeRegionNetworkFirewallPolicyRef{Name: policyObj},
+			Spec: computev1beta1.ComputeRegionNetworkFirewallPolicyAssociationSpec{
+				FirewallPolicyRef: computev1beta1.ComputeRegionNetworkFirewallPolicyRef{Name: policyObj},
 				NetworkRef:        computerefs.ComputeNetworkRef{External: networkPath},
 				ResourceID:        mockenv.Ptr(mockenv.Name(name)),
 			},
@@ -184,7 +184,7 @@ func TestComputeRegionNetworkFirewallPolicyAssociation(t *testing.T) {
 			t.Errorf("changing the network: err = %v", err)
 		}
 		o = getObj(t, attached)
-		o.Spec.FirewallPolicyRef = computev1alpha1.ComputeRegionNetworkFirewallPolicyRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/firewallPolicies/other"}
+		o.Spec.FirewallPolicyRef = computev1beta1.ComputeRegionNetworkFirewallPolicyRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/firewallPolicies/other"}
 		if err := env.Kube.Update(env.Ctx, o); err == nil || !strings.Contains(err.Error(), "immutable") {
 			t.Errorf("changing the policy: err = %v", err)
 		}

@@ -212,11 +212,11 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/sql/client.go]}
   - here: [pkg/controller/direct/sql/sqluser_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/sql/sqlsslcert_controller.go]}
-  - here: [apis/sqladmin/v1alpha1/groupversion_info.go]
+  - here: [apis/sqladmin/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/sqladmin/v1alpha1/groupversion_info.go]}
-  - here: [apis/sqladmin/v1alpha1/sqladminbackup_types.go]
+  - here: [apis/sqladmin/v1beta1/sqladminbackup_types.go]
     from: {pin: k8s-config-connector, paths: [apis/sqladmin/v1alpha1/sqladminbackup_types.go]}
-  - here: [apis/sqladmin/v1alpha1/sqladminbackup_identity.go]
+  - here: [apis/sqladmin/v1beta1/sqladminbackup_identity.go]
     from: {pin: k8s-config-connector, paths: [apis/sqladmin/v1alpha1/sqladminbackup_identity.go]}
     also_prs: [GoogleCloudPlatform/k8s-config-connector#12553]
   - here: [pkg/controller/direct/sqladmin/sqladminbackup_controller.go]
@@ -268,15 +268,13 @@ copied:
   - here: [pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/artifactregistry/artifactregistryrepository_fuzzer.go]}
     also_prs: [GoogleCloudPlatform/k8s-config-connector#13517]
-  - here: [apis/artifactregistry/v1alpha1/groupversion_info.go]
-    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1alpha1/groupversion_info.go]}
-  - here: [apis/storage/v1alpha1/groupversion_info.go]
+  - here: [apis/storage/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/storage/v1alpha1/groupversion_info.go]}
   - here: [apis/compute/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1alpha1/groupversion_info.go]}
-  - here: [apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_types.go]
+  - here: [apis/compute/v1beta1/computeregionnetworkfirewallpolicy_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_types.go]}
-  - here: [apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_identity.go]
+  - here: [apis/compute/v1beta1/computeregionnetworkfirewallpolicy_identity.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_identity.go]}
   - here: [pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkfirewallpolicy_controller.go, pkg/controller/direct/compute/computenetworkfirewallpolicy_mapper.go]}
@@ -334,11 +332,9 @@ copied:
     from: {written_here: true}
   - here: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/serviceusage/serviceidentity_controller.go]}
-  - here: [apis/networksecurity/v1alpha1/groupversion_info.go, apis/networksecurity/v1alpha1/doc.go]
-    from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/groupversion_info.go, apis/networksecurity/v1alpha1/doc.go]}
-  - here: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_types.go]
+  - here: [apis/networksecurity/v1beta1/networksecurityaddressgroup_types.go]
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_types.go]}
-  - here: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity.go, apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity_test.go]
+  - here: [apis/networksecurity/v1beta1/networksecurityaddressgroup_identity.go, apis/networksecurity/v1beta1/networksecurityaddressgroup_identity_test.go]
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity.go, apis/networksecurity/v1alpha1/networksecurityaddressgroup_identity_test.go]}
   - here: [pkg/controller/direct/networksecurity/addressgroup_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecurityaddressgroup_controller.go]}
@@ -347,17 +343,17 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/mapper.generated.go]}
   - here: [pkg/controller/direct/networksecurity/addressgroup_fuzzer_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecurityaddressgroup_fuzzer.go]}
-  - here: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_types.go]
+  - here: [apis/networksecurity/v1beta1/networksecuritysecurityprofile_types.go]
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_types.go]}
-  - here: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity_test.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_reference.go]
+  - here: [apis/networksecurity/v1beta1/networksecuritysecurityprofile_identity.go, apis/networksecurity/v1beta1/networksecuritysecurityprofile_identity_test.go, apis/networksecurity/v1beta1/networksecuritysecurityprofile_reference.go]
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_identity_test.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofile_reference.go]}
   - here: [pkg/controller/direct/networksecurity/securityprofile_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecuritysecurityprofile_controller.go]}
   - here: [pkg/controller/direct/networksecurity/securityprofile_fuzzer_test.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecuritysecurityprofile_fuzzer.go]}
-  - here: [apis/networksecurity/v1alpha1/networksecuritysecurityprofilegroup_types.go]
+  - here: [apis/networksecurity/v1beta1/networksecuritysecurityprofilegroup_types.go]
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecuritysecurityprofilegroup_types.go]}
-  - here: [apis/networksecurity/v1alpha1/networksecuritysecurityprofilegroup_identity.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofilegroup_identity_test.go]
+  - here: [apis/networksecurity/v1beta1/networksecuritysecurityprofilegroup_identity.go, apis/networksecurity/v1beta1/networksecuritysecurityprofilegroup_identity_test.go]
     from: {pin: k8s-config-connector, paths: [apis/networksecurity/v1alpha1/networksecuritysecurityprofilegroup_identity.go, apis/networksecurity/v1alpha1/networksecuritysecurityprofilegroup_identity_test.go]}
   - here: [pkg/controller/direct/networksecurity/securityprofilegroup_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/networksecurity/networksecuritysecurityprofilegroup_controller.go]}
@@ -375,19 +371,19 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/securitycenter/muteconfig/securitycentermuteconfig_controller.go]}
   - here: [pkg/controller/direct/securitycenter/muteconfig_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/securitycenter/mapper.generated.go]}
-  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]
+  - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_types.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]}
-  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.go]
+  - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_identity.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_identity.generated.go]}
-  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_reference.go]
+  - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_reference.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_reference.generated.go]}
-  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_types.go]
+  - here: [apis/iam/v1beta1/iamworkloadidentitypoolmanagedidentity_types.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_types.go]}
-  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_identity.go]
+  - here: [apis/iam/v1beta1/iamworkloadidentitypoolmanagedidentity_identity.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_identity.generated.go]}
-  - here: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_reference.go]
+  - here: [apis/iam/v1beta1/iamworkloadidentitypoolmanagedidentity_reference.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14418, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolmanagedidentity_reference.generated.go]}
-  - here: [apis/iam/v1alpha1/types.generated.go]
+  - here: [apis/iam/v1beta1/ownerservice_types.generated.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/types.generated.go]}
   - here: [apis/iam/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/iam/v1beta1/groupversion_info.go]}
@@ -591,9 +587,8 @@ copied:
       - apis/iam/v1beta1/iambinding_types.go
       - apis/iam/v1beta1/iambinding_identity.go
       - apis/iam/v1beta1/iamresourceref_types.go
-      - apis/iam/v1alpha1/iammember_types.go
-      - apis/iam/v1alpha1/iammember_identity.go
-      - apis/iam/v1alpha1/iamresourceref_types.go
+      - apis/iam/v1beta1/iammember_types.go
+      - apis/iam/v1beta1/iammember_identity.go
       - pkg/iampolicy/
       - pkg/controller/direct/iam/binding_controller.go
       - pkg/controller/direct/iam/member_controller.go

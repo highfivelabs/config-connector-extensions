@@ -1,16 +1,20 @@
 ---
 kinds: [IAMWorkloadIdentityPoolNamespace]
-apiVersion: iam.gcp.hfl.dev/v1alpha1
+apiVersion: iam.gcp.hfl.dev/v1beta1
 ---
 # IAMWorkloadIdentityPoolNamespace
 
-`iam.gcp.hfl.dev/v1alpha1`
+`iam.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** a namespace in a workload identity pool (managed workload identities, Terraform's `google_iam_workload_identity_pool_namespace`); Config Connector has types for it only in a pull request, and no controller
 
 **Source.** upstream PR #14209's types; controller and the pool reference written here
 
 ## Notes
+
+2026-11-15: moved from `iam.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

@@ -38,13 +38,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
-	policyGVK := computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK
-	ruleGVK := computev1alpha1.ComputeRegionNetworkFirewallPolicyRuleGVK
+	policyGVK := computev1beta1.ComputeRegionNetworkFirewallPolicyGVK
+	ruleGVK := computev1beta1.ComputeRegionNetworkFirewallPolicyRuleGVK
 	env := mockenv.New(t, namespace)
 	policies, err := gcp.NewRegionNetworkFirewallPoliciesRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -88,15 +88,15 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *computev1alpha1.ComputeRegionNetworkFirewallPolicyRule {
+	getObj := func(t *testing.T, name string) *computev1beta1.ComputeRegionNetworkFirewallPolicyRule {
 		t.Helper()
-		obj := &computev1alpha1.ComputeRegionNetworkFirewallPolicyRule{}
+		obj := &computev1beta1.ComputeRegionNetworkFirewallPolicyRule{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
 		return obj
 	}
-	update := func(t *testing.T, name string, change func(*computev1alpha1.ComputeRegionNetworkFirewallPolicyRule)) {
+	update := func(t *testing.T, name string, change func(*computev1beta1.ComputeRegionNetworkFirewallPolicyRule)) {
 		t.Helper()
 		o := getObj(t, name)
 		change(o)
@@ -106,22 +106,22 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 	}
 	resync := func(t *testing.T, name string) {
 		t.Helper()
-		update(t, name, func(o *computev1alpha1.ComputeRegionNetworkFirewallPolicyRule) {
+		update(t, name, func(o *computev1beta1.ComputeRegionNetworkFirewallPolicyRule) {
 			o.Annotations = map[string]string{k8s.InternalForceReconcileAnnotation: time.Now().Format(time.RFC3339Nano)}
 		})
 	}
-	newRule := func(name string, priority int64) *computev1alpha1.ComputeRegionNetworkFirewallPolicyRule {
-		return &computev1alpha1.ComputeRegionNetworkFirewallPolicyRule{
+	newRule := func(name string, priority int64) *computev1beta1.ComputeRegionNetworkFirewallPolicyRule {
+		return &computev1beta1.ComputeRegionNetworkFirewallPolicyRule{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: computev1alpha1.ComputeRegionNetworkFirewallPolicyRuleSpec{
-				FirewallPolicyRef: computev1alpha1.ComputeRegionNetworkFirewallPolicyRef{Name: policyObj},
+			Spec: computev1beta1.ComputeRegionNetworkFirewallPolicyRuleSpec{
+				FirewallPolicyRef: computev1beta1.ComputeRegionNetworkFirewallPolicyRef{Name: policyObj},
 				Priority:          priority,
 				Action:            "allow",
 				Direction:         "INGRESS",
 				Description:       mockenv.Ptr("health checks"),
-				Match: computev1alpha1.RegionFirewallPolicyRuleMatch{
+				Match: computev1beta1.RegionFirewallPolicyRuleMatch{
 					SrcIPRanges: []string{"130.211.0.0/22", "35.191.0.0/16"},
-					Layer4Configs: []computev1alpha1.RegionFirewallPolicyRuleLayer4Config{
+					Layer4Configs: []computev1beta1.RegionFirewallPolicyRuleLayer4Config{
 						{IPProtocol: "tcp", Ports: []string{"80", "443"}},
 					},
 				},
@@ -170,7 +170,7 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 
 	t.Run("changed fields are patched once", func(t *testing.T) {
 		before := writes()
-		update(t, health, func(o *computev1alpha1.ComputeRegionNetworkFirewallPolicyRule) {
+		update(t, health, func(o *computev1beta1.ComputeRegionNetworkFirewallPolicyRule) {
 			o.Spec.Description = mockenv.Ptr("health checks and the proxy")
 			o.Spec.EnableLogging = mockenv.Ptr(true)
 			o.Spec.RuleName = mockenv.Ptr("health")
@@ -192,7 +192,7 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 	})
 
 	t.Run("taking fields off the spec puts their defaults back", func(t *testing.T) {
-		update(t, health, func(o *computev1alpha1.ComputeRegionNetworkFirewallPolicyRule) {
+		update(t, health, func(o *computev1beta1.ComputeRegionNetworkFirewallPolicyRule) {
 			o.Spec.Description = nil
 			o.Spec.EnableLogging = nil
 			o.Spec.RuleName = nil
@@ -205,7 +205,7 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 	})
 
 	t.Run("lists taken off the spec are cleared", func(t *testing.T) {
-		update(t, health, func(o *computev1alpha1.ComputeRegionNetworkFirewallPolicyRule) {
+		update(t, health, func(o *computev1beta1.ComputeRegionNetworkFirewallPolicyRule) {
 			o.Spec.Match.SrcIPRanges = nil
 			o.Spec.Match.SrcRegionCodes = []string{"US"}
 			o.Spec.Match.Layer4Configs[0].Ports = nil
@@ -269,9 +269,9 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 		r.Spec.Direction = "EGRESS"
 		r.Spec.Action = "deny"
 		r.Spec.Description = nil
-		r.Spec.Match = computev1alpha1.RegionFirewallPolicyRuleMatch{
+		r.Spec.Match = computev1beta1.RegionFirewallPolicyRuleMatch{
 			DestIPRanges:  []string{"192.0.2.0/24"},
-			Layer4Configs: []computev1alpha1.RegionFirewallPolicyRuleLayer4Config{{IPProtocol: "udp", Ports: []string{"53"}}},
+			Layer4Configs: []computev1beta1.RegionFirewallPolicyRuleLayer4Config{{IPProtocol: "udp", Ports: []string{"53"}}},
 		}
 		r.Spec.TargetServiceAccounts = []iamrefs.IAMServiceAccountRef{{External: "app@" + mockenv.Project + ".iam.gserviceaccount.com"}}
 		if err := env.Kube.Create(env.Ctx, r); err != nil {
@@ -308,7 +308,7 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 			t.Errorf("changing the priority: err = %v", err)
 		}
 		o = getObj(t, health)
-		o.Spec.FirewallPolicyRef = computev1alpha1.ComputeRegionNetworkFirewallPolicyRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/firewallPolicies/other"}
+		o.Spec.FirewallPolicyRef = computev1beta1.ComputeRegionNetworkFirewallPolicyRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/firewallPolicies/other"}
 		if err := env.Kube.Update(env.Ctx, o); err == nil || !strings.Contains(err.Error(), "immutable") {
 			t.Errorf("changing the policy: err = %v", err)
 		}
@@ -321,7 +321,7 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 		// stop with the watch open.
 		const lateObj = "not-yet"
 		r := newRule("early", 3000)
-		r.Spec.FirewallPolicyRef = computev1alpha1.ComputeRegionNetworkFirewallPolicyRef{Name: lateObj}
+		r.Spec.FirewallPolicyRef = computev1beta1.ComputeRegionNetworkFirewallPolicyRef{Name: lateObj}
 		if err := env.Kube.Create(env.Ctx, r); err != nil {
 			t.Fatal(err)
 		}
@@ -365,7 +365,7 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, health)); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeRegionNetworkFirewallPolicyRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: health}})
+		env.WaitGone(&computev1beta1.ComputeRegionNetworkFirewallPolicyRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: health}})
 		_, err := cloudRule(t, 1000)
 		if err == nil {
 			t.Fatal("the rule is still in the policy")

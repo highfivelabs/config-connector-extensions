@@ -35,16 +35,16 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 // newRegionFirewallPolicy is the object name; the policy's is
 // mockenv.Name(name).
-func newRegionFirewallPolicy(name, description string) *computev1alpha1.ComputeRegionNetworkFirewallPolicy {
-	return &computev1alpha1.ComputeRegionNetworkFirewallPolicy{
+func newRegionFirewallPolicy(name, description string) *computev1beta1.ComputeRegionNetworkFirewallPolicy {
+	return &computev1beta1.ComputeRegionNetworkFirewallPolicy{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
-		Spec: computev1alpha1.ComputeRegionNetworkFirewallPolicySpec{
+		Spec: computev1beta1.ComputeRegionNetworkFirewallPolicySpec{
 			ProjectRef:  &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Region:      region,
 			ResourceID:  mockenv.Ptr(mockenv.Name(name)),
@@ -54,7 +54,7 @@ func newRegionFirewallPolicy(name, description string) *computev1alpha1.ComputeR
 }
 
 func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
-	policyGVK := computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK
+	policyGVK := computev1beta1.ComputeRegionNetworkFirewallPolicyGVK
 	env := mockenv.New(t, namespace)
 	policies, err := gcp.NewRegionNetworkFirewallPoliciesRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -92,9 +92,9 @@ func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *computev1alpha1.ComputeRegionNetworkFirewallPolicy {
+	getObj := func(t *testing.T, name string) *computev1beta1.ComputeRegionNetworkFirewallPolicy {
 		t.Helper()
-		obj := &computev1alpha1.ComputeRegionNetworkFirewallPolicy{}
+		obj := &computev1beta1.ComputeRegionNetworkFirewallPolicy{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -209,7 +209,7 @@ func TestComputeRegionNetworkFirewallPolicy(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "vpc-us-central1")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeRegionNetworkFirewallPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "vpc-us-central1"}})
+		env.WaitGone(&computev1beta1.ComputeRegionNetworkFirewallPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "vpc-us-central1"}})
 		if _, err := cloud(t, "vpc-us-central1"); err == nil || !strings.Contains(err.Error(), "404") {
 			t.Errorf("reading the deleted policy: got %v, want 404", err)
 		}

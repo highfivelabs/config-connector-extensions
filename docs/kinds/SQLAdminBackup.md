@@ -1,16 +1,20 @@
 ---
 kinds: [SQLAdminBackup]
-apiVersion: sqladmin.gcp.hfl.dev/v1alpha1
+apiVersion: sqladmin.gcp.hfl.dev/v1beta1
 ---
 # SQLAdminBackup
 
-`sqladmin.gcp.hfl.dev/v1alpha1`
+`sqladmin.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** an on-demand Cloud SQL backup (`backupRuns`); upstream master has the types but no controller
 
 **Source.** upstream PR #12553
 
 ## Notes
+
+2026-11-15: moved from `sqladmin.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
