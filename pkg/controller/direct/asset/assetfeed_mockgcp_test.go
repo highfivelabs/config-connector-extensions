@@ -43,7 +43,6 @@ import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/option"
 	pubsub "google.golang.org/api/pubsub/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -62,8 +61,7 @@ func TestAssetFeed(t *testing.T) {
 	}
 	feedGVK := assetv1beta1.AssetFeedGVK
 	env := mockenv.New(t, namespace)
-	opts := append(env.GCPOptions(), option.WithQuotaProject(mockenv.Project))
-	cloud, err := gcp.NewRESTClient(env.Ctx, opts...)
+	cloud, err := gcp.NewRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
 		t.Fatal(err)
 	}
