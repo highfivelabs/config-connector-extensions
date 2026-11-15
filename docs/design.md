@@ -2454,7 +2454,18 @@ To raise confidence in `ArtifactRegistryRepository`:
     the tests"). `hack/discokind` writes them to
     `pkg/controller/direct/<service>/discokindtest`, fixtures beside them,
     so the generated and hand-written halves run in parallel; no timeout
-    changes.
+    changes. Done 2026-11-15: the hand-written files that register a
+    kind's kindtest setup or run a kindtest case moved with the fixtures
+    (they need them and the generated tests' binary), and the generator
+    fails while a service's old `zz_discokind_test.go` is left behind.
+    `hack/live/run.sh` runs `./pkg/controller/direct/<k>/...`, live with
+    `-p 1`. Measured on one offload VM (c2d-standard-16, mock, two runs
+    each, same commit before and after): `compute` went from 510 s and
+    503 s wall (one package) to 282 s and 275 s (`compute` 275 s and
+    268 s beside `compute/discokindtest` 227 s and 223 s), with the same
+    2,286 tests and subtests passing; `go test -list` names the same 172
+    top-level tests across `pkg/controller/direct/...` and
+    `pkg/discokind/...`, in 47 packages instead of 40.
 
 29. **Every patch is numbered** (the builder, 2026-11-13: "patches: the
     guard wins (always numbered), fix CONTRIBUTING.md"). `task

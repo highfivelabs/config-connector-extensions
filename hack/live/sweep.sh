@@ -292,7 +292,7 @@ disco_delete() { # disco_delete BASE NAME: delete, and wait if it answers an ope
 # live (its live-skip: the API is off in the project, and listing is then
 # a 403), no test made one: left alone, as the discokind loop does.
 gw_locs="us-central1 global"
-if compgen -G "${HERE}/../../pkg/controller/direct/networkservices/testdata/discokind/NetworkServicesGateway/live-skip" >/dev/null; then
+if compgen -G "${HERE}/../../pkg/controller/direct/networkservices/discokindtest/testdata/discokind/NetworkServicesGateway/live-skip" >/dev/null; then
   gw_locs=""
 fi
 for loc in ${gw_locs}; do
@@ -310,7 +310,7 @@ done
 # lakes (a lake with zones cannot go): every zone of a run's lake in
 # us-central1, the tests' region, its assets first.
 dp="https://dataplex.googleapis.com/v1/"
-if ! compgen -G "${HERE}/../../pkg/controller/direct/dataplex/testdata/discokind/DataplexLake/live-skip" >/dev/null; then
+if ! compgen -G "${HERE}/../../pkg/controller/direct/dataplex/discokindtest/testdata/discokind/DataplexLake/live-skip" >/dev/null; then
   lakes="$(disco_api GET "${dp}projects/${project}/locations/us-central1/lakes?pageSize=1000" \
     | jq -r '.lakes[]? | "\(.name) \(.createTime // "-")"')"
   while read -r lake made; do
@@ -335,7 +335,7 @@ while IFS=$'\t' read -r dkind base coll field soft; do
   # nothing to sweep, and listing its collection may need a permission the
   # live-test account is not given (a preview API's, BYOIP's): left alone,
   # as the deny policies and mute configs are.
-  if compgen -G "${HERE}/../../pkg/controller/direct/*/testdata/discokind/${dkind}/live-skip" >/dev/null; then
+  if compgen -G "${HERE}/../../pkg/controller/direct/*/discokindtest/testdata/discokind/${dkind}/live-skip" >/dev/null; then
     continue
   fi
   coll="${coll//\{project\}/${project}}"

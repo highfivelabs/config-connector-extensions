@@ -29,9 +29,11 @@
 //     the read-only ones;
 //   - pkg/controller/zz_discokinds.go: each kind's descriptor, its
 //     controller and its scheme;
-//   - pkg/controller/direct/<service>/zz_discokind_test.go: each kind's
-//     end-to-end test (pkg/discokind/kindtest), which reads the fixtures in
-//     testdata/discokind/<Kind>/ beside it;
+//   - pkg/controller/direct/<service>/discokindtest/zz_discokind_test.go:
+//     each kind's end-to-end test (pkg/discokind/kindtest), which reads the
+//     fixtures in testdata/discokind/<Kind>/ beside it. A package of its
+//     own, so go test runs it beside the service's hand-written tests
+//     rather than after them (docs/design.md decision 28);
 //   - hack/live/discokinds.tsv: what the live sweeper lists;
 //   - docs/kinds/<Kind>.md, when it is missing (docs/kinds/README.md).
 //
@@ -199,9 +201,20 @@ func main() {
 	for _, k := range kinds {
 		bySvc[k.svc] = append(bySvc[k.svc], k)
 	}
+	var stale []string
 	for svc, ks := range bySvc {
-		p := filepath.Join("pkg/controller/direct", svc, "zz_discokind_test.go")
-		outputs[p] = gofmt(p, testFile(svc, ks))
+		p := filepath.Join("pkg/controller/direct", svc, testPkg, "zz_discokind_test.go")
+		outputs[p] = gofmt(p, testFile(ks))
+		// Before decision 28 the test sat in the service's own package; a
+		// copy left there would run every kind twice.
+		old := filepath.Join("pkg/controller/direct", svc, "zz_discokind_test.go")
+		if _, err := os.Stat(filepath.Join(root, old)); err == nil {
+			stale = append(stale, old)
+		}
+	}
+	sort.Strings(stale)
+	for _, p := range stale {
+		fmt.Fprintf(os.Stderr, "discokind: %s is stale: the test is in %s/ now; delete it and move testdata/discokind/ there\n", p, testPkg)
 	}
 	outputs["hack/live/discokinds.tsv"] = sweepFile(kinds)
 
@@ -225,6 +238,9 @@ func main() {
 		must(os.MkdirAll(filepath.Dir(full), 0o755))
 		must(os.WriteFile(full, outputs[p], 0o644))
 		fmt.Printf("discokind: wrote %s\n", p)
+	}
+	if len(stale) > 0 {
+		fatalf("%d stale file(s)", len(stale))
 	}
 	if *check && changed > 0 {
 		fatalf("%d file(s) are not current; run go run ./hack/discokind", changed)

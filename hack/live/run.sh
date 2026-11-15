@@ -10,9 +10,13 @@
 #   hack/live/run.sh --project P [KIND...]
 #
 # KIND is a package under pkg/controller/direct (default: every built kind,
-# in docs/design.md section 6.3's order). LIVE_RUN, when set, is a go test
-# -run regexp for both runs of every package (one kind of a package:
-# LIVE_RUN=TestIAMOAuthClient). Credentials are Application
+# in docs/design.md section 6.3's order); its packages below it run too,
+# among them discokindtest/, the generated kinds' tests (docs/design.md
+# decision 28). The mock run runs them in parallel; the live run one after
+# another (-p 1), as one package did before, so its log streams and two
+# packages do not share a project's quotas at once. LIVE_RUN, when set,
+# is a go test -run regexp for both runs of every package (one kind of a
+# package: LIVE_RUN=TestIAMOAuthClient). Credentials are Application
 # Default Credentials, which must be a service account (it is the IAM
 # principal the SQLUser test grants roles to); on an offload VM started
 # with --sa they are that service account's.
@@ -150,7 +154,7 @@ run_filter=()
 [[ -z "${LIVE_RUN:-}" ]] || run_filter=(-run "${LIVE_RUN}")
 failed=0
 for k in "${kinds[@]}"; do
-  pkg="./pkg/controller/direct/${k}/"
+  pkg="./pkg/controller/direct/${k}/..."
   echo "== live: ${k}: mock"
   mock=PASS
   E2E_GCP_TARGET=mock go test -count=1 -v -timeout 15m ${run_filter[@]+"${run_filter[@]}"} "${pkg}" >"${out}/${k}.mock.log" 2>&1 || mock=FAIL
@@ -161,7 +165,7 @@ for k in "${kinds[@]}"; do
   # Streamed as it runs, so a preempted VM's log still has it.
   E2E_GCP_TARGET=real GCP_PROJECT_ID="${project}" E2E_RUN_ID="${run_id}" \
     E2E_SERVICE_ACCOUNT="${sa}" E2E_SQL_INSTANCE="${sql_instance}" \
-    go test -count=1 -v -timeout 60m ${run_filter[@]+"${run_filter[@]}"} "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
+    go test -count=1 -v -p 1 -timeout 60m ${run_filter[@]+"${run_filter[@]}"} "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
     | grep -E --line-buffered '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:|^=== RUN' || live=FAIL
   secs=$(( $(date +%s) - t0 ))
   [[ "${mock}" == PASS && "${live}" == PASS ]] || failed=1

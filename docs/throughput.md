@@ -83,7 +83,8 @@ delete; AIP-121 to 135):
   from the same descriptors: no mockgcp patch.
 - `pkg/discokind/kindtest` is the end-to-end test: create, a resync
   writes nothing, update, delete, abandon, on the fake or live, from
-  `testdata/discokind/<Kind>/create.yaml` and `update.yaml`.
+  `testdata/discokind/<Kind>/create.yaml` and `update.yaml` in
+  `pkg/controller/direct/<service>/discokindtest/`, a package of its own.
 - The kind list (`pkg/controller/zz_discokinds.go`) and the sweeper's
   list (`hack/live/discokinds.tsv`) are generated, so a kind touches no
   hand-kept shared file; several kinds go in one pull request.

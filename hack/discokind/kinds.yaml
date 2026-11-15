@@ -1,7 +1,7 @@
 # The kinds hack/discokind generates (pkg/discokind, docs/throughput.md).
 # One entry per kind; `go run ./hack/discokind` then `hack/generate.sh`.
 # Each kind also needs its fixtures,
-# pkg/controller/direct/<service>/testdata/discokind/<Kind>/{create,update}.yaml
+# pkg/controller/direct/<service>/discokindtest/testdata/discokind/<Kind>/{create,update}.yaml
 # (pkg/discokind/kindtest), a row in docs/live-runs.md once it ran live,
 # and its line in docs/design.md 6.6.
 #
