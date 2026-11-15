@@ -18,6 +18,9 @@
 // resource API (create with an ID, get, list, patch with an update mask,
 // delete), in front of mockgcp. It is generated from the same Kind
 // descriptors as the controller, so a new kind needs no mockgcp patch.
+// A kind's input-only fields (Kind.InputOnly and Kind.Secrets, such as a
+// Looker instance's OAuth client secret) are kept but never answered, as
+// the API does; Stored shows them to a test.
 //
 // BigLake (every kind under biglake.googleapis.com) and any kind with
 // Kind.MissingIs403 answer 403 PERMISSION_DENIED, not 404, for a name the
@@ -98,6 +101,22 @@ type pendingDelete struct {
 	op      map[string]any
 	k       *discokind.Kind
 	refused string
+}
+
+// Stored is the resource name of k as the fake holds it, input-only
+// fields (Kind.InputOnly, Kind.Secrets) included, which a get leaves out;
+// nil when it holds none. For tests of what a write sent.
+func (c *Cloud) Stored(k *discokind.Kind, name string) map[string]any {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	obj, ok := c.objects[k.BaseURL+name]
+	if !ok {
+		return nil
+	}
+	b, _ := json.Marshal(obj)
+	out := map[string]any{}
+	_ = json.Unmarshal(b, &out)
+	return out
 }
 
 // SetDeleteDelay makes a delete of a kind whose delete answers an
@@ -293,9 +312,9 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 	body = newObject(k, name, id, body)
 	c.objects[key] = body
 	if k.CreateLRO {
-		return c.doneOp(req, k, name, body)
+		return c.doneOp(req, k, name, k.Comparable(body))
 	}
-	return jsonResponse(req, http.StatusOK, body)
+	return jsonResponse(req, http.StatusOK, k.Comparable(body))
 }
 
 // kindPath is full's path under k's BaseURL, and whether full is k's. A
@@ -401,9 +420,9 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		obj = newObject(k, name, name[strings.LastIndex(name, "/")+1:], body)
 		c.objects[key] = obj
 		if k.UpdateLRO {
-			return c.doneOp(req, k, name, obj)
+			return c.doneOp(req, k, name, k.Comparable(obj))
 		}
-		return jsonResponse(req, http.StatusOK, obj)
+		return jsonResponse(req, http.StatusOK, k.Comparable(obj))
 	}
 	if !ok && missingIs403(k) {
 		// As BigLake answers for a catalog, database or table that does not
@@ -416,7 +435,9 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 	deleted := k.SoftDelete != nil && obj[k.SoftDelete.Field] == k.SoftDelete.Value
 	switch req.Method {
 	case http.MethodGet:
-		return jsonResponse(req, http.StatusOK, obj)
+		// Input-only fields (Kind.InputOnly, Kind.Secrets) are kept but
+		// never answered, as the API does (Stored shows them).
+		return jsonResponse(req, http.StatusOK, k.Comparable(obj))
 	case http.MethodPatch, http.MethodPut:
 		if !k.Updatable || (req.Method == http.MethodPut) != k.UpdatePUT {
 			return errorResponse(req, http.StatusMethodNotAllowed, "UNIMPLEMENTED", "no patch method")
@@ -477,9 +498,9 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		}
 		c.objects[key] = updated
 		if k.UpdateLRO {
-			return c.doneOp(req, k, name, updated)
+			return c.doneOp(req, k, name, k.Comparable(updated))
 		}
-		return jsonResponse(req, http.StatusOK, updated)
+		return jsonResponse(req, http.StatusOK, k.Comparable(updated))
 	case http.MethodDelete:
 		if deleted {
 			return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s was not found", name))
@@ -535,7 +556,7 @@ func (c *Cloud) list(req *http.Request, k *discokind.Kind, coll string) (*http.R
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		items = append(items, c.objects[key])
+		items = append(items, k.Comparable(c.objects[key]))
 	}
 	field := coll[strings.LastIndex(coll, "/")+1:]
 	if k.InsertStyle {

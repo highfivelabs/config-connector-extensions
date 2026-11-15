@@ -68,6 +68,8 @@ type typeGen struct {
 	order    []string
 	inStack  map[string]bool
 	usesJSON bool
+	// secrets are the Config.Secrets paths given secret.Legacy.
+	secrets map[string]bool
 }
 
 // comment is a description as // lines.
@@ -95,8 +97,10 @@ func comment(desc string) string {
 	return out.String()
 }
 
-// goType is the Go type of a schema; typeName names a struct it needs.
-func (g *typeGen) goType(s *Schema, typeName string) string {
+// goType is the Go type of a schema; typeName names a struct it needs;
+// path is the field's dotted JSON path in the spec ([] marks a list's
+// items).
+func (g *typeGen) goType(s *Schema, typeName, path string) string {
 	if s.Ref != "" {
 		ref := g.k.d.Schemas[s.Ref]
 		if ref == nil {
@@ -117,7 +121,7 @@ func (g *typeGen) goType(s *Schema, typeName string) string {
 		if _, done := g.defs[name]; !done {
 			g.defs[name] = "" // reserve
 			g.inStack[s.Ref] = true
-			g.defs[name] = g.structDef(name, ref, false)
+			g.defs[name] = g.structDef(name, ref, false, path)
 			g.order = append(g.order, name)
 			delete(g.inStack, s.Ref)
 		}
@@ -142,7 +146,7 @@ func (g *typeGen) goType(s *Schema, typeName string) string {
 	case "number":
 		return "*float64"
 	case "array":
-		it := g.goType(s.Items, typeName+"Item")
+		it := g.goType(s.Items, typeName+"Item", path+"[]")
 		if strings.HasPrefix(it, "*") {
 			it = it[1:]
 		}
@@ -163,7 +167,7 @@ func (g *typeGen) goType(s *Schema, typeName string) string {
 			name := typeName
 			if _, done := g.defs[name]; !done {
 				g.defs[name] = ""
-				g.defs[name] = g.structDef(name, s, false)
+				g.defs[name] = g.structDef(name, s, false, path)
 				g.order = append(g.order, name)
 			}
 			return "*" + name
@@ -174,8 +178,9 @@ func (g *typeGen) goType(s *Schema, typeName string) string {
 }
 
 // structDef writes a struct of a schema's fields: for the spec, the
-// writable ones; for observedState, all of them.
-func (g *typeGen) structDef(name string, s *Schema, top bool) string {
+// writable ones; for observedState, all of them. path is the struct's
+// dotted JSON path in the spec ("" at the top).
+func (g *typeGen) structDef(name string, s *Schema, top bool, path string) string {
 	var b strings.Builder
 	fields := make([]string, 0, len(s.Properties))
 	for f := range s.Properties {
@@ -193,8 +198,27 @@ func (g *typeGen) structDef(name string, s *Schema, top bool) string {
 		if top && g.k.c.Skip[f] != "" {
 			continue
 		}
-		t := g.goType(p, name+goName(f))
+		fieldPath := f
+		if path != "" {
+			fieldPath = path + "." + f
+		}
+		t := g.goType(p, name+goName(f), fieldPath)
+		secretField := !g.status && contains(g.k.c.Secrets, fieldPath)
+		if secretField {
+			if t != "*string" {
+				fatalf("%s: secrets: %s is %s, not a string", g.k.c.Kind, fieldPath, t)
+			}
+			// Config Connector's shape for a secret string (SQLUser's
+			// password): value, or valueFrom.secretKeyRef.
+			t = "*secret.Legacy"
+			g.secrets[fieldPath] = true
+		}
 		b.WriteString(comment(p.Description))
+		if secretField {
+			b.WriteString("//\n// Takes value, or valueFrom.secretKeyRef (name, key) of a Secret in the\n// object's namespace, which the controller reads and sends; the API never\n// returns it.\n")
+		} else if !g.status && contains(g.k.c.InputOnly, fieldPath) {
+			b.WriteString("//\n// The API never returns it: it is sent when the spec changes, and a\n// change made in the cloud is not seen.\n")
+		}
 		if len(p.Enum) > 0 && !g.status {
 			b.WriteString("//\n// One of " + strings.Join(p.Enum, ", ") + ".\n")
 		}
@@ -229,8 +253,13 @@ func (k *built) typesFile() []byte {
 	b.WriteString(header)
 	fmt.Fprintf(&b, "package %s\n\n", c.Version)
 
-	spec := &typeGen{k: k, defs: map[string]string{}, inStack: map[string]bool{}}
-	specBody := spec.structDef(c.Kind+"Spec", k.schema, true)
+	spec := &typeGen{k: k, defs: map[string]string{}, inStack: map[string]bool{}, secrets: map[string]bool{}}
+	specBody := spec.structDef(c.Kind+"Spec", k.schema, true, "")
+	for _, p := range c.Secrets {
+		if !spec.secrets[p] {
+			fatalf("%s: secrets: %s is not a field of the spec (a struct shared with another path, or under a list, is not supported)", c.Kind, p)
+		}
+	}
 	status := &typeGen{k: k, status: true, defs: map[string]string{}, inStack: map[string]bool{}}
 	obs := &Schema{Properties: map[string]*Schema{}}
 	for _, f := range k.output {
@@ -240,7 +269,7 @@ func (k *built) typesFile() []byte {
 	}
 	obsBody := ""
 	if len(obs.Properties) > 0 {
-		obsBody = status.structDef(c.Kind+"ObservedState", obs, false)
+		obsBody = status.structDef(c.Kind+"ObservedState", obs, false, "")
 	}
 
 	b.WriteString("import (\n")
@@ -249,6 +278,9 @@ func (k *built) typesFile() []byte {
 	}
 	if contains(c.Parents, "project") || contains(c.Parents, "folder") || contains(c.Parents, "organization") {
 		b.WriteString("refsv1beta1 \"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1\"\n")
+	}
+	if len(spec.secrets) > 0 {
+		b.WriteString("\"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret\"\n")
 	}
 	b.WriteString("\"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1\"\n")
 	if spec.usesJSON || status.usesJSON {
@@ -336,6 +368,9 @@ ObservedGeneration *int64 ` + "`json:\"observedGeneration,omitempty\"`" + `
 	fmt.Fprintf(&b, "// The resource's name, %s.\n// +optional\nExternalRef *string `json:\"externalRef,omitempty\"`\n", k.name)
 	if obsBody != "" {
 		fmt.Fprintf(&b, "\n// The API's read-only fields.\n// +optional\nObservedState *%sObservedState `json:\"observedState,omitempty\"`\n", c.Kind)
+	}
+	if len(c.Secrets) > 0 || len(c.InputOnly) > 0 {
+		b.WriteString("\n" + comment("A digest of the input-only fields last sent ("+strings.Join(append(append([]string(nil), c.InputOnly...), c.Secrets...), ", ")+"): their values, and each Secret's name, key and resourceVersion, never its value. The API never returns these fields, so they are sent again when it changes.") + "// +optional\nInputVersion *string `json:\"inputVersion,omitempty\"`\n")
 	}
 	b.WriteString("}\n\n")
 
@@ -464,6 +499,12 @@ func registryFile(kinds []*built) []byte {
 		}
 		if c.SoftDelete != nil {
 			fmt.Fprintf(&b, "SoftDelete: &discokind.FieldValue{Field: %q, Value: %q},\n", c.SoftDelete.Field, c.SoftDelete.Value)
+		}
+		if len(c.Secrets) > 0 {
+			fmt.Fprintf(&b, "Secrets: %#v,\n", c.Secrets)
+		}
+		if len(c.InputOnly) > 0 {
+			fmt.Fprintf(&b, "InputOnly: %#v,\n", c.InputOnly)
 		}
 		if len(c.FakeDefaults) > 0 {
 			var keys []string
