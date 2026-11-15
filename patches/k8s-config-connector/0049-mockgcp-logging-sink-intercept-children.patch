@@ -1,0 +1,246 @@
+config-connector-extensions patch 0049: mockgcp keeps a log sink's interceptChildren.
+
+For logging.gcp.hfl.dev LoggingLogSink. The REST API's LogSink has
+interceptChildren; the LogSink protobuf at cloud.google.com/go/logging
+v1.18.0 (mockgcp's) has not, so the gRPC gateway dropped it. A new
+mocklogging/sinkintercept.go, on the HTTP layer, keeps it beside each
+sink, adds it to every sink it serves (get, list, create, update), and
+refuses, as the API does, an intercepting sink that is not a folder's or
+an organization's, whose includeChildren is not true, or whose
+destination is not a Cloud project (logging.googleapis.com/projects/{id}).
+An update naming interceptChildren in its mask may not change it (the API
+has not been seen to; the kind keeps it immutable). Applies after 0029.
+Upstream candidate: no, a stopgap until the protobuf has the field;
+then the field belongs in logsink.go.
+
+diff --git a/mockgcp/mocklogging/service.go b/mockgcp/mocklogging/service.go
+index 7df6bd3..6c4b4d8 100644
+--- a/mockgcp/mocklogging/service.go
++++ b/mockgcp/mocklogging/service.go
+@@ -48,6 +48,10 @@ type MockService struct {
+ 
+ 	logScopesMutex sync.Mutex
+ 	logScopes      map[string]*logScopeEntity
++
++	// sinkIntercepts keeps each sink's interceptChildren, which the
++	// protobuf lacks (sinkintercept.go).
++	sinkIntercepts sinkIntercepts
+ }
+ 
+ type configServiceV2 struct {
+@@ -96,6 +100,11 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 				return
+ 			}
+ 		}
++		if strings.Contains(r.URL.Path, "/sinks") {
++			if s.serveSink(w, r, grpcMux) {
++				return
++			}
++		}
+ 		grpcMux.ServeHTTP(w, r)
+ 	}), nil
+ }
+diff --git a/mockgcp/mocklogging/sinkintercept.go b/mockgcp/mocklogging/sinkintercept.go
+new file mode 100644
+index 0000000..afbda34
+--- /dev/null
++++ b/mockgcp/mocklogging/sinkintercept.go
+@@ -0,0 +1,198 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mocklogging
++
++// A log sink's interceptChildren: the REST API has the field, but the
++// LogSink protobuf at cloud.google.com/go/logging v1.18.0 has not, so the
++// gRPC gateway drops it. The HTTP layer keeps it beside the sink, checks
++// the API's rules for it when a sink is made (a folder's or organization's
++// sink only, with includeChildren true and a Cloud project destination,
++// logging.googleapis.com/projects/{project}), and adds it to every sink
++// it serves. An update that names it in its mask may not change it.
++
++import (
++	"bytes"
++	"encoding/json"
++	"fmt"
++	"io"
++	"net/http"
++	"net/http/httptest"
++	"regexp"
++	"strings"
++	"sync"
++)
++
++var projectSinkDestination = regexp.MustCompile(`^logging\.googleapis\.com/projects/[^/]+$`)
++
++type sinkIntercepts struct {
++	mu sync.Mutex
++	// by sink name, {projects|folders|organizations|billingAccounts}/{id}/sinks/{sink}
++	m map[string]bool
++}
++
++func (x *sinkIntercepts) get(name string) bool {
++	x.mu.Lock()
++	defer x.mu.Unlock()
++	return x.m[name]
++}
++
++func (x *sinkIntercepts) set(name string, v bool) {
++	x.mu.Lock()
++	defer x.mu.Unlock()
++	if x.m == nil {
++		x.m = map[string]bool{}
++	}
++	if v {
++		x.m[name] = true
++	} else {
++		delete(x.m, name)
++	}
++}
++
++func writeSinkError(w http.ResponseWriter, code int, status, msg string) {
++	w.Header().Set("Content-Type", "application/json")
++	w.WriteHeader(code)
++	b, _ := json.Marshal(map[string]any{"error": map[string]any{"code": code, "message": msg, "status": status}})
++	w.Write(b)
++}
++
++// serveSink handles a request for a log sink, or for a parent's sinks, and
++// says whether it did.
++func (s *MockService) serveSink(w http.ResponseWriter, r *http.Request, next http.Handler) bool {
++	tokens := strings.Split(strings.TrimPrefix(r.URL.Path, "/v2/"), "/")
++	if len(tokens) < 3 || tokens[2] != "sinks" || len(tokens) > 4 {
++		return false
++	}
++	switch tokens[0] {
++	case "projects", "folders", "organizations", "billingAccounts":
++	default:
++		return false
++	}
++	parent := tokens[0] + "/" + tokens[1]
++	item := len(tokens) == 4
++
++	var body map[string]any
++	var raw []byte
++	if r.Body != nil && (r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch) {
++		var err error
++		raw, err = io.ReadAll(r.Body)
++		if err != nil {
++			writeSinkError(w, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
++			return true
++		}
++		r.Body = io.NopCloser(bytes.NewReader(raw))
++		if len(raw) > 0 {
++			if err := json.Unmarshal(raw, &body); err != nil {
++				return false
++			}
++		}
++	}
++	intercept, _ := body["interceptChildren"].(bool)
++
++	name := ""
++	switch {
++	case !item && r.Method == http.MethodPost:
++		sinkName, _ := body["name"].(string)
++		name = parent + "/sinks/" + sinkName
++		if intercept {
++			if tokens[0] != "folders" && tokens[0] != "organizations" {
++				writeSinkError(w, http.StatusBadRequest, "INVALID_ARGUMENT", "interceptChildren is only allowed for a folder's or an organization's sink")
++				return true
++			}
++			if include, _ := body["includeChildren"].(bool); !include {
++				writeSinkError(w, http.StatusBadRequest, "INVALID_ARGUMENT", "interceptChildren needs includeChildren to be true")
++				return true
++			}
++			if dest, _ := body["destination"].(string); !projectSinkDestination.MatchString(dest) {
++				writeSinkError(w, http.StatusBadRequest, "INVALID_ARGUMENT", fmt.Sprintf("an intercepting sink's destination must be a Cloud project, logging.googleapis.com/projects/[PROJECT_ID], not %q", dest))
++				return true
++			}
++		}
++	case item && (r.Method == http.MethodPut || r.Method == http.MethodPatch):
++		name = parent + "/sinks/" + tokens[3]
++		q := r.URL.Query()
++		var kept []string
++		named := false
++		for _, p := range strings.Split(q.Get("updateMask"), ",") {
++			switch p {
++			case "":
++			case "interceptChildren", "intercept_children":
++				named = true
++			default:
++				kept = append(kept, p)
++			}
++		}
++		if named {
++			if intercept != s.sinkIntercepts.get(name) {
++				writeSinkError(w, http.StatusBadRequest, "INVALID_ARGUMENT", "interceptChildren cannot be changed by mockgcp")
++				return true
++			}
++			if len(kept) == 0 {
++				// Nothing else to update: answer with the sink.
++				r.Method, r.Body, raw = http.MethodGet, http.NoBody, nil
++				q.Del("updateMask")
++			} else {
++				q.Set("updateMask", strings.Join(kept, ","))
++			}
++			r.URL.RawQuery = q.Encode()
++		}
++	case item:
++		name = parent + "/sinks/" + tokens[3]
++	}
++
++	rec := httptest.NewRecorder()
++	next.ServeHTTP(rec, r)
++	out := rec.Body.Bytes()
++	if rec.Code >= 200 && rec.Code < 300 {
++		switch {
++		case !item && r.Method == http.MethodPost:
++			s.sinkIntercepts.set(name, intercept)
++		case item && r.Method == http.MethodDelete:
++			s.sinkIntercepts.set(name, false)
++		}
++		var resp map[string]any
++		if err := json.Unmarshal(out, &resp); err == nil && resp != nil {
++			changed := false
++			if sinks, ok := resp["sinks"].([]any); ok {
++				for _, e := range sinks {
++					if m, ok := e.(map[string]any); ok {
++						if n, _ := m["name"].(string); s.sinkIntercepts.get(parent + "/sinks/" + n) {
++							m["interceptChildren"] = true
++							changed = true
++						}
++					}
++				}
++			} else if name != "" && s.sinkIntercepts.get(name) {
++				resp["interceptChildren"] = true
++				changed = true
++			}
++			if changed {
++				if b, err := json.Marshal(resp); err == nil {
++					out = b
++				}
++			}
++		}
++	}
++	for k, v := range rec.Header() {
++		if k == "Content-Length" {
++			continue
++		}
++		w.Header()[k] = v
++	}
++	w.WriteHeader(rec.Code)
++	w.Write(out)
++	return true
++}

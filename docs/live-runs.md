@@ -344,6 +344,20 @@ project that need not exist (assumed: the API does not check the
 destination at create); their names carry the run ID, and the sweeper
 deletes them from that billing account.
 
+`LoggingLogSink` (package `logging`) runs live in the run's project with
+the account's `roles/logging.admin` there: one project sink routing to the
+project's own `_Default` log bucket, with a filter that matches no log, so
+it routes nothing; the sweeper deletes the project's sinks by the run's
+name. Run it alone with `LIVE_RUN=TestLoggingLogSink` (the package's
+`LoggingSettings` test fails live without its folder and key). Its folder
+case, an intercepting sink (`interceptChildren`) routing to the run's
+project with a filter that matches nothing, runs live only with
+`E2E_LOGGING_FOLDER`, the folder `LoggingSettings` uses, on which the
+account needs `logging.sinks.*` (`roles/logging.configWriter`, which the
+test estate grants the generation's own account, not `$GCP_LIVE_SA`); the
+sweeper then deletes that folder's sinks by the run's name too. An
+organization's sink runs on the fake only.
+
 `SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
 Command Center for the run's project: it must be active for the project
 (or its organization), and the live-test service account needs

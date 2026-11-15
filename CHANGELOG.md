@@ -35,6 +35,17 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`logging.gcp.hfl.dev/v1beta1` `LoggingLogSink`**, our own log sink of
+  a project, folder or organization, owning the whole sink, with what
+  Config Connector's `LoggingLogSink` lacks: `interceptChildren` (a
+  folder's or organization's sink that keeps the logs it routes from its
+  children's sinks) and a Cloud project destination
+  (`destination.projectRef`), which an intercepting sink needs. The spec
+  is otherwise Config Connector's, so a manifest moves by changing its
+  `apiVersion`; exactly one parent is required (Config Connector's falls
+  back to the namespace's project). A workload moves a sink to ours by
+  acquiring it (`resourceID`) and abandoning Config Connector's object
+  (`docs/design.md` section 6.4).
 - **`biglake.gcp.hfl.dev/v1beta1` `BigLakeTable`**, generated from
   Discovery: a table in a BigLake Metastore database
   (`google_biglake_table`). Config Connector's own `BigLakeTable`

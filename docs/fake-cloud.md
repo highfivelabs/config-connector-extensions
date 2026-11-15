@@ -248,6 +248,18 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   checks no billing account (any ID is one), no destination (a topic or
   bucket that does not exist is accepted) and no filter, does not
   require `uniqueWriterIdentity`, and keeps no exclusion's timestamps.
+- **A log sink's `interceptChildren` in mockgcp** (patch 0049, ours, for
+  `LoggingLogSink`). The `LogSink` protobuf mockgcp serves lacks the field,
+  so the HTTP layer keeps it beside each sink and adds it to every sink it
+  returns. At create it refuses an intercepting sink that is not a
+  folder's or an organization's, whose `includeChildren` is not true, or
+  whose destination is not a Cloud project
+  (`logging.googleapis.com/projects/{id}`), as the API's reference says;
+  the real error texts have not been seen. An update may not change the
+  field (the kind keeps it immutable; whether the API allows it is not
+  known). The fake makes up every sink's writer identity, whatever
+  `uniqueWriterIdentity` says, and does not model the interception itself
+  (which logs a child's sinks then miss).
 - **Security Command Center mute configs in mockgcp** (patch 0031, ours,
   for `SecurityCenterMuteConfig`). A folder's and a project's beside an
   organization's, each stored and named under its parent as given (a
