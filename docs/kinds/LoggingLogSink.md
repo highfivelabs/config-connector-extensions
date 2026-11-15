@@ -41,3 +41,6 @@ name, `gs://`, `storage.googleapis.com/` and the rest); a project as its ID,
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-15 | `e464b10` | PASS | PASS (project parent) | none: create (with `uniqueWriterIdentity=true`), a resync with no write, one update with the mask `disabled,exclusions`, the CRD's refusals, delete and abandon match the fake; run `cce-11152237-3412`, `LIVE_RUN=TestLoggingLogSink` | 2 project sinks to the project's `_Default` bucket, matching no log (deleted, the abandoned one by the test); `task live-list` empty |
+| 2026-11-15 | pending | PASS | pending (folder parent, `interceptChildren`): needs `E2E_LOGGING_FOLDER` with `logging.sinks.*` (`roles/logging.configWriter`) for `$GCP_LIVE_SA`; the test estate grants it to the generation's own account, which the run scripts do not impersonate yet | not run (the test skips live) | none |
+| 2026-11-15 | n/a | PASS | never (organization parent: a live run never uses an organization) | not run | none |
