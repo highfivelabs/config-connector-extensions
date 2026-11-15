@@ -1044,6 +1044,66 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     certificate.
   - With this, every ranked and unranked candidate in section 6.3 is built,
     watched, waiting for a release, or skipped with its reason.
+- `LoggingLogSink` (`logging.gcp.hfl.dev/v1beta1`; built 2026-11-15 on the
+  builder's answer to section 10 question 7, CCEQ: "our own
+  LoggingLogSink (v1beta1)"; decisions 19 and 26). Our own kind for the
+  whole sink of a project, folder or organization, so that the catalog's
+  folder and organization charts can render an intercepting sink
+  (Terraform's `intercept_children`, which fabric allows on a
+  `project`-type sink only). Upstream, rechecked 2026-11-15 (read-only):
+  Config Connector's `LoggingLogSink` is `v1beta1` (Terraform-based by
+  default, a direct controller opt-in) with neither `interceptChildren` nor
+  a Cloud project destination, at the pin, in v1.160.0 and on `master`
+  (`2374254`, 2026-11-15); no pull request adds them (searched
+  "interceptChildren", "LoggingLogSink": #14429 resolves the project
+  annotation, #11575 adds export). **Copied** from upstream's direct
+  controller with as little change as possible, after
+  `LoggingBillingAccountSink`: the types, identity, controller and the
+  sink's mapper functions. Changed:
+  - `spec.interceptChildren`, and a Cloud project as a destination
+    (`destination.projectRef`, sent as
+    `logging.googleapis.com/projects/{id}`), which an intercepting sink
+    needs; CEL rules carry the API's rules for it (a folder or organization
+    parent, `includeChildren` true, a project destination), refuse more
+    or fewer than one parent and one destination (upstream falls back to
+    the namespace's project and takes the first destination set), and keep
+    the parents, `resourceID`, `includeChildren` and `interceptChildren`
+    immutable (Terraform's `include_children` is `ForceNew`).
+  - The Logging REST client (`google.golang.org/api/logging/v2`) in place
+    of upstream's protobuf client: the `LogSink` protobuf at the pinned
+    `cloud.google.com/go/logging` v1.18.0 has no `interceptChildren`, so
+    the field cannot be sent through it; the update mask is built by
+    comparing the same top-level fields upstream's
+    `DiffForTopLevelFields` does, BigQuery options only when the spec sets
+    them (the API fills them in for a BigQuery destination).
+  - `uniqueWriterIdentity` is sent true for a folder's or organization's
+    sink (the API refuses false there; Terraform's folder and organization
+    sinks always send true) and for a sink whose writer identity is
+    already unique (the API refuses going back to the shared one); a
+    project's sink otherwise sends the spec's, as upstream does.
+  - `status.externalRef`, checked by the identity; a delete uses it and
+    resolves neither the parent nor the destination again, so a folder
+    deleted together with its sinks does not hold them (the rule our
+    generated kinds and `IAMDenyPolicy` follow).
+  Generated: the CRD and deepcopy (controller-gen); `hack/scaffold-kind.sh`
+  was not run (upstream's controller is the nearer code), nor
+  `hack/discokind` (a sink's create takes the name in the body and
+  `uniqueWriterIdentity` as a parameter). Mockgcp patch 0049 keeps
+  `interceptChildren` beside each sink on the HTTP layer
+  (`docs/fake-cloud.md`). Proven on the fake: a project's sink (create, a
+  resync with no write, one update of `disabled` and `exclusions`, the CRD
+  refusing a parent change, no or two parents, two destinations and a
+  project's intercepting sink, delete, abandon), a folder's intercepting
+  sink to a project (and the CRD refusing to change `interceptChildren`,
+  or one without `includeChildren` or a project destination), and an
+  organization's sink to a bucket. Live: `docs/kinds/LoggingLogSink.md`.
+  Left: the catalog's folder and organization charts move their sinks to
+  this kind (and drop their refusals of `intercept_children` and type
+  `project`), and grant the writer identity some other way than Config
+  Connector's `IAMPolicyMember.memberFrom.logSinkRef`, which resolves
+  Config Connector's `LoggingLogSink` only; the kind retires when
+  upstream ships `interceptChildren` and a project destination (section
+  3.4).
 
 ### 6.5 From the seed catalog (read 2026-11-09)
 
@@ -1538,7 +1598,15 @@ Notes on what was built from this table:
   after the insert would insert a second policy, as upstream). mockgcp
   serves both unpatched (`docs/fake-cloud.md`). Hand-written here: the
   end-to-end test only. Live: pending, needs the test folder (both act
-  on an organization or folder; `docs/live-runs.md`).
+  on an organization or folder; `docs/live-runs.md`). 2026-11-15 (the
+  builder's RECPF answer, "a stable Cloud Armor association"): this kind is
+  that association (fabric's `cloud_armor_policy` is Terraform's
+  `google_compute_organization_security_policy_association`, attached to
+  `projects/<number>` or `folders/<id>`); added `excludedFolders` and
+  `excludedProjects` (v1 API fields), refused on a project's association
+  by CEL as fabric refuses them, and a fake-cloud case of a `CLOUD_ARMOR`
+  policy attached to a project and to a folder with exclusions
+  (`docs/kinds/ComputeOrganizationSecurityPolicyAssociation.md`).
 - `ComputeOrganizationSecurityPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
   decision 13: a rule of a hierarchical firewall policy, at its
   priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
@@ -2117,7 +2185,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     not take), which mockgcp does not make; how long a new policy takes to
     apply; and a policy's `denialCondition`, which no test sets.
 30. `ComputeOrganizationSecurityPolicy` and its association: a live run
-    (the test folder: a policy under it, attached to it); what the real
+    (the test folder: a policy under it, attached to it, and a
+    `CLOUD_ARMOR` policy attached to a project by number, with and
+    without exclusions on the folder); whether the API refuses exclusions
+    on a project's association as fabric does (ours refuses them by CEL);
+    what the real
     API defaults (`type`, rules it adds) and whether a resync then writes
     nothing; the API's checks of a parent or attachment the caller cannot
     use, which mockgcp does not make.
@@ -2639,9 +2711,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     module kinds at low priority."). The asks came from the catalog's
     pull requests #215 and #216. **Built 2026-11-15** here: the IAM
     resource table's `CloudFunctionsFunction` row (section 6.5, rank 2).
-    The `AssetFeed` fix and the Cloud Armor association are built in their
-    own pull request (branch `agent/r2-assetfeed-armor`), with its notes
-    there; `LookerInstance`'s `secretKeyRef` (RECLOOK) is decision 33. The SCC v2 mute config and the project SHA
+    The `AssetFeed` fix is pull request #134 (branch
+    `agent/r2-assetfeed-armor`) and the Cloud Armor association #136, with
+    their notes there; `LookerInstance`'s `secretKeyRef` (RECLOOK) is decision 33. The SCC v2 mute config and the project SHA
     module kinds are not started.
 
 36. **One served version; the catalog's folder, organization and logging
@@ -2657,7 +2729,7 @@ To raise confidence in `ArtifactRegistryRepository`:
       objects that cannot be abandoned and re-created.
     - **`LoggingLogSink`** (`logging.gcp.hfl.dev/v1beta1`, with
       `interceptChildren` and a folder, organization or project parent):
-      built in its own pull request (branch `agent/r2-logsink`).
+      built in its own pull request (#137, branch `agent/r2-logsink`).
     - **No `Folder` kind.** The catalog maps
       `deletion_protection = true` to
       `cnrm.cloud.google.com/deletion-policy: abandon`, or to Bundt's

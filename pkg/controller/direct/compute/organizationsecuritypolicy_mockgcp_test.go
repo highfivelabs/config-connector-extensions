@@ -212,6 +212,83 @@ func TestComputeOrganizationSecurityPolicy(t *testing.T) {
 		}
 	})
 
+	// The catalog's cloud_armor_policy (fabric's project and folder
+	// modules, google_compute_organization_security_policy_association):
+	// a hierarchical Cloud Armor policy attached to a project by its number,
+	// and to a folder with exclusions.
+	t.Run("a Cloud Armor policy attached to a project and to a folder with exclusions", func(t *testing.T) {
+		armor := newPolicy("armor", "lz-armor")
+		armor.Spec.Type = mockenv.Ptr("CLOUD_ARMOR")
+		if err := env.Kube.Create(env.Ctx, armor); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitReady(policyGVK, namespace, "armor")
+		armorID := ""
+		if id := getPolicy(t, "armor").Status.PolicyId; id != nil {
+			armorID = *id
+		}
+		byArmor := func(s *computev1beta1.ComputeOrganizationSecurityPolicyAssociationSpec) {
+			s.SecurityPolicyRef = &computev1beta1.ComputeOrganizationSecurityPolicyRef{Name: "armor"}
+		}
+		project := newAssoc("armor-project", func(s *computev1beta1.ComputeOrganizationSecurityPolicyAssociationSpec) {
+			byArmor(s)
+			s.AttachmentID = "projects/886048300"
+			s.ResourceID = mockenv.Ptr("project-886048300")
+		})
+		folder := newAssoc("armor-folder", func(s *computev1beta1.ComputeOrganizationSecurityPolicyAssociationSpec) {
+			byArmor(s)
+			s.AttachmentID = "folders/42"
+			s.ExcludedFolders = []string{"folders/43"}
+			s.ExcludedProjects = []string{"projects/886048301"}
+		})
+		for _, a := range []*computev1beta1.ComputeOrganizationSecurityPolicyAssociation{project, folder} {
+			if err := env.Kube.Create(env.Ctx, a); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitReady(assocGVK, namespace, a.Name)
+		}
+		read := func(name string) *pb.SecurityPolicyAssociation {
+			t.Helper()
+			got, err := cloud.GetAssociation(env.Ctx, &pb.GetAssociationOrganizationSecurityPolicyRequest{SecurityPolicy: armorID, Name: mockenv.Ptr(name)})
+			if err != nil {
+				t.Fatalf("reading association %s: %v", name, err)
+			}
+			return got
+		}
+		if got := read("project-886048300"); got.GetAttachmentId() != "projects/886048300" {
+			t.Errorf("project association attachmentId = %q", got.GetAttachmentId())
+		}
+		got := read("armor-folder")
+		if strings.Join(got.GetExcludedFolders(), ",") != "folders/43" || strings.Join(got.GetExcludedProjects(), ",") != "projects/886048301" {
+			t.Errorf("folder association exclusions = %v, %v", got.GetExcludedFolders(), got.GetExcludedProjects())
+		}
+
+		// A project's association takes no exclusions (fabric refuses them).
+		bad := newAssoc("armor-project-excluding", func(s *computev1beta1.ComputeOrganizationSecurityPolicyAssociationSpec) {
+			byArmor(s)
+			s.AttachmentID = "projects/886048300"
+			s.ExcludedProjects = []string{"projects/886048301"}
+		})
+		if err := env.Kube.Create(env.Ctx, bad); err == nil || !strings.Contains(err.Error(), "exclusions are not supported for a project's association") {
+			t.Errorf("a project's association with exclusions: got %v, want the API server to refuse it", err)
+		}
+
+		for _, a := range []*computev1beta1.ComputeOrganizationSecurityPolicyAssociation{project, folder} {
+			if err := env.Kube.Delete(env.Ctx, a); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(a)
+		}
+		if _, err := cloud.GetAssociation(env.Ctx, &pb.GetAssociationOrganizationSecurityPolicyRequest{SecurityPolicy: armorID, Name: mockenv.Ptr("project-886048300")}); err == nil {
+			t.Error("the project's association is still in the cloud")
+		}
+		p := getPolicy(t, "armor")
+		if err := env.Kube.Delete(env.Ctx, p); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(p)
+	})
+
 	t.Run("delete detaches, then removes the policy", func(t *testing.T) {
 		a := &computev1beta1.ComputeOrganizationSecurityPolicyAssociation{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "org-baseline"}}
 		if err := env.Kube.Delete(env.Ctx, a); err != nil {

@@ -345,8 +345,8 @@ items:
       - logging.googleapis.com/SavedQuery
     missing: >-
       On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is
-      `cmekSettings`, present on the kind); on `LoggingLogSink`: `interceptChildren`, `outputVersionFormat`;
-      whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
+      `cmekSettings`, present on the kind); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren`
+      is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
     attributes: The measured lists.
     upstream: >-
       none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for
