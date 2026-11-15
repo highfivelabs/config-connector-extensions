@@ -150,7 +150,7 @@ func TestAssetFeed(t *testing.T) {
 	}
 
 	feed := newFeed("iam-changes")
-	feed.Spec.Parent.ProjectRef = &refsv1beta1.ProjectRef{External: mockenv.Project}
+	feed.Spec.AssetFeedParent.ProjectRef = &refsv1beta1.ProjectRef{External: mockenv.Project}
 	if err := env.Kube.Create(env.Ctx, feed); err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestAssetFeed(t *testing.T) {
 
 	t.Run("the CRD refuses a change of parent", func(t *testing.T) {
 		o := getObj(t, "iam-changes")
-		o.Spec.Parent.ProjectRef = &refsv1beta1.ProjectRef{External: "another-project"}
+		o.Spec.AssetFeedParent.ProjectRef = &refsv1beta1.ProjectRef{External: "another-project"}
 		err := env.Kube.Update(env.Ctx, o)
 		if err == nil || !strings.Contains(err.Error(), "projectRef is immutable") {
 			t.Errorf("changing projectRef: got %v, want the API server to refuse it", err)
@@ -213,8 +213,8 @@ func TestAssetFeed(t *testing.T) {
 	t.Run("the CRD refuses none or two parents", func(t *testing.T) {
 		none := newFeed("no-parent")
 		two := newFeed("two-parents")
-		two.Spec.Parent.ProjectRef = &refsv1beta1.ProjectRef{External: mockenv.Project}
-		two.Spec.Parent.FolderRef = &refsv1beta1.FolderRefDeprecated{External: "folders/123456"}
+		two.Spec.AssetFeedParent.ProjectRef = &refsv1beta1.ProjectRef{External: mockenv.Project}
+		two.Spec.AssetFeedParent.FolderRef = &refsv1beta1.FolderRefDeprecated{External: "folders/123456"}
 		for _, o := range []*assetv1beta1.AssetFeed{none, two} {
 			err := env.Kube.Create(env.Ctx, o)
 			if err == nil || !strings.Contains(err.Error(), "exactly one of organizationRef, folderRef and projectRef") {
@@ -248,7 +248,7 @@ func TestAssetFeed(t *testing.T) {
 			t.Fatal(err)
 		}
 		o := newFeed("by-object")
-		o.Spec.Parent.ProjectRef = &refsv1beta1.ProjectRef{Name: "landing"}
+		o.Spec.AssetFeedParent.ProjectRef = &refsv1beta1.ProjectRef{Name: "landing"}
 		if err := env.Kube.Create(env.Ctx, o); err != nil {
 			t.Fatal(err)
 		}
@@ -272,9 +272,9 @@ func TestAssetFeed(t *testing.T) {
 			t.Skip("a live run never makes a folder's or an organization's feed (docs/live-runs.md)")
 		}
 		folder := newFeed("sandbox-folder")
-		folder.Spec.Parent.FolderRef = &refsv1beta1.FolderRefDeprecated{External: "folders/123456"}
+		folder.Spec.AssetFeedParent.FolderRef = &refsv1beta1.FolderRefDeprecated{External: "folders/123456"}
 		org := newFeed("org-wide")
-		org.Spec.Parent.OrganizationRef = &refsv1beta1.OrganizationRef{External: "organizations/987654"}
+		org.Spec.AssetFeedParent.OrganizationRef = &refsv1beta1.OrganizationRef{External: "organizations/987654"}
 		for _, o := range []*assetv1beta1.AssetFeed{folder, org} {
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
@@ -299,7 +299,7 @@ func TestAssetFeed(t *testing.T) {
 
 	t.Run("abandon keeps the feed", func(t *testing.T) {
 		kept := newFeed("kept")
-		kept.Spec.Parent.ProjectRef = &refsv1beta1.ProjectRef{External: "projects/" + mockenv.Project}
+		kept.Spec.AssetFeedParent.ProjectRef = &refsv1beta1.ProjectRef{External: "projects/" + mockenv.Project}
 		if err := env.Kube.Create(env.Ctx, kept); err != nil {
 			t.Fatal(err)
 		}

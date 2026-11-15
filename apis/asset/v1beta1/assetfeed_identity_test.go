@@ -58,7 +58,7 @@ func TestFeedIdentityProjectNumberAndID(t *testing.T) {
 	feed := func(project, external string) *AssetFeed {
 		o := &AssetFeed{
 			ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "feed"},
-			Spec:       AssetFeedSpec{Parent: AssetFeedParent{ProjectRef: &refs.ProjectRef{External: project}}},
+			Spec:       AssetFeedSpec{AssetFeedParent: AssetFeedParent{ProjectRef: &refs.ProjectRef{External: project}}},
 		}
 		if external != "" {
 			o.Status.ExternalRef = ptr(external)
@@ -100,7 +100,7 @@ func TestFeedIdentityProjectNumberAndID(t *testing.T) {
 func TestFeedIdentityFolderAndOrganization(t *testing.T) {
 	folder := &AssetFeed{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "feed"},
-		Spec:       AssetFeedSpec{Parent: AssetFeedParent{FolderRef: &refs.FolderRefDeprecated{External: "folders/123"}}},
+		Spec:       AssetFeedSpec{AssetFeedParent: AssetFeedParent{FolderRef: &refs.FolderRefDeprecated{External: "folders/123"}}},
 		Status:     AssetFeedStatus{ExternalRef: ptr("folders/123/feeds/feed")},
 	}
 	if id, err := NewFeedIdentity(context.Background(), nil, folder, nil); err != nil || id.String() != "folders/123/feeds/feed" {

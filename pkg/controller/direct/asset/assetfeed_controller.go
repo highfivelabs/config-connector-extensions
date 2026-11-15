@@ -338,11 +338,11 @@ func (a *feedAdapter) Export(ctx context.Context) (*unstructured.Unstructured, e
 		return nil, fmt.Errorf("parsing parent from name %q: %w", a.actual.Name, err)
 	}
 	if parentRef.ProjectID != "" {
-		obj.Spec.Parent.ProjectRef = &refs.ProjectRef{External: parentRef.String()}
+		obj.Spec.AssetFeedParent.ProjectRef = &refs.ProjectRef{External: parentRef.String()}
 	} else if parentRef.FolderID != "" {
-		obj.Spec.Parent.FolderRef = &refs.FolderRefDeprecated{External: parentRef.String()}
+		obj.Spec.AssetFeedParent.FolderRef = &refs.FolderRefDeprecated{External: parentRef.String()}
 	} else if parentRef.OrganizationID != "" {
-		obj.Spec.Parent.OrganizationRef = &refs.OrganizationRef{External: parentRef.String()}
+		obj.Spec.AssetFeedParent.OrganizationRef = &refs.OrganizationRef{External: parentRef.String()}
 	} else {
 		return nil, fmt.Errorf("unknown parent type in name %q", a.actual.Name)
 	}

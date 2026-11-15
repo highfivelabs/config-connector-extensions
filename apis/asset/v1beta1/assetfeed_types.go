@@ -20,8 +20,10 @@
 // folderRef is refs.FolderRefDeprecated, the type refs.FolderRef aliases
 // (controller-gen does not take aliases); exactly one parent and the
 // parent and resourceID immutable, by CEL (docs/design.md decision 20;
-// upstream refuses a change in the identity); group, labels and short
-// names are ours.
+// upstream refuses a change in the identity); the parent is an embedded
+// field (upstream names it Parent with an inline tag, which encoding/json
+// ignores, so a typed client would send spec.Parent); group, labels and
+// short names are ours.
 
 package v1beta1
 
@@ -96,7 +98,7 @@ type Expr struct {
 // +kcc:spec:proto=google.cloud.asset.v1.Feed
 // +kubebuilder:validation:XValidation:rule="(has(self.organizationRef) ? 1 : 0) + (has(self.folderRef) ? 1 : 0) + (has(self.projectRef) ? 1 : 0) == 1",message="exactly one of organizationRef, folderRef and projectRef is required"
 type AssetFeedSpec struct {
-	Parent AssetFeedParent `json:",inline"`
+	AssetFeedParent `json:",inline"`
 
 	// The AssetFeed name. If not given, the metadata.name will be used.
 	// Immutable.
