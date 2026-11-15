@@ -22,6 +22,7 @@ package v1alpha1
 
 import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret"
 	k8sv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -347,8 +348,8 @@ func (in *LookerInstanceOAuthConfig) DeepCopyInto(out *LookerInstanceOAuthConfig
 	}
 	if in.ClientSecret != nil {
 		in, out := &in.ClientSecret, &out.ClientSecret
-		*out = new(string)
-		**out = **in
+		*out = new(secret.Legacy)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.SharedOauthClientEnabled != nil {
 		in, out := &in.SharedOauthClientEnabled, &out.SharedOauthClientEnabled
@@ -836,6 +837,11 @@ func (in *LookerInstanceStatus) DeepCopyInto(out *LookerInstanceStatus) {
 		in, out := &in.ObservedState, &out.ObservedState
 		*out = new(LookerInstanceObservedState)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.InputVersion != nil {
+		in, out := &in.InputVersion, &out.InputVersion
+		*out = new(string)
+		**out = **in
 	}
 }
 

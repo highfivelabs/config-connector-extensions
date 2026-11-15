@@ -17,6 +17,9 @@ package discokind
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,13 +30,17 @@ import (
 
 	billingv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/billing/v1alpha1"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/googleapi"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -55,7 +62,7 @@ var _ directbase.Model = &model{}
 func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForObjectOperation) (directbase.Adapter, error) {
 	u := op.GetUnstructured()
 	ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
-	var name string
+	var name, inputVersion string
 	var body map[string]any
 	switch deleting := !u.GetDeletionTimestamp().IsZero(); {
 	case deleting && k8s.HasAbandonAnnotation(u):
@@ -73,7 +80,7 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 		name = ext
 	default:
 		var err error
-		name, body, err = m.kind.resolve(ctx, op.Reader, u)
+		name, body, inputVersion, err = m.kind.resolve(ctx, op.Reader, u)
 		if err != nil {
 			if deleting {
 				// Never made or acquired (no status.externalRef) and its parent
@@ -94,7 +101,14 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 	api := &API{HTTP: httpClient, BaseURL: m.kind.BaseURL, LocationHost: m.kind.LocationHost, GetQuery: m.kind.GetQuery}
 	spec, _, _ := unstructured.NestedMap(u.Object, "spec")
 	deleting := !u.GetDeletionTimestamp().IsZero()
-	return &adapter{kind: m.kind, api: api, name: name, desired: body, query: m.kind.QueryOf(spec), recorded: ext != "", deleting: deleting}, nil
+	var resend []string
+	if applied, _, _ := unstructured.NestedString(u.Object, "status", "inputVersion"); m.kind.Updatable && applied != inputVersion {
+		// The input-only fields, or a Secret one comes from, changed since
+		// they were last sent: send them again, since a read cannot
+		// compare them.
+		resend = m.kind.WriteOnlySet(body)
+	}
+	return &adapter{kind: m.kind, api: api, name: name, desired: body, inputVersion: inputVersion, query: m.kind.QueryOf(spec), recorded: ext != "", deleting: deleting, resend: resend}, nil
 }
 
 // AdapterForURL is not supported: these kinds are not exported.
@@ -102,12 +116,12 @@ func (m *model) AdapterForURL(ctx context.Context, url string) (directbase.Adapt
 	return nil, nil
 }
 
-// resolve is the object's resource name and the request body its spec
-// asks for.
-func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructured.Unstructured) (string, map[string]any, error) {
+// resolve is the object's resource name, the request body its spec asks
+// for, and the version of its input-only fields (status.inputVersion).
+func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructured.Unstructured) (string, map[string]any, string, error) {
 	spec, _, err := unstructured.NestedMap(u.Object, "spec")
 	if err != nil {
-		return "", nil, fmt.Errorf("reading spec: %w", err)
+		return "", nil, "", fmt.Errorf("reading spec: %w", err)
 	}
 	if spec == nil {
 		spec = map[string]any{}
@@ -115,7 +129,7 @@ func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructure
 	parent := ""
 	if len(k.Parents) > 0 {
 		if parent, err = resolveParent(ctx, reader, u, k.Parents, spec); err != nil {
-			return "", nil, err
+			return "", nil, "", err
 		}
 	}
 	id := u.GetName()
@@ -129,9 +143,88 @@ func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructure
 	}
 	name, err := k.Render(parent, id, params)
 	if err != nil {
-		return "", nil, err
+		return "", nil, "", err
 	}
-	return name, k.Body(spec), nil
+	body := k.Body(spec)
+	version, err := k.resolveSecrets(ctx, reader, u.GetNamespace(), body)
+	if err != nil {
+		return "", nil, "", err
+	}
+	return name, body, version, nil
+}
+
+// resolveSecrets replaces each Secrets field body sets, a secret.Legacy
+// (value, or valueFrom.secretKeyRef to a Secret in the object's
+// namespace), with its string, as Config Connector's SQLUser does for its
+// password. It returns the version of the body's input-only fields
+// (status.inputVersion), "" when the kind has none.
+func (k *Kind) resolveSecrets(ctx context.Context, reader client.Reader, namespace string, body map[string]any) (string, error) {
+	if len(k.writeOnly()) == 0 {
+		return "", nil
+	}
+	h := sha256.New()
+	for _, p := range k.InputOnly {
+		v, found, _ := unstructured.NestedFieldNoCopy(body, strings.Split(p, ".")...)
+		b, _ := json.Marshal(v)
+		fmt.Fprintf(h, "%s\x00%v\x00%s\x00", p, found, b)
+	}
+	for _, p := range k.Secrets {
+		path := strings.Split(p, ".")
+		raw, found, err := unstructured.NestedFieldNoCopy(body, path...)
+		if err != nil {
+			return "", fmt.Errorf("reading spec.%s: %w", p, err)
+		}
+		if !found || raw == nil {
+			fmt.Fprintf(h, "%s\x00unset\x00", p)
+			continue
+		}
+		m, ok := raw.(map[string]any)
+		if !ok {
+			return "", fmt.Errorf("spec.%s: want value or valueFrom.secretKeyRef, got %T", p, raw)
+		}
+		legacy := &secret.Legacy{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(m, legacy); err != nil {
+			return "", fmt.Errorf("reading spec.%s: %w", p, err)
+		}
+		var v string
+		switch {
+		case legacy.Value != nil && legacy.ValueFrom != nil:
+			return "", fmt.Errorf("spec.%s: set one of value and valueFrom, not both", p)
+		case legacy.Value != nil:
+			// The value is in the spec already; its digest goes into the
+			// version's, never into status on its own.
+			v = *legacy.Value
+			fmt.Fprintf(h, "%s\x00value\x00%x\x00", p, sha256.Sum256([]byte(v)))
+		case legacy.ValueFrom != nil && legacy.ValueFrom.SecretKeyRef != nil:
+			ref := legacy.ValueFrom.SecretKeyRef
+			if ref.Name == "" || ref.Key == "" {
+				return "", fmt.Errorf("spec.%s.valueFrom.secretKeyRef needs name and key", p)
+			}
+			sec := &corev1.Secret{}
+			if err := reader.Get(ctx, types.NamespacedName{Namespace: namespace, Name: ref.Name}, sec); err != nil {
+				if apierrors.IsNotFound(err) {
+					return "", fmt.Errorf("spec.%s: Secret %s/%s not found", p, namespace, ref.Name)
+				}
+				return "", fmt.Errorf("spec.%s: reading Secret %s/%s: %w", p, namespace, ref.Name, err)
+			}
+			data, ok := sec.Data[ref.Key]
+			if !ok {
+				return "", fmt.Errorf("spec.%s: Secret %s/%s has no key %q", p, namespace, ref.Name, ref.Key)
+			}
+			v = string(data)
+			// The Secret's name, key and resourceVersion, not its value
+			// (ComputeRouter's md5AuthenticationKeysVersion).
+			fmt.Fprintf(h, "%s\x00secret\x00%s\x00%s\x00%s\x00", p, ref.Name, ref.Key, sec.ResourceVersion)
+		default:
+			unstructured.RemoveNestedField(body, path...)
+			fmt.Fprintf(h, "%s\x00unset\x00", p)
+			continue
+		}
+		if err := unstructured.SetNestedField(body, v, path...); err != nil {
+			return "", fmt.Errorf("setting spec.%s: %w", p, err)
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil))[:16], nil
 }
 
 // Body is the request body a spec asks for: the spec without the parent
@@ -234,6 +327,13 @@ type adapter struct {
 	recorded bool
 	// deleting: the object is being deleted (it has a deletion timestamp).
 	deleting bool
+	// inputVersion is the version of the spec's input-only fields
+	// (Kind.InputOnly), written to status.inputVersion.
+	inputVersion string
+	// resend are top-level fields holding input-only fields
+	// (Kind.InputOnly, Kind.Secrets) that Update sends whatever the read
+	// shows, because status.inputVersion is not inputVersion.
+	resend []string
 }
 
 var _ directbase.Adapter = &adapter{}
@@ -332,7 +432,10 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 }
 
 func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) error {
-	mask := Diff(a.desired, a.actual)
+	mask := Diff(a.kind.Comparable(a.desired), a.actual)
+	if len(a.resend) > 0 {
+		mask = union(mask, a.resend)
+	}
 	got := a.actual
 	if len(mask) > 0 {
 		if !a.kind.Updatable {
@@ -439,6 +542,20 @@ func Diff(desired, actual map[string]any) []string {
 	}
 	sort.Strings(mask)
 	return mask
+}
+
+// union is a and b without repeats, sorted.
+func union(a, b []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, s := range append(append([]string(nil), a...), b...) {
+		if !seen[s] {
+			seen[s] = true
+			out = append(out, s)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // Subset reports whether every value want sets is in got: maps by key,
@@ -556,6 +673,7 @@ func scalarString(v any) string {
 type status struct {
 	ExternalRef   string         `json:"externalRef"`
 	ObservedState map[string]any `json:"observedState,omitempty"`
+	InputVersion  string         `json:"inputVersion,omitempty"`
 }
 
 func (a *adapter) status(got map[string]any) *status {
@@ -565,7 +683,7 @@ func (a *adapter) status(got map[string]any) *status {
 			observed[f] = v
 		}
 	}
-	s := &status{ExternalRef: a.name}
+	s := &status{ExternalRef: a.name, InputVersion: a.inputVersion}
 	if len(observed) > 0 {
 		s.ObservedState = observed
 	}

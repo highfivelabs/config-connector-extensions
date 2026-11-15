@@ -19,6 +19,7 @@ package v1alpha1
 
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -299,13 +300,20 @@ type LookerInstanceMaintenanceWindow struct {
 type LookerInstanceOAuthConfig struct {
 	// Input only. Client ID from an external OAuth application. This is an
 	// input-only field, and thus will not be set in any responses.
+	//
+	// The API never returns it: it is sent when the spec changes, and a
+	// change made in the cloud is not seen.
 	// +optional
 	ClientID *string `json:"clientId,omitempty"`
 
 	// Input only. Client secret from an external OAuth application. This is an
 	// input-only field, and thus will not be set in any responses.
+	//
+	// Takes value, or valueFrom.secretKeyRef (name, key) of a Secret in the
+	// object's namespace, which the controller reads and sends; the API never
+	// returns it.
 	// +optional
-	ClientSecret *string `json:"clientSecret,omitempty"`
+	ClientSecret *secret.Legacy `json:"clientSecret,omitempty"`
 
 	// Optional. Whether to use the shared OAuth client. Instances specifying this
 	// field do not need to provide client_id and client_secret.
@@ -493,6 +501,13 @@ type LookerInstanceStatus struct {
 	// The API's read-only fields.
 	// +optional
 	ObservedState *LookerInstanceObservedState `json:"observedState,omitempty"`
+
+	// A digest of the input-only fields last sent (oauthConfig.clientId,
+	// oauthConfig.clientSecret): their values, and each Secret's name, key and
+	// resourceVersion, never its value. The API never returns these fields, so
+	// they are sent again when it changes.
+	// +optional
+	InputVersion *string `json:"inputVersion,omitempty"`
 }
 
 // +genclient

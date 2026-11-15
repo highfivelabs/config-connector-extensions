@@ -111,6 +111,16 @@ type Config struct {
 	// (Kind.GetQuery): API Gateway's view FULL, without which a config's
 	// source files are left out.
 	GetQuery map[string]string `json:"getQuery,omitempty"`
+	// Secrets are dotted paths of string fields that take Config
+	// Connector's secret.Legacy (value, or valueFrom.secretKeyRef) in
+	// place of the string, so a secret need not be in the manifest (a
+	// Looker instance's oauthConfig.clientSecret, decision 33). The API
+	// never returns them (Kind.Secrets).
+	Secrets []string `json:"secrets,omitempty"`
+	// InputOnly are dotted paths of fields the API takes but never
+	// returns ("Input only." in their descriptions), so they are never a
+	// difference (Kind.InputOnly).
+	InputOnly []string `json:"inputOnly,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -511,6 +521,12 @@ func build(c *Config, d *Discovery) (*built, error) {
 	if k.schema == nil {
 		return nil, fmt.Errorf("no schema %s", create.Request.Ref)
 	}
+	for _, p := range append(append([]string(nil), c.Secrets...), c.InputOnly...) {
+		f := fieldAt(d, k.schema, p)
+		if f == nil || isOutput(f) {
+			return nil, fmt.Errorf("secrets/inputOnly: %s is not a writable field of %s", p, create.Request.Ref)
+		}
+	}
 	for f, s := range k.schema.Properties {
 		if isOutput(s) || (k.insertStyle && f == "fingerprint") {
 			// A compute fingerprint is read and sent back by the
@@ -529,6 +545,21 @@ func build(c *Config, d *Discovery) (*built, error) {
 		k.sweep = strings.Replace(collectionTemplate(k.name), "{parent}", "projects/{project}", 1)
 	}
 	return k, nil
+}
+
+// fieldAt is the schema of the field at a dotted path under s, through
+// objects and $refs (not lists), or nil.
+func fieldAt(d *Discovery, s *Schema, path string) *Schema {
+	for _, part := range strings.Split(path, ".") {
+		if s != nil && s.Ref != "" {
+			s = d.Schemas[s.Ref]
+		}
+		if s == nil {
+			return nil
+		}
+		s = s.Properties[part]
+	}
+	return s
 }
 
 func collectionTemplate(name string) string {
