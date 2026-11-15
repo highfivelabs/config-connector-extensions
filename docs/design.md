@@ -160,7 +160,13 @@ since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
 `docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
 references beyond the parent (the other parts of a name are IDs), no
-secrets in status. Compute Engine's shape is covered too
+secrets in status. A string field the API takes as a secret can take
+Config Connector's `secret.Legacy` instead (`secrets` in `kinds.yaml`:
+`value`, or `valueFrom.secretKeyRef` to a Secret in the object's
+namespace, read by the controller and sent as the string), and a field
+the API never returns is marked `inputOnly`; both are left out of the
+comparison and sent again when `status.inputVersion` changes (decision
+33, `LookerInstance`'s OAuth client, 2026-11-15). Compute Engine's shape is covered too
 (`InsertStyle`, 2026-11-11): insert with the ID as the body's name, a
 patch that merges the fields sent with the read fingerprint (or an update
 that replaces the resource), and compute operations polled at their
@@ -2597,6 +2603,44 @@ To raise confidence in `ArtifactRegistryRepository`:
     still lists keeps its finalizer until the denial is lifted; a table
     deleted behind the controller's back, its database still there, is
     proven gone by its own collection).
+
+33. **`LookerInstance`'s OAuth client secret comes from a Kubernetes
+    Secret** (2026-11-15, RECLOOK). The builder, 2026-11-15, verbatim:
+    "RECLOOK: as recommended (Yes. Add a secretKeyRef for
+    oauthConfig.clientSecret, then the chart takes client_secret from a
+    Kubernetes Secret, as bigquery-connection does.)"
+    Built: `spec.oauthConfig.clientSecret` is Config Connector's
+    `refs/v1beta1/secret.Legacy`, the shape of `SQLUser`'s `password`
+    and `SQLInstance`'s root password: `value`, or
+    `valueFrom.secretKeyRef` (`name`, `key`) of a Secret in the object's
+    namespace. `hack/discokind` makes any field listed under `secrets`
+    in `kinds.yaml` so; `pkg/discokind` reads the Secret before every
+    write and sends the string. **The plain value is kept, not
+    deprecated**, as `clientSecret.value`: Config Connector keeps
+    `value` beside `valueFrom` on every such field, and this repository
+    follows its shapes (section 2.3); the catalog's chart only ever
+    writes `valueFrom`. Setting both is refused ("set one of value and
+    valueFrom, not both"). The string form is gone, a breaking change
+    allowed at `v1alpha1` (no object of the kind has run live or been
+    made by a chart). The API never returns `oauthConfig.clientId` or
+    `clientSecret` ("Input only"), so before this they were a
+    difference on every resync and every reconcile patched
+    `oauthConfig`; now they are left out of the comparison (`inputOnly`
+    and `secrets`), and `status.inputVersion`, a digest of the client
+    ID and of the Secret's name, key and `resourceVersion` (never its
+    value, as `ComputeRouter`'s `md5AuthenticationKeysVersion`), says
+    when to send them again: a changed client ID, another Secret, or
+    the same Secret rotated (seen at the next reconcile; the controller
+    does not watch Secrets). Tested on the fake, which now keeps
+    input-only fields but never answers them, as the API does:
+    `TestLookerInstanceOAuthClientSecret` (a missing Secret holds the
+    create; the Secret's value reaches the cloud and never shows in a
+    read; a resync writes nothing; a rotated Secret is sent again; a
+    plain value works; value and valueFrom together are refused) and the
+    kind's fixtures, which now read the secret from a Secret. Live:
+    pending, as for the kind (`docs/live-runs.md`): an instance is
+    billed by the year and takes about an hour, and the Looker API is
+    not on in the live-test project.
 
 ## 9. The operator: Config Connector's identity, per namespace
 

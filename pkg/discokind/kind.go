@@ -27,8 +27,11 @@ package discokind
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -117,6 +120,55 @@ type Kind struct {
 	// FakeDefaults are values of read-only fields the fake cloud sets on
 	// create (state: ACTIVE), where the real API sets them.
 	FakeDefaults map[string]any
+	// Secrets are the dotted paths of string fields the spec takes as
+	// Config Connector's secret.Legacy, `value` or
+	// `valueFrom.secretKeyRef` (a Looker instance's
+	// oauthConfig.clientSecret): the controller reads the Secret and sends
+	// the string. They are input-only too (InputOnly).
+	Secrets []string
+	// InputOnly are dotted paths of fields the API takes but never
+	// returns (a Looker instance's oauthConfig.clientId). They are never
+	// a difference. They are sent on create, with any patch of their
+	// top-level field, and whenever their version changes: a digest of
+	// their values and of each Secret's name, key and resourceVersion
+	// (never a Secret's value), kept in status.inputVersion, as
+	// ComputeRouter keeps md5AuthenticationKeysVersion.
+	InputOnly []string
+}
+
+// writeOnly are InputOnly and Secrets.
+func (k *Kind) writeOnly() []string {
+	return append(append([]string(nil), k.InputOnly...), k.Secrets...)
+}
+
+// Comparable is body without its input-only fields (InputOnly and
+// Secrets), the part a read of the resource can show.
+func (k *Kind) Comparable(body map[string]any) map[string]any {
+	paths := k.writeOnly()
+	if len(paths) == 0 {
+		return body
+	}
+	out := runtime.DeepCopyJSON(body)
+	for _, p := range paths {
+		unstructured.RemoveNestedField(out, strings.Split(p, ".")...)
+	}
+	return out
+}
+
+// WriteOnlySet are the top-level fields of body that hold an input-only
+// field (InputOnly or Secrets) it sets, sorted.
+func (k *Kind) WriteOnlySet(body map[string]any) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, p := range k.writeOnly() {
+		parts := strings.Split(p, ".")
+		if _, found, _ := unstructured.NestedFieldNoCopy(body, parts...); found && !seen[parts[0]] {
+			seen[parts[0]] = true
+			out = append(out, parts[0])
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // FieldValue is a top-level field and a value of it.
