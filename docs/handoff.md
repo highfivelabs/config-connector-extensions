@@ -55,7 +55,7 @@ gap is a standard collection (create with an ID query parameter, get,
 delete, optionally patch with an update mask), add it to
 `hack/discokind/kinds.yaml`, run `go run ./hack/discokind` and
 `hack/generate.sh`, and write its two fixtures
-(`pkg/controller/direct/<service>/testdata/discokind/<Kind>/create.yaml`,
+(`pkg/controller/direct/<service>/discokindtest/testdata/discokind/<Kind>/create.yaml`,
 `update.yaml`; `live-skip` for organization-level kinds). No controller,
 mockgcp patch, test code or `controllers.go` edit; several kinds per pull
 request. `docs/throughput.md` says why and what it reaches (178 of the
