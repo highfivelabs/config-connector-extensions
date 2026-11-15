@@ -267,6 +267,27 @@ func TestAssetFeed(t *testing.T) {
 		}
 	})
 
+	// Never made: its Project object never existed, so it never became
+	// Ready, and its delete makes no call.
+	t.Run("a feed whose Project object never existed is deleted without a call", func(t *testing.T) {
+		o := newFeed("orphan")
+		o.Spec.AssetFeedParent.ProjectRef = &refsv1beta1.ProjectRef{Name: "no-such-project"}
+		if err := env.Kube.Create(env.Ctx, o); err != nil {
+			t.Fatal(err)
+		}
+		if msg := env.WaitNotReady(feedGVK, namespace, "orphan"); !strings.Contains(msg, "not found") {
+			t.Errorf("not-Ready message = %q, want the missing Project", msg)
+		}
+		before := len(writes())
+		if err := env.Kube.Delete(env.Ctx, getObj(t, "orphan")); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&assetv1beta1.AssetFeed{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "orphan"}})
+		if w := writes()[before:]; len(w) != 0 {
+			t.Errorf("the delete wrote %v", w)
+		}
+	})
+
 	t.Run("a folder's and an organization's feeds", func(t *testing.T) {
 		if mockenv.Live() {
 			t.Skip("a live run never makes a folder's or an organization's feed (docs/live-runs.md)")

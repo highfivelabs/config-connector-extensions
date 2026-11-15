@@ -20,8 +20,8 @@
 // projectRef with status.externalRef (apis/asset/v1beta1, NewFeedIdentity),
 // through Resource Manager's projects.get; a delete names the feed from
 // status.externalRef without resolving the parent (which may be gone,
-// everything deleted at once), and a delete of a feed never made whose
-// parent cannot be resolved makes no call; on update the desired name is
+// everything deleted at once), and a delete with no status.externalRef
+// whose parent object is gone makes no call; on update the desired name is
 // the one the API returned, so the project's number for its ID is no diff.
 // Our KRM types.
 
@@ -39,6 +39,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -132,10 +134,12 @@ func (m *feedModel) AdapterForObject(ctx context.Context, op *directbase.Adapter
 	default:
 		id, err = krm.NewFeedIdentity(ctx, reader, obj, m.projectNumber)
 		if err != nil {
-			if deleting {
-				// Never made or acquired and its parent cannot be
-				// resolved: there is nothing of ours to delete.
-				klog.FromContext(ctx).Info("deleting without a call: no status.externalRef and the parent cannot be resolved", "error", err.Error())
+			if deleting && parentObjectGone(ctx, reader, obj) {
+				// No status.externalRef and the parent object it names is
+				// gone: nothing names a feed of ours to delete. Any other
+				// error (a transient read) is returned, so the delete is
+				// tried again rather than the feed left behind.
+				klog.FromContext(ctx).Info("deleting without a call: no status.externalRef and the parent object is gone", "error", err.Error())
 				return &feedAdapter{desired: obj, gone: true}, nil
 			}
 			return nil, err
@@ -153,6 +157,27 @@ func (m *feedModel) AdapterForObject(ctx context.Context, op *directbase.Adapter
 		desired:   obj,
 		reader:    reader,
 	}, nil
+}
+
+// parentObjectGone says whether the spec's parent is a Config Connector
+// object (by name) that no longer exists.
+func parentObjectGone(ctx context.Context, reader client.Reader, obj *krm.AssetFeed) bool {
+	var kind, name, namespace string
+	switch p := obj.Spec.AssetFeedParent; {
+	case p.ProjectRef != nil && p.ProjectRef.Name != "":
+		kind, name, namespace = "Project", p.ProjectRef.Name, p.ProjectRef.Namespace
+	case p.FolderRef != nil && p.FolderRef.Name != "":
+		kind, name, namespace = "Folder", p.FolderRef.Name, p.FolderRef.Namespace
+	default:
+		return false
+	}
+	if namespace == "" {
+		namespace = obj.GetNamespace()
+	}
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{Group: "resourcemanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: kind})
+	err := reader.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, u)
+	return errors.IsNotFound(err)
 }
 
 func (m *feedModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
