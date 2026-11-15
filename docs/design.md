@@ -1531,7 +1531,15 @@ Notes on what was built from this table:
   after the insert would insert a second policy, as upstream). mockgcp
   serves both unpatched (`docs/fake-cloud.md`). Hand-written here: the
   end-to-end test only. Live: pending, needs the test folder (both act
-  on an organization or folder; `docs/live-runs.md`).
+  on an organization or folder; `docs/live-runs.md`). 2026-11-15 (the
+  builder's RECPF answer, "a stable Cloud Armor association"): this kind is
+  that association (fabric's `cloud_armor_policy` is Terraform's
+  `google_compute_organization_security_policy_association`, attached to
+  `projects/<number>` or `folders/<id>`); added `excludedFolders` and
+  `excludedProjects` (v1 API fields), refused on a project's association
+  by CEL as fabric refuses them, and a fake-cloud case of a `CLOUD_ARMOR`
+  policy attached to a project and to a folder with exclusions
+  (`docs/kinds/ComputeOrganizationSecurityPolicyAssociation.md`).
 - `ComputeOrganizationSecurityPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
   decision 13: a rule of a hierarchical firewall policy, at its
   priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
@@ -2096,7 +2104,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     not take), which mockgcp does not make; how long a new policy takes to
     apply; and a policy's `denialCondition`, which no test sets.
 30. `ComputeOrganizationSecurityPolicy` and its association: a live run
-    (the test folder: a policy under it, attached to it); what the real
+    (the test folder: a policy under it, attached to it, and a
+    `CLOUD_ARMOR` policy attached to a project by number, with and
+    without exclusions on the folder); whether the API refuses exclusions
+    on a project's association as fabric does (ours refuses them by CEL);
+    what the real
     API defaults (`type`, rules it adds) and whether a resync then writes
     nothing; the API's checks of a parent or attachment the caller cannot
     use, which mockgcp does not make.

@@ -20,7 +20,12 @@
 // and securityPolicyRef (CEL; upstream errors in the identity when none is
 // set) and the spec immutable (CEL; upstream's controller refuses any change);
 // the reference names our ComputeOrganizationSecurityPolicy; group, labels
-// and short names are ours.
+// and short names are ours. Added 2026-11-15 (the builder's RECPF answer, a
+// stable Cloud Armor association): excludedFolders and excludedProjects, the
+// v1 API's fields that Terraform's
+// google_compute_organization_security_policy_association and fabric's
+// cloud_armor_policy carry, refused on a project's association (CEL, as
+// fabric's project module refuses them).
 
 package v1beta1
 
@@ -34,9 +39,18 @@ var ComputeOrganizationSecurityPolicyAssociationGVK = GroupVersion.WithKind("Com
 // +kcc:spec:proto=google.cloud.compute.v1.SecurityPolicyAssociation
 // +kubebuilder:validation:XValidation:rule="has(self.policyId) != has(self.securityPolicyRef)",message="exactly one of policyId and securityPolicyRef is required"
 // +kubebuilder:validation:XValidation:rule="self == oldSelf",message="the spec is immutable"
+// +kubebuilder:validation:XValidation:rule="!self.attachmentId.startsWith('projects/') || (!has(self.excludedFolders) && !has(self.excludedProjects))",message="exclusions are not supported for a project's association"
 type ComputeOrganizationSecurityPolicyAssociationSpec struct {
-	/* Immutable. The resource that the security policy is attached to. */
+	/* Immutable. The resource that the security policy is attached to: organizations/{organization}, folders/{folder} or projects/{project number}. */
 	AttachmentID string `json:"attachmentId"`
+
+	/* Immutable. Folders under the attachment the policy does not apply to, as folders/{folder}. Not on a project's association. */
+	// +optional
+	ExcludedFolders []string `json:"excludedFolders,omitempty"`
+
+	/* Immutable. Projects under the attachment the policy does not apply to, as projects/{project number}. Not on a project's association. */
+	// +optional
+	ExcludedProjects []string `json:"excludedProjects,omitempty"`
 
 	/* Immutable. The security policy ID of the association. Exactly one of policyId or securityPolicyRef must be specified. */
 	// +optional
