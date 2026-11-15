@@ -22,7 +22,7 @@ answer the same). Then it passed, and the kind moved from
 `CHANGELOG.md` says how to upgrade. The organization parent runs on the
 fake only (a live run never touches the organization). It is Cloud
 Foundation Fabric's folder and organization `service_agents_config`
-(decision 35).
+(decision 36).
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

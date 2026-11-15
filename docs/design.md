@@ -160,7 +160,13 @@ since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
 `docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
 references beyond the parent (the other parts of a name are IDs), no
-secrets in status. Compute Engine's shape is covered too
+secrets in status. A string field the API takes as a secret can take
+Config Connector's `secret.Legacy` instead (`secrets` in `kinds.yaml`:
+`value`, or `valueFrom.secretKeyRef` to a Secret in the object's
+namespace, read by the controller and sent as the string), and a field
+the API never returns is marked `inputOnly`; both are left out of the
+comparison and sent again when `status.inputVersion` changes (decision
+33, `LookerInstance`'s OAuth client, 2026-11-15). Compute Engine's shape is covered too
 (`InsertStyle`, 2026-11-11): insert with the ID as the body's name, a
 patch that merges the fields sent with the read fingerprint (or an update
 that replaces the resource), and compute operations polled at their
@@ -1866,7 +1872,7 @@ Notes on what was built from this table:
   are not offered; `members` takes the address.
   `CloudFunctionsFunction` (Config Connector's 1st gen function,
   `cloudfunctions.cnrm.cloud.google.com/v1beta1`) was added 2026-11-15
-  (the builder's RECPF answer, decision 34): by `name` its project,
+  (the builder's RECPF answer, decision 35): by `name` its project,
   `spec.region` (the resolver reads `spec.region` when a kind has no
   `spec.location`) and `resourceID`, or by `external`; the Cloud Functions
   v1 API's `:getIamPolicy` (GET) and `:setIamPolicy`, read from the v1 REST
@@ -2458,11 +2464,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     `SQLAdminBackup` (`08fcc66`) and `StorageBucketObject` (`756c69f`).
     `RunService` (`aee1155`) passed too, but Config Connector has a
     `RunService`; ours is a field-gap kind (decision 19), which this
-    decision's wording did not name (section 10, question 9); decision 33
+    decision's wording did not name (section 10, question 9); decision 34
     extends the rule to it, and it is `v1beta1` since 2026-11-15. The other
     `v1alpha1` kinds have no live pass yet, or wait on a prerequisite
     (`LoggingBillingAccountSink`, `ServiceIdentity` (passed live and
-    promoted 2026-11-15, decision 35), `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`),
+    promoted 2026-11-15, decision 36), `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`),
     or failed their last run (`ComputeNetworkFirewallPolicyPacketMirroringRule`).
 
 28. **A service's generated kinds' tests get their own package** (the
@@ -2554,7 +2560,45 @@ To raise confidence in `ArtifactRegistryRepository`:
     deleted behind the controller's back, its database still there, is
     proven gone by its own collection).
 
-33. **Decision 27 covers our field-gap kinds** (the builder, 2026-11-15,
+33. **`LookerInstance`'s OAuth client secret comes from a Kubernetes
+    Secret** (2026-11-15, RECLOOK). The builder, 2026-11-15, verbatim:
+    "RECLOOK: as recommended (Yes. Add a secretKeyRef for
+    oauthConfig.clientSecret, then the chart takes client_secret from a
+    Kubernetes Secret, as bigquery-connection does.)"
+    Built: `spec.oauthConfig.clientSecret` is Config Connector's
+    `refs/v1beta1/secret.Legacy`, the shape of `SQLUser`'s `password`
+    and `SQLInstance`'s root password: `value`, or
+    `valueFrom.secretKeyRef` (`name`, `key`) of a Secret in the object's
+    namespace. `hack/discokind` makes any field listed under `secrets`
+    in `kinds.yaml` so; `pkg/discokind` reads the Secret before every
+    write and sends the string. **The plain value is kept, not
+    deprecated**, as `clientSecret.value`: Config Connector keeps
+    `value` beside `valueFrom` on every such field, and this repository
+    follows its shapes (section 2.3); the catalog's chart only ever
+    writes `valueFrom`. Setting both is refused ("set one of value and
+    valueFrom, not both"). The string form is gone, a breaking change
+    allowed at `v1alpha1` (no object of the kind has run live or been
+    made by a chart). The API never returns `oauthConfig.clientId` or
+    `clientSecret` ("Input only"), so before this they were a
+    difference on every resync and every reconcile patched
+    `oauthConfig`; now they are left out of the comparison (`inputOnly`
+    and `secrets`), and `status.inputVersion`, a digest of the client
+    ID and of the Secret's name, key and `resourceVersion` (never its
+    value, as `ComputeRouter`'s `md5AuthenticationKeysVersion`), says
+    when to send them again: a changed client ID, another Secret, or
+    the same Secret rotated (seen at the next reconcile; the controller
+    does not watch Secrets). Tested on the fake, which now keeps
+    input-only fields but never answers them, as the API does:
+    `TestLookerInstanceOAuthClientSecret` (a missing Secret holds the
+    create; the Secret's value reaches the cloud and never shows in a
+    read; a resync writes nothing; a rotated Secret is sent again; a
+    plain value works; value and valueFrom together are refused) and the
+    kind's fixtures, which now read the secret from a Secret. Live:
+    pending, as for the kind (`docs/live-runs.md`): an instance is
+    billed by the year and takes about an hour, and the Looker API is
+    not on in the live-test project.
+
+34. **Decision 27 covers our field-gap kinds** (the builder, 2026-11-15,
     EXTQ6-1, answering section 10 question 9: "as recommended (Yes:
     promote field-gap kinds under the same rule. The catalog's charts
     refuse alpha kinds whatever gap a kind fills.)"). A kind of ours that
@@ -2583,9 +2627,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     They are left for their own pull request (a generated kind's version
     is set in `hack/discokind/kinds.yaml` and regenerated).
     `ServiceIdentity`, a kind for a missing resource, passed live on
-    2026-11-15 and was promoted under decision 27 (decision 35).
+    2026-11-15 and was promoted under decision 27 (decision 36).
 
-34. **IAMBinding and IAMMember take a `CloudFunctionsFunction`; AssetFeed's
+35. **IAMBinding and IAMMember take a `CloudFunctionsFunction`; AssetFeed's
     parent comparison is fixed; Cloud Armor gets a stable association;
     SCC v2 mute configs and project Security Health Analytics custom
     modules are low priority** (the builder, 2026-11-15, RECPF, the parts
@@ -2596,12 +2640,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     pull requests #215 and #216. **Built 2026-11-15** here: the IAM
     resource table's `CloudFunctionsFunction` row (section 6.5, rank 2).
     The `AssetFeed` fix and the Cloud Armor association are built in their
-    own pull request (branch `agent/r2-assetfeed-armor`), and
-    `LookerInstance`'s `secretKeyRef` (RECLOOK) in `agent/r2-looker-secret`;
-    their notes are there. The SCC v2 mute config and the project SHA
+    own pull request (branch `agent/r2-assetfeed-armor`), with its notes
+    there; `LookerInstance`'s `secretKeyRef` (RECLOOK) is decision 33. The SCC v2 mute config and the project SHA
     module kinds are not started.
 
-35. **One served version; the catalog's folder, organization and logging
+36. **One served version; the catalog's folder, organization and logging
     gaps** (the builder, 2026-11-15, CCEQ, answering section 10 questions
     4 and 7: "as recommended (Q4 keep one served version (decision 24).
     Q7: our own LoggingLogSink (v1beta1); no Folder kind (deletion-policy
@@ -2915,7 +2958,7 @@ moves to section 8.
    Terraform's `google_<resource>_iam_member` and `_iam_binding`
    (decision 12). The question had recommended keeping `IAMRoleMember`.
 
-4. Answered 2026-11-15 (CCEQ, decision 35): keep one served version
+4. Answered 2026-11-15 (CCEQ, decision 36): keep one served version
    (decision 24). The question was:
    **Should `IAMBinding` `v1alpha1` stay served, deprecated, beside
    `v1beta1`?** (2026-11-10, after decision 24). Decision 24 moved the
@@ -2943,7 +2986,7 @@ moves to section 8.
    (decision 27, "Built"); `LoggingSettings` and `SecurityCenterMuteConfig`
    still owe their first live run.
 
-7. Answered 2026-11-15 (CCEQ, decision 35): our own `LoggingLogSink`
+7. Answered 2026-11-15 (CCEQ, decision 36): our own `LoggingLogSink`
    (`v1beta1`); no `Folder` kind; our own `OrgPolicyPolicy` only if the
    catalog cannot order deletes; the service-agents config under decision
    18 (it is our `ServiceIdentity`). The question was:
@@ -2980,7 +3023,7 @@ moves to section 8.
 8. Answered 2026-11-13: yes, split the generated kinds' tests into
    their own package (decision 28).
 
-9. Answered 2026-11-15 (EXTQ6-1, decision 33): yes, and `RunService`
+9. Answered 2026-11-15 (EXTQ6-1, decision 34): yes, and `RunService`
    is `v1beta1`. The question was:
    **Does decision 27 cover our field-gap kinds?** (2026-11-15.)
    Decision 27 promotes "a kind of ours for a gap Config Connector has no

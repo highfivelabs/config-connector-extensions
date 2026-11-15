@@ -6,6 +6,21 @@ has been released yet; each release moves its entries out of
 
 ## Unreleased
 
+### Changed
+
+- **`LookerInstance` takes its OAuth client secret from a Kubernetes
+  Secret.** `spec.oauthConfig.clientSecret` is now Config Connector's
+  secret shape (as `SQLUser`'s `password`): `value`, or
+  `valueFrom.secretKeyRef` (`name`, `key`) of a Secret in the object's
+  namespace, which the controller reads. A manifest that set
+  `clientSecret` as a string must move it to `clientSecret.value` (the
+  kind is `v1alpha1`). The API never returns the client ID or secret, so
+  they are no longer a difference on every resync; they are sent again
+  when `status.inputVersion`, a digest of the client ID and the Secret's
+  name, key and `resourceVersion`, changes, as when the Secret is
+  rotated (`docs/design.md`, decision 33). Generated kinds can mark such
+  fields with `secrets` and `inputOnly` in `hack/discokind/kinds.yaml`.
+
 ### Fixed
 
 - **A folder's or organization's `ServiceIdentity` never went Ready**

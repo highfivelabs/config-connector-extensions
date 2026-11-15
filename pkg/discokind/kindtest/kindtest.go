@@ -189,9 +189,12 @@ func run(t *testing.T, kindName, caseName string) {
 			time.Sleep(pollEvery())
 		}
 	}
+	// spec is what a read of the object's resource shows: its body without
+	// input-only fields (Kind.InputOnly, Kind.Secrets), which the API
+	// never returns. A kind's own test checks what was sent for them.
 	spec := func(u *unstructured.Unstructured) map[string]any {
 		s, _, _ := unstructured.NestedMap(u.Object, "spec")
-		return k.Body(s)
+		return k.Comparable(k.Body(s))
 	}
 
 	obj := create.DeepCopy()
