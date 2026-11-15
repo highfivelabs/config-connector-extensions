@@ -62,3 +62,4 @@ only.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-15 | `c419344` | PASS | pending, needs `roles/cloudasset.owner` for `cce-live-tests`; then `E2E_CLOUD_ASSET=true` (run `cce-11152322-2857` skipped live) | not run | none |
