@@ -108,6 +108,10 @@ func Resolve(ctx context.Context, reader client.Reader, defaultNamespace string,
 		return nil, "", k8s.NewReferenceNotReadyError(obj.GroupVersionKind(), key)
 	}
 	parts := ObjectParts{Location: nestedString(obj, "spec", "location")}
+	if parts.Location == "" {
+		// Kinds that name it spec.region (CloudFunctionsFunction).
+		parts.Location = nestedString(obj, "spec", "region")
+	}
 	parts.ID = nestedString(obj, "spec", "resourceID")
 	if parts.ID == "" {
 		parts.ID = obj.GetName()
