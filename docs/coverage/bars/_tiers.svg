@@ -12,7 +12,7 @@
 <g clip-path="url(#c0)">
 <rect x="10" y="21" width="620" height="14" fill="#d0d7de"/>
 <rect x="10" y="21" width="282.48" height="14" fill="#2f81f7"/>
-<rect x="292.48" y="21" width="74.97" height="14" fill="#2da44e"/>
+<rect x="292.48" y="21" width="75.18" height="14" fill="#2da44e"/>
 </g>
 <clipPath id="c1"><rect x="10" y="77" width="620" height="14" rx="3"/></clipPath>
 <text x="10" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#24292f">Tier 2: security-adjacent and application (68 services, 23615 attributes): <tspan fill="#0969da">39.2%</tspan> / <tspan fill="#1a7f37">1.0%</tspan> / <tspan fill="#57606a">59.8%</tspan>   <tspan fill="#7b42bc">Terraform 42.7% (L1 37.6%)</tspan></text>

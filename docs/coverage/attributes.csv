@@ -12547,8 +12547,8 @@ compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,advance
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,advancedOptionsConfig.requestBodyInspectionSize,string,false,none,,
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,advancedOptionsConfig.userIpRequestHeaders[],string,false,none,,
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,associations[].attachmentId,string,false,both,ComputeOrganizationSecurityPolicyAssociation:spec.attachmentId,ComputeOrganizationSecurityPolicyAssociation:spec.attachmentId
-compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,associations[].excludedFolders[],string,false,none,,
-compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,associations[].excludedProjects[],string,false,none,,
+compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,associations[].excludedFolders[],string,false,ours,,ComputeOrganizationSecurityPolicyAssociation:spec.excludedFolders[]
+compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,associations[].excludedProjects[],string,false,ours,,ComputeOrganizationSecurityPolicyAssociation:spec.excludedProjects[]
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,associations[].name,string,false,none,,
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,ddosProtectionConfig.ddosAdaptiveProtection,string,false,none,,
 compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,ddosProtectionConfig.ddosImpactedBaselineThreshold,number,false,none,,
