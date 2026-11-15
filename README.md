@@ -35,7 +35,7 @@ Tier 1, 16 services, most covered attributes first:
 
 | Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered | Terraform `google-beta` | Terraform `google` |
 | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 8.8% | 40.7% | 56.0% | 53.2% |
+| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 8.8% | 40.6% | 56.0% | 53.2% |
 | 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 67.4% | 8.7% | 37.6% | 37.6% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
 | 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 15.0% | 24.8% | 74.5% | 73.2% |
@@ -243,6 +243,15 @@ A gap kind references Config Connector kinds the same way KCC kinds
 reference each other: `SQLUser.spec.instanceRef.name` names a
 `sql.cnrm.cloud.google.com` `SQLInstance` in the same namespace, or
 `instanceRef.external` gives `projects/<p>/instances/<i>`.
+
+Some kinds keep Config Connector's name in our group because Config
+Connector's kind lacks a field or misbehaves, and ours owns the whole
+resource instead (`docs/design.md` decision 19); a workload moves by
+acquiring the same resource. `asset.gcp.hfl.dev/v1beta1` `AssetFeed` is
+one: Config Connector's compares the project number in a feed's name with
+the project ID in its `projectRef` and refuses every reconcile after the
+create, so its feed cannot be updated or deleted; ours treats the number
+and the ID as one project (`docs/kinds/AssetFeed.md`).
 
 Annotations mean what they mean in Config Connector, because the reconciler
 is Config Connector's: `cnrm.cloud.google.com/deletion-policy: abandon`,

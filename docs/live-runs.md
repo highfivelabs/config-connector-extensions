@@ -127,6 +127,7 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/aiplatform.user` | project | `AIPlatformReasoningEngine` (not granted yet, and `aiplatform.googleapis.com` is off: the test skips live without `E2E_VERTEX_AI=true`) |
 | `roles/servicemanagement.admin` | project | `EndpointsService` (not granted: run `cce-11130544-c338` was refused `servicemanagement.services.list`; the test skips live without `E2E_SERVICE_MANAGEMENT=true`) |
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
+| `roles/cloudasset.owner` | project | `AssetFeed` (not granted yet; the account has `roles/cloudasset.viewer`, which cannot make a feed, and `roles/pubsub.admin` for the test's topic: the test skips live without `E2E_CLOUD_ASSET=true`) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
 | `roles/run.admin` | project | `RunService` |
 | `roles/apigateway.admin` | project | `APIGatewayAPIConfig`, `APIGatewayGateway` (`TestAPIGatewayDeleteGatewayAndConfigTogether`, with its API) |

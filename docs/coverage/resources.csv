@@ -251,7 +251,7 @@ chronicle.googleapis.com,chronicle.googleapis.com/NativeDashboard,33,ChronicleNa
 chronicle.googleapis.com,chronicle.googleapis.com/ReferenceList,5,ChronicleReferenceList;ChronicleWatchlist,4,ChronicleReferenceList,0,1,false,api=v1:google.cloud.chronicle.v1.ReferenceListService.CreateReferenceList; ours-spec-fields-unmatched=5/8
 chronicle.googleapis.com,chronicle.googleapis.com/Retrohunt,2,,0,,0,2,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRetrohunt
 chronicle.googleapis.com,chronicle.googleapis.com/Rule,4,ChronicleRule,4,ChronicleRule,0,0,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRule; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=5/7
-cloudasset.googleapis.com,cloudasset.googleapis.com/Feed,11,AssetFeed;CloudAssetFolderFeed;CloudAssetOrganizationFeed;CloudAssetProjectFeed,11,,0,0,false,api=v1:feeds; request-wrapper=CreateFeedRequest
+cloudasset.googleapis.com,cloudasset.googleapis.com/Feed,11,AssetFeed;CloudAssetFolderFeed;CloudAssetOrganizationFeed;CloudAssetProjectFeed,11,AssetFeed,0,0,false,api=v1:feeds; request-wrapper=CreateFeedRequest; ours-spec-fields-unmatched=4/13
 cloudasset.googleapis.com,cloudasset.googleapis.com/SavedQuery,15,AssetSavedQuery,15,,0,0,false,api=v1:savedQueries; official-spec-fields-unmatched=4/18
 cloudbilling.googleapis.com,cloudbilling.googleapis.com/BillingAccount,3,BillingAccount,2,,0,1,false,api=v1:billingAccounts; official-spec-fields-unmatched=2/4
 cloudbilling.googleapis.com,cloudbilling.googleapis.com/OrganizationBillingAccount,3,,0,,0,3,false,api=v1:organizations.billingAccounts
@@ -384,7 +384,7 @@ compute.googleapis.com,compute.googleapis.com/NetworkEndpointGroup,17,ComputeNet
 compute.googleapis.com,compute.googleapis.com/NetworkFirewallPolicy,73,ComputeNetworkFirewallPolicy;ComputeNetworkFirewallPolicyAssociation;ComputeNetworkFirewallPolicyRule,26,ComputeNetworkFirewallPolicyPacketMirroringRule;ComputeNetworkFirewallPolicyRule,12,35,false,api=v1:networkFirewallPolicies
 compute.googleapis.com,compute.googleapis.com/NodeGroup,12,ComputeNodeGroup,10,,0,2,false,api=v1:nodeGroups; official-spec-fields-unmatched=5/14
 compute.googleapis.com,compute.googleapis.com/NodeTemplate,14,ComputeNodeTemplate,8,,0,6,false,api=v1:nodeTemplates; official-spec-fields-unmatched=2/9
-compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,0,74,false,api=v1:organizationSecurityPolicies
+compute.googleapis.com,compute.googleapis.com/OrganizationSecurityPolicy,86,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,12,ComputeOrganizationSecurityPolicy;ComputeOrganizationSecurityPolicyAssociation;ComputeOrganizationSecurityPolicyRule,2,72,false,api=v1:organizationSecurityPolicies
 compute.googleapis.com,compute.googleapis.com/PacketMirroring,12,ComputePacketMirroring,12,,0,0,false,api=v1:packetMirrorings; official-spec-fields-unmatched=5/16
 compute.googleapis.com,compute.googleapis.com/PublicAdvertisedPrefix,7,,0,ComputePublicAdvertisedPrefix,7,0,false,api=v1:publicAdvertisedPrefixes; ours-spec-fields-unmatched=2/8
 compute.googleapis.com,compute.googleapis.com/PublicDelegatedPrefix,15,,0,ComputePublicDelegatedPrefix,15,0,false,api=v1:publicDelegatedPrefixes; ours-spec-fields-unmatched=3/17

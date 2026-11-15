@@ -9,6 +9,7 @@ resources:
 - apigee.gcp.hfl.dev_apigeenataddresses.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistryrepositories.yaml
 - artifactregistry.gcp.hfl.dev_artifactregistrytags.yaml
+- asset.gcp.hfl.dev_assetfeeds.yaml
 - backupdr.gcp.hfl.dev_backupdrmanagementservers.yaml
 - biglake.gcp.hfl.dev_biglakecatalogs.yaml
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
