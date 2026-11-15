@@ -23,6 +23,11 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`IAMBinding` and `IAMMember` on a `CloudFunctions2Function` named by
+  `name`** were refused on a real install: the manager's ClusterRole could
+  not read `cloudfunctions2.cnrm.cloud.google.com` (nor, for the new row,
+  `cloudfunctions.cnrm.cloud.google.com`). Both are in the role now.
+
 - **A folder's or organization's `ServiceIdentity` never went Ready**
   against Google Cloud: the API answers `generateServiceIdentity` with an
   operation already done, named `operations/finished.DONE_OPERATION`, and
