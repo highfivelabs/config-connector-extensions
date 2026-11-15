@@ -18,7 +18,8 @@
 // pkg/controller/direct/compute/mappers.go (UPSTREAM.md). Only the
 // ComputeOrganizationSecurityPolicy and ComputeOrganizationSecurityPolicyAssociation
 // functions, unchanged but for our KRM types (compute.gcp.hfl.dev/v1beta1)
-// and the version in their names.
+// and the version in their names; the association's excludedFolders and
+// excludedProjects (2026-11-15) are mapped both ways.
 
 package compute
 
@@ -104,6 +105,8 @@ func ComputeOrganizationSecurityPolicyAssociationSpec_v1beta1_FromProto(mapCtx *
 	}
 	out := &krmcomputev1beta1.ComputeOrganizationSecurityPolicyAssociationSpec{}
 	out.AttachmentID = in.GetAttachmentId()
+	out.ExcludedFolders = in.ExcludedFolders
+	out.ExcludedProjects = in.ExcludedProjects
 	if in.SecurityPolicyId != nil {
 		out.PolicyID = in.SecurityPolicyId
 	}
@@ -122,6 +125,8 @@ func ComputeOrganizationSecurityPolicyAssociationSpec_v1beta1_ToProto(mapCtx *di
 	if in.AttachmentID != "" {
 		out.AttachmentId = direct.LazyPtr(in.AttachmentID)
 	}
+	out.ExcludedFolders = in.ExcludedFolders
+	out.ExcludedProjects = in.ExcludedProjects
 	if in.PolicyID != nil && *in.PolicyID != "" {
 		out.SecurityPolicyId = in.PolicyID
 	}
