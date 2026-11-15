@@ -251,7 +251,7 @@ chronicle.googleapis.com,chronicle.googleapis.com/NativeDashboard,33,ChronicleNa
 chronicle.googleapis.com,chronicle.googleapis.com/ReferenceList,5,ChronicleReferenceList;ChronicleWatchlist,4,ChronicleReferenceList,0,1,false,api=v1:google.cloud.chronicle.v1.ReferenceListService.CreateReferenceList; ours-spec-fields-unmatched=5/8
 chronicle.googleapis.com,chronicle.googleapis.com/Retrohunt,2,,0,,0,2,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRetrohunt
 chronicle.googleapis.com,chronicle.googleapis.com/Rule,4,ChronicleRule,4,ChronicleRule,0,0,false,api=v1:google.cloud.chronicle.v1.RuleService.CreateRule; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=5/7
-cloudasset.googleapis.com,cloudasset.googleapis.com/Feed,11,AssetFeed;CloudAssetFolderFeed;CloudAssetOrganizationFeed;CloudAssetProjectFeed,11,,0,0,false,api=v1:feeds; request-wrapper=CreateFeedRequest
+cloudasset.googleapis.com,cloudasset.googleapis.com/Feed,11,AssetFeed;CloudAssetFolderFeed;CloudAssetOrganizationFeed;CloudAssetProjectFeed,11,AssetFeed,0,0,false,api=v1:feeds; request-wrapper=CreateFeedRequest; ours-spec-fields-unmatched=4/13
 cloudasset.googleapis.com,cloudasset.googleapis.com/SavedQuery,15,AssetSavedQuery,15,,0,0,false,api=v1:savedQueries; official-spec-fields-unmatched=4/18
 cloudbilling.googleapis.com,cloudbilling.googleapis.com/BillingAccount,3,BillingAccount,2,,0,1,false,api=v1:billingAccounts; official-spec-fields-unmatched=2/4
 cloudbilling.googleapis.com,cloudbilling.googleapis.com/OrganizationBillingAccount,3,,0,,0,3,false,api=v1:organizations.billingAccounts

@@ -244,6 +244,15 @@ reference each other: `SQLUser.spec.instanceRef.name` names a
 `sql.cnrm.cloud.google.com` `SQLInstance` in the same namespace, or
 `instanceRef.external` gives `projects/<p>/instances/<i>`.
 
+Some kinds keep Config Connector's name in our group because Config
+Connector's kind lacks a field or misbehaves, and ours owns the whole
+resource instead (`docs/design.md` decision 19); a workload moves by
+acquiring the same resource. `asset.gcp.hfl.dev/v1beta1` `AssetFeed` is
+one: Config Connector's compares the project number in a feed's name with
+the project ID in its `projectRef` and refuses every reconcile after the
+create, so its feed cannot be updated or deleted; ours treats the number
+and the ID as one project (`docs/kinds/AssetFeed.md`).
+
 Annotations mean what they mean in Config Connector, because the reconciler
 is Config Connector's: `cnrm.cloud.google.com/deletion-policy: abandon`,
 `cnrm.cloud.google.com/project-id`, `.../reconcile-interval-in-seconds`,

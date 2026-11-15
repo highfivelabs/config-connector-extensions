@@ -371,6 +371,16 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/securitycenter/muteconfig/securitycentermuteconfig_controller.go]}
   - here: [pkg/controller/direct/securitycenter/muteconfig_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/securitycenter/mapper.generated.go]}
+  - here: [apis/asset/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/asset/v1beta1/groupversion_info.go]}
+  - here: [apis/asset/v1beta1/assetfeed_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/asset/v1beta1/assetfeed_types.go, apis/asset/v1beta1/types.generated.go]}
+  - here: [apis/asset/v1beta1/assetfeed_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/asset/v1beta1/assetfeed_identity.go]}
+  - here: [pkg/controller/direct/asset/assetfeed_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/asset/assetfeed_controller.go]}
+  - here: [pkg/controller/direct/asset/assetfeed_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/asset/assetfeed_mapper.go, pkg/controller/direct/asset/mapper.generated.go]}
   - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_types.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]}
   - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_identity.go]

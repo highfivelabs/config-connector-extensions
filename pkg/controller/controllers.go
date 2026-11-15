@@ -46,6 +46,7 @@ import (
 	aiplatformv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/aiplatform/v1beta1"
 	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
+	assetv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/asset/v1beta1"
 	chroniclev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1alpha1"
 	chroniclev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
@@ -71,6 +72,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/asset"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
@@ -161,6 +163,7 @@ var Kinds = []kind{
 	{gvk: chroniclev1alpha1.ChronicleRuleDeploymentGVK, crdName: "chronicleruledeployments.chronicle.gcp.hfl.dev", model: chronicle.NewRuleDeploymentModel},
 	{gvk: chroniclev1beta1.ChronicleRuleGVK, crdName: "chroniclerules.chronicle.gcp.hfl.dev", model: chronicle.NewRuleModel},
 	{gvk: chroniclev1beta1.ChronicleReferenceListGVK, crdName: "chroniclereferencelists.chronicle.gcp.hfl.dev", model: chronicle.NewReferenceListModel},
+	{gvk: assetv1beta1.AssetFeedGVK, crdName: "assetfeeds.asset.gcp.hfl.dev", model: asset.NewFeedModel},
 }
 
 // AddToScheme adds every config-connector-extensions API group to a scheme.
@@ -191,6 +194,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		resourcemanagerv1alpha1.AddToScheme,
 		networksecurityv1beta1.AddToScheme,
 		securitycenterv1beta1.AddToScheme,
+		assetv1beta1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

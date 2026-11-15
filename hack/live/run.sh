@@ -53,6 +53,7 @@ source hack/live/projects.sh
 # aiplatform (AIPlatformReasoningEngine) skips live unless E2E_VERTEX_AI=true
 # chronicle (ChronicleRule, ChronicleRuleDeployment, ChronicleReferenceList) skips live unless E2E_CHRONICLE_INSTANCE
 # names a SecOps instance, <location>/<instance ID>;
+# asset (AssetFeed) skips live unless E2E_CLOUD_ASSET=true;
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"

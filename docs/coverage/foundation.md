@@ -489,6 +489,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 
 | Kind | Resource | Ours beyond official | From an open PR |
 | --- | --- | ---: | :-: |
+| AssetFeed | cloudasset.googleapis.com/Feed | 0 | false |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
 | ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
@@ -682,7 +683,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `certificatemanager.googleapis.com/CertificateMapCertificateMapEntry` | CertificateManagerCertificateMapEntry | - | 6 | 6 | 0 | 0 | - |
 | security | `certificatemanager.googleapis.com/DnsAuthorization` | CertificateManagerDNSAuthorization | - | 6 | 5 | 0 | 1 | - |
 | security | `certificatemanager.googleapis.com/TrustConfig` | CertificateManagerTrustConfig (alpha) | - | 9 | 4 | 0 | 5 | 25 |
-| security | `cloudasset.googleapis.com/Feed` | AssetFeed, CloudAssetFolderFeed (alpha), CloudAssetOrganizationFeed (alpha), CloudAssetProjectFeed (alpha) | - | 11 | 11 | 0 | 0 | - |
+| security | `cloudasset.googleapis.com/Feed` | AssetFeed, CloudAssetFolderFeed (alpha), CloudAssetOrganizationFeed (alpha), CloudAssetProjectFeed (alpha) | AssetFeed | 11 | 11 | 0 | 0 | - |
 | security | `cloudasset.googleapis.com/SavedQuery` | AssetSavedQuery | - | 15 | 15 | 0 | 0 | - |
 | foundation | `cloudbilling.googleapis.com/BillingAccount` | BillingAccount (alpha) | - | 3 | 2 | 0 | 1 | - |
 | foundation | `cloudbilling.googleapis.com/OrganizationBillingAccount` | - | - | 3 | 0 | 0 | 3 | - |
