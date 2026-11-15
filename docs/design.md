@@ -1038,6 +1038,66 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     certificate.
   - With this, every ranked and unranked candidate in section 6.3 is built,
     watched, waiting for a release, or skipped with its reason.
+- `LoggingLogSink` (`logging.gcp.hfl.dev/v1beta1`; built 2026-11-15 on the
+  builder's answer to section 10 question 7, CCEQ: "our own
+  LoggingLogSink (v1beta1)"; decisions 19 and 26). Our own kind for the
+  whole sink of a project, folder or organization, so that the catalog's
+  folder and organization charts can render an intercepting sink
+  (Terraform's `intercept_children`, which fabric allows on a
+  `project`-type sink only). Upstream, rechecked 2026-11-15 (read-only):
+  Config Connector's `LoggingLogSink` is `v1beta1` (Terraform-based by
+  default, a direct controller opt-in) with neither `interceptChildren` nor
+  a Cloud project destination, at the pin, in v1.160.0 and on `master`
+  (`2374254`, 2026-11-15); no pull request adds them (searched
+  "interceptChildren", "LoggingLogSink": #14429 resolves the project
+  annotation, #11575 adds export). **Copied** from upstream's direct
+  controller with as little change as possible, after
+  `LoggingBillingAccountSink`: the types, identity, controller and the
+  sink's mapper functions. Changed:
+  - `spec.interceptChildren`, and a Cloud project as a destination
+    (`destination.projectRef`, sent as
+    `logging.googleapis.com/projects/{id}`), which an intercepting sink
+    needs; CEL rules carry the API's rules for it (a folder or organization
+    parent, `includeChildren` true, a project destination), refuse more
+    or fewer than one parent and one destination (upstream falls back to
+    the namespace's project and takes the first destination set), and keep
+    the parents, `resourceID`, `includeChildren` and `interceptChildren`
+    immutable (Terraform's `include_children` is `ForceNew`).
+  - The Logging REST client (`google.golang.org/api/logging/v2`) in place
+    of upstream's protobuf client: the `LogSink` protobuf at the pinned
+    `cloud.google.com/go/logging` v1.18.0 has no `interceptChildren`, so
+    the field cannot be sent through it; the update mask is built by
+    comparing the same top-level fields upstream's
+    `DiffForTopLevelFields` does, BigQuery options only when the spec sets
+    them (the API fills them in for a BigQuery destination).
+  - `uniqueWriterIdentity` is sent true for a folder's or organization's
+    sink (the API refuses false there; Terraform's folder and organization
+    sinks always send true) and for a sink whose writer identity is
+    already unique (the API refuses going back to the shared one); a
+    project's sink otherwise sends the spec's, as upstream does.
+  - `status.externalRef`, checked by the identity; a delete uses it and
+    resolves neither the parent nor the destination again, so a folder
+    deleted together with its sinks does not hold them (the rule our
+    generated kinds and `IAMDenyPolicy` follow).
+  Generated: the CRD and deepcopy (controller-gen); `hack/scaffold-kind.sh`
+  was not run (upstream's controller is the nearer code), nor
+  `hack/discokind` (a sink's create takes the name in the body and
+  `uniqueWriterIdentity` as a parameter). Mockgcp patch 0049 keeps
+  `interceptChildren` beside each sink on the HTTP layer
+  (`docs/fake-cloud.md`). Proven on the fake: a project's sink (create, a
+  resync with no write, one update of `disabled` and `exclusions`, the CRD
+  refusing a parent change, no or two parents, two destinations and a
+  project's intercepting sink, delete, abandon), a folder's intercepting
+  sink to a project (and the CRD refusing to change `interceptChildren`,
+  or one without `includeChildren` or a project destination), and an
+  organization's sink to a bucket. Live: `docs/kinds/LoggingLogSink.md`.
+  Left: the catalog's folder and organization charts move their sinks to
+  this kind (and drop their refusals of `intercept_children` and type
+  `project`), and grant the writer identity some other way than Config
+  Connector's `IAMPolicyMember.memberFrom.logSinkRef`, which resolves
+  Config Connector's `LoggingLogSink` only; the kind retires when
+  upstream ships `interceptChildren` and a project destination (section
+  3.4).
 
 ### 6.5 From the seed catalog (read 2026-11-09)
 

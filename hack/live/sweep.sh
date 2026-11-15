@@ -28,7 +28,9 @@
 # security profile groups and security profiles, by name, and IAM deny
 # policies on the project, by name, where the account may list them
 # (E2E_IAM_DENY_ADMIN=true), IAM v3 policy bindings on the project, by
-# name, where E2E_IAM_POLICY_BINDING_POLICY is set, log sinks of the billing account in
+# name, where E2E_IAM_POLICY_BINDING_POLICY is set, log sinks of the
+# project, by name, and of the test folder in E2E_LOGGING_FOLDER, where it
+# is set, log sinks of the billing account in
 # E2E_BILLING_ACCOUNT, by name, where it is set, Security Command
 # Center mute configs of the project, by name, where it is active
 # (E2E_SECURITY_CENTER=true), Cloud DNS response policies, by name,
@@ -588,6 +590,26 @@ if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
     act "billing account log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --billing-account="${billing}"
+  done <<<"${rows}"
+fi
+
+# Log sinks of the project (a live LoggingLogSink test's), by the run's
+# name, and of the logging test folder in E2E_LOGGING_FOLDER (folders/{id},
+# on which the live-test service account administers logging), where it
+# is set; without it the folder's LoggingLogSink test does not run live.
+rows="$("${G[@]}" logging sinks list --verbosity=error --format='value(name,createTime)')"
+while read -r id made; do
+  [[ -n "${id}" ]] || continue
+  by_run "${id}" "${made}" || continue
+  act "log sink" "${id}" "${G[@]}" logging sinks delete "${id}"
+done <<<"${rows}"
+if [[ -n "${E2E_LOGGING_FOLDER:-}" ]]; then
+  folder="${E2E_LOGGING_FOLDER#folders/}"
+  rows="$("${G[@]}" logging sinks list --folder="${folder}" --verbosity=error --format='value(name,createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "folder log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --folder="${folder}"
   done <<<"${rows}"
 fi
 

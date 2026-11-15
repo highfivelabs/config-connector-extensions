@@ -195,6 +195,7 @@ patches:
   - {file: patches/k8s-config-connector/0046-mockgcp-iam-policy-bindings-access.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0047-directbase-quota-requeue.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0048-mockgcp-compute-create-instances-target-size.patch, pin: k8s-config-connector, upstream_candidate: "the regional half"}
+  - {file: patches/k8s-config-connector/0049-mockgcp-logging-sink-intercept-children.patch, pin: k8s-config-connector, upstream_candidate: "no: a stopgap until the protobuf has the field"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -301,6 +302,14 @@ copied:
   - here: [pkg/controller/direct/logging/billingaccountsink_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/logging/logginglogsink_controller.go]}
   - here: [pkg/controller/direct/logging/billingaccountsink_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/logging/mapper.go]}
+  - here: [apis/logging/v1beta1/logginglogsink_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/logging/v1beta1/logginglogsink_types.go]}
+  - here: [apis/logging/v1beta1/logginglogsink_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/logging/v1beta1/logginglogsink_identity.go]}
+  - here: [pkg/controller/direct/logging/logsink_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/logging/logginglogsink_controller.go]}
+  - here: [pkg/controller/direct/logging/logsink_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/logging/mapper.go]}
   - here: [apis/resourcemanager/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/resourcemanager/v1beta1/groupversion_info.go]}
