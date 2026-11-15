@@ -172,7 +172,7 @@ Decision 16 has begun: `SecurityCenterMuteConfig` (design.md 6.5, patch
 0031) takes an organization, folder or project. Upstream PR #7673 has
 the three parents for mute configs, BigQuery exports and custom modules
 but predates `master`'s kinds: copy `master`'s kind and #7673's parent
-(`apis/securitycenter/v1alpha1/parent.go`, `ResolveParent`), as the
+(`apis/securitycenter/v1beta1/parent.go`, `ResolveParent`), as the
 mute config did. Next: `SecurityCenterBigQueryExport` (mockgcp already
 serves all three parents), the two custom module kinds, then
 `SecurityCenterNotificationConfig` (Terraform-based upstream). Live

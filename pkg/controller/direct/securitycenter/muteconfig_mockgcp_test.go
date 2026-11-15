@@ -37,11 +37,12 @@ import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	securitycenterv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
+	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -51,7 +52,7 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 	if mockenv.Live() && os.Getenv("E2E_SECURITY_CENTER") != "true" {
 		t.Skip("a live SecurityCenterMuteConfig needs Security Command Center active for the project and securitycenter.muteconfigs.* for the live-test service account; set E2E_SECURITY_CENTER=true where it has them (docs/live-runs.md)")
 	}
-	muteGVK := securitycenterv1alpha1.SecurityCenterMuteConfigGVK
+	muteGVK := securitycenterv1beta1.SecurityCenterMuteConfigGVK
 	env := mockenv.New(t, namespace)
 	cloud, err := gcp.NewRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -81,9 +82,9 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 		}
 		return out
 	}
-	getObj := func(t *testing.T, n string) *securitycenterv1alpha1.SecurityCenterMuteConfig {
+	getObj := func(t *testing.T, n string) *securitycenterv1beta1.SecurityCenterMuteConfig {
 		t.Helper()
-		obj := &securitycenterv1alpha1.SecurityCenterMuteConfig{}
+		obj := &securitycenterv1beta1.SecurityCenterMuteConfig{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: n}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -110,10 +111,10 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 		}
 	})
 
-	newMute := func(n, filter string) *securitycenterv1alpha1.SecurityCenterMuteConfig {
-		return &securitycenterv1alpha1.SecurityCenterMuteConfig{
+	newMute := func(n, filter string) *securitycenterv1beta1.SecurityCenterMuteConfig {
+		return &securitycenterv1beta1.SecurityCenterMuteConfig{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: n, Labels: mockenv.Labels()},
-			Spec: securitycenterv1alpha1.SecurityCenterMuteConfigSpec{
+			Spec: securitycenterv1beta1.SecurityCenterMuteConfigSpec{
 				ResourceID:  mockenv.Ptr(mockenv.Name(n)),
 				Filter:      mockenv.Ptr(filter),
 				Description: mockenv.Ptr("accepted by the platform team"),
@@ -126,6 +127,22 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 	if err := env.Kube.Create(env.Ctx, site); err != nil {
 		t.Fatal(err)
 	}
+
+	// The kind moved to v1beta1 (docs/design.md decision 27): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(muteGVK.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a securitycenter.gcp.hfl.dev/v1alpha1 SecurityCenterMuteConfig: err = %v, want no match for the kind", err)
+		}
+		if muteGVK.Version != "v1beta1" {
+			t.Errorf("SecurityCenterMuteConfig's version = %q, want v1beta1", muteGVK.Version)
+		}
+	})
 
 	t.Run("create makes the project's mute config", func(t *testing.T) {
 		u := env.WaitReady(muteGVK, namespace, "public-site")
@@ -187,7 +204,7 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 		two := newMute("two-parents", `category="X"`)
 		two.Spec.ProjectRef = &refsv1beta1.ProjectRef{External: mockenv.Project}
 		two.Spec.FolderRef = &refsv1beta1.FolderRefDeprecated{External: "folders/123456"}
-		for _, o := range []*securitycenterv1alpha1.SecurityCenterMuteConfig{none, two} {
+		for _, o := range []*securitycenterv1beta1.SecurityCenterMuteConfig{none, two} {
 			err := env.Kube.Create(env.Ctx, o)
 			if err == nil || !strings.Contains(err.Error(), "exactly one of organizationRef, folderRef and projectRef") {
 				t.Errorf("creating %s: got %v, want the API server to refuse it", o.Name, err)
@@ -204,7 +221,7 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 		folder.Spec.Type = mockenv.Ptr("DYNAMIC")
 		org := newMute("org-category", `category="OPEN_FIREWALL"`)
 		org.Spec.OrganizationRef = &refsv1beta1.OrganizationRef{External: "organizations/987654"}
-		for _, o := range []*securitycenterv1alpha1.SecurityCenterMuteConfig{folder, org} {
+		for _, o := range []*securitycenterv1beta1.SecurityCenterMuteConfig{folder, org} {
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
@@ -223,7 +240,7 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 			if err := env.Kube.Delete(env.Ctx, getObj(t, n)); err != nil {
 				t.Fatal(err)
 			}
-			env.WaitGone(&securitycenterv1alpha1.SecurityCenterMuteConfig{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: n}})
+			env.WaitGone(&securitycenterv1beta1.SecurityCenterMuteConfig{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: n}})
 		}
 		if _, err := get(name("folders/123456", "sandbox-folder")); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the folder's mute config: %v, want not found", err)
@@ -234,7 +251,7 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "public-site")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&securitycenterv1alpha1.SecurityCenterMuteConfig{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "public-site"}})
+		env.WaitGone(&securitycenterv1beta1.SecurityCenterMuteConfig{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "public-site"}})
 		if _, err := get(name(project, "public-site")); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the mute config: %v, want not found", err)
 		}
@@ -255,7 +272,7 @@ func TestSecurityCenterMuteConfig(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, kept); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&securitycenterv1alpha1.SecurityCenterMuteConfig{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept"}})
+		env.WaitGone(&securitycenterv1beta1.SecurityCenterMuteConfig{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept"}})
 		if _, err := get(name(project, "kept")); err != nil {
 			t.Errorf("after abandon, reading the mute config: %v, want it kept", err)
 		}

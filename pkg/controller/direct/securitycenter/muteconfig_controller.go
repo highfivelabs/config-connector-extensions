@@ -49,7 +49,7 @@ import (
 
 	refs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 )
 
 func init() {

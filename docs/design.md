@@ -1199,7 +1199,8 @@ Notes on what was built from this table:
   resource; an association is a list inside the policy's proto with no
   resource of its own.
   Live: passes (`docs/live-runs.md`).
-- `LoggingSettings` (`logging.gcp.hfl.dev/v1alpha1`, rank 7). **Written
+- `LoggingSettings` (`logging.gcp.hfl.dev/v1beta1` since decision 27,
+  first `v1alpha1`; rank 7). **Written
   here** from the Cloud Logging API's `Settings`: `organizationRef` or
   `folderRef` (exactly one, checked by the CRD), `kmsKeyRef` (Config
   Connector's `KMSCryptoKeyRef`), `storageLocation`, `disableDefaultSink`;
@@ -1394,7 +1395,8 @@ Notes on what was built from this table:
   returns a profile reference as it was sent, so a resync writes
   nothing); an organization's is "live: pending, needs test folder".
 
-- `ComputeRouter` (`compute.gcp.hfl.dev/v1alpha1`, decision 14,
+- `ComputeRouter` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first
+  `v1alpha1`; decision 14,
   `docs/coverage/foundation.md` item 9). A whole Cloud Router in one
   object: BGP (with `identifierRange`), interfaces, BGP peers (BFD,
   custom learned ranges, IPv4 and IPv6 next hops, import and export
@@ -1701,7 +1703,8 @@ Notes on what was built from this table:
   patch 0030 (IAM v3 principal access boundary policies, which mockgcp
   lacked; `docs/fake-cloud.md`). Live: pending, needs organization-level
   access (a policy lives under an organization; `docs/live-runs.md`).
-- `SecurityCenterMuteConfig` (`securitycenter.gcp.hfl.dev/v1alpha1`,
+- `SecurityCenterMuteConfig` (`securitycenter.gcp.hfl.dev/v1beta1` since
+  decision 27, first `v1alpha1`;
   decision 16, foundation item 20, the first of its Security Command
   Center kinds: a mute config of an organization, folder or project).
   Upstream, rechecked 2026-11-10 (read-only): on `master` at the pin
@@ -2405,6 +2408,42 @@ To raise confidence in `ArtifactRegistryRepository`:
     way as `IAMBinding` (decision 24). `ComputeRouter`, `LoggingSettings`
     and `SecurityCenterMuteConfig` are promoted first, to unblock the
     catalog's VPN, folder and organization charts.
+    **Built 2026-11-15** for those three, as decision 24 did it: the
+    types moved to `apis/compute/v1beta1`, `apis/logging/v1beta1` and
+    `apis/securitycenter/v1beta1` with their schemas unchanged, each CRD
+    serves `v1beta1` only (no conversion, no webhook), and the fake-cloud
+    tests check that `v1alpha1` is refused; `CHANGELOG.md` has the upgrade.
+    `ComputeRouter` passed live on 2026-11-10 (`1ff3750`); its one schema
+    change since (`5a0daca`, a CEL rule refusing an interface with more
+    than one link, which the API refuses too) is not breaking.
+    `LoggingSettings` and `SecurityCenterMuteConfig` have not run live:
+    each waits on a prerequisite (a test folder and KMS key; Security
+    Command Center on the test project, `docs/live-runs.md`), so they
+    were promoted on the builder's explicit "promote those three", ahead
+    of the rule; their first live run is still owed. `ComputeRouterRoutePolicy`
+    stays `v1alpha1` and finds our router at `v1beta1`.
+    The rest of our `v1alpha1` kinds, checked 2026-11-15 against the
+    ledger (`docs/live-runs.md` and `docs/kinds/`): these passed live and
+    their CRDs are byte-for-byte unchanged since that run, so they qualify
+    and are next: `ArtifactRegistryTag` (`08fcc66`),
+    `ComputeProjectMetadataItem` (`c459e36`), `ComputeRegionNetworkEndpoint`
+    (`c459e36`), `ComputeRegionNetworkFirewallPolicy` (`c459e36`),
+    `ComputeRegionNetworkFirewallPolicyAssociation` (`c7f163f`),
+    `ComputeRegionNetworkFirewallPolicyRule` (`39ded9d`),
+    `ComputeRouterRoutePolicy` (`afe91be`), `IAMMember` (`a8c6de4`),
+    `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`
+    and `IAMWorkloadIdentityPoolProviderKey` (`c459e36`, again `78644ec`),
+    `NetworkSecurityAddressGroup` (`a9a2026`), `NetworkSecuritySecurityProfile`
+    (`b7eae2b`, project parent; the organization parent waits on the test
+    folder) and `NetworkSecuritySecurityProfileGroup` (`c64a5b6`),
+    `SQLAdminBackup` (`08fcc66`) and `StorageBucketObject` (`756c69f`).
+    `RunService` (`aee1155`) passed too, but Config Connector has a
+    `RunService`; ours is a field-gap kind (decision 19), which this
+    decision's wording does not name (section 10, question 9). The other
+    `v1alpha1` kinds have no live pass yet, or wait on a prerequisite
+    (`LoggingBillingAccountSink`, `ServiceIdentity`,
+    `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`),
+    or failed their last run (`ComputeNetworkFirewallPolicyPacketMirroringRule`).
 
 28. **A service's generated kinds' tests get their own package** (the
     builder, 2026-11-13, answering section 10 question 8: "Q8 yes, split
@@ -2755,7 +2794,9 @@ moves to section 8.
 6. Answered 2026-11-13: our own `v1alpha1` kinds move to `v1beta1`
    once they pass live, and `ComputeRouter`, `LoggingSettings` and
    `SecurityCenterMuteConfig` are promoted first (decision 27; the second
-   half was decision 26).
+   half was decision 26). Status 2026-11-15: the three are `v1beta1`
+   (decision 27, "Built"); `LoggingSettings` and `SecurityCenterMuteConfig`
+   still owe their first live run.
 
 7. **Field gaps on Config Connector kinds the catalog's folder,
    organization and logging ports found** (2026-11-13). Decision 19 says a
@@ -2789,3 +2830,13 @@ moves to section 8.
 
 8. Answered 2026-11-13: yes, split the generated kinds' tests into
    their own package (decision 28).
+
+9. **Does decision 27 cover our field-gap kinds?** (2026-11-15.)
+   Decision 27 promotes "a kind of ours for a gap Config Connector has no
+   kind for". `RunService` (`run.gcp.hfl.dev/v1alpha1`) is ours for a
+   field gap: Config Connector has a `RunService`, and ours owns the
+   whole service to add `invokerIamDisabled` and GPUs (decision 19). It
+   passed live (`aee1155`) and its CRD has not changed since.
+   Recommendation: yes, promote field-gap kinds under the same rule, so
+   every kind of ours reaches `v1beta1` the same way; the catalog's charts
+   refuse alpha kinds whichever gap the kind fills.

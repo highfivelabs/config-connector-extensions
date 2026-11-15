@@ -41,7 +41,7 @@ import (
 	computev1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 )
 
 // ComputeRouterSpec_FromProto maps a pb.Router to a krm.ComputeRouterSpec.

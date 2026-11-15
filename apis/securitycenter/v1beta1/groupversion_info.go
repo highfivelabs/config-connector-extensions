@@ -17,11 +17,12 @@
 // Modified by High Five Labs for config-connector-extensions: copied from Config Connector
 // apis/securitycenter/v1alpha1/groupversion_info.go (UPSTREAM.md); the
 // group is securitycenter.gcp.hfl.dev instead of
-// securitycenter.cnrm.cloud.google.com.
+// securitycenter.cnrm.cloud.google.com, and the version is v1beta1
+// (docs/design.md decision 27).
 
 // +kubebuilder:object:generate=true
 // +groupName=securitycenter.gcp.hfl.dev
-package v1alpha1
+package v1beta1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,7 +31,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "securitycenter.gcp.hfl.dev", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "securitycenter.gcp.hfl.dev", Version: "v1beta1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

@@ -32,11 +32,12 @@ import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	api "google.golang.org/api/logging/v2"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -45,7 +46,7 @@ const (
 	org       = "organizations/987654"
 )
 
-var gvk = loggingv1alpha1.LoggingSettingsGVK
+var gvk = loggingv1beta1.LoggingSettingsGVK
 
 func TestLoggingSettings(t *testing.T) {
 	env := mockenv.New(t, namespace)
@@ -78,9 +79,9 @@ func TestLoggingSettings(t *testing.T) {
 		}
 		return out
 	}
-	getObj := func(t *testing.T, name string) *loggingv1alpha1.LoggingSettings {
+	getObj := func(t *testing.T, name string) *loggingv1beta1.LoggingSettings {
 		t.Helper()
-		obj := &loggingv1alpha1.LoggingSettings{}
+		obj := &loggingv1beta1.LoggingSettings{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -111,9 +112,9 @@ func TestLoggingSettings(t *testing.T) {
 		}
 	})
 
-	fs := &loggingv1alpha1.LoggingSettings{
+	fs := &loggingv1beta1.LoggingSettings{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "landing-zone-folder", Labels: mockenv.Labels()},
-		Spec: loggingv1alpha1.LoggingSettingsSpec{
+		Spec: loggingv1beta1.LoggingSettingsSpec{
 			FolderRef:          &refsv1beta1.FolderRefDeprecated{External: folder},
 			KMSKeyRef:          &kmsv1beta1.KMSCryptoKeyRef{External: key},
 			StorageLocation:    mockenv.Ptr("europe-west1"),
@@ -123,6 +124,22 @@ func TestLoggingSettings(t *testing.T) {
 	if err := env.Kube.Create(env.Ctx, fs); err != nil {
 		t.Fatal(err)
 	}
+
+	// The kind moved to v1beta1 (docs/design.md decision 27): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(gvk.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a logging.gcp.hfl.dev/v1alpha1 LoggingSettings: err = %v, want no match for the kind", err)
+		}
+		if gvk.Version != "v1beta1" {
+			t.Errorf("LoggingSettings's version = %q, want v1beta1", gvk.Version)
+		}
+	})
 
 	t.Run("create sets the folder's settings", func(t *testing.T) {
 		u := env.WaitReady(gvk, namespace, "landing-zone-folder")
@@ -191,9 +208,9 @@ func TestLoggingSettings(t *testing.T) {
 		if mockenv.Live() {
 			t.Skip("a live run never changes an organization's settings (docs/live-runs.md)")
 		}
-		o := &loggingv1alpha1.LoggingSettings{
+		o := &loggingv1beta1.LoggingSettings{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "organization"},
-			Spec: loggingv1alpha1.LoggingSettingsSpec{
+			Spec: loggingv1beta1.LoggingSettingsSpec{
 				OrganizationRef: &refsv1beta1.OrganizationRef{External: org},
 				StorageLocation: mockenv.Ptr("europe-west1"),
 			},
@@ -211,9 +228,9 @@ func TestLoggingSettings(t *testing.T) {
 	})
 
 	t.Run("exactly one parent", func(t *testing.T) {
-		o := &loggingv1alpha1.LoggingSettings{
+		o := &loggingv1beta1.LoggingSettings{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "both"},
-			Spec: loggingv1alpha1.LoggingSettingsSpec{
+			Spec: loggingv1beta1.LoggingSettingsSpec{
 				OrganizationRef: &refsv1beta1.OrganizationRef{External: org},
 				FolderRef:       &refsv1beta1.FolderRefDeprecated{External: folder},
 			},
@@ -229,7 +246,7 @@ func TestLoggingSettings(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "landing-zone-folder")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&loggingv1alpha1.LoggingSettings{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "landing-zone-folder"}})
+		env.WaitGone(&loggingv1beta1.LoggingSettings{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "landing-zone-folder"}})
 		if got := cloud(t, folder); got.StorageLocation != "europe-west4" || got.KmsKeyName != key {
 			t.Errorf("settings after delete = %+v, want them unchanged", got)
 		}

@@ -20,8 +20,12 @@
 // (docs/design.md decision 16), as Config Connector pull request #7673
 // has them: exactly one, immutable (CEL). The rest is upstream's; group,
 // labels and short names are ours.
+//
+// v1beta1 since 2026-11-15 (docs/design.md decision 27): the kind moved
+// from v1alpha1 unchanged, and v1alpha1 is no longer served. Nothing had
+// been released at v1alpha1.
 
-package v1alpha1
+package v1beta1
 
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"

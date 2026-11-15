@@ -24,7 +24,7 @@ import (
 	pb "cloud.google.com/go/securitycenter/apiv1/securitycenterpb"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 )
 
 func SecurityCenterMuteConfigObservedState_FromProto(mapCtx *direct.MapContext, in *pb.MuteConfig) *krm.SecurityCenterMuteConfigObservedState {

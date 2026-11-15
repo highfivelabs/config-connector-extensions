@@ -328,6 +328,28 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **`ComputeRouter`, `LoggingSettings` and `SecurityCenterMuteConfig` are
+  `v1beta1`** (`docs/design.md` decision 27): `compute.gcp.hfl.dev/v1beta1`,
+  `logging.gcp.hfl.dev/v1beta1` and `securitycenter.gcp.hfl.dev/v1beta1`.
+  Their schemas are unchanged; only the version moved. The CRDs no longer
+  serve `v1alpha1`, so a manifest that names `v1alpha1` with one of these
+  kinds is refused: change the `apiVersion`. `ComputeRouterRoutePolicy`
+  stays `v1alpha1` and its `routerRef` finds our router at `v1beta1`.
+
+  To upgrade a cluster that has `v1alpha1` objects of these kinds (the API
+  server will not apply a CRD that drops a version it has stored), for
+  each kind:
+
+  1. Annotate each object `cnrm.cloud.google.com/deletion-policy: abandon`
+     and delete it; the router, settings or mute config stays in Google
+     Cloud.
+  2. Delete the kind's CRD (`computerouters.compute.gcp.hfl.dev`,
+     `loggingsettings.logging.gcp.hfl.dev` or
+     `securitycentermuteconfigs.securitycenter.gcp.hfl.dev`) and install
+     the new one.
+  3. Apply the same objects at `v1beta1`. Each acquires the resource it
+     names, as the old one did.
+
 - **`IAMBinding` is `iam.gcp.hfl.dev/v1beta1`** (`docs/design.md`
   decision 24). Its schema is unchanged; only the version moved. The CRD
   no longer serves `v1alpha1`, so a manifest that says

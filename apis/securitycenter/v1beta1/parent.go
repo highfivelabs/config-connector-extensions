@@ -22,7 +22,7 @@
 // aliases (controller-gen does not take aliases); ParseParent takes the
 // parent from the first two segments and returns the rest unparsed.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"

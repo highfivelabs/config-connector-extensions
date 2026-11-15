@@ -13,13 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1beta1
 
 // Written here from the Cloud Logging API's Settings
 // (organizations/{id}/settings, folders/{id}/settings) and Terraform's
 // google_logging_organization_settings and google_logging_folder_settings
 // (read, not copied). Config Connector's closed PR #3730 was a scaffold
 // with no fields; nothing is taken from it.
+//
+// v1beta1 since 2026-11-15 (docs/design.md decision 27): the kind moved
+// from v1alpha1 unchanged, and v1alpha1 is no longer served. Nothing had
+// been released at v1alpha1.
 
 import (
 	kmsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/kms/v1beta1"

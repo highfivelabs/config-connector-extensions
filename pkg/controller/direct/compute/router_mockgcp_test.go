@@ -37,11 +37,12 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/protobuf/encoding/protojson"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	hflcomputev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -53,7 +54,7 @@ func TestComputeRouter(t *testing.T) {
 		keyValue  = "first-md5-key-value"
 		rotated   = "second-md5-key-value"
 	)
-	routerGVK := computev1alpha1.ComputeRouterGVK
+	routerGVK := hflcomputev1beta1.ComputeRouterGVK
 	router := mockenv.Name("router")
 	env := mockenv.New(t, namespace)
 	routers, err := gcp.NewRoutersRESTClient(env.Ctx, env.GCPOptions()...)
@@ -86,31 +87,31 @@ func TestComputeRouter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newRouter := func(objName, resourceID string) *computev1alpha1.ComputeRouter {
-		return &computev1alpha1.ComputeRouter{
+	newRouter := func(objName, resourceID string) *hflcomputev1beta1.ComputeRouter {
+		return &hflcomputev1beta1.ComputeRouter{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   namespace,
 				Name:        objName,
 				Annotations: map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project},
 			},
-			Spec: computev1alpha1.ComputeRouterSpec{
+			Spec: hflcomputev1beta1.ComputeRouterSpec{
 				ResourceID:  mockenv.Ptr(resourceID),
 				Region:      region,
 				NetworkRef:  computerefs.ComputeNetworkRef{External: network},
 				Description: mockenv.Ptr("on-premises link"),
-				BGP: &computev1alpha1.RouterBGP{
+				BGP: &hflcomputev1beta1.RouterBGP{
 					Asn:                64514,
 					AdvertiseMode:      mockenv.Ptr("CUSTOM"),
 					AdvertisedGroups:   []string{"ALL_SUBNETS"},
-					AdvertisedIPRanges: []computev1alpha1.RouterAdvertisedIPRange{{Range: "10.200.0.0/16", Description: mockenv.Ptr("shared services")}},
+					AdvertisedIPRanges: []hflcomputev1beta1.RouterAdvertisedIPRange{{Range: "10.200.0.0/16", Description: mockenv.Ptr("shared services")}},
 				},
-				MD5AuthenticationKeys: []computev1alpha1.RouterMD5AuthenticationKey{
+				MD5AuthenticationKeys: []hflcomputev1beta1.RouterMD5AuthenticationKey{
 					{Name: "onprem-key", KeyRef: secret.LegacyValueFromSecretKeyRef{Name: "bgp-md5", Key: "key"}},
 				},
-				Interfaces: []computev1alpha1.RouterInterface{
+				Interfaces: []hflcomputev1beta1.RouterInterface{
 					{Name: "onprem-if", IPRange: mockenv.Ptr("169.254.10.1/30")},
 				},
-				BGPPeers: []computev1alpha1.RouterBGPPeer{{
+				BGPPeers: []hflcomputev1beta1.RouterBGPPeer{{
 					Name:                     "onprem-peer",
 					InterfaceName:            "onprem-if",
 					PeerAsn:                  65010,
@@ -118,7 +119,7 @@ func TestComputeRouter(t *testing.T) {
 					AdvertisedRoutePriority:  mockenv.Ptr(int64(100)),
 					MD5AuthenticationKeyName: mockenv.Ptr("onprem-key"),
 				}},
-				NATs: []computev1alpha1.RouterNAT{{
+				NATs: []hflcomputev1beta1.RouterNAT{{
 					Name:                          "egress",
 					NatIpAllocateOption:           mockenv.Ptr("AUTO_ONLY"),
 					SourceSubnetworkIpRangesToNat: "ALL_SUBNETWORKS_ALL_IP_RANGES",
@@ -148,9 +149,9 @@ func TestComputeRouter(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T) *computev1alpha1.ComputeRouter {
+	getObj := func(t *testing.T) *hflcomputev1beta1.ComputeRouter {
 		t.Helper()
-		obj := &computev1alpha1.ComputeRouter{}
+		obj := &hflcomputev1beta1.ComputeRouter{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -178,6 +179,22 @@ func TestComputeRouter(t *testing.T) {
 	if err := env.Kube.Create(env.Ctx, obj); err != nil {
 		t.Fatal(err)
 	}
+
+	// The kind moved to v1beta1 (docs/design.md decision 27): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(routerGVK.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a compute.gcp.hfl.dev/v1alpha1 ComputeRouter: err = %v, want no match for the kind", err)
+		}
+		if routerGVK.Version != "v1beta1" {
+			t.Errorf("ComputeRouter's version = %q, want v1beta1", routerGVK.Version)
+		}
+	})
 
 	var keysVersion string
 	t.Run("create makes the whole router", func(t *testing.T) {
@@ -227,7 +244,7 @@ func TestComputeRouter(t *testing.T) {
 		before := writes()
 		o := getObj(t)
 		o.Spec.BGPPeers[0].AdvertisedRoutePriority = mockenv.Ptr(int64(200))
-		o.Spec.BGPPeers[0].Bfd = &computev1alpha1.RouterBGPPeerBfd{SessionInitializationMode: mockenv.Ptr("PASSIVE")}
+		o.Spec.BGPPeers[0].Bfd = &hflcomputev1beta1.RouterBGPPeerBfd{SessionInitializationMode: mockenv.Ptr("PASSIVE")}
 		o.Spec.NATs = nil
 		if err := env.Kube.Update(env.Ctx, o); err != nil {
 			t.Fatal(err)
@@ -319,7 +336,7 @@ func TestComputeRouter(t *testing.T) {
 		tunnel := &computev1beta1.ComputeVPNTunnelRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/vpnTunnels/onprem-tunnel"}
 		subnet := &computev1beta1.ComputeSubnetworkRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/subnetworks/appliance"}
 		r := newRouter("two-links", mockenv.Name("two-links"))
-		r.Spec.Interfaces = []computev1alpha1.RouterInterface{{Name: "linked-if", VPNTunnelRef: tunnel, SubnetworkRef: subnet}}
+		r.Spec.Interfaces = []hflcomputev1beta1.RouterInterface{{Name: "linked-if", VPNTunnelRef: tunnel, SubnetworkRef: subnet}}
 		err := env.Kube.Create(env.Ctx, r)
 		if err == nil || !strings.Contains(err.Error(), "at most one of vpnTunnelRef, interconnectAttachmentRef and subnetworkRef") {
 			if err == nil {
@@ -333,7 +350,7 @@ func TestComputeRouter(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t)); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeRouter{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		env.WaitGone(&hflcomputev1beta1.ComputeRouter{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		_, err := routers.Get(env.Ctx, &pb.GetRouterRequest{Project: mockenv.Project, Region: region, Router: router})
 		if !direct.IsNotFound(err) {
 			t.Errorf("reading the deleted router: got %v, want not found", err)
