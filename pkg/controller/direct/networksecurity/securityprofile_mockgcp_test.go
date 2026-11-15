@@ -37,25 +37,25 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	networksecurityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1alpha1"
+	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 // newThreatPreventionProfile is the object name; the profile's is
 // mockenv.Name(name).
-func newThreatPreventionProfile(name string) *networksecurityv1alpha1.NetworkSecuritySecurityProfile {
-	return &networksecurityv1alpha1.NetworkSecuritySecurityProfile{
+func newThreatPreventionProfile(name string) *networksecurityv1beta1.NetworkSecuritySecurityProfile {
+	return &networksecurityv1beta1.NetworkSecuritySecurityProfile{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
-		Spec: networksecurityv1alpha1.NetworkSecuritySecurityProfileSpec{
+		Spec: networksecurityv1beta1.NetworkSecuritySecurityProfileSpec{
 			ProjectRef:  &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:    mockenv.Ptr(location),
 			ResourceID:  mockenv.Ptr(mockenv.Name(name)),
 			Description: mockenv.Ptr("deny critical threats"),
 			Labels:      labels(map[string]string{"team": "security"}),
 			Type:        mockenv.Ptr("THREAT_PREVENTION"),
-			ThreatPreventionProfile: &networksecurityv1alpha1.ThreatPreventionProfile{
+			ThreatPreventionProfile: &networksecurityv1beta1.ThreatPreventionProfile{
 				// Not in the API's order, which the comparison ignores.
-				SeverityOverrides: []networksecurityv1alpha1.SeverityOverride{
+				SeverityOverrides: []networksecurityv1beta1.SeverityOverride{
 					{Severity: mockenv.Ptr("LOW"), Action: mockenv.Ptr("ALERT")},
 					{Severity: mockenv.Ptr("CRITICAL"), Action: mockenv.Ptr("DENY")},
 				},
@@ -65,7 +65,7 @@ func newThreatPreventionProfile(name string) *networksecurityv1alpha1.NetworkSec
 }
 
 func TestNetworkSecuritySecurityProfile(t *testing.T) {
-	gvk := networksecurityv1alpha1.NetworkSecuritySecurityProfileGVK
+	gvk := networksecurityv1beta1.NetworkSecuritySecurityProfileGVK
 	env := mockenv.New(t, namespace)
 	projects, err := gcp.NewSecurityProfileGroupRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -107,9 +107,9 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *networksecurityv1alpha1.NetworkSecuritySecurityProfile {
+	getObj := func(t *testing.T, name string) *networksecurityv1beta1.NetworkSecuritySecurityProfile {
 		t.Helper()
-		obj := &networksecurityv1alpha1.NetworkSecuritySecurityProfile{}
+		obj := &networksecurityv1beta1.NetworkSecuritySecurityProfile{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -170,7 +170,7 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 		o := getObj(t, "threats")
 		o.Spec.Description = mockenv.Ptr("deny critical and high threats")
 		o.Spec.ThreatPreventionProfile.SeverityOverrides = append(o.Spec.ThreatPreventionProfile.SeverityOverrides,
-			networksecurityv1alpha1.SeverityOverride{Severity: mockenv.Ptr("HIGH"), Action: mockenv.Ptr("DENY")})
+			networksecurityv1beta1.SeverityOverride{Severity: mockenv.Ptr("HIGH"), Action: mockenv.Ptr("DENY")})
 		if err := env.Kube.Update(env.Ctx, o); err != nil {
 			t.Fatal(err)
 		}
@@ -205,16 +205,16 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 
 	t.Run("exactly one parent and at most one profile", func(t *testing.T) {
 		for name, c := range map[string]struct {
-			mutate func(*networksecurityv1alpha1.NetworkSecuritySecurityProfile)
+			mutate func(*networksecurityv1beta1.NetworkSecuritySecurityProfile)
 			want   string
 		}{
-			"both": {func(o *networksecurityv1alpha1.NetworkSecuritySecurityProfile) {
+			"both": {func(o *networksecurityv1beta1.NetworkSecuritySecurityProfile) {
 				o.Spec.OrganizationRef = &refsv1beta1.OrganizationRef{External: org}
 			}, "exactly one of organizationRef and projectRef"},
-			"neither": {func(o *networksecurityv1alpha1.NetworkSecuritySecurityProfile) { o.Spec.ProjectRef = nil },
+			"neither": {func(o *networksecurityv1beta1.NetworkSecuritySecurityProfile) { o.Spec.ProjectRef = nil },
 				"exactly one of organizationRef and projectRef"},
-			"two-profiles": {func(o *networksecurityv1alpha1.NetworkSecuritySecurityProfile) {
-				o.Spec.URLFilteringProfile = &networksecurityv1alpha1.URLFilteringProfile{}
+			"two-profiles": {func(o *networksecurityv1beta1.NetworkSecuritySecurityProfile) {
+				o.Spec.URLFilteringProfile = &networksecurityv1beta1.URLFilteringProfile{}
 			}, "at most one of threatPreventionProfile"},
 		} {
 			o := newThreatPreventionProfile(name)
@@ -227,16 +227,16 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 	})
 
 	t.Run("a URL filtering profile, without the API's default filter", func(t *testing.T) {
-		o := &networksecurityv1alpha1.NetworkSecuritySecurityProfile{
+		o := &networksecurityv1beta1.NetworkSecuritySecurityProfile{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "urls", Labels: mockenv.Labels()},
-			Spec: networksecurityv1alpha1.NetworkSecuritySecurityProfileSpec{
+			Spec: networksecurityv1beta1.NetworkSecuritySecurityProfileSpec{
 				ProjectRef: &refsv1beta1.ProjectRef{External: mockenv.Project},
 				Location:   mockenv.Ptr(location),
 				ResourceID: mockenv.Ptr(mockenv.Name("urls")),
 				Labels:     labels(nil),
 				Type:       mockenv.Ptr("URL_FILTERING"),
-				URLFilteringProfile: &networksecurityv1alpha1.URLFilteringProfile{
-					URLFilters: []networksecurityv1alpha1.URLFilter{
+				URLFilteringProfile: &networksecurityv1beta1.URLFilteringProfile{
+					URLFilters: []networksecurityv1beta1.URLFilter{
 						{FilteringAction: mockenv.Ptr("DENY"), Urls: []string{"example.com"}, Priority: mockenv.Ptr(int32(20))},
 						{FilteringAction: mockenv.Ptr("ALLOW"), Urls: []string{"www.example.org"}, Priority: mockenv.Ptr(int32(10))},
 					},
@@ -264,21 +264,21 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "urls")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "urls"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "urls"}})
 	})
 
 	t.Run("the organization's security profile", func(t *testing.T) {
 		if mockenv.Live() {
 			t.Skip("a live run never touches an organization (docs/live-runs.md)")
 		}
-		o := &networksecurityv1alpha1.NetworkSecuritySecurityProfile{
+		o := &networksecurityv1beta1.NetworkSecuritySecurityProfile{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "corp-threats"},
-			Spec: networksecurityv1alpha1.NetworkSecuritySecurityProfileSpec{
+			Spec: networksecurityv1beta1.NetworkSecuritySecurityProfileSpec{
 				OrganizationRef: &refsv1beta1.OrganizationRef{External: org},
 				Location:        mockenv.Ptr(location),
 				Type:            mockenv.Ptr("THREAT_PREVENTION"),
-				ThreatPreventionProfile: &networksecurityv1alpha1.ThreatPreventionProfile{
-					AntivirusOverrides: []networksecurityv1alpha1.AntivirusOverride{
+				ThreatPreventionProfile: &networksecurityv1beta1.ThreatPreventionProfile{
+					AntivirusOverrides: []networksecurityv1beta1.AntivirusOverride{
 						{Protocol: mockenv.Ptr("SMTP"), Action: mockenv.Ptr("DENY")},
 					},
 				},
@@ -332,7 +332,7 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "corp-threats")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "corp-threats"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "corp-threats"}})
 		if _, err := orgs.GetSecurityProfile(env.Ctx, &pb.GetSecurityProfileRequest{Name: orgName}); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the organization's security profile: %v, want not found", err)
 		}
@@ -364,7 +364,7 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "threats")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "threats"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "threats"}})
 		if _, err := cloud(t, "threats"); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the security profile: %v, want not found", err)
 		}
@@ -380,7 +380,7 @@ func TestNetworkSecuritySecurityProfile(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "kept-profile")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept-profile"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecuritySecurityProfile{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept-profile"}})
 		if _, err := cloud(t, "kept-profile"); err != nil {
 			t.Errorf("after abandon, reading the security profile: %v, want it kept", err)
 		}

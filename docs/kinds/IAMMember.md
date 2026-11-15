@@ -1,16 +1,20 @@
 ---
 kinds: [IAMMember]
-apiVersion: iam.gcp.hfl.dev/v1alpha1
+apiVersion: iam.gcp.hfl.dev/v1beta1
 ---
 # IAMMember
 
-`iam.gcp.hfl.dev/v1alpha1`
+`iam.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** one member of one role on one resource, additive (Terraform's `google_*_iam_member`), for the resource types Config Connector's `IAMPolicyMember` cannot reference: regional secrets, managed folders, log views, Cloud Run worker pools, backend services and about two dozen more; the name is a working one (`docs/design.md` section 10)
 
 **Source.** written here, over the same `pkg/iampolicy` as `IAMBinding`
 
 ## Notes
+
+2026-11-15: moved from `iam.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

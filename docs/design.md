@@ -931,7 +931,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     `upstreamcredentials_mapping.go`. `pkg/test/mockenv` now installs
     Config Connector's two Secret Manager CRDs, so a reference by name
     resolves in tests.
-- `IAMWorkloadIdentityPoolNamespace` (`iam.gcp.hfl.dev/v1alpha1`, decision
+- `IAMWorkloadIdentityPoolNamespace` (`iam.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; decision
   9). Rechecked 2026-11-09: PR #14209 (head `a5e8f5a9`) is open; changes
   were requested on its CI files, not on the types. It is the first kind
   here whose controller is **written here** rather than copied: upstream
@@ -956,7 +956,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     toolchain and reproduces byte for byte.
   - `pkg/test/mockenv` also installs Config Connector's `IAMWorkloadIdentityPool`
     CRD, so the pool resolves by name in tests.
-- `IAMWorkloadIdentityPoolManagedIdentity` (`iam.gcp.hfl.dev/v1alpha1`,
+- `IAMWorkloadIdentityPoolManagedIdentity` (`iam.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   decision 9). Rechecked 2026-11-09: PR #14418 (head `b080f5dc`) is open,
   review required, no reviews; types only, like #14209.
   - Copied from the PR: the types, identity and reference, and the
@@ -1001,7 +1001,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     #14417's line).
   - The managers' role also reads the `compute`, `vpcaccess`, `storage`
     and `networkservices` Config Connector groups the template references.
-- `ArtifactRegistryTag` (`artifactregistry.gcp.hfl.dev/v1alpha1`, decision
+- `ArtifactRegistryTag` (`artifactregistry.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; decision
   10, the first unranked candidate). **Written here** in full: no Config
   Connector code or pull request, and no Terraform resource, has package
   tags; the kind follows the Artifact Registry API (`tags.create`, `get`,
@@ -1016,7 +1016,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     packages, so neither the package nor the version is checked.
   - The managers' role also reads `artifactregistry.cnrm.cloud.google.com`;
     `pkg/test/mockenv` installs Config Connector's repository CRD.
-- `IAMWorkloadIdentityPoolProviderKey` (`iam.gcp.hfl.dev/v1alpha1`, decision
+- `IAMWorkloadIdentityPoolProviderKey` (`iam.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; decision
   10, the last unranked candidate). **Written here** in full: no Config
   Connector code or pull request, and no Terraform resource (Terraform has
   only `google_iam_workforce_pool_provider_key`, the workforce analogue),
@@ -1064,7 +1064,7 @@ this repository's rules (6.1, decision 5, section 10).
 
 Notes on what was built from this table:
 
-- `ComputeRegionNetworkEndpoint` (`compute.gcp.hfl.dev/v1alpha1`, rank 3).
+- `ComputeRegionNetworkEndpoint` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; rank 3).
   **Written here**, after Config Connector's zonal `ComputeNetworkEndpoint`
   (whose types have only the group, `ipAddress` and `instanceRef`), with
   the fields Terraform's `google_compute_region_network_endpoint` has:
@@ -1079,7 +1079,7 @@ Notes on what was built from this table:
   `/networkEndpoints/{address}:{port}`, ours. Patch 0011: mockgcp attaches,
   detaches and lists a regional group's endpoints, adapted from its zonal
   ones.
-- `ComputeRouterRoutePolicy` (`compute.gcp.hfl.dev/v1alpha1`, rank 4).
+- `ComputeRouterRoutePolicy` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; rank 4).
   **Written here** from the Compute Engine API's `RoutePolicy`:
   `routerRef` (a `ComputeRouter` by name, ours or Config Connector's, or
   `external`),
@@ -1101,7 +1101,7 @@ Notes on what was built from this table:
   compute.cnrm.cloud.google.com object; name the router by
   routerRef.external") rather than picked silently. The field's shape is
   unchanged, so existing objects keep working.
-- `StorageBucketObject` (`storage.gcp.hfl.dev/v1alpha1`, rank 5). **Written
+- `StorageBucketObject` (`storage.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; rank 5). **Written
   here**: `bucketRef` (Config Connector's `StorageBucketRef`), `resourceID`
   (the object name; "/" allowed), the content inline or `contentFrom` a
   Secret's or ConfigMap's key, `contentType`, `cacheControl`,
@@ -1117,7 +1117,7 @@ Notes on what was built from this table:
   changes. Patch 0013: mockgcp's objects were stubs; it now serves media
   and multipart uploads, content reads, get and delete. The managers' role
   now reads ConfigMaps.
-- `ComputeRegionNetworkFirewallPolicy` (`compute.gcp.hfl.dev/v1alpha1`,
+- `ComputeRegionNetworkFirewallPolicy` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   rank 6, the policy). **Copied** from Config Connector's opt-in direct
   `ComputeNetworkFirewallPolicy` (types, identity, controller, the status
   mapping) for a region: `spec.region`, the regional client,
@@ -1133,7 +1133,7 @@ Notes on what was built from this table:
   not. Patch 0014: mockgcp serves regional policies, adapted from its
   global ones. The rules and the association are separate kinds, next.
   Live: passes (`docs/live-runs.md`).
-- `ComputeRegionNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`,
+- `ComputeRegionNetworkFirewallPolicyRule` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   rank 6, the rules). **Written here**: no Config Connector code has a
   regional policy's rule (`ComputeFirewallPolicyRule` is the rule of an
   organization or folder policy; the global network policy's rule is
@@ -1171,7 +1171,7 @@ Notes on what was built from this table:
   Patch 0020: mockgcp serves a regional policy's rules, adapted from the
   global ones (its `patchRule` replaces the whole rule).
   Live: passes (`docs/live-runs.md`).
-- `ComputeRegionNetworkFirewallPolicyAssociation` (`compute.gcp.hfl.dev/v1alpha1`,
+- `ComputeRegionNetworkFirewallPolicyAssociation` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   rank 6, the association). **Written here**: attaches a regional policy
   to a VPC network. `firewallPolicyRef` (the
   `ComputeRegionNetworkFirewallPolicyRef` the rule kind added),
@@ -1298,7 +1298,7 @@ Notes on what was built from this table:
   `mockenv.FolderProject`), never `$GCP_PROJECT`, whose compute default
   account the offload VMs and `RunService` use.
 
-- `NetworkSecurityAddressGroup` (`networksecurity.gcp.hfl.dev/v1alpha1`,
+- `NetworkSecurityAddressGroup` (`networksecurity.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   `docs/coverage/foundation.md` item 6). An address group, the ranges
   that firewall policy rules name as `srcAddressGroups` or
   `destAddressGroups`, owned by an organization (for its hierarchical
@@ -1329,7 +1329,7 @@ Notes on what was built from this table:
   organization's is "live: pending, needs test folder" (it needs
   organization access, and a live run never touches the organization).
 
-- `NetworkSecuritySecurityProfile` (`networksecurity.gcp.hfl.dev/v1alpha1`,
+- `NetworkSecuritySecurityProfile` (`networksecurity.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   `docs/coverage/foundation.md` item 6). A security profile: what a
   firewall policy rule with `apply_security_profile_group` does with
   threats (severity, threat and antivirus overrides), URLs (filters), or
@@ -1368,7 +1368,7 @@ Notes on what was built from this table:
   pending, needs test folder" (it needs organization access, and a live
   run never touches the organization).
 
-- `NetworkSecuritySecurityProfileGroup` (`networksecurity.gcp.hfl.dev/v1alpha1`,
+- `NetworkSecuritySecurityProfileGroup` (`networksecurity.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`;
   `docs/coverage/foundation.md` item 6, its last kind). The group a
   firewall policy rule applies (`securityProfileGroup` with action
   `apply_security_profile_group`): one profile of each type, by
@@ -1804,7 +1804,7 @@ Notes on what was built from this table:
   the same name (`resourceID`) and abandoning Config Connector's object;
   ours cannot change an acquired tunnel's immutable fields, so a tunnel
   that needs `cipherSuite` is made new. Live: see `docs/live-runs.md`.
-- `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1alpha1`, rank 10,
+- `ComputeProjectMetadataItem` (`compute.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; rank 10,
   per-key metadata). **Written here** after Terraform's
   `google_compute_project_metadata_item` (read, not copied): `projectRef`,
   `resourceID` (the key; `metadata.name` by default), `value`. The
@@ -1866,7 +1866,7 @@ Notes on what was built from this table:
   Patch 0018: mockgcp serves Cloud Storage's `.../iam` paths from the
   store it already keeps for the `:getIamPolicy` verbs.
   Live: passes, on a secret and a bucket (`docs/live-runs.md`).
-- `IAMMember` (`iam.gcp.hfl.dev/v1alpha1`, rank 2; built as
+- `IAMMember` (`iam.gcp.hfl.dev/v1beta1` since decision 27, first `v1alpha1`; rank 2; built as
   `IAMRoleMember`, renamed by decision 12). **Written here**,
   the additive sibling of `IAMBinding`, shaped like Config Connector's
   `IAMPolicyMember`: `resourceRef` (the same type as `IAMBinding`'s),
@@ -2425,7 +2425,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     The rest of our `v1alpha1` kinds, checked 2026-11-15 against the
     ledger (`docs/live-runs.md` and `docs/kinds/`): these passed live and
     their CRDs are byte-for-byte unchanged since that run, so they qualify
-    and are next: `ArtifactRegistryTag` (`08fcc66`),
+    and were promoted the same way on 2026-11-15 (the
+    `artifactregistry`, `networksecurity`, `sqladmin` and `storage`
+    `v1alpha1` packages are gone; `compute` and `iam` keep only kinds not
+    yet promoted; `pkg/controller` tests that each promoted CRD serves
+    only `v1beta1`): `ArtifactRegistryTag` (`08fcc66`),
     `ComputeProjectMetadataItem` (`c459e36`), `ComputeRegionNetworkEndpoint`
     (`c459e36`), `ComputeRegionNetworkFirewallPolicy` (`c459e36`),
     `ComputeRegionNetworkFirewallPolicyAssociation` (`c7f163f`),

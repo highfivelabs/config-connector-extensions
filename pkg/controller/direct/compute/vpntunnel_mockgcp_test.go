@@ -37,14 +37,12 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
-
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
-	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
-	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 func TestComputeVPNTunnel(t *testing.T) {
@@ -188,7 +186,7 @@ func TestComputeVPNTunnel(t *testing.T) {
 				VpnGatewayInterface:          mockenv.Ptr(int64(0)),
 				PeerExternalGatewayRef:       &kccv1beta1.ComputeExternalVPNGatewayRef{External: "projects/" + mockenv.Project + "/global/externalVpnGateways/" + peer},
 				PeerExternalGatewayInterface: mockenv.Ptr(int64(0)),
-				RouterRef:                    &computev1alpha1.ComputeRouterRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/routers/" + router},
+				RouterRef:                    &computev1beta1.ComputeRouterRef{External: "projects/" + mockenv.Project + "/regions/" + region + "/routers/" + router},
 				SharedSecret: secret.Legacy{ValueFrom: &secret.LegacyValueFrom{
 					SecretKeyRef: &secret.LegacyValueFromSecretKeyRef{Name: "vpn-secret", Key: "sharedSecret"},
 				}},

@@ -40,11 +40,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-var miGVK = iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK
+var miGVK = iamv1beta1.IAMWorkloadIdentityPoolManagedIdentityGVK
 
 // vm1, vm2 and vm3 are Compute Engine instances the attestation rules
 // name, in the project the pool is in: the API refuses rules naming a
@@ -79,10 +79,10 @@ func miCloudName(ns, id string) string {
 	return cloudName(ns) + "/managedIdentities/" + id
 }
 
-func rules(resources ...string) []iamv1alpha1.AttestationRule {
-	out := []iamv1alpha1.AttestationRule{}
+func rules(resources ...string) []iamv1beta1.AttestationRule {
+	out := []iamv1beta1.AttestationRule{}
 	for _, r := range resources {
-		out = append(out, iamv1alpha1.AttestationRule{GoogleCloudResource: r})
+		out = append(out, iamv1beta1.AttestationRule{GoogleCloudResource: r})
 	}
 	return out
 }
@@ -102,7 +102,7 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 		"location":   "global",
 		"projectRef": map[string]any{"external": mockenv.Project},
 	}}}
-	p.SetGroupVersionKind(iamv1alpha1.IAMWorkloadIdentityPoolGVK)
+	p.SetGroupVersionKind(iamv1beta1.IAMWorkloadIdentityPoolGVK)
 	p.SetNamespace(namespace)
 	p.SetName(pool)
 	if err := env.Kube.Create(env.Ctx, p); err != nil {
@@ -116,12 +116,12 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 
 	const id = "inference"
 	name := miCloudName(ns, id)
-	mi := &iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentity{
+	mi := &iamv1beta1.IAMWorkloadIdentityPoolManagedIdentity{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: id},
-		Spec: iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentitySpec{
+		Spec: iamv1beta1.IAMWorkloadIdentityPoolManagedIdentitySpec{
 			ProjectRef:                       &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:                         mockenv.Ptr("global"),
-			WorkloadIdentityPoolNamespaceRef: &iamv1alpha1.IAMWorkloadIdentityPoolNamespaceRef{Name: ns},
+			WorkloadIdentityPoolNamespaceRef: &iamv1beta1.IAMWorkloadIdentityPoolNamespaceRef{Name: ns},
 			Description:                      mockenv.Ptr("the inference service"),
 			AttestationRules:                 rules(vm1, vm2),
 		},
@@ -130,9 +130,9 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	getObj := func(t *testing.T) *iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentity {
+	getObj := func(t *testing.T) *iamv1beta1.IAMWorkloadIdentityPoolManagedIdentity {
 		t.Helper()
-		obj := &iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentity{}
+		obj := &iamv1beta1.IAMWorkloadIdentityPoolManagedIdentity{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: id}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -257,7 +257,7 @@ func TestWorkloadIdentityPoolManagedIdentity(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, mi); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: id}})
+		env.WaitGone(&iamv1beta1.IAMWorkloadIdentityPoolManagedIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: id}})
 		got, err := mis.Get(name).Context(env.Ctx).Do()
 		if err != nil {
 			t.Fatal(err)

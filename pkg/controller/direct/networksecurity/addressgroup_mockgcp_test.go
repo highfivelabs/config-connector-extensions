@@ -39,7 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	networksecurityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1alpha1"
+	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -49,7 +49,7 @@ const (
 	org       = "organizations/987654"
 )
 
-var gvk = networksecurityv1alpha1.NetworkSecurityAddressGroupGVK
+var gvk = networksecurityv1beta1.NetworkSecurityAddressGroupGVK
 
 // labels are the group's own labels plus, live, the run's (the sweeper
 // finds address groups by them).
@@ -61,10 +61,10 @@ func labels(extra map[string]string) map[string]string {
 }
 
 // newProjectAddressGroup is the object name; the group's is mockenv.Name(name).
-func newProjectAddressGroup(name string, items ...string) *networksecurityv1alpha1.NetworkSecurityAddressGroup {
-	return &networksecurityv1alpha1.NetworkSecurityAddressGroup{
+func newProjectAddressGroup(name string, items ...string) *networksecurityv1beta1.NetworkSecurityAddressGroup {
+	return &networksecurityv1beta1.NetworkSecurityAddressGroup{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
-		Spec: networksecurityv1alpha1.NetworkSecurityAddressGroupSpec{
+		Spec: networksecurityv1beta1.NetworkSecurityAddressGroupSpec{
 			ProjectRef:  &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:    mockenv.Ptr(location),
 			ResourceID:  mockenv.Ptr(mockenv.Name(name)),
@@ -119,9 +119,9 @@ func TestNetworkSecurityAddressGroup(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *networksecurityv1alpha1.NetworkSecurityAddressGroup {
+	getObj := func(t *testing.T, name string) *networksecurityv1beta1.NetworkSecurityAddressGroup {
 		t.Helper()
-		obj := &networksecurityv1alpha1.NetworkSecurityAddressGroup{}
+		obj := &networksecurityv1beta1.NetworkSecurityAddressGroup{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -208,11 +208,11 @@ func TestNetworkSecurityAddressGroup(t *testing.T) {
 	})
 
 	t.Run("exactly one parent", func(t *testing.T) {
-		for name, mutate := range map[string]func(*networksecurityv1alpha1.NetworkSecurityAddressGroup){
-			"both": func(o *networksecurityv1alpha1.NetworkSecurityAddressGroup) {
+		for name, mutate := range map[string]func(*networksecurityv1beta1.NetworkSecurityAddressGroup){
+			"both": func(o *networksecurityv1beta1.NetworkSecurityAddressGroup) {
 				o.Spec.OrganizationRef = &refsv1beta1.OrganizationRef{External: org}
 			},
-			"neither": func(o *networksecurityv1alpha1.NetworkSecurityAddressGroup) { o.Spec.ProjectRef = nil },
+			"neither": func(o *networksecurityv1beta1.NetworkSecurityAddressGroup) { o.Spec.ProjectRef = nil },
 		} {
 			o := newProjectAddressGroup(name, "10.0.0.0/8")
 			mutate(o)
@@ -227,9 +227,9 @@ func TestNetworkSecurityAddressGroup(t *testing.T) {
 		if mockenv.Live() {
 			t.Skip("a live run never touches an organization (docs/live-runs.md)")
 		}
-		o := &networksecurityv1alpha1.NetworkSecurityAddressGroup{
+		o := &networksecurityv1beta1.NetworkSecurityAddressGroup{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "corp-egress"},
-			Spec: networksecurityv1alpha1.NetworkSecurityAddressGroupSpec{
+			Spec: networksecurityv1beta1.NetworkSecurityAddressGroupSpec{
 				OrganizationRef: &refsv1beta1.OrganizationRef{External: org},
 				Location:        mockenv.Ptr(location),
 				Type:            mockenv.Ptr("IPV4"),
@@ -285,7 +285,7 @@ func TestNetworkSecurityAddressGroup(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "corp-egress")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecurityAddressGroup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "corp-egress"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecurityAddressGroup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "corp-egress"}})
 		if _, err := orgs.GetAddressGroup(env.Ctx, &pb.GetAddressGroupRequest{Name: orgName}); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the organization's address group: %v, want not found", err)
 		}
@@ -317,7 +317,7 @@ func TestNetworkSecurityAddressGroup(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "on-prem")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecurityAddressGroup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "on-prem"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecurityAddressGroup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "on-prem"}})
 		if _, err := cloud(t, "on-prem"); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the address group: %v, want not found", err)
 		}
@@ -333,7 +333,7 @@ func TestNetworkSecurityAddressGroup(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "kept")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&networksecurityv1alpha1.NetworkSecurityAddressGroup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept"}})
+		env.WaitGone(&networksecurityv1beta1.NetworkSecurityAddressGroup{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept"}})
 		if _, err := cloud(t, "kept"); err != nil {
 			t.Errorf("after abandon, reading the address group: %v, want it kept", err)
 		}

@@ -47,12 +47,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
-	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
-var memberGVK = iamv1alpha1.IAMMemberGVK
+var memberGVK = iamv1beta1.IAMMemberGVK
 
 // storageManagedFolderGVK is Config Connector's StorageManagedFolder, which
 // the member test names by name (it is not reconciled there).
@@ -113,7 +113,7 @@ func TestIAMMember(t *testing.T) {
 	}
 	resync := func(t *testing.T, name string) {
 		t.Helper()
-		o := &iamv1alpha1.IAMMember{}
+		o := &iamv1beta1.IAMMember{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, o); err != nil {
 			t.Fatal(err)
 		}
@@ -122,17 +122,17 @@ func TestIAMMember(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	newMember := func(name string, tg target, member string) *iamv1alpha1.IAMMember {
-		return &iamv1alpha1.IAMMember{
+	newMember := func(name string, tg target, member string) *iamv1beta1.IAMMember {
+		return &iamv1beta1.IAMMember{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: iamv1alpha1.IAMMemberSpec{
-				ResourceRef: iamv1alpha1.IAMResourceReference{Kind: tg.kind, External: tg.name},
+			Spec: iamv1beta1.IAMMemberSpec{
+				ResourceRef: iamv1beta1.IAMResourceReference{Kind: tg.kind, External: tg.name},
 				Role:        tg.role,
 				Member:      mockenv.Ptr(member),
 			},
 		}
 	}
-	del := func(t *testing.T, o *iamv1alpha1.IAMMember) {
+	del := func(t *testing.T, o *iamv1beta1.IAMMember) {
 		t.Helper()
 		if err := env.Kube.Delete(env.Ctx, o); err != nil {
 			t.Fatal(err)
@@ -149,7 +149,7 @@ func TestIAMMember(t *testing.T) {
 
 		first := newMember(prefix+"-mine", tg, mine)
 		second := newMember(prefix+"-theirs", tg, theirs)
-		for _, o := range []*iamv1alpha1.IAMMember{first, second} {
+		for _, o := range []*iamv1beta1.IAMMember{first, second} {
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
@@ -262,12 +262,12 @@ func TestIAMMember(t *testing.T) {
 
 		t.Run("the same member under a condition is its own binding", func(t *testing.T) {
 			o := newMember("secret-timed", tg, mine)
-			o.Spec.Condition = &iamv1alpha1.IAMCondition{
+			o.Spec.Condition = &iamv1beta1.IAMCondition{
 				Title:      "until 2099",
 				Expression: `request.time < timestamp("2099-01-01T00:00:00Z")`,
 			}
 			plain := newMember("secret-plain", tg, mine)
-			for _, m := range []*iamv1alpha1.IAMMember{plain, o} {
+			for _, m := range []*iamv1beta1.IAMMember{plain, o} {
 				if err := env.Kube.Create(env.Ctx, m); err != nil {
 					t.Fatal(err)
 				}
@@ -294,7 +294,7 @@ func TestIAMMember(t *testing.T) {
 		t.Run("a member from a service account, named by its email", func(t *testing.T) {
 			o := newMember("secret-from", tg, "")
 			o.Spec.Member = nil
-			o.Spec.MemberFrom = &iamv1alpha1.IAMBindingMemberFrom{}
+			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{}
 			o.Spec.MemberFrom.ServiceAccountRef.External = strings.TrimPrefix(theirs, "serviceAccount:")
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
@@ -308,7 +308,7 @@ func TestIAMMember(t *testing.T) {
 
 		t.Run("a member and a memberFrom, or neither, are refused", func(t *testing.T) {
 			both := newMember("both", tg, mine)
-			both.Spec.MemberFrom = &iamv1alpha1.IAMBindingMemberFrom{}
+			both.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{}
 			both.Spec.MemberFrom.ServiceAccountRef.External = strings.TrimPrefix(theirs, "serviceAccount:")
 			if err := env.Kube.Create(env.Ctx, both); err == nil || !strings.Contains(err.Error(), "exactly one of member and memberFrom") {
 				t.Errorf("both: err = %v", err)
@@ -424,7 +424,7 @@ func TestIAMMember(t *testing.T) {
 				t.Fatal(err)
 			}
 			late := newMember("folder-late", tg, mine)
-			late.Spec.ResourceRef = iamv1alpha1.IAMResourceReference{Kind: "StorageManagedFolder", Name: "app-folder"}
+			late.Spec.ResourceRef = iamv1beta1.IAMResourceReference{Kind: "StorageManagedFolder", Name: "app-folder"}
 			if err := env.Kube.Create(env.Ctx, late); err != nil {
 				t.Fatal(err)
 			}

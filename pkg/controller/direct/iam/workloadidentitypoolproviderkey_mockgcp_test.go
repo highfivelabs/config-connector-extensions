@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
+	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -48,7 +48,7 @@ func TestWorkloadIdentityPoolProviderKey(t *testing.T) {
 	usePool(t, env, cloud, "key-pool", "")
 	useSAMLProvider(t, env, cloud, "saml-idp")
 	keys := cloud.Projects.Locations.WorkloadIdentityPools.Providers.Keys
-	keyGVK := iamv1alpha1.IAMWorkloadIdentityPoolProviderKeyGVK
+	keyGVK := iamv1beta1.IAMWorkloadIdentityPoolProviderKeyGVK
 
 	// The pool and provider, as Config Connector objects (not reconciled
 	// here; read to resolve workloadIdentityPoolProviderRef by name).
@@ -63,30 +63,30 @@ func TestWorkloadIdentityPoolProviderKey(t *testing.T) {
 		}
 	}
 	projectRef := map[string]any{"external": mockenv.Project}
-	kcc(metav1.GroupVersionKind(iamv1alpha1.IAMWorkloadIdentityPoolGVK), pool, map[string]any{"location": "global", "projectRef": projectRef})
-	kcc(metav1.GroupVersionKind(iamv1alpha1.IAMWorkloadIdentityPoolProviderGVK), "corp-saml", map[string]any{
+	kcc(metav1.GroupVersionKind(iamv1beta1.IAMWorkloadIdentityPoolGVK), pool, map[string]any{"location": "global", "projectRef": projectRef})
+	kcc(metav1.GroupVersionKind(iamv1beta1.IAMWorkloadIdentityPoolProviderGVK), "corp-saml", map[string]any{
 		"location": "global", "projectRef": projectRef, "resourceID": "saml-idp",
 		"workloadIdentityPoolRef": map[string]any{"name": pool},
 	})
 
 	const name = "saml-encryption"
 	cloudKey := "projects/" + mockenv.Project + "/locations/global/workloadIdentityPools/" + pool + "/providers/saml-idp/keys/" + name
-	key := &iamv1alpha1.IAMWorkloadIdentityPoolProviderKey{
+	key := &iamv1beta1.IAMWorkloadIdentityPoolProviderKey{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: iamv1alpha1.IAMWorkloadIdentityPoolProviderKeySpec{
+		Spec: iamv1beta1.IAMWorkloadIdentityPoolProviderKeySpec{
 			ProjectRef:                      &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:                        mockenv.Ptr("global"),
-			WorkloadIdentityPoolProviderRef: &iamv1alpha1.IAMWorkloadIdentityPoolProviderRef{Name: "corp-saml"},
+			WorkloadIdentityPoolProviderRef: &iamv1beta1.IAMWorkloadIdentityPoolProviderRef{Name: "corp-saml"},
 			Use:                             "ENCRYPTION",
-			KeyData:                         &iamv1alpha1.IAMWorkloadIdentityPoolProviderKeyKeyData{KeySpec: "RSA_2048"},
+			KeyData:                         &iamv1beta1.IAMWorkloadIdentityPoolProviderKeyKeyData{KeySpec: "RSA_2048"},
 		},
 	}
 	if err := env.Kube.Create(env.Ctx, key); err != nil {
 		t.Fatal(err)
 	}
-	getObj := func(t *testing.T) *iamv1alpha1.IAMWorkloadIdentityPoolProviderKey {
+	getObj := func(t *testing.T) *iamv1beta1.IAMWorkloadIdentityPoolProviderKey {
 		t.Helper()
-		obj := &iamv1alpha1.IAMWorkloadIdentityPoolProviderKey{}
+		obj := &iamv1beta1.IAMWorkloadIdentityPoolProviderKey{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -159,7 +159,7 @@ func TestWorkloadIdentityPoolProviderKey(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, key); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&iamv1alpha1.IAMWorkloadIdentityPoolProviderKey{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		env.WaitGone(&iamv1beta1.IAMWorkloadIdentityPoolProviderKey{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		got, err := keys.Get(cloudKey).Context(env.Ctx).Do()
 		if err != nil || got.State != "DELETED" {
 			t.Errorf("cloud key after delete = %+v, %v; want state DELETED", got, err)

@@ -1,16 +1,20 @@
 ---
 kinds: [ComputeProjectMetadataItem]
-apiVersion: compute.gcp.hfl.dev/v1alpha1
+apiVersion: compute.gcp.hfl.dev/v1beta1
 ---
 # ComputeProjectMetadataItem
 
-`compute.gcp.hfl.dev/v1alpha1`
+`compute.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** one key of a project's common instance metadata (for example `enable-oslogin`), leaving the other keys alone; Config Connector's `ComputeProjectMetadata` owns the whole metadata
 
 **Source.** written here after Terraform's `google_compute_project_metadata_item`
 
 ## Notes
+
+2026-11-15: moved from `compute.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

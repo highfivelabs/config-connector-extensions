@@ -36,13 +36,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 func TestComputeProjectMetadataItem(t *testing.T) {
 	const namespace = "example"
-	itemGVK := computev1alpha1.ComputeProjectMetadataItemGVK
+	itemGVK := computev1beta1.ComputeProjectMetadataItemGVK
 	env := mockenv.New(t, namespace)
 	projects, err := gcp.NewProjectsRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -126,19 +126,19 @@ func TestComputeProjectMetadataItem(t *testing.T) {
 			time.Sleep(500 * time.Millisecond)
 		}
 	}
-	newItem := func(base, value string) *computev1alpha1.ComputeProjectMetadataItem {
-		return &computev1alpha1.ComputeProjectMetadataItem{
+	newItem := func(base, value string) *computev1beta1.ComputeProjectMetadataItem {
+		return &computev1beta1.ComputeProjectMetadataItem{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: base, Labels: mockenv.Labels()},
-			Spec: computev1alpha1.ComputeProjectMetadataItemSpec{
+			Spec: computev1beta1.ComputeProjectMetadataItemSpec{
 				ProjectRef: &refsv1beta1.ProjectRef{External: mockenv.Project},
 				ResourceID: mockenv.Ptr(mockenv.Name(base)),
 				Value:      value,
 			},
 		}
 	}
-	getObj := func(t *testing.T, name string) *computev1alpha1.ComputeProjectMetadataItem {
+	getObj := func(t *testing.T, name string) *computev1beta1.ComputeProjectMetadataItem {
 		t.Helper()
-		obj := &computev1alpha1.ComputeProjectMetadataItem{}
+		obj := &computev1beta1.ComputeProjectMetadataItem{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -203,7 +203,7 @@ func TestComputeProjectMetadataItem(t *testing.T) {
 	})
 
 	t.Run("two keys at once both land", func(t *testing.T) {
-		for _, o := range []*computev1alpha1.ComputeProjectMetadataItem{newItem("owner", "team-a"), newItem("region", "europe-west1")} {
+		for _, o := range []*computev1beta1.ComputeProjectMetadataItem{newItem("owner", "team-a"), newItem("region", "europe-west1")} {
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
@@ -220,7 +220,7 @@ func TestComputeProjectMetadataItem(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "owner")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeProjectMetadataItem{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "owner"}})
+		env.WaitGone(&computev1beta1.ComputeProjectMetadataItem{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "owner"}})
 		md, _ := metadata(t)
 		if _, ok := md[mockenv.Name("owner")]; ok {
 			t.Errorf("the deleted key is still there: %v", md)

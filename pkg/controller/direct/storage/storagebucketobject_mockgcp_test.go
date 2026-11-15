@@ -36,7 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	storagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
+	hflstoragev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -46,7 +46,7 @@ const namespace = "example"
 // carries its run ID.
 var bucket = mockenv.Name("app-config-bucket")
 
-var gvk = storagev1alpha1.StorageBucketObjectGVK
+var gvk = hflstoragev1beta1.StorageBucketObjectGVK
 
 func TestStorageBucketObject(t *testing.T) {
 	env := mockenv.New(t, namespace)
@@ -96,10 +96,10 @@ func TestStorageBucketObject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newObject := func(name, objectName string) *storagev1alpha1.StorageBucketObject {
-		return &storagev1alpha1.StorageBucketObject{
+	newObject := func(name, objectName string) *hflstoragev1beta1.StorageBucketObject {
+		return &hflstoragev1beta1.StorageBucketObject{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
-			Spec: storagev1alpha1.StorageBucketObjectSpec{
+			Spec: hflstoragev1beta1.StorageBucketObjectSpec{
 				BucketRef:  &storagev1beta1.StorageBucketRef{Name: bucket},
 				ResourceID: mockenv.Ptr(objectName),
 			},
@@ -131,9 +131,9 @@ func TestStorageBucketObject(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *storagev1alpha1.StorageBucketObject {
+	getObj := func(t *testing.T, name string) *hflstoragev1beta1.StorageBucketObject {
 		t.Helper()
-		obj := &storagev1alpha1.StorageBucketObject{}
+		obj := &hflstoragev1beta1.StorageBucketObject{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -197,10 +197,10 @@ func TestStorageBucketObject(t *testing.T) {
 
 	t.Run("content from a ConfigMap and a Secret", func(t *testing.T) {
 		fromCM := newObject("settings", "settings.json")
-		fromCM.Spec.ContentFrom = &storagev1alpha1.ContentSource{ConfigMapKeyRef: &storagev1alpha1.KeyRef{Name: "app", Key: "settings.json"}}
+		fromCM.Spec.ContentFrom = &hflstoragev1beta1.ContentSource{ConfigMapKeyRef: &hflstoragev1beta1.KeyRef{Name: "app", Key: "settings.json"}}
 		fromSecret := newObject("startup", "scripts/startup.sh")
-		fromSecret.Spec.ContentFrom = &storagev1alpha1.ContentSource{SecretKeyRef: &storagev1alpha1.KeyRef{Name: "startup", Key: "script"}}
-		for _, o := range []*storagev1alpha1.StorageBucketObject{fromCM, fromSecret} {
+		fromSecret.Spec.ContentFrom = &hflstoragev1beta1.ContentSource{SecretKeyRef: &hflstoragev1beta1.KeyRef{Name: "startup", Key: "script"}}
+		for _, o := range []*hflstoragev1beta1.StorageBucketObject{fromCM, fromSecret} {
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
@@ -219,7 +219,7 @@ func TestStorageBucketObject(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, cfg); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&storagev1alpha1.StorageBucketObject{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "app-config"}})
+		env.WaitGone(&hflstoragev1beta1.StorageBucketObject{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "app-config"}})
 		if _, err := gcs.Objects.Get(bucket, "config/app.yaml").Context(env.Ctx).Do(); err == nil || !strings.Contains(err.Error(), "404") {
 			t.Errorf("reading the deleted object: got %v, want 404", err)
 		}

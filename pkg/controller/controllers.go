@@ -45,7 +45,6 @@ import (
 
 	aiplatformv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/aiplatform/v1beta1"
 	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
-	artifactregistryv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	chroniclev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1alpha1"
 	chroniclev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
@@ -58,7 +57,7 @@ import (
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
-	networksecurityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1alpha1"
+	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
@@ -67,8 +66,8 @@ import (
 	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
 	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
-	sqladminv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1alpha1"
-	storagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1alpha1"
+	sqladminv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
+	storagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
@@ -106,18 +105,18 @@ type kind struct {
 // Kinds is every kind config-connector-extensions reconciles.
 var Kinds = []kind{
 	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
-	{gvk: sqladminv1alpha1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
+	{gvk: sqladminv1beta1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
 	{gvk: secretmanagerv1beta1.SecretManagerSecretGVK, crdName: "secretmanagersecrets.secretmanager.gcp.hfl.dev", model: secretmanager.NewModel, labels: slotguard.Metadata},
 	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
 	{gvk: artifactregistryv1beta1.ArtifactRegistryRepositoryGVK, crdName: "artifactregistryrepositories.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryRepositoryModel, labels: slotguard.Metadata},
-	{gvk: artifactregistryv1alpha1.ArtifactRegistryTagGVK, crdName: "artifactregistrytags.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryTagModel},
-	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
-	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolManagedIdentityGVK, crdName: "iamworkloadidentitypoolmanagedidentities.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolManagedIdentityModel},
-	{gvk: iamv1alpha1.IAMWorkloadIdentityPoolProviderKeyGVK, crdName: "iamworkloadidentitypoolproviderkeys.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolProviderKeyModel},
+	{gvk: artifactregistryv1beta1.ArtifactRegistryTagGVK, crdName: "artifactregistrytags.artifactregistry.gcp.hfl.dev", model: artifactregistry.NewArtifactRegistryTagModel},
+	{gvk: iamv1beta1.IAMWorkloadIdentityPoolNamespaceGVK, crdName: "iamworkloadidentitypoolnamespaces.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolNamespaceModel},
+	{gvk: iamv1beta1.IAMWorkloadIdentityPoolManagedIdentityGVK, crdName: "iamworkloadidentitypoolmanagedidentities.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolManagedIdentityModel},
+	{gvk: iamv1beta1.IAMWorkloadIdentityPoolProviderKeyGVK, crdName: "iamworkloadidentitypoolproviderkeys.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolProviderKeyModel},
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
-	{gvk: iamv1alpha1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
+	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
 	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
-	{gvk: computev1alpha1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
+	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
 	{gvk: computev1beta1.ComputeRegionAutoscalerGVK, crdName: "computeregionautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeRegionAutoscalerModel},
@@ -125,20 +124,20 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeRegionDiskResourcePolicyAttachmentGVK, crdName: "computeregiondiskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeRegionDiskResourcePolicyAttachmentModel},
 	{gvk: computev1beta1.ComputeRegionPerInstanceConfigGVK, crdName: "computeregionperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputeRegionPerInstanceConfigModel},
 	{gvk: computev1beta1.ComputePerInstanceConfigGVK, crdName: "computeperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputePerInstanceConfigModel},
-	{gvk: computev1alpha1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
-	{gvk: computev1alpha1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
-	{gvk: storagev1alpha1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
-	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK, crdName: "computeregionnetworkfirewallpolicies.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyModel},
-	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyRuleGVK, crdName: "computeregionnetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyRuleModel},
-	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociationGVK, crdName: "computeregionnetworkfirewallpolicyassociations.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyAssociationModel},
+	{gvk: computev1beta1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
+	{gvk: computev1beta1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
+	{gvk: storagev1beta1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
+	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyGVK, crdName: "computeregionnetworkfirewallpolicies.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyModel},
+	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyRuleGVK, crdName: "computeregionnetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyRuleModel},
+	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyAssociationGVK, crdName: "computeregionnetworkfirewallpolicyassociations.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyAssociationModel},
 	{gvk: loggingv1beta1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 	{gvk: loggingv1alpha1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
 	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
-	{gvk: networksecurityv1alpha1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel, labels: slotguard.Spec},
-	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGVK, crdName: "networksecuritysecurityprofiles.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileModel, labels: slotguard.Spec},
-	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGroupGVK, crdName: "networksecuritysecurityprofilegroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileGroupModel, labels: slotguard.Spec},
+	{gvk: networksecurityv1beta1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel, labels: slotguard.Spec},
+	{gvk: networksecurityv1beta1.NetworkSecuritySecurityProfileGVK, crdName: "networksecuritysecurityprofiles.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileModel, labels: slotguard.Spec},
+	{gvk: networksecurityv1beta1.NetworkSecuritySecurityProfileGroupGVK, crdName: "networksecuritysecurityprofilegroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileGroupModel, labels: slotguard.Spec},
 	{gvk: computev1beta1.ComputeRouterGVK, crdName: "computerouters.compute.gcp.hfl.dev", model: compute.NewRouterModel},
 	{gvk: iamv1beta1.IAMDenyPolicyGVK, crdName: "iamdenypolicies.iam.gcp.hfl.dev", model: iam.NewDenyPolicyModel},
 	{gvk: iamv1beta1.IAMPrincipalAccessBoundaryPolicyGVK, crdName: "iamprincipalaccessboundarypolicies.iam.gcp.hfl.dev", model: iam.NewPrincipalAccessBoundaryPolicyModel},
@@ -168,10 +167,9 @@ var Kinds = []kind{
 func AddToScheme(scheme *runtime.Scheme) error {
 	for _, add := range []func(*runtime.Scheme) error{
 		sqlv1beta1.AddToScheme,
-		sqladminv1alpha1.AddToScheme,
+		sqladminv1beta1.AddToScheme,
 		secretmanagerv1beta1.AddToScheme,
 		artifactregistryv1beta1.AddToScheme,
-		artifactregistryv1alpha1.AddToScheme,
 		iamv1alpha1.AddToScheme,
 		iamv1beta1.AddToScheme,
 		runv1alpha1.AddToScheme,
@@ -185,13 +183,13 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		aiplatformv1beta1.AddToScheme,
 		chroniclev1alpha1.AddToScheme,
 		chroniclev1beta1.AddToScheme,
-		storagev1alpha1.AddToScheme,
+		storagev1beta1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
 		resourcemanagerv1alpha1.AddToScheme,
-		networksecurityv1alpha1.AddToScheme,
+		networksecurityv1beta1.AddToScheme,
 		securitycenterv1beta1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {

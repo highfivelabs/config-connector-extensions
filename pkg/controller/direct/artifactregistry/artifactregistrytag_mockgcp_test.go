@@ -43,7 +43,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	arv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1alpha1"
+	arv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -119,7 +119,7 @@ func pushImage(t *testing.T, env *mockenv.Env, repo, label string) string {
 func TestArtifactRegistryTag(t *testing.T) {
 	env := mockenv.New(t, namespace)
 	cloud := newClient(t, env)
-	tagGVK := arv1alpha1.ArtifactRegistryTagGVK
+	tagGVK := arv1beta1.ArtifactRegistryTagGVK
 
 	// The repository, in the cloud and as a Config Connector object (not
 	// reconciled here; read to resolve repositoryRef by name). The test
@@ -161,10 +161,10 @@ func TestArtifactRegistryTag(t *testing.T) {
 
 	pkg := cloudName(repo) + "/packages/app"
 	tagName := pkg + "/tags/prod"
-	newTag := func(name, version string) *arv1alpha1.ArtifactRegistryTag {
-		return &arv1alpha1.ArtifactRegistryTag{
+	newTag := func(name, version string) *arv1beta1.ArtifactRegistryTag {
+		return &arv1beta1.ArtifactRegistryTag{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: arv1alpha1.ArtifactRegistryTagSpec{
+			Spec: arv1beta1.ArtifactRegistryTagSpec{
 				RepositoryRef: &arv1beta1kcc.ArtifactRegistryRepositoryRef{Name: repo},
 				Package:       "app",
 				Version:       version,
@@ -184,9 +184,9 @@ func TestArtifactRegistryTag(t *testing.T) {
 		}
 		return out
 	}
-	getObj := func(t *testing.T) *arv1alpha1.ArtifactRegistryTag {
+	getObj := func(t *testing.T) *arv1beta1.ArtifactRegistryTag {
 		t.Helper()
-		obj := &arv1alpha1.ArtifactRegistryTag{}
+		obj := &arv1beta1.ArtifactRegistryTag{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: "prod"}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -270,7 +270,7 @@ func TestArtifactRegistryTag(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, tag); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&arv1alpha1.ArtifactRegistryTag{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "prod"}})
+		env.WaitGone(&arv1beta1.ArtifactRegistryTag{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "prod"}})
 		_, err := cloud.GetTag(env.Ctx, &pb.GetTagRequest{Name: tagName})
 		if status.Code(err) != codes.NotFound {
 			t.Errorf("reading the deleted tag: got %v, want NotFound", err)
