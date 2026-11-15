@@ -32,10 +32,10 @@ import (
 	vpcaccessv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/vpcaccess/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	krmrunv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	krmrunv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 )
 
-func ResolveRunServiceRefs(ctx context.Context, kube client.Reader, desired *krmrunv1alpha1.RunService) error {
+func ResolveRunServiceRefs(ctx context.Context, kube client.Reader, desired *krmrunv1beta1.RunService) error {
 	if desired.Spec.Template == nil {
 		return nil
 	}
@@ -92,7 +92,7 @@ func resolveCommonTemplateRefs(ctx context.Context, kube client.Reader, owner cl
 		// Actually, let's just pass the connectorRef directly if it exists.
 		var connectorRef *vpcaccessv1beta1.VPCAccessConnectorRef
 		switch v := vpcAccess.(type) {
-		case *krmrunv1alpha1.VPCAccess:
+		case *krmrunv1beta1.VPCAccess:
 			if v != nil {
 				connectorRef = v.ConnectorRef
 			}
@@ -148,7 +148,7 @@ func resolveCommonVolumeRefs(ctx context.Context, kube client.Reader, owner clie
 		var versionRefs []*secretmanagerv1beta1.SecretVersionRef
 
 		switch s := secret.(type) {
-		case *krmrunv1alpha1.SecretVolumeSource:
+		case *krmrunv1beta1.SecretVolumeSource:
 			if s != nil {
 				secretRef = s.SecretRef
 				for i := range s.Items {
@@ -181,7 +181,7 @@ func resolveCommonVolumeRefs(ctx context.Context, kube client.Reader, owner clie
 	// Resolve Cloud SQL Volume
 	var instanceRefs []*refs.SQLInstanceRef
 	switch c := cloudSQLInstance.(type) {
-	case *krmrunv1alpha1.CloudSQLInstance:
+	case *krmrunv1beta1.CloudSQLInstance:
 		if c != nil {
 			instanceRefs = c.InstanceRefs
 		}
@@ -197,7 +197,7 @@ func resolveCommonVolumeRefs(ctx context.Context, kube client.Reader, owner clie
 	// Resolve GCS Volume
 	var bucketRef *storagev1beta1.StorageBucketRef
 	switch g := gcs.(type) {
-	case *krmrunv1alpha1.GCSVolumeSource:
+	case *krmrunv1beta1.GCSVolumeSource:
 		if g != nil {
 			bucketRef = g.BucketRef
 		}

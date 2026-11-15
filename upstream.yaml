@@ -565,15 +565,15 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/dns/v1alpha1/dnsresponsepolicyrule_identity.go, apis/dns/v1alpha1/dnsresponsepolicyrule_identity_test.go]}
   - here: [pkg/controller/direct/dns/responsepolicyrule_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/dns/zz_generated.v1alpha1.mappers.go]}
-  - here: [apis/run/v1alpha1/groupversion_info.go]
+  - here: [apis/run/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/groupversion_info.go]}
-  - here: [apis/run/v1alpha1/runservice_types.go]
+  - here: [apis/run/v1beta1/runservice_types.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/runworkerpool_types.go]}
-  - here: [apis/run/v1alpha1/servicescaling_types.go]
+  - here: [apis/run/v1beta1/servicescaling_types.go]
     from: {written_here: true}
-  - here: [apis/run/v1alpha1/runservice_identity.go, apis/run/v1alpha1/runservice_reference.go]
+  - here: [apis/run/v1beta1/runservice_identity.go, apis/run/v1beta1/runservice_reference.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/runworkerpool_identity.go, apis/run/v1alpha1/runworkerpool_reference.go]}
-  - here: [apis/run/v1alpha1/types.generated.go]
+  - here: [apis/run/v1beta1/types.generated.go]
     from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/types.generated.go]}
   - here: [pkg/controller/direct/run/runservice_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_controller.go]}

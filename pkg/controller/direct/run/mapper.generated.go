@@ -35,10 +35,10 @@ import (
 	krmstoragev1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/storage/v1beta1"
 	krmvpcaccessv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/vpcaccess/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
-	krmrunv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	krmrunv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 )
 
-func BinaryAuthorization_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.BinaryAuthorization) *pb.BinaryAuthorization {
+func BinaryAuthorization_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.BinaryAuthorization) *pb.BinaryAuthorization {
 	if in == nil {
 		return nil
 	}
@@ -50,16 +50,16 @@ func BinaryAuthorization_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv
 	out.BreakglassJustification = direct.ValueOf(in.BreakglassJustification)
 	return out
 }
-func BuildInfoObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.BuildInfo) *krmrunv1alpha1.BuildInfoObservedState {
+func BuildInfoObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.BuildInfo) *krmrunv1beta1.BuildInfoObservedState {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.BuildInfoObservedState{}
+	out := &krmrunv1beta1.BuildInfoObservedState{}
 	out.FunctionTarget = direct.LazyPtr(in.GetFunctionTarget())
 	out.SourceLocation = direct.LazyPtr(in.GetSourceLocation())
 	return out
 }
-func BuildInfoObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.BuildInfoObservedState) *pb.BuildInfo {
+func BuildInfoObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.BuildInfoObservedState) *pb.BuildInfo {
 	if in == nil {
 		return nil
 	}
@@ -68,11 +68,11 @@ func BuildInfoObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmr
 	out.SourceLocation = direct.ValueOf(in.SourceLocation)
 	return out
 }
-func CloudSQLInstance_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.CloudSqlInstance) *krmrunv1alpha1.CloudSQLInstance {
+func CloudSQLInstance_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.CloudSqlInstance) *krmrunv1beta1.CloudSQLInstance {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.CloudSQLInstance{}
+	out := &krmrunv1beta1.CloudSQLInstance{}
 
 	if v := in.GetInstances(); len(v) != 0 {
 		for i := range v {
@@ -82,7 +82,7 @@ func CloudSQLInstance_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Cloud
 
 	return out
 }
-func CloudSQLInstance_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.CloudSQLInstance) *pb.CloudSqlInstance {
+func CloudSQLInstance_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.CloudSQLInstance) *pb.CloudSqlInstance {
 	if in == nil {
 		return nil
 	}
@@ -96,11 +96,11 @@ func CloudSQLInstance_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1al
 
 	return out
 }
-func Container_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Container) *krmrunv1alpha1.Container {
+func Container_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Container) *krmrunv1beta1.Container {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.Container{}
+	out := &krmrunv1beta1.Container{}
 	out.Name = direct.LazyPtr(in.GetName())
 	out.Image = direct.LazyPtr(in.GetImage())
 	out.Command = in.Command
@@ -117,7 +117,7 @@ func Container_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Container) *
 	// MISSING: BuildInfo
 	return out
 }
-func Container_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Container) *pb.Container {
+func Container_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.Container) *pb.Container {
 	if in == nil {
 		return nil
 	}
@@ -138,11 +138,11 @@ func Container_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Co
 	// MISSING: BuildInfo
 	return out
 }
-func ContainerObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Container) *krmrunv1alpha1.ContainerObservedState {
+func ContainerObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Container) *krmrunv1beta1.ContainerObservedState {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.ContainerObservedState{}
+	out := &krmrunv1beta1.ContainerObservedState{}
 	// MISSING: Name
 	// MISSING: Image
 	// MISSING: Command
@@ -159,7 +159,7 @@ func ContainerObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb
 	out.BuildInfo = BuildInfoObservedState_v1alpha1_FromProto(mapCtx, in.GetBuildInfo())
 	return out
 }
-func ContainerObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.ContainerObservedState) *pb.Container {
+func ContainerObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.ContainerObservedState) *pb.Container {
 	if in == nil {
 		return nil
 	}
@@ -180,16 +180,16 @@ func ContainerObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmr
 	out.BuildInfo = BuildInfoObservedState_v1alpha1_ToProto(mapCtx, in.BuildInfo)
 	return out
 }
-func ContainerPort_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.ContainerPort) *krmrunv1alpha1.ContainerPort {
+func ContainerPort_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.ContainerPort) *krmrunv1beta1.ContainerPort {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.ContainerPort{}
+	out := &krmrunv1beta1.ContainerPort{}
 	out.Name = direct.LazyPtr(in.GetName())
 	out.ContainerPort = direct.LazyPtr(in.GetContainerPort())
 	return out
 }
-func ContainerPort_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.ContainerPort) *pb.ContainerPort {
+func ContainerPort_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.ContainerPort) *pb.ContainerPort {
 	if in == nil {
 		return nil
 	}
@@ -198,16 +198,16 @@ func ContainerPort_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha
 	out.ContainerPort = direct.ValueOf(in.ContainerPort)
 	return out
 }
-func EmptyDirVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.EmptyDirVolumeSource) *krmrunv1alpha1.EmptyDirVolumeSource {
+func EmptyDirVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.EmptyDirVolumeSource) *krmrunv1beta1.EmptyDirVolumeSource {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.EmptyDirVolumeSource{}
+	out := &krmrunv1beta1.EmptyDirVolumeSource{}
 	out.Medium = direct.Enum_FromProto(mapCtx, in.GetMedium())
 	out.SizeLimit = direct.LazyPtr(in.GetSizeLimit())
 	return out
 }
-func EmptyDirVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.EmptyDirVolumeSource) *pb.EmptyDirVolumeSource {
+func EmptyDirVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.EmptyDirVolumeSource) *pb.EmptyDirVolumeSource {
 	if in == nil {
 		return nil
 	}
@@ -216,17 +216,17 @@ func EmptyDirVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrun
 	out.SizeLimit = direct.ValueOf(in.SizeLimit)
 	return out
 }
-func EnvVar_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.EnvVar) *krmrunv1alpha1.EnvVar {
+func EnvVar_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.EnvVar) *krmrunv1beta1.EnvVar {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.EnvVar{}
+	out := &krmrunv1beta1.EnvVar{}
 	out.Name = direct.LazyPtr(in.GetName())
 	out.Value = direct.LazyPtr(in.GetValue())
 	out.ValueSource = EnvVarSource_v1alpha1_FromProto(mapCtx, in.GetValueSource())
 	return out
 }
-func EnvVar_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.EnvVar) *pb.EnvVar {
+func EnvVar_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.EnvVar) *pb.EnvVar {
 	if in == nil {
 		return nil
 	}
@@ -240,15 +240,15 @@ func EnvVar_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.EnvVa
 	}
 	return out
 }
-func EnvVarSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.EnvVarSource) *krmrunv1alpha1.EnvVarSource {
+func EnvVarSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.EnvVarSource) *krmrunv1beta1.EnvVarSource {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.EnvVarSource{}
+	out := &krmrunv1beta1.EnvVarSource{}
 	out.SecretKeyRef = SecretKeySelector_v1alpha1_FromProto(mapCtx, in.GetSecretKeyRef())
 	return out
 }
-func EnvVarSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.EnvVarSource) *pb.EnvVarSource {
+func EnvVarSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.EnvVarSource) *pb.EnvVarSource {
 	if in == nil {
 		return nil
 	}
@@ -256,11 +256,11 @@ func EnvVarSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1
 	out.SecretKeyRef = SecretKeySelector_v1alpha1_ToProto(mapCtx, in.SecretKeyRef)
 	return out
 }
-func GCSVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.GCSVolumeSource) *krmrunv1alpha1.GCSVolumeSource {
+func GCSVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.GCSVolumeSource) *krmrunv1beta1.GCSVolumeSource {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.GCSVolumeSource{}
+	out := &krmrunv1beta1.GCSVolumeSource{}
 	if in.GetBucket() != "" {
 		out.BucketRef = &krmstoragev1beta1.StorageBucketRef{External: in.GetBucket()}
 	}
@@ -268,7 +268,7 @@ func GCSVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.GCSVol
 	out.MountOptions = in.MountOptions
 	return out
 }
-func GCSVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.GCSVolumeSource) *pb.GCSVolumeSource {
+func GCSVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.GCSVolumeSource) *pb.GCSVolumeSource {
 	if in == nil {
 		return nil
 	}
@@ -280,16 +280,16 @@ func GCSVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alp
 	out.MountOptions = in.MountOptions
 	return out
 }
-func GrpcAction_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.GRPCAction) *krmrunv1alpha1.GrpcAction {
+func GrpcAction_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.GRPCAction) *krmrunv1beta1.GrpcAction {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.GrpcAction{}
+	out := &krmrunv1beta1.GrpcAction{}
 	out.Port = direct.LazyPtr(in.GetPort())
 	out.Service = direct.LazyPtr(in.GetService())
 	return out
 }
-func GrpcAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.GrpcAction) *pb.GRPCAction {
+func GrpcAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.GrpcAction) *pb.GRPCAction {
 	if in == nil {
 		return nil
 	}
@@ -298,17 +298,17 @@ func GrpcAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.G
 	out.Service = direct.ValueOf(in.Service)
 	return out
 }
-func HTTPGetAction_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.HTTPGetAction) *krmrunv1alpha1.HTTPGetAction {
+func HTTPGetAction_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.HTTPGetAction) *krmrunv1beta1.HTTPGetAction {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.HTTPGetAction{}
+	out := &krmrunv1beta1.HTTPGetAction{}
 	out.Path = direct.LazyPtr(in.GetPath())
 	out.HTTPHeaders = direct.Slice_FromProto(mapCtx, in.HttpHeaders, HTTPHeader_v1alpha1_FromProto)
 	out.Port = direct.LazyPtr(in.GetPort())
 	return out
 }
-func HTTPGetAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.HTTPGetAction) *pb.HTTPGetAction {
+func HTTPGetAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.HTTPGetAction) *pb.HTTPGetAction {
 	if in == nil {
 		return nil
 	}
@@ -318,16 +318,16 @@ func HTTPGetAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha
 	out.Port = direct.ValueOf(in.Port)
 	return out
 }
-func HTTPHeader_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.HTTPHeader) *krmrunv1alpha1.HTTPHeader {
+func HTTPHeader_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.HTTPHeader) *krmrunv1beta1.HTTPHeader {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.HTTPHeader{}
+	out := &krmrunv1beta1.HTTPHeader{}
 	out.Name = direct.LazyPtr(in.GetName())
 	out.Value = direct.LazyPtr(in.GetValue())
 	return out
 }
-func HTTPHeader_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.HTTPHeader) *pb.HTTPHeader {
+func HTTPHeader_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.HTTPHeader) *pb.HTTPHeader {
 	if in == nil {
 		return nil
 	}
@@ -336,17 +336,17 @@ func HTTPHeader_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.H
 	out.Value = direct.ValueOf(in.Value)
 	return out
 }
-func NfsVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.NFSVolumeSource) *krmrunv1alpha1.NfsVolumeSource {
+func NfsVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.NFSVolumeSource) *krmrunv1beta1.NfsVolumeSource {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.NfsVolumeSource{}
+	out := &krmrunv1beta1.NfsVolumeSource{}
 	out.Server = direct.LazyPtr(in.GetServer())
 	out.Path = direct.LazyPtr(in.GetPath())
 	out.ReadOnly = direct.LazyPtr(in.GetReadOnly())
 	return out
 }
-func NfsVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.NfsVolumeSource) *pb.NFSVolumeSource {
+func NfsVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.NfsVolumeSource) *pb.NFSVolumeSource {
 	if in == nil {
 		return nil
 	}
@@ -356,15 +356,15 @@ func NfsVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alp
 	out.ReadOnly = direct.ValueOf(in.ReadOnly)
 	return out
 }
-func NodeSelector_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.NodeSelector) *krmrunv1alpha1.NodeSelector {
+func NodeSelector_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.NodeSelector) *krmrunv1beta1.NodeSelector {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.NodeSelector{}
+	out := &krmrunv1beta1.NodeSelector{}
 	out.Accelerator = direct.LazyPtr(in.GetAccelerator())
 	return out
 }
-func NodeSelector_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.NodeSelector) *pb.NodeSelector {
+func NodeSelector_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.NodeSelector) *pb.NodeSelector {
 	if in == nil {
 		return nil
 	}
@@ -372,11 +372,11 @@ func NodeSelector_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1
 	out.Accelerator = direct.ValueOf(in.Accelerator)
 	return out
 }
-func Probe_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Probe) *krmrunv1alpha1.Probe {
+func Probe_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Probe) *krmrunv1beta1.Probe {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.Probe{}
+	out := &krmrunv1beta1.Probe{}
 	out.InitialDelaySeconds = direct.LazyPtr(in.GetInitialDelaySeconds())
 	out.TimeoutSeconds = direct.LazyPtr(in.GetTimeoutSeconds())
 	out.PeriodSeconds = direct.LazyPtr(in.GetPeriodSeconds())
@@ -386,7 +386,7 @@ func Probe_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Probe) *krmrunv1
 	out.Grpc = GrpcAction_v1alpha1_FromProto(mapCtx, in.GetGrpc())
 	return out
 }
-func Probe_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Probe) *pb.Probe {
+func Probe_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.Probe) *pb.Probe {
 	if in == nil {
 		return nil
 	}
@@ -406,17 +406,17 @@ func Probe_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Probe)
 	}
 	return out
 }
-func ResourceRequirements_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.ResourceRequirements) *krmrunv1alpha1.ResourceRequirements {
+func ResourceRequirements_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.ResourceRequirements) *krmrunv1beta1.ResourceRequirements {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.ResourceRequirements{}
+	out := &krmrunv1beta1.ResourceRequirements{}
 	out.Limits = in.Limits
 	out.CPUIdle = direct.LazyPtr(in.GetCpuIdle())
 	out.StartupCPUBoost = direct.LazyPtr(in.GetStartupCpuBoost())
 	return out
 }
-func ResourceRequirements_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.ResourceRequirements) *pb.ResourceRequirements {
+func ResourceRequirements_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.ResourceRequirements) *pb.ResourceRequirements {
 	if in == nil {
 		return nil
 	}
@@ -426,11 +426,11 @@ func ResourceRequirements_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrun
 	out.StartupCpuBoost = direct.ValueOf(in.StartupCPUBoost)
 	return out
 }
-func SecretKeySelector_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.SecretKeySelector) *krmrunv1alpha1.SecretKeySelector {
+func SecretKeySelector_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.SecretKeySelector) *krmrunv1beta1.SecretKeySelector {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.SecretKeySelector{}
+	out := &krmrunv1beta1.SecretKeySelector{}
 	if in.GetSecret() != "" {
 		out.SecretRef = &krmsecretmanagerv1beta1.SecretRef{External: in.GetSecret()}
 	}
@@ -439,7 +439,7 @@ func SecretKeySelector_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Secr
 	}
 	return out
 }
-func SecretKeySelector_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.SecretKeySelector) *pb.SecretKeySelector {
+func SecretKeySelector_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.SecretKeySelector) *pb.SecretKeySelector {
 	if in == nil {
 		return nil
 	}
@@ -452,11 +452,11 @@ func SecretKeySelector_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1a
 	}
 	return out
 }
-func SecretVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.SecretVolumeSource) *krmrunv1alpha1.SecretVolumeSource {
+func SecretVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.SecretVolumeSource) *krmrunv1beta1.SecretVolumeSource {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.SecretVolumeSource{}
+	out := &krmrunv1beta1.SecretVolumeSource{}
 	if in.GetSecret() != "" {
 		out.SecretRef = &krmsecretmanagerv1beta1.SecretRef{External: in.GetSecret()}
 	}
@@ -464,7 +464,7 @@ func SecretVolumeSource_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Sec
 	out.DefaultMode = direct.LazyPtr(in.GetDefaultMode())
 	return out
 }
-func SecretVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.SecretVolumeSource) *pb.SecretVolumeSource {
+func SecretVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.SecretVolumeSource) *pb.SecretVolumeSource {
 	if in == nil {
 		return nil
 	}
@@ -476,15 +476,15 @@ func SecretVolumeSource_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1
 	out.DefaultMode = direct.ValueOf(in.DefaultMode)
 	return out
 }
-func TCPSocketAction_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.TCPSocketAction) *krmrunv1alpha1.TCPSocketAction {
+func TCPSocketAction_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.TCPSocketAction) *krmrunv1beta1.TCPSocketAction {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.TCPSocketAction{}
+	out := &krmrunv1beta1.TCPSocketAction{}
 	out.Port = direct.LazyPtr(in.GetPort())
 	return out
 }
-func TCPSocketAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.TCPSocketAction) *pb.TCPSocketAction {
+func TCPSocketAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.TCPSocketAction) *pb.TCPSocketAction {
 	if in == nil {
 		return nil
 	}
@@ -492,11 +492,11 @@ func TCPSocketAction_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alp
 	out.Port = direct.ValueOf(in.Port)
 	return out
 }
-func VPCAccess_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VpcAccess) *krmrunv1alpha1.VPCAccess {
+func VPCAccess_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VpcAccess) *krmrunv1beta1.VPCAccess {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.VPCAccess{}
+	out := &krmrunv1beta1.VPCAccess{}
 	if in.GetConnector() != "" {
 		out.ConnectorRef = &krmvpcaccessv1beta1.VPCAccessConnectorRef{External: in.GetConnector()}
 	}
@@ -504,7 +504,7 @@ func VPCAccess_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VpcAccess) *
 	out.NetworkInterfaces = direct.Slice_FromProto(mapCtx, in.NetworkInterfaces, VPCAccess_NetworkInterface_v1alpha1_FromProto)
 	return out
 }
-func VPCAccess_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.VPCAccess) *pb.VpcAccess {
+func VPCAccess_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.VPCAccess) *pb.VpcAccess {
 	if in == nil {
 		return nil
 	}
@@ -516,11 +516,11 @@ func VPCAccess_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.VP
 	out.NetworkInterfaces = direct.Slice_ToProto(mapCtx, in.NetworkInterfaces, VPCAccess_NetworkInterface_v1alpha1_ToProto)
 	return out
 }
-func VPCAccess_NetworkInterface_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VpcAccess_NetworkInterface) *krmrunv1alpha1.VPCAccess_NetworkInterface {
+func VPCAccess_NetworkInterface_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VpcAccess_NetworkInterface) *krmrunv1beta1.VPCAccess_NetworkInterface {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.VPCAccess_NetworkInterface{}
+	out := &krmrunv1beta1.VPCAccess_NetworkInterface{}
 	if in.GetNetwork() != "" {
 		out.NetworkRef = &krmcomputerefs.ComputeNetworkRef{External: in.GetNetwork()}
 	}
@@ -530,7 +530,7 @@ func VPCAccess_NetworkInterface_v1alpha1_FromProto(mapCtx *direct.MapContext, in
 	out.Tags = in.Tags
 	return out
 }
-func VPCAccess_NetworkInterface_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.VPCAccess_NetworkInterface) *pb.VpcAccess_NetworkInterface {
+func VPCAccess_NetworkInterface_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.VPCAccess_NetworkInterface) *pb.VpcAccess_NetworkInterface {
 	if in == nil {
 		return nil
 	}
@@ -544,11 +544,11 @@ func VPCAccess_NetworkInterface_v1alpha1_ToProto(mapCtx *direct.MapContext, in *
 	out.Tags = in.Tags
 	return out
 }
-func VersionToPath_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VersionToPath) *krmrunv1alpha1.VersionToPath {
+func VersionToPath_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VersionToPath) *krmrunv1beta1.VersionToPath {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.VersionToPath{}
+	out := &krmrunv1beta1.VersionToPath{}
 	out.Path = direct.LazyPtr(in.GetPath())
 	if in.GetVersion() != "" {
 		out.VersionRef = &krmsecretmanagerv1beta1.SecretVersionRef{External: in.GetVersion()}
@@ -556,7 +556,7 @@ func VersionToPath_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VersionT
 	out.Mode = direct.LazyPtr(in.GetMode())
 	return out
 }
-func VersionToPath_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.VersionToPath) *pb.VersionToPath {
+func VersionToPath_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.VersionToPath) *pb.VersionToPath {
 	if in == nil {
 		return nil
 	}
@@ -568,11 +568,11 @@ func VersionToPath_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha
 	out.Mode = direct.ValueOf(in.Mode)
 	return out
 }
-func Volume_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Volume) *krmrunv1alpha1.Volume {
+func Volume_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Volume) *krmrunv1beta1.Volume {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.Volume{}
+	out := &krmrunv1beta1.Volume{}
 	out.Name = direct.LazyPtr(in.GetName())
 	out.Secret = SecretVolumeSource_v1alpha1_FromProto(mapCtx, in.GetSecret())
 	out.CloudSQLInstance = CloudSQLInstance_v1alpha1_FromProto(mapCtx, in.GetCloudSqlInstance())
@@ -581,7 +581,7 @@ func Volume_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Volume) *krmrun
 	out.GCS = GCSVolumeSource_v1alpha1_FromProto(mapCtx, in.GetGcs())
 	return out
 }
-func Volume_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Volume) *pb.Volume {
+func Volume_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.Volume) *pb.Volume {
 	if in == nil {
 		return nil
 	}
@@ -604,16 +604,16 @@ func Volume_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Volum
 	}
 	return out
 }
-func VolumeMount_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VolumeMount) *krmrunv1alpha1.VolumeMount {
+func VolumeMount_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.VolumeMount) *krmrunv1beta1.VolumeMount {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.VolumeMount{}
+	out := &krmrunv1beta1.VolumeMount{}
 	out.Name = direct.LazyPtr(in.GetName())
 	out.MountPath = direct.LazyPtr(in.GetMountPath())
 	return out
 }
-func VolumeMount_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.VolumeMount) *pb.VolumeMount {
+func VolumeMount_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.VolumeMount) *pb.VolumeMount {
 	if in == nil {
 		return nil
 	}
@@ -622,11 +622,11 @@ func VolumeMount_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.
 	out.MountPath = direct.ValueOf(in.MountPath)
 	return out
 }
-func RevisionTemplate_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.RevisionTemplate) *krmrunv1alpha1.RevisionTemplate {
+func RevisionTemplate_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.RevisionTemplate) *krmrunv1beta1.RevisionTemplate {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.RevisionTemplate{}
+	out := &krmrunv1beta1.RevisionTemplate{}
 	out.Revision = direct.LazyPtr(in.GetRevision())
 	// MISSING: Labels
 	out.Annotations = in.Annotations
@@ -653,7 +653,7 @@ func RevisionTemplate_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Revis
 	out.GpuZonalRedundancyDisabled = in.GpuZonalRedundancyDisabled
 	return out
 }
-func RevisionTemplate_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.RevisionTemplate) *pb.RevisionTemplate {
+func RevisionTemplate_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.RevisionTemplate) *pb.RevisionTemplate {
 	if in == nil {
 		return nil
 	}
@@ -684,11 +684,11 @@ func RevisionTemplate_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1al
 	out.GpuZonalRedundancyDisabled = in.GpuZonalRedundancyDisabled
 	return out
 }
-func RevisionTemplateObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.RevisionTemplate) *krmrunv1alpha1.RevisionTemplateObservedState {
+func RevisionTemplateObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.RevisionTemplate) *krmrunv1beta1.RevisionTemplateObservedState {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.RevisionTemplateObservedState{}
+	out := &krmrunv1beta1.RevisionTemplateObservedState{}
 	out.Revision = direct.LazyPtr(in.GetRevision())
 	// MISSING: Labels
 	// MISSING: Annotations
@@ -703,7 +703,7 @@ func RevisionTemplateObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext,
 	// MISSING: NodeSelector
 	return out
 }
-func RevisionTemplateObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.RevisionTemplateObservedState) *pb.RevisionTemplate {
+func RevisionTemplateObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.RevisionTemplateObservedState) *pb.RevisionTemplate {
 	if in == nil {
 		return nil
 	}

@@ -38,11 +38,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	runv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -62,7 +63,7 @@ func images() (string, string) {
 	return "us-docker.pkg.dev/example/inference/server:1", "us-docker.pkg.dev/example/inference/server:2"
 }
 
-var gvk = runv1alpha1.RunServiceGVK
+var gvk = runv1beta1.RunServiceGVK
 
 func cloudName(name string) string {
 	return "projects/" + mockenv.Project + "/locations/" + region + "/services/" + mockenv.Name(name)
@@ -78,26 +79,26 @@ func gpu() bool {
 	return !mockenv.Live() || os.Getenv("E2E_RUN_GPU") == "true"
 }
 
-func newService(name string) *runv1alpha1.RunService {
-	s := &runv1alpha1.RunService{
+func newService(name string) *runv1beta1.RunService {
+	s := &runv1beta1.RunService{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: runv1alpha1.RunServiceSpec{
+		Spec: runv1beta1.RunServiceSpec{
 			ResourceID:         mockenv.Ptr(mockenv.Name(name)),
 			Labels:             mockenv.Labels(),
 			ProjectRef:         &refsv1beta1.ProjectRef{External: mockenv.Project},
 			Location:           mockenv.Ptr(region),
 			Description:        mockenv.Ptr("inference on a GPU"),
 			InvokerIamDisabled: mockenv.Ptr(true),
-			Template: &runv1alpha1.RevisionTemplate{
-				Containers: []runv1alpha1.Container{{
+			Template: &runv1beta1.RevisionTemplate{
+				Containers: []runv1beta1.Container{{
 					Image: mockenv.Ptr(image1),
-					Resources: &runv1alpha1.ResourceRequirements{
+					Resources: &runv1beta1.ResourceRequirements{
 						Limits: map[string]string{"cpu": "4", "memory": "16Gi", "nvidia.com/gpu": "1"},
 					},
 				}},
-				NodeSelector:               &runv1alpha1.NodeSelector{Accelerator: mockenv.Ptr("nvidia-l4")},
+				NodeSelector:               &runv1beta1.NodeSelector{Accelerator: mockenv.Ptr("nvidia-l4")},
 				GpuZonalRedundancyDisabled: mockenv.Ptr(true),
-				Scaling:                    &runv1alpha1.RevisionScaling{MaxInstanceCount: mockenv.Ptr(int32(3))},
+				Scaling:                    &runv1beta1.RevisionScaling{MaxInstanceCount: mockenv.Ptr(int32(3))},
 			},
 		},
 	}
@@ -153,14 +154,31 @@ func TestRunServiceGPUAndInvokerIAM(t *testing.T) {
 		}
 		return svc
 	}
-	getObj := func(t *testing.T, name string) *runv1alpha1.RunService {
+	getObj := func(t *testing.T, name string) *runv1beta1.RunService {
 		t.Helper()
-		obj := &runv1alpha1.RunService{}
+		obj := &runv1beta1.RunService{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
 		return obj
 	}
+
+	// The kind moved to v1beta1 (docs/design.md decision 27, which covers
+	// field-gap kinds since section 10 question 9): v1alpha1 is not served,
+	// so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(gvk.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a run.gcp.hfl.dev/v1alpha1 RunService: err = %v, want no match for the kind", err)
+		}
+		if gvk.Version != "v1beta1" {
+			t.Errorf("RunService's version = %q, want v1beta1", gvk.Version)
+		}
+	})
 
 	const name = "inference"
 	svc := newService(name)
@@ -269,7 +287,7 @@ func TestRunServiceGPUAndInvokerIAM(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, svc); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&runv1alpha1.RunService{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		env.WaitGone(&runv1beta1.RunService{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 		_, err := cloud.GetService(env.Ctx, &pb.GetServiceRequest{Name: cloudName(name)})
 		if status.Code(err) != codes.NotFound {
 			t.Errorf("reading the deleted service: got %v, want NotFound", err)

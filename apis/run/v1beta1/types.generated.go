@@ -18,7 +18,7 @@
 // apis/run/v1alpha1/types.generated.go (UPSTREAM.md), without the worker pool's
 // InstanceSplit, InstanceSplitStatus and WorkerPoolScaling.
 
-package v1alpha1
+package v1beta1
 
 // +kcc:proto=google.cloud.run.v2.ContainerPort
 type ContainerPort struct {

@@ -36,6 +36,8 @@ var promoted = []string{
 	"NetworkSecuritySecurityProfileGroup",
 	"SQLAdminBackup",
 	"StorageBucketObject",
+	// A field-gap kind (section 10 question 9, answered 2026-11-15).
+	"RunService",
 }
 
 func TestPromotedKindsServeOnlyV1beta1(t *testing.T) {

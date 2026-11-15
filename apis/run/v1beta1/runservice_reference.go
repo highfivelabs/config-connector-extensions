@@ -18,7 +18,7 @@
 // apis/run/v1alpha1/runworkerpool_reference.go (UPSTREAM.md): a reference to this
 // project's RunService (run.gcp.hfl.dev) instead of a worker pool.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"

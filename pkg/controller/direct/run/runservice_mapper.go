@@ -28,7 +28,7 @@ import (
 	pb "cloud.google.com/go/run/apiv2/runpb"
 	networkservicesv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/networkservices/v1alpha1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
-	krmrunv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	krmrunv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	apipb "google.golang.org/genproto/googleapis/api"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -40,11 +40,11 @@ func BinaryAuthorization_UseDefault_ToProto(mapCtx *direct.MapContext, in *bool)
 	return &pb.BinaryAuthorization_UseDefault{UseDefault: *in}
 }
 
-func BinaryAuthorization_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.BinaryAuthorization) *krmrunv1alpha1.BinaryAuthorization {
+func BinaryAuthorization_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.BinaryAuthorization) *krmrunv1beta1.BinaryAuthorization {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.BinaryAuthorization{}
+	out := &krmrunv1beta1.BinaryAuthorization{}
 	switch x := in.BinauthzMethod.(type) {
 	case *pb.BinaryAuthorization_UseDefault:
 		val := x.UseDefault
@@ -61,7 +61,7 @@ func EnvVar_Value_ToProto(mapCtx *direct.MapContext, in *string) *pb.EnvVar_Valu
 	return &pb.EnvVar_Value{Value: *in}
 }
 
-func RunServiceSpec_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.RunServiceSpec) *pb.Service {
+func RunServiceSpec_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.RunServiceSpec) *pb.Service {
 	if in == nil {
 		return nil
 	}
@@ -85,11 +85,11 @@ func RunServiceSpec_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alph
 }
 
 // Written here (upstream generates it for the worker pool).
-func RunServiceSpec_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Service) *krmrunv1alpha1.RunServiceSpec {
+func RunServiceSpec_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Service) *krmrunv1beta1.RunServiceSpec {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.RunServiceSpec{}
+	out := &krmrunv1beta1.RunServiceSpec{}
 	out.Description = direct.LazyPtr(in.GetDescription())
 	out.Labels = in.Labels
 	out.Annotations = in.Annotations
@@ -107,11 +107,11 @@ func RunServiceSpec_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Service
 }
 
 // Written here.
-func ServiceScaling_FromProto(mapCtx *direct.MapContext, in *pb.ServiceScaling) *krmrunv1alpha1.ServiceScaling {
+func ServiceScaling_FromProto(mapCtx *direct.MapContext, in *pb.ServiceScaling) *krmrunv1beta1.ServiceScaling {
 	if in == nil {
 		return nil
 	}
-	return &krmrunv1alpha1.ServiceScaling{
+	return &krmrunv1beta1.ServiceScaling{
 		MinInstanceCount:    direct.LazyPtr(in.GetMinInstanceCount()),
 		ScalingMode:         direct.Enum_FromProto(mapCtx, in.GetScalingMode()),
 		MaxInstanceCount:    direct.LazyPtr(in.GetMaxInstanceCount()),
@@ -120,7 +120,7 @@ func ServiceScaling_FromProto(mapCtx *direct.MapContext, in *pb.ServiceScaling) 
 }
 
 // Written here.
-func ServiceScaling_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.ServiceScaling) *pb.ServiceScaling {
+func ServiceScaling_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.ServiceScaling) *pb.ServiceScaling {
 	if in == nil {
 		return nil
 	}
@@ -133,18 +133,18 @@ func ServiceScaling_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Servic
 }
 
 // Written here.
-func RevisionScaling_FromProto(mapCtx *direct.MapContext, in *pb.RevisionScaling) *krmrunv1alpha1.RevisionScaling {
+func RevisionScaling_FromProto(mapCtx *direct.MapContext, in *pb.RevisionScaling) *krmrunv1beta1.RevisionScaling {
 	if in == nil {
 		return nil
 	}
-	return &krmrunv1alpha1.RevisionScaling{
+	return &krmrunv1beta1.RevisionScaling{
 		MinInstanceCount: direct.LazyPtr(in.GetMinInstanceCount()),
 		MaxInstanceCount: direct.LazyPtr(in.GetMaxInstanceCount()),
 	}
 }
 
 // Written here.
-func RevisionScaling_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.RevisionScaling) *pb.RevisionScaling {
+func RevisionScaling_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.RevisionScaling) *pb.RevisionScaling {
 	if in == nil {
 		return nil
 	}
@@ -154,11 +154,11 @@ func RevisionScaling_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.Revis
 	}
 }
 
-func RunServiceObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Service) *krmrunv1alpha1.RunServiceObservedState {
+func RunServiceObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Service) *krmrunv1beta1.RunServiceObservedState {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.RunServiceObservedState{}
+	out := &krmrunv1beta1.RunServiceObservedState{}
 	// MISSING: Name
 	out.Uid = direct.LazyPtr(in.GetUid())
 	out.Generation = direct.LazyPtr(in.GetGeneration())
@@ -184,7 +184,7 @@ func RunServiceObservedState_v1alpha1_FromProto(mapCtx *direct.MapContext, in *p
 	return out
 }
 
-func RunServiceObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.RunServiceObservedState) *pb.Service {
+func RunServiceObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.RunServiceObservedState) *pb.Service {
 	if in == nil {
 		return nil
 	}
@@ -213,7 +213,7 @@ func RunServiceObservedState_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krm
 	return out
 }
 
-func ServiceMesh_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.ServiceMesh) *pb.ServiceMesh {
+func ServiceMesh_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.ServiceMesh) *pb.ServiceMesh {
 	if in == nil {
 		return nil
 	}
@@ -224,22 +224,22 @@ func ServiceMesh_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.
 	return out
 }
 
-func ServiceMesh_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.ServiceMesh) *krmrunv1alpha1.ServiceMesh {
+func ServiceMesh_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.ServiceMesh) *krmrunv1beta1.ServiceMesh {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.ServiceMesh{}
+	out := &krmrunv1beta1.ServiceMesh{}
 	if in.GetMesh() != "" {
 		out.MeshRef = &networkservicesv1alpha1.NetworkServicesMeshRef{External: in.GetMesh()}
 	}
 	return out
 }
 
-func RunCondition_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Condition) *krmrunv1alpha1.RunCondition {
+func RunCondition_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Condition) *krmrunv1beta1.RunCondition {
 	if in == nil {
 		return nil
 	}
-	out := &krmrunv1alpha1.RunCondition{}
+	out := &krmrunv1beta1.RunCondition{}
 	out.Type = direct.LazyPtr(in.GetType())
 	out.State = direct.Enum_FromProto(mapCtx, in.GetState())
 	out.Message = direct.LazyPtr(in.GetMessage())
@@ -268,7 +268,7 @@ func RunCondition_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Condition
 	return out
 }
 
-func RunCondition_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1alpha1.RunCondition) *pb.Condition {
+func RunCondition_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv1beta1.RunCondition) *pb.Condition {
 	if in == nil {
 		return nil
 	}

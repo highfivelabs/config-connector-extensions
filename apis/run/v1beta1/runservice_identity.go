@@ -19,7 +19,7 @@
 // (projects/{project}/locations/{location}/services/{service}) instead of a
 // worker pool; otherwise unchanged.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"

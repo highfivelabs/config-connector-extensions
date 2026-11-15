@@ -59,7 +59,7 @@ import (
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
-	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	runv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 	servicemanagementv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/servicemanagement/v1alpha1"
@@ -115,7 +115,7 @@ var Kinds = []kind{
 	{gvk: iamv1beta1.IAMWorkloadIdentityPoolProviderKeyGVK, crdName: "iamworkloadidentitypoolproviderkeys.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolProviderKeyModel},
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
 	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
-	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
+	{gvk: runv1beta1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
 	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
@@ -172,7 +172,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		artifactregistryv1beta1.AddToScheme,
 		iamv1alpha1.AddToScheme,
 		iamv1beta1.AddToScheme,
-		runv1alpha1.AddToScheme,
+		runv1beta1.AddToScheme,
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,
 		dnsv1beta1.AddToScheme,
