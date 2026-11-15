@@ -1,0 +1,51 @@
+# Generated paths for factory/review (review/README.md): a pull request that
+# changes only docs and these paths gets no model review. One glob a line
+# (Python fnmatch: * also matches /), beside synthesize.py's defaults.
+# Listed: data written by this repository's generators, and every committed
+# file marked "DO NOT EDIT" (`git grep -l "DO NOT EDIT"`); a directory
+# appears as dir/* only when every file under it is generated. Add new
+# generated kinds' files here; a path missing here is only reviewed, so
+# never list a hand-written file.
+pkg/controller/*zz_discokind*
+apis/apigateway/*
+apis/backupdr/*
+apis/biglake/*
+apis/certificatemanager/*
+apis/cloudbuild/*
+apis/clouddeploy/*
+apis/cloudfunctions2/*
+apis/dataplex/*
+apis/discoveryengine/*
+apis/gkebackup/*
+apis/gkehub/*
+apis/looker/*
+apis/networkconnectivity/*
+apis/networkservices/*
+apis/apigee/v1alpha1/*
+apis/networksecurity/v1beta1/*
+apis/compute/v1alpha1/computecrosssitenetwork_types.go
+apis/compute/v1alpha1/computeglobalpublicdelegatedprefix_types.go
+apis/compute/v1alpha1/computeglobalvmextensionpolicy_types.go
+apis/compute/v1alpha1/computeinterconnectgroup_types.go
+apis/compute/v1alpha1/computepublicadvertisedprefix_types.go
+apis/compute/v1alpha1/computepublicdelegatedprefix_types.go
+apis/compute/v1alpha1/computeregionbackendbucket_types.go
+apis/compute/v1alpha1/computeregioncompositehealthcheck_types.go
+apis/compute/v1alpha1/computeregionhealthaggregationpolicy_types.go
+apis/compute/v1alpha1/computeregionhealthcheckservice_types.go
+apis/compute/v1alpha1/computeregionhealthsource_types.go
+apis/compute/v1alpha1/computeregioninstancetemplate_types.go
+apis/compute/v1alpha1/computeregionnotificationendpoint_types.go
+apis/compute/v1alpha1/computerolloutplan_types.go
+apis/compute/v1alpha1/computewiregroup_types.go
+apis/compute/v1alpha1/computezonevmextensionpolicy_types.go
+apis/compute/v1beta1/computeglobalnetworkendpointgroup_types.go
+apis/compute/v1beta1/computeinterconnectattachment_types.go
+apis/compute/v1beta1/computenetworkattachment_types.go
+apis/iam/v1alpha1/iamoauthclient_types.go
+apis/iam/v1alpha1/iamworkforcepoolproviderkey_types.go
+apis/iam/v1alpha1/iamworkforcepoolproviderscimtenant_types.go
+apis/logging/v1alpha1/logginglink_types.go
+apis/logging/v1alpha1/loggingsavedquery_types.go
+apis/resourcemanager/v1alpha1/resourcemanagerboundary_types.go
+apis/resourcemanager/v1alpha1/resourcemanagercapabilityconfig_types.go
