@@ -59,9 +59,22 @@ spec:
           spec:
             properties:
               attachmentId:
-                description: Immutable. The resource that the security policy is attached
-                  to.
+                description: 'Immutable. The resource that the security policy is
+                  attached to: organizations/{organization}, folders/{folder} or projects/{project
+                  number}.'
                 type: string
+              excludedFolders:
+                description: Immutable. Folders under the attachment the policy does
+                  not apply to, as folders/{folder}. Not on a project's association.
+                items:
+                  type: string
+                type: array
+              excludedProjects:
+                description: Immutable. Projects under the attachment the policy does
+                  not apply to, as projects/{project number}. Not on a project's association.
+                items:
+                  type: string
+                type: array
               policyId:
                 description: Immutable. The security policy ID of the association.
                   Exactly one of policyId or securityPolicyRef must be specified.
@@ -110,6 +123,9 @@ spec:
               rule: has(self.policyId) != has(self.securityPolicyRef)
             - message: the spec is immutable
               rule: self == oldSelf
+            - message: exclusions are not supported for a project's association
+              rule: '!self.attachmentId.startsWith(''projects/'') || (!has(self.excludedFolders)
+                && !has(self.excludedProjects))'
           status:
             properties:
               conditions:

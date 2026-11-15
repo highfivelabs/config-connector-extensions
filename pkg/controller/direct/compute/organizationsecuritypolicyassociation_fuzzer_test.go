@@ -18,7 +18,8 @@
 // pkg/controller/direct/compute/computeorganizationsecuritypolicyassociation_fuzzer.go (UPSTREAM.md). Unchanged but for
 // the harness: a test file here, run by its own test function instead of
 // registered with Config Connector's fuzz runner, so the manager does not link
-// the fuzz harness; and the mapper names (organizationsecuritypolicy_mapper.go).
+// the fuzz harness; the mapper names (organizationsecuritypolicy_mapper.go);
+// and excluded_folders and excluded_projects, spec fields here (2026-11-15).
 
 // +tool:fuzz-gen
 // proto.message: google.cloud.compute.v1.SecurityPolicyAssociation
@@ -58,26 +59,26 @@ func computeOrganizationSecurityPolicyAssociationFuzzer() fuzztesting.KRMFuzzer 
 	// - attachmentId -> f.SpecField(".attachment_id")
 	// - policyId     -> f.SpecField(".security_policy_id")
 	// - resourceID   -> f.SpecField(".name")
+	// - excludedFolders  -> f.SpecField(".excluded_folders")
+	// - excludedProjects -> f.SpecField(".excluded_projects")
 	//
 	// KRM Status Fields:
 	// - displayName  -> f.StatusField(".display_name")
 	//
 	// Unimplemented Proto Fields:
-	// - excluded_folders  -> f.Unimplemented_NotYetTriaged(".excluded_folders")
-	// - excluded_projects -> f.Unimplemented_NotYetTriaged(".excluded_projects")
 	// - short_name        -> f.Unimplemented_NotYetTriaged(".short_name")
 
 	// Spec fields
 	f.SpecField(".attachment_id")
 	f.SpecField(".security_policy_id")
 	f.SpecField(".name")
+	f.SpecField(".excluded_folders")
+	f.SpecField(".excluded_projects")
 
 	// Status fields
 	f.StatusField(".display_name")
 
 	// Unimplemented / Not Yet Triaged fields
-	f.Unimplemented_NotYetTriaged(".excluded_folders")
-	f.Unimplemented_NotYetTriaged(".excluded_projects")
 	f.Unimplemented_NotYetTriaged(".short_name")
 
 	return f

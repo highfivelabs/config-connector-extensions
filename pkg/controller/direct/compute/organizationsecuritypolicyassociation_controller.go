@@ -18,7 +18,8 @@
 // pkg/controller/direct/compute/computeorganizationsecuritypolicyassociation_controller.go (UPSTREAM.md). Changed: the model is returned
 // to our manager instead of registered with Config Connector's registry; our
 // KRM types (stable, compute.gcp.hfl.dev/v1beta1, docs/design.md decision 13)
-// and mapper names (organizationsecuritypolicy_mapper.go).
+// and mapper names (organizationsecuritypolicy_mapper.go); the comparison
+// takes the exclusions as sets (2026-11-15).
 
 package compute
 
@@ -26,6 +27,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"google.golang.org/api/googleapi"
@@ -318,6 +320,12 @@ func compareOrganizationSecurityPolicyAssociation(ctx context.Context, actual, d
 	maskedActual.Name = desired.Name
 
 	clonedDesired := proto.CloneOf(desired)
+	// The exclusions are sets: an order the API returns differently is no
+	// difference (the spec is immutable, so a difference fails the object).
+	for _, a := range []*computepb.SecurityPolicyAssociation{maskedActual, clonedDesired} {
+		a.ExcludedFolders = slices.Sorted(slices.Values(a.ExcludedFolders))
+		a.ExcludedProjects = slices.Sorted(slices.Values(a.ExcludedProjects))
+	}
 
 	diffs, _, err := common.DiffForTopLevelFields(ctx, clonedDesired.ProtoReflect(), maskedActual.ProtoReflect())
 	if err != nil {

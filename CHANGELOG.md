@@ -6,6 +6,21 @@ has been released yet; each release moves its entries out of
 
 ## Unreleased
 
+### Changed
+
+- **`LookerInstance` takes its OAuth client secret from a Kubernetes
+  Secret.** `spec.oauthConfig.clientSecret` is now Config Connector's
+  secret shape (as `SQLUser`'s `password`): `value`, or
+  `valueFrom.secretKeyRef` (`name`, `key`) of a Secret in the object's
+  namespace, which the controller reads. A manifest that set
+  `clientSecret` as a string must move it to `clientSecret.value` (the
+  kind is `v1alpha1`). The API never returns the client ID or secret, so
+  they are no longer a difference on every resync; they are sent again
+  when `status.inputVersion`, a digest of the client ID and the Secret's
+  name, key and `resourceVersion`, changes, as when the Secret is
+  rotated (`docs/design.md`, decision 33). Generated kinds can mark such
+  fields with `secrets` and `inputOnly` in `hack/discokind/kinds.yaml`.
+
 ### Fixed
 
 - **Deleting a BigLake catalog, database and table at once** no longer
@@ -20,6 +35,17 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`logging.gcp.hfl.dev/v1beta1` `LoggingLogSink`**, our own log sink of
+  a project, folder or organization, owning the whole sink, with what
+  Config Connector's `LoggingLogSink` lacks: `interceptChildren` (a
+  folder's or organization's sink that keeps the logs it routes from its
+  children's sinks) and a Cloud project destination
+  (`destination.projectRef`), which an intercepting sink needs. The spec
+  is otherwise Config Connector's, so a manifest moves by changing its
+  `apiVersion`; exactly one parent is required (Config Connector's falls
+  back to the namespace's project). A workload moves a sink to ours by
+  acquiring it (`resourceID`) and abandoning Config Connector's object
+  (`docs/design.md` section 6.4).
 - **`biglake.gcp.hfl.dev/v1beta1` `BigLakeTable`**, generated from
   Discovery: a table in a BigLake Metastore database
   (`google_biglake_table`). Config Connector's own `BigLakeTable`

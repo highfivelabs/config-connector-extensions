@@ -133,6 +133,7 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyRuleGVK, crdName: "computeregionnetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyRuleModel},
 	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyAssociationGVK, crdName: "computeregionnetworkfirewallpolicyassociations.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyAssociationModel},
 	{gvk: loggingv1beta1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
+	{gvk: loggingv1beta1.LoggingLogSinkGVK, crdName: "logginglogsinks.logging.gcp.hfl.dev", model: logging.NewLogSinkModel},
 	{gvk: loggingv1alpha1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
 	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},

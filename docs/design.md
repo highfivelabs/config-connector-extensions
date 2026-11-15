@@ -160,7 +160,13 @@ since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
 `docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
 references beyond the parent (the other parts of a name are IDs), no
-secrets in status. Compute Engine's shape is covered too
+secrets in status. A string field the API takes as a secret can take
+Config Connector's `secret.Legacy` instead (`secrets` in `kinds.yaml`:
+`value`, or `valueFrom.secretKeyRef` to a Secret in the object's
+namespace, read by the controller and sent as the string), and a field
+the API never returns is marked `inputOnly`; both are left out of the
+comparison and sent again when `status.inputVersion` changes (decision
+33, `LookerInstance`'s OAuth client, 2026-11-15). Compute Engine's shape is covered too
 (`InsertStyle`, 2026-11-11): insert with the ID as the body's name, a
 patch that merges the fields sent with the read fingerprint (or an update
 that replaces the resource), and compute operations polled at their
@@ -1063,6 +1069,66 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   serves feeds unpatched. Live: pending, needs `roles/cloudasset.owner` for
   `cce-live-tests` (`E2E_CLOUD_ASSET=true`). `docs/kinds/AssetFeed.md` has
   the rest.
+- `LoggingLogSink` (`logging.gcp.hfl.dev/v1beta1`; built 2026-11-15 on the
+  builder's answer to section 10 question 7, CCEQ: "our own
+  LoggingLogSink (v1beta1)"; decisions 19 and 26). Our own kind for the
+  whole sink of a project, folder or organization, so that the catalog's
+  folder and organization charts can render an intercepting sink
+  (Terraform's `intercept_children`, which fabric allows on a
+  `project`-type sink only). Upstream, rechecked 2026-11-15 (read-only):
+  Config Connector's `LoggingLogSink` is `v1beta1` (Terraform-based by
+  default, a direct controller opt-in) with neither `interceptChildren` nor
+  a Cloud project destination, at the pin, in v1.160.0 and on `master`
+  (`2374254`, 2026-11-15); no pull request adds them (searched
+  "interceptChildren", "LoggingLogSink": #14429 resolves the project
+  annotation, #11575 adds export). **Copied** from upstream's direct
+  controller with as little change as possible, after
+  `LoggingBillingAccountSink`: the types, identity, controller and the
+  sink's mapper functions. Changed:
+  - `spec.interceptChildren`, and a Cloud project as a destination
+    (`destination.projectRef`, sent as
+    `logging.googleapis.com/projects/{id}`), which an intercepting sink
+    needs; CEL rules carry the API's rules for it (a folder or organization
+    parent, `includeChildren` true, a project destination), refuse more
+    or fewer than one parent and one destination (upstream falls back to
+    the namespace's project and takes the first destination set), and keep
+    the parents, `resourceID`, `includeChildren` and `interceptChildren`
+    immutable (Terraform's `include_children` is `ForceNew`).
+  - The Logging REST client (`google.golang.org/api/logging/v2`) in place
+    of upstream's protobuf client: the `LogSink` protobuf at the pinned
+    `cloud.google.com/go/logging` v1.18.0 has no `interceptChildren`, so
+    the field cannot be sent through it; the update mask is built by
+    comparing the same top-level fields upstream's
+    `DiffForTopLevelFields` does, BigQuery options only when the spec sets
+    them (the API fills them in for a BigQuery destination).
+  - `uniqueWriterIdentity` is sent true for a folder's or organization's
+    sink (the API refuses false there; Terraform's folder and organization
+    sinks always send true) and for a sink whose writer identity is
+    already unique (the API refuses going back to the shared one); a
+    project's sink otherwise sends the spec's, as upstream does.
+  - `status.externalRef`, checked by the identity; a delete uses it and
+    resolves neither the parent nor the destination again, so a folder
+    deleted together with its sinks does not hold them (the rule our
+    generated kinds and `IAMDenyPolicy` follow).
+  Generated: the CRD and deepcopy (controller-gen); `hack/scaffold-kind.sh`
+  was not run (upstream's controller is the nearer code), nor
+  `hack/discokind` (a sink's create takes the name in the body and
+  `uniqueWriterIdentity` as a parameter). Mockgcp patch 0049 keeps
+  `interceptChildren` beside each sink on the HTTP layer
+  (`docs/fake-cloud.md`). Proven on the fake: a project's sink (create, a
+  resync with no write, one update of `disabled` and `exclusions`, the CRD
+  refusing a parent change, no or two parents, two destinations and a
+  project's intercepting sink, delete, abandon), a folder's intercepting
+  sink to a project (and the CRD refusing to change `interceptChildren`,
+  or one without `includeChildren` or a project destination), and an
+  organization's sink to a bucket. Live: `docs/kinds/LoggingLogSink.md`.
+  Left: the catalog's folder and organization charts move their sinks to
+  this kind (and drop their refusals of `intercept_children` and type
+  `project`), and grant the writer identity some other way than Config
+  Connector's `IAMPolicyMember.memberFrom.logSinkRef`, which resolves
+  Config Connector's `LoggingLogSink` only; the kind retires when
+  upstream ships `interceptChildren` and a project destination (section
+  3.4).
 
 ### 6.5 From the seed catalog (read 2026-11-09)
 
@@ -1556,7 +1622,15 @@ Notes on what was built from this table:
   after the insert would insert a second policy, as upstream). mockgcp
   serves both unpatched (`docs/fake-cloud.md`). Hand-written here: the
   end-to-end test only. Live: pending, needs the test folder (both act
-  on an organization or folder; `docs/live-runs.md`).
+  on an organization or folder; `docs/live-runs.md`). 2026-11-15 (the
+  builder's RECPF answer, "a stable Cloud Armor association"): this kind is
+  that association (fabric's `cloud_armor_policy` is Terraform's
+  `google_compute_organization_security_policy_association`, attached to
+  `projects/<number>` or `folders/<id>`); added `excludedFolders` and
+  `excludedProjects` (v1 API fields), refused on a project's association
+  by CEL as fabric refuses them, and a fake-cloud case of a `CLOUD_ARMOR`
+  policy attached to a project and to a folder with exclusions
+  (`docs/kinds/ComputeOrganizationSecurityPolicyAssociation.md`).
 - `ComputeOrganizationSecurityPolicyRule` (`compute.gcp.hfl.dev/v1beta1`,
   decision 13: a rule of a hierarchical firewall policy, at its
   priority). Upstream, rechecked 2026-11-10 (read-only): `v1alpha1` at
@@ -2121,7 +2195,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     not take), which mockgcp does not make; how long a new policy takes to
     apply; and a policy's `denialCondition`, which no test sets.
 30. `ComputeOrganizationSecurityPolicy` and its association: a live run
-    (the test folder: a policy under it, attached to it); what the real
+    (the test folder: a policy under it, attached to it, and a
+    `CLOUD_ARMOR` policy attached to a project by number, with and
+    without exclusions on the folder); whether the API refuses exclusions
+    on a project's association as fabric does (ours refuses them by CEL);
+    what the real
     API defaults (`type`, rules it adds) and whether a resync then writes
     nothing; the API's checks of a parent or attachment the caller cannot
     use, which mockgcp does not make.
@@ -2592,6 +2670,44 @@ To raise confidence in `ArtifactRegistryRepository`:
     still lists keeps its finalizer until the denial is lifted; a table
     deleted behind the controller's back, its database still there, is
     proven gone by its own collection).
+
+33. **`LookerInstance`'s OAuth client secret comes from a Kubernetes
+    Secret** (2026-11-15, RECLOOK). The builder, 2026-11-15, verbatim:
+    "RECLOOK: as recommended (Yes. Add a secretKeyRef for
+    oauthConfig.clientSecret, then the chart takes client_secret from a
+    Kubernetes Secret, as bigquery-connection does.)"
+    Built: `spec.oauthConfig.clientSecret` is Config Connector's
+    `refs/v1beta1/secret.Legacy`, the shape of `SQLUser`'s `password`
+    and `SQLInstance`'s root password: `value`, or
+    `valueFrom.secretKeyRef` (`name`, `key`) of a Secret in the object's
+    namespace. `hack/discokind` makes any field listed under `secrets`
+    in `kinds.yaml` so; `pkg/discokind` reads the Secret before every
+    write and sends the string. **The plain value is kept, not
+    deprecated**, as `clientSecret.value`: Config Connector keeps
+    `value` beside `valueFrom` on every such field, and this repository
+    follows its shapes (section 2.3); the catalog's chart only ever
+    writes `valueFrom`. Setting both is refused ("set one of value and
+    valueFrom, not both"). The string form is gone, a breaking change
+    allowed at `v1alpha1` (no object of the kind has run live or been
+    made by a chart). The API never returns `oauthConfig.clientId` or
+    `clientSecret` ("Input only"), so before this they were a
+    difference on every resync and every reconcile patched
+    `oauthConfig`; now they are left out of the comparison (`inputOnly`
+    and `secrets`), and `status.inputVersion`, a digest of the client
+    ID and of the Secret's name, key and `resourceVersion` (never its
+    value, as `ComputeRouter`'s `md5AuthenticationKeysVersion`), says
+    when to send them again: a changed client ID, another Secret, or
+    the same Secret rotated (seen at the next reconcile; the controller
+    does not watch Secrets). Tested on the fake, which now keeps
+    input-only fields but never answers them, as the API does:
+    `TestLookerInstanceOAuthClientSecret` (a missing Secret holds the
+    create; the Secret's value reaches the cloud and never shows in a
+    read; a resync writes nothing; a rotated Secret is sent again; a
+    plain value works; value and valueFrom together are refused) and the
+    kind's fixtures, which now read the secret from a Secret. Live:
+    pending, as for the kind (`docs/live-runs.md`): an instance is
+    billed by the year and takes about an hour, and the Looker API is
+    not on in the live-test project.
 
 ## 9. The operator: Config Connector's identity, per namespace
 

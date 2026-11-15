@@ -9,3 +9,10 @@ spec:
   platformEdition: LOOKER_CORE_STANDARD_ANNUAL
   publicIpEnabled: true
   geminiEnabled: true
+  oauthConfig:
+    clientId: ${NAME}.apps.googleusercontent.com
+    clientSecret:
+      valueFrom:
+        secretKeyRef:
+          name: looker-oauth
+          key: client-secret

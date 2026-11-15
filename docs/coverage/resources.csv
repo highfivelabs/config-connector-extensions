@@ -863,7 +863,7 @@ logging.googleapis.com,logging.googleapis.com/FolderExclusion,4,LoggingLogExclus
 logging.googleapis.com,logging.googleapis.com/FolderLocationBucket,8,LoggingLogBucket,3,,0,5,false,api=v2:folders.locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/FolderLocationBucketLink,1,,0,LoggingLink,1,0,false,api=v2:folders.locations.buckets.links; ours-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/FolderLocationBucketView,2,LoggingLogView,2,,0,0,false,api=v2:folders.locations.buckets.views; official-spec-fields-unmatched=7/9
-logging.googleapis.com,logging.googleapis.com/FolderSink,13,LoggingLogSink,11,,0,2,false,api=v2:folders.sinks; official-spec-fields-unmatched=8/18
+logging.googleapis.com,logging.googleapis.com/FolderSink,13,LoggingLogSink,11,LoggingLogSink,1,1,false,api=v2:folders.sinks; official-spec-fields-unmatched=8/18; ours-spec-fields-unmatched=9/20
 logging.googleapis.com,logging.googleapis.com/LocationBucket,8,LoggingLogBucket,3,,0,5,false,api=v2:projects.locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/LocationBucketLink,1,,0,LoggingLink,1,0,false,api=v2:projects.locations.buckets.links; ours-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/LocationBucketView,2,LoggingLogView,2,,0,0,false,api=v2:projects.locations.buckets.views; official-spec-fields-unmatched=7/9
@@ -874,16 +874,16 @@ logging.googleapis.com,logging.googleapis.com/OrganizationExclusion,4,LoggingLog
 logging.googleapis.com,logging.googleapis.com/OrganizationLocationBucket,8,LoggingLogBucket,3,,0,5,false,api=v2:organizations.locations.buckets; official-spec-fields-unmatched=7/10
 logging.googleapis.com,logging.googleapis.com/OrganizationLocationBucketLink,1,,0,LoggingLink,1,0,false,api=v2:organizations.locations.buckets.links; ours-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/OrganizationLocationBucketView,2,LoggingLogView,2,,0,0,false,api=v2:organizations.locations.buckets.views; official-spec-fields-unmatched=7/9
-logging.googleapis.com,logging.googleapis.com/OrganizationSink,13,LoggingLogSink,11,,0,2,false,api=v2:organizations.sinks; official-spec-fields-unmatched=8/18
+logging.googleapis.com,logging.googleapis.com/OrganizationSink,13,LoggingLogSink,11,LoggingLogSink,1,1,false,api=v2:organizations.sinks; official-spec-fields-unmatched=8/18; ours-spec-fields-unmatched=9/20
 logging.googleapis.com,logging.googleapis.com/SavedQuery,77,,0,LoggingSavedQuery,77,0,false,api=v2:billingAccounts.locations.savedQueries; recursive-cut=5; ours-spec-fields-unmatched=6/83
-logging.googleapis.com,logging.googleapis.com/Sink,13,LoggingLogSink,11,,0,2,false,api=v2:projects.sinks; official-spec-fields-unmatched=8/18
+logging.googleapis.com,logging.googleapis.com/Sink,13,LoggingLogSink,11,LoggingLogSink,1,1,false,api=v2:projects.sinks; official-spec-fields-unmatched=8/18; ours-spec-fields-unmatched=9/20
 logging.googleapis.com,logging.googleapis.com/folders.locations.savedQueries,77,,0,LoggingSavedQuery,77,0,false,api=v2:folders.locations.savedQueries; recursive-cut=5; ours-spec-fields-unmatched=6/83
 logging.googleapis.com,logging.googleapis.com/organizations.locations.logScopes,2,LoggingLogScope,1,,0,1,false,api=v2:organizations.locations.logScopes; official-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/organizations.locations.savedQueries,77,,0,LoggingSavedQuery,77,0,false,api=v2:organizations.locations.savedQueries; recursive-cut=5; ours-spec-fields-unmatched=6/83
 logging.googleapis.com,logging.googleapis.com/projects.exclusions,4,LoggingLogExclusion,4,,0,0,false,api=v2:projects.exclusions; official-spec-fields-unmatched=5/8
 logging.googleapis.com,logging.googleapis.com/projects.locations.logScopes,2,LoggingLogScope,1,,0,1,false,api=v2:projects.locations.logScopes; official-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/projects.locations.savedQueries,77,,0,LoggingSavedQuery,77,0,false,api=v2:projects.locations.savedQueries; recursive-cut=5; ours-spec-fields-unmatched=6/83
-logging.googleapis.com,logging.googleapis.com/sinks,13,LoggingLogSink,11,LoggingBillingAccountSink,0,2,false,api=v2:sinks; official-spec-fields-unmatched=8/18; ours-spec-fields-unmatched=5/14
+logging.googleapis.com,logging.googleapis.com/sinks,13,LoggingLogSink,11,LoggingBillingAccountSink;LoggingLogSink,1,1,false,api=v2:sinks; official-spec-fields-unmatched=8/18
 looker.googleapis.com,looker.googleapis.com/Instance,56,,0,LookerInstance,56,0,false,api=v1:projects.locations.instances; ours-spec-fields-unmatched=4/59
 looker.googleapis.com,looker.googleapis.com/InstanceBackup,1,,0,,0,1,false,api=v1:projects.locations.instances.backups
 lustre.googleapis.com,lustre.googleapis.com/DirectoryPolicy,2,,0,,0,2,false,api=v1:google.cloud.lustre.v1.Lustre.CreateDirectoryPolicy

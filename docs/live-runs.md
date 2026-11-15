@@ -264,6 +264,7 @@ on the same VM, minutes apart.
 | 2026-11-10 | `81ac634` | ComputeVPNTunnel | PASS | FAIL | `vpnTunnels.insert`: 400 "peer_ip may not be a reserved IP (RFC5735)" for the peer gateway on 203.0.113.10, which mockgcp accepted (fixed: the test reserves an external address of its project for the peer; `docs/fake-cloud.md`). Run `cce-11100852-72bb`; an earlier attempt, `cce-11100848-13c6`, stopped at its first sweep (`externalVpnGateways.list` refuses a `name~` filter; the sweeper now matches names itself) | the network, HA and external VPN gateways and router (deleted by the test) |
 | 2026-11-10 | `23fa22b` | ComputeVPNTunnel | PASS | FAIL | "a resync writes nothing" saw one write: `vpnTunnels.insert` leaves the labels out, so the first reconcile set them (fixed: Create sets them after insert, as Terraform's tunnel does; patch 0033's insert leaves them out too). The other five subtests passed. Run `cce-11101009-a46a` | 2 tunnels, an address, the gateways, router and network (deleted); `task live-list` empty |
 | 2026-11-10 | `edf63e7` | ComputeVPNTunnel | PASS | PASS | none: an HA VPN tunnel to an external peer on the test's own address, with a phase 1 and 2 cipher suite the API returned as sent, labels set after insert, a resync with no write, a label change by `setLabels`, the CRD refusing a cipher suite change, delete and abandon. Run `cce-11101104-1658` (the package's `TestComputeNetworkFirewallPolicyRule` failed as in #51, which fixes it) | 2 tunnels, an address, 2 VPN gateways, a router, a network (deleted); `task live-list` empty |
+| 2026-11-15 | pending | LookerInstance | PASS | pending, a decision to pay for one | not run: an instance is billed by the year and takes about an hour, and the Looker API is not on in the live-test project (`live-skip`). Includes the OAuth client secret from a Secret (`docs/design.md` decision 33), tested on the fake only (`TestLookerInstanceOAuthClientSecret`) | none |
 
 `+` means the commit plus the uncommitted changes that became the next
 commit. Runs `cce-11090718-8cc1` (gcloud's GA track has no `--labels` for
@@ -343,6 +344,20 @@ sweeper too). The test's sinks send to a Pub/Sub topic path in the run's
 project that need not exist (assumed: the API does not check the
 destination at create); their names carry the run ID, and the sweeper
 deletes them from that billing account.
+
+`LoggingLogSink` (package `logging`) runs live in the run's project with
+the account's `roles/logging.admin` there: one project sink routing to the
+project's own `_Default` log bucket, with a filter that matches no log, so
+it routes nothing; the sweeper deletes the project's sinks by the run's
+name. Run it alone with `LIVE_RUN=TestLoggingLogSink` (the package's
+`LoggingSettings` test fails live without its folder and key). Its folder
+case, an intercepting sink (`interceptChildren`) routing to the run's
+project with a filter that matches nothing, runs live only with
+`E2E_LOGGING_FOLDER`, the folder `LoggingSettings` uses, on which the
+account needs `logging.sinks.*` (`roles/logging.configWriter`, which the
+test estate grants the generation's own account, not `$GCP_LIVE_SA`); the
+sweeper then deletes that folder's sinks by the run's name too. An
+organization's sink runs on the fake only.
 
 `SecurityCenterMuteConfig` (package `securitycenter`) waits on Security
 Command Center for the run's project: it must be active for the project

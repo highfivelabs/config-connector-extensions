@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 17.1% | 43.9% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 17.3% | 43.8% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 3.7% | 29.1% |
 
 By service:
@@ -19,7 +19,7 @@ By service:
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
 | foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 19.0% | 40.6% |
-| foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 66.5% | 9.5% |
+| foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 0.0% | 70.5% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 15.0% | 24.8% |
@@ -78,7 +78,7 @@ What these numbers miss, for the foundation:
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 15 / 85 (51.8%) | none for the fields |
 | 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found. |
-| 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 7 / 98 (14.3%) | none for these fields |
+| 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 6 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
 | 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 20 / 87 (77.0%) | none found. |
@@ -257,12 +257,12 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** field, **size** S, **modules** 4 (logging-bucket, organization, folder, project).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `logging.googleapis.com/Bucket`: 3 / 0 / 5 of 8; LoggingLogBucket
-  - `logging.googleapis.com/Sink`: 11 / 0 / 2 of 13; LoggingLogSink
+  - `logging.googleapis.com/Sink`: 11 / 1 / 1 of 13; LoggingLogSink, LoggingLogSink (ours)
   - `logging.googleapis.com/SavedQuery`: 0 / 77 / 0 of 77; LoggingSavedQuery (ours)
-- **Missing, whole resources:** On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is `cmekSettings`, present on the kind); on `LoggingLogSink`: `interceptChildren`, `outputVersionFormat`; whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
+- **Missing, whole resources:** On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is `cmekSettings`, present on the kind); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren` is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `logging.googleapis.com/Bucket` (measured): `analyticsEnabled`, `cmekSettings.kmsKeyName`, `indexConfigs[].fieldPath`, `indexConfigs[].type`, `restrictedFields[]`
-  - uncovered in `logging.googleapis.com/Sink` (measured): `interceptChildren`, `outputVersionFormat`
+  - uncovered in `logging.googleapis.com/Sink` (measured): `outputVersionFormat`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for `LoggingLogSink`) and #14429 (project annotation in the sink) are fixes.
 - **Build:** Wait (decision 5) for the fields; `LoggingSavedQuery` is a small new kind (`logging.gcp.hfl.dev`, the API's `savedQueries` under a project, folder or organization location) if a team asks.
 
@@ -532,13 +532,16 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
-| LoggingBillingAccountSink | logging.googleapis.com/sinks | 0 | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
+| LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
@@ -547,8 +550,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
@@ -562,9 +565,9 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
@@ -799,7 +802,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `logging.googleapis.com/FolderLocationBucket` | LoggingLogBucket | - | 8 | 3 | 0 | 5 | - |
 | foundation | `logging.googleapis.com/FolderLocationBucketLink` | - | LoggingLink | 1 | 0 | 1 | 0 | - |
 | foundation | `logging.googleapis.com/FolderLocationBucketView` | LoggingLogView | - | 2 | 2 | 0 | 0 | - |
-| foundation | `logging.googleapis.com/FolderSink` | LoggingLogSink | - | 13 | 11 | 0 | 2 | - |
+| foundation | `logging.googleapis.com/FolderSink` | LoggingLogSink | LoggingLogSink | 13 | 11 | 1 | 1 | - |
 | foundation | `logging.googleapis.com/LocationBucket` | LoggingLogBucket | - | 8 | 3 | 0 | 5 | - |
 | foundation | `logging.googleapis.com/LocationBucketLink` | - | LoggingLink | 1 | 0 | 1 | 0 | - |
 | foundation | `logging.googleapis.com/LocationBucketView` | LoggingLogView | - | 2 | 2 | 0 | 0 | - |
@@ -809,16 +812,16 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `logging.googleapis.com/OrganizationLocationBucket` | LoggingLogBucket | - | 8 | 3 | 0 | 5 | - |
 | foundation | `logging.googleapis.com/OrganizationLocationBucketLink` | - | LoggingLink | 1 | 0 | 1 | 0 | - |
 | foundation | `logging.googleapis.com/OrganizationLocationBucketView` | LoggingLogView | - | 2 | 2 | 0 | 0 | - |
-| foundation | `logging.googleapis.com/OrganizationSink` | LoggingLogSink | - | 13 | 11 | 0 | 2 | - |
+| foundation | `logging.googleapis.com/OrganizationSink` | LoggingLogSink | LoggingLogSink | 13 | 11 | 1 | 1 | - |
 | foundation | `logging.googleapis.com/SavedQuery` | - | LoggingSavedQuery | 77 | 0 | 77 | 0 | 12 |
-| foundation | `logging.googleapis.com/Sink` | LoggingLogSink | - | 13 | 11 | 0 | 2 | 12 |
+| foundation | `logging.googleapis.com/Sink` | LoggingLogSink | LoggingLogSink | 13 | 11 | 1 | 1 | 12 |
 | foundation | `logging.googleapis.com/folders.locations.savedQueries` | - | LoggingSavedQuery | 77 | 0 | 77 | 0 | - |
 | foundation | `logging.googleapis.com/organizations.locations.logScopes` | LoggingLogScope (alpha) | - | 2 | 1 | 0 | 1 | - |
 | foundation | `logging.googleapis.com/organizations.locations.savedQueries` | - | LoggingSavedQuery | 77 | 0 | 77 | 0 | - |
 | foundation | `logging.googleapis.com/projects.exclusions` | LoggingLogExclusion | - | 4 | 4 | 0 | 0 | - |
 | foundation | `logging.googleapis.com/projects.locations.logScopes` | LoggingLogScope (alpha) | - | 2 | 1 | 0 | 1 | - |
 | foundation | `logging.googleapis.com/projects.locations.savedQueries` | - | LoggingSavedQuery | 77 | 0 | 77 | 0 | - |
-| foundation | `logging.googleapis.com/sinks` | LoggingLogSink | LoggingBillingAccountSink | 13 | 11 | 0 | 2 | - |
+| foundation | `logging.googleapis.com/sinks` | LoggingLogSink | LoggingBillingAccountSink, LoggingLogSink | 13 | 11 | 1 | 1 | - |
 | foundation | `networkconnectivity.googleapis.com/AutomatedDnsRecord` | - | NetworkConnectivityAutomatedDnsRecord | 11 | 0 | 11 | 0 | - |
 | foundation | `networkconnectivity.googleapis.com/Hub` | NetworkConnectivityHub | - | 8 | 2 | 0 | 6 | - |
 | foundation | `networkconnectivity.googleapis.com/InternalRange` | NetworkConnectivityInternalRange (alpha) | - | 17 | 14 | 0 | 3 | - |
