@@ -47,7 +47,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1beta1"
 )
 
 func init() {

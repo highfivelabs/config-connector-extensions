@@ -31,11 +31,12 @@ import (
 
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	serviceusagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -44,7 +45,7 @@ const (
 	org       = "organizations/987654"
 )
 
-var gvk = serviceusagev1alpha1.ServiceIdentityGVK
+var gvk = serviceusagev1beta1.ServiceIdentityGVK
 
 func TestServiceIdentity(t *testing.T) {
 	env := mockenv.New(t, namespace)
@@ -59,18 +60,34 @@ func TestServiceIdentity(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *serviceusagev1alpha1.ServiceIdentity {
+	getObj := func(t *testing.T, name string) *serviceusagev1beta1.ServiceIdentity {
 		t.Helper()
-		obj := &serviceusagev1alpha1.ServiceIdentity{}
+		obj := &serviceusagev1beta1.ServiceIdentity{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
 		return obj
 	}
 
-	osconfig := &serviceusagev1alpha1.ServiceIdentity{
+	// The kind moved to v1beta1 (docs/design.md decision 27): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(gvk.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a serviceusage.gcp.hfl.dev/v1alpha1 ServiceIdentity: err = %v, want no match for the kind", err)
+		}
+		if gvk.Version != "v1beta1" {
+			t.Errorf("ServiceIdentity's version = %q, want v1beta1", gvk.Version)
+		}
+	})
+
+	osconfig := &serviceusagev1beta1.ServiceIdentity{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "folder-osconfig", Labels: mockenv.Labels()},
-		Spec: serviceusagev1alpha1.ServiceIdentitySpec{
+		Spec: serviceusagev1beta1.ServiceIdentitySpec{
 			ResourceID: mockenv.Ptr("osconfig.googleapis.com"),
 			FolderRef:  &refsv1beta1.FolderRefDeprecated{External: folder},
 		},
@@ -126,9 +143,9 @@ func TestServiceIdentity(t *testing.T) {
 		if mockenv.Live() {
 			t.Skip("a live run never touches an organization (docs/live-runs.md)")
 		}
-		o := &serviceusagev1alpha1.ServiceIdentity{
+		o := &serviceusagev1beta1.ServiceIdentity{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "cloudasset.googleapis.com"},
-			Spec: serviceusagev1alpha1.ServiceIdentitySpec{
+			Spec: serviceusagev1beta1.ServiceIdentitySpec{
 				OrganizationRef: &refsv1beta1.OrganizationRef{External: org},
 			},
 		}
@@ -145,14 +162,14 @@ func TestServiceIdentity(t *testing.T) {
 	})
 
 	t.Run("exactly one parent", func(t *testing.T) {
-		for name, spec := range map[string]serviceusagev1alpha1.ServiceIdentitySpec{
+		for name, spec := range map[string]serviceusagev1beta1.ServiceIdentitySpec{
 			"both": {
 				OrganizationRef: &refsv1beta1.OrganizationRef{External: org},
 				FolderRef:       &refsv1beta1.FolderRefDeprecated{External: folder},
 			},
 			"neither": {},
 		} {
-			o := &serviceusagev1alpha1.ServiceIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}, Spec: spec}
+			o := &serviceusagev1beta1.ServiceIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}, Spec: spec}
 			err := env.Kube.Create(env.Ctx, o)
 			if err == nil || !strings.Contains(err.Error(), "exactly one of organizationRef and folderRef") {
 				t.Errorf("creating with %s: got %v, want the API server to refuse it", name, err)
@@ -186,7 +203,7 @@ func TestServiceIdentity(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "folder-osconfig")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&serviceusagev1alpha1.ServiceIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "folder-osconfig"}})
+		env.WaitGone(&serviceusagev1beta1.ServiceIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "folder-osconfig"}})
 		for _, r := range env.Requests()[before:] {
 			if strings.Contains(r, "serviceusage") {
 				t.Errorf("delete called %s", r)

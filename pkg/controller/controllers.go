@@ -63,7 +63,7 @@ import (
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 	servicemanagementv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/servicemanagement/v1alpha1"
-	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	serviceusagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1beta1"
 	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
@@ -132,7 +132,7 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyAssociationGVK, crdName: "computeregionnetworkfirewallpolicyassociations.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyAssociationModel},
 	{gvk: loggingv1beta1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 	{gvk: loggingv1alpha1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
-	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
+	{gvk: serviceusagev1beta1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
 	{gvk: networksecurityv1beta1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel, labels: slotguard.Spec},
@@ -186,7 +186,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		storagev1beta1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
-		serviceusagev1alpha1.AddToScheme,
+		serviceusagev1beta1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
 		resourcemanagerv1alpha1.AddToScheme,
 		networksecurityv1beta1.AddToScheme,
