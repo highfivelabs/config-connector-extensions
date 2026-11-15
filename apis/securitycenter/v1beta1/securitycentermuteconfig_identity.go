@@ -21,7 +21,7 @@
 // identity is {parent}/muteConfigs/{muteConfig} rather than a gcpurls
 // template with an organization.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"

@@ -28,7 +28,7 @@ package compute
 import (
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
-	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 )
 
 func RouterBGPPeerBfd_FromProto(mapCtx *direct.MapContext, in *pb.RouterBgpPeerBfd) *krm.RouterBGPPeerBfd {

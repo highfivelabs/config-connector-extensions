@@ -1,16 +1,20 @@
 ---
 kinds: [ComputeRouter]
-apiVersion: compute.gcp.hfl.dev/v1alpha1
+apiVersion: compute.gcp.hfl.dev/v1beta1
 ---
 # ComputeRouter
 
-`compute.gcp.hfl.dev/v1alpha1`
+`compute.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** a whole Cloud Router: BGP (with `identifierRange`), interfaces, BGP peers (BFD, custom learned ranges, IPv4 and IPv6 next hops, route policies), Cloud NATs and MD5 authentication keys whose values come from Secrets; Config Connector's direct `ComputeRouter` has only the BGP basics and leaves the rest to Terraform-based kinds without these fields (`docs/design.md` decision 14)
 
 **Source.** copied from Config Connector's direct `ComputeRouter`, NAT and interface mappers; the peers and keys written here
 
 ## Notes
+
+2026-11-15: moved from `compute.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

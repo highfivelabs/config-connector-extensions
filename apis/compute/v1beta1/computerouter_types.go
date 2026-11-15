@@ -32,8 +32,12 @@
 //     without the router, region and resource ID, plus name,
 //     autoNetworkTier, nat64Subnetworks and sourceSubnetworkIpRangesToNat64.
 // Group, labels and short names are ours.
+//
+// v1beta1 since 2026-11-15 (docs/design.md decision 27): the kind moved
+// from v1alpha1 unchanged, and v1alpha1 is no longer served. Nothing had
+// been released at v1alpha1.
 
-package v1alpha1
+package v1beta1
 
 import (
 	computerefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/refs"

@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	hflcomputev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -228,14 +229,14 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 	// name both have.
 	t.Run("routerRef names this project's ComputeRouter by object", func(t *testing.T) {
 		ours := mockenv.Name("ours-router")
-		routerObj := &computev1alpha1.ComputeRouter{
+		routerObj := &hflcomputev1beta1.ComputeRouter{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   namespace,
 				Name:        "ours-router",
 				Labels:      mockenv.Labels(),
 				Annotations: map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project},
 			},
-			Spec: computev1alpha1.ComputeRouterSpec{
+			Spec: hflcomputev1beta1.ComputeRouterSpec{
 				ResourceID: mockenv.Ptr(ours),
 				Region:     region,
 				NetworkRef: computerefs.ComputeNetworkRef{External: network},
@@ -253,7 +254,7 @@ func TestComputeRouterRoutePolicy(t *testing.T) {
 				t.Errorf("deleting router %s: %v", ours, err)
 			}
 		})
-		env.WaitReady(computev1alpha1.ComputeRouterGVK, namespace, "ours-router")
+		env.WaitReady(hflcomputev1beta1.ComputeRouterGVK, namespace, "ours-router")
 
 		onOurs := newPolicy("on-ours")
 		onOurs.Spec.RouterRef = &computev1alpha1.ComputeRouterRef{Name: "ours-router"}

@@ -36,6 +36,11 @@ import (
 // ConfigConnectorComputeRouterGVK is Config Connector's Cloud Router.
 var ConfigConnectorComputeRouterGVK = schema.GroupVersionKind{Group: "compute.cnrm.cloud.google.com", Version: "v1beta1", Kind: "ComputeRouter"}
 
+// computeRouterGVK is this project's Cloud Router, compute.gcp.hfl.dev/v1beta1
+// since docs/design.md decision 27. It is written out here because
+// apis/compute/v1beta1 imports this package.
+var computeRouterGVK = schema.GroupVersionKind{Group: GroupVersion.Group, Version: "v1beta1", Kind: "ComputeRouter"}
+
 // ComputeRouterRef names a Cloud Router.
 type ComputeRouterRef struct {
 	// An existing router, as "projects/{{projectID}}/regions/{{region}}/routers/{{name}}".
@@ -55,7 +60,7 @@ type ComputeRouterRef struct {
 // for a while; the reference must not pick one silently).
 func referencedRouter(ctx context.Context, reader client.Reader, key types.NamespacedName) (*unstructured.Unstructured, error) {
 	var found []*unstructured.Unstructured
-	for _, gvk := range []schema.GroupVersionKind{ComputeRouterGVK, ConfigConnectorComputeRouterGVK} {
+	for _, gvk := range []schema.GroupVersionKind{computeRouterGVK, ConfigConnectorComputeRouterGVK} {
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
 		if err := reader.Get(ctx, key, u); err != nil {
@@ -72,7 +77,7 @@ func referencedRouter(ctx context.Context, reader client.Reader, key types.Names
 	case 1:
 		return found[0], nil
 	default:
-		return nil, fmt.Errorf("referenced ComputeRouter %v is both a %s and a %s object; name the router by routerRef.external", key, ComputeRouterGVK.Group, ConfigConnectorComputeRouterGVK.Group)
+		return nil, fmt.Errorf("referenced ComputeRouter %v is both a %s and a %s object; name the router by routerRef.external", key, computeRouterGVK.Group, ConfigConnectorComputeRouterGVK.Group)
 	}
 }
 

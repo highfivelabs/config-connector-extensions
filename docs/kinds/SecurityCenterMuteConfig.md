@@ -1,16 +1,20 @@
 ---
 kinds: [SecurityCenterMuteConfig]
-apiVersion: securitycenter.gcp.hfl.dev/v1alpha1
+apiVersion: securitycenter.gcp.hfl.dev/v1beta1
 ---
 # SecurityCenterMuteConfig
 
-`securitycenter.gcp.hfl.dev/v1alpha1`
+`securitycenter.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** a Security Command Center mute config of an organization, folder or project (Terraform's `google_scc_mute_config`, `google_scc_folder_mute_config`, `google_scc_project_mute_config`); Config Connector's `SecurityCenterMuteConfig` is alpha and takes an organization only (`docs/design.md` decision 16)
 
 **Source.** Config Connector's direct `SecurityCenterMuteConfig`, with the parents of upstream PR #7673
 
 ## Notes
+
+2026-11-15: moved from `securitycenter.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
 
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.

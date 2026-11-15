@@ -57,11 +57,12 @@ import (
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1alpha1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
-	securitycenterv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1alpha1"
+	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 	servicemanagementv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/servicemanagement/v1alpha1"
 	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
 	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
@@ -130,7 +131,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyGVK, crdName: "computeregionnetworkfirewallpolicies.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyModel},
 	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyRuleGVK, crdName: "computeregionnetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyRuleModel},
 	{gvk: computev1alpha1.ComputeRegionNetworkFirewallPolicyAssociationGVK, crdName: "computeregionnetworkfirewallpolicyassociations.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyAssociationModel},
-	{gvk: loggingv1alpha1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
+	{gvk: loggingv1beta1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 	{gvk: loggingv1alpha1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
 	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
@@ -138,7 +139,7 @@ var Kinds = []kind{
 	{gvk: networksecurityv1alpha1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel, labels: slotguard.Spec},
 	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGVK, crdName: "networksecuritysecurityprofiles.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileModel, labels: slotguard.Spec},
 	{gvk: networksecurityv1alpha1.NetworkSecuritySecurityProfileGroupGVK, crdName: "networksecuritysecurityprofilegroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewSecurityProfileGroupModel, labels: slotguard.Spec},
-	{gvk: computev1alpha1.ComputeRouterGVK, crdName: "computerouters.compute.gcp.hfl.dev", model: compute.NewRouterModel},
+	{gvk: computev1beta1.ComputeRouterGVK, crdName: "computerouters.compute.gcp.hfl.dev", model: compute.NewRouterModel},
 	{gvk: iamv1beta1.IAMDenyPolicyGVK, crdName: "iamdenypolicies.iam.gcp.hfl.dev", model: iam.NewDenyPolicyModel},
 	{gvk: iamv1beta1.IAMPrincipalAccessBoundaryPolicyGVK, crdName: "iamprincipalaccessboundarypolicies.iam.gcp.hfl.dev", model: iam.NewPrincipalAccessBoundaryPolicyModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
@@ -147,7 +148,7 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyAssociationGVK, crdName: "computeorganizationsecuritypolicyassociations.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyAssociationModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyRuleGVK, crdName: "computeorganizationsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewOrganizationSecurityPolicyRuleModel},
 	{gvk: computev1beta1.ComputeNetworkFirewallPolicyRuleGVK, crdName: "computenetworkfirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyRuleModel},
-	{gvk: securitycenterv1alpha1.SecurityCenterMuteConfigGVK, crdName: "securitycentermuteconfigs.securitycenter.gcp.hfl.dev", model: securitycenter.NewMuteConfigModel},
+	{gvk: securitycenterv1beta1.SecurityCenterMuteConfigGVK, crdName: "securitycentermuteconfigs.securitycenter.gcp.hfl.dev", model: securitycenter.NewMuteConfigModel},
 	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel, labels: slotguard.Metadata},
 	{gvk: dnsv1beta1.DNSResponsePolicyRuleGVK, crdName: "dnsresponsepolicyrules.dns.gcp.hfl.dev", model: dns.NewResponsePolicyRuleModel},
 	{gvk: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
@@ -186,11 +187,12 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		chroniclev1beta1.AddToScheme,
 		storagev1alpha1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
+		loggingv1beta1.AddToScheme,
 		serviceusagev1alpha1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
 		resourcemanagerv1alpha1.AddToScheme,
 		networksecurityv1alpha1.AddToScheme,
-		securitycenterv1alpha1.AddToScheme,
+		securitycenterv1beta1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

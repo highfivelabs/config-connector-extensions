@@ -18,7 +18,7 @@
 // apis/compute/v1beta1/computerouter_identity.go (UPSTREAM.md), unchanged
 // but for the package.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"
