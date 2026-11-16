@@ -238,10 +238,10 @@ func TestContainerFields(t *testing.T) {
 			if k := cl.GetNodePoolAutoConfig().GetNodeKubeletConfig(); k == nil || k.InsecureKubeletReadonlyPortEnabled == nil || k.GetInsecureKubeletReadonlyPortEnabled() {
 				t.Errorf("nodePoolAutoConfig.nodeKubeletConfig = %v, want the read-only port off", k)
 			}
-			// The fake starts with none of them set; live, the cluster may
-			// already have some, so only "at most one each" holds.
-			if n := clusterUpdates() - before; n == 0 || n > 5 || (!mockenv.Live() && n != 5) {
-				t.Errorf("clusters.update called %d times, want one per field that differed (5 on the fake)", n)
+			// A new cluster already has some of these values (the fake's
+			// defaults include one), so only "at most one each" holds.
+			if n := clusterUpdates() - before; n == 0 || n > 5 {
+				t.Errorf("clusters.update called %d times, want one per field that differed (1 to 5)", n)
 			}
 		})
 

@@ -22,6 +22,7 @@ package kms_test
 // in the one key ring the runs share (cce-e2e-fields).
 
 import (
+	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -45,6 +46,13 @@ import (
 var configConnectorKMSCryptoKeyGVK = schema.GroupVersionKind{Group: "kms.cnrm.cloud.google.com", Version: "v1beta1", Kind: "KMSCryptoKey"}
 
 func TestKMSCryptoKeyFields(t *testing.T) {
+	if mockenv.Live() && os.Getenv("E2E_KMS_KAJ") != "true" {
+		// Run cce-11160523-1e83: the API refuses a policy on a key outside
+		// Key Access Justifications enrollment, set or cleared alike (400,
+		// "This key is not enrolled in Key Access Justifications with
+		// policy enforcement"), and the live-test project's keys are not.
+		t.Skip("a live KMSCryptoKeyFields run needs a key ring in a project enrolled in Key Access Justifications with policy enforcement (Assured Workloads); set E2E_KMS_KAJ=true where it is (docs/kinds/KMSCryptoKeyFields.md)")
+	}
 	const (
 		namespace = "example"
 		location  = "us-central1"

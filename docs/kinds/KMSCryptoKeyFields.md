@@ -33,7 +33,21 @@ The test's key is the run's own, made with no key version (no cost); Cloud
 KMS never deletes a key or key ring, so keys stay in the shared key ring
 `cce-e2e-fields` (us-central1) with their policy cleared.
 
+2026-11-16, live (run `cce-11160523-1e83`): the API refuses a policy on a
+key that is not enrolled in Key Access Justifications, setting and
+clearing alike: 400, "This key is not enrolled in Key Access
+Justifications with policy enforcement". Enrollment comes from Assured
+Workloads (a folder with Key Access Justifications), which the live-test
+project is not in. The controller reports the API's message (not Ready,
+`UpdateFailed`) and tries again; nothing else of the key was written (the
+test's key kept its labels and has no policy). The live test now skips
+unless `E2E_KMS_KAJ=true`, for a run against an enrolled project; whether
+to enroll one is a question for the builder (CCEQ8). The mask behaviour
+(only the policy is written; Config Connector's label update leaves it)
+is proven on the fake only.
+
 ## Live runs
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | `7be2586` | pass (9 cases) | fail: 400 "This key is not enrolled in Key Access Justifications with policy enforcement" on the first patch (run `cce-11160523-1e83`); now skips without `E2E_KMS_KAJ=true` | the API needs Key Access Justifications enrollment; mockgcp does not check it | one key with no version (`cce-11160523-1e83-kaj-key`, free; Cloud KMS never deletes keys) in key ring `cce-e2e-fields` |

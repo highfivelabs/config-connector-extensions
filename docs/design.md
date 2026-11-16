@@ -2913,6 +2913,10 @@ To raise confidence in `ArtifactRegistryRepository`:
     update of Config Connector's own kubelet fields can reset ours until
     our next reconcile). Their files in `docs/kinds/` have the details
     and the live runs. Patches 0052 and 0053 teach mockgcp the writes.
+    Live (2026-11-16, run `cce-11160523-1e83`): Cloud KMS refuses any
+    `keyAccessJustificationsPolicy` on a key outside Key Access
+    Justifications enrollment (Assured Workloads), so `KMSCryptoKeyFields`
+    cannot pass live in the live-test project; section 10 question 10.
 
 ## 9. The operator: Config Connector's identity, per namespace
 
@@ -3243,3 +3247,16 @@ moves to section 8.
    Recommendation: yes, promote field-gap kinds under the same rule, so
    every kind of ours reaches `v1beta1` the same way; the catalog's charts
    refuse alpha kinds whichever gap the kind fills.
+
+10. **Where can `KMSCryptoKeyFields` run live?** (2026-11-16, CCEQ8.)
+    Cloud KMS refuses a key's `keyAccessJustificationsPolicy`, set or
+    cleared, unless the key is enrolled in Key Access Justifications with
+    policy enforcement, which comes from an Assured Workloads folder (run
+    `cce-11160523-1e83`: 400 "This key is not enrolled in Key Access
+    Justifications with policy enforcement"). The live-test project is not
+    enrolled, so the kind cannot get its live row, and decision 27 keeps it
+    `v1alpha1`. Recommendation: do not enroll for tests now (Assured
+    Workloads with Key Access Justifications is a paid, organization-level
+    setup); keep the kind fake-tested and `v1alpha1`, let a catalog chart
+    render it only behind `allow_alpha`, and run it live (`E2E_KMS_KAJ=true`)
+    in the first enrolled project a customer or the builder has.

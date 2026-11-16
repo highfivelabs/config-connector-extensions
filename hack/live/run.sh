@@ -55,6 +55,8 @@ source hack/live/projects.sh
 # chronicle (ChronicleRule, ChronicleRuleDeployment, ChronicleReferenceList) skips live unless E2E_CHRONICLE_INSTANCE
 # names a SecOps instance, <location>/<instance ID>;
 # asset (AssetFeed) skips live unless E2E_CLOUD_ASSET=true;
+# kms (KMSCryptoKeyFields) skips live unless E2E_KMS_KAJ=true (the key ring
+# must be in a project enrolled in Key Access Justifications);
 # container (ContainerClusterFields, ContainerNodePoolFields) skips live
 # unless E2E_GKE=true (it makes a GKE cluster);
 # (docs/live-runs.md).
