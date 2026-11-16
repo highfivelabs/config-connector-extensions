@@ -44,7 +44,9 @@ pick ours or Config Connector's `LoggingLogSink`) grants the sink's
 `status.writerIdentity`, waiting (`DependencyNotReady`) until the sink
 has one. `IAMBinding.membersFrom[]` takes the same. A sink deleted
 before the member does not hold the member's delete: the member is read
-from `status.externalRef`. `docs/design.md` section 6.5 has the rest.
+from `status.externalRef`; one that never resolved (no
+`status.externalRef`) was never added and deletes without a call.
+`docs/design.md` section 6.5 has the rest.
 
 A parent being deleted (2026-11-13): as `IAMBinding`'s (see `IAMBinding.md`):
 the delete succeeds without a call when the parent is gone or being

@@ -75,10 +75,14 @@ func (m *memberModel) AdapterForObject(ctx context.Context, op *directbase.Adapt
 		// While the object is being deleted, a memberFrom object that is
 		// gone or not ready (a log sink deleted first, with its chart) does
 		// not hold the delete: the member it resolved to is in
-		// status.externalRef.
-		prev := &krm.IAMMemberIdentity{}
-		if !op.IsDeleting() || !isReferenceError(err) || prev.FromExternal(direct.ValueOf(obj.Status.ExternalRef)) != nil {
+		// status.externalRef, and without one it never resolved, so it
+		// was never added and there is nothing to remove.
+		if !op.IsDeleting() || !isReferenceError(err) {
 			return nil, err
+		}
+		prev := &krm.IAMMemberIdentity{}
+		if prev.FromExternal(direct.ValueOf(obj.Status.ExternalRef)) != nil {
+			return &memberAdapter{desired: obj, gone: true}, nil
 		}
 		member = prev.Member
 	}

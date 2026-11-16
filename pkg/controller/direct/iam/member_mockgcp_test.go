@@ -450,6 +450,17 @@ func TestIAMMember(t *testing.T) {
 			}
 		})
 
+		t.Run("a member whose sink never had a writer identity deletes without a call", func(t *testing.T) {
+			o := newMember("secret-no-sink", tg, "")
+			o.Spec.Member = nil
+			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{LogSinkRef: &iamv1beta1.IAMLogSinkRef{Name: "no-such-sink"}}
+			if err := env.Kube.Create(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitNotReady(memberGVK, namespace, o.Name)
+			del(t, o)
+		})
+
 		t.Run("a memberFrom with two sources, or none, is refused", func(t *testing.T) {
 			// The CRD's oneOf (Config Connector's validation step) or the
 			// CEL rule answers, whichever the API server reports.
