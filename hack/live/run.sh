@@ -84,6 +84,7 @@ done
 G=(gcloud --quiet --project "${project}")
 if [[ -n "${LIVE_ACCOUNT:-}" ]]; then G+=(--account "${LIVE_ACCOUNT}"); fi
 SWEEP=(hack/live/sweep.sh --project "${project}")
+if [[ "${LIVE_FOLDER_ONLY:-}" == true ]]; then SWEEP+=(--folder-only); fi
 
 # Under offload run --impersonate the run acts as OFFLOAD_IMPERSONATE (gcloud
 # may list the VM's own account, from which it impersonates).
