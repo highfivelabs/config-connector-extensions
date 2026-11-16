@@ -38,7 +38,7 @@ spec:
       jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
       name: Status Age
       type: date
-    name: v1alpha1
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: LoggingSavedQuery is a logging.v2 resource (https://logging.googleapis.com/v2/{parent}/locations/{location}/savedQueries/{id}),

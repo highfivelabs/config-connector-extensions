@@ -8,6 +8,17 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **Six generated kinds are `v1beta1`** (`docs/design.md` decisions 27
+  and 34: they passed live and their CRDs have not changed since):
+  `ComputeRegionHealthAggregationPolicy` and `ComputeRegionBackendBucket`
+  (`compute.gcp.hfl.dev`), `LoggingSavedQuery` and `LoggingLink`
+  (`logging.gcp.hfl.dev`), `GKEHubRolloutSequence` (`gkehub.gcp.hfl.dev`)
+  and `IAMOauthClient` (`iam.gcp.hfl.dev`). Schemas are unchanged; the
+  CRDs no longer serve `v1alpha1`, so change the `apiVersion`. A cluster
+  with `v1alpha1` objects of these kinds upgrades as for the sixteen
+  below: abandon and delete them, replace the CRD, apply them again at
+  `v1beta1`.
+
 - **`LookerInstance` takes its OAuth client secret from a Kubernetes
   Secret.** `spec.oauthConfig.clientSecret` is now Config Connector's
   secret shape (as `SQLUser`'s `password`): `value`, or
