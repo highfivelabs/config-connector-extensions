@@ -21,8 +21,8 @@
 package v1beta1
 
 import (
-	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/container/v1beta1"
-	k8sv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	containerv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/container/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -145,7 +145,7 @@ func (in *ContainerClusterFieldsSpec) DeepCopyInto(out *ContainerClusterFieldsSp
 	*out = *in
 	if in.ResourceRef != nil {
 		in, out := &in.ResourceRef, &out.ResourceRef
-		*out = new(v1beta1.ContainerClusterRef)
+		*out = new(containerv1beta1.ContainerClusterRef)
 		**out = **in
 	}
 	if in.SecretManagerConfig != nil {
@@ -190,7 +190,7 @@ func (in *ContainerClusterFieldsStatus) DeepCopyInto(out *ContainerClusterFields
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]k8sv1alpha1.Condition, len(*in))
+		*out = make([]v1alpha1.Condition, len(*in))
 		copy(*out, *in)
 	}
 	if in.ObservedGeneration != nil {
@@ -279,7 +279,7 @@ func (in *ContainerNodePoolFieldsSpec) DeepCopyInto(out *ContainerNodePoolFields
 	*out = *in
 	if in.ResourceRef != nil {
 		in, out := &in.ResourceRef, &out.ResourceRef
-		*out = new(v1beta1.ContainerNodePoolRef)
+		*out = new(containerv1beta1.ContainerNodePoolRef)
 		**out = **in
 	}
 	if in.Config != nil {
@@ -304,7 +304,7 @@ func (in *ContainerNodePoolFieldsStatus) DeepCopyInto(out *ContainerNodePoolFiel
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]k8sv1alpha1.Condition, len(*in))
+		*out = make([]v1alpha1.Condition, len(*in))
 		copy(*out, *in)
 	}
 	if in.ObservedGeneration != nil {
