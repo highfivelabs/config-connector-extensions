@@ -24,6 +24,14 @@ fake only (a live run never touches the organization). It is Cloud
 Foundation Fabric's folder and organization `service_agents_config`
 (decision 36).
 
+2026-11-15: a delete resolves no reference and builds no client. It
+makes no call anyway (nothing undoes `generateServiceIdentity`), but it
+used to resolve `folderRef` first, so once the Folder object was gone
+(everything deleted at once: the catalog's folder chart on the fake
+cloud, 1 failure in 67 objects) the object never went. Two mock cases:
+the Folder object deleted first, and a Folder object that never existed.
+AssetFeed had the same fault (#134).
+
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
