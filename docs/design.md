@@ -2915,7 +2915,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     update of Config Connector's own kubelet fields can reset ours until
     our next reconcile). Their files in `docs/kinds/` have the details
     and the live runs. Patches 0052 and 0053 teach mockgcp the writes.
-    Live (2026-11-16, run `cce-11160523-1e83`): Cloud KMS refuses any
+    Live (2026-11-16): `ContainerClusterFields` and
+    `ContainerNodePoolFields` passed (run `cce-11160848-7b8d`, every
+    case, on a real zonal cluster). Cloud KMS (run `cce-11160523-1e83`) refuses any
     `keyAccessJustificationsPolicy` on a key outside Key Access
     Justifications enrollment (Assured Workloads), so `KMSCryptoKeyFields`
     cannot pass live in the live-test project; section 10 question 10.

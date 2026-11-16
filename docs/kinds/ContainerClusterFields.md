@@ -44,7 +44,9 @@ resource in the namespace. Patch 0053 makes mockgcp's `clusters.update`
 take the five `desired*` fields and merge `desiredAddonsConfig` (it
 replaced the whole add-ons config).
 
-The live test skips unless `E2E_GKE=true` (a zonal cluster with one
+Both passed live on 2026-11-16 (run `cce-11160848-7b8d`); with their
+CRDs unchanged they can move to `v1beta1` under decision 27 (not done in
+this change). The live test skips unless `E2E_GKE=true` (a zonal cluster with one
 `e2-small` node and a one-node pool, made and deleted by the test; the
 sweeper deletes leftover clusters by label) and takes about an hour: run
 it with `LIVE_TIMEOUT=150m`.
@@ -76,3 +78,4 @@ What live taught (2026-11-16):
 | 2026-11-16 | `4b15567` | pass | fail: the Secret Manager add-on needs Workload Identity (`cce-11160547-aae3`) | the fake took it; now refuses | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted |
 | 2026-11-16 | `815f129` | pass | fail: each update about 7 minutes, the test's 15-minute wait ran out; the cluster's delete refused during an update, swept by the next run (`cce-11160623-50f0`) | none | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted |
 | 2026-11-16 | `eefbc0b` | pass | fail on one case only: the Terraform-reset case read the node pool before the resync's update ran (a test bug, fixed); every other case passed, cluster fields and node pool fields (`cce-11160727-382a`) | none | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted |
+| 2026-11-16 | `d59760e` | not run: the VM's `/tmp` filled while building (the same code passed the fake in `cce-11160727-382a` and in `task ci` on `d59760e`) | **pass**, every case of both kinds: five cluster fields set one update each (about 7 minutes per update), a changed field written alone, delete leaves them; node pool fields set with Config Connector's kubelet fields kept, Terraform's whole-config update resets them and the next reconcile sets them again, delete unsets them, abandon keeps them (`cce-11160848-7b8d`, 58 minutes) | none | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted; sweep found nothing left |
