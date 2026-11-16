@@ -77,6 +77,25 @@ service account, never on a laptop and never with a downloaded key:
   env GCP_PROJECT="$GCP_PROJECT" bash -c 'task upstream && task test-live'
 ```
 
+Runs in the organization's `live-tests` folder (the folder kinds below:
+`E2E_TEST_FOLDER`, `E2E_TEST_FOLDER_PROJECT`) act as `$GCP_LIVE_IMPERSONATE`
+instead, `live-tests@` in the organization's own testing project, which
+tf-infra makes and grants (`dev/gcp/projects/hfl-testing`; its README,
+"Live tests"): the folder's roles, `billing.user`, quota, asset and log
+read in `$GCP_PROJECT`, read on the offload bucket. The VM stays the
+offload runner, which may impersonate it; no key, and no VM attached to an
+account of another project:
+
+```sh
+../offload/offload run --impersonate "$GCP_LIVE_IMPERSONATE" --hours 2 -- \
+  env GCP_PROJECT="$GCP_PROJECT" E2E_TEST_FOLDER=folders/<live-tests folder> \
+  bash -c 'task upstream && task test-live KINDS=serviceusage'
+```
+
+It does not hold `$GCP_PROJECT`'s admin roles, so the project kinds stay on
+`$GCP_LIVE_SA`. The folder's `logging.configWriter` (`E2E_LOGGING_FOLDER`)
+is not granted to it yet.
+
 `hack/live/run.sh` (what `task test-live` runs):
 
 1. refuses any project not in `hack/live/projects.sh` and any credentials
