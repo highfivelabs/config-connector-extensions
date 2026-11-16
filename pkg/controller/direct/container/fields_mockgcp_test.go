@@ -116,14 +116,23 @@ func TestContainerFields(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		op, err := c.DeleteCluster(env.Ctx, &pb.DeleteClusterRequest{Name: clusterName})
-		if err != nil {
-			if !direct.IsNotFound(err) {
-				t.Errorf("deleting cluster %s: %v", clusterName, err)
+		// A cluster with an operation running refuses the delete (400
+		// "Cluster is running incompatible operation", run
+		// cce-11160623-50f0): try again until it is done.
+		for deadline := time.Now().Add(30 * time.Minute); ; time.Sleep(15 * time.Second) {
+			op, err := c.DeleteCluster(env.Ctx, &pb.DeleteClusterRequest{Name: clusterName})
+			if err == nil {
+				wait(t, op)
+				return
 			}
-			return
+			if direct.IsNotFound(err) {
+				return
+			}
+			if !strings.Contains(err.Error(), "incompatible operation") || time.Now().After(deadline) {
+				t.Errorf("deleting cluster %s: %v", clusterName, err)
+				return
+			}
 		}
-		wait(t, op)
 	})
 	wait(t, op)
 	op, err = c.CreateNodePool(env.Ctx, &pb.CreateNodePoolRequest{Parent: clusterName, NodePool: &pb.NodePool{

@@ -878,11 +878,24 @@ fi
 # cce-e2e=true and cce-run=<run>). Cloud KMS keys are not swept: the API
 # never deletes a key or a key ring (the KMSCryptoKeyFields test makes keys
 # with no version, which cost nothing, and clears their policy).
+# A cluster with an operation running (a test's update) refuses the delete
+# (400 "Cluster is running incompatible operation"): wait and try again, up
+# to 30 minutes (run cce-11160623-50f0).
+gke_delete() { # gke_delete NAME LOCATION
+  local i err
+  for i in $(seq 60); do
+    if err="$("${G[@]}" container clusters delete "$1" --location "$2" 2>&1)"; then return 0; fi
+    [[ "${err}" == *"incompatible operation"* ]] || { echo "${err}" >&2; return 1; }
+    sleep 30
+  done
+  echo "${err}" >&2
+  return 1
+}
 rows="$("${G[@]}" container clusters list --verbosity=error \
   --filter="$(filter resourceLabels ^)" --format='value(name,location)')"
 while read -r name loc; do
   [[ -n "${name}" ]] || continue
-  act "GKE cluster" "${loc}/${name}" "${G[@]}" container clusters delete "${name}" --location "${loc}"
+  act "GKE cluster" "${loc}/${name}" gke_delete "${name}" "${loc}"
 done <<<"${rows}"
 
 if [[ "${mode}" == "list" ]]; then
