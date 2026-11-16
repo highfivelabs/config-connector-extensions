@@ -1,7 +1,7 @@
 // Copyright 2026 High Five Labs
 // SPDX-License-Identifier: Apache-2.0
 
-package v1alpha1
+package v1beta1
 
 // Written here, after our ComputeNetworkFirewallPolicyRule's identity
 // (apis/compute/v1beta1), with packetMirroringRules in place of rules.

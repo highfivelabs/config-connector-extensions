@@ -47,6 +47,8 @@ var promoted = []string{
 	"GKEHubRolloutSequence", "IAMOauthClient",
 	// Field kinds that passed live (run cce-11160848-7b8d, 2026-11-16).
 	"ContainerClusterFields", "ContainerNodePoolFields",
+	// Passed live at 78644ec (run cce-11120932-1df3), CRD unchanged since.
+	"ComputeNetworkFirewallPolicyPacketMirroringRule",
 }
 
 func TestPromotedKindsServeOnlyV1beta1(t *testing.T) {

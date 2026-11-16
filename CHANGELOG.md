@@ -8,6 +8,12 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **`ComputeNetworkFirewallPolicyPacketMirroringRule` is `v1beta1`**
+  (`compute.gcp.hfl.dev/v1beta1`; `docs/design.md` decision 27: it passed
+  live at `78644ec` in run `cce-11120932-1df3` and its CRD has not changed
+  since). The schema is unchanged; the CRD no longer serves `v1alpha1`, so
+  change the `apiVersion`.
+
 - **`ContainerClusterFields` and `ContainerNodePoolFields` are
   `v1beta1`** (`container.gcp.hfl.dev/v1beta1`; `docs/design.md`
   decision 27: both passed live in run `cce-11160848-7b8d` and their CRDs

@@ -293,6 +293,7 @@ cloudidentity.googleapis.com,cloudidentity.googleapis.com/Policy,6,,0,,0,6,false
 cloudiot.googleapis.com,cloudiot.googleapis.com/Device,28,CloudIOTDevice,11,,0,17,false,api=v1:google.cloud.iot.v1.DeviceManager.CreateDevice; official-spec-fields-unmatched=2/12
 cloudiot.googleapis.com,cloudiot.googleapis.com/DeviceRegistry,16,CloudIOTDeviceRegistry,15,,0,1,false,api=v1:google.cloud.iot.v1.DeviceManager.CreateDeviceRegistry; official-spec-fields-unmatched=3/10
 cloudkms.googleapis.com,cloudkms.googleapis.com/EkmConnection,6,KMSEkmConnection,6,,0,0,false,api=v1:projects.locations.ekmConnections; official-spec-fields-unmatched=4/10
+cloudkms.googleapis.com,cloudkms.googleapis.com/KMSCryptoKeyFields,0,,0,KMSCryptoKeyFields,0,0,false,"outside-denominator; a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37)"
 cloudkms.googleapis.com,cloudkms.googleapis.com/KeyHandle,2,KMSKeyHandle,2,,0,0,false,api=v1:projects.locations.keyHandles; official-spec-fields-unmatched=3/4
 cloudkms.googleapis.com,cloudkms.googleapis.com/KeyRing,0,KMSKeyRing,0,,0,0,false,api=v1:projects.locations.keyRings; official-spec-fields-unmatched=2/2
 cloudkms.googleapis.com,cloudkms.googleapis.com/KeyRingCryptoKey,10,KMSCryptoKey,7,,0,3,false,api=v1:projects.locations.keyRings.cryptoKeys; official-spec-fields-unmatched=3/9
@@ -482,6 +483,8 @@ contactcenterinsights.googleapis.com,contactcenterinsights.googleapis.com/QaScor
 contactcenterinsights.googleapis.com,contactcenterinsights.googleapis.com/View,3,CCInsightsView,3,,0,0,false,api=v1:projects.locations.views; official-spec-fields-unmatched=3/5
 container.googleapis.com,container.googleapis.com/Cluster,715,ContainerCluster;ContainerNodePool,294,,0,421,false,api=v1:projects.locations.clusters; request-wrapper=CreateClusterRequest
 container.googleapis.com,container.googleapis.com/ClusterNodePool,213,ContainerNodePool,108,,0,105,false,api=v1:projects.locations.clusters.nodePools; request-wrapper=CreateNodePoolRequest; official-spec-fields-unmatched=13/120
+container.googleapis.com,container.googleapis.com/ContainerClusterFields,0,,0,ContainerClusterFields,0,0,false,"outside-denominator; a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37)"
+container.googleapis.com,container.googleapis.com/ContainerNodePoolFields,0,,0,ContainerNodePoolFields,0,0,false,"outside-denominator; a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37)"
 containeranalysis.googleapis.com,containeranalysis.googleapis.com/LocationNote,183,,0,,0,183,false,api=v1:projects.locations.notes
 containeranalysis.googleapis.com,containeranalysis.googleapis.com/LocationOccurrence,419,,0,,0,419,false,api=v1:projects.locations.occurrences
 containeranalysis.googleapis.com,containeranalysis.googleapis.com/Note,183,ContainerAnalysisNote;GrafeasNote,152,,0,31,false,api=v1:projects.notes

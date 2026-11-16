@@ -36,16 +36,17 @@ import (
 	kcccomputev1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
 func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
-	gvk := computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK
+	gvk := computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK
 	env := mockenv.New(t, namespace)
 	policies, err := gcp.NewNetworkFirewallPoliciesRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -97,15 +98,15 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 		}
 		return n
 	}
-	getObj := func(t *testing.T, name string) *computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule {
+	getObj := func(t *testing.T, name string) *computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule {
 		t.Helper()
-		obj := &computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule{}
+		obj := &computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
 		return obj
 	}
-	update := func(t *testing.T, name string, change func(*computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule)) {
+	update := func(t *testing.T, name string, change func(*computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule)) {
 		t.Helper()
 		o := getObj(t, name)
 		change(o)
@@ -113,19 +114,19 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	newRule := func(name string, priority int64, action string) *computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule {
-		return &computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule{
+	newRule := func(name string, priority int64, action string) *computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule {
+		return &computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-			Spec: computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRuleSpec{
+			Spec: computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRuleSpec{
 				FirewallPolicyRef: kcccomputev1beta1.ComputeNetworkFirewallPolicyRef{External: policyPath},
 				Priority:          priority,
 				Action:            action,
 				Direction:         "INGRESS",
 				Description:       mockenv.Ptr("web traffic is not mirrored"),
-				Match: computev1alpha1.NetworkFirewallPolicyPacketMirroringRuleMatch{
+				Match: computev1beta1.NetworkFirewallPolicyPacketMirroringRuleMatch{
 					SrcIPRanges:  []string{"10.0.0.0/8"},
 					DestIPRanges: []string{"10.20.0.0/16"},
-					Layer4Configs: []computev1alpha1.NetworkFirewallPolicyPacketMirroringRuleLayer4Config{
+					Layer4Configs: []computev1beta1.NetworkFirewallPolicyPacketMirroringRuleLayer4Config{
 						{IPProtocol: "tcp", Ports: []string{"80", "443"}},
 					},
 				},
@@ -137,6 +138,22 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 	if err := env.Kube.Create(env.Ctx, newRule(web, 1000, "do_not_mirror")); err != nil {
 		t.Fatal(err)
 	}
+
+	// The kind moved to v1beta1 (docs/design.md decision 27): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(gvk.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a compute.gcp.hfl.dev/v1alpha1 ComputeNetworkFirewallPolicyPacketMirroringRule: err = %v, want no match for the kind", err)
+		}
+		if gvk.Version != "v1beta1" {
+			t.Errorf("ComputeNetworkFirewallPolicyPacketMirroringRule's version = %q, want v1beta1", gvk.Version)
+		}
+	})
 
 	t.Run("create adds the packet mirroring rule at its priority", func(t *testing.T) {
 		u := env.WaitReady(gvk, namespace, web)
@@ -168,7 +185,7 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 
 	t.Run("a resync writes nothing", func(t *testing.T) {
 		before := writes("patchPacketMirroringRule") + writes("addPacketMirroringRule")
-		update(t, web, func(o *computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
+		update(t, web, func(o *computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
 			o.Annotations = map[string]string{k8s.InternalForceReconcileAnnotation: time.Now().Format(time.RFC3339Nano)}
 		})
 		time.Sleep(3 * time.Second)
@@ -180,7 +197,7 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 
 	t.Run("changed fields and an emptied list are one patch", func(t *testing.T) {
 		before := writes("patchPacketMirroringRule")
-		update(t, web, func(o *computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
+		update(t, web, func(o *computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
 			// An INGRESS rule must keep a source (the API refuses one without,
 			// run cce-11120814-5d2a), so the emptied list is the destination's.
 			o.Spec.Description = mockenv.Ptr("web traffic to the frontends is not mirrored")
@@ -215,9 +232,9 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 		next := newRule("rest-goes-on", 2000, "goto_next")
 		next.Spec.Direction = "EGRESS"
 		next.Spec.Description = nil
-		next.Spec.Match = computev1alpha1.NetworkFirewallPolicyPacketMirroringRuleMatch{
+		next.Spec.Match = computev1beta1.NetworkFirewallPolicyPacketMirroringRuleMatch{
 			DestIPRanges:  []string{"0.0.0.0/0"},
-			Layer4Configs: []computev1alpha1.NetworkFirewallPolicyPacketMirroringRuleLayer4Config{{IPProtocol: "all"}},
+			Layer4Configs: []computev1beta1.NetworkFirewallPolicyPacketMirroringRuleLayer4Config{{IPProtocol: "all"}},
 		}
 		if err := env.Kube.Create(env.Ctx, next); err != nil {
 			t.Fatal(err)
@@ -258,7 +275,7 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "mirror-rest")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "mirror-rest"}})
+		env.WaitGone(&computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "mirror-rest"}})
 	})
 
 	t.Run("the priority and the policy are immutable", func(t *testing.T) {
@@ -278,20 +295,20 @@ func TestComputeNetworkFirewallPolicyPacketMirroringRule(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, web)); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: web}})
+		env.WaitGone(&computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: web}})
 		if _, err := cloudRule(1000); !missing(err) {
 			t.Errorf("after delete, reading the rule at 1000: %v, want it missing", err)
 		}
 	})
 
 	t.Run("abandon keeps the rule", func(t *testing.T) {
-		update(t, "rest-goes-on", func(o *computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
+		update(t, "rest-goes-on", func(o *computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule) {
 			o.Annotations = map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
 		})
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "rest-goes-on")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&computev1alpha1.ComputeNetworkFirewallPolicyPacketMirroringRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "rest-goes-on"}})
+		env.WaitGone(&computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "rest-goes-on"}})
 		if _, err := cloudRule(2000); err != nil {
 			t.Errorf("after abandon, reading the rule at 2000: %v, want it kept", err)
 		}

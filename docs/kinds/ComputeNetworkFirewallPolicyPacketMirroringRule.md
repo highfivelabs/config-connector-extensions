@@ -1,10 +1,10 @@
 ---
 kinds: [ComputeNetworkFirewallPolicyPacketMirroringRule]
-apiVersion: compute.gcp.hfl.dev/v1alpha1
+apiVersion: compute.gcp.hfl.dev/v1beta1
 ---
 # ComputeNetworkFirewallPolicyPacketMirroringRule
 
-`compute.gcp.hfl.dev/v1alpha1`
+`compute.gcp.hfl.dev/v1beta1` (since 2026-11-16, decision 27; first `v1alpha1`)
 
 **Gap it fills.** a packet mirroring rule of a global network firewall policy (which traffic is mirrored to a security profile group's mirroring endpoint group, not mirrored, or passed on), as Terraform's `google_compute_network_firewall_policy_packet_mirroring_rule` has it; in no Config Connector code or pull request
 

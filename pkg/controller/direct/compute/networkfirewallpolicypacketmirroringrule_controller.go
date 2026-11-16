@@ -49,7 +49,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 )
 
 // NewNetworkFirewallPolicyPacketMirroringRuleModel is the

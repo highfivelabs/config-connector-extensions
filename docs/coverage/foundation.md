@@ -120,7 +120,7 @@ What these numbers miss, for the foundation:
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]`, `packetMirroringRules[].match.srcAddressGroups[]`, `packetMirroringRules[].match.srcFqdns[]`, `packetMirroringRules[].match.srcNetworkContext` and 11 more
   - uncovered in `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kind or pull request for the regional policy; the global `ComputeNetworkFirewallPolicyRule` and `...Association` are Terraform-based (the rule is alpha-only, see the stability item), with no packet mirroring rule at all. `docs/design.md` 6.5 row 6 has the same finding.
-- **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version. `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10 (`compute.gcp.hfl.dev/v1alpha1`, written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields; mockgcp patch 0032). Next: the hierarchical policy's, on the beta API, live pending the test folder.
+- **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version. `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, built at `v1alpha1`; written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields; mockgcp patch 0032). Next: the hierarchical policy's, on the beta API, live pending the test folder.
 
 ### 3. Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
 
@@ -514,6 +514,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 7 | false |
 | ComputeWireGroup | compute.googleapis.com/WireGroup | 7 | false |
+| ContainerClusterFields | (not a create) a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37) | n/a | false |
+| ContainerNodePoolFields | (not a create) a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37) | n/a | false |
 | DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 0 | false |
 | DNSResponsePolicyRule | dns.googleapis.com/ResponsePolicyRule | 0 | false |
 | DataCatalogTag | (not a create) no API resource named like tag/datacatalogtag in datacatalog.googleapis.com | n/a | false |
@@ -532,16 +534,17 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
+| KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
@@ -558,22 +561,22 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only
