@@ -51,7 +51,7 @@ import (
 	chroniclev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
-	containerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/container/v1alpha1"
+	containerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/container/v1beta1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
 	dnsv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
 	firestorev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/firestore/v1beta1"
@@ -151,8 +151,8 @@ var Kinds = []kind{
 	// Field kinds: a few fields of a Config Connector kind's resource
 	// (docs/design.md section 6.6, pattern 2; decision 37).
 	{gvk: kmsv1alpha1.KMSCryptoKeyFieldsGVK, crdName: "kmscryptokeyfields.kms.gcp.hfl.dev", model: kms.NewCryptoKeyFieldsModel},
-	{gvk: containerv1alpha1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
-	{gvk: containerv1alpha1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
+	{gvk: containerv1beta1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
+	{gvk: containerv1beta1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},
@@ -206,7 +206,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		securitycenterv1beta1.AddToScheme,
 		assetv1beta1.AddToScheme,
 		kmsv1alpha1.AddToScheme,
-		containerv1alpha1.AddToScheme,
+		containerv1beta1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

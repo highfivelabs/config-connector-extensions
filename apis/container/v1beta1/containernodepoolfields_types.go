@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1beta1
 
 // Written here: a field kind (docs/design.md section 6.6, pattern 2;
 // decision 37 names it). The fields are the node pool's kubeletConfig

@@ -8,6 +8,13 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **`ContainerClusterFields` and `ContainerNodePoolFields` are
+  `v1beta1`** (`container.gcp.hfl.dev/v1beta1`; `docs/design.md`
+  decision 27: both passed live in run `cce-11160848-7b8d` and their CRDs
+  have not changed since). Schemas are unchanged; the CRDs no longer
+  serve `v1alpha1`, so change the `apiVersion`. `KMSCryptoKeyFields`
+  stays `v1alpha1` (it cannot pass live in the live-test project).
+
 - **A remote `ArtifactRegistryRepository` whose custom upstream URI
   changes is replaced** (`docs/design.md` decision 21): the controller
   deletes the repository and creates it again with the same name, as
