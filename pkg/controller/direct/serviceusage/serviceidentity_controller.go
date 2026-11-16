@@ -23,7 +23,10 @@
 // the identity's name in externalRef so a changed parent is refused rather
 // than reported with the old email, and observedState through the generated
 // mapper (mapper.generated.go). Export is left out (no exporter here). An
-// operation the API answers already done is not read again (waitForOp).
+// operation the API answers already done is not read again (waitForOp). A
+// delete resolves no reference and builds no client: it makes no call, and
+// a parent Folder or Organization object already gone (everything deleted
+// at once) would otherwise hold it forever, as AssetFeed's did (#134).
 
 // Package serviceusage has the direct controller for this project's Service
 // Usage kind.
@@ -86,6 +89,12 @@ func (m *serviceIdentityModel) AdapterForObject(ctx context.Context, op *directb
 	obj := &krm.ServiceIdentity{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
+	}
+
+	if !u.GetDeletionTimestamp().IsZero() {
+		// Nothing undoes generateServiceIdentity, so a delete makes no
+		// call (Delete) and needs neither the parent nor a client.
+		return &serviceIdentityAdapter{desiredKube: obj}, nil
 	}
 
 	if err := common.NormalizeReferences(ctx, kube, obj, nil); err != nil {

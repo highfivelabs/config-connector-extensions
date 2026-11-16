@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	serviceusagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1beta1"
@@ -196,6 +197,80 @@ func TestServiceIdentity(t *testing.T) {
 			t.Fatal(err)
 		}
 		env.WaitReady(gvk, namespace, "folder-osconfig")
+	})
+
+	// The case: everything deleted at once (a namespace, a release, the
+	// catalog's folder chart), and the Folder object the folderRef names
+	// goes first. The delete makes no call, so it resolves nothing and the
+	// object goes. Nothing here runs Folder's controller, so the Folder
+	// object is gone as soon as it is deleted.
+	folderObject := func(t *testing.T, name string) *unstructured.Unstructured {
+		t.Helper()
+		u := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+			"resourceID":      "123456",
+			"displayName":     "landing",
+			"organizationRef": map[string]any{"external": org},
+		}}}
+		u.SetGroupVersionKind(schema.GroupVersionKind{Group: "resourcemanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "Folder"})
+		u.SetNamespace(namespace)
+		u.SetName(name)
+		if err := env.Kube.Create(env.Ctx, u); err != nil {
+			t.Fatal(err)
+		}
+		return u
+	}
+	onFolderObject := func(t *testing.T, name, folderObj string) {
+		t.Helper()
+		o := &serviceusagev1beta1.ServiceIdentity{
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+			Spec: serviceusagev1beta1.ServiceIdentitySpec{
+				ResourceID: mockenv.Ptr("osconfig.googleapis.com"),
+				FolderRef:  &refsv1beta1.FolderRefDeprecated{Name: folderObj},
+			},
+		}
+		if err := env.Kube.Create(env.Ctx, o); err != nil {
+			t.Fatal(err)
+		}
+	}
+	deleteCallsNothing := func(t *testing.T, name string) {
+		t.Helper()
+		before := len(env.Requests())
+		if err := env.Kube.Delete(env.Ctx, getObj(t, name)); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&serviceusagev1beta1.ServiceIdentity{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		for _, r := range env.Requests()[before:] {
+			if strings.Contains(r, "serviceusage") {
+				t.Errorf("delete called %s", r)
+			}
+		}
+	}
+
+	t.Run("made, then its folder object deleted first, it still deletes", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("a live run never makes a folder's identity on a made-up folder (docs/live-runs.md)")
+		}
+		name := "folder-gone"
+		f := folderObject(t, name+"-folder")
+		onFolderObject(t, name, name+"-folder")
+		u := env.WaitReady(gvk, namespace, name)
+		if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != "folders/123456/services/osconfig.googleapis.com" {
+			t.Errorf("status.externalRef = %q", ref)
+		}
+		if err := env.Kube.Delete(env.Ctx, f); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(f)
+		deleteCallsNothing(t, name)
+	})
+
+	t.Run("never made, its folder object never existed, it deletes", func(t *testing.T) {
+		name := "folder-never"
+		onFolderObject(t, name, "no-such-folder")
+		if msg := env.WaitNotReady(gvk, namespace, name); !strings.Contains(msg, "not found") {
+			t.Errorf("not-Ready message = %q, want the missing Folder", msg)
+		}
+		deleteCallsNothing(t, name)
 	})
 
 	t.Run("delete leaves the identity and calls nothing", func(t *testing.T) {
