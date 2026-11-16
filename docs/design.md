@@ -882,6 +882,9 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
     `remoteRepositoryConfig` in an update mask, which mockgcp refuses
     ("not supported by mockgcp"), so the object goes not Ready and the
     fake cloud keeps the old URI. What the real API does is not known.
+    Since 2026-11-16 (decision 21, ARURI) ours deletes the repository
+    and makes it again with the same name, as Terraform does; the API
+    refuses the change in place (section 7 item 14).
   - A resync (Config Connector's force-reconcile annotation) reads the
     repository back and sends no update, which shows the mapper
     round-trips `customRepository`: a dropped field would be a diff.
@@ -2158,7 +2161,8 @@ To raise confidence in `ArtifactRegistryRepository`:
     custom upstream's URI ("Remote source configuartion cannot be
     updated"; patch 0016 makes mockgcp answer the same), so the object goes
     not Ready and the repository keeps its URI; Terraform replaces the
-    repository instead. Whether ours should replace it too is not decided.
+    repository instead. Done 2026-11-16 (decision 21, ARURI): ours
+    replaces it too.
     The API also refuses, at creation, a remote upstream it cannot reach,
     unless `disableUpstreamValidation` is set; mockgcp does not check.
 15. Watch PR #13517 (UPSTREAM.md, "Copied from open pull requests"); when
@@ -2521,7 +2525,28 @@ To raise confidence in `ArtifactRegistryRepository`:
     the immutable fields, as the kinds already do; no admission webhook
     is added for it.
 21. **A remote `ArtifactRegistryRepository` whose upstream URI changes is
-    deleted and made again** (confirmed 2026-11-10, G3).
+    deleted and made again** (confirmed 2026-11-10, G3; built 2026-11-16,
+    ARURI). The builder, 2026-11-16, verbatim: "ARURI: as recommended
+    (Replace it, as decision 21 (2026-11-10) already says and Terraform
+    does: a remote repository holds only a cache of the upstream, so
+    replacing loses nothing that can't be refetched. Build it in
+    config-connector-extensions.)"
+    Built in the controller (`pkg/controller/direct/artifactregistry/replace.go`),
+    not the CRD: when the repository in the cloud is a remote one and
+    the spec's `customRepository.uri` (Docker, Maven, npm or Python)
+    differs from the cloud's, including a public upstream swapped for a
+    custom one or back, the update deletes the repository, waits, and
+    creates it from the spec with the same name, as Terraform's
+    `ForceNew` on `custom_repository` does. Every other change (the
+    description, the upstream credentials, cleanup policies) is still an
+    update in place, and a standard or virtual repository is never
+    replaced. If the create fails after the delete, the next reconcile
+    finds no repository and creates it. The field stays mutable in the
+    CRD: no CEL rule is added (decision 20 is for fields that cannot
+    change at all).
+    Proven on mockgcp and live (run `cce-11160906-a434`,
+    `docs/kinds/ArtifactRegistryRepository.md`): the real API takes a
+    create with the same name at once after the delete.
 22. **`status.appliedDatabaseRoles` stays until upstream PR #7148**
     (confirmed 2026-11-10, G5; section 10 item 2's
     recommendation): the field and the comparison with what was applied

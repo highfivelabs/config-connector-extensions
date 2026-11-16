@@ -253,6 +253,9 @@ func TestArtifactRegistryUpstreamCredentials(t *testing.T) {
 		if len(masks) != 1 || masks[0] != want {
 			t.Errorf("update masks = %q, want one: %s", masks, want)
 		}
+		if n := count(env, "DELETE", cloudName(name)); n != 0 {
+			t.Errorf("DELETE requests after credential changes: %d, want none (only a changed upstream URI replaces)", n)
+		}
 	})
 
 	t.Run("delete removes the repository", func(t *testing.T) {
