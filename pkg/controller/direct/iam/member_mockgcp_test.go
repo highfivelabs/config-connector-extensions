@@ -36,9 +36,13 @@ import (
 	gcp "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/iam/apiv1/iampb"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/iam/iamrefs"
+	loggingv1beta1kcc "github.com/GoogleCloudPlatform/k8s-config-connector/apis/logging/v1beta1"
+	refs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	bigquery "google.golang.org/api/bigquery/v2"
+	loggingapi "google.golang.org/api/logging/v2"
 	"google.golang.org/api/option"
 	secretmanager "google.golang.org/api/secretmanager/v1"
 	storageapi "google.golang.org/api/storage/v1"
@@ -48,6 +52,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
+	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
@@ -294,8 +299,9 @@ func TestIAMMember(t *testing.T) {
 		t.Run("a member from a service account, named by its email", func(t *testing.T) {
 			o := newMember("secret-from", tg, "")
 			o.Spec.Member = nil
-			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{}
-			o.Spec.MemberFrom.ServiceAccountRef.External = strings.TrimPrefix(theirs, "serviceAccount:")
+			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{ServiceAccountRef: &iamrefs.IAMServiceAccountRef{
+				External: strings.TrimPrefix(theirs, "serviceAccount:"),
+			}}
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
@@ -306,10 +312,166 @@ func TestIAMMember(t *testing.T) {
 			del(t, o)
 		})
 
+		t.Run("a member from a log sink's writer identity waits until the sink has one", func(t *testing.T) {
+			// The catalog's folder and organization charts grant their
+			// sinks' writer identities this way. The sink is this
+			// project's LoggingLogSink in the run's project (live: one
+			// sink to the project's own _Default bucket, matching no log).
+			parent := "projects/" + mockenv.Project
+			sinkID := mockenv.Name("member-sink")
+			logs, err := loggingapi.NewService(env.Ctx, env.GCPOptions()...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() {
+				if _, err := logs.Sinks.Delete(parent + "/sinks/" + sinkID).Context(env.Ctx).Do(); err != nil && !iampolicy.IsNotFound(err) {
+					t.Errorf("cleaning up the sink: %v", err)
+				}
+			})
+			fromSink := func(name, sink string) *iamv1beta1.IAMMember {
+				o := newMember(name, tg, "")
+				o.Spec.Member = nil
+				o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{LogSinkRef: &iamv1beta1.IAMLogSinkRef{Name: sink}}
+				return o
+			}
+			o := fromSink("secret-sink", "member-sink")
+			if err := env.Kube.Create(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			if msg := env.WaitNotReady(memberGVK, namespace, o.Name); !strings.Contains(msg, "member-sink") {
+				t.Errorf("the message does not name the sink it waits for: %q", msg)
+			}
+			sink := &loggingv1beta1.LoggingLogSink{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "member-sink", Labels: mockenv.Labels()},
+				Spec: loggingv1beta1.LoggingLogSinkSpec{
+					ProjectRef: &refs.ProjectRef{External: mockenv.Project},
+					ResourceID: mockenv.Ptr(sinkID),
+					Destination: loggingv1beta1.LoggingLogSinkDestination{
+						LoggingLogBucketRef: &loggingv1beta1kcc.LoggingLogBucketRef{External: parent + "/locations/global/buckets/_Default"},
+					},
+					Filter:               mockenv.Ptr(`logName="` + parent + `/logs/` + mockenv.Name("none") + `"`),
+					UniqueWriterIdentity: mockenv.Ptr(true),
+				},
+			}
+			if err := env.Kube.Create(env.Ctx, sink); err != nil {
+				t.Fatal(err)
+			}
+			su := env.WaitReady(loggingv1beta1.LoggingLogSinkGVK, namespace, sink.Name)
+			writer, _, _ := unstructured.NestedString(su.Object, "status", "writerIdentity")
+			if writer == "" {
+				t.Fatal("the sink has no status.writerIdentity")
+			}
+			u := env.WaitReady(memberGVK, namespace, o.Name)
+			if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != tg.name+"#"+tg.role+"#"+writer {
+				t.Errorf("status.externalRef = %q, want the sink's writer identity %q in it", ref, writer)
+			}
+			if got := members(t, tg); !slices.Contains(got, writer) {
+				t.Errorf("members = %v, want %s among them", got, writer)
+			}
+
+			// IAMBinding takes the same source in membersFrom.
+			b := &iamv1beta1.IAMBinding{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "secret-sink-binding"},
+				Spec: iamv1beta1.IAMBindingSpec{
+					ResourceRef: iamv1beta1.IAMResourceReference{Kind: tg.kind, External: tg.name},
+					Role:        "roles/secretmanager.viewer",
+					MembersFrom: []iamv1beta1.IAMBindingMemberFrom{{LogSinkRef: &iamv1beta1.IAMLogSinkRef{
+						Name: "member-sink", APIVersion: "logging.gcp.hfl.dev/v1beta1",
+					}}},
+				},
+			}
+			if err := env.Kube.Create(env.Ctx, b); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitReady(bindingGVK, namespace, b.Name)
+			viewers := target{kind: tg.kind, name: tg.name, role: b.Spec.Role}
+			if got := members(t, viewers); !slices.Equal(got, []string{writer}) {
+				t.Errorf("IAMBinding members = %v, want [%s]", got, writer)
+			}
+			if err := env.Kube.Delete(env.Ctx, b); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(b)
+
+			// The sink goes first (a chart uninstalled whole): the member
+			// is still removed, by the identity it recorded.
+			if err := env.Kube.Delete(env.Ctx, sink); err != nil {
+				t.Fatal(err)
+			}
+			env.WaitGone(sink)
+			del(t, o)
+			if got := members(t, tg); slices.Contains(got, writer) {
+				t.Errorf("the writer identity is still a member after its IAMMember was deleted: %v", got)
+			}
+		})
+
+		t.Run("a member from Config Connector's LoggingLogSink", func(t *testing.T) {
+			// Config Connector's sink is not reconciled here: the test
+			// writes its status: the run's own service account as the
+			// writer identity (a real policy takes it; no other subtest
+			// leaves it a member here).
+			kcc := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+				"projectRef":  map[string]any{"external": mockenv.Project},
+				"destination": map[string]any{"loggingLogBucketRef": map[string]any{"external": "projects/" + mockenv.Project + "/locations/global/buckets/_Default"}},
+			}}}
+			kcc.SetGroupVersionKind(iampolicy.LogSinkGVKs[1])
+			kcc.SetNamespace(namespace)
+			kcc.SetName("kcc-sink")
+			if err := env.Kube.Create(env.Ctx, kcc); err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { _ = env.Kube.Delete(env.Ctx, kcc) })
+			o := newMember("secret-kcc-sink", tg, "")
+			o.Spec.Member = nil
+			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{LogSinkRef: &iamv1beta1.IAMLogSinkRef{Name: "kcc-sink"}}
+			if err := env.Kube.Create(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			if msg := env.WaitNotReady(memberGVK, namespace, o.Name); !strings.Contains(msg, "kcc-sink") {
+				t.Errorf("the message does not name the sink with no writer identity: %q", msg)
+			}
+			if err := unstructured.SetNestedField(kcc.Object, mine, "status", "writerIdentity"); err != nil {
+				t.Fatal(err)
+			}
+			if err := env.Kube.Status().Update(env.Ctx, kcc); err != nil {
+				t.Fatal(err)
+			}
+			resync(t, o.Name)
+			env.WaitReady(memberGVK, namespace, o.Name)
+			if got := members(t, tg); !slices.Contains(got, mine) {
+				t.Errorf("members = %v, want %s among them", got, mine)
+			}
+			del(t, o)
+			if got := members(t, tg); slices.Contains(got, mine) {
+				t.Errorf("the writer identity is still a member after its IAMMember was deleted: %v", got)
+			}
+		})
+
+		t.Run("a memberFrom with two sources, or none, is refused", func(t *testing.T) {
+			// The CRD's oneOf (Config Connector's validation step) or the
+			// CEL rule answers, whichever the API server reports.
+			two := newMember("two-sources", tg, "")
+			two.Spec.Member = nil
+			two.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{
+				ServiceAccountRef: &iamrefs.IAMServiceAccountRef{External: strings.TrimPrefix(theirs, "serviceAccount:")},
+				LogSinkRef:        &iamv1beta1.IAMLogSinkRef{Name: "member-sink"},
+			}
+			if err := env.Kube.Create(env.Ctx, two); err == nil || !strings.Contains(err.Error(), "memberFrom") {
+				t.Errorf("two sources: err = %v", err)
+			}
+			none := newMember("no-source", tg, "")
+			none.Spec.Member = nil
+			none.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{}
+			if err := env.Kube.Create(env.Ctx, none); err == nil || !strings.Contains(err.Error(), "memberFrom") {
+				t.Errorf("no source: err = %v", err)
+			}
+		})
+
 		t.Run("a member and a memberFrom, or neither, are refused", func(t *testing.T) {
 			both := newMember("both", tg, mine)
-			both.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{}
-			both.Spec.MemberFrom.ServiceAccountRef.External = strings.TrimPrefix(theirs, "serviceAccount:")
+			both.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{ServiceAccountRef: &iamrefs.IAMServiceAccountRef{
+				External: strings.TrimPrefix(theirs, "serviceAccount:"),
+			}}
 			if err := env.Kube.Create(env.Ctx, both); err == nil || !strings.Contains(err.Error(), "exactly one of member and memberFrom") {
 				t.Errorf("both: err = %v", err)
 			}

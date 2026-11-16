@@ -92,8 +92,9 @@ func (m *bindingModel) AdapterForObject(ctx context.Context, op *directbase.Adap
 	return &bindingAdapter{id: id, rtype: t, client: c, desired: obj, members: members}, nil
 }
 
-// desiredMembers is spec.members and the service accounts of
-// spec.membersFrom, as the API writes them.
+// desiredMembers is spec.members and the identities spec.membersFrom
+// names (service accounts, log sinks' writer identities), as the API
+// writes them.
 func desiredMembers(ctx context.Context, op *directbase.AdapterForObjectOperation, obj *krm.IAMBinding) ([]string, error) {
 	var members []string
 	for _, m := range obj.Spec.Members {
@@ -103,11 +104,11 @@ func desiredMembers(ctx context.Context, op *directbase.AdapterForObjectOperatio
 		members = append(members, m)
 	}
 	for i := range obj.Spec.MembersFrom {
-		ref := obj.Spec.MembersFrom[i].ServiceAccountRef
-		if err := ref.Normalize(ctx, op.Reader, obj.GetNamespace()); err != nil {
+		m, err := memberFrom(ctx, op, obj.GetNamespace(), &obj.Spec.MembersFrom[i], fmt.Sprintf("spec.membersFrom[%d]", i))
+		if err != nil {
 			return nil, err
 		}
-		members = append(members, "serviceAccount:"+ref.External)
+		members = append(members, m)
 	}
 	if len(members) == 0 {
 		return nil, fmt.Errorf("a binding needs at least one member")

@@ -46,6 +46,16 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`IAMMember.memberFrom.logSinkRef` and `IAMBinding.membersFrom[].logSinkRef`**:
+  a `LoggingLogSink`'s writer identity (`status.writerIdentity`) as the
+  member, as Config Connector's `IAMPolicyMember` takes it, for this
+  project's `LoggingLogSink` (`logging.gcp.hfl.dev`) and Config
+  Connector's; `apiVersion` picks one when both have a sink of that name.
+  The object waits (`DependencyNotReady`) until the sink has a writer
+  identity. `memberFrom.serviceAccountRef` is now optional: exactly one
+  of `serviceAccountRef` and `logSinkRef` is required (Go clients: the
+  field is a pointer).
+
 - **`IAMBinding` and `IAMMember` take a `CloudFunctionsFunction`** (Config
   Connector's 1st gen function, `cloudfunctions.cnrm.cloud.google.com`) as
   `resourceRef`, by `name` (its project, `spec.region` and `resourceID`) or

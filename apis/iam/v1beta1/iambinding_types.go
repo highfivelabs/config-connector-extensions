@@ -57,11 +57,42 @@ type IAMBindingSpec struct {
 	MembersFrom []IAMBindingMemberFrom `json:"membersFrom,omitempty"`
 }
 
-// IAMBindingMemberFrom is a member taken from an object.
+// IAMBindingMemberFrom is a member taken from an object: exactly one of
+// serviceAccountRef and logSinkRef, the sources of Config Connector's
+// IAMPolicyMember.memberFrom this project offers (docs/design.md 6.5).
+// +kubebuilder:validation:XValidation:rule="has(self.serviceAccountRef) != has(self.logSinkRef)",message="exactly one of serviceAccountRef and logSinkRef is required"
 type IAMBindingMemberFrom struct {
 	// The IAMServiceAccount (or an external service account email) to
 	// bind: serviceAccount:{its email}.
-	ServiceAccountRef iamrefs.IAMServiceAccountRef `json:"serviceAccountRef"`
+	// +optional
+	ServiceAccountRef *iamrefs.IAMServiceAccountRef `json:"serviceAccountRef,omitempty"`
+
+	// The LoggingLogSink whose writer identity (its status.writerIdentity)
+	// is to be bound, as Config Connector's
+	// IAMPolicyMember.memberFrom.logSinkRef. Until the sink has one, the
+	// object waits (DependencyNotReady) and retries.
+	// +optional
+	LogSinkRef *IAMLogSinkRef `json:"logSinkRef,omitempty"`
+}
+
+// IAMLogSinkRef names a LoggingLogSink object: this project's
+// (logging.gcp.hfl.dev) or Config Connector's (logging.cnrm.cloud.google.com).
+// Shaped like Config Connector's MemberReference, plus apiVersion.
+type IAMLogSinkRef struct {
+	// The API version of the LoggingLogSink, when both kinds are installed
+	// and a sink of the same name could be either. Unset, this project's
+	// sink is looked for first, then Config Connector's.
+	// +kubebuilder:validation:Enum=logging.gcp.hfl.dev/v1beta1;logging.cnrm.cloud.google.com/v1beta1
+	// +optional
+	APIVersion string `json:"apiVersion,omitempty"`
+
+	// The name of the LoggingLogSink object.
+	Name string `json:"name"`
+
+	// The namespace of the LoggingLogSink object; the referring object's
+	// own if unset.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // IAMBindingStatus defines the config connector machine state of IAMBinding

@@ -29,9 +29,10 @@ cannot change (a new sink is a new object).
 
 **The writer identity** is in `status.writerIdentity`. A folder's or
 organization's sink always has its own. The catalog's charts grant it on
-the destination; Config Connector's `IAMPolicyMember.memberFrom.logSinkRef`
-reads only Config Connector's `LoggingLogSink`, so a chart rendering this
-kind grants it another way.
+the destination with our `IAMMember`'s `memberFrom.logSinkRef`
+(2026-11-15), which reads this kind's (and Config Connector's) writer
+identity; Config Connector's `IAMPolicyMember.memberFrom.logSinkRef`
+reads only Config Connector's `LoggingLogSink`.
 
 **Destination forms** are `LoggingBillingAccountSink`'s (a bucket by bare
 name, `gs://`, `storage.googleapis.com/` and the rest); a project as its ID,

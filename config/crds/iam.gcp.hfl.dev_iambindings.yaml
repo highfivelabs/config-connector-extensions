@@ -92,8 +92,36 @@ spec:
                 description: Members that are the identity of a Config Connector object,
                   added to members.
                 items:
-                  description: IAMBindingMemberFrom is a member taken from an object.
+                  description: 'IAMBindingMemberFrom is a member taken from an object:
+                    exactly one of serviceAccountRef and logSinkRef, the sources of
+                    Config Connector''s IAMPolicyMember.memberFrom this project offers
+                    (docs/design.md 6.5).'
                   properties:
+                    logSinkRef:
+                      description: The LoggingLogSink whose writer identity (its status.writerIdentity)
+                        is to be bound, as Config Connector's IAMPolicyMember.memberFrom.logSinkRef.
+                        Until the sink has one, the object waits (DependencyNotReady)
+                        and retries.
+                      properties:
+                        apiVersion:
+                          description: The API version of the LoggingLogSink, when
+                            both kinds are installed and a sink of the same name could
+                            be either. Unset, this project's sink is looked for first,
+                            then Config Connector's.
+                          enum:
+                          - logging.gcp.hfl.dev/v1beta1
+                          - logging.cnrm.cloud.google.com/v1beta1
+                          type: string
+                        name:
+                          description: The name of the LoggingLogSink object.
+                          type: string
+                        namespace:
+                          description: The namespace of the LoggingLogSink object;
+                            the referring object's own if unset.
+                          type: string
+                      required:
+                      - name
+                      type: object
                     serviceAccountRef:
                       description: 'The IAMServiceAccount (or an external service
                         account email) to bind: serviceAccount:{its email}.'
@@ -123,9 +151,10 @@ spec:
                           description: The namespace of an IAMServiceAccount resource.
                           type: string
                       type: object
-                  required:
-                  - serviceAccountRef
                   type: object
+                  x-kubernetes-validations:
+                  - message: exactly one of serviceAccountRef and logSinkRef is required
+                    rule: has(self.serviceAccountRef) != has(self.logSinkRef)
                 type: array
               resourceRef:
                 description: The resource whose IAM policy holds the binding. Immutable.

@@ -35,6 +35,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/registry"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -71,7 +72,15 @@ func (m *memberModel) AdapterForObject(ctx context.Context, op *directbase.Adapt
 	}
 	member, err := desiredMember(ctx, op, obj)
 	if err != nil {
-		return nil, err
+		// While the object is being deleted, a memberFrom object that is
+		// gone or not ready (a log sink deleted first, with its chart) does
+		// not hold the delete: the member it resolved to is in
+		// status.externalRef.
+		prev := &krm.IAMMemberIdentity{}
+		if !op.IsDeleting() || !isReferenceError(err) || prev.FromExternal(direct.ValueOf(obj.Status.ExternalRef)) != nil {
+			return nil, err
+		}
+		member = prev.Member
 	}
 	id := &krm.IAMMemberIdentity{Resource: name, Role: obj.Spec.Role, Member: member}
 	if obj.Spec.Condition != nil {
@@ -87,8 +96,8 @@ func (m *memberModel) AdapterForObject(ctx context.Context, op *directbase.Adapt
 	return &memberAdapter{id: id, rtype: t, client: c, desired: obj}, nil
 }
 
-// desiredMember is spec.member, or the service account of spec.memberFrom,
-// as the API writes it.
+// desiredMember is spec.member, or the identity spec.memberFrom names, as
+// the API writes it.
 func desiredMember(ctx context.Context, op *directbase.AdapterForObjectOperation, obj *krm.IAMMember) (string, error) {
 	switch {
 	case obj.Spec.Member != nil && obj.Spec.MemberFrom == nil:
@@ -97,13 +106,32 @@ func desiredMember(ctx context.Context, op *directbase.AdapterForObjectOperation
 		}
 		return *obj.Spec.Member, nil
 	case obj.Spec.MemberFrom != nil && obj.Spec.Member == nil:
-		ref := obj.Spec.MemberFrom.ServiceAccountRef
-		if err := ref.Normalize(ctx, op.Reader, obj.GetNamespace()); err != nil {
+		return memberFrom(ctx, op, obj.GetNamespace(), obj.Spec.MemberFrom, "spec.memberFrom")
+	}
+	return "", fmt.Errorf("exactly one of spec.member and spec.memberFrom is required")
+}
+
+// memberFrom is the identity one memberFrom names: a service account's
+// email, or a log sink's writer identity (waiting, as a reference error,
+// until the sink has one).
+func memberFrom(ctx context.Context, op *directbase.AdapterForObjectOperation, namespace string, from *krm.IAMBindingMemberFrom, field string) (string, error) {
+	switch {
+	case from.ServiceAccountRef != nil && from.LogSinkRef == nil:
+		ref := from.ServiceAccountRef
+		if err := ref.Normalize(ctx, op.Reader, namespace); err != nil {
 			return "", err
 		}
 		return "serviceAccount:" + ref.External, nil
+	case from.LogSinkRef != nil && from.ServiceAccountRef == nil:
+		ref := from.LogSinkRef
+		return iampolicy.LogSinkWriter(ctx, op.Reader, namespace, ref.APIVersion, ref.Name, ref.Namespace)
 	}
-	return "", fmt.Errorf("exactly one of spec.member and spec.memberFrom is required")
+	return "", fmt.Errorf("%s needs exactly one of serviceAccountRef and logSinkRef", field)
+}
+
+// isReferenceError is a referenced object that is missing or not ready.
+func isReferenceError(err error) bool {
+	return k8s.IsReferenceNotFoundError(err) || k8s.IsReferenceNotReadyError(err)
 }
 
 func (m *memberModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {

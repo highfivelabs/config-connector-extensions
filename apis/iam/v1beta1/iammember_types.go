@@ -47,7 +47,8 @@ type IAMMemberSpec struct {
 	// +optional
 	Member *string `json:"member,omitempty"`
 
-	// The identity of a Config Connector object. Immutable.
+	// The identity of an object: a service account (serviceAccountRef) or
+	// a log sink's writer identity (logSinkRef). Immutable.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="memberFrom is immutable"
 	// +optional
 	MemberFrom *IAMBindingMemberFrom `json:"memberFrom,omitempty"`

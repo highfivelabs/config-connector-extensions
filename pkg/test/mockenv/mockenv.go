@@ -298,6 +298,9 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_cloudfunctionsfunctions.cloudfunctions.cnrm.cloud.google.com.yaml"),
 			// ChronicleRuleDeployment's rule.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_chroniclerules.chronicle.cnrm.cloud.google.com.yaml"),
+			// Config Connector's LoggingLogSink, which an IAMMember's
+			// memberFrom.logSinkRef names (TestIAMMember).
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_logginglogsinks.logging.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}
