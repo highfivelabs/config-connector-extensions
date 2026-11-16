@@ -1674,7 +1674,7 @@ Notes on what was built from this table:
   patch included); the rest is written here. mockgcp patch 0028
   (`docs/fake-cloud.md`). Live: pending, needs the test folder.
 - `ComputeNetworkFirewallPolicyPacketMirroringRule`
-  (`compute.gcp.hfl.dev/v1alpha1`, foundation item 2: a packet mirroring
+  (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, decision 27; built at `v1alpha1`; foundation item 2: a packet mirroring
   rule of a global network firewall policy, at its priority). Upstream,
   checked 2026-11-10 (read-only): no kind, no direct or Terraform code and
   no pull request (searched `PacketMirroringRule`, `packet mirroring`);
@@ -2652,7 +2652,8 @@ To raise confidence in `ArtifactRegistryRepository`:
     `v1alpha1` kinds have no live pass yet, or wait on a prerequisite
     (`LoggingBillingAccountSink`, `ServiceIdentity` (passed live and
     promoted 2026-11-15, decision 36), `ComputeProjectDefaultNetworkTier`, `ProjectDefaultServiceAccounts`),
-    or failed their last run (`ComputeNetworkFirewallPolicyPacketMirroringRule`).
+    or failed their last run (none now: `ComputeNetworkFirewallPolicyPacketMirroringRule`
+    passed at `78644ec` and was promoted 2026-11-16).
 
 28. **A service's generated kinds' tests get their own package** (the
     builder, 2026-11-13, answering section 10 question 8: "Q8 yes, split
@@ -2814,10 +2815,13 @@ To raise confidence in `ArtifactRegistryRepository`:
     `apis/gkehub/v1beta1` is new), the fixtures' `apiVersion`, the
     `LoggingSavedQuery` slot-move test, `pkg/controller`'s served-version
     test, `docs/kinds/` and `CHANGELOG.md`.
-    `ComputeNetworkFirewallPolicyPacketMirroringRule` stays `v1alpha1`
-    for now: the catalog's `net-firewall-policy` chart renders it at
-    `compute.gcp.hfl.dev/v1alpha1` (behind `allow_alpha`), so it waits
-    until that chart can move to `v1beta1` with a catalog pin bump.
+    `ComputeNetworkFirewallPolicyPacketMirroringRule` waited at
+    `v1alpha1` until the catalog's `net-firewall-policy` chart could move
+    with a pin bump; **it was promoted 2026-11-16** (types and CRD
+    rechecked unchanged since `78644ec` with `git log`): the types move to
+    `apis/compute/v1beta1`, the CRD serves `v1beta1` only, the fake-cloud
+    test checks `v1alpha1` is refused, and `versions_test.go` lists it.
+    The catalog's chart renders it at `v1beta1` without `allow_alpha`.
     `ServiceIdentity`, a kind for a missing resource, passed live on
     2026-11-15 and was promoted under decision 27 (decision 36).
 
