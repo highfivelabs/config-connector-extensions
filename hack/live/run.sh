@@ -19,7 +19,8 @@
 # package: LIVE_RUN=TestIAMOAuthClient). Credentials are Application
 # Default Credentials, which must be a service account (it is the IAM
 # principal the SQLUser test grants roles to); on an offload VM started
-# with --sa they are that service account's.
+# with --sa they are that service account's; with --impersonate EMAIL,
+# EMAIL's (offload's local metadata server answers for it).
 #
 # The run's ID (cce-<UTC month day hour minute>-<random>) prefixes every
 # name a test makes and labels what takes labels (cce-e2e=true,
@@ -79,7 +80,9 @@ G=(gcloud --quiet --project "${project}")
 if [[ -n "${LIVE_ACCOUNT:-}" ]]; then G+=(--account "${LIVE_ACCOUNT}"); fi
 SWEEP=(hack/live/sweep.sh --project "${project}")
 
-sa="${E2E_SERVICE_ACCOUNT:-$(gcloud auth list --filter=status:ACTIVE --format='value(account)' | head -1)}"
+# Under offload run --impersonate the run acts as OFFLOAD_IMPERSONATE (gcloud
+# may list the VM's own account, from which it impersonates).
+sa="${E2E_SERVICE_ACCOUNT:-${OFFLOAD_IMPERSONATE:-$(gcloud auth list --filter=status:ACTIVE --format='value(account)' | head -1)}}"
 if [[ "${sa}" != *.gserviceaccount.com ]]; then
   echo "live: the credentials are ${sa:-none}, not a service account; run on an offload VM with --sa (docs/live-runs.md)" >&2
   exit 2
