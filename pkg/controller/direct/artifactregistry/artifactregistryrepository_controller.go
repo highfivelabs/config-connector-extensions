@@ -92,6 +92,23 @@ func (m *modelArtifactRegistryRepository) AdapterForObject(ctx context.Context, 
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if op.IsDeleting() {
+		// Find and Delete need only the name, so a delete resolves no
+		// spec reference (a key or secret object already gone when
+		// everything is deleted at once would otherwise hold it forever).
+		// The project is still resolved: status keeps only the short
+		// repository name (status.name), not the project.
+		id, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &ArtifactRegistryRepositoryAdapter{id: id.(*krm.ArtifactRegistryRepositoryIdentity), gcpClient: gcpClient, desired: obj}, nil
+	}
+
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}

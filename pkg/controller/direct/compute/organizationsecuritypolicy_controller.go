@@ -88,6 +88,23 @@ func (m *computeOrganizationSecurityPolicyModel) AdapterForObject(ctx context.Co
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if op.IsDeleting() {
+		// Deleting: the policy's name is status.policyId (this kind has no
+		// status.externalRef), else spec.resourceID, and Find and Delete
+		// need nothing else, so no reference is resolved. An object one
+		// names already gone (everything deleted at once) would otherwise
+		// hold the delete forever. With neither, Find finds nothing.
+		id := &krm.ComputeOrganizationSecurityPolicyIdentity{SecurityPolicy: direct.ValueOf(obj.Status.PolicyId)}
+		if id.SecurityPolicy == "" {
+			id.SecurityPolicy = direct.ValueOf(obj.Spec.ResourceID)
+		}
+		gcpClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &computeOrganizationSecurityPolicyAdapter{id: id, gcpClient: gcpClient, desired: obj, reader: reader}, nil
+	}
+
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}

@@ -98,6 +98,22 @@ func (m *securityProfileModel) AdapterForObject(ctx context.Context, op *directb
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a profile that was made: its name is in status, and Find
+		// and Delete need nothing else, so no reference is resolved. An
+		// object one names already gone (everything deleted at once) would
+		// otherwise hold the delete forever.
+		spID := &krm.NetworkSecuritySecurityProfileIdentity{}
+		if err := spID.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx, spID)
+		if err != nil {
+			return nil, err
+		}
+		return &securityProfileAdapter{gcpClient: gcpClient, id: spID}, nil
+	}
+
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}

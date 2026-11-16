@@ -87,9 +87,21 @@ func (m *muteConfigModel) AdapterForObject(ctx context.Context, op *directbase.A
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
-	identity, err := obj.GetIdentity(ctx, reader)
-	if err != nil {
-		return nil, err
+	id := &krm.SecurityCenterMuteConfigIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a mute config that was made or acquired: its name is in
+		// status, and Find and Delete need only the name, so the parent is
+		// not resolved. A parent object already gone (everything deleted
+		// at once) would otherwise hold the delete forever.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		identity, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		id = identity.(*krm.SecurityCenterMuteConfigIdentity)
 	}
 
 	gcpClient, err := m.client(ctx)
@@ -98,7 +110,7 @@ func (m *muteConfigModel) AdapterForObject(ctx context.Context, op *directbase.A
 	}
 
 	return &securityCenterMuteConfigAdapter{
-		id:        identity.(*krm.SecurityCenterMuteConfigIdentity),
+		id:        id,
 		gcpClient: gcpClient,
 		desired:   obj,
 	}, nil

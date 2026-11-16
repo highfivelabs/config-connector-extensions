@@ -68,11 +68,22 @@ func (m *modelPrincipalAccessBoundaryPolicy) AdapterForObject(ctx context.Contex
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	i, err := obj.GetIdentity(ctx, reader)
-	if err != nil {
-		return nil, err
+	id := &krm.IAMPrincipalAccessBoundaryPolicyIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a policy that was made or acquired: its name is in
+		// status, so the parent is not resolved. A parent object already
+		// gone (everything deleted at once) would otherwise hold the
+		// delete forever.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		i, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		id = i.(*krm.IAMPrincipalAccessBoundaryPolicyIdentity)
 	}
-	id := i.(*krm.IAMPrincipalAccessBoundaryPolicyIdentity)
 
 	// Get iam GCP client
 	gcpClient, err := m.client(ctx)

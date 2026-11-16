@@ -81,8 +81,16 @@ func (m *computeNetworkEndpointModel) AdapterForObject(ctx context.Context, op *
 	}
 	endpointId := id.(*krm.ComputeNetworkEndpointIdentity)
 
-	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
-		return nil, fmt.Errorf("normalizing references: %w", err)
+	// A delete needs only the identity (its instance overrides the spec's
+	// in buildDesiredEndpoint), so the other references (projectRef) are
+	// not resolved: an object already gone (everything deleted at once)
+	// would otherwise hold the delete forever. The identity itself is
+	// resolved from spec, since the kind keeps no status.externalRef
+	// (pkg/deleting).
+	if !op.IsDeleting() {
+		if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
+			return nil, fmt.Errorf("normalizing references: %w", err)
+		}
 	}
 
 	opts, err := m.config.RESTClientOptions()

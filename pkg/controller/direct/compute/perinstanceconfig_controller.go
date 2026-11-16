@@ -83,8 +83,15 @@ func (m *computePerInstanceConfigModel) AdapterForObject(ctx context.Context, op
 		return nil, fmt.Errorf("incomplete identity: %+v", picId)
 	}
 
-	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
-		return nil, fmt.Errorf("normalizing references: %w", err)
+	// A delete needs only the name and removeInstanceStateOnDestroy, so the
+	// preserved-state references are not resolved: a disk or other object
+	// already gone (everything deleted at once) would otherwise hold the
+	// delete forever. The name itself is resolved from spec, since the kind
+	// keeps no status.externalRef (pkg/deleting).
+	if !op.IsDeleting() {
+		if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
+			return nil, fmt.Errorf("normalizing references: %w", err)
+		}
 	}
 
 	opts, err := m.config.RESTClientOptions()

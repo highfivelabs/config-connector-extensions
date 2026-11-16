@@ -65,12 +65,26 @@ func (m *routePolicyModel) AdapterForObject(ctx context.Context, op *directbase.
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
-		return nil, fmt.Errorf("normalizing references: %w", err)
-	}
-	id, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
+	var id *krm.ComputeRouterRoutePolicyIdentity
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a policy that was made: its name is in status and cannot
+		// change, so neither the router nor the project is resolved. A
+		// router object already gone (everything deleted at once) would
+		// otherwise hold the delete forever. Find and Delete need only the
+		// name.
+		id = &krm.ComputeRouterRoutePolicyIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
+			return nil, fmt.Errorf("normalizing references: %w", err)
+		}
+		got, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			return nil, err
+		}
+		id = got.(*krm.ComputeRouterRoutePolicyIdentity)
 	}
 	opts, err := m.config.RESTClientOptions()
 	if err != nil {
@@ -80,7 +94,7 @@ func (m *routePolicyModel) AdapterForObject(ctx context.Context, op *directbase.
 	if err != nil {
 		return nil, fmt.Errorf("building routers client: %w", err)
 	}
-	return &routePolicyAdapter{id: id.(*krm.ComputeRouterRoutePolicyIdentity), gcpClient: c, desired: obj}, nil
+	return &routePolicyAdapter{id: id, gcpClient: c, desired: obj}, nil
 }
 
 func (m *routePolicyModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {

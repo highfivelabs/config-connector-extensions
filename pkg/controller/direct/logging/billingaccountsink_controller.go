@@ -113,6 +113,22 @@ func (m *billingAccountSinkModel) AdapterForObject(ctx context.Context, op *dire
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a sink that was made or acquired: its name is in status,
+		// and Find and Delete need only the name, so neither the billing
+		// account nor the destination is resolved. A destination object
+		// deleted at the same time would otherwise hold the delete forever.
+		id := &krm.LoggingBillingAccountSinkIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &billingAccountSinkAdapter{id: id, gcpClient: gcpClient}, nil
+	}
+
 	normalizeSinkDestination(&obj.Spec.Destination)
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)

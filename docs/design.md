@@ -2370,6 +2370,23 @@ To raise confidence in `ArtifactRegistryRepository`:
     candidates and `l2Forwarding`, `ComputeInterconnect`'s
     `applicationAwareInterconnect`), the next field-gap PRs.
 
+43. A delete that still needs a reference (2026-11-16, `pkg/deleting`).
+    Every kind now deletes by its recorded name and resolves nothing, and
+    abandon resolves nothing, except these, whose status records no name
+    to delete by: `SQLUser`, `ComputeDiskResourcePolicyAttachment`,
+    `ComputeRegionDiskResourcePolicyAttachment`, `ComputeNetworkEndpoint`,
+    `ComputePerInstanceConfig` and `ComputeRegionPerInstanceConfig` (no
+    `status.externalRef`; they are marked `noRecord` in
+    `pkg/controller`, so a delete whose reference is gone keeps its error
+    rather than leave the resource behind), and `ArtifactRegistryRepository`
+    (records `status.name` without the project, so it still resolves the
+    project). `SQLAdminBackup` reads its `SQLInstance` object when
+    `instanceRef` is by name (the backup's recorded name has no instance)
+    and `ComputeOrganizationSecurityPolicyAssociation` its policy object
+    when `securityPolicyRef` is by name; each finishes without a call if
+    that object is gone. Adding `status.externalRef` to the first seven is
+    a CRD change, not started.
+
 ## 8. Decisions
 
 1. **Upstream's unmerged `SQLUser` (PR #7148)**: use it once it does what

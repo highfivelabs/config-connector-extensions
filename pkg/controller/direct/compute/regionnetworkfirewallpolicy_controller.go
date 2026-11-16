@@ -77,6 +77,22 @@ func (m *regionNetworkFirewallPolicyModel) AdapterForObject(ctx context.Context,
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if selfLink := direct.ValueOf(obj.Status.SelfLink); op.IsDeleting() && selfLink != "" {
+		// Deleting a policy that was made: its name is status.selfLink (this
+		// kind has no status.externalRef), so the project is not resolved. A
+		// Project object already gone (everything deleted at once) would
+		// otherwise hold the delete forever.
+		id := &krm.ComputeRegionNetworkFirewallPolicyIdentity{}
+		if err := id.FromExternal(selfLink); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &regionNetworkFirewallPolicyAdapter{gcpClient: gcpClient, id: id, desired: obj}, nil
+	}
+
 	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}

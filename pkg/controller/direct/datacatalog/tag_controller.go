@@ -43,6 +43,7 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	upstreamdatacatalog "github.com/GoogleCloudPlatform/k8s-config-connector/apis/datacatalog/v1alpha1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
@@ -91,6 +92,19 @@ func (m *tagModel) AdapterForObject(ctx context.Context, op *directbase.AdapterF
 	obj := &krm.DataCatalogTag{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
+	}
+
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a tag that was made: its name, entry included, is in
+		// status and cannot change, so the entry reference is not resolved.
+		// An entry object already gone (everything deleted at once) would
+		// otherwise hold the delete forever. With entryRef.external set from
+		// status, NewTagIdentity reads nothing.
+		parent, _, err := krm.ParseTagExternal(ext)
+		if err != nil {
+			return nil, err
+		}
+		obj.Spec.EntryRef = &upstreamdatacatalog.EntryRef{External: parent.String()}
 	}
 
 	// The tag's ID is server-generated: the identity is the parent entry and,

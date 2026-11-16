@@ -81,6 +81,21 @@ func (m *regionNetworkFirewallPolicyRuleModel) AdapterForObject(ctx context.Cont
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a rule that was made: its name is in status, and Find and
+		// Delete need nothing else, so neither the policy nor the target
+		// service accounts are resolved. An object they name already gone
+		// (everything deleted at once) would otherwise hold the delete forever.
+		id := &krm.ComputeRegionNetworkFirewallPolicyRuleIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		c, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &regionNetworkFirewallPolicyRuleAdapter{gcpClient: c, id: id}, nil
+	}
 	idVal, err := obj.GetIdentity(ctx, op.Reader)
 	if err != nil {
 		return nil, err

@@ -63,6 +63,33 @@ func (m *endpointModel) AdapterForObject(ctx context.Context, op *directbase.Ada
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
+	client := func() (*gcp.RegionNetworkEndpointGroupsClient, error) {
+		opts, err := m.config.RESTClientOptions()
+		if err != nil {
+			return nil, err
+		}
+		c, err := gcp.NewRegionNetworkEndpointGroupsRESTClient(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("building region network endpoint groups client: %w", err)
+		}
+		return c, nil
+	}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting an endpoint that was attached: its group is in status
+		// and cannot change, and the endpoint the detach names comes from
+		// the spec's plain fields, so nothing is resolved. A group or
+		// project object already gone (everything deleted at once) would
+		// otherwise hold the delete forever.
+		id := &krm.ComputeRegionNetworkEndpointIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		c, err := client()
+		if err != nil {
+			return nil, err
+		}
+		return &endpointAdapter{id: id, gcpClient: c, desired: obj, deleting: true}, nil
+	}
 	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}
@@ -70,15 +97,11 @@ func (m *endpointModel) AdapterForObject(ctx context.Context, op *directbase.Ada
 	if err != nil {
 		return nil, err
 	}
-	opts, err := m.config.RESTClientOptions()
+	c, err := client()
 	if err != nil {
 		return nil, err
 	}
-	c, err := gcp.NewRegionNetworkEndpointGroupsRESTClient(ctx, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("building region network endpoint groups client: %w", err)
-	}
-	return &endpointAdapter{id: id.(*krm.ComputeRegionNetworkEndpointIdentity), gcpClient: c, desired: obj}, nil
+	return &endpointAdapter{id: id.(*krm.ComputeRegionNetworkEndpointIdentity), gcpClient: c, desired: obj, deleting: op.IsDeleting()}, nil
 }
 
 func (m *endpointModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
@@ -90,6 +113,8 @@ type endpointAdapter struct {
 	gcpClient *gcp.RegionNetworkEndpointGroupsClient
 	desired   *krm.ComputeRegionNetworkEndpoint
 	actual    *pb.NetworkEndpoint
+	// deleting: a group already gone means the endpoint is gone too.
+	deleting bool
 }
 
 var _ directbase.Adapter = &endpointAdapter{}
@@ -125,6 +150,9 @@ func (a *endpointAdapter) Find(ctx context.Context) (bool, error) {
 		}
 		if err != nil {
 			if direct.IsNotFound(err) {
+				if a.deleting {
+					return false, nil
+				}
 				return false, fmt.Errorf("the network endpoint group %s does not exist", a.id.GroupName())
 			}
 			return false, fmt.Errorf("listing the endpoints of %s: %w", a.id.GroupName(), err)

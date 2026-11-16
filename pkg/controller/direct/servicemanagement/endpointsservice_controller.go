@@ -67,6 +67,22 @@ func (m *endpointsServiceModel) AdapterForObject(ctx context.Context, op *direct
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && strings.HasPrefix(ext, "services/") {
+		// Deleting a service that was made: its name is in status and
+		// cannot change, so the project is not resolved. A project object
+		// already gone (everything deleted at once) would otherwise hold the
+		// delete forever. With no project, Find checks no owner: it was
+		// checked when status.externalRef was written.
+		opts, err := m.config.RESTClientOptions()
+		if err != nil {
+			return nil, err
+		}
+		client, err := gcp.NewService(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("building servicemanagement v1 client: %w", err)
+		}
+		return &endpointsServiceAdapter{client: client, name: strings.TrimPrefix(ext, "services/"), desired: obj}, nil
+	}
 	project, err := refsv1beta1.ResolveProject(ctx, op.Reader, obj.GetNamespace(), obj.Spec.ProjectRef)
 	if err != nil {
 		return nil, err
@@ -162,7 +178,7 @@ func (a *endpointsServiceAdapter) Find(ctx context.Context) (bool, error) {
 		}
 		return false, fmt.Errorf("getting service %s: %w", a.name, err)
 	}
-	if got.ProducerProjectId != "" && got.ProducerProjectId != a.project {
+	if a.project != "" && got.ProducerProjectId != "" && got.ProducerProjectId != a.project {
 		return false, fmt.Errorf("service %s belongs to project %s, not spec.projectRef's %s", a.name, got.ProducerProjectId, a.project)
 	}
 	a.actual = got

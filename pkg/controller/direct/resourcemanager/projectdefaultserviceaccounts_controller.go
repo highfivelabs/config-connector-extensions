@@ -95,12 +95,25 @@ func (m *defaultServiceAccountsModel) AdapterForObject(ctx context.Context, op *
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
-		return nil, fmt.Errorf("normalizing references: %w", err)
-	}
-	id, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
+	id := &krm.ProjectDefaultServiceAccountsIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting (which reverts the action): the project is in status,
+		// and the revert needs only the spec's action and the accounts in
+		// status, so nothing is resolved. A Project object already gone
+		// (everything deleted at once) would otherwise hold the delete
+		// forever.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
+			return nil, fmt.Errorf("normalizing references: %w", err)
+		}
+		got, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			return nil, err
+		}
+		id = got.(*krm.ProjectDefaultServiceAccountsIdentity)
 	}
 	opts, err := m.config.RESTClientOptions()
 	if err != nil {
@@ -116,7 +129,7 @@ func (m *defaultServiceAccountsModel) AdapterForObject(ctx context.Context, op *
 	}
 	projectType, _ := iampolicy.Lookup("Project")
 	return &defaultServiceAccountsAdapter{
-		id:          id.(*krm.ProjectDefaultServiceAccountsIdentity),
+		id:          id,
 		iam:         svc,
 		policy:      &iampolicy.Client{HTTP: h},
 		projectType: projectType,

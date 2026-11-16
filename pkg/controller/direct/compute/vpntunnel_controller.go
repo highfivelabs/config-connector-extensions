@@ -72,6 +72,22 @@ func (m *vpnTunnelModel) AdapterForObject(ctx context.Context, op *directbase.Ad
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a tunnel that was made or acquired: its name is in
+		// status and cannot change, so no gateway, router, project or
+		// Secret is read. One already gone (everything deleted at once)
+		// would otherwise hold the delete forever. Find and Delete need
+		// only the name.
+		id := &krm.ComputeVPNTunnelIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		c, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &vpnTunnelAdapter{gcpClient: c, id: id, obj: obj}, nil
+	}
 	idVal, err := obj.GetIdentity(ctx, op.Reader)
 	if err != nil {
 		return nil, err

@@ -111,6 +111,24 @@ func (m *routerModel) AdapterForObject(ctx context.Context, op *directbase.Adapt
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if selfLink := direct.ValueOf(obj.Status.SelfLink); op.IsDeleting() && selfLink != "" {
+		// Deleting a router that was made or acquired: its name is in
+		// status.selfLink (the kind has no status.externalRef) and cannot
+		// change, so no reference, VPN tunnel or Secret is read. A network,
+		// tunnel or project object already gone (everything deleted at
+		// once) would otherwise hold the delete forever. Find and Delete
+		// need only the name.
+		id := &krm.ComputeRouterIdentity{}
+		if err := id.FromExternal(selfLink); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &RouterAdapter{gcpClient: gcpClient, id: id}, nil
+	}
+
 	id, err := obj.GetIdentity(ctx, reader)
 	if err != nil {
 		return nil, err

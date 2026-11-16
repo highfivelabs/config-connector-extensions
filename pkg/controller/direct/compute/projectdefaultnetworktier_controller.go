@@ -38,6 +38,7 @@ import (
 	"k8s.io/klog/v2"
 
 	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/deleting"
 )
 
 func init() {
@@ -58,6 +59,13 @@ func (m *networkTierModel) AdapterForObject(ctx context.Context, op *directbase.
 	obj := &krm.ComputeProjectDefaultNetworkTier{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
+	}
+	if op.IsDeleting() {
+		// Delete leaves the tier as it is and makes no call, so it resolves
+		// nothing and reads nothing: a project object already gone
+		// (everything deleted at once) would otherwise hold the delete
+		// forever, and so would Find on a project already deleted.
+		return deleting.Gone{}, nil
 	}
 	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
