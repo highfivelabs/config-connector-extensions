@@ -23,7 +23,9 @@
 // Written here: the upstream credentials' password secret version reference
 // is resolved, disableUpstreamValidation (input only) is never a difference,
 // and a change to the credentials alone is sent with their own mask paths
-// (upstreamcredentials_mapping.go).
+// (upstreamcredentials_mapping.go). A remote repository whose custom
+// upstream URI changes is deleted and made again with the same name, as
+// Terraform's ForceNew does (replace.go; docs/design.md decision 21).
 
 package artifactregistry
 
@@ -171,13 +173,25 @@ func (a *ArtifactRegistryRepositoryAdapter) Create(ctx context.Context, createOp
 	log := klog.FromContext(ctx)
 	log.V(2).Info("creating ArtifactRegistryRepository", "name", a.id)
 
+	created, err := a.createRepository(ctx)
+	if err != nil {
+		return err
+	}
+	log.V(2).Info("successfully created ArtifactRegistryRepository", "name", a.id)
+
+	return a.updateStatus(ctx, createOp, created)
+}
+
+// createRepository is Create's request, shared with replace (Written here:
+// moved out of Create unchanged).
+func (a *ArtifactRegistryRepositoryAdapter) createRepository(ctx context.Context) (*pb.Repository, error) {
 	parent := fmt.Sprintf("projects/%s/locations/%s", a.id.Project, a.id.Location)
 	repositoryID := a.id.Repository
 
 	mapCtx := &direct.MapContext{}
 	desiredPb := ArtifactRegistryRepositorySpec_v1beta1_ToProto(mapCtx, &a.desired.Spec)
 	if mapCtx.Err() != nil {
-		return mapCtx.Err()
+		return nil, mapCtx.Err()
 	}
 	desiredPb.Labels = label.GCPLabels(a.desired)
 	populateCleanupPolicyDefaults(desiredPb)
@@ -189,15 +203,13 @@ func (a *ArtifactRegistryRepositoryAdapter) Create(ctx context.Context, createOp
 	}
 	op, err := a.gcpClient.CreateRepository(ctx, req)
 	if err != nil {
-		return fmt.Errorf("creating ArtifactRegistryRepository %s: %w", a.id, err)
+		return nil, fmt.Errorf("creating ArtifactRegistryRepository %s: %w", a.id, err)
 	}
 	created, err := op.Wait(ctx)
 	if err != nil {
-		return fmt.Errorf("ArtifactRegistryRepository %s waiting creation: %w", a.id, err)
+		return nil, fmt.Errorf("ArtifactRegistryRepository %s waiting creation: %w", a.id, err)
 	}
-	log.V(2).Info("successfully created ArtifactRegistryRepository", "name", a.id)
-
-	return a.updateStatus(ctx, createOp, created)
+	return created, nil
 }
 
 func (a *ArtifactRegistryRepositoryAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
@@ -213,6 +225,12 @@ func (a *ArtifactRegistryRepositoryAdapter) Update(ctx context.Context, updateOp
 	if diffs.HasDiff() {
 		diffs.Object = updateOp.GetUnstructured()
 		structuredreporting.ReportDiff(ctx, diffs)
+
+		// Written here: the API refuses a change of a remote repository's
+		// custom upstream URI, so the repository is replaced (replace.go).
+		if customUpstreamURIChanged(desiredPb, a.actual) {
+			return a.replace(ctx, updateOp)
+		}
 
 		req := &pb.UpdateRepositoryRequest{
 			Repository: desiredPb,

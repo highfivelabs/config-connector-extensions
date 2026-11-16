@@ -211,13 +211,22 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		if len(masks) != 1 || masks[0] != "description" {
 			t.Errorf("update masks = %q, want one update of description only", masks)
 		}
+		if n := count(env, "DELETE", cloudName(name)); n != 0 {
+			t.Errorf("DELETE requests after a description change: %d, want none (only a changed upstream URI replaces)", n)
+		}
 	})
 
-	t.Run("a changed upstream URI is refused", func(t *testing.T) {
-		// Terraform marks custom_repository ForceNew; Config Connector's
-		// direct controller sends remoteRepositoryConfig in an update mask,
-		// which the real API refuses (seen live, docs/live-runs.md), and
-		// mockgcp with it (patch 0016).
+	t.Run("a changed upstream URI replaces the repository", func(t *testing.T) {
+		// The API refuses an update of remoteRepositoryConfig ("Remote
+		// source configuartion cannot be updated", seen live,
+		// docs/live-runs.md; mockgcp with it, patch 0016). Terraform marks
+		// custom_repository ForceNew; ours deletes the repository and makes
+		// it again with the same name (docs/design.md decision 21).
+		before, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		deletes, patches := count(env, "DELETE", cloudName(name)), count(env, "PATCH", cloudName(name))
 		obj := &arv1beta1.ArtifactRegistryRepository{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
@@ -226,16 +235,67 @@ func TestArtifactRegistryRemoteRepository(t *testing.T) {
 		if err := env.Kube.Update(env.Ctx, obj); err != nil {
 			t.Fatal(err)
 		}
-		msg := env.WaitNotReady(gvk, namespace, name)
-		if !strings.Contains(msg, "Remote source configuartion cannot be updated") {
-			t.Errorf("Ready message = %q, want the API's refusal (\"Remote source configuartion cannot be updated\")", msg)
+		deadline := time.Now().Add(5 * time.Minute)
+		var got *pb.Repository
+		for {
+			got, err = cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
+			if err == nil && got.GetRemoteRepositoryConfig().GetDockerRepository().GetCustomRepository().GetUri() == uriChange {
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("the cloud repository does not have the new upstream URI after 5m: %v, %v", got.GetRemoteRepositoryConfig(), err)
+			}
+			time.Sleep(500 * time.Millisecond)
 		}
-		got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
-		if err != nil {
+		env.WaitReady(gvk, namespace, name)
+		if n := count(env, "DELETE", cloudName(name)) - deletes; n != 1 {
+			t.Errorf("DELETE requests for the replacement: %d, want 1", n)
+		}
+		if n := count(env, "PATCH", cloudName(name)) - patches; n != 0 {
+			t.Errorf("PATCH requests for the replacement: %d, want none (the API refuses the change in place)", n)
+		}
+		if !got.GetCreateTime().AsTime().After(before.GetCreateTime().AsTime()) {
+			t.Errorf("createTime %v is not after the old repository's %v: not a new repository", got.GetCreateTime().AsTime(), before.GetCreateTime().AsTime())
+		}
+		if got.GetMode() != pb.Repository_REMOTE_REPOSITORY || got.GetFormat() != pb.Repository_DOCKER {
+			t.Errorf("replaced repository mode/format = %v/%v, want REMOTE_REPOSITORY/DOCKER", got.GetMode(), got.GetFormat())
+		}
+		if got.GetDescription() != "pull-through cache, changed" {
+			t.Errorf("replaced repository description = %q, want the spec's", got.GetDescription())
+		}
+		if got.GetRemoteRepositoryConfig().GetDescription() != "private Docker registry" {
+			t.Errorf("replaced repository remoteRepositoryConfig.description = %q, want the spec's", got.GetRemoteRepositoryConfig().GetDescription())
+		}
+	})
+
+	t.Run("a resync after the replacement sends no update", func(t *testing.T) {
+		gets := count(env, "GET", cloudName(name))
+		deletes, patches := count(env, "DELETE", cloudName(name)), count(env, "PATCH", cloudName(name))
+		u := &unstructured.Unstructured{}
+		u.SetGroupVersionKind(gvk)
+		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
 			t.Fatal(err)
 		}
-		if got.GetRemoteRepositoryConfig().GetDockerRepository().GetCustomRepository().GetUri() != uri {
-			t.Errorf("cloud custom upstream = %v, want it unchanged (%q)", got.GetRemoteRepositoryConfig(), uri)
+		ann := u.GetAnnotations()
+		ann[k8s.InternalForceReconcileAnnotation] = "2"
+		u.SetAnnotations(ann)
+		if err := env.Kube.Update(env.Ctx, u); err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.Now().Add(30 * time.Second)
+		for count(env, "GET", cloudName(name)) == gets {
+			if time.Now().After(deadline) {
+				t.Fatal("the controller did not read the repository again after the annotation changed")
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		time.Sleep(time.Second)
+		env.WaitReady(gvk, namespace, name)
+		if n := count(env, "DELETE", cloudName(name)) - deletes; n != 0 {
+			t.Errorf("DELETE requests after a resync: %d, want none", n)
+		}
+		if n := count(env, "PATCH", cloudName(name)) - patches; n != 0 {
+			t.Errorf("PATCH requests after a resync: %d, want none", n)
 		}
 	})
 

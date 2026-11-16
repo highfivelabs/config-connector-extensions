@@ -8,6 +8,14 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **A remote `ArtifactRegistryRepository` whose custom upstream URI
+  changes is replaced** (`docs/design.md` decision 21): the controller
+  deletes the repository and creates it again with the same name, as
+  Terraform does, instead of going not Ready on the API's refusal
+  ("Remote source configuartion cannot be updated"). The repository's
+  cached packages are dropped and fetched again from the new upstream.
+  Every other change is still made in place.
+
 - **Six generated kinds are `v1beta1`** (`docs/design.md` decisions 27
   and 34: they passed live and their CRDs have not changed since):
   `ComputeRegionHealthAggregationPolicy` and `ComputeRegionBackendBucket`
