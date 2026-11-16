@@ -445,5 +445,45 @@ func TestContainerFields(t *testing.T) {
 			env.WaitGone(k)
 			ours(t, getPool(t).GetConfig().GetKubeletConfig())
 		})
+
+		// The node pool's clusterRef as a bare cluster name (the catalog's
+		// gke-nodepool chart writes it so, because a full id breaks Config
+		// Connector's delete of the node pool) and as a full id: Config
+		// Connector's reference resolution read only the full id, and the
+		// object stayed "reference not ready" (catalog #240).
+		for _, tc := range []struct{ name, clusterRef string }{
+			{"bare-cluster-name", clusterID},
+			{"full-cluster-id", clusterName},
+		} {
+			t.Run("resourceRef.name to a node pool whose clusterRef.external is a "+tc.name, func(t *testing.T) {
+				p := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+					"location": zone, "resourceID": poolID, "clusterRef": map[string]any{"external": tc.clusterRef},
+				}}}
+				p.SetGroupVersionKind(configConnectorNodePoolGVK)
+				p.SetNamespace(namespace)
+				p.SetName("pool-" + tc.name)
+				p.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
+				if err := env.Kube.Create(env.Ctx, p); err != nil {
+					t.Fatal(err)
+				}
+				o := newObj(tc.name)
+				o.Spec.ResourceRef = &containerv1beta1.ContainerNodePoolRef{Name: "pool-" + tc.name}
+				o.Annotations = map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}
+				if err := env.Kube.Create(env.Ctx, o); err != nil {
+					t.Fatal(err)
+				}
+				u := waitReady(t, gvk, tc.name)
+				if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != poolName {
+					t.Errorf("status.externalRef = %q, want %q", ref, poolName)
+				}
+				ours(t, getPool(t).GetConfig().GetKubeletConfig())
+				for _, x := range []client.Object{o, p} {
+					if err := env.Kube.Delete(env.Ctx, x); err != nil {
+						t.Fatal(err)
+					}
+					env.WaitGone(x)
+				}
+			})
+		}
 	})
 }

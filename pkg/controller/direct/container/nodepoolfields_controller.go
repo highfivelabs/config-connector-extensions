@@ -80,11 +80,11 @@ func (m *nodePoolFieldsModel) AdapterForObject(ctx context.Context, op *directba
 		// Deleting: the node pool is in the status; Config Connector's
 		// ContainerNodePool may be gone already.
 		ref = &containerv1beta1.ContainerNodePoolRef{External: prev}
-	} else if err := ref.Normalize(ctx, op.Reader, obj.GetNamespace()); err != nil {
-		return nil, err
 	}
-	id := &containerv1beta1.ContainerNodePoolIdentity{}
-	if err := id.FromExternal(ref.External); err != nil {
+	// Not ref.Normalize: it cannot read a clusterRef.external that is a
+	// bare cluster name (nodepoolref.go).
+	id, err := resolveNodePool(ctx, op.Reader, obj.GetNamespace(), ref)
+	if err != nil {
 		return nil, err
 	}
 	if prev != "" && prev != id.String() {

@@ -49,6 +49,16 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`ContainerNodePoolFields` with `resourceRef.name` now becomes Ready
+  when the referenced `ContainerNodePool`'s `clusterRef.external` is a
+  bare cluster name** (as the catalog's `gke-nodepool` chart writes it).
+  Config Connector's node pool reference read only a full cluster id, so
+  the object stayed "reference not ready" while the node pool was Ready.
+  The controller now resolves the node pool through its `clusterRef`
+  itself: a bare name in the node pool's project (its
+  `cnrm.cloud.google.com/project-id` annotation) and `spec.location`, a
+  full id as it is, a name through the `ContainerCluster` object.
+
 - **`IAMBinding` and `IAMMember` on a `CloudFunctions2Function` named by
   `name`** were refused on a real install: the manager's ClusterRole could
   not read `cloudfunctions2.cnrm.cloud.google.com` (nor, for the new row,
