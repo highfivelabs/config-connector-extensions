@@ -22,7 +22,7 @@
 
 - kind: LoggingSavedQuery
   group: logging.gcp.hfl.dev
-  version: v1alpha1
+  version: v1beta1
   discovery: logging.v2
   resource: projects.locations.savedQueries
   parents: [project, folder, organization, billingAccount]
@@ -30,7 +30,7 @@
 
 - kind: IAMOauthClient
   group: iam.gcp.hfl.dev
-  version: v1alpha1
+  version: v1beta1
   discovery: iam.v1
   resource: projects.locations.oauthClients
   parents: [project]
@@ -70,7 +70,7 @@
 
 - kind: GKEHubRolloutSequence
   group: gkehub.gcp.hfl.dev
-  version: v1alpha1
+  version: v1beta1
   discovery: gkehub.v1
   resource: projects.locations.rolloutSequences
   parents: [project]
@@ -78,7 +78,7 @@
 
 - kind: LoggingLink
   group: logging.gcp.hfl.dev
-  version: v1alpha1
+  version: v1beta1
   discovery: logging.v2
   resource: projects.locations.buckets.links
   parents: [project, folder, organization, billingAccount]
@@ -107,7 +107,7 @@
 
 - kind: ComputeRegionHealthAggregationPolicy
   group: compute.gcp.hfl.dev
-  version: v1alpha1
+  version: v1beta1
   discovery: compute.v1
   resource: regionHealthAggregationPolicies
   parents: [project]
@@ -131,7 +131,7 @@
 
 - kind: ComputeRegionBackendBucket
   group: compute.gcp.hfl.dev
-  version: v1alpha1
+  version: v1beta1
   discovery: compute.v1
   resource: regionBackendBuckets
   parents: [project]

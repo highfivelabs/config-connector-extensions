@@ -35,8 +35,10 @@ import (
 	discoveryenginev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/discoveryengine/v1alpha1"
 	gkebackupv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkebackup/v1beta1"
 	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
+	gkehubv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1beta1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
-	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
+	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	lookerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/looker/v1alpha1"
 	networkconnectivityv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkconnectivity/v1alpha1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
@@ -49,7 +51,7 @@ import (
 // The discokind kinds (hack/discokind/kinds.yaml).
 var discoKinds = []*discokind.Kind{
 	{
-		GVK:       loggingv1alpha1.LoggingSavedQueryGVK,
+		GVK:       loggingv1beta1.LoggingSavedQueryGVK,
 		CRDName:   "loggingsavedqueries.logging.gcp.hfl.dev",
 		BaseURL:   "https://logging.googleapis.com/v2/",
 		Name:      "{parent}/locations/{location}/savedQueries/{id}",
@@ -60,7 +62,7 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "name", "updateTime"},
 	},
 	{
-		GVK:       iamv1alpha1.IAMOauthClientGVK,
+		GVK:       iamv1beta1.IAMOauthClientGVK,
 		CRDName:   "iamoauthclients.iam.gcp.hfl.dev",
 		BaseURL:   "https://iam.googleapis.com/v1/",
 		Name:      "{parent}/locations/{location}/oauthClients/{id}",
@@ -108,7 +110,7 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "deleteTime", "state", "uid", "updateTime"},
 	},
 	{
-		GVK:       gkehubv1alpha1.GKEHubRolloutSequenceGVK,
+		GVK:       gkehubv1beta1.GKEHubRolloutSequenceGVK,
 		CRDName:   "gkehubrolloutsequences.gkehub.gcp.hfl.dev",
 		BaseURL:   "https://gkehub.googleapis.com/v1/",
 		Name:      "{parent}/locations/{location}/rolloutSequences/{id}",
@@ -119,7 +121,7 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"computedReleaseChannel", "createTime", "deleteTime", "effectiveAutoUpgradeConfig", "etag", "lastQualifiedControlPlaneVersion", "lastQualifiedNodeVersion", "operationalState", "targetControlPlaneVersion", "targetNodeVersion", "uid", "updateTime"},
 	},
 	{
-		GVK:       loggingv1alpha1.LoggingLinkGVK,
+		GVK:       loggingv1beta1.LoggingLinkGVK,
 		CRDName:   "logginglinks.logging.gcp.hfl.dev",
 		BaseURL:   "https://logging.googleapis.com/v2/",
 		Name:      "{parent}/locations/{location}/buckets/{bucket}/links/{id}",
@@ -152,7 +154,7 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"creationTimestamp", "fingerprint", "id", "kind", "region", "selfLink"},
 	},
 	{
-		GVK:         computev1alpha1.ComputeRegionHealthAggregationPolicyGVK,
+		GVK:         computev1beta1.ComputeRegionHealthAggregationPolicyGVK,
 		CRDName:     "computeregionhealthaggregationpolicies.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",
 		Name:        "{parent}/regions/{region}/healthAggregationPolicies/{id}",
@@ -185,7 +187,7 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"creationTimestamp", "fingerprint", "id", "kind", "region", "selfLink", "selfLinkWithId"},
 	},
 	{
-		GVK:         computev1alpha1.ComputeRegionBackendBucketGVK,
+		GVK:         computev1beta1.ComputeRegionBackendBucketGVK,
 		CRDName:     "computeregionbackendbuckets.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",
 		Name:        "{parent}/regions/{region}/backendBuckets/{id}",
@@ -790,9 +792,11 @@ var discoKinds = []*discokind.Kind{
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
-	loggingv1alpha1.AddToScheme,
+	loggingv1beta1.AddToScheme,
+	iamv1beta1.AddToScheme,
 	iamv1alpha1.AddToScheme,
 	gkehubv1alpha1.AddToScheme,
+	gkehubv1beta1.AddToScheme,
 	computev1alpha1.AddToScheme,
 	computev1beta1.AddToScheme,
 	lookerv1alpha1.AddToScheme,

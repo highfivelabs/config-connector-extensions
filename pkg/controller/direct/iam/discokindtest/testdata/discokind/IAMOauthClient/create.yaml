@@ -1,4 +1,4 @@
-apiVersion: iam.gcp.hfl.dev/v1alpha1
+apiVersion: iam.gcp.hfl.dev/v1beta1
 kind: IAMOauthClient
 metadata:
   name: ${NAME}

@@ -1,4 +1,4 @@
-apiVersion: logging.gcp.hfl.dev/v1alpha1
+apiVersion: logging.gcp.hfl.dev/v1beta1
 kind: LoggingLink
 metadata:
   name: ${NAME}

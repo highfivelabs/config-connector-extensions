@@ -40,6 +40,11 @@ var promoted = []string{
 	"RunService",
 	// Passed live 2026-11-15 (cce-11152310-b63f).
 	"ServiceIdentity",
+	// Generated kinds that passed live with their CRDs unchanged since
+	// (decision 34, 2026-11-15).
+	"ComputeRegionHealthAggregationPolicy", "LoggingSavedQuery",
+	"ComputeRegionBackendBucket", "LoggingLink",
+	"GKEHubRolloutSequence", "IAMOauthClient",
 }
 
 func TestPromotedKindsServeOnlyV1beta1(t *testing.T) {
