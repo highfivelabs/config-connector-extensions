@@ -70,6 +70,29 @@ What live taught (2026-11-16):
   until its next reconcile), both as the fake now does (run
   `cce-11160727-382a`).
 
+2026-11-16: `ContainerNodePoolFields`' `resourceRef.name` resolves the
+node pool through its `clusterRef` here (`nodepoolref.go`), not through
+Config Connector's `ContainerNodePoolRef.Normalize`. The Terraform-based
+`ContainerNodePool` has no `status.externalRef`, and upstream's fallback
+parses `clusterRef.external` as a full cluster id only; a bare cluster
+name (Terraform's `cluster` field, and what the catalog's `gke-nodepool`
+chart writes, because a full id breaks Config Connector's delete of the
+node pool) left the object "reference not ready" for good (found in
+catalog #240's fake-cloud run). Now:
+
+| The node pool's `clusterRef` | The node pool resolved as |
+| --- | --- |
+| `external: <cluster>` (bare name) | `projects/<the node pool's cnrm.cloud.google.com/project-id annotation>/locations/<its spec.location>/clusters/<cluster>/nodePools/<its resourceID or name>` |
+| `external: projects/<p>/locations/<l>/clusters/<c>` (or `zones/<z>`) | that cluster; location the node pool's `spec.location`, else the cluster's |
+| `name: <ContainerCluster>` | through the `ContainerCluster` object, as before |
+
+A node pool's `status.externalRef`, if one is ever set, is used first. The
+project comes only from the annotation (Config Connector's admission
+webhook always sets it on its objects; the managers do not read
+namespaces). The fake-cloud test covers the bare name and the full id.
+No live run: the change reads Kubernetes objects only and makes no new
+API call.
+
 ## Live runs
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
