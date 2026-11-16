@@ -70,6 +70,9 @@ func (m *clusterFieldsModel) AdapterForObject(ctx context.Context, op *directbas
 		return nil, fmt.Errorf("spec.resourceRef needs external or name")
 	}
 	prev := direct.ValueOf(obj.Status.ExternalRef)
+	if fieldkind.Deleting(obj, prev) {
+		return fieldkind.Gone{}, nil
+	}
 	if obj.GetDeletionTimestamp() != nil && prev != "" {
 		// Deleting: the cluster is in the status; Config Connector's
 		// ContainerCluster may be gone already.

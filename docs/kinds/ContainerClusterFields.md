@@ -44,14 +44,35 @@ resource in the namespace. Patch 0053 makes mockgcp's `clusters.update`
 take the five `desired*` fields and merge `desiredAddonsConfig` (it
 replaced the whole add-ons config).
 
-To confirm live: that `desiredAddonsConfig` naming one add-on leaves the
-others (the test checks HTTP load balancing stays off), and how the API
-answers a whole-`kubeletConfig` update without these fields. The live
-test skips unless `E2E_GKE=true` (a zonal cluster with one `e2-small`
-node and a one-node pool, made and deleted by the test; the sweeper
-deletes leftover clusters by label).
+The live test skips unless `E2E_GKE=true` (a zonal cluster with one
+`e2-small` node and a one-node pool, made and deleted by the test; the
+sweeper deletes leftover clusters by label) and takes about an hour: run
+it with `LIVE_TIMEOUT=150m`.
+
+What live taught (2026-11-16):
+- The Secret Manager add-on needs Workload Identity: 400
+  "Secret_manager_config.enabled cannot be true if
+  workload_identity_config.workload_pool is not set" (run
+  `cce-11160547-aae3`). The test's cluster has a pool, mockgcp refuses
+  the same, and a refused field no longer stops the others: the
+  controller tries every owned field and reports the refusals together.
+- Each `clusters.update` takes about 7 minutes (five took 20); the test
+  waits up to 75 minutes live (run `cce-11160623-50f0`).
+- A cluster refuses a delete while an update runs (400 "Cluster is
+  running incompatible operation"); the test's cleanup and the sweeper
+  try again for up to 30 minutes. That run's cluster was left and swept
+  by the next run.
+- `desiredAddonsConfig` naming only Stateful HA leaves the other add-ons
+  (HTTP load balancing stayed off), and `nodePools.update` replaces the
+  whole `kubeletConfig` (Terraform's update reset this object's fields
+  until its next reconcile), both as the fake now does (run
+  `cce-11160727-382a`).
 
 ## Live runs
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | `7be2586` | fail (an update count the fake's defaults break; fixed) | skipped (no `E2E_GKE`) (`cce-11160523-1e83`) | none | none |
+| 2026-11-16 | `4b15567` | pass | fail: the Secret Manager add-on needs Workload Identity (`cce-11160547-aae3`) | the fake took it; now refuses | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted |
+| 2026-11-16 | `815f129` | pass | fail: each update about 7 minutes, the test's 15-minute wait ran out; the cluster's delete refused during an update, swept by the next run (`cce-11160623-50f0`) | none | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted |
+| 2026-11-16 | `eefbc0b` | pass | fail on one case only: the Terraform-reset case read the node pool before the resync's update ran (a test bug, fixed); every other case passed, cluster fields and node pool fields (`cce-11160727-382a`) | none | one zonal cluster (1 `e2-small` node) and a one-node pool, deleted |

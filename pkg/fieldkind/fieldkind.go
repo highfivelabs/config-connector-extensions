@@ -26,6 +26,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -92,4 +93,31 @@ func older(a *unstructured.Unstructured, b client.Object) bool {
 		return ta.Before(&tb)
 	}
 	return a.GetName() < b.GetName()
+}
+
+// Gone is the adapter for an object being deleted that never wrote its
+// resource (no status.externalRef): there is nothing to give back, and
+// the Config Connector object its resourceRef names may be gone already,
+// so the reference is not resolved. Find reports not found, so the
+// delete finishes without a call.
+type Gone struct{}
+
+var _ directbase.Adapter = Gone{}
+
+func (Gone) Find(ctx context.Context) (bool, error) { return false, nil }
+func (Gone) Create(ctx context.Context, op *directbase.CreateOperation) error {
+	return fmt.Errorf("a field object being deleted is never created")
+}
+func (Gone) Update(ctx context.Context, op *directbase.UpdateOperation) error {
+	return fmt.Errorf("a field object being deleted is never updated")
+}
+func (Gone) Delete(ctx context.Context, op *directbase.DeleteOperation) (bool, error) {
+	return true, nil
+}
+func (Gone) Export(ctx context.Context) (*unstructured.Unstructured, error) { return nil, nil }
+
+// Deleting reports whether obj is being deleted without ever having
+// written its resource: its adapter is then Gone.
+func Deleting(obj client.Object, externalRef string) bool {
+	return obj.GetDeletionTimestamp() != nil && externalRef == ""
 }

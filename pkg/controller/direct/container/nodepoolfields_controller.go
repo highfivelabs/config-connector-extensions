@@ -73,6 +73,9 @@ func (m *nodePoolFieldsModel) AdapterForObject(ctx context.Context, op *directba
 		return nil, fmt.Errorf("spec.config.kubeletConfig is required")
 	}
 	prev := direct.ValueOf(obj.Status.ExternalRef)
+	if fieldkind.Deleting(obj, prev) {
+		return fieldkind.Gone{}, nil
+	}
 	if obj.GetDeletionTimestamp() != nil && prev != "" {
 		// Deleting: the node pool is in the status; Config Connector's
 		// ContainerNodePool may be gone already.

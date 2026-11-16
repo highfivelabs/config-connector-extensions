@@ -2896,7 +2896,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     - a second object of the same kind for the same resource in the
       namespace is refused (the oldest owns it);
     - a delete uses the resource in `status.externalRef`, so it does not
-      need Config Connector's object to still exist.
+      need Config Connector's object to still exist; an object that never
+      wrote its resource (no `status.externalRef`) goes without a call
+      (`fieldkind.Gone`; review C1 on #143).
     **Built 2026-11-16** (`v1alpha1`, promoted under decision 27 once each
     passes live): `KMSCryptoKeyFields` (`kms.gcp.hfl.dev`;
     `keyAccessJustificationsPolicy`, `cryptoKeys.patch` with a one-path

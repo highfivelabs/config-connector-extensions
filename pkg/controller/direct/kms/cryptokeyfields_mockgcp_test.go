@@ -291,6 +291,41 @@ func TestKMSCryptoKeyFields(t *testing.T) {
 		env.WaitGone(w)
 	})
 
+	// Review C1 (PR #143): an object that never wrote its key (no
+	// status.externalRef) and whose Config Connector object is deleted
+	// first still goes, without resolving the reference.
+	t.Run("a waiting object goes after its Config Connector object", func(t *testing.T) {
+		ghost := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+			"keyRingRef": map[string]any{"external": ringName}, "resourceID": "never-made", "purpose": "ENCRYPT_DECRYPT",
+		}}}
+		ghost.SetGroupVersionKind(configConnectorKMSCryptoKeyGVK)
+		ghost.SetNamespace(namespace)
+		ghost.SetName("ghost")
+		if err := env.Kube.Create(env.Ctx, ghost); err != nil {
+			t.Fatal(err)
+		}
+		if err := unstructured.SetNestedField(ghost.Object, ringName+"/cryptoKeys/"+mockenv.Name("ghost-key"), "status", "selfLink"); err != nil {
+			t.Fatal(err)
+		}
+		if err := env.Kube.Status().Update(env.Ctx, ghost); err != nil {
+			t.Fatal(err)
+		}
+		w := newFields("waits-by-name", &kmsv1beta1.KMSCryptoKeyRef{Name: "ghost"}, "CUSTOMER_INITIATED_ACCESS")
+		if err := env.Kube.Create(env.Ctx, w); err != nil {
+			t.Fatal(err)
+		}
+		if msg := env.WaitNotReady(gvk, namespace, "waits-by-name"); !strings.Contains(msg, "does not exist yet") {
+			t.Errorf("Ready message = %q, want the missing key waited for", msg)
+		}
+		if err := env.Kube.Delete(env.Ctx, ghost); err != nil {
+			t.Fatal(err)
+		}
+		if err := env.Kube.Delete(env.Ctx, w); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(w)
+	})
+
 	t.Run("delete clears the policy and keeps the key", func(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, obj); err != nil {
 			t.Fatal(err)
