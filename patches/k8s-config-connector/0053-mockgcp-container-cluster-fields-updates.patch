@@ -9,14 +9,16 @@ and a desiredAddonsConfig naming only the Stateful HA add-on. mockgcp
 refused the first four ("update was not fully implemented") and replaced
 the whole addonsConfig with the request's, which dropped every add-on the
 request did not name; the API changes only the add-ons a request names
-(gcloud's --update-addons sends one), so the mock now merges. Upstream
-candidate: yes.
+(gcloud's --update-addons sends one), so the mock now merges. Like the
+API, it refuses the Secret Manager add-on on a cluster without a
+Workload Identity pool (live run cce-11160547-aae3). Upstream candidate:
+yes.
 
 diff --git a/mockgcp/mockcontainer/cluster.go b/mockgcp/mockcontainer/cluster.go
-index 9bd54847c..aed6140be 100644
+index 9bd54847c..605795d42 100644
 --- a/mockgcp/mockcontainer/cluster.go
 +++ b/mockgcp/mockcontainer/cluster.go
-@@ -303,10 +303,38 @@ func (s *ClusterManagerV1) UpdateCluster(ctx context.Context, req *pb.UpdateClus
+@@ -303,10 +303,41 @@ func (s *ClusterManagerV1) UpdateCluster(ctx context.Context, req *pb.UpdateClus
  	}
  
  	if update.DesiredAddonsConfig != nil {
@@ -31,6 +33,9 @@ index 9bd54847c..aed6140be 100644
  	}
  
 +	if update.DesiredSecretManagerConfig != nil {
++		if update.DesiredSecretManagerConfig.GetEnabled() && obj.GetWorkloadIdentityConfig().GetWorkloadPool() == "" {
++			return nil, status.Errorf(codes.InvalidArgument, "Secret_manager_config.enabled cannot be true if workload_identity_config.workload_pool is not set.")
++		}
 +		obj.SecretManagerConfig = update.DesiredSecretManagerConfig
 +		update.DesiredSecretManagerConfig = nil
 +	}

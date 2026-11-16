@@ -107,6 +107,10 @@ func TestContainerFields(t *testing.T) {
 			Config: &pb.NodeConfig{MachineType: "e2-small", DiskSizeGb: 20, ResourceLabels: labels},
 		}},
 		AddonsConfig: &pb.AddonsConfig{HttpLoadBalancing: &pb.HttpLoadBalancing{Disabled: true}},
+		// The Secret Manager add-on needs Workload Identity (live run
+		// cce-11160547-aae3: 400 "Secret_manager_config.enabled cannot be
+		// true if workload_identity_config.workload_pool is not set").
+		WorkloadIdentityConfig: &pb.WorkloadIdentityConfig{WorkloadPool: mockenv.Project + ".svc.id.goog"},
 	}})
 	if err != nil {
 		t.Fatal(err)

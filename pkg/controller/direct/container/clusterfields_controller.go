@@ -26,6 +26,7 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -228,22 +229,30 @@ func (a *clusterFieldsAdapter) Create(ctx context.Context, createOp *directbase.
 	return fieldkind.NotFoundError("ContainerCluster", a.id.String())
 }
 
+// Update writes each owned field that differs. A field the API refuses
+// does not stop the others: every refusal is reported together, and the
+// object is not Ready until all are set.
 func (a *clusterFieldsAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
+	var errs []error
 	for _, u := range a.updates {
 		if u.has(a.actual) {
 			continue
 		}
 		klog.FromContext(ctx).V(2).Info("setting a field of a GKE cluster", "name", a.id, "field", u.field)
 		op, err := a.client.UpdateCluster(ctx, &pb.UpdateClusterRequest{Name: a.id.String(), Update: u.update})
-		if err != nil {
-			return fmt.Errorf("setting %s of GKE cluster %s: %w", u.field, a.id, err)
+		if err == nil {
+			err = waitForOperation(ctx, a.client, a.id.Project, a.id.Location, op)
 		}
-		if err := waitForOperation(ctx, a.client, a.id.Project, a.id.Location, op); err != nil {
-			return fmt.Errorf("setting %s of GKE cluster %s: %w", u.field, a.id, err)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("setting %s of GKE cluster %s: %w", u.field, a.id, err))
+			continue
 		}
 		if _, err := a.Find(ctx); err != nil {
 			return err
 		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 	return updateOp.UpdateStatus(ctx, &krm.ContainerClusterFieldsStatus{ExternalRef: direct.LazyPtr(a.id.String())}, nil)
 }
