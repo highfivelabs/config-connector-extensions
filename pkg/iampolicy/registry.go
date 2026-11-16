@@ -261,7 +261,7 @@ var resourceTypes = func() map[string]*ResourceType {
 		{
 			Kind: "RunService",
 			GVKs: []schema.GroupVersionKind{
-				gvk("run.gcp.hfl.dev", "v1alpha1", "RunService"),
+				gvk("run.gcp.hfl.dev", "v1beta1", "RunService"),
 				gvk("run.cnrm.cloud.google.com", "v1beta1", "RunService"),
 			},
 			Host: "run.googleapis.com", Version: "v2",
@@ -269,6 +269,17 @@ var resourceTypes = func() map[string]*ResourceType {
 			FromObject: func(o ObjectParts) (string, error) {
 				return "projects/" + o.Project + "/locations/" + o.Location + "/services/" + o.ID, nil
 			},
+		},
+		{
+			// A 1st gen Cloud Function (Cloud Functions v1 API), Config
+			// Connector's CloudFunctionsFunction, which names its region in
+			// spec.region (resolve.go). Asked for by the catalog's
+			// cloud-function-v1 chart (RECPF, 2026-11-15).
+			Kind: "CloudFunctionsFunction",
+			GVKs: []schema.GroupVersionKind{gvk("cloudfunctions.cnrm.cloud.google.com", "v1beta1", "CloudFunctionsFunction")},
+			Host: "cloudfunctions.googleapis.com", Version: "v1",
+			Name:       re(`projects/[^/]+/locations/[^/]+/functions/[^/]+`),
+			FromObject: inLocation("functions"),
 		},
 		{
 			Kind: "PubSubTopic", GVKs: []schema.GroupVersionKind{gvk("pubsub.cnrm.cloud.google.com", "v1beta1", "PubSubTopic")},

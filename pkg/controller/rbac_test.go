@@ -24,11 +24,13 @@ import (
 
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
+
+	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 )
 
-// Every kind's group is in the manager's ClusterRole, so a new kind cannot
-// ship without the rights to reconcile it.
-func TestManagerRoleCoversEveryKind(t *testing.T) {
+// managerRole is the manager's ClusterRole in config/operator/rbac.yaml.
+func managerRole(t *testing.T) *rbacv1.ClusterRole {
+	t.Helper()
 	data, err := os.ReadFile(filepath.Join("..", "..", "config", "operator", "rbac.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -48,6 +50,13 @@ func TestManagerRoleCoversEveryKind(t *testing.T) {
 	if role == nil {
 		t.Fatal("config/operator/rbac.yaml has no ClusterRole config-connector-extensions-manager")
 	}
+	return role
+}
+
+// Every kind's group is in the manager's ClusterRole, so a new kind cannot
+// ship without the rights to reconcile it.
+func TestManagerRoleCoversEveryKind(t *testing.T) {
+	role := managerRole(t)
 	for _, k := range Kinds {
 		var crud, status bool
 		for _, rule := range role.Rules {
@@ -63,6 +72,28 @@ func TestManagerRoleCoversEveryKind(t *testing.T) {
 		}
 		if !crud || !status {
 			t.Errorf("ClusterRole config-connector-extensions-manager does not cover %s (objects: %v, status: %v)", k.gvk.Group, crud, status)
+		}
+	}
+}
+
+// Every kind IAMBinding and IAMMember can name by resourceRef.name
+// (pkg/iampolicy's table) is readable by the manager: the resolver gets the
+// object, and a group missing from the role is a 403 on a real install that
+// envtest, which has no RBAC, never shows.
+func TestManagerRoleReadsEveryIAMResourceKind(t *testing.T) {
+	role := managerRole(t)
+	for _, kind := range iampolicy.Kinds() {
+		rt, _ := iampolicy.Lookup(kind)
+		for _, gvk := range rt.GVKs {
+			readable := false
+			for _, rule := range role.Rules {
+				if slices.Contains(rule.APIGroups, gvk.Group) && slices.Contains(rule.Resources, "*") && slices.Contains(rule.Verbs, "get") {
+					readable = true
+				}
+			}
+			if !readable {
+				t.Errorf("ClusterRole config-connector-extensions-manager cannot get %s (IAM resourceRef kind %s)", gvk.Group, kind)
+			}
 		}
 	}
 }

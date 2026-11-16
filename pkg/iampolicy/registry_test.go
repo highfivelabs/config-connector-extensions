@@ -145,6 +145,33 @@ func TestManagedFolderFromObject(t *testing.T) {
 	}
 }
 
+// A 1st gen function, which Config Connector's IAMPolicyMember also takes
+// (so it is not in samples): its name, the v1 API's policy URL, and the name
+// from an object's project, spec.region and resourceID.
+func TestCloudFunctionsFunction(t *testing.T) {
+	rt, ok := Lookup("CloudFunctionsFunction")
+	if !ok {
+		t.Fatal("no CloudFunctionsFunction row")
+	}
+	const n = "projects/p/locations/us-central1/functions/f"
+	if got, err := rt.ResolveExternal(n); err != nil || got != n {
+		t.Errorf("ResolveExternal(%q) = %q, %v", n, got, err)
+	}
+	if _, err := rt.ResolveExternal("projects/p/locations/us-central1/services/f"); err == nil {
+		t.Error("a Cloud Run service name was accepted as a function")
+	}
+	c := &Client{}
+	if got, err := c.url(rt, n, "getIamPolicy"); err != nil || got != "https://cloudfunctions.googleapis.com/v1/"+n+":getIamPolicy" {
+		t.Errorf("policy URL = %s, %v", got, err)
+	}
+	if got, err := rt.ResolveObject(ObjectParts{Project: "p", Location: "us-central1", ID: "f"}); err != nil || got != n {
+		t.Errorf("ResolveObject = %q, %v; want %q", got, err, n)
+	}
+	if _, err := rt.ResolveObject(ObjectParts{Project: "p", ID: "f"}); err == nil {
+		t.Error("a function with no region must not resolve")
+	}
+}
+
 func TestLocatedNameFromObject(t *testing.T) {
 	rt, _ := Lookup("RunWorkerPool")
 	got, err := rt.ResolveObject(ObjectParts{Project: "p", Location: "us-central1", ID: "w"})

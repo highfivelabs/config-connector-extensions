@@ -60,11 +60,11 @@ import (
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
-	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	runv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 	servicemanagementv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/servicemanagement/v1alpha1"
-	serviceusagev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	serviceusagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1beta1"
 	spannerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/spanner/v1beta1"
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
@@ -117,7 +117,7 @@ var Kinds = []kind{
 	{gvk: iamv1beta1.IAMWorkloadIdentityPoolProviderKeyGVK, crdName: "iamworkloadidentitypoolproviderkeys.iam.gcp.hfl.dev", model: iam.NewWorkloadIdentityPoolProviderKeyModel},
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
 	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
-	{gvk: runv1alpha1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
+	{gvk: runv1beta1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
 	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
@@ -135,7 +135,7 @@ var Kinds = []kind{
 	{gvk: loggingv1beta1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 	{gvk: loggingv1beta1.LoggingLogSinkGVK, crdName: "logginglogsinks.logging.gcp.hfl.dev", model: logging.NewLogSinkModel},
 	{gvk: loggingv1alpha1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
-	{gvk: serviceusagev1alpha1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
+	{gvk: serviceusagev1beta1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
 	{gvk: networksecurityv1beta1.NetworkSecurityAddressGroupGVK, crdName: "networksecurityaddressgroups.networksecurity.gcp.hfl.dev", model: networksecurity.NewAddressGroupModel, labels: slotguard.Spec},
@@ -176,7 +176,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		artifactregistryv1beta1.AddToScheme,
 		iamv1alpha1.AddToScheme,
 		iamv1beta1.AddToScheme,
-		runv1alpha1.AddToScheme,
+		runv1beta1.AddToScheme,
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,
 		dnsv1beta1.AddToScheme,
@@ -190,7 +190,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		storagev1beta1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
-		serviceusagev1alpha1.AddToScheme,
+		serviceusagev1beta1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
 		resourcemanagerv1alpha1.AddToScheme,
 		networksecurityv1beta1.AddToScheme,

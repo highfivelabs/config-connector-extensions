@@ -23,6 +23,17 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **`IAMBinding` and `IAMMember` on a `CloudFunctions2Function` named by
+  `name`** were refused on a real install: the manager's ClusterRole could
+  not read `cloudfunctions2.cnrm.cloud.google.com` (nor, for the new row,
+  `cloudfunctions.cnrm.cloud.google.com`). Both are in the role now.
+
+- **A folder's or organization's `ServiceIdentity` never went Ready**
+  against Google Cloud: the API answers `generateServiceIdentity` with an
+  operation already done, named `operations/finished.DONE_OPERATION`, and
+  refuses a read of it; the controller read it. A done operation is now
+  taken as it is.
+
 - **Deleting a BigLake catalog, database and table at once** no longer
   holds the database's and table's finalizers. BigLake's catalog delete
   takes the database and table along, and they then answer 403, as
@@ -35,6 +46,12 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`IAMBinding` and `IAMMember` take a `CloudFunctionsFunction`** (Config
+  Connector's 1st gen function, `cloudfunctions.cnrm.cloud.google.com`) as
+  `resourceRef`, by `name` (its project, `spec.region` and `resourceID`) or
+  by `external` (`projects/{project}/locations/{region}/functions/{id}`),
+  through the Cloud Functions v1 API's policy verbs. Asked for by the
+  catalog's `cloud-function-v1` chart.
 - **`logging.gcp.hfl.dev/v1beta1` `LoggingLogSink`**, our own log sink of
   a project, folder or organization, owning the whole sink, with what
   Config Connector's `LoggingLogSink` lacks: `interceptChildren` (a
@@ -353,6 +370,20 @@ has been released yet; each release moves its entries out of
   refuses two candidates.
 
 ### Changed
+
+- **`ServiceIdentity` is `v1beta1`** (`serviceusage.gcp.hfl.dev/v1beta1`,
+  `docs/design.md` decision 27: it passed live on 2026-11-15 on a test
+  folder). The schema is unchanged; the CRD no longer serves `v1alpha1`,
+  so change the `apiVersion`; upgrade as below. A service identity is
+  never deleted, so abandoning the old object loses nothing.
+
+- **`RunService` is `v1beta1`** (`run.gcp.hfl.dev/v1beta1`, `docs/design.md`
+  decision 27, which since 2026-11-15 covers field-gap kinds too: it passed
+  live and its schema has not changed since). The schema is unchanged; the
+  CRD no longer serves `v1alpha1`, so change the `apiVersion`. A cluster
+  with `v1alpha1` `RunService` objects upgrades as below: abandon and
+  delete them, replace the CRD, apply them again at `v1beta1`, which takes
+  over the same Cloud Run service.
 
 - **Sixteen more of our kinds are `v1beta1`** (`docs/design.md`
   decision 27: they passed live and their schemas have not changed since):

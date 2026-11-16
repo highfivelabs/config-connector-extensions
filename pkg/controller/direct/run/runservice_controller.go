@@ -52,7 +52,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/mappers"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/structuredreporting"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 )
 
 func init() {

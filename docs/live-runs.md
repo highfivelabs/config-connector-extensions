@@ -296,8 +296,11 @@ cannot be deleted, so the test puts the folder's back as it found them;
 there is nothing for the sweeper. Then:
 `E2E_LOGGING_FOLDER=... E2E_LOGGING_KMS_KEY=... task test-live PROJECT=$GCP_PROJECT KINDS=logging`.
 
-`ServiceIdentity` (package `serviceusage`) also waits on the test folder,
-passed as `E2E_TEST_FOLDER=folders/<id>`; it never uses the
+`ServiceIdentity` (package `serviceusage`) runs on the test folder,
+passed as `E2E_TEST_FOLDER=folders/<id>` (it passed on 2026-11-15 with the
+test estate's folder and the project's live-test account, which has
+`roles/resourcemanager.folderAdmin` there; rows in
+`docs/kinds/ServiceIdentity.md`); it never uses the
 organization (that case runs in the fake cloud only). The live-test
 service account needs `serviceusage.services.use` on the folder or the
 quota project (assumed from the Service Usage reference, not yet seen).

@@ -27,7 +27,7 @@ package serviceusage
 
 import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
-	krm "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/serviceusage/v1beta1"
 	pb "google.golang.org/genproto/googleapis/api/serviceusage/v1beta1"
 )
 

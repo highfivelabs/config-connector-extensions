@@ -29,7 +29,11 @@
 // +kcc:source:service-docs=https://cloud.google.com/service-usage/
 // +kcc:source:resource-docs=https://cloud.google.com/service-usage/docs/reference/rest/v1beta1/services/generateServiceIdentity
 
-package v1alpha1
+// v1beta1 since 2026-11-15 (docs/design.md decision 27): the kind moved
+// from v1alpha1 unchanged after its first live pass, and v1alpha1 is no
+// longer served.
+
+package v1beta1
 
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1beta1
 
 // Written here, in the shape of Config Connector's identities: upstream's
 // ServiceIdentityIdentity (apis/serviceusage/v1beta1) has a project only.

@@ -35,7 +35,11 @@
 //     SecretVersionRef (controller-gen v0.16.5 panics on aliases under Go
 //     1.27; same schema).
 
-package v1alpha1
+// v1beta1 since 2026-11-15 (docs/design.md decision 27, extended to
+// field-gap kinds by the answer to section 10 question 9): the kind moved
+// from v1alpha1 unchanged, and v1alpha1 is no longer served.
+
+package v1beta1
 
 import (
 	computerefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/refs"

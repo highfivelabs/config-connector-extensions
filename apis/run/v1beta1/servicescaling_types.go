@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1beta1
 
 // Written here, from the Cloud Run v2 API: the scaling settings a service
 // and its revisions have, which Config Connector's direct Run kinds do not.

@@ -15,4 +15,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // +kcc:proto=google.api.serviceusage.v1beta1
-package v1alpha1
+package v1beta1
