@@ -58,7 +58,8 @@ source hack/live/projects.sh
 # kms (KMSCryptoKeyFields) skips live unless E2E_KMS_KAJ=true (the key ring
 # must be in a project enrolled in Key Access Justifications);
 # container (ContainerClusterFields, ContainerNodePoolFields) skips live
-# unless E2E_GKE=true (it makes a GKE cluster);
+# unless E2E_GKE=true (it makes a GKE cluster, and takes over an hour:
+# set LIVE_TIMEOUT=150m, the live go test timeout, default 60m);
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
@@ -171,7 +172,7 @@ for k in "${kinds[@]}"; do
   # Streamed as it runs, so a preempted VM's log still has it.
   E2E_GCP_TARGET=real GCP_PROJECT_ID="${project}" E2E_RUN_ID="${run_id}" \
     E2E_SERVICE_ACCOUNT="${sa}" E2E_SQL_INSTANCE="${sql_instance}" \
-    go test -count=1 -v -p 1 -timeout 60m ${run_filter[@]+"${run_filter[@]}"} "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
+    go test -count=1 -v -p 1 -timeout "${LIVE_TIMEOUT:-60m}" ${run_filter[@]+"${run_filter[@]}"} "${pkg}" 2>&1 | tee "${out}/${k}.live.log" \
     | grep -E --line-buffered '^\s*--- (PASS|FAIL|SKIP)|^(ok|FAIL)\s|_test.go:[0-9]+:|^=== RUN' || live=FAIL
   secs=$(( $(date +%s) - t0 ))
   [[ "${mock}" == PASS && "${live}" == PASS ]] || failed=1

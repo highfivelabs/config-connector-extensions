@@ -190,6 +190,31 @@ func TestContainerFields(t *testing.T) {
 	// the node pool.
 	clusterUpdates := func() int { return count("PUT", "/clusters/"+clusterID+"?") }
 	poolUpdates := func() int { return count("PUT", "/nodePools/"+poolID+"?") }
+	// waitReady is env.WaitReady with GKE's time: live, each clusters.update
+	// takes minutes (about 7 to turn on the Secret Manager add-on, run
+	// cce-11160623-50f0) and a kubelet change recreates the nodes, longer
+	// than mockenv.Timeout().
+	waitReady := func(t *testing.T, gvk schema.GroupVersionKind, name string) *unstructured.Unstructured {
+		t.Helper()
+		timeout := mockenv.Timeout()
+		if mockenv.Live() {
+			timeout = 75 * time.Minute
+		}
+		var last *unstructured.Unstructured
+		for deadline := time.Now().Add(timeout); time.Now().Before(deadline); time.Sleep(time.Second) {
+			u := &unstructured.Unstructured{}
+			u.SetGroupVersionKind(gvk)
+			if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, u); err != nil {
+				t.Fatal(err)
+			}
+			last = u
+			if ready, _ := mockenv.Ready(u); ready {
+				return u
+			}
+		}
+		t.Fatalf("%s %s/%s did not become Ready in %v; last status: %v", gvk.Kind, namespace, name, timeout, last.Object["status"])
+		return nil
+	}
 	resync := func(t *testing.T, gvk schema.GroupVersionKind, obj client.Object) {
 		t.Helper()
 		obj.SetAnnotations(map[string]string{k8s.InternalForceReconcileAnnotation: time.Now().String()})
@@ -197,7 +222,7 @@ func TestContainerFields(t *testing.T) {
 			t.Fatal(err)
 		}
 		time.Sleep(3 * time.Second)
-		env.WaitReady(gvk, namespace, obj.GetName())
+		waitReady(t, gvk, obj.GetName())
 	}
 
 	t.Run("ContainerClusterFields", func(t *testing.T) {
@@ -219,7 +244,7 @@ func TestContainerFields(t *testing.T) {
 		}
 
 		t.Run("create sets each field with its own update", func(t *testing.T) {
-			u := env.WaitReady(gvk, namespace, "cluster")
+			u := waitReady(t, gvk, "cluster")
 			if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != clusterName {
 				t.Errorf("status.externalRef = %q, want %q", ref, clusterName)
 			}
@@ -271,14 +296,14 @@ func TestContainerFields(t *testing.T) {
 			if err := env.Kube.Update(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
-			deadline := time.Now().Add(mockenv.Timeout())
+			deadline := time.Now().Add(30 * time.Minute)
 			for getCluster(t).GetAnonymousAuthenticationConfig().GetMode() != pb.AnonymousAuthenticationConfig_ENABLED {
 				if time.Now().After(deadline) {
 					t.Fatal("anonymousAuthenticationConfig.mode did not become ENABLED")
 				}
 				time.Sleep(2 * time.Second)
 			}
-			env.WaitReady(gvk, namespace, "cluster")
+			waitReady(t, gvk, "cluster")
 			if n := clusterUpdates() - before; n != 1 {
 				t.Errorf("clusters.update called %d times, want 1", n)
 			}
@@ -323,7 +348,7 @@ func TestContainerFields(t *testing.T) {
 		}
 
 		t.Run("create sets the fields and keeps Config Connector's", func(t *testing.T) {
-			u := env.WaitReady(gvk, namespace, "pool")
+			u := waitReady(t, gvk, "pool")
 			if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != poolName {
 				t.Errorf("status.externalRef = %q, want %q", ref, poolName)
 			}
@@ -392,7 +417,7 @@ func TestContainerFields(t *testing.T) {
 			if err := env.Kube.Create(env.Ctx, k); err != nil {
 				t.Fatal(err)
 			}
-			env.WaitReady(gvk, namespace, "kept")
+			waitReady(t, gvk, "kept")
 			if err := env.Kube.Delete(env.Ctx, k); err != nil {
 				t.Fatal(err)
 			}
