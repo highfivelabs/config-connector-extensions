@@ -43,6 +43,7 @@ import (
 	"k8s.io/klog/v2"
 
 	krm "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/deleting"
 )
 
 func init() {
@@ -63,6 +64,15 @@ func (m *settingsModel) AdapterForObject(ctx context.Context, op *directbase.Ada
 	obj := &krm.LoggingSettings{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
+	}
+	if op.IsDeleting() {
+		// Delete leaves the settings as they are and makes no call, so it
+		// resolves nothing and builds no client: a Folder object already
+		// gone (everything deleted at once: the catalog's folder chart)
+		// would otherwise hold the delete forever ("referenced Folder ...
+		// not found"). Abandon is the same.
+		klog.FromContext(ctx).V(2).Info("forgetting LoggingSettings; the settings stay as they are", "name", obj.GetName())
+		return deleting.Gone{}, nil
 	}
 	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
@@ -177,9 +187,9 @@ func (a *settingsAdapter) apply(ctx context.Context, op directbase.Operation) er
 }
 
 // Delete leaves the settings as they are: they cannot be deleted, and
-// Terraform's resources only forget them.
+// Terraform's resources only forget them. An object being deleted gets
+// deleting.Gone (AdapterForObject), so nothing reaches here on a delete.
 func (a *settingsAdapter) Delete(ctx context.Context, deleteOp *directbase.DeleteOperation) (bool, error) {
-	klog.FromContext(ctx).V(2).Info("forgetting LoggingSettings; the settings stay as they are", "name", a.id)
 	return true, nil
 }
 
