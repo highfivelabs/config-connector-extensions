@@ -32,7 +32,10 @@ organization's sink always has its own. The catalog's charts grant it on
 the destination with our `IAMMember`'s `memberFrom.logSinkRef`
 (2026-11-15), which reads this kind's (and Config Connector's) writer
 identity; Config Connector's `IAMPolicyMember.memberFrom.logSinkRef`
-reads only Config Connector's `LoggingLogSink`.
+reads only Config Connector's `LoggingLogSink`. A project's sink to a log
+bucket of the same project has no writer identity (seen live
+2026-11-15); an `IAMMember` naming it waits until one appears, which is
+never, so a chart grants nothing for that case.
 
 **Destination forms** are `LoggingBillingAccountSink`'s (a bucket by bare
 name, `gs://`, `storage.googleapis.com/` and the rest); a project as its ID,

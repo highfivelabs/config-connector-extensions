@@ -37,7 +37,7 @@ import (
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/iam/apiv1/iampb"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/iam/iamrefs"
-	loggingv1beta1kcc "github.com/GoogleCloudPlatform/k8s-config-connector/apis/logging/v1beta1"
+	pubsubv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/pubsub/v1beta1"
 	refs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
@@ -315,8 +315,11 @@ func TestIAMMember(t *testing.T) {
 		t.Run("a member from a log sink's writer identity waits until the sink has one", func(t *testing.T) {
 			// The catalog's folder and organization charts grant their
 			// sinks' writer identities this way. The sink is this
-			// project's LoggingLogSink in the run's project (live: one
-			// sink to the project's own _Default bucket, matching no log).
+			// project's LoggingLogSink in the run's project, matching no
+			// log, to a Pub/Sub topic of the run's that need not exist
+			// (the API does not check it at create). Live, a sink to a
+			// log bucket of its own project has no writer identity, so
+			// that destination would never let the member go on.
 			parent := "projects/" + mockenv.Project
 			sinkID := mockenv.Name("member-sink")
 			logs, err := loggingapi.NewService(env.Ctx, env.GCPOptions()...)
@@ -347,7 +350,7 @@ func TestIAMMember(t *testing.T) {
 					ProjectRef: &refs.ProjectRef{External: mockenv.Project},
 					ResourceID: mockenv.Ptr(sinkID),
 					Destination: loggingv1beta1.LoggingLogSinkDestination{
-						LoggingLogBucketRef: &loggingv1beta1kcc.LoggingLogBucketRef{External: parent + "/locations/global/buckets/_Default"},
+						PubSubTopicRef: &pubsubv1beta1.PubSubTopicRef{External: parent + "/topics/" + mockenv.Name("member-sink")},
 					},
 					Filter:               mockenv.Ptr(`logName="` + parent + `/logs/` + mockenv.Name("none") + `"`),
 					UniqueWriterIdentity: mockenv.Ptr(true),
