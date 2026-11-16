@@ -391,15 +391,27 @@ func TestContainerFields(t *testing.T) {
 				t.Fatal(err)
 			}
 			wait(t, op)
+			// The API replaces the whole kubeletConfig, as the fake does
+			// (run cce-11160727-382a).
 			if got := getPool(t).GetConfig().GetKubeletConfig().GetContainerLogMaxSize(); got == "20Mi" {
-				t.Logf("the API kept containerLogMaxSize through a whole-config update (the fake replaces it)")
+				t.Errorf("containerLogMaxSize survived a whole-config update: the fake replaces it")
 			}
 			o := &hflcontainer.ContainerNodePoolFields{}
 			if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: "pool"}, o); err != nil {
 				t.Fatal(err)
 			}
+			// A resync does not change the generation, so Ready says
+			// nothing about it: wait for the node pool instead (live, a
+			// kubelet change recreates the nodes).
 			resync(t, gvk, o)
+			timeout := mockenv.Timeout()
+			if mockenv.Live() {
+				timeout = 30 * time.Minute
+			}
 			k := getPool(t).GetConfig().GetKubeletConfig()
+			for deadline := time.Now().Add(timeout); k.GetContainerLogMaxSize() != "20Mi" && time.Now().Before(deadline); time.Sleep(5 * time.Second) {
+				k = getPool(t).GetConfig().GetKubeletConfig()
+			}
 			ours(t, k)
 			if k.GetPodPidsLimit() != 2048 {
 				t.Errorf("podPidsLimit = %d, want Config Connector's 2048 kept", k.GetPodPidsLimit())
