@@ -41,7 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	hflcontainer "github.com/highfivelabs/config-connector-extensions/apis/container/v1alpha1"
+	hflcontainer "github.com/highfivelabs/config-connector-extensions/apis/container/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 

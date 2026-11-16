@@ -45,6 +45,8 @@ var promoted = []string{
 	"ComputeRegionHealthAggregationPolicy", "LoggingSavedQuery",
 	"ComputeRegionBackendBucket", "LoggingLink",
 	"GKEHubRolloutSequence", "IAMOauthClient",
+	// Field kinds that passed live (run cce-11160848-7b8d, 2026-11-16).
+	"ContainerClusterFields", "ContainerNodePoolFields",
 }
 
 func TestPromotedKindsServeOnlyV1beta1(t *testing.T) {

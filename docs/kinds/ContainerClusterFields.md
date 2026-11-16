@@ -1,10 +1,10 @@
 ---
 kinds: [ContainerClusterFields, ContainerNodePoolFields]
-apiVersion: container.gcp.hfl.dev/v1alpha1
+apiVersion: container.gcp.hfl.dev/v1beta1
 ---
 # ContainerClusterFields, ContainerNodePoolFields
 
-`container.gcp.hfl.dev/v1alpha1`
+`container.gcp.hfl.dev/v1beta1` (since 2026-11-16, decision 27; first `v1alpha1`)
 
 **Gap it fills.** GKE cluster and node pool fields Config Connector's `ContainerCluster` and `ContainerNodePool` lack, set beside them as field kinds (`docs/design.md` section 6.6, pattern 2, and decision 37): on a cluster, `secretManagerConfig`, `rbacBindingConfig`, `anonymousAuthenticationConfig`, `addonsConfig.statefulHaConfig` and `nodePoolAutoConfig.nodeKubeletConfig.insecureKubeletReadonlyPortEnabled`; on a node pool, `config.kubeletConfig`'s `insecureKubeletReadonlyPortEnabled`, `containerLogMaxSize`, `containerLogMaxFiles`, `allowedUnsafeSysctls` and `maxParallelImagePulls`
 

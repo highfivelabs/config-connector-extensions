@@ -395,7 +395,7 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/asset/assetfeed_mapper.go, pkg/controller/direct/asset/mapper.generated.go]}
   - here: [apis/kms/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/kms/v1alpha1/groupversion_info.go]}
-  - here: [apis/container/v1alpha1/groupversion_info.go]
+  - here: [apis/container/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/container/v1beta1/groupversion_info.go]}
   - here: [pkg/controller/direct/container/operation.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/container/containernodepool_controller.go]}

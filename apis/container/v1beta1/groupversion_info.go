@@ -17,12 +17,12 @@
 // Modified by High Five Labs for config-connector-extensions: copied from Config Connector
 // apis/container/v1beta1/groupversion_info.go (UPSTREAM.md); the group is
 // container.gcp.hfl.dev instead of container.cnrm.cloud.google.com, and the
-// version v1alpha1. Our field kinds on Config Connector's container kinds
+// version v1beta1 (decision 27; first v1alpha1). Our field kinds on Config Connector's container kinds
 // (docs/design.md section 6.6, pattern 2, and decision 37) are in this version.
 
 // +kubebuilder:object:generate=true
 // +groupName=container.gcp.hfl.dev
-package v1alpha1
+package v1beta1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,7 +31,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "container.gcp.hfl.dev", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "container.gcp.hfl.dev", Version: "v1beta1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

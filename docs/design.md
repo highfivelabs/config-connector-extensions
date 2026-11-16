@@ -2925,7 +2925,8 @@ To raise confidence in `ArtifactRegistryRepository`:
       wrote its resource (no `status.externalRef`) goes without a call
       (`fieldkind.Gone`; review C1 on #143).
     **Built 2026-11-16** (`v1alpha1`, promoted under decision 27 once each
-    passes live): `KMSCryptoKeyFields` (`kms.gcp.hfl.dev`;
+    passes live; the two container kinds are `v1beta1` since their live
+    pass): `KMSCryptoKeyFields` (`kms.gcp.hfl.dev`;
     `keyAccessJustificationsPolicy`, `cryptoKeys.patch` with a one-path
     mask); `ContainerClusterFields` (`container.gcp.hfl.dev`;
     `secretManagerConfig`, `rbacBindingConfig`,
@@ -2942,7 +2943,8 @@ To raise confidence in `ArtifactRegistryRepository`:
     and the live runs. Patches 0052 and 0053 teach mockgcp the writes.
     Live (2026-11-16): `ContainerClusterFields` and
     `ContainerNodePoolFields` passed (run `cce-11160848-7b8d`, every
-    case, on a real zonal cluster). Cloud KMS (run `cce-11160523-1e83`) refuses any
+    case, on a real zonal cluster) with their CRDs unchanged since, so
+    both are `container.gcp.hfl.dev/v1beta1` (decision 27). Cloud KMS (run `cce-11160523-1e83`) refuses any
     `keyAccessJustificationsPolicy` on a key outside Key Access
     Justifications enrollment (Assured Workloads), so `KMSCryptoKeyFields`
     cannot pass live in the live-test project; section 10 question 10.
