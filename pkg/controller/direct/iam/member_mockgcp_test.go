@@ -453,12 +453,31 @@ func TestIAMMember(t *testing.T) {
 		t.Run("a member whose sink never had a writer identity deletes without a call", func(t *testing.T) {
 			o := newMember("secret-no-sink", tg, "")
 			o.Spec.Member = nil
-			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{LogSinkRef: &iamv1beta1.IAMLogSinkRef{Name: "no-such-sink"}}
+			o.Spec.MemberFrom = &iamv1beta1.IAMBindingMemberFrom{LogSinkRef: &iamv1beta1.IAMLogSinkRef{
+				// Config Connector's kind, which nothing reconciles here.
+				Name: "no-such-sink", APIVersion: "logging.cnrm.cloud.google.com/v1beta1",
+			}}
 			if err := env.Kube.Create(env.Ctx, o); err != nil {
 				t.Fatal(err)
 			}
 			env.WaitNotReady(memberGVK, namespace, o.Name)
 			del(t, o)
+			// The reconciler watches for the sink it waited on until the
+			// sink is Ready or deleted, and an open watch keeps envtest's
+			// kube-apiserver from stopping: make one and delete it.
+			gone := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+				"projectRef":  map[string]any{"external": mockenv.Project},
+				"destination": map[string]any{"pubSubTopicRef": map[string]any{"external": "projects/" + mockenv.Project + "/topics/none"}},
+			}}}
+			gone.SetGroupVersionKind(iampolicy.LogSinkGVKs[1])
+			gone.SetNamespace(namespace)
+			gone.SetName("no-such-sink")
+			if err := env.Kube.Create(env.Ctx, gone); err != nil {
+				t.Fatal(err)
+			}
+			if err := env.Kube.Delete(env.Ctx, gone); err != nil {
+				t.Fatal(err)
+			}
 		})
 
 		t.Run("a memberFrom with two sources, or none, is refused", func(t *testing.T) {
