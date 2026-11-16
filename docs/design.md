@@ -1122,11 +1122,13 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   sink to a project (and the CRD refusing to change `interceptChildren`,
   or one without `includeChildren` or a project destination), and an
   organization's sink to a bucket. Live: `docs/kinds/LoggingLogSink.md`.
+  The writer identity is granted with our `IAMMember`'s
+  `memberFrom.logSinkRef` (2026-11-15, section 6.5 at `IAMMember`),
+  since Config Connector's `IAMPolicyMember.memberFrom.logSinkRef`
+  resolves Config Connector's `LoggingLogSink` only.
   Left: the catalog's folder and organization charts move their sinks to
   this kind (and drop their refusals of `intercept_children` and type
-  `project`), and grant the writer identity some other way than Config
-  Connector's `IAMPolicyMember.memberFrom.logSinkRef`, which resolves
-  Config Connector's `LoggingLogSink` only; the kind retires when
+  `project`), granting with `IAMMember`; the kind retires when
   upstream ships `interceptChildren` and a project destination (section
   3.4).
 
@@ -1960,7 +1962,8 @@ Notes on what was built from this table:
   `RunService`, `PubSubTopic`, `PubSubSubscription`, `KMSKeyRing`,
   `KMSCryptoKey`. A `Folder`, `Organization` or `KMSCryptoKey` is named by
   `external`; the others also by `name`. The table grows by one row per
-  resource type, with no change to the kind. `logSinkRef`,
+  resource type, with no change to the kind. `membersFrom` takes
+  `serviceAccountRef` or `logSinkRef` (2026-11-15, below at `IAMMember`);
   `sqlInstanceRef` and the other `memberFrom` sources of `IAMPolicyMember`
   are not offered; `members` takes the address.
   `CloudFunctionsFunction` (Config Connector's 1st gen function,
@@ -1984,8 +1987,32 @@ Notes on what was built from this table:
   `IAMRoleMember`, renamed by decision 12). **Written here**,
   the additive sibling of `IAMBinding`, shaped like Config Connector's
   `IAMPolicyMember`: `resourceRef` (the same type as `IAMBinding`'s),
-  `role`, `condition`, and one of `member` or `memberFrom.serviceAccountRef`
-  (CEL: exactly one). Every field is immutable, as in `IAMPolicyMember`.
+  `role`, `condition`, and one of `member` or `memberFrom` (CEL: exactly
+  one). Every field is immutable, as in `IAMPolicyMember`.
+  `memberFrom` (and `IAMBinding.membersFrom`, the same type) takes exactly
+  one of `serviceAccountRef` and, since 2026-11-15, `logSinkRef`: a
+  `LoggingLogSink` whose `status.writerIdentity` is the member, shaped like
+  `IAMPolicyMember.memberFrom.logSinkRef` (`name`, `namespace`) plus an
+  optional `apiVersion` (an enum of `logging.gcp.hfl.dev/v1beta1`, ours,
+  and `logging.cnrm.cloud.google.com/v1beta1`, Config Connector's; unset,
+  ours is looked for first, then Config Connector's, as `resourceRef`
+  does for a kind in both). Written here (`pkg/iampolicy/logsink.go`),
+  after Config Connector's `iamclient.ResolveMemberIdentity`, which
+  resolves its own `LoggingLogSink` only: the reason the catalog's folder
+  and organization charts could not grant our sink's writer identity with
+  `IAMPolicyMember`. A sink that is missing, not Ready or without a writer
+  identity yet is a reference error: the object is `DependencyNotReady`
+  and waits (a watch on the sink, then retries), never failing. While an
+  `IAMMember` is being deleted, a `memberFrom` object that is gone or not
+  ready (a sink deleted first, with its chart) does not hold the delete:
+  the member comes from `status.externalRef`. Tested on the fake
+  (`TestIAMMember`, "a regional secret"): an `IAMMember` made before its
+  sink waits and names it, then grants the sink's writer identity once
+  our `LoggingLogSink` is Ready; an `IAMBinding` takes the same source;
+  the sink deleted first still lets the member remove itself; a Config
+  Connector `LoggingLogSink` (its CRD is in `mockenv`, not reconciled)
+  waits until its status has a writer identity; two sources or none are
+  refused.
   It adds its member to the role's binding (`AddMembers`) and removes only
   that member on delete (`RemoveMembers`, and the binding if it was the
   last): other members of the role, other roles and the audit configs are
@@ -2181,7 +2208,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     their names and URLs (each service's quirks: GET or POST for the read,
     the API version, the policy version it accepts; a BigQuery dataset has
     no IAM policy, only `access`); `memberFrom` sources beyond a service
-    account; and a check that the policy's etag conflict is seen live (the
+    account and a log sink; and a check that the policy's etag conflict is seen live (the
     fake serves 409; the API's real answer is 409 for most services and
     412 for Compute Engine).
 27. `ComputeRegionNetworkFirewallPolicyRule` against a real project: the

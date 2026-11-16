@@ -258,7 +258,10 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   the real error texts have not been seen. An update may not change the
   field (the kind keeps it immutable; whether the API allows it is not
   known). The fake makes up every sink's writer identity, whatever
-  `uniqueWriterIdentity` says, and does not model the interception itself
+  `uniqueWriterIdentity` says, even for a project's sink to a log bucket
+  of the same project, which has none in the real API (seen live
+  2026-11-15, run `cce-11160035-9947`; `TestIAMMember` therefore routes
+  its sink to a Pub/Sub topic), and does not model the interception itself
   (which logs a child's sinks then miss).
 - **Security Command Center mute configs in mockgcp** (patch 0031, ours,
   for `SecurityCenterMuteConfig`). A folder's and a project's beside an
