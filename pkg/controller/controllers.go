@@ -51,11 +51,13 @@ import (
 	chroniclev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/chronicle/v1beta1"
 	computev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	containerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/container/v1alpha1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
 	dnsv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
 	firestorev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/firestore/v1beta1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
+	kmsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/kms/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
@@ -75,10 +77,12 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/asset"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/compute"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/container"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/datacatalog"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/dns"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/firestore"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/kms"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/networksecurity"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/resourcemanager"
@@ -144,6 +148,11 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeRouterGVK, crdName: "computerouters.compute.gcp.hfl.dev", model: compute.NewRouterModel},
 	{gvk: iamv1beta1.IAMDenyPolicyGVK, crdName: "iamdenypolicies.iam.gcp.hfl.dev", model: iam.NewDenyPolicyModel},
 	{gvk: iamv1beta1.IAMPrincipalAccessBoundaryPolicyGVK, crdName: "iamprincipalaccessboundarypolicies.iam.gcp.hfl.dev", model: iam.NewPrincipalAccessBoundaryPolicyModel},
+	// Field kinds: a few fields of a Config Connector kind's resource
+	// (docs/design.md section 6.6, pattern 2; decision 37).
+	{gvk: kmsv1alpha1.KMSCryptoKeyFieldsGVK, crdName: "kmscryptokeyfields.kms.gcp.hfl.dev", model: kms.NewCryptoKeyFieldsModel},
+	{gvk: containerv1alpha1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
+	{gvk: containerv1alpha1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},
@@ -196,6 +205,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		networksecurityv1beta1.AddToScheme,
 		securitycenterv1beta1.AddToScheme,
 		assetv1beta1.AddToScheme,
+		kmsv1alpha1.AddToScheme,
+		containerv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

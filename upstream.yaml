@@ -197,6 +197,8 @@ patches:
   - {file: patches/k8s-config-connector/0048-mockgcp-compute-create-instances-target-size.patch, pin: k8s-config-connector, upstream_candidate: "the regional half"}
   - {file: patches/k8s-config-connector/0049-mockgcp-logging-sink-intercept-children.patch, pin: k8s-config-connector, upstream_candidate: "no: a stopgap until the protobuf has the field"}
   - {file: patches/k8s-config-connector/0051-mockgcp-serviceusage-identity-done-operation.patch, pin: k8s-config-connector, upstream_candidate: "with 0022"}
+  - {file: patches/k8s-config-connector/0052-mockgcp-kms-key-access-justifications-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0053-mockgcp-container-cluster-fields-updates.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -391,6 +393,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/asset/assetfeed_controller.go]}
   - here: [pkg/controller/direct/asset/assetfeed_mapper.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/asset/assetfeed_mapper.go, pkg/controller/direct/asset/mapper.generated.go]}
+  - here: [apis/kms/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/kms/v1alpha1/groupversion_info.go]}
+  - here: [apis/container/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/container/v1beta1/groupversion_info.go]}
+  - here: [pkg/controller/direct/container/operation.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/container/containernodepool_controller.go]}
   - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_types.go]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14209, paths: [apis/iam/v1alpha1/iamworkloadidentitypoolnamespace_types.go]}
   - here: [apis/iam/v1beta1/iamworkloadidentitypoolnamespace_identity.go]

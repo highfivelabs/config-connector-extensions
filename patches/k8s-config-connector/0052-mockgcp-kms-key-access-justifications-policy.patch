@@ -1,0 +1,24 @@
+config-connector-extensions patch 0052: mockgcp's cryptoKeys.patch takes
+key_access_justifications_policy in its update mask.
+
+KMSCryptoKeyFields (kms.gcp.hfl.dev, docs/design.md decision 37) sets
+and clears a key's Key Access Justifications policy with cryptoKeys.patch
+and an update mask naming only that field; mockgcp refused any path but
+labels, rotation, next rotation time and destroy duration ("not yet
+handled in mock"). A mask with the path and no policy in the body clears
+it, as the API does. Upstream candidate: yes.
+
+diff --git a/mockgcp/mockkms/cryptokey.go b/mockgcp/mockkms/cryptokey.go
+index 2ba7eff63..69e1bd5b6 100644
+--- a/mockgcp/mockkms/cryptokey.go
++++ b/mockgcp/mockkms/cryptokey.go
+@@ -141,6 +141,9 @@ func (r *kmsServer) UpdateCryptoKey(ctx context.Context, req *pb.UpdateCryptoKey
+ 			obj.NextRotationTime = req.GetCryptoKey().GetNextRotationTime()
+ 		case "destroy_scheduled_duration", "destroyScheduledDuration":
+ 			obj.DestroyScheduledDuration = req.GetCryptoKey().GetDestroyScheduledDuration()
++		case "key_access_justifications_policy", "keyAccessJustificationsPolicy":
++			// Set or, when the request has none, cleared (config-connector-extensions' KMSCryptoKeyFields).
++			obj.KeyAccessJustificationsPolicy = req.GetCryptoKey().GetKeyAccessJustificationsPolicy()
+ 		default:
+ 			return nil, status.Errorf(codes.InvalidArgument, "field %q is not yet handled in mock", path)
+ 		}
