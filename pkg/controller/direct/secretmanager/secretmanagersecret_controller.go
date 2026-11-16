@@ -99,6 +99,22 @@ func (m *secretModel) AdapterForObject(ctx context.Context, op *directbase.Adapt
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a secret that was made or acquired: its name is in
+		// status, and Find and Delete need only the name, so the project
+		// is not resolved. A Project object already gone (everything
+		// deleted at once) would otherwise hold the delete forever.
+		id := &krm.SecretIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx, id.Location())
+		if err != nil {
+			return nil, err
+		}
+		return &Adapter{id: id, gcpClient: gcpClient, desired: obj}, nil
+	}
+
 	id, err := krm.NewSecretIdentity(ctx, reader, obj, copied)
 	if err != nil {
 		return nil, err

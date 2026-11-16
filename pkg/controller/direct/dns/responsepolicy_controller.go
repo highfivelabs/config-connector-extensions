@@ -81,6 +81,22 @@ func (m *responsePolicyModel) AdapterForObject(ctx context.Context, op *directba
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a policy that was made: its name is in status and cannot
+		// change, so nothing is resolved. A project or network object
+		// already gone (everything deleted at once) would otherwise hold
+		// the delete forever. Delete clears the networks Find read.
+		id := &krm.DNSResponsePolicyIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &DNSResponsePolicyAdapter{id: id, gcpClient: gcpClient}, nil
+	}
+
 	// Always call common.NormalizeReferences to resolve references
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)

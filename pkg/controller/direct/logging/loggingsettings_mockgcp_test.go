@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
@@ -239,6 +240,82 @@ func TestLoggingSettings(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "exactly one of organizationRef and folderRef") {
 			t.Errorf("creating with both parents: got %v, want the API server to refuse it", err)
 		}
+	})
+
+	// The case: everything deleted at once (a namespace, a release, the
+	// catalog's folder chart), and the Folder object the folderRef names
+	// goes first. The delete makes no call, so it resolves nothing and the
+	// object goes. Nothing here runs Folder's controller, so the Folder
+	// object is gone as soon as it is deleted. The settings objects set no
+	// field, so they only read the folder's settings, live too.
+	folderObject := func(t *testing.T, name string) *unstructured.Unstructured {
+		t.Helper()
+		u := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+			"resourceID":      strings.TrimPrefix(folder, "folders/"),
+			"displayName":     "landing",
+			"organizationRef": map[string]any{"external": org},
+		}}}
+		u.SetGroupVersionKind(schema.GroupVersionKind{Group: "resourcemanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "Folder"})
+		u.SetNamespace(namespace)
+		u.SetName(name)
+		if err := env.Kube.Create(env.Ctx, u); err != nil {
+			t.Fatal(err)
+		}
+		return u
+	}
+	onFolderObject := func(t *testing.T, name, folderObj string, annotations map[string]string) {
+		t.Helper()
+		o := &loggingv1beta1.LoggingSettings{
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels(), Annotations: annotations},
+			Spec:       loggingv1beta1.LoggingSettingsSpec{FolderRef: &refsv1beta1.FolderRefDeprecated{Name: folderObj}},
+		}
+		if err := env.Kube.Create(env.Ctx, o); err != nil {
+			t.Fatal(err)
+		}
+	}
+	deleteCallsNothing := func(t *testing.T, name string) {
+		t.Helper()
+		before := len(env.Requests())
+		if err := env.Kube.Delete(env.Ctx, getObj(t, name)); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&loggingv1beta1.LoggingSettings{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+		for _, r := range env.Requests()[before:] {
+			if strings.Contains(r, "/settings") {
+				t.Errorf("delete called %s", r)
+			}
+		}
+	}
+	madeThenFolderGone := func(t *testing.T, name string, annotations map[string]string) {
+		t.Helper()
+		f := folderObject(t, name+"-folder")
+		onFolderObject(t, name, name+"-folder", annotations)
+		u := env.WaitReady(gvk, namespace, name)
+		if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != folder+"/settings" {
+			t.Errorf("status.externalRef = %q", ref)
+		}
+		if err := env.Kube.Delete(env.Ctx, f); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(f)
+		deleteCallsNothing(t, name)
+	}
+
+	t.Run("made, then its folder object deleted first, it still deletes", func(t *testing.T) {
+		madeThenFolderGone(t, "folder-gone", nil)
+	})
+
+	t.Run("never made, its folder object never existed, it deletes", func(t *testing.T) {
+		name := "folder-never"
+		onFolderObject(t, name, "no-such-folder", nil)
+		if msg := env.WaitNotReady(gvk, namespace, name); !strings.Contains(msg, "not found") {
+			t.Errorf("not-Ready message = %q, want the missing Folder", msg)
+		}
+		deleteCallsNothing(t, name)
+	})
+
+	t.Run("abandoned, its folder object deleted first, it still goes", func(t *testing.T) {
+		madeThenFolderGone(t, "folder-abandon", map[string]string{k8s.DeletionPolicyAnnotation: k8s.DeletionPolicyAbandon})
 	})
 
 	t.Run("delete leaves the settings", func(t *testing.T) {

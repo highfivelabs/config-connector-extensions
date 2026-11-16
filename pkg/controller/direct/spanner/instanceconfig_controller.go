@@ -40,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 
+	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/directbase"
@@ -76,6 +77,20 @@ func (m *instanceConfigModel) AdapterForObject(ctx context.Context, op *directba
 	obj := &krm.SpannerInstanceConfig{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
+	}
+
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a configuration that was made: its name is in status and
+		// cannot change, so the project is not resolved. A project object
+		// already gone (everything deleted at once) would otherwise hold the
+		// delete forever. With the project and ID taken from status,
+		// NewInstanceConfigIdentity reads nothing.
+		parent, resourceID, err := krm.ParseInstanceConfigExternal(ext)
+		if err != nil {
+			return nil, err
+		}
+		obj.Spec.ProjectRef = &refsv1beta1.ProjectRef{External: parent.String()}
+		obj.Spec.ResourceID = &resourceID
 	}
 
 	id, err := krm.NewInstanceConfigIdentity(ctx, reader, obj)

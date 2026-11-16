@@ -32,7 +32,6 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/diffs"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/structuredreporting"
 	api "google.golang.org/api/dns/v1"
-	"google.golang.org/api/option"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -57,6 +56,25 @@ func (m *responsePolicyRuleModel) AdapterForObject(ctx context.Context, op *dire
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
+	opts, err := m.config.RESTClientOptions()
+	if err != nil {
+		return nil, err
+	}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a rule that was made: its name is in status and cannot
+		// change, so the policy is not resolved. A policy object already
+		// gone (everything deleted at once) would otherwise hold the delete
+		// forever. Find and Delete need only the name.
+		id := &krm.DNSResponsePolicyRuleIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := api.NewService(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("building DNS client: %w", err)
+		}
+		return &DNSResponsePolicyRuleAdapter{id: id, gcpClient: gcpClient}, nil
+	}
 	idVal, err := obj.GetIdentity(ctx, op.Reader)
 	if err != nil {
 		return nil, err
@@ -76,11 +94,6 @@ func (m *responsePolicyRuleModel) AdapterForObject(ctx context.Context, op *dire
 	}
 	desired.RuleName = id.Rule
 
-	var opts []option.ClientOption
-	opts, err = m.config.RESTClientOptions()
-	if err != nil {
-		return nil, err
-	}
 	gcpClient, err := api.NewService(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("building DNS client: %w", err)

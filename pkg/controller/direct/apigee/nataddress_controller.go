@@ -71,11 +71,22 @@ func (m *modelApigeeNATAddress) AdapterForObject(ctx context.Context, op *direct
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
-	i, err := obj.GetIdentity(ctx, reader)
-	if err != nil {
-		return nil, err
+	id := &krm.ApigeeNATAddressIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting an address that was made: its name is in status and
+		// cannot change, so nothing is resolved. An organization or
+		// instance object already gone (everything deleted at once) would
+		// otherwise hold the delete forever.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		i, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		id = i.(*krm.ApigeeNATAddressIdentity)
 	}
-	id := i.(*krm.ApigeeNATAddressIdentity)
 
 	s, err := m.service(ctx)
 	if err != nil {

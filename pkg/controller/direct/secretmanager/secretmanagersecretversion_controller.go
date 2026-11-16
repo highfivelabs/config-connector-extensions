@@ -91,6 +91,19 @@ func (m *modelSecretVersion) AdapterForObject(ctx context.Context, op *directbas
 		obj.Spec.Enabled = direct.PtrTo(true)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a version that was made or acquired: its name, and its
+		// secret's, are in status, so the secretRef is not resolved. A
+		// secret object already gone (everything deleted at once) would
+		// otherwise hold the delete forever. With the secret given as
+		// external, NewSecretVersionIdentity reads nothing.
+		prev, err := krm.ParseSecretVersionExternal(ext)
+		if err != nil {
+			return nil, err
+		}
+		obj.Spec.SecretRef = &krm.SecretManagerSecretRef{External: prev.Parent().String()}
+	}
+
 	id, err := krm.NewSecretVersionIdentity(ctx, reader, obj, u)
 	if err != nil {
 		return nil, err

@@ -58,12 +58,24 @@ func (m *modelTag) AdapterForObject(ctx context.Context, op *directbase.AdapterF
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
-		return nil, fmt.Errorf("normalizing references: %w", err)
-	}
-	id, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
+	id := &krm.ArtifactRegistryTagIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a tag that was made: its name is in status and cannot
+		// change, so the repository is not resolved. A repository object
+		// already gone (everything deleted at once) would otherwise hold
+		// the delete forever. Find and Delete need only the name.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
+			return nil, fmt.Errorf("normalizing references: %w", err)
+		}
+		got, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			return nil, err
+		}
+		id = got.(*krm.ArtifactRegistryTagIdentity)
 	}
 	opts, err := m.config.RESTClientOptions()
 	if err != nil {
@@ -73,7 +85,7 @@ func (m *modelTag) AdapterForObject(ctx context.Context, op *directbase.AdapterF
 	if err != nil {
 		return nil, fmt.Errorf("building ArtifactRegistryTag client: %w", err)
 	}
-	return &tagAdapter{id: id.(*krm.ArtifactRegistryTagIdentity), gcpClient: c, desired: obj}, nil
+	return &tagAdapter{id: id, gcpClient: c, desired: obj}, nil
 }
 
 func (m *modelTag) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {

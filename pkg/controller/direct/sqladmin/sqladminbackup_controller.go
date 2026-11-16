@@ -48,11 +48,15 @@ import (
 	gax "github.com/googleapis/gax-go/v2"
 	"google.golang.org/api/googleapi"
 	api "google.golang.org/api/sqladmin/v1beta4"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 
 	krm "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/deleting"
 )
 
 func init() {
@@ -70,6 +74,70 @@ type sqlAdminBackupModel struct {
 }
 
 var _ directbase.Model = &sqlAdminBackupModel{}
+
+// deletingAdapter is the adapter for a backup run being deleted that was
+// made: the project and the run's ID are in status, so the project is not
+// resolved. The instance is not in status (externalRef is
+// projects/{project}/backups/{id}), so it comes from spec.instanceRef: an
+// external one is parsed, and a named SQLInstance object is read for its
+// name only. When that object is already gone (everything deleted at once),
+// it took its instance and the instance's backup runs with it, so the
+// delete makes no call; it would otherwise wait forever.
+func (m *sqlAdminBackupModel) deletingAdapter(ctx context.Context, op *directbase.AdapterForObjectOperation, obj *krm.SQLAdminBackup, ext string) (directbase.Adapter, error) {
+	id := &krm.SQLAdminBackupIdentity{}
+	if err := id.FromExternal(ext); err != nil {
+		return nil, err
+	}
+	backupID, err := strconv.ParseInt(id.Backup, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("parsing backup ID %q as int64: %w", id.Backup, err)
+	}
+	ref := obj.Spec.InstanceRef
+	if ref == nil {
+		return nil, fmt.Errorf("spec.instanceRef is required")
+	}
+	instanceID := ""
+	if ref.External != "" {
+		instance, err := refsv1beta1.ResolveSQLInstanceRef(ctx, op.Reader, obj, ref)
+		if err != nil {
+			return nil, fmt.Errorf("resolving spec.instanceRef: %w", err)
+		}
+		instanceID = instance.SQLInstanceName
+	} else {
+		key := types.NamespacedName{Namespace: ref.Namespace, Name: ref.Name}
+		if key.Namespace == "" {
+			key.Namespace = obj.GetNamespace()
+		}
+		u := &unstructured.Unstructured{}
+		u.SetGroupVersionKind(schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1beta1", Kind: "SQLInstance"})
+		if err := op.Reader.Get(ctx, key, u); err != nil {
+			if apierrors.IsNotFound(err) {
+				klog.FromContext(ctx).Info("deleting SQLAdminBackup without a call: its SQLInstance object is gone, and the instance with it", "instance", key, "backup", ext)
+				return deleting.Gone{}, nil
+			}
+			return nil, fmt.Errorf("reading referenced SQLInstance %v: %w", key, err)
+		}
+		instanceID, _, _ = unstructured.NestedString(u.Object, "spec", "resourceID")
+		if instanceID == "" {
+			instanceID = u.GetName()
+		}
+	}
+	opts, err := m.config.RESTClientOptions()
+	if err != nil {
+		return nil, err
+	}
+	service, err := api.NewService(ctx, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("building sqladmin client: %w", err)
+	}
+	return &sqlAdminBackupAdapter{
+		projectID:           id.Project,
+		instanceID:          instanceID,
+		backupID:            backupID,
+		sqlBackupRunsClient: api.NewBackupRunsService(service),
+		sqlOperationsClient: api.NewOperationsService(service),
+	}, nil
+}
 
 func (m *sqlAdminBackupModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
 	return nil, nil
@@ -95,6 +163,10 @@ func (m *sqlAdminBackupModel) AdapterForObject(ctx context.Context, op *directba
 	obj := &krm.SQLAdminBackup{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &obj); err != nil {
 		return nil, fmt.Errorf("converting to %T failed: %w", obj, err)
+	}
+
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		return m.deletingAdapter(ctx, op, obj, ext)
 	}
 
 	// Always call common.NormalizeReferences to resolve references

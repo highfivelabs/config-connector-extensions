@@ -69,13 +69,24 @@ func (m *networkFirewallPolicyPacketMirroringRuleModel) AdapterForObject(ctx con
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	idVal, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
-	}
-	id, ok := idVal.(*krm.ComputeNetworkFirewallPolicyPacketMirroringRuleIdentity)
-	if !ok {
-		return nil, fmt.Errorf("unexpected identity type: %T", idVal)
+	id := &krm.ComputeNetworkFirewallPolicyPacketMirroringRuleIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a rule that was made: its name is in status, so the
+		// policy is not resolved. A policy object already gone (everything
+		// deleted at once) would otherwise hold the delete forever.
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		idVal, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			return nil, err
+		}
+		got, ok := idVal.(*krm.ComputeNetworkFirewallPolicyPacketMirroringRuleIdentity)
+		if !ok {
+			return nil, fmt.Errorf("unexpected identity type: %T", idVal)
+		}
+		id = got
 	}
 	opts, err := m.config.RESTClientOptions()
 	if err != nil {

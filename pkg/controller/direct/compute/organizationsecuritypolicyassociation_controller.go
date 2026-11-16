@@ -40,6 +40,7 @@ import (
 
 	gcp "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	apirefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/config"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct/common"
@@ -47,6 +48,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/mappers"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/structuredreporting"
 	krm "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/deleting"
 )
 
 // NewComputeOrganizationSecurityPolicyAssociationModel is the model of the kind.
@@ -91,6 +93,10 @@ func (m *computeOrganizationSecurityPolicyAssociationModel) AdapterForObject(ctx
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if op.IsDeleting() {
+		return m.adapterForDelete(ctx, reader, obj)
+	}
+
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}
@@ -115,6 +121,53 @@ func (m *computeOrganizationSecurityPolicyAssociationModel) AdapterForObject(ctx
 		desired:   obj,
 		reader:    reader,
 	}, nil
+}
+
+// adapterForDelete resolves nothing when it can: this kind has no
+// status.externalRef, so the policy comes from spec.policyId or
+// securityPolicyRef.external, and the association's name from
+// spec.resourceID or the object's name; Find and Delete need nothing else.
+// A securityPolicyRef by name is read, since only the policy object holds
+// the policy's ID; if that object is gone (everything deleted at once),
+// the policy went with it and took its associations, so the delete
+// finishes without a call rather than waiting forever.
+func (m *computeOrganizationSecurityPolicyAssociationModel) adapterForDelete(ctx context.Context, reader client.Reader, obj *krm.ComputeOrganizationSecurityPolicyAssociation) (directbase.Adapter, error) {
+	id := &krm.ComputeOrganizationSecurityPolicyAssociationIdentity{Association: obj.GetName()}
+	if r := direct.ValueOf(obj.Spec.ResourceID); r != "" {
+		id.Association = r
+	}
+	switch ref := obj.Spec.SecurityPolicyRef; {
+	case direct.ValueOf(obj.Spec.PolicyID) != "":
+		// As the identity reads it (parseSecurityPolicyID): a bare ID, or
+		// the ID after ".../securityPolicies/".
+		p := apirefs.TrimComputeURIPrefix(*obj.Spec.PolicyID)
+		if _, after, ok := strings.Cut(p, "/securityPolicies/"); ok {
+			p, _, _ = strings.Cut(after, "/")
+		}
+		id.SecurityPolicy = p
+	case ref != nil && ref.External != "":
+		policy := &krm.ComputeOrganizationSecurityPolicyIdentity{}
+		if err := policy.FromExternal(ref.External); err != nil {
+			return nil, fmt.Errorf("spec.securityPolicyRef: %w", err)
+		}
+		id.SecurityPolicy = policy.SecurityPolicy
+	default:
+		rawID, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			klog.FromContext(ctx).Info("deleting ComputeOrganizationSecurityPolicyAssociation without a call: its security policy cannot be resolved", "error", err.Error())
+			return deleting.Gone{}, nil
+		}
+		resolved, ok := rawID.(*krm.ComputeOrganizationSecurityPolicyAssociationIdentity)
+		if !ok {
+			return nil, fmt.Errorf("unexpected identity type %T", rawID)
+		}
+		id = resolved
+	}
+	gcpClient, err := m.client(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &computeOrganizationSecurityPolicyAssociationAdapter{id: id, gcpClient: gcpClient, desired: obj, reader: reader}, nil
 }
 
 func (m *computeOrganizationSecurityPolicyAssociationModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {

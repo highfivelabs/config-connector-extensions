@@ -96,6 +96,22 @@ func (m *securityProfileGroupModel) AdapterForObject(ctx context.Context, op *di
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a group that was made: its name is in status, and Find
+		// and Delete need nothing else, so no reference (the profiles, the
+		// parent) is resolved. An object one names already gone (everything
+		// deleted at once) would otherwise hold the delete forever.
+		spgID := &krm.NetworkSecuritySecurityProfileGroupIdentity{}
+		if err := spgID.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx, spgID)
+		if err != nil {
+			return nil, err
+		}
+		return &securityProfileGroupAdapter{gcpClient: gcpClient, id: spgID}, nil
+	}
+
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
 	}

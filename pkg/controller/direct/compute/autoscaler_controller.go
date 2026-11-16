@@ -87,6 +87,23 @@ func (m *computeAutoscalerModel) AdapterForObject(ctx context.Context, op *direc
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if selfLink := direct.ValueOf(obj.Status.SelfLink); op.IsDeleting() && selfLink != "" {
+		// Deleting an autoscaler that was made or acquired: its name is in
+		// status.selfLink (the kind has no status.externalRef) and cannot
+		// change, so nothing is resolved. A target group manager or project
+		// object already gone (everything deleted at once) would otherwise
+		// hold the delete forever. Find and Delete need only the name.
+		id := &krm.ComputeAutoscalerIdentity{}
+		if err := id.FromExternal(selfLink); err != nil {
+			return nil, err
+		}
+		autoscalersClient, err := m.client(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &ComputeAutoscalerAdapter{gcpClient: autoscalersClient, id: id, reader: reader}, nil
+	}
+
 	id, err := obj.GetIdentity(ctx, reader)
 	if err != nil {
 		return nil, err

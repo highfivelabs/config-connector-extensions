@@ -63,12 +63,26 @@ func (m *metadataItemModel) AdapterForObject(ctx context.Context, op *directbase
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(op.GetUnstructured().Object, obj); err != nil {
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
-	if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
-		return nil, fmt.Errorf("normalizing references: %w", err)
-	}
-	id, err := obj.GetIdentity(ctx, op.Reader)
-	if err != nil {
-		return nil, err
+	var id *krm.ComputeProjectMetadataItemIdentity
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a key that was written: its project and key are in
+		// status and cannot change, so the project is not resolved. A
+		// project object already gone (everything deleted at once) would
+		// otherwise hold the delete forever. Find and Delete need only the
+		// name.
+		id = &krm.ComputeProjectMetadataItemIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := common.NormalizeReferences(ctx, op.Reader, obj, nil); err != nil {
+			return nil, fmt.Errorf("normalizing references: %w", err)
+		}
+		got, err := obj.GetIdentity(ctx, op.Reader)
+		if err != nil {
+			return nil, err
+		}
+		id = got.(*krm.ComputeProjectMetadataItemIdentity)
 	}
 	opts, err := m.config.RESTClientOptions()
 	if err != nil {
@@ -78,7 +92,7 @@ func (m *metadataItemModel) AdapterForObject(ctx context.Context, op *directbase
 	if err != nil {
 		return nil, fmt.Errorf("building compute projects client: %w", err)
 	}
-	return &metadataItemAdapter{id: id.(*krm.ComputeProjectMetadataItemIdentity), gcpClient: c, desired: obj}, nil
+	return &metadataItemAdapter{id: id, gcpClient: c, desired: obj}, nil
 }
 
 func (m *metadataItemModel) AdapterForURL(ctx context.Context, url string) (directbase.Adapter, error) {
@@ -109,6 +123,11 @@ func (a *metadataItemAdapter) metadata(ctx context.Context) (*pb.Metadata, error
 func (a *metadataItemAdapter) Find(ctx context.Context) (bool, error) {
 	md, err := a.metadata(ctx)
 	if err != nil {
+		if direct.IsNotFound(err) {
+			// The project is gone (deleted with everything else), and its
+			// metadata with it.
+			return false, nil
+		}
 		return false, err
 	}
 	for _, item := range md.GetItems() {

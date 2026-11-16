@@ -95,6 +95,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sql"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/sqladmin"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/storage"
+	"github.com/highfivelabs/config-connector-extensions/pkg/deleting"
 	"github.com/highfivelabs/config-connector-extensions/pkg/slotguard"
 )
 
@@ -106,11 +107,20 @@ type kind struct {
 	// guard (pkg/slotguard); unset, a CRD with spec.labels means
 	// slotguard.Spec, any other none.
 	labels slotguard.LabelSource
+	// deletes are the kind's exceptions to pkg/deleting's rules.
+	deletes deleting.Options
 }
+
+// noRecord marks a kind whose status records nothing when it makes its
+// resource (no status.externalRef, selfLink or name): a delete whose
+// references no longer resolve keeps its error rather than leave a
+// resource behind (pkg/deleting). Giving these kinds status.externalRef
+// is a CRD change, docs/design.md section 7.
+var noRecord = deleting.Options{NoRecord: true}
 
 // Kinds is every kind config-connector-extensions reconciles.
 var Kinds = []kind{
-	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel},
+	{gvk: sqlv1beta1.SQLUserGVK, crdName: "sqlusers.sql.gcp.hfl.dev", model: sql.NewSQLUserModel, deletes: noRecord},
 	{gvk: sqladminv1beta1.SQLAdminBackupGVK, crdName: "sqladminbackups.sqladmin.gcp.hfl.dev", model: sqladmin.NewSQLAdminBackupModel},
 	{gvk: secretmanagerv1beta1.SecretManagerSecretGVK, crdName: "secretmanagersecrets.secretmanager.gcp.hfl.dev", model: secretmanager.NewModel, labels: slotguard.Metadata},
 	{gvk: secretmanagerv1beta1.SecretManagerSecretVersionGVK, crdName: "secretmanagersecretversions.secretmanager.gcp.hfl.dev", model: secretmanager.NewSecretVersionModel},
@@ -123,13 +133,13 @@ var Kinds = []kind{
 	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
 	{gvk: runv1beta1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
 	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
-	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
+	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel, deletes: noRecord},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
 	{gvk: computev1beta1.ComputeRegionAutoscalerGVK, crdName: "computeregionautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeRegionAutoscalerModel},
-	{gvk: computev1beta1.ComputeDiskResourcePolicyAttachmentGVK, crdName: "computediskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeDiskResourcePolicyAttachmentModel},
-	{gvk: computev1beta1.ComputeRegionDiskResourcePolicyAttachmentGVK, crdName: "computeregiondiskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeRegionDiskResourcePolicyAttachmentModel},
-	{gvk: computev1beta1.ComputeRegionPerInstanceConfigGVK, crdName: "computeregionperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputeRegionPerInstanceConfigModel},
-	{gvk: computev1beta1.ComputePerInstanceConfigGVK, crdName: "computeperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputePerInstanceConfigModel},
+	{gvk: computev1beta1.ComputeDiskResourcePolicyAttachmentGVK, crdName: "computediskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeDiskResourcePolicyAttachmentModel, deletes: noRecord},
+	{gvk: computev1beta1.ComputeRegionDiskResourcePolicyAttachmentGVK, crdName: "computeregiondiskresourcepolicyattachments.compute.gcp.hfl.dev", model: compute.NewComputeRegionDiskResourcePolicyAttachmentModel, deletes: noRecord},
+	{gvk: computev1beta1.ComputeRegionPerInstanceConfigGVK, crdName: "computeregionperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputeRegionPerInstanceConfigModel, deletes: noRecord},
+	{gvk: computev1beta1.ComputePerInstanceConfigGVK, crdName: "computeperinstanceconfigs.compute.gcp.hfl.dev", model: compute.NewComputePerInstanceConfigModel, deletes: noRecord},
 	{gvk: computev1beta1.ComputeRouterRoutePolicyGVK, crdName: "computerouterroutepolicies.compute.gcp.hfl.dev", model: compute.NewRouterRoutePolicyModel},
 	{gvk: computev1beta1.ComputeProjectMetadataItemGVK, crdName: "computeprojectmetadataitems.compute.gcp.hfl.dev", model: compute.NewProjectMetadataItemModel},
 	{gvk: storagev1beta1.StorageBucketObjectGVK, crdName: "storagebucketobjects.storage.gcp.hfl.dev", model: storage.NewStorageBucketObjectModel},
@@ -298,6 +308,11 @@ func AddToManager(ctx context.Context, mgr manager.Manager, cfg *config.Controll
 		model, err := k.model(ctx, cfg)
 		if err != nil {
 			return fmt.Errorf("building model for %v: %w", k.gvk, err)
+		}
+		// Abandon, and a delete of an object never made, resolve nothing
+		// (pkg/deleting).
+		if model, err = deleting.Wrap(model, k.deletes); err != nil {
+			return fmt.Errorf("%v: %w", k.gvk, err)
 		}
 		crd, err := crds.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, k.crdName, metav1.GetOptions{})
 		if err != nil {

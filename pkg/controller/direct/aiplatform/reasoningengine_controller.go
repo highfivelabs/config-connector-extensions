@@ -77,6 +77,22 @@ func (m *aiplatformReasoningEngineModel) AdapterForObject(ctx context.Context, o
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting an engine that was made: its name is in status and
+		// cannot change, so nothing is resolved. A project object already
+		// gone (everything deleted at once) would otherwise hold the delete
+		// forever. Find and Delete need only the name.
+		id := &krm.AIPlatformReasoningEngineIdentity{}
+		if err := id.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		api, err := m.api(ctx, id.Location)
+		if err != nil {
+			return nil, err
+		}
+		return &AIPlatformReasoningEngineAdapter{id: id, api: api, desired: obj}, nil
+	}
+
 	id, err := obj.GetIdentity(ctx, reader)
 	if err != nil {
 		return nil, err

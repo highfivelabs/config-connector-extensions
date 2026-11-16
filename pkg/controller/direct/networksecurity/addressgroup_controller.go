@@ -100,6 +100,22 @@ func (m *addressGroupModel) AdapterForObject(ctx context.Context, op *directbase
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting an address group that was made: its name is in status,
+		// and Find and Delete need nothing else, so no reference is
+		// resolved. An object one names already gone (everything deleted at
+		// once) would otherwise hold the delete forever.
+		agID := &krm.NetworkSecurityAddressGroupIdentity{}
+		if err := agID.FromExternal(ext); err != nil {
+			return nil, err
+		}
+		gcpClient, err := m.client(ctx, agID)
+		if err != nil {
+			return nil, err
+		}
+		return &addressGroupAdapter{gcpClient: gcpClient, id: agID}, nil
+	}
+
 	id, err := obj.GetIdentity(ctx, reader)
 	if err != nil {
 		return nil, err

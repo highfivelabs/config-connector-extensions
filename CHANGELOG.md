@@ -55,6 +55,16 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **Deleting or abandoning an object no longer waits forever when an
+  object its spec names is already gone** (everything deleted at once: a
+  namespace, a Helm release, a catalog chart). `LoggingSettings` stuck
+  with "referenced Folder ... not found" though its delete makes no call.
+  Now an abandon resolves nothing; a delete of an object that was made
+  takes its name from `status.externalRef` (or `status.selfLink`) and
+  resolves nothing; and an object never made, whose references no longer
+  resolve, goes without a call. This covers every kind but the few whose
+  status records no name (`docs/design.md` section 7, item 43).
+
 - **`ContainerNodePoolFields` with `resourceRef.name` now becomes Ready
   when the referenced `ContainerNodePool`'s `clusterRef.external` is a
   bare cluster name** (as the catalog's `gke-nodepool` chart writes it).
