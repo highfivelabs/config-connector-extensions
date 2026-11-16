@@ -55,7 +55,8 @@ source "${HERE}/projects.sh"
 PREFIX="cce-"
 SECRET_REGIONS="${SECRET_REGIONS:-us-central1 europe-west1}"
 ADDRESS_GROUP_REGIONS="${ADDRESS_GROUP_REGIONS:-us-central1}"
-project="" run="" mode="sweep" dry=0 max_age_hours=2
+project="" run="" mode="sweep" dry=0 max_age_hours=2 folder_only=0
+[[ "${LIVE_FOLDER_ONLY:-}" == true ]] && folder_only=1
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project) project="$2"; shift 2 ;;
@@ -63,6 +64,7 @@ while [[ $# -gt 0 ]]; do
     --list) mode="list"; shift ;;
     --dry-run) dry=1; shift ;;
     --max-age-hours) max_age_hours="$2"; shift 2 ;;
+    --folder-only) folder_only=1; shift ;;
     *) echo "sweep: unknown argument $1" >&2; exit 2 ;;
   esac
 done
@@ -72,8 +74,9 @@ if [[ -n "${run}" && ! "${run}" =~ ^${PREFIX}[a-z0-9-]+$ ]]; then
   exit 2
 fi
 
-G=(gcloud --quiet --project "${project}")
-if [[ -n "${LIVE_ACCOUNT:-}" ]]; then G+=(--account "${LIVE_ACCOUNT}"); fi
+G_BASE=(gcloud --quiet)
+if [[ -n "${LIVE_ACCOUNT:-}" ]]; then G_BASE+=(--account "${LIVE_ACCOUNT}"); fi
+G=("${G_BASE[@]}" --project "${project}")
 
 cutoff="$(date -u -d "-${max_age_hours} hours" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
   || date -u -v "-${max_age_hours}H" +%Y-%m-%dT%H:%M:%SZ)"
@@ -116,6 +119,36 @@ case "${mode}" in
       echo "sweep: leftovers older than ${max_age_hours}h (created before ${cutoff}) in ${project}"
     fi ;;
 esac
+
+# Folder-only runs (impersonating live-tests@, which has folder roles and
+# not the project's admin roles) cannot list project-level resources;
+# sweep only the logging test folder's sinks.
+if [[ ${folder_only} -eq 1 ]]; then
+  if [[ -n "${E2E_LOGGING_FOLDER:-}" ]]; then
+    folder="${E2E_LOGGING_FOLDER#folders/}"
+    rows="$("${G_BASE[@]}" logging sinks list --folder="${folder}" --verbosity=error --format='value(name,createTime)')"
+    while read -r id made; do
+      [[ -n "${id}" ]] || continue
+      if [[ -n "${run}" ]]; then
+        [[ "${id}" == "${run}-"* ]] || continue
+      else
+        [[ "${id}" =~ ^${PREFIX}([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-[0-9a-f]+- ]] || continue
+        if [[ "${mode}" == "sweep" ]]; then
+          made_cmp="${made:-$(date -u +%Y)-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}T${BASH_REMATCH[3]}:${BASH_REMATCH[4]}:00Z}"
+          [[ "${made_cmp:0:19}Z" < "${cutoff}" ]] || continue
+        fi
+      fi
+      act "folder log sink" "${id}" "${G_BASE[@]}" logging sinks delete "${id}" --folder="${folder}"
+    done <<<"${rows}"
+  fi
+  if [[ "${mode}" == "list" ]]; then
+    echo "sweep: ${found} live-test resource(s) in ${project}"
+  else
+    echo "sweep: ${found} matched, ${failed} failed"
+  fi
+  [[ ${failed} -eq 0 ]]
+  exit $?
+fi
 
 # Artifact Registry: names are projects/P/locations/L/repositories/R.
 names="$("${G[@]}" artifacts repositories list --location=all --verbosity=error \
@@ -585,11 +618,11 @@ fi
 # sweep.
 if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
   billing="${E2E_BILLING_ACCOUNT#billingAccounts/}"
-  rows="$("${G[@]}" logging sinks list --billing-account="${billing}" --verbosity=error --format='value(name,createTime)')"
+  rows="$("${G_BASE[@]}" logging sinks list --billing-account="${billing}" --verbosity=error --format='value(name,createTime)')"
   while read -r id made; do
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
-    act "billing account log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --billing-account="${billing}"
+    act "billing account log sink" "${id}" "${G_BASE[@]}" logging sinks delete "${id}" --billing-account="${billing}"
   done <<<"${rows}"
 fi
 
@@ -605,11 +638,11 @@ while read -r id made; do
 done <<<"${rows}"
 if [[ -n "${E2E_LOGGING_FOLDER:-}" ]]; then
   folder="${E2E_LOGGING_FOLDER#folders/}"
-  rows="$("${G[@]}" logging sinks list --folder="${folder}" --verbosity=error --format='value(name,createTime)')"
+  rows="$("${G_BASE[@]}" logging sinks list --folder="${folder}" --verbosity=error --format='value(name,createTime)')"
   while read -r id made; do
     [[ -n "${id}" ]] || continue
     by_run "${id}" "${made}" || continue
-    act "folder log sink" "${id}" "${G[@]}" logging sinks delete "${id}" --folder="${folder}"
+    act "folder log sink" "${id}" "${G_BASE[@]}" logging sinks delete "${id}" --folder="${folder}"
   done <<<"${rows}"
 fi
 
