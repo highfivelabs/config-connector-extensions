@@ -134,6 +134,8 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/biglake.admin` | project | `BigLakeCatalog`, `BigLakeDatabase`, `BigLakeTable` (`TestBigLake*MissingIs403` and the kind tests, with their catalogs and databases) |
 | `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
 | `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
+| `roles/cloudkms.admin` | project | `KMSCryptoKeyFields` (the test's key ring `cce-e2e-fields` and its keys; held by 2026-11-16) |
+| `roles/container.clusterAdmin` | project | `ContainerClusterFields`, `ContainerNodePoolFields` (the test's cluster; held by 2026-11-16; the test skips live without `E2E_GKE=true`) |
 
 `IAMMember` on a backend service needed no new role: the account's
 `roles/compute.networkAdmin` and `roles/compute.securityAdmin` were enough

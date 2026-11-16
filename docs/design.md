@@ -2099,8 +2099,12 @@ lighter pattern fits; check it per field before building.
    `keyAccessJustificationsPolicy` (Terraform's update of a key names the
    changed fields in its mask; to be confirmed live), GKE cluster fields
    (`clusters.update` takes one `desired*` change at a time) and node pool
-   `kubeletConfig` (`nodePools.update`). Not built yet: the first
-   field-gap PR that needs it builds it; its name is section 10 question 5.
+   `kubeletConfig` (`nodePools.update`). **Built 2026-11-16** as
+   `KMSCryptoKeyFields`, `ContainerClusterFields` and
+   `ContainerNodePoolFields` (decision 37, which also names the kind).
+   A node pool's `kubeletConfig` is the partial case: the API takes it
+   whole, so ours sends it merged, and Terraform's update of Config
+   Connector's own kubelet fields can reset ours until our next reconcile.
 3. **Otherwise** (the field is mutable and Config Connector's update would
    reset it), a whole-object kind as before.
 
@@ -2872,6 +2876,44 @@ To raise confidence in `ArtifactRegistryRepository`:
       not built (section 7, item 14: the object goes not Ready and the
       repository keeps its URI).
 
+37. **A field kind is `<Config Connector kind>Fields`** (the builder,
+    2026-11-16, CCEQ5, answering section 10 question 5: "as recommended
+    (`<Config Connector kind>Fields` in our group, with a resourceRef to
+    Config Connector's object and the API's field names, e.g.
+    KMSCryptoKeyFields for keyAccessJustificationsPolicy.)"). A kind of
+    ours that owns a few fields of a resource Config Connector's kind owns
+    (section 6.6, pattern 2) is named after that kind with `Fields`, lives
+    in our group for the service (`<service>.gcp.hfl.dev`), names the
+    resource by `spec.resourceRef` (Config Connector's own reference type:
+    `name` of its object, or `external`), and keeps the API's field names
+    and nesting. Rules every field kind follows (`pkg/fieldkind`):
+    - it owns only the fields its spec sets, and never sends another;
+    - it never creates or deletes the resource: a missing one is waited
+      for, not Ready, "does not exist yet";
+    - delete gives the fields back where the API can unset them (cleared),
+      and leaves them where it cannot (said per kind); `deletion-policy:
+      abandon` always leaves them;
+    - a second object of the same kind for the same resource in the
+      namespace is refused (the oldest owns it);
+    - a delete uses the resource in `status.externalRef`, so it does not
+      need Config Connector's object to still exist.
+    **Built 2026-11-16** (`v1alpha1`, promoted under decision 27 once each
+    passes live): `KMSCryptoKeyFields` (`kms.gcp.hfl.dev`;
+    `keyAccessJustificationsPolicy`, `cryptoKeys.patch` with a one-path
+    mask); `ContainerClusterFields` (`container.gcp.hfl.dev`;
+    `secretManagerConfig`, `rbacBindingConfig`,
+    `anonymousAuthenticationConfig`, `addonsConfig.statefulHaConfig`,
+    `nodePoolAutoConfig.nodeKubeletConfig.insecureKubeletReadonlyPortEnabled`,
+    one `clusters.update` per field; delete leaves them);
+    `ContainerNodePoolFields` (`kubeletConfig`'s
+    `insecureKubeletReadonlyPortEnabled`, `containerLogMaxSize`,
+    `containerLogMaxFiles`, `allowedUnsafeSysctls`,
+    `maxParallelImagePulls`; the API takes `kubeletConfig` whole, so ours
+    reads it and sends it with only its fields changed, and Terraform's
+    update of Config Connector's own kubelet fields can reset ours until
+    our next reconcile). Their files in `docs/kinds/` have the details
+    and the live runs. Patches 0052 and 0053 teach mockgcp the writes.
+
 ## 9. The operator: Config Connector's identity, per namespace
 
 The goal: install the CRDs and run the managers so that a gap kind acts
@@ -3135,7 +3177,11 @@ moves to section 8.
    both only if a cluster turns up with `v1alpha1` objects that cannot be
    abandoned and re-created. Reversing is cheap: add the version back to
    the CRD with `served: true`, `storage: false`, `deprecated: true`.
-5. **The name of a field kind** (section 6.6, pattern 2; 2026-11-10).
+5. Answered 2026-11-16 (CCEQ5, decision 37): "as recommended
+   (`<Config Connector kind>Fields` in our group, with a resourceRef to
+   Config Connector's object and the API's field names, e.g.
+   KMSCryptoKeyFields for keyAccessJustificationsPolicy.)" The question was:
+   **The name of a field kind** (section 6.6, pattern 2; 2026-11-10).
    A kind of ours that owns a few fields of a resource Config Connector's
    kind owns has no name in Config Connector or Terraform (decision 18).
    Recommendation: `<Config Connector kind>Fields` in our group, with a

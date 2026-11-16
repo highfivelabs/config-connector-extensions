@@ -1,0 +1,192 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: containernodepoolfields.container.gcp.hfl.dev
+spec:
+  group: container.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ContainerNodePoolFields
+    listKind: ContainerNodePoolFieldsList
+    plural: containernodepoolfields
+    shortNames:
+    - hflcontainernodepoolfields
+    singular: containernodepoolfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ContainerNodePoolFields sets kubelet settings of a GKE node pool
+          that Config Connector's ContainerNodePool has no field for, and only those.
+          The API takes a node pool's kubeletConfig whole, so each write reads the
+          node pool and sends its kubeletConfig with only this object's fields changed.
+          Deleting it clears them (the API's defaults apply again); with deletion-policy
+          abandon they stay.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ContainerNodePoolFieldsSpec is the fields of a GKE node
+              pool this object owns. A field left out is not owned: it is never written.'
+            properties:
+              config:
+                description: The node pool's kubelet settings this object owns.
+                properties:
+                  kubeletConfig:
+                    description: Kubelet settings Config Connector's kubeletConfig
+                      lacks.
+                    properties:
+                      allowedUnsafeSysctls:
+                        description: Unsafe sysctls, or sysctl groups ending in "*",
+                          pods may set.
+                        items:
+                          type: string
+                        type: array
+                      containerLogMaxFiles:
+                        description: The most log files a container keeps; 2 to 10.
+                        format: int32
+                        type: integer
+                      containerLogMaxSize:
+                        description: The largest a container log file may grow before
+                          it is rotated, as a quantity with a unit ("10Mi"); 10Mi
+                          to 500Mi.
+                        type: string
+                      insecureKubeletReadonlyPortEnabled:
+                        description: Enable the kubelet's insecure read-only port
+                          (10255).
+                        type: boolean
+                      maxParallelImagePulls:
+                        description: How many images the kubelet pulls at once; 2
+                          to 5.
+                        format: int32
+                        type: integer
+                    type: object
+                    x-kubernetes-validations:
+                    - message: set at least one field
+                      rule: has(self.insecureKubeletReadonlyPortEnabled) || has(self.containerLogMaxSize)
+                        || has(self.containerLogMaxFiles) || has(self.allowedUnsafeSysctls)
+                        || has(self.maxParallelImagePulls)
+                required:
+                - kubeletConfig
+                type: object
+              resourceRef:
+                description: 'Immutable. The node pool: Config Connector''s ContainerNodePool
+                  by name (container.cnrm.cloud.google.com), or any node pool by external,
+                  as "projects/{{projectID}}/locations/{{location}}/clusters/{{cluster}}/nodePools/{{nodePool}}".
+                  The node pool must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ContainerNodePool
+                      resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/clusters/{{clusterID}}/nodePools/{{nodePoolID}}"
+                      or "projects/{{projectID}}/zones/{{zone}}/clusters/{{clusterID}}/nodePools/{{nodePoolID}}".
+                    type: string
+                  name:
+                    description: The name of a ContainerNodePool resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ContainerNodePool resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - config
+            - resourceRef
+            type: object
+          status:
+            description: ContainerNodePoolFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The node pool whose fields this object sets, as projects/{project}/locations/{location}/clusters/{cluster}/nodePools/{nodePool}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

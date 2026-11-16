@@ -301,6 +301,12 @@ func startCluster(t *testing.T) *cluster {
 			// Config Connector's LoggingLogSink, which an IAMMember's
 			// memberFrom.logSinkRef names (TestIAMMember).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_logginglogsinks.logging.cnrm.cloud.google.com.yaml"),
+			// The Config Connector objects the field kinds name by
+			// resourceRef (KMSCryptoKeyFields, ContainerClusterFields,
+			// ContainerNodePoolFields).
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_kmscryptokeys.kms.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containerclusters.container.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containernodepools.container.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}

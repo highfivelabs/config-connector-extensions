@@ -1,0 +1,58 @@
+config-connector-extensions patch 0053: mockgcp's clusters.update takes the
+desired* fields ContainerClusterFields sends, and merges desiredAddonsConfig.
+
+ContainerClusterFields (container.gcp.hfl.dev, docs/design.md decision 37)
+sends one clusters.update per field with a single desired* field:
+desiredSecretManagerConfig, desiredRbacBindingConfig,
+desiredAnonymousAuthenticationConfig, desiredNodePoolAutoConfigKubeletConfig
+and a desiredAddonsConfig naming only the Stateful HA add-on. mockgcp
+refused the first four ("update was not fully implemented") and replaced
+the whole addonsConfig with the request's, which dropped every add-on the
+request did not name; the API changes only the add-ons a request names
+(gcloud's --update-addons sends one), so the mock now merges. Upstream
+candidate: yes.
+
+diff --git a/mockgcp/mockcontainer/cluster.go b/mockgcp/mockcontainer/cluster.go
+index 9bd54847c..aed6140be 100644
+--- a/mockgcp/mockcontainer/cluster.go
++++ b/mockgcp/mockcontainer/cluster.go
+@@ -303,10 +303,38 @@ func (s *ClusterManagerV1) UpdateCluster(ctx context.Context, req *pb.UpdateClus
+ 	}
+ 
+ 	if update.DesiredAddonsConfig != nil {
+-		obj.AddonsConfig = update.DesiredAddonsConfig
++		// The API changes only the add-ons the request names; the others
++		// stay as they are (gcloud's --update-addons sends one).
++		if obj.AddonsConfig == nil {
++			obj.AddonsConfig = &pb.AddonsConfig{}
++		}
++		proto.Merge(obj.AddonsConfig, update.DesiredAddonsConfig)
+ 		update.DesiredAddonsConfig = nil
+ 	}
+ 
++	if update.DesiredSecretManagerConfig != nil {
++		obj.SecretManagerConfig = update.DesiredSecretManagerConfig
++		update.DesiredSecretManagerConfig = nil
++	}
++
++	if update.DesiredRbacBindingConfig != nil {
++		obj.RbacBindingConfig = update.DesiredRbacBindingConfig
++		update.DesiredRbacBindingConfig = nil
++	}
++
++	if update.DesiredAnonymousAuthenticationConfig != nil {
++		obj.AnonymousAuthenticationConfig = update.DesiredAnonymousAuthenticationConfig
++		update.DesiredAnonymousAuthenticationConfig = nil
++	}
++
++	if update.DesiredNodePoolAutoConfigKubeletConfig != nil {
++		if obj.NodePoolAutoConfig == nil {
++			obj.NodePoolAutoConfig = &pb.NodePoolAutoConfig{}
++		}
++		obj.NodePoolAutoConfig.NodeKubeletConfig = update.DesiredNodePoolAutoConfigKubeletConfig
++		update.DesiredNodePoolAutoConfigKubeletConfig = nil
++	}
++
+ 	if update.DesiredNodePoolAutoConfigNetworkTags != nil {
+ 		if obj.NodePoolAutoConfig == nil {
+ 			obj.NodePoolAutoConfig = &pb.NodePoolAutoConfig{}

@@ -64,6 +64,8 @@ resources:
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml
+- container.gcp.hfl.dev_containerclusterfields.yaml
+- container.gcp.hfl.dev_containernodepoolfields.yaml
 - datacatalog.gcp.hfl.dev_datacatalogtags.yaml
 - dataplex.gcp.hfl.dev_dataplexaspecttypes.yaml
 - dataplex.gcp.hfl.dev_dataplexassets.yaml
@@ -92,6 +94,7 @@ resources:
 - iam.gcp.hfl.dev_iamworkloadidentitypoolmanagedidentities.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolnamespaces.yaml
 - iam.gcp.hfl.dev_iamworkloadidentitypoolproviderkeys.yaml
+- kms.gcp.hfl.dev_kmscryptokeyfields.yaml
 - logging.gcp.hfl.dev_loggingbillingaccountsinks.yaml
 - logging.gcp.hfl.dev_logginglinks.yaml
 - logging.gcp.hfl.dev_logginglogsinks.yaml

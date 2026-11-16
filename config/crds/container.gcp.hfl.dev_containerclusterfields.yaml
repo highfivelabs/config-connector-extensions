@@ -1,0 +1,229 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: containerclusterfields.container.gcp.hfl.dev
+spec:
+  group: container.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ContainerClusterFields
+    listKind: ContainerClusterFieldsList
+    plural: containerclusterfields
+    shortNames:
+    - hflcontainerclusterfields
+    singular: containerclusterfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'ContainerClusterFields sets fields of a GKE cluster that Config
+          Connector''s ContainerCluster has no field for, and only those: one clusters.update
+          per changed field, each carrying a single desired* field. Deleting it leaves
+          the fields as they are (the API has no "unset" for them; set the value wanted
+          before deleting).'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ContainerClusterFieldsSpec is the fields of a GKE cluster
+              this object owns. A field left out is not owned: it is never read or
+              written.'
+            properties:
+              addonsConfig:
+                description: Add-ons Config Connector's addonsConfig lacks (desiredAddonsConfig,
+                  sent with only these add-ons set).
+                properties:
+                  statefulHaConfig:
+                    description: The Stateful HA add-on.
+                    properties:
+                      enabled:
+                        description: Enable the add-on.
+                        type: boolean
+                    required:
+                    - enabled
+                    type: object
+                type: object
+              anonymousAuthenticationConfig:
+                description: Anonymous authentication to the API server (desiredAnonymousAuthenticationConfig).
+                properties:
+                  mode:
+                    description: ENABLED, or LIMITED (anonymous requests reach only
+                      the health check endpoints).
+                    enum:
+                    - ENABLED
+                    - LIMITED
+                    type: string
+                required:
+                - mode
+                type: object
+              nodePoolAutoConfig:
+                description: Settings of auto-provisioned node pools Config Connector's
+                  nodePoolAutoConfig lacks (desiredNodePoolAutoConfigKubeletConfig).
+                properties:
+                  nodeKubeletConfig:
+                    description: Kubelet settings of auto-provisioned node pools.
+                    properties:
+                      insecureKubeletReadonlyPortEnabled:
+                        description: Enable the kubelet's insecure read-only port
+                          (10255).
+                        type: boolean
+                    type: object
+                type: object
+              rbacBindingConfig:
+                description: The RBAC bindings to system:anonymous and the system:unauthenticated
+                  and system:authenticated groups (desiredRbacBindingConfig).
+                properties:
+                  enableInsecureBindingSystemAuthenticated:
+                    description: Allow bindings to system:authenticated, other than
+                      the default ones.
+                    type: boolean
+                  enableInsecureBindingSystemUnauthenticated:
+                    description: Allow bindings to system:anonymous or system:unauthenticated.
+                    type: boolean
+                type: object
+              resourceRef:
+                description: 'Immutable. The cluster: Config Connector''s ContainerCluster
+                  by name (container.cnrm.cloud.google.com), or any cluster by external,
+                  as "projects/{{projectID}}/locations/{{location}}/clusters/{{cluster}}".
+                  The cluster must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The GKE cluster. Valid formats: `projects/{projectID}/locations/{location}/clusters/{clusterID}`
+                      `projects/{projectID}/zones/{zone}/clusters/{clusterID}`'
+                    type: string
+                  name:
+                    description: 'Name of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      */'
+                    type: string
+                  namespace:
+                    description: 'Namespace of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      */'
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+              secretManagerConfig:
+                description: Secret Manager add-on (clusters.update desiredSecretManagerConfig).
+                properties:
+                  enabled:
+                    description: Enable the Secret Manager CSI driver add-on.
+                    type: boolean
+                  rotationConfig:
+                    description: Rotation of the secrets the add-on mounts.
+                    properties:
+                      enabled:
+                        description: Enable rotation.
+                        type: boolean
+                      rotationInterval:
+                        description: How often secrets are rotated, as a duration
+                          ("120s").
+                        type: string
+                    type: object
+                required:
+                - enabled
+                type: object
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set at least one field
+              rule: has(self.secretManagerConfig) || has(self.rbacBindingConfig) ||
+                has(self.anonymousAuthenticationConfig) || has(self.addonsConfig)
+                || has(self.nodePoolAutoConfig)
+          status:
+            description: ContainerClusterFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The cluster whose fields this object sets, as projects/{project}/locations/{location}/clusters/{cluster}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

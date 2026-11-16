@@ -57,6 +57,19 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **Field kinds: `KMSCryptoKeyFields`, `ContainerClusterFields`,
+  `ContainerNodePoolFields`** (`kms.gcp.hfl.dev/v1alpha1`,
+  `container.gcp.hfl.dev/v1alpha1`; `docs/design.md` decision 37). Each
+  names Config Connector's object (`spec.resourceRef`) and sets only the
+  fields it lists, which Config Connector's kind lacks: a key's
+  `keyAccessJustificationsPolicy`; a cluster's `secretManagerConfig`,
+  `rbacBindingConfig`, `anonymousAuthenticationConfig`,
+  `addonsConfig.statefulHaConfig` and auto-provisioned node pools'
+  kubelet read-only port; a node pool's kubelet read-only port, container
+  log size and files, unsafe sysctls and parallel image pulls. They never
+  create or delete the resource. The manager's ClusterRole now reads
+  `container.cnrm.cloud.google.com`.
+
 - **`IAMMember.memberFrom.logSinkRef` and `IAMBinding.membersFrom[].logSinkRef`**:
   a `LoggingLogSink`'s writer identity (`status.writerIdentity`) as the
   member, as Config Connector's `IAMPolicyMember` takes it, for this

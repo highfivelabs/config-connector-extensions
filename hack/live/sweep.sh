@@ -874,6 +874,17 @@ else
   failed=$((failed + 1))
 fi
 
+# GKE clusters (the container field kinds' test cluster, labelled
+# cce-e2e=true and cce-run=<run>). Cloud KMS keys are not swept: the API
+# never deletes a key or a key ring (the KMSCryptoKeyFields test makes keys
+# with no version, which cost nothing, and clears their policy).
+rows="$("${G[@]}" container clusters list --verbosity=error \
+  --filter="$(filter resourceLabels ^)" --format='value(name,location)')"
+while read -r name loc; do
+  [[ -n "${name}" ]] || continue
+  act "GKE cluster" "${loc}/${name}" "${G[@]}" container clusters delete "${name}" --location "${loc}"
+done <<<"${rows}"
+
 if [[ "${mode}" == "list" ]]; then
   echo "sweep: ${found} live-test resource(s) in ${project}"
 else

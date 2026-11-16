@@ -1,0 +1,163 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: kmscryptokeyfields.kms.gcp.hfl.dev
+spec:
+  group: kms.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: KMSCryptoKeyFields
+    listKind: KMSCryptoKeyFieldsList
+    plural: kmscryptokeyfields
+    shortNames:
+    - hflkmscryptokeyfields
+    singular: kmscryptokeyfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'KMSCryptoKeyFields sets fields of a Cloud KMS key that Config
+          Connector''s KMSCryptoKey has no field for (its keyAccessJustificationsPolicy),
+          and only those: it patches the key with an update mask naming them. Deleting
+          it clears them; with deletion-policy abandon they stay.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: KMSCryptoKeyFieldsSpec is the fields of a Cloud KMS key this
+              object owns. Every other field of the key stays Config Connector's.
+            properties:
+              keyAccessJustificationsPolicy:
+                description: 'The key''s Key Access Justifications policy: the reasons
+                  for which Google may use the key. Owned whole: the list replaces
+                  the key''s.'
+                properties:
+                  allowedAccessReasons:
+                    description: 'The access reasons allowed, as the API names them
+                      (for example CUSTOMER_INITIATED_ACCESS, GOOGLE_INITIATED_SYSTEM_OPERATION).
+                      An empty list allows none: every encrypt, decrypt and sign with
+                      the key fails.'
+                    items:
+                      type: string
+                    type: array
+                type: object
+              resourceRef:
+                description: 'Immutable. The key: Config Connector''s KMSCryptoKey
+                  by name (kms.cnrm.cloud.google.com), or any key by external, as
+                  "projects/{{projectID}}/locations/{{location}}/keyRings/{{keyRing}}/cryptoKeys/{{cryptoKey}}".
+                  The key must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed KMSCryptoKey
+                      resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/keyRings/{{keyring}}/cryptoKeys/{{cryptokey}}".
+                    type: string
+                  name:
+                    description: The name of a KMSCryptoKey resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a KMSCryptoKey resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - keyAccessJustificationsPolicy
+            - resourceRef
+            type: object
+          status:
+            description: KMSCryptoKeyFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The key whose fields this object sets, as projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{cryptoKey}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

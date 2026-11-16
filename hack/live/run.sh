@@ -55,6 +55,8 @@ source hack/live/projects.sh
 # chronicle (ChronicleRule, ChronicleRuleDeployment, ChronicleReferenceList) skips live unless E2E_CHRONICLE_INSTANCE
 # names a SecOps instance, <location>/<instance ID>;
 # asset (AssetFeed) skips live unless E2E_CLOUD_ASSET=true;
+# container (ContainerClusterFields, ContainerNodePoolFields) skips live
+# unless E2E_GKE=true (it makes a GKE cluster);
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
