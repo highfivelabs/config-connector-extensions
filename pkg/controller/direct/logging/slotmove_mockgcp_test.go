@@ -33,7 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/slotmove"
 )
@@ -68,16 +68,16 @@ func TestSlotMoveLoggingSavedQuery(t *testing.T) {
 	}
 
 	slotmove.Run(t, env, slotmove.Case{
-		GVK:  loggingv1alpha1.LoggingSavedQueryGVK,
+		GVK:  loggingv1beta1.LoggingSavedQueryGVK,
 		Name: name,
 		Object: func(ns string) client.Object {
-			return &loggingv1alpha1.LoggingSavedQuery{
+			return &loggingv1beta1.LoggingSavedQuery{
 				ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name},
-				Spec: loggingv1alpha1.LoggingSavedQuerySpec{
+				Spec: loggingv1beta1.LoggingSavedQuerySpec{
 					ProjectRef:   &refsv1beta1.ProjectRef{External: mockenv.Project},
 					Location:     "global",
 					DisplayName:  mockenv.Ptr("payments errors"),
-					LoggingQuery: &loggingv1alpha1.LoggingSavedQueryLoggingQuery{Filter: mockenv.Ptr(`severity>=ERROR AND resource.labels.service_name="payments"`)},
+					LoggingQuery: &loggingv1beta1.LoggingSavedQueryLoggingQuery{Filter: mockenv.Ptr(`severity>=ERROR AND resource.labels.service_name="payments"`)},
 					Visibility:   mockenv.Ptr("SHARED"),
 				},
 			}

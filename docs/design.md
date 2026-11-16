@@ -2751,8 +2751,17 @@ To raise confidence in `ArtifactRegistryRepository`:
     `ComputeRegionHealthAggregationPolicy` and `LoggingSavedQuery`
     (`e8a920c`), `ComputeRegionBackendBucket` and `LoggingLink`
     (`81d7b24`), `GKEHubRolloutSequence` and `IAMOauthClient` (`e1e23f5`).
-    They are left for their own pull request (a generated kind's version
-    is set in `hack/discokind/kinds.yaml` and regenerated).
+    **The six generated kinds were promoted 2026-11-15** (their CRDs and
+    types rechecked unchanged since those commits with `git log`): the
+    version in `hack/discokind/kinds.yaml`, regenerated into each group's
+    `v1beta1` package (the types differ only in the package name;
+    `apis/gkehub/v1beta1` is new), the fixtures' `apiVersion`, the
+    `LoggingSavedQuery` slot-move test, `pkg/controller`'s served-version
+    test, `docs/kinds/` and `CHANGELOG.md`.
+    `ComputeNetworkFirewallPolicyPacketMirroringRule` stays `v1alpha1`
+    for now: the catalog's `net-firewall-policy` chart renders it at
+    `compute.gcp.hfl.dev/v1alpha1` (behind `allow_alpha`), so it waits
+    until that chart can move to `v1beta1` with a catalog pin bump.
     `ServiceIdentity`, a kind for a missing resource, passed live on
     2026-11-15 and was promoted under decision 27 (decision 36).
 
