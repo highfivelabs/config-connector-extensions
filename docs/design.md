@@ -2544,6 +2544,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     finds no repository and creates it. The field stays mutable in the
     CRD: no CEL rule is added (decision 20 is for fields that cannot
     change at all).
+    Proven on mockgcp and live (run `cce-11160906-a434`,
+    `docs/kinds/ArtifactRegistryRepository.md`): the real API takes a
+    create with the same name at once after the delete.
 22. **`status.appliedDatabaseRoles` stays until upstream PR #7148**
     (confirmed 2026-11-10, G5; section 10 item 2's
     recommendation): the field and the comparison with what was applied

@@ -22,3 +22,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | `7732c02` | FAIL in the run (its mock log is empty: no test ran); PASS in `task ci` on the same commit (offload/ci) | PASS | run `cce-11160906-a434`: a changed custom upstream URI replaces the repository live as on mockgcp (decision 21, ARURI): one DELETE, no PATCH, a later `createTime`, the spec's fields on the new repository, Ready, and a resync after it sends nothing; credential and description changes delete nothing | 7 remote repositories (one replaced once), 1 Docker repository with 2 minimal images, 1 secret (deleted); sweep empty |
