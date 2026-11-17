@@ -39,6 +39,8 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	"google.golang.org/api/iterator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
@@ -241,7 +243,10 @@ func TestComputePerInstanceConfig(t *testing.T) {
 	}
 
 	t.Run("create writes the config and keeps the group's size", func(t *testing.T) {
-		env.WaitReady(gvk, "example", "zdb-0")
+		u := env.WaitReady(gvk, "example", "zdb-0")
+		if ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ext == "" {
+			t.Errorf("status.externalRef is empty")
+		}
 		c, ok := configs()[db]
 		if !ok {
 			t.Fatalf("no per-instance config %s in %s", db, group)
@@ -338,5 +343,37 @@ func TestComputePerInstanceConfig(t *testing.T) {
 		if _, ok := configs()[instanceFor["zdb-1"]]; !ok {
 			t.Errorf("after abandon, the per-instance config %s is gone, want it kept", instanceFor["zdb-1"])
 		}
+	})
+
+	t.Run("delete when project object is gone", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("fake only: creates a Project object without its controller")
+		}
+		proj := &unstructured.Unstructured{Object: map[string]any{
+			"spec": map[string]any{"name": mockenv.Project, "resourceID": mockenv.Project},
+		}}
+		proj.SetGroupVersionKind(schema.GroupVersionKind{Group: "resourcemanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "Project"})
+		proj.SetNamespace("example")
+		proj.SetName("gone-zpic-project")
+		if err := env.Kube.Create(env.Ctx, proj); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg := newConfig("zdb-gone-proj", "primary")
+		cfg.Spec.ProjectRef = refs.ProjectRef{Name: "gone-zpic-project"}
+		if err := env.Kube.Create(env.Ctx, cfg); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitReady(gvk, "example", cfg.Name)
+
+		if err := env.Kube.Delete(env.Ctx, proj); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(proj)
+
+		if err := env.Kube.Delete(env.Ctx, cfg); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&computev1beta1.ComputePerInstanceConfig{ObjectMeta: metav1.ObjectMeta{Namespace: "example", Name: cfg.Name}})
 	})
 }

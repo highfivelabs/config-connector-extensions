@@ -94,19 +94,25 @@ func (m *modelArtifactRegistryRepository) AdapterForObject(ctx context.Context, 
 
 	if op.IsDeleting() {
 		// Find and Delete need only the name, so a delete resolves no
-		// spec reference (a key or secret object already gone when
-		// everything is deleted at once would otherwise hold it forever).
-		// The project is still resolved: status keeps only the short
-		// repository name (status.name), not the project.
-		id, err := obj.GetIdentity(ctx, reader)
-		if err != nil {
-			return nil, err
+		// spec reference (a key, secret, or project object already gone
+		// when everything is deleted at once would otherwise hold it forever).
+		id := &krm.ArtifactRegistryRepositoryIdentity{}
+		if ext := direct.ValueOf(obj.Status.ExternalRef); ext != "" {
+			if err := id.FromExternal(ext); err != nil {
+				return nil, err
+			}
+		} else {
+			resolved, err := obj.GetIdentity(ctx, reader)
+			if err != nil {
+				return nil, err
+			}
+			id = resolved.(*krm.ArtifactRegistryRepositoryIdentity)
 		}
 		gcpClient, err := m.client(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return &ArtifactRegistryRepositoryAdapter{id: id.(*krm.ArtifactRegistryRepositoryIdentity), gcpClient: gcpClient, desired: obj}, nil
+		return &ArtifactRegistryRepositoryAdapter{id: id, gcpClient: gcpClient, desired: obj}, nil
 	}
 
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
@@ -282,6 +288,8 @@ func (a *ArtifactRegistryRepositoryAdapter) updateStatus(ctx context.Context, op
 		}
 		status.Name = &s
 	}
+
+	status.ExternalRef = direct.LazyPtr(a.id.String())
 
 	return op.UpdateStatus(ctx, status, nil)
 }

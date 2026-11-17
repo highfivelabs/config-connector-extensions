@@ -34,6 +34,8 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
@@ -169,7 +171,10 @@ func TestComputeRegionDiskResourcePolicyAttachment(t *testing.T) {
 	}
 
 	t.Run("create attaches the schedule to the disk", func(t *testing.T) {
-		env.WaitReady(gvk, "example", "data-daily")
+		u := env.WaitReady(gvk, "example", "data-daily")
+		if ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ext == "" {
+			t.Errorf("status.externalRef is empty")
+		}
 		if !attached(data) {
 			t.Errorf("disk %s does not have %s", data, schedule)
 		}
@@ -227,6 +232,41 @@ func TestComputeRegionDiskResourcePolicyAttachment(t *testing.T) {
 		env.WaitGone(&computev1beta1.ComputeRegionDiskResourcePolicyAttachment{ObjectMeta: metav1.ObjectMeta{Namespace: "example", Name: "kept-daily"}})
 		if !attached(kept) {
 			t.Errorf("after abandon, disk %s lost %s, want it kept", kept, schedule)
+		}
+	})
+
+	t.Run("delete when project object is gone", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("fake only: creates a Project object without its controller")
+		}
+		proj := &unstructured.Unstructured{Object: map[string]any{
+			"spec": map[string]any{"name": mockenv.Project, "resourceID": mockenv.Project},
+		}}
+		proj.SetGroupVersionKind(schema.GroupVersionKind{Group: "resourcemanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "Project"})
+		proj.SetNamespace("example")
+		proj.SetName("gone-region-project")
+		if err := env.Kube.Create(env.Ctx, proj); err != nil {
+			t.Fatal(err)
+		}
+
+		att := newAttachment("region-data-daily-gone-proj", data)
+		att.Spec.ProjectRef = refs.ProjectRef{Name: "gone-region-project"}
+		if err := env.Kube.Create(env.Ctx, att); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitReady(gvk, "example", att.Name)
+
+		if err := env.Kube.Delete(env.Ctx, proj); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(proj)
+
+		if err := env.Kube.Delete(env.Ctx, att); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&computev1beta1.ComputeRegionDiskResourcePolicyAttachment{ObjectMeta: metav1.ObjectMeta{Namespace: "example", Name: att.Name}})
+		if attached(data) {
+			t.Errorf("after delete, disk %s still has %s", data, schedule)
 		}
 	})
 }

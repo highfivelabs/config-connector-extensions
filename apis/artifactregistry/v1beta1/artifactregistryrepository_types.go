@@ -115,6 +115,10 @@ type ArtifactRegistryRepositoryStatus struct {
 	// The name of the repository, for example: "repo1".
 	// +kcc:proto:field=google.devtools.artifactregistry.v1.Repository.name
 	Name *string `json:"name,omitempty"`
+
+	// A unique specifier for the ArtifactRegistryRepository resource in GCP.
+	// +optional
+	ExternalRef *string `json:"externalRef,omitempty"`
 }
 
 // +kcc:proto=google.devtools.artifactregistry.v1.UpstreamPolicy

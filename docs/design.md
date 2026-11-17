@@ -2370,22 +2370,21 @@ To raise confidence in `ArtifactRegistryRepository`:
     candidates and `l2Forwarding`, `ComputeInterconnect`'s
     `applicationAwareInterconnect`), the next field-gap PRs.
 
-43. A delete that still needs a reference (2026-11-16, `pkg/deleting`).
-    Every kind now deletes by its recorded name and resolves nothing, and
-    abandon resolves nothing, except these, whose status records no name
-    to delete by: `SQLUser`, `ComputeDiskResourcePolicyAttachment`,
-    `ComputeRegionDiskResourcePolicyAttachment`, `ComputeNetworkEndpoint`,
-    `ComputePerInstanceConfig` and `ComputeRegionPerInstanceConfig` (no
-    `status.externalRef`; they are marked `noRecord` in
-    `pkg/controller`, so a delete whose reference is gone keeps its error
-    rather than leave the resource behind), and `ArtifactRegistryRepository`
-    (records `status.name` without the project, so it still resolves the
-    project). `SQLAdminBackup` reads its `SQLInstance` object when
-    `instanceRef` is by name (the backup's recorded name has no instance)
-    and `ComputeOrganizationSecurityPolicyAssociation` its policy object
+43. A delete that still needs a reference (2026-11-16, `pkg/deleting`;
+    updated 2026-11-17). Every kind now deletes by its recorded name and
+    resolves nothing, and abandon resolves nothing, except two:
+    `SQLAdminBackup` reads its `SQLInstance` object when `instanceRef`
+    is by name (the backup's recorded name has no instance) and
+    `ComputeOrganizationSecurityPolicyAssociation` its policy object
     when `securityPolicyRef` is by name; each finishes without a call if
-    that object is gone. Adding `status.externalRef` to the first seven is
-    a CRD change, not started.
+    that object is gone. (`SQLUser`,
+    `ComputeDiskResourcePolicyAttachment`,
+    `ComputeRegionDiskResourcePolicyAttachment`,
+    `ComputeNetworkEndpoint`, `ComputePerInstanceConfig`,
+    `ComputeRegionPerInstanceConfig`, and `ArtifactRegistryRepository`
+    gained `status.externalRef` and now delete from it without resolving
+    references; `noRecord` is no longer needed on any kind in
+    `pkg/controller`.)
 
 ## 8. Decisions
 
