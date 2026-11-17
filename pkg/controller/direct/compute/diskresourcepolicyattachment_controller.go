@@ -68,11 +68,20 @@ func (m *computeDiskResourcePolicyAttachmentModel) AdapterForObject(ctx context.
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
-	id, err := obj.GetIdentity(ctx, reader)
-	if err != nil {
-		return nil, err
+	attachmentId := &krm.ComputeDiskResourcePolicyAttachmentIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting an attachment that was made: its name is in status
+		// and cannot change, so neither diskRef nor projectRef is resolved.
+		if err := attachmentId.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		id, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		attachmentId = id.(*krm.ComputeDiskResourcePolicyAttachmentIdentity)
 	}
-	attachmentId := id.(*krm.ComputeDiskResourcePolicyAttachmentIdentity)
 
 	opts, err := m.config.RESTClientOptions()
 	if err != nil {
@@ -165,6 +174,7 @@ func (a *ComputeDiskResourcePolicyAttachmentAdapter) Create(ctx context.Context,
 	log.V(2).Info("successfully attached resource policy to disk", "id", a.id)
 
 	status := &krm.ComputeDiskResourcePolicyAttachmentStatus{}
+	status.ExternalRef = direct.LazyPtr(a.id.String())
 	status.ObservedGeneration = direct.PtrTo(createOp.GetUnstructured().GetGeneration())
 	return createOp.UpdateStatus(ctx, status, nil)
 }
@@ -174,6 +184,7 @@ func (a *ComputeDiskResourcePolicyAttachmentAdapter) Update(ctx context.Context,
 	log.V(2).Info("updating ComputeDiskResourcePolicyAttachment", "id", a.id)
 
 	status := &krm.ComputeDiskResourcePolicyAttachmentStatus{}
+	status.ExternalRef = direct.LazyPtr(a.id.String())
 	status.ObservedGeneration = direct.PtrTo(updateOp.GetUnstructured().GetGeneration())
 	return updateOp.UpdateStatus(ctx, status, nil)
 }

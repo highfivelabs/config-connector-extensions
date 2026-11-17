@@ -74,14 +74,23 @@ func (m *sqlUserModel) AdapterForObject(ctx context.Context, op *directbase.Adap
 		return nil, fmt.Errorf("converting to %T failed: %w", obj, err)
 	}
 
-	id, err := obj.GetIdentity(ctx, kube)
-	if err != nil {
-		return nil, err
-	}
-
-	typedID, ok := id.(*krm.SQLUserIdentity)
-	if !ok {
-		return nil, fmt.Errorf("expected SQLUserIdentity, got %T", id)
+	typedID := &krm.SQLUserIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a user that was made: its name is in status and
+		// cannot change, so the SQLInstance is not resolved.
+		if err := typedID.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		id, err := obj.GetIdentity(ctx, kube)
+		if err != nil {
+			return nil, err
+		}
+		var ok bool
+		typedID, ok = id.(*krm.SQLUserIdentity)
+		if !ok {
+			return nil, fmt.Errorf("expected SQLUserIdentity, got %T", id)
+		}
 	}
 
 	gcpClient, err := newGCPClient(ctx, m.config)
@@ -404,7 +413,9 @@ func (a *sqlUserAdapter) pollForLROCompletion(ctx context.Context, op *api.Opera
 }
 
 func (a *sqlUserAdapter) updateStatus(ctx context.Context, op directbase.Operation, appliedRoles []string) error {
-	status := &krm.SQLUserStatus{}
+	status := &krm.SQLUserStatus{
+		ExternalRef: direct.LazyPtr(a.id.String()),
+	}
 	if len(appliedRoles) > 0 {
 		status.AppliedDatabaseRoles = appliedRoles
 	}

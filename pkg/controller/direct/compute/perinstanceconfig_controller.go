@@ -70,13 +70,24 @@ func (m *computePerInstanceConfigModel) AdapterForObject(ctx context.Context, op
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
-	id, err := obj.GetIdentity(ctx, reader)
-	if err != nil {
-		return nil, err
-	}
-	picId, ok := id.(*krm.ComputePerInstanceConfigIdentity)
-	if !ok {
-		return nil, fmt.Errorf("unexpected identity type %T", id)
+	picId := &krm.ComputePerInstanceConfigIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting a config that was made: its identity is in status and
+		// cannot change, so neither instanceGroupManagerRef nor projectRef
+		// is resolved.
+		if err := picId.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		id, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		var ok bool
+		picId, ok = id.(*krm.ComputePerInstanceConfigIdentity)
+		if !ok {
+			return nil, fmt.Errorf("unexpected identity type %T", id)
+		}
 	}
 
 	if picId.Project == "" || picId.Zone == "" || picId.InstanceGroupManager == "" || picId.Name == "" {
@@ -86,8 +97,7 @@ func (m *computePerInstanceConfigModel) AdapterForObject(ctx context.Context, op
 	// A delete needs only the name and removeInstanceStateOnDestroy, so the
 	// preserved-state references are not resolved: a disk or other object
 	// already gone (everything deleted at once) would otherwise hold the
-	// delete forever. The name itself is resolved from spec, since the kind
-	// keeps no status.externalRef (pkg/deleting).
+	// delete forever.
 	if !op.IsDeleting() {
 		if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 			return nil, fmt.Errorf("normalizing references: %w", err)
@@ -342,7 +352,9 @@ func (a *ComputePerInstanceConfigAdapter) Delete(ctx context.Context, deleteOp *
 }
 
 func (a *ComputePerInstanceConfigAdapter) updateStatus(ctx context.Context, op directbase.Operation) error {
-	status := &krm.ComputePerInstanceConfigStatus{}
+	status := &krm.ComputePerInstanceConfigStatus{
+		ExternalRef: direct.LazyPtr(a.id.String()),
+	}
 	return op.UpdateStatus(ctx, status, nil)
 }
 

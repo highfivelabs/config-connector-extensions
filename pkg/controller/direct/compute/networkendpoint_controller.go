@@ -75,18 +75,26 @@ func (m *computeNetworkEndpointModel) AdapterForObject(ctx context.Context, op *
 		return nil, fmt.Errorf("error converting to %T: %w", obj, err)
 	}
 
-	id, err := obj.GetIdentity(ctx, reader)
-	if err != nil {
-		return nil, err
+	endpointId := &krm.ComputeNetworkEndpointIdentity{}
+	if ext := direct.ValueOf(obj.Status.ExternalRef); op.IsDeleting() && ext != "" {
+		// Deleting an endpoint that was made: its identity is in status
+		// and cannot change, so neither networkEndpointGroupRef nor
+		// instanceRef is resolved.
+		if err := endpointId.FromExternal(ext); err != nil {
+			return nil, err
+		}
+	} else {
+		id, err := obj.GetIdentity(ctx, reader)
+		if err != nil {
+			return nil, err
+		}
+		endpointId = id.(*krm.ComputeNetworkEndpointIdentity)
 	}
-	endpointId := id.(*krm.ComputeNetworkEndpointIdentity)
 
 	// A delete needs only the identity (its instance overrides the spec's
 	// in buildDesiredEndpoint), so the other references (projectRef) are
 	// not resolved: an object already gone (everything deleted at once)
-	// would otherwise hold the delete forever. The identity itself is
-	// resolved from spec, since the kind keeps no status.externalRef
-	// (pkg/deleting).
+	// would otherwise hold the delete forever.
 	if !op.IsDeleting() {
 		if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 			return nil, fmt.Errorf("normalizing references: %w", err)
@@ -318,7 +326,9 @@ func (a *ComputeNetworkEndpointAdapter) Export(ctx context.Context) (*unstructur
 }
 
 func (a *ComputeNetworkEndpointAdapter) updateStatus(ctx context.Context, op directbase.Operation, latest *pb.NetworkEndpoint) error {
-	status := &krm.ComputeNetworkEndpointStatus{}
+	status := &krm.ComputeNetworkEndpointStatus{
+		ExternalRef: direct.LazyPtr(a.id.String()),
+	}
 	return op.UpdateStatus(ctx, status, nil)
 }
 

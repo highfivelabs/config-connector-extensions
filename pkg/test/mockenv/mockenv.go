@@ -293,6 +293,9 @@ func startCluster(t *testing.T) *cluster {
 			// A Folder an IAMDenyPolicy's folderRef names by name, deleted
 			// before the policy (TestIAMDenyPolicy).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_folders.resourcemanager.cnrm.cloud.google.com.yaml"),
+			// A SQLInstance a SQLUser's instanceRef names by name, deleted
+			// before the user (TestSQLUserDatabaseRoles).
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_sqlinstances.sql.cnrm.cloud.google.com.yaml"),
 			// A 1st gen Cloud Function IAMBinding and IAMMember name by name
 			// (TestIAMOnCloudFunctionsFunction).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_cloudfunctionsfunctions.cloudfunctions.cnrm.cloud.google.com.yaml"),

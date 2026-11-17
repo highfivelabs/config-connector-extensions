@@ -36,6 +36,7 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
@@ -125,6 +126,9 @@ func TestSQLUserDatabaseRoles(t *testing.T) {
 		if !slices.Equal(applied, []string{"cloudsqlsuperuser"}) {
 			t.Errorf("status.appliedDatabaseRoles = %v, want [cloudsqlsuperuser]", applied)
 		}
+		if ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ext == "" {
+			t.Errorf("status.externalRef is empty")
+		}
 	})
 
 	t.Run("adding a role grants it", func(t *testing.T) {
@@ -155,5 +159,54 @@ func TestSQLUserDatabaseRoles(t *testing.T) {
 		} else if !errors.As(err, &gerr) || gerr.Code != http.StatusNotFound {
 			t.Errorf("reading deleted user: got %v, want 404", err)
 		}
+	})
+
+	t.Run("delete when instance object is gone", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("fake only: creates a SQLInstance object without its controller")
+		}
+		instGVK := schema.GroupVersionKind{Group: "sql.cnrm.cloud.google.com", Version: "v1beta1", Kind: "SQLInstance"}
+		inst := &unstructured.Unstructured{Object: map[string]any{
+			"spec": map[string]any{
+				"databaseVersion": "POSTGRES_15",
+				"settings":        map[string]any{"tier": "db-f1-micro"},
+			},
+			"status": map[string]any{
+				"externalRef": fmt.Sprintf("projects/%s/instances/%s", mockenv.Project, h.instance),
+			},
+		}}
+		inst.SetGroupVersionKind(instGVK)
+		inst.SetNamespace(namespace)
+		inst.SetName("gone-instance")
+		inst.SetAnnotations(map[string]string{"cnrm.cloud.google.com/project-id": mockenv.Project})
+		if err := h.env.Kube.Create(h.env.Ctx, inst); err != nil {
+			t.Fatal(err)
+		}
+		if err := h.env.Kube.Status().Update(h.env.Ctx, inst); err != nil {
+			t.Fatal(err)
+		}
+
+		u2 := &sqlv1beta1.SQLUser{
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "app-runtime-gone-ref", Labels: mockenv.Labels()},
+			Spec: sqlv1beta1.SQLUserSpec{
+				ResourceID:  mockenv.Ptr(h.userName),
+				Type:        mockenv.Ptr("CLOUD_IAM_SERVICE_ACCOUNT"),
+				InstanceRef: refsv1beta1.SQLInstanceRef{Name: "gone-instance"},
+			},
+		}
+		if err := h.env.Kube.Create(h.env.Ctx, u2); err != nil {
+			t.Fatal(err)
+		}
+		h.env.WaitReady(gvk, namespace, u2.Name)
+
+		if err := h.env.Kube.Delete(h.env.Ctx, inst); err != nil {
+			t.Fatal(err)
+		}
+		h.env.WaitGone(inst)
+
+		if err := h.env.Kube.Delete(h.env.Ctx, u2); err != nil {
+			t.Fatal(err)
+		}
+		h.env.WaitGone(&sqlv1beta1.SQLUser{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: u2.Name}})
 	})
 }

@@ -394,7 +394,10 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 				}
 				env.WaitGone(&arv1beta1.ArtifactRegistryRepository{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 			})
-			env.WaitReady(gvk, namespace, name)
+			u := env.WaitReady(gvk, namespace, name)
+			if ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ext == "" {
+				t.Errorf("status.externalRef is empty")
+			}
 			got, err := cloud.GetRepository(env.Ctx, &pb.GetRepositoryRequest{Name: cloudName(name)})
 			if err != nil {
 				t.Fatalf("reading the repository from the cloud: %v", err)
@@ -404,4 +407,28 @@ func TestArtifactRegistryCustomUpstreamFormats(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("delete without project annotation", func(t *testing.T) {
+		name := mockenv.Name("delete-no-proj")
+		repo := newRemoteRepository(name, "DOCKER", dockerUpstream("https://registry.example.com"))
+		if err := env.Kube.Create(env.Ctx, repo); err != nil {
+			t.Fatal(err)
+		}
+		u := env.WaitReady(gvk, namespace, name)
+		if ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ext == "" {
+			t.Errorf("status.externalRef is empty")
+		}
+		cur := &arv1beta1.ArtifactRegistryRepository{}
+		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, cur); err != nil {
+			t.Fatal(err)
+		}
+		delete(cur.Annotations, "cnrm.cloud.google.com/project-id")
+		if err := env.Kube.Update(env.Ctx, cur); err != nil {
+			t.Fatal(err)
+		}
+		if err := env.Kube.Delete(env.Ctx, cur); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&arv1beta1.ArtifactRegistryRepository{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
+	})
 }
