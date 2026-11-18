@@ -22,7 +22,7 @@
 // BillingAccountRef does, and the identity is checked against
 // status.externalRef, as upstream's newer identities are.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"

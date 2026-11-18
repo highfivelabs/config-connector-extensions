@@ -1,10 +1,10 @@
 ---
 kinds: [LoggingBillingAccountSink]
-apiVersion: logging.gcp.hfl.dev/v1alpha1
+apiVersion: logging.gcp.hfl.dev/v1beta1
 ---
 # LoggingBillingAccountSink
 
-`logging.gcp.hfl.dev/v1alpha1`
+`logging.gcp.hfl.dev/v1beta1`
 
 **Gap it fills.** a billing account's log sink (Terraform's `google_logging_billing_account_sink`): its audit logs to a bucket, dataset, topic or log bucket, with a filter and exclusions; Config Connector's `LoggingLogSink` takes a project, folder or organization only (`docs/design.md` decision 15)
 
@@ -33,3 +33,10 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+
+## Notes
+
+2026-11-18: moved from `logging.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27: it passed live in run
+`cce-11181701-a6f8` and its CRD is unchanged); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.

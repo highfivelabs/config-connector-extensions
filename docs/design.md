@@ -1759,7 +1759,8 @@ Notes on what was built from this table:
   policy (the proto has no rule resource), so the generated share of the
   hand-kept lines is 0%. mockgcp serves a global policy's rules
   unpatched (`docs/fake-cloud.md`). Live: passes (`docs/live-runs.md`).
-- `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1alpha1`, decision
+- `LoggingBillingAccountSink` (`logging.gcp.hfl.dev/v1beta1` since decision 27,
+  first `v1alpha1`; decision
   15, foundation item 17: a billing account's log sink, Terraform's
   `google_logging_billing_account_sink`). Upstream, rechecked 2026-11-10
   (read-only): `LoggingLogSink` is `v1beta1` with a direct controller

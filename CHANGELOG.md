@@ -8,6 +8,12 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **`LoggingBillingAccountSink` is `v1beta1`**
+  (`logging.gcp.hfl.dev/v1beta1`; `docs/design.md` decision 27: it passed
+  live in run `cce-11181701-a6f8` as `live-tests@` and its CRD has not
+  changed). The schema is unchanged; the CRD no longer serves `v1alpha1`,
+  so change the `apiVersion`.
+
 - **`ComputeNetworkFirewallPolicyPacketMirroringRule` is `v1beta1`**
   (`compute.gcp.hfl.dev/v1beta1`; `docs/design.md` decision 27: it passed
   live at `78644ec` in run `cce-11120932-1df3` and its CRD has not changed
