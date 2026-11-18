@@ -454,7 +454,7 @@ items:
     attributes: '`billingAccountRef` plus the sink''s own fields (all present on the other parents).'
     upstream: none found.
     build: >-
-      `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with
+      `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1beta1` (since 2026-11-18, built at `v1alpha1`), S: a copy of `LoggingLogSink` with
       `billingAccountRef` (API `billingAccounts.sinks`).
     decided: >-
       Build `LoggingBillingAccountSink` now (`docs/design.md` decision 15). Its live test needs billing-account

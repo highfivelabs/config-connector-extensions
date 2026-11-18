@@ -296,11 +296,11 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computerouter_controller.go]}
   - here: [apis/iam/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/iam/v1alpha1/groupversion_info.go]}
-  - here: [apis/logging/v1alpha1/groupversion_info.go, apis/logging/v1beta1/groupversion_info.go]
+  - here: [apis/logging/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/logging/v1alpha1/groupversion_info.go]}
-  - here: [apis/logging/v1alpha1/loggingbillingaccountsink_types.go]
+  - here: [apis/logging/v1beta1/loggingbillingaccountsink_types.go]
     from: {pin: k8s-config-connector, paths: [apis/logging/v1beta1/logginglogsink_types.go]}
-  - here: [apis/logging/v1alpha1/loggingbillingaccountsink_identity.go]
+  - here: [apis/logging/v1beta1/loggingbillingaccountsink_identity.go]
     from: {pin: k8s-config-connector, paths: [apis/logging/v1beta1/logginglogsink_identity.go]}
   - here: [pkg/controller/direct/logging/billingaccountsink_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/logging/logginglogsink_controller.go]}

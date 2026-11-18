@@ -33,7 +33,7 @@ import (
 	storagev1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/storage/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 
-	krm "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	krm "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 )
 
 func LoggingBillingAccountSinkSpec_FromProto(mapCtx *direct.MapContext, in *pb.LogSink) *krm.LoggingBillingAccountSinkSpec {

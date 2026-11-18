@@ -63,3 +63,4 @@ only.
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-15 | `c419344` | PASS | pending, needs `roles/cloudasset.owner` for `cce-live-tests`; then `E2E_CLOUD_ASSET=true` (run `cce-11152322-2857` skipped live) | not run | none |
+| 2026-11-18 | `23e425b`+ | AssetFeed | PASS | FAIL | `TestAssetFeed` live: 403 `Cloud Resource Manager API has not been used in project 50660598795` (`hfl-testing-8347a2`, the impersonated account's home project, where tf-infra lists `cloudresourcemanager.googleapis.com` but it is not enabled). Whether `live-tests@` holds `pubsub.admin` in `hfl-dev-514205` for the test's topic is not yet seen. Run `cce-11181655-f14f` and `cce-11181701-a6f8` | none made |

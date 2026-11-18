@@ -327,7 +327,7 @@ What these numbers miss, for the foundation:
 - **Missing, attributes that matter:** `billingAccountRef` plus the sink's own fields (all present on the other parents).
   - uncovered in `logging.googleapis.com/BillingAccountSink` (measured): `includeChildren`, `interceptChildren`, `outputVersionFormat`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1alpha1`, S: a copy of `LoggingLogSink` with `billingAccountRef` (API `billingAccounts.sinks`).
+- **Build:** `LoggingBillingAccountSink` in `logging.gcp.hfl.dev/v1beta1` (since 2026-11-18, built at `v1alpha1`), S: a copy of `LoggingLogSink` with `billingAccountRef` (API `billingAccounts.sinks`).
 - **Decided (2026-11-09):** Build `LoggingBillingAccountSink` now (`docs/design.md` decision 15). Its live test needs billing-account access the builder has not granted: "live: pending, needs billing account access"; prove it on the fake.
 
 ### 18. KMS fields (key access justifications, key backend)

@@ -34,3 +34,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | `23e425b`+ | IAMDenyPolicy | PASS | PASS | after one run (`cce-11181733-4513`) whose only failure was a 429 `Policy Read Requests per minute per user` on the abandon step (the test's `get` now waits and retries). Create, resync with no write, one update for a changed rule and display name, the one-parent CRD rule, delete and abandon pass with `roles/iam.denyAdmin` on the organization (`E2E_IAM_DENY_ADMIN=true`, as `live-tests@`). Run `cce-11181742-20cc`. Already `v1beta1` | 1 deny policy on `hfl-dev-514205` (deleted); `task live-list` empty |

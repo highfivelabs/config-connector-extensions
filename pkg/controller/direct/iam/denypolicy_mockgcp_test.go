@@ -69,8 +69,17 @@ func TestIAMDenyPolicy(t *testing.T) {
 		return "policies/" + attachment(parent) + "/denypolicies/" + id
 	}
 	projectPolicy := func(name string) string { return policyName("projects/"+mockenv.Project, mockenv.Name(name)) }
+	// Live, Policy Read Requests is limited per minute per user (the test's
+	// polling shares it with the controller's reads): a 429 waits for the
+	// next minute rather than failing the step.
 	get := func(name string) (*pb.Policy, error) {
-		return cloud.GetPolicy(env.Ctx, &pb.GetPolicyRequest{Name: name})
+		for attempt := 0; ; attempt++ {
+			p, err := cloud.GetPolicy(env.Ctx, &pb.GetPolicyRequest{Name: name})
+			if err == nil || attempt >= 6 || !strings.Contains(err.Error(), "Error 429") {
+				return p, err
+			}
+			time.Sleep(20 * time.Second)
+		}
 	}
 	// Delete what the test made, the abandoned policy included, and what a
 	// failed step left.

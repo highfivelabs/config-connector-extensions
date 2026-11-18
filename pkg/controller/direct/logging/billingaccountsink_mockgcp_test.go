@@ -39,11 +39,12 @@ import (
 	pubsubv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/pubsub/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 
-	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	hfllogging "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -55,7 +56,7 @@ func TestLoggingBillingAccountSink(t *testing.T) {
 			t.Skip("a live LoggingBillingAccountSink needs a billing account the live-test service account administers logging on; set E2E_BILLING_ACCOUNT=billingAccounts/{id} (docs/live-runs.md)")
 		}
 	}
-	sinkGVK := loggingv1alpha1.LoggingBillingAccountSinkGVK
+	sinkGVK := hfllogging.LoggingBillingAccountSinkGVK
 	env := mockenv.New(t, namespace)
 	cloud, err := gcp.NewConfigRESTClient(env.Ctx, env.GCPOptions()...)
 	if err != nil {
@@ -89,9 +90,9 @@ func TestLoggingBillingAccountSink(t *testing.T) {
 		}
 		return out
 	}
-	getObj := func(t *testing.T, name string) *loggingv1alpha1.LoggingBillingAccountSink {
+	getObj := func(t *testing.T, name string) *hfllogging.LoggingBillingAccountSink {
 		t.Helper()
-		obj := &loggingv1alpha1.LoggingBillingAccountSink{}
+		obj := &hfllogging.LoggingBillingAccountSink{}
 		if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: name}, obj); err != nil {
 			t.Fatal(err)
 		}
@@ -118,10 +119,10 @@ func TestLoggingBillingAccountSink(t *testing.T) {
 		}
 	})
 
-	newSink := func(name string) *loggingv1alpha1.LoggingBillingAccountSink {
-		return &loggingv1alpha1.LoggingBillingAccountSink{
+	newSink := func(name string) *hfllogging.LoggingBillingAccountSink {
+		return &hfllogging.LoggingBillingAccountSink{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name, Labels: mockenv.Labels()},
-			Spec: loggingv1alpha1.LoggingBillingAccountSinkSpec{
+			Spec: hfllogging.LoggingBillingAccountSinkSpec{
 				BillingAccountRef: billingv1alpha1.BillingAccountRef{External: account},
 				ResourceID:        mockenv.Ptr(mockenv.Name(name)),
 				Destination: loggingv1beta1.LogSinkDestination{
@@ -235,11 +236,27 @@ func TestLoggingBillingAccountSink(t *testing.T) {
 		}
 	})
 
+	// The kind moved to v1beta1 (docs/design.md decision 27): v1alpha1 is
+	// not served, so a manifest that still names it is refused.
+	t.Run("v1alpha1 is not served", func(t *testing.T) {
+		alpha := &unstructured.Unstructured{}
+		alpha.SetGroupVersionKind(sinkGVK.GroupKind().WithVersion("v1alpha1"))
+		alpha.SetNamespace(namespace)
+		alpha.SetName("alpha")
+		err := env.Kube.Create(env.Ctx, alpha)
+		if !meta.IsNoMatchError(err) {
+			t.Fatalf("creating a logging.gcp.hfl.dev/v1alpha1 LoggingBillingAccountSink: err = %v, want no match for the kind", err)
+		}
+		if sinkGVK.Version != "v1beta1" {
+			t.Errorf("LoggingBillingAccountSink's version = %q, want v1beta1", sinkGVK.Version)
+		}
+	})
+
 	t.Run("delete deletes the sink", func(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, getObj(t, "billing-audit")); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&loggingv1alpha1.LoggingBillingAccountSink{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "billing-audit"}})
+		env.WaitGone(&hfllogging.LoggingBillingAccountSink{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "billing-audit"}})
 		if _, err := get(sinkName("billing-audit")); !direct.IsNotFound(err) {
 			t.Errorf("after delete, reading the sink: %v, want not found", err)
 		}
@@ -259,7 +276,7 @@ func TestLoggingBillingAccountSink(t *testing.T) {
 		if err := env.Kube.Delete(env.Ctx, kept); err != nil {
 			t.Fatal(err)
 		}
-		env.WaitGone(&loggingv1alpha1.LoggingBillingAccountSink{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept"}})
+		env.WaitGone(&hfllogging.LoggingBillingAccountSink{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "kept"}})
 		if _, err := get(sinkName("kept")); err != nil {
 			t.Errorf("after abandon, reading the sink: %v, want it kept", err)
 		}

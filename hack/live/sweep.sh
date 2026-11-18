@@ -120,6 +120,30 @@ case "${mode}" in
     fi ;;
 esac
 
+# by_run NAME [CREATED]: whether this sweep takes NAME: the run's own, or,
+# with no run given, any live-test name made before the cutoff, by CREATED
+# (an RFC 3339 time) or else by the time in the run ID (cce-MMDDhhmm-...,
+# UTC, this year).
+by_run() {
+  local name="$1" made="${2:-}"
+  if [[ -n "${run}" ]]; then [[ "${name}" == "${run}-"* ]]; return; fi
+  [[ "${name}" =~ ^${PREFIX}([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-[0-9a-f]+- ]] || return 1
+  [[ "${mode}" == "sweep" ]] || return 0
+  if [[ -z "${made}" ]]; then
+    made="$(date -u +%Y)-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}T${BASH_REMATCH[3]}:${BASH_REMATCH[4]}:00Z"
+  fi
+  [[ "${made:0:19}Z" < "${cutoff}" ]]
+}
+
+dns_rp_delete() { # dns_rp_delete NAME
+  local rules r
+  rules="$("${G[@]}" dns response-policies rules list "$1" --verbosity=error --format='value(ruleName)')" || return 1
+  for r in ${rules}; do
+    "${G[@]}" dns response-policies rules delete "${r}" --response-policy="$1" || return 1
+  done
+  "${G[@]}" dns response-policies update "$1" --networks="" &&
+    "${G[@]}" dns response-policies delete "$1"
+}
 # Folder-only runs (impersonating live-tests@, which has folder roles and
 # not the project's admin roles) cannot list project-level resources;
 # sweep only the logging test folder's sinks.
@@ -140,6 +164,43 @@ if [[ ${folder_only} -eq 1 ]]; then
       fi
       act "folder log sink" "${id}" "${G_BASE[@]}" logging sinks delete "${id}" --folder="${folder}"
     done <<<"${rows}"
+  fi
+  # What live-tests@ may also list in the project and on the billing
+  # account, where the run's switches say it holds the roles: deny policies
+  # (E2E_IAM_DENY_ADMIN, Deny Admin on the organization), the billing
+  # account's log sinks (E2E_BILLING_ACCOUNT), the project's log sinks
+  # (logging.viewer) and Cloud DNS response policies (E2E_DNS_ADMIN).
+  if [[ "${E2E_IAM_DENY_ADMIN:-}" == true ]]; then
+    attachment="cloudresourcemanager.googleapis.com/projects/${project}"
+    rows="$("${G[@]}" iam policies list --attachment-point="${attachment}" --kind=denypolicies \
+      --verbosity=error --format='value(name.basename(),createTime)')"
+    while read -r id made; do
+      [[ -n "${id}" ]] || continue
+      by_run "${id}" "${made}" || continue
+      act "deny policy" "${id}" "${G[@]}" iam policies delete "${id}" --attachment-point="${attachment}" --kind=denypolicies
+    done <<<"${rows}"
+  fi
+  if [[ -n "${E2E_BILLING_ACCOUNT:-}" ]]; then
+    billing="${E2E_BILLING_ACCOUNT#billingAccounts/}"
+    rows="$("${G_BASE[@]}" logging sinks list --billing-account="${billing}" --verbosity=error --format='value(name,createTime)')"
+    while read -r id made; do
+      [[ -n "${id}" ]] || continue
+      by_run "${id}" "${made}" || continue
+      act "billing account log sink" "${id}" "${G_BASE[@]}" logging sinks delete "${id}" --billing-account="${billing}"
+    done <<<"${rows}"
+  fi
+  rows="$("${G[@]}" logging sinks list --verbosity=error --format='value(name,createTime)')"
+  while read -r id made; do
+    [[ -n "${id}" ]] || continue
+    by_run "${id}" "${made}" || continue
+    act "log sink" "${id}" "${G[@]}" logging sinks delete "${id}"
+  done <<<"${rows}"
+  if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
+    rows="$("${G[@]}" dns response-policies list --verbosity=error --format='value(responsePolicyName)')"
+    for name in ${rows}; do
+      by_run "${name}" || continue
+      act "DNS response policy" "${name}" dns_rp_delete "${name}"
+    done
   fi
   if [[ "${mode}" == "list" ]]; then
     echo "sweep: ${found} live-test resource(s) in ${project}"
@@ -228,21 +289,6 @@ for loc in global ${ADDRESS_GROUP_REGIONS}; do
     act "address group" "${name}" "${G[@]}" network-security address-groups delete "${name##*/}" --location="${loc}"
   done
 done
-
-# by_run NAME [CREATED]: whether this sweep takes NAME: the run's own, or,
-# with no run given, any live-test name made before the cutoff, by CREATED
-# (an RFC 3339 time) or else by the time in the run ID (cce-MMDDhhmm-...,
-# UTC, this year).
-by_run() {
-  local name="$1" made="${2:-}"
-  if [[ -n "${run}" ]]; then [[ "${name}" == "${run}-"* ]]; return; fi
-  [[ "${name}" =~ ^${PREFIX}([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-[0-9a-f]+- ]] || return 1
-  [[ "${mode}" == "sweep" ]] || return 0
-  if [[ -z "${made}" ]]; then
-    made="$(date -u +%Y)-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}T${BASH_REMATCH[3]}:${BASH_REMATCH[4]}:00Z"
-  fi
-  [[ "${made:0:19}Z" < "${cutoff}" ]]
-}
 
 # Network Security security profile groups, then the security profiles
 # they hold (a project's; an organization's are never made live), by the
@@ -668,15 +714,6 @@ fi
 # A policy's rules (DNSResponsePolicyRule's) go first, since a policy with
 # rules cannot be deleted; then it is unbound from its networks, as the
 # controller does, and deleted.
-dns_rp_delete() { # dns_rp_delete NAME
-  local rules r
-  rules="$("${G[@]}" dns response-policies rules list "$1" --verbosity=error --format='value(ruleName)')" || return 1
-  for r in ${rules}; do
-    "${G[@]}" dns response-policies rules delete "${r}" --response-policy="$1" || return 1
-  done
-  "${G[@]}" dns response-policies update "$1" --networks="" &&
-    "${G[@]}" dns response-policies delete "$1"
-}
 if [[ "${E2E_DNS_ADMIN:-}" == true ]]; then
   rows="$("${G[@]}" dns response-policies list --verbosity=error --format='value(responsePolicyName)')"
   for name in ${rows}; do

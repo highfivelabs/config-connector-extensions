@@ -25,7 +25,7 @@
 // BigQuery options and exclusions are Config Connector's own types, reused;
 // status gains externalRef; group, labels and short names are ours.
 
-package v1alpha1
+package v1beta1
 
 import (
 	billingv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/billing/v1alpha1"

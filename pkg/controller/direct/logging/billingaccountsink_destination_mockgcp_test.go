@@ -35,7 +35,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
+	hfllogging "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/test/mockenv"
 )
 
@@ -86,11 +86,11 @@ func TestLoggingBillingAccountSinkDestinations(t *testing.T) {
 		{"log-bucket", loggingv1beta1.LogSinkDestination{LoggingLogBucketRef: &loggingv1beta1.LoggingLogBucketRef{External: logBucket}}, "logging.googleapis.com/" + logBucket},
 		{"log-bucket-prefix", loggingv1beta1.LogSinkDestination{LoggingLogBucketRef: &loggingv1beta1.LoggingLogBucketRef{External: "logging.googleapis.com/" + logBucket}}, "logging.googleapis.com/" + logBucket},
 	}
-	var objs []*loggingv1alpha1.LoggingBillingAccountSink
+	var objs []*hfllogging.LoggingBillingAccountSink
 	for _, c := range cases {
-		o := &loggingv1alpha1.LoggingBillingAccountSink{
+		o := &hfllogging.LoggingBillingAccountSink{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: c.name},
-			Spec: loggingv1alpha1.LoggingBillingAccountSinkSpec{
+			Spec: hfllogging.LoggingBillingAccountSinkSpec{
 				BillingAccountRef: billingv1alpha1.BillingAccountRef{External: account},
 				Destination:       c.dest,
 				Filter:            mockenv.Ptr(`logName:"cloudaudit.googleapis.com"`),
@@ -103,7 +103,7 @@ func TestLoggingBillingAccountSinkDestinations(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			env.WaitReady(loggingv1alpha1.LoggingBillingAccountSinkGVK, namespace, c.name)
+			env.WaitReady(hfllogging.LoggingBillingAccountSinkGVK, namespace, c.name)
 			got, err := cloud.GetSink(env.Ctx, &pb.GetSinkRequest{SinkName: account + "/sinks/" + c.name})
 			if err != nil {
 				t.Fatalf("reading the sink: %v", err)

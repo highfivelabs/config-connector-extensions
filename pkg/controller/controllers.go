@@ -58,7 +58,6 @@ import (
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	kmsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/kms/v1alpha1"
-	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
@@ -141,7 +140,7 @@ var Kinds = []kind{
 	{gvk: computev1beta1.ComputeRegionNetworkFirewallPolicyAssociationGVK, crdName: "computeregionnetworkfirewallpolicyassociations.compute.gcp.hfl.dev", model: compute.NewRegionNetworkFirewallPolicyAssociationModel},
 	{gvk: loggingv1beta1.LoggingSettingsGVK, crdName: "loggingsettings.logging.gcp.hfl.dev", model: logging.NewSettingsModel},
 	{gvk: loggingv1beta1.LoggingLogSinkGVK, crdName: "logginglogsinks.logging.gcp.hfl.dev", model: logging.NewLogSinkModel},
-	{gvk: loggingv1alpha1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
+	{gvk: loggingv1beta1.LoggingBillingAccountSinkGVK, crdName: "loggingbillingaccountsinks.logging.gcp.hfl.dev", model: logging.NewBillingAccountSinkModel},
 	{gvk: serviceusagev1beta1.ServiceIdentityGVK, crdName: "serviceidentities.serviceusage.gcp.hfl.dev", model: serviceusage.NewServiceIdentityModel},
 	{gvk: computev1alpha1.ComputeProjectDefaultNetworkTierGVK, crdName: "computeprojectdefaultnetworktiers.compute.gcp.hfl.dev", model: compute.NewProjectDefaultNetworkTierModel},
 	{gvk: resourcemanagerv1alpha1.ProjectDefaultServiceAccountsGVK, crdName: "projectdefaultserviceaccounts.resourcemanager.gcp.hfl.dev", model: resourcemanager.NewProjectDefaultServiceAccountsModel},
@@ -200,7 +199,6 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		chroniclev1alpha1.AddToScheme,
 		chroniclev1beta1.AddToScheme,
 		storagev1beta1.AddToScheme,
-		loggingv1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
 		serviceusagev1beta1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,

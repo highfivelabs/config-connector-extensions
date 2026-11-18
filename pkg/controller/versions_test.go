@@ -47,6 +47,8 @@ var promoted = []string{
 	"GKEHubRolloutSequence", "IAMOauthClient",
 	// Field kinds that passed live (run cce-11160848-7b8d, 2026-11-16).
 	"ContainerClusterFields", "ContainerNodePoolFields",
+	// Passed live 2026-11-18 (run cce-11181701-a6f8) as live-tests@, CRD unchanged.
+	"LoggingBillingAccountSink",
 	// Passed live at 78644ec (run cce-11120932-1df3), CRD unchanged since.
 	"ComputeNetworkFirewallPolicyPacketMirroringRule",
 }
