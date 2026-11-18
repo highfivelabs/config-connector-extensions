@@ -22,3 +22,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | `23e425b`+ | DNSResponsePolicy | PASS | FAIL | the test's network: 403 `compute.networks.create` on `projects/hfl-dev-514205` for `live-tests@` (it holds `dns.admin` there, no Compute network role). Run `cce-11181733-4513` | none made |

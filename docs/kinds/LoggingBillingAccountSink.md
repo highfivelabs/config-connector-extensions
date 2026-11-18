@@ -26,6 +26,11 @@ name `projects/_/` before the reference is validated, and the API gets
 `storage.googleapis.com/<name>` (`TestLoggingBillingAccountSinkDestinations`,
 on the fake).
 
+**Version** (2026-11-18). Moved from `logging.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
+schema unchanged (`docs/design.md` decision 27: it passed live in run
+`cce-11181701-a6f8` and its CRD is unchanged); `v1alpha1` is no longer
+served, and `CHANGELOG.md` says how to upgrade.
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows
@@ -33,10 +38,4 @@ go here, one per run.
 
 | Date | Commit | Mock | Live | Differences seen | Cost-relevant resources made and deleted |
 | --- | --- | --- | --- | --- | --- |
-
-## Notes
-
-2026-11-18: moved from `logging.gcp.hfl.dev/v1alpha1` to `v1beta1` with its
-schema unchanged (`docs/design.md` decision 27: it passed live in run
-`cce-11181701-a6f8` and its CRD is unchanged); `v1alpha1` is no longer
-served, and `CHANGELOG.md` says how to upgrade.
+| 2026-11-18 | `23e425b`+ | LoggingBillingAccountSink | PASS | PASS | none: create, resync with no write, pausing and a second exclusion as one update, the CRD refusing a billing account change and a missing one, delete and abandon. Run `cce-11181701-a6f8` (`E2E_BILLING_ACCOUNT` the spectacle account, as `live-tests@hfl-testing-8347a2` by impersonation, `LIVE_FOLDER_ONLY=true`); decision 27: promoted to v1beta1, CRD unchanged | 1 to 3 billing account sinks (deleted); `task live-list` empty |
