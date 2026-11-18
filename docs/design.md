@@ -3311,3 +3311,11 @@ moves to section 8.
     setup); keep the kind fake-tested and `v1alpha1`, let a catalog chart
     render it only behind `allow_alpha`, and run it live (`E2E_KMS_KAJ=true`)
     in the first enrolled project a customer or the builder has.
+
+    **Answered** 2026-11-17 (CCEQ8): "CCEQ8: as recommended (Don't enroll a
+    project just for tests. Keep KMSCryptoKeyFields tested on the fake cloud
+    and at v1alpha1, let charts render it only behind allow_alpha, and run
+    it live (E2E_KMS_KAJ=true) in the first enrolled project a customer or
+    you have.)" No project is enrolled for tests; `KMSCryptoKeyFields` stays
+    `v1alpha1` (decision 27) and fake-tested, and its live row waits for the
+    first enrolled project.
