@@ -257,6 +257,14 @@ func main() {
 	}
 }
 
+// isIDParam: a create's query parameter named ...Id is the new resource's
+// ID, but for requestId (an idempotency key some APIs take beside the ID)
+// and clientOperationId (Cloud DNS's name for its operation, which every
+// DNS method takes).
+func isIDParam(name string) bool {
+	return strings.HasSuffix(name, "Id") && name != "requestId" && name != "clientOperationId"
+}
+
 func loadDiscovery(root, dir, name string) (*Discovery, error) {
 	var b []byte
 	var err error
@@ -447,8 +455,7 @@ func build(c *Config, d *Discovery) (*built, error) {
 	k.updatable = patch != nil
 	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(d, create), isLRO(d, patch), isLRO(d, del)
 	if !k.insertStyle && !k.patchCreates {
-		// The ID parameter: a query parameter named ...Id, but not
-		// requestId (an idempotency key some APIs take beside the ID).
+		// The ID parameter (isIDParam).
 		// Sorted, so a run does not depend on map order.
 		names := make([]string, 0, len(create.Parameters))
 		for n := range create.Parameters {
@@ -456,7 +463,7 @@ func build(c *Config, d *Discovery) (*built, error) {
 		}
 		sort.Strings(names)
 		for _, n := range names {
-			if p := create.Parameters[n]; p.Location == "query" && strings.HasSuffix(n, "Id") && n != "requestId" {
+			if p := create.Parameters[n]; p.Location == "query" && isIDParam(n) {
 				if k.idParam != "" {
 					return nil, fmt.Errorf("%s.create has two ID query parameters, %s and %s", c.Resource, k.idParam, n)
 				}

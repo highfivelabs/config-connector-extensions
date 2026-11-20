@@ -374,7 +374,7 @@ compute.googleapis.com,compute.googleapis.com/InstantSnapshot,5,,0,,0,5,false,ap
 compute.googleapis.com,compute.googleapis.com/InstantSnapshotGroup,3,,0,,0,3,false,api=v1:instantSnapshotGroups
 compute.googleapis.com,compute.googleapis.com/Interconnect,25,ComputeInterconnect,16,,0,9,false,api=v1:interconnects; official-spec-fields-unmatched=3/18
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,36,ComputeInterconnectAttachment,13,ComputeInterconnectAttachment,19,4,false,api=v1:interconnectAttachments; official-spec-fields-unmatched=2/14; ours-spec-fields-unmatched=6/37
-compute.googleapis.com,compute.googleapis.com/InterconnectAttachmentGroup,5,,0,,0,5,false,api=v1:interconnectAttachmentGroups
+compute.googleapis.com,compute.googleapis.com/InterconnectAttachmentGroup,5,,0,ComputeInterconnectAttachmentGroup,5,0,false,api=v1:interconnectAttachmentGroups; ours-spec-fields-unmatched=2/6
 compute.googleapis.com,compute.googleapis.com/InterconnectGroup,4,,0,ComputeInterconnectGroup,4,0,false,api=v1:interconnectGroups; ours-spec-fields-unmatched=3/6
 compute.googleapis.com,compute.googleapis.com/License,16,,0,,0,16,false,api=v1:licenses
 compute.googleapis.com,compute.googleapis.com/MachineImage,20,ComputeMachineImage,8,,0,12,false,api=v1:machineImages; official-spec-fields-unmatched=2/9
@@ -676,7 +676,7 @@ dlp.googleapis.com,dlp.googleapis.com/projects.locations.discoveryConfigs,102,DL
 dlp.googleapis.com,dlp.googleapis.com/projects.storedInfoTypes,14,DLPStoredInfoType,11,,0,3,false,api=v2:projects.storedInfoTypes; request-wrapper=GooglePrivacyDlpV2CreateStoredInfoTypeRequest; official-spec-fields-unmatched=5/16
 dns.googleapis.com,dns.googleapis.com/Change,104,,0,,0,104,false,api=v1:changes
 dns.googleapis.com,dns.googleapis.com/ManagedZone,26,DNSManagedZone,17,,0,9,false,api=v1:managedZones; official-spec-fields-unmatched=4/19
-dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,,0,8,false,api=v1:outboundEndpoints
+dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,DNSOutboundEndpoint,8,0,false,api=v1:outboundEndpoints; ours-spec-fields-unmatched=3/10
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,50,DNSRecordSet,43,,0,7,false,api=v1:resourceRecordSets; official-spec-fields-unmatched=5/48
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5

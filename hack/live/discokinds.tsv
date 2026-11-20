@@ -16,6 +16,7 @@ ComputeGlobalNetworkEndpointGroup	https://compute.googleapis.com/compute/v1/	pro
 ComputeGlobalPublicDelegatedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicDelegatedPrefixes	items	-
 ComputeGlobalVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/global/vmExtensionPolicies	items	-
 ComputeInterconnectAttachment	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/interconnectAttachments	items	-
+ComputeInterconnectAttachmentGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/interconnectAttachmentGroups	items	-
 ComputeInterconnectGroup	https://compute.googleapis.com/compute/v1/	projects/{project}/global/interconnectGroups	items	-
 ComputeNetworkAttachment	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/networkAttachments	items	-
 ComputePublicAdvertisedPrefix	https://compute.googleapis.com/compute/v1/	projects/{project}/global/publicAdvertisedPrefixes	items	-
@@ -29,6 +30,7 @@ ComputeRegionInstanceTemplate	https://compute.googleapis.com/compute/v1/	project
 ComputeRegionNotificationEndpoint	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/notificationEndpoints	items	-
 ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}/global/rolloutPlans	items	-
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
+DNSOutboundEndpoint	https://dns.googleapis.com/dns/v1/	projects/{project}/locations/us-central1/outboundEndpoints	outboundEndpoints	-
 DataplexAspectType	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/aspectTypes	aspectTypes	-
 DataplexDataScan	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/dataScans	dataScans	-
 DataplexLake	https://dataplex.googleapis.com/v1/	projects/{project}/locations/us-central1/lakes	lakes	-

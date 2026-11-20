@@ -46,6 +46,11 @@ func TestComputeInterconnectAttachment(t *testing.T) {
 	kindtest.Run(t, "ComputeInterconnectAttachment")
 }
 
+// TestComputeInterconnectAttachmentGroup runs testdata/discokind/ComputeInterconnectAttachmentGroup/ on the fake cloud, or live.
+func TestComputeInterconnectAttachmentGroup(t *testing.T) {
+	kindtest.Run(t, "ComputeInterconnectAttachmentGroup")
+}
+
 // TestComputeInterconnectGroup runs testdata/discokind/ComputeInterconnectGroup/ on the fake cloud, or live.
 func TestComputeInterconnectGroup(t *testing.T) { kindtest.Run(t, "ComputeInterconnectGroup") }
 

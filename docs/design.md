@@ -502,6 +502,20 @@ empty here, so nothing is marked required: a missing `dataset` or
 two custom module kinds are not this shape (create takes no ID; the server
 names the module).
 
+Then (2026-11-19) two foundation whole-resource gaps with no Config
+Connector kind, from `docs/coverage/foundation.md`'s "Every resource":
+`ComputeInterconnectAttachmentGroup` (`compute.gcp.hfl.dev/v1alpha1`,
+item 7's last, beside `ComputeInterconnectGroup`; its `etag` is left out
+of the spec with `skip`, since the API generates it) and
+`DNSOutboundEndpoint` (`dns.gcp.hfl.dev/v1alpha1`, Cloud DNS's
+`outboundEndpoints`, a long-running create; Terraform's
+`google_dns_outbound_endpoint`, named under decision 18). Cloud DNS's create takes
+`clientOperationId` beside `outboundEndpointId`, so the generator's ID
+parameter leaves it out as it does `requestId` (`isIDParam`). Both skip
+live: the attachment group needs Dedicated Interconnects, the endpoint
+Cloud DNS in the live project (as `DNSResponsePolicy`) and a network and
+subnetwork Setup.
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check
@@ -602,7 +616,7 @@ namespace):
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
 `DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
-`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, `NetworkSecurityAuthzPolicy`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine` and `SpannerInstanceConfig`. These move the same
+`NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, `NetworkSecurityAuthzPolicy`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine`, `SpannerInstanceConfig` and `DNSOutboundEndpoint`. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
 the `LoggingSavedQuery` move does. `StorageBucketObject` could carry the

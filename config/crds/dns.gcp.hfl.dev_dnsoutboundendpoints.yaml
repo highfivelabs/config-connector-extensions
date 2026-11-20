@@ -1,0 +1,212 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: dnsoutboundendpoints.dns.gcp.hfl.dev
+spec:
+  group: dns.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: DNSOutboundEndpoint
+    listKind: DNSOutboundEndpointList
+    plural: dnsoutboundendpoints
+    shortNames:
+    - hfldnsoutboundendpoint
+    - hfldnsoutboundendpoints
+    singular: dnsoutboundendpoint
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DNSOutboundEndpoint is a dns.v1 resource (https://dns.googleapis.com/dns/v1/{parent}/locations/{location}/outboundEndpoints/{id}),
+          from its Discovery document dns.v1 (hack/discokind). Terraform's google_dns_outbound_endpoint.
+          An address on a subnetwork that Cloud DNS sends a VPC network's outbound
+          forwarded queries from.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              annotations:
+                additionalProperties:
+                  type: string
+                description: Optional. Annotations as key value pairs
+                type: object
+              description:
+                description: Optional. User provided description.
+                type: string
+              endpointIp:
+                description: Optional. Immutable. User provided IP address to use
+                  for outbound DNS forwarding. This address must be a free address
+                  on the subnetwork. If omitted, a free IP address from the subnetwork
+                  is automatically allocated.
+                type: string
+                x-kubernetes-validations:
+                - message: endpointIp is immutable
+                  rule: self == oldSelf
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Labels as key value pairs
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/outboundEndpoints/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              network:
+                description: Required. Immutable. The VPC network containing the outbound
+                  endpoint, specified as full path.
+                type: string
+                x-kubernetes-validations:
+                - message: network is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              subnetwork:
+                description: Required. Immutable. The subnetwork holding the endpoint_ip,
+                  specified as full path.
+                type: string
+                x-kubernetes-validations:
+                - message: subnetwork is immutable
+                  rule: self == oldSelf
+              tags:
+                additionalProperties:
+                  type: string
+                description: Optional. Tag bindings as key value pairs
+                type: object
+            required:
+            - location
+            - network
+            - projectRef
+            - subnetwork
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/outboundEndpoints/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. [Output only] Create time stamp
+                    type: string
+                  updateTime:
+                    description: Output only. [Output only] Update time stamp
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -47,3 +47,16 @@ func TestIsLRO(t *testing.T) {
 		t.Error("a method without a response is not an operation")
 	}
 }
+
+// TestIsIDParam: Cloud DNS's create takes clientOperationId beside
+// outboundEndpointId; only the second is the ID.
+func TestIsIDParam(t *testing.T) {
+	for name, want := range map[string]bool{
+		"outboundEndpointId": true, "bigQueryExportId": true, "configId": true,
+		"requestId": false, "clientOperationId": false, "parent": false, "validateOnly": false,
+	} {
+		if got := isIDParam(name); got != want {
+			t.Errorf("isIDParam(%q) = %v, want %v", name, got, want)
+		}
+	}
+}
