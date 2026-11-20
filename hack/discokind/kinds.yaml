@@ -665,3 +665,29 @@
   sweepLocation: us
   fakeDefaults: {state: ACTIVE}
   note: "A Cloud KMS key that Vertex AI Search (Discovery Engine) encrypts a location's data with; location is us or eu, served at that location's host. The API has no create: patch makes the config. Terraform's set_default defaults to true; here setDefault is sent only when the spec sets it."
+
+# Foundation whole-resource gaps with no Config Connector kind (2026-11-19,
+# docs/coverage/foundation.md "Every resource"): a Cross-Site
+# Interconnect's attachment group (item 7, beside ComputeInterconnectGroup)
+# and a Cloud DNS outbound endpoint (the forwarding address a VPC network's
+# outbound DNS queries leave from).
+
+- kind: ComputeInterconnectAttachmentGroup
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: interconnectAttachmentGroups
+  parents: [project]
+  terraform: google_compute_interconnect_attachment_group
+  skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
+  note: "A group of VLAN attachments for a topology Google checks."
+
+- kind: DNSOutboundEndpoint
+  group: dns.gcp.hfl.dev
+  version: v1alpha1
+  discovery: dns.v1
+  resource: outboundEndpoints
+  parents: [project]
+  terraform: google_dns_outbound_endpoint
+  sweepLocation: us-central1
+  note: "An address on a subnetwork that Cloud DNS sends a VPC network's outbound forwarded queries from."

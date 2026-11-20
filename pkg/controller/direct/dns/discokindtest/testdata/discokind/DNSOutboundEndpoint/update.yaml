@@ -1,0 +1,13 @@
+apiVersion: dns.gcp.hfl.dev/v1alpha1
+kind: DNSOutboundEndpoint
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  network: projects/${PROJECT}/global/networks/${NAME}
+  subnetwork: projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}
+  description: An outbound endpoint made by a config-connector-extensions test, changed.
+  labels:
+    purpose: test

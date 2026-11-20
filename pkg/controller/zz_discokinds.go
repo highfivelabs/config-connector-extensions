@@ -33,6 +33,7 @@ import (
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	dataplexv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dataplex/v1beta1"
 	discoveryenginev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/discoveryengine/v1alpha1"
+	dnsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1alpha1"
 	gkebackupv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkebackup/v1beta1"
 	gkehubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1alpha1"
 	gkehubv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/gkehub/v1beta1"
@@ -789,6 +790,28 @@ var discoKinds = []*discokind.Kind{
 		Output:       []string{"isDefault", "kmsKeyVersion", "lastRotationTimestampMicros", "notebooklmState", "state"},
 		FakeDefaults: map[string]any{"state": "ACTIVE"},
 	},
+	{
+		GVK:         computev1alpha1.ComputeInterconnectAttachmentGroupGVK,
+		CRDName:     "computeinterconnectattachmentgroups.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/global/interconnectAttachmentGroups/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"configured", "creationTimestamp", "id", "kind", "logicalStructure", "selfLink"},
+	},
+	{
+		GVK:       dnsv1alpha1.DNSOutboundEndpointGVK,
+		CRDName:   "dnsoutboundendpoints.dns.gcp.hfl.dev",
+		BaseURL:   "https://dns.googleapis.com/dns/v1/",
+		Name:      "{parent}/locations/{location}/outboundEndpoints/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "outboundEndpointId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -817,6 +840,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	dataplexv1beta1.AddToScheme,
 	apigeev1alpha1.AddToScheme,
 	discoveryenginev1alpha1.AddToScheme,
+	dnsv1alpha1.AddToScheme,
 }
 
 func init() {

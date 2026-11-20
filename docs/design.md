@@ -485,6 +485,20 @@ object with the same ID takes it back (find, then patch). Reads use the
 full view, the only one with the entries. `docs/kinds/ChronicleReferenceList.md`
 has the rest.
 
+Then (2026-11-19) two foundation whole-resource gaps with no Config
+Connector kind, from `docs/coverage/foundation.md`'s "Every resource":
+`ComputeInterconnectAttachmentGroup` (`compute.gcp.hfl.dev/v1alpha1`,
+item 7's last, beside `ComputeInterconnectGroup`; its `etag` is left out
+of the spec with `skip`, since the API generates it) and
+`DNSOutboundEndpoint` (`dns.gcp.hfl.dev/v1alpha1`, Cloud DNS's
+`outboundEndpoints`, a long-running create; Terraform's
+`google_dns_outbound_endpoint`, named under decision 18). Cloud DNS's create takes
+`clientOperationId` beside `outboundEndpointId`, so the generator's ID
+parameter leaves it out as it does `requestId` (`isIDParam`). Both skip
+live: the attachment group needs Dedicated Interconnects, the endpoint
+Cloud DNS in the live project (as `DNSResponsePolicy`) and a network and
+subnetwork Setup.
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check

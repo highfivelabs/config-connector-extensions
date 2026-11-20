@@ -1,0 +1,1 @@
+needs dns.googleapis.com on in the live project and roles/dns.admin for the live-test account (as DNSResponsePolicy's E2E_DNS_ADMIN), and a network and subnetwork Setup; live: pending
