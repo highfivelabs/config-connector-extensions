@@ -1,0 +1,11 @@
+apiVersion: securitycenter.gcp.hfl.dev/v1beta1
+kind: SecurityCenterNotificationConfig
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  description: Findings published by a config-connector-extensions test.
+  pubsubTopic: projects/${PROJECT}/topics/${NAME}
+  streamingConfig:
+    filter: severity="HIGH"

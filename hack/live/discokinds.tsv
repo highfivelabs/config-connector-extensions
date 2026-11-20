@@ -55,3 +55,5 @@ NetworkServicesAgentGateway	https://networkservices.googleapis.com/v1/	projects/
 NetworkServicesAuthzExtension	https://networkservices.googleapis.com/v1/	projects/{project}/locations/us-central1/authzExtensions	authzExtensions	-
 NetworkServicesGateway	https://networkservices.googleapis.com/v1/	projects/{project}/locations/us-central1/gateways	gateways	-
 ResourceManagerCapabilityConfig	https://cloudresourcemanager.googleapis.com/v3/	projects/{project}/capabilityConfigs	capabilityConfigs	-
+SecurityCenterBigQueryExport	https://securitycenter.googleapis.com/v1/	projects/{project}/bigQueryExports	bigQueryExports	-
+SecurityCenterNotificationConfig	https://securitycenter.googleapis.com/v1/	projects/{project}/notificationConfigs	notificationConfigs	-

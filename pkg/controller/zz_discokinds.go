@@ -46,6 +46,7 @@ import (
 	networkservicesv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1alpha1"
 	networkservicesv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networkservices/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
+	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 )
 
@@ -791,6 +792,28 @@ var discoKinds = []*discokind.Kind{
 		FakeDefaults: map[string]any{"state": "ACTIVE"},
 	},
 	{
+		GVK:       securitycenterv1beta1.SecurityCenterBigQueryExportGVK,
+		CRDName:   "securitycenterbigqueryexports.securitycenter.gcp.hfl.dev",
+		BaseURL:   "https://securitycenter.googleapis.com/v1/",
+		Name:      "{parent}/bigQueryExports/{id}",
+		Parents:   []string{"project", "folder", "organization"},
+		IDParam:   "bigQueryExportId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"createTime", "mostRecentEditor", "principal", "updateTime"},
+	},
+	{
+		GVK:       securitycenterv1beta1.SecurityCenterNotificationConfigGVK,
+		CRDName:   "securitycenternotificationconfigs.securitycenter.gcp.hfl.dev",
+		BaseURL:   "https://securitycenter.googleapis.com/v1/",
+		Name:      "{parent}/notificationConfigs/{id}",
+		Parents:   []string{"project", "folder", "organization"},
+		IDParam:   "configId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"serviceAccount"},
+	},
+	{
 		GVK:         computev1alpha1.ComputeInterconnectAttachmentGroupGVK,
 		CRDName:     "computeinterconnectattachmentgroups.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",
@@ -840,6 +863,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	dataplexv1beta1.AddToScheme,
 	apigeev1alpha1.AddToScheme,
 	discoveryenginev1alpha1.AddToScheme,
+	securitycenterv1beta1.AddToScheme,
 	dnsv1alpha1.AddToScheme,
 }
 
