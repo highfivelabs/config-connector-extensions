@@ -1,0 +1,10 @@
+apiVersion: securitycenter.gcp.hfl.dev/v1beta1
+kind: SecurityCenterBigQueryExport
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  description: Findings exported by a config-connector-extensions test.
+  dataset: projects/${PROJECT}/datasets/${ID}
+  filter: severity="HIGH"

@@ -485,6 +485,23 @@ object with the same ID takes it back (find, then patch). Reads use the
 full view, the only one with the entries. `docs/kinds/ChronicleReferenceList.md`
 has the rest.
 
+Then `SecurityCenterBigQueryExport` and `SecurityCenterNotificationConfig`
+(`securitycenter.gcp.hfl.dev/v1beta1`, 2026-11-19), foundation item 20
+under decision 16: Config Connector's kinds are `v1alpha1` and take an
+organization only, so ours are stable equivalents (decision 26) taking an
+organization, folder or project, generated from the `securitycenter` v1
+Discovery document (the API `SecurityCenterMuteConfig` uses; the
+collections are standard under all three parents). Upstream rechecked
+2026-11-19 (read-only): #7673 has not moved, #13932 only aligns the
+export's mock logs. The project's fixtures are the generated tests;
+`kindtest.RunCase` runs a folder's and an organization's on the fake
+(`parents_test.go`). All skip live: Security Command Center is not active
+in the live project, as for the mute config. The API's descriptions are
+empty here, so nothing is marked required: a missing `dataset` or
+`pubsubTopic` is the API's 400, shown in the object's Ready message. The
+two custom module kinds are not this shape (create takes no ID; the server
+names the module).
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check
