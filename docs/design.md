@@ -3320,3 +3320,30 @@ moves to section 8.
     you have.)" No project is enrolled for tests; `KMSCryptoKeyFields` stays
     `v1alpha1` (decision 27) and fake-tested, and its live row waits for the
     first enrolled project.
+
+11. **Where does a generated kind put a secret the API returns?**
+    (2026-11-19, foundation item 4's last two kinds.) Two whole-resource
+    gaps are standard collections `hack/discokind` could generate today,
+    but each returns a secret as an output field:
+    `IAMOauthClientCredential` (`projects.locations.oauthClients.credentials`,
+    `clientSecret`, returned on every read) and
+    `IAMWorkforcePoolProviderScimTenantToken`
+    (`...providers.scimTenants.tokens`, `securityToken`, returned only by
+    the create). The generator puts every output field in
+    `status.observedState`, so the secret would sit in the object's status,
+    readable by anyone who can read the object, as Config Connector's
+    `IAMServiceAccountKey.status.privateKey` does. foundation.md's build
+    line says the token is "secret output, like a service account key",
+    which does not settle where it goes, and decision 33 settled only
+    secrets we send (from a Kubernetes Secret), not ones we receive.
+    Options: (a) status, as Config Connector's service account key;
+    (b) a Kubernetes Secret in the object's namespace, owned by the
+    object, named by a new `spec.secretOutput.name` (default the object's
+    name), holding the value under the field's name, never in status;
+    a token the API returns only at create is written once and, if the
+    Secret is lost, the token must be deleted and made again.
+    Recommendation: (b), as a `hack/discokind` option (`secretOutputs`,
+    the mirror of decision 33's `secrets`), so both kinds and any later
+    one get it without hand-written code; the manager's ClusterRole
+    already writes Secrets for nothing else, so it gains `create` and
+    `update` on Secrets. Until answered, neither kind is built.
