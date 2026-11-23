@@ -475,6 +475,26 @@ live-test account has no Access Context Manager role. Before its first
 live run: an access policy for the tests, its number in the fixtures, the
 role on it, and a sweeper section for the run's descriptions.
 
+`AccessContextManagerServicePerimeter` (package `accesscontextmanager`,
+2026-11-23) skips live for the same reasons; before its first live run it
+needs the same access policy and role, and a sweeper section for the
+run's perimeters.
+
+Live pending, built 2026-11-23 (each kind's `docs/kinds/` file has the
+command): `ComputeServiceAttachment` and `ComputeSubnetwork` (package
+`compute`; the service attachment's Setup makes two internal passthrough
+load balancers, whose forwarding rules bill by the hour while they exist;
+the subnetwork's `insertonly` case skips live), `ComputeRegionSecurityPolicy`
+(package `compute`; a `CLOUD_ARMOR` policy, billed by Cloud Armor while it
+exists; the `network` case skips live without Cloud Armor Enterprise),
+`CertificateManagerTrustConfig` (package `certificatemanager`, free) and
+`BinaryAuthorizationPlatformPolicy` (package `binaryauthorization`, free;
+needs `binaryauthorization.googleapis.com` on and
+`roles/binaryauthorization.policyAdmin` for the live-test account). The
+sweeper covers each: service attachments and subnetworks in their own
+sections, the regional policy and the trust config through
+`discokinds.tsv`, and GKE's platform policies in a section of their own.
+
 `PrivateCACAPoolFields` and `PrivateCACertificateTemplateFields`
 (package `privateca`) wait on Certificate Authority Service for the
 account: whether `privateca.googleapis.com` is on in `$GCP_PROJECT` and
