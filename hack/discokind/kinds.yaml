@@ -287,6 +287,30 @@
   skip: {producerForwardingRule: "the API's older name for targetService, which replaces it"}
   note: "A Private Service Connect producer's service attachment: the internal load balancer it publishes, its NAT subnets, and the consumer projects and networks it accepts."
 
+# Foundation item 16 (2026-11-23): Config Connector's Terraform-based
+# ComputeSubnetwork lacks ipCollection, externalIpv6Prefix,
+# internalIpv6Prefix, resolveSubnetMask and params.resourceManagerTags,
+# which the API takes only at insert, and the secondary ranges'
+# ipCollection and ipVersion (a list Terraform sends whole). Ours is a
+# parallel kind with the API's field set (decision 19); mockgcp serves
+# subnetworks for many other tests, so the fake leaves them to it. Immutable:
+# what the API takes only at insert, and ipCidrRange and
+# privateIpGoogleAccess, which it changes only by expandIpCidrRange and
+# setPrivateIpGoogleAccess, not by patch (a subnet that needs either stays
+# on Config Connector's kind).
+- kind: ComputeSubnetwork
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: subnetworks
+  parents: [project]
+  terraform: google_compute_subnetwork
+  mockgcp: true
+  immutable: [description, network, ipCidrRange, privateIpGoogleAccess, purpose, ipCollection, externalIpv6Prefix, internalIpv6Prefix, resolveSubnetMask, reservedInternalRange, params]
+  inputOnly: [params.resourceManagerTags]
+  skip: {enableFlowLogs: "deprecated by the API in favour of logConfig.enable"}
+  note: "A VPC subnetwork, with what the API takes only at insert: a BYOIP IPv6 prefix (ipCollection), the IPv6 prefixes, subnet mask resolution and resource manager tags."
+
 - kind: ComputeRegionInstanceTemplate
   group: compute.gcp.hfl.dev
   version: v1alpha1

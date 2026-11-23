@@ -1,0 +1,17 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeSubnetwork
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  network: projects/${PROJECT}/global/networks/${NAME}-net
+  ipCidrRange: 10.40.0.0/24
+  stackType: IPV4_IPV6
+  ipv6AccessType: EXTERNAL
+  ipCollection: projects/${PROJECT}/regions/us-central1/publicDelegatedPrefixes/${NAME}-sub-pdp
+  resolveSubnetMask: ARP_PRIMARY_RANGE
+  params:
+    resourceManagerTags:
+      tagKeys/123: tagValues/456

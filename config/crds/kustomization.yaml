@@ -70,6 +70,7 @@ resources:
 - compute.gcp.hfl.dev_computeserviceattachmentfields.yaml
 - compute.gcp.hfl.dev_computeserviceattachments.yaml
 - compute.gcp.hfl.dev_computesubnetworkfields.yaml
+- compute.gcp.hfl.dev_computesubnetworks.yaml
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml

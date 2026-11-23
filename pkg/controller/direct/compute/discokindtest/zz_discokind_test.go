@@ -102,6 +102,9 @@ func TestComputeRolloutPlan(t *testing.T) { kindtest.Run(t, "ComputeRolloutPlan"
 // TestComputeServiceAttachment runs testdata/discokind/ComputeServiceAttachment/ on the fake cloud, or live.
 func TestComputeServiceAttachment(t *testing.T) { kindtest.Run(t, "ComputeServiceAttachment") }
 
+// TestComputeSubnetwork runs testdata/discokind/ComputeSubnetwork/ on the fake cloud, or live.
+func TestComputeSubnetwork(t *testing.T) { kindtest.Run(t, "ComputeSubnetwork") }
+
 // TestComputeWireGroup runs testdata/discokind/ComputeWireGroup/ on the fake cloud, or live.
 func TestComputeWireGroup(t *testing.T) { kindtest.Run(t, "ComputeWireGroup") }
 

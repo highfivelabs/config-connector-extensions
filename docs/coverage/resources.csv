@@ -430,7 +430,7 @@ compute.googleapis.com,compute.googleapis.com/Snapshot,27,ComputeSnapshot,12,,0,
 compute.googleapis.com,compute.googleapis.com/SslCertificate,8,ComputeManagedSSLCertificate;ComputeSSLCertificate,6,,0,2,false,api=v1:sslCertificates
 compute.googleapis.com,compute.googleapis.com/SslPolicy,6,ComputeSSLPolicy,5,,0,1,false,api=v1:sslPolicies; official-spec-fields-unmatched=1/5
 compute.googleapis.com,compute.googleapis.com/StoragePool,14,,0,,0,14,false,api=v1:storagePools
-compute.googleapis.com,compute.googleapis.com/Subnetwork,30,ComputeSubnetwork,20,,0,10,false,api=v1:subnetworks; official-spec-fields-unmatched=1/20
+compute.googleapis.com,compute.googleapis.com/Subnetwork,30,ComputeSubnetwork,20,ComputeSubnetwork,9,1,false,api=v1:subnetworks; official-spec-fields-unmatched=1/20; ours-spec-fields-unmatched=2/30
 compute.googleapis.com,compute.googleapis.com/TargetGrpcProxy,4,ComputeTargetGRPCProxy,4,,0,0,false,api=v1:targetGrpcProxies; official-spec-fields-unmatched=1/4
 compute.googleapis.com,compute.googleapis.com/TargetHttpProxy,5,ComputeTargetHTTPProxy,5,,0,0,false,api=v1:targetHttpProxies; official-spec-fields-unmatched=2/6
 compute.googleapis.com,compute.googleapis.com/TargetHttpsProxy,12,ComputeTargetHTTPSProxy,10,,0,2,false,api=v1:targetHttpsProxies; official-spec-fields-unmatched=3/12

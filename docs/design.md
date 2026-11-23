@@ -613,9 +613,23 @@ owns the whole attachment with the API's field set (decision 19, as
 mockgcp already serves and other tests make resources in
 (`ComputeServiceAttachmentFields`'), so `kinds.yaml` gained `mockgcp`:
 `pkg/discokind/fake` passes the collection's requests to mockgcp instead
-of serving them (`Kind.Mockgcp`). Its live Setup makes a producer (an
-internal passthrough load balancer and a PSC NAT subnet) for the object
-and its abandoned one.
+of serving them (`Kind.Mockgcp`), and the kind is left out of
+`hack/live/discokinds.tsv`, since `sweep.sh` sweeps service attachments
+in its own section, before the forwarding rules and subnets they use. Its
+live Setup makes a producer (an internal passthrough load balancer and a
+PSC NAT subnet) for the object and its abandoned one. Then
+`ComputeSubnetwork` (`compute.gcp.hfl.dev/v1alpha1`, the same day, on
+mockgcp's subnetworks the same way), for foundation item 16's fields the
+API takes only at insert (`ipCollection`, `externalIpv6Prefix`,
+`internalIpv6Prefix`, `resolveSubnetMask`, `params.resourceManagerTags`,
+the last input-only) and the secondary ranges' `ipCollection` and
+`ipVersion`, which Terraform sends in a whole list. `ipCidrRange` and
+`privateIpGoogleAccess` are immutable in ours: the API changes them only
+by `expandIpCidrRange` and `setPrivateIpGoogleAccess`, which the generated
+controller does not call, so a subnet that needs those changes stays on
+Config Connector's kind. A second fixture set (`insertonly`) makes a
+BYOIP, tagged subnet on the fake; it skips live (no sub-prefix or tag in
+the live-test project).
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -2584,6 +2598,17 @@ To raise confidence in `ArtifactRegistryRepository`:
     create, the API's defaults (`propagatedConnectionLimit`) and whether a
     resync then writes nothing, and `metadata` and `natIpsPerEndpoint`,
     which mockgcp cannot show.
+
+50. `ComputeSubnetwork` (ours, generated; foundation item 16,
+    2026-11-23): a live run (`task test-live PROJECT=$GCP_PROJECT
+    KINDS=compute LIVE_RUN=TestComputeSubnetwork`; the `insertonly` case
+    skips live). To be seen live: whether `subnetworks.patch` takes the
+    body the generated controller sends (only the fields that differ, the
+    fingerprint and the name), the API's defaults for a new subnet
+    (`stackType`, `privateIpv6GoogleAccess`, `logConfig`) and whether a
+    resync then writes nothing; with a BYOIP sub-prefix and a tag in the
+    project, the `insertonly` case. Not built: `expandIpCidrRange` and
+    `setPrivateIpGoogleAccess`.
 
 46. `AccessContextManagerAuthorizedOrgsDesc` (foundation item 21,
     2026-11-23; section 2.3): a live run needs an organization's access

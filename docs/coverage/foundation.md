@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 19.0% | 42.1% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 19.3% | 41.8% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 6.4% | 26.4% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 24.9% | 34.7% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 26.3% | 33.3% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -82,7 +82,7 @@ What these numbers miss, for the foundation:
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
 | 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 20 / 87 (77.0%) | none found. |
-| 16 | [Network and subnetwork fields (BGP best path, IP collection, subnet overlap)](#16-network-and-subnetwork-fields-bgp-best-path-ip-collection-subnet-overlap) | A | field | 1 | S | 15 / 44 (65.9%) | none for the fields |
+| 16 | [Network and subnetwork fields (BGP best path, IP collection, subnet overlap)](#16-network-and-subnetwork-fields-bgp-best-path-ip-collection-subnet-overlap) | A | field | 1 | S | 6 / 44 (65.9%) | none for the fields |
 | 17 | [Billing account log sink](#17-billing-account-log-sink) | A | field | 1 | S | 3 / 13 (0.0%) | none found. |
 | 18 | [KMS fields (key access justifications, key backend)](#18-kms-fields-key-access-justifications-key-backend) | A | field | 1 | S | 7 / 15 (53.3%) | open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would land |
 | 19 | [Hierarchical firewall policy rule fields](#19-hierarchical-firewall-policy-rule-fields) | A | field | 1 | M | 53 / 114 (44.7%) | none found (`ComputeFirewall` has #12102 "validate direct promotion") |
@@ -307,13 +307,13 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** field, **size** S, **modules** 1 (net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `compute.googleapis.com/Network`: 9 / 0 / 5 of 14; ComputeNetwork
-  - `compute.googleapis.com/Subnetwork`: 20 / 0 / 10 of 30; ComputeSubnetwork
+  - `compute.googleapis.com/Subnetwork`: 20 / 9 / 1 of 30; ComputeSubnetwork, ComputeSubnetwork (ours)
 - **Missing, whole resources:** `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost` on `ComputeNetwork`; `ipCollection`, `allowSubnetCidrRoutesOverlap`, `internalIpv6Prefix`/`externalIpv6Prefix` on `ComputeSubnetwork` and status `networkId`. (`docs/design.md` 6.5 row 9.)
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `compute.googleapis.com/Network` (measured): `IPv4Range`, `params.resourceManagerTags{}`, `routingConfig.bgpAlwaysCompareMed`, `routingConfig.bgpBestPathSelectionMode`, `routingConfig.bgpInterRegionCost`
-  - uncovered in `compute.googleapis.com/Subnetwork` (measured): `allowSubnetCidrRoutesOverlap`, `enableFlowLogs`, `externalIpv6Prefix`, `internalIpv6Prefix`, `ipCollection`, `logConfig.enable`, `params.resourceManagerTags{}`, `resolveSubnetMask`, `secondaryIpRanges[].ipCollection`, `secondaryIpRanges[].ipVersion`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork" (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no pull request.
-- **Build:** Field kinds (decision 19, section 6.6 pattern 2), built 2026-11-23, live pending: `ComputeNetworkFields` (`compute.gcp.hfl.dev/v1alpha1`; `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost`) and `ComputeSubnetworkFields` (`allowSubnetCidrRoutesOverlap`); Terraform's updates send only the fields that changed. Not built: `ipCollection`, the IPv6 prefixes, `resolveSubnetMask` and `params.resourceManagerTags` are taken only at create (a create-only whole-object kind), the secondary ranges' `ipCollection` and `ipVersion` sit in a list Terraform sends whole, and `enableFlowLogs` is deprecated.
+  - uncovered in `compute.googleapis.com/Subnetwork` (measured): `enableFlowLogs`
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork" (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no pull request. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0, #12521's head 4e94076d of 2026-08-27): no release or pull request has `ipCollection`, `resolveSubnetMask` or `params` on a subnetwork.
+- **Build:** Field kinds (decision 19, section 6.6 pattern 2), built 2026-11-23, live pending: `ComputeNetworkFields` (`compute.gcp.hfl.dev/v1alpha1`; `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost`) and `ComputeSubnetworkFields` (`allowSubnetCidrRoutesOverlap`); Terraform's updates send only the fields that changed. The rest, built 2026-11-23, live pending: our whole-object `ComputeSubnetwork` (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind`, the API's field set, tested on mockgcp's subnetworks) takes `ipCollection`, the IPv6 prefixes, `resolveSubnetMask` and `params.resourceManagerTags` at insert and the secondary ranges' `ipCollection` and `ipVersion`; `ipCidrRange` and `privateIpGoogleAccess` are immutable there (the API changes them only by `expandIpCidrRange` and `setPrivateIpGoogleAccess`, which the generated controller does not call), so a subnet that needs either change stays on Config Connector's kind. `enableFlowLogs` is deprecated (`logConfig.enable`) and left out.
 
 ### 17. Billing account log sink
 
@@ -513,6 +513,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeSecurityPolicyFields | (not a create) a field kind, Adaptive Protection threshold configs and the request body inspection size of a security policy Config Connector's ComputeSecurityPolicy owns, written with securityPolicies.patch (decision 37) | n/a | false |
 | ComputeServiceAttachment | compute.googleapis.com/ServiceAttachment | 7 | false |
 | ComputeServiceAttachmentFields | (not a create) a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37) | n/a | false |
+| ComputeSubnetwork | compute.googleapis.com/Subnetwork | 9 | false |
 | ComputeSubnetworkFields | (not a create) a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37) | n/a | false |
 | ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 8 | false |
 | ComputeWireGroup | compute.googleapis.com/WireGroup | 7 | false |
@@ -766,7 +767,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `compute.googleapis.com/SecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | 27 |
 | foundation | `compute.googleapis.com/ServiceAttachment` | ComputeServiceAttachment | ComputeServiceAttachment | 17 | 9 | 7 | 1 | 11 |
 | security | `compute.googleapis.com/SslPolicy` | ComputeSSLPolicy | - | 6 | 5 | 0 | 1 | - |
-| foundation | `compute.googleapis.com/Subnetwork` | ComputeSubnetwork | - | 30 | 20 | 0 | 10 | 16 |
+| foundation | `compute.googleapis.com/Subnetwork` | ComputeSubnetwork | ComputeSubnetwork | 30 | 20 | 9 | 1 | 16 |
 | foundation | `compute.googleapis.com/TargetVpnGateway` | ComputeTargetVPNGateway | - | 5 | 3 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/VpnGateway` | ComputeVPNGateway | - | 8 | 5 | 0 | 3 | - |
 | foundation | `compute.googleapis.com/VpnTunnel` | ComputeVPNTunnel | ComputeVPNTunnel | 24 | 15 | 8 | 1 | 10 |

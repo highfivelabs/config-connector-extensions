@@ -399,6 +399,12 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   `LEGACY` (mockgcp drops them), a subnet patch's fingerprint check, or
   what the BGP settings or the overlap change for routes (mockgcp has no
   Cloud Routers learning routes, and checks no route against a subnet).
+  The generated `ComputeSubnetwork` runs on mockgcp's subnetworks
+  (`kinds.yaml` `mockgcp`). mockgcp's patch changes only the description,
+  `privateIpGoogleAccess`, `role`, `allowSubnetCidrRoutesOverlap` and the
+  secondary ranges, so the fixtures change only those; its protos lack a
+  secondary range's `ipCollection` and `ipVersion`; and it checks no
+  `ipCollection` against a public delegated prefix and binds no tags.
 - **Cloud DNS server policies** (`DNSPolicyFields`). mockgcp's
   `policies.patch` now changes only the fields a request sets (patch
   0057; it replaced the whole policy). It does not show: whether the API

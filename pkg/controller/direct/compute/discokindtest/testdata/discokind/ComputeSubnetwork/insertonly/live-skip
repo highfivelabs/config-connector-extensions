@@ -1,0 +1,1 @@
+needs a BYOIP sub-prefix in EXTERNAL_IPV6_SUBNETWORK_CREATION mode (ipCollection) and a tag key and value to bind (params.resourceManagerTags), which the live-test project does not have
