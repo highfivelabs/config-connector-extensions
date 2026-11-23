@@ -601,6 +601,28 @@ fake was. As there, a custom IAM method on a service (`:getIamPolicy`,
 `:setIamPolicy`, `:testIamPermissions`) goes on to mockgcp, which serves
 it for every resource (patch 0018).
 
+## The user access binding fake (`pkg/controller/direct/accesscontextmanager/fake`)
+
+mockgcp serves Access Context Manager's GCP user access bindings from the
+pinned protos (`cloud.google.com/go/accesscontextmanager` v1.14.0), which
+have only a binding's `groupKey` and `accessLevels`: it drops the fields
+`AccessContextManagerGCPUserAccessBinding` adds, and its patch takes only
+`access_levels`. A small in-memory fake therefore serves
+`organizations/{org}/gcpUserAccessBindings` in front of mockgcp (in
+`pkg/test/mockenv` and both fake-cloud binaries), keeping each binding as
+the JSON it was sent: create (the server's ID; a name in the body, a
+missing group key, or a second binding of one group key in an
+organization refused; `restrictedClientApplications` with
+`scopedAccessSettings` refused), get, list, patch of the fields its update
+mask names, in either spelling (`groupKey` refused; a field the mask names
+and the body leaves out is cleared), and delete, each answered with a done
+operation that a get of the operation also finds. Other Access Context
+Manager requests go on to mockgcp. It does not show: organizations, Google
+Groups and access levels (any is taken), the API's checks of a duration, a
+session reauth method or an application, and permissions. A new fake was
+chosen over a mockgcp patch because the fields are in no proto mockgcp has
+(a newer Go client would be a dependency change, the builder's call).
+
 ## The Chronicle fake (`pkg/controller/direct/chronicle/fake`)
 
 mockgcp does not serve the Chronicle API (`<location>-chronicle.googleapis.com`,

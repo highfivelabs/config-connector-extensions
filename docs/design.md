@@ -2694,9 +2694,23 @@ To raise confidence in `ArtifactRegistryRepository`:
     (`status`, `spec`) the controller sends, and whether the API answers
     rules as sent (order, `*`). It cannot be used beside Config
     Connector's perimeter or `AccessContextManagerServicePerimeterResource`
-    for the same perimeter. The alpha-only user access binding's fields are
-    not built: the API names a binding itself, which `hack/discokind` does
-    not generate.
+    for the same perimeter. The alpha-only user access binding's fields:
+    our `AccessContextManagerGCPUserAccessBinding`
+    (`accesscontextmanager.gcp.hfl.dev/v1beta1`, 2026-11-23, decision 26;
+    `docs/kinds/AccessContextManagerGCPUserAccessBinding.md`), Config
+    Connector's direct types, identity and controller copied, with
+    `dryRunAccessLevels`, `sessionSettings`, `restrictedClientApplications`
+    and `scopedAccessSettings` added. Upstream read first (master
+    `bc464f55`, releases to `v1.162.0`, every pull request head from
+    #13500 to #16331, read-only): no pull request touches the kind's types
+    or controller. The pinned Go client and mockgcp's protos lack the
+    fields, so the kind sends REST (`google.golang.org/api`, already a
+    dependency) and is tested on an HTTP fake of our own
+    (`docs/fake-cloud.md`); the server names a binding, so its ID is
+    written back to `spec.resourceID`, and an object with no ID takes over
+    the organization's binding of its group key. Live it skips, as the
+    authorized orgs description does. Not built: `principal`, which the
+    pinned REST client lacks.
 
 44. `IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`
     (decision 38, 2026-11-23): a live run. The credential's

@@ -475,6 +475,13 @@ live-test account has no Access Context Manager role. Before its first
 live run: an access policy for the tests, its number in the fixtures, the
 role on it, and a sweeper section for the run's descriptions.
 
+`AccessContextManagerGCPUserAccessBinding` (package `accesscontextmanager`,
+2026-11-23; its test skips live in code) needs an organization, a Google
+Group and an access policy's levels, which a live run never touches, and
+`roles/accesscontextmanager.gcpAccessAdmin` on the organization for the
+live-test account; before its first live run, those and a sweeper section
+for the run's bindings.
+
 `AccessContextManagerServicePerimeter` (package `accesscontextmanager`,
 2026-11-23) skips live for the same reasons; before its first live run it
 needs the same access policy and role, and a sweeper section for the

@@ -61,6 +61,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	acmfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/accesscontextmanager/fake"
 	chroniclefake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle/fake"
 	smfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/servicemanagement/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
@@ -363,8 +364,9 @@ func startCluster(t *testing.T) *cluster {
 		// (config/tests/samples/create/harness.go).
 		mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
 		// The discokind kinds' collections are served by their own fake
-		// (pkg/discokind/fake), and Service Management and the Chronicle API by their own, in front of mockgcp.
-		disco = discofake.New(chroniclefake.New(smfake.New(mockCloud)), discokind.Kinds())
+		// (pkg/discokind/fake), and Service Management, the Chronicle API and
+		// Access Context Manager's user access bindings by their own, in front of mockgcp.
+		disco = discofake.New(chroniclefake.New(smfake.New(acmfake.New(mockCloud))), discokind.Kinds())
 		requests = &recorder{inner: disco}
 	}
 	gcpHTTP := &http.Client{Transport: requests}

@@ -43,6 +43,7 @@ import (
 	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	accesscontextmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/accesscontextmanager/v1beta1"
 	aiplatformv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/aiplatform/v1beta1"
 	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
@@ -73,6 +74,7 @@ import (
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
 	storagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/accesscontextmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
@@ -181,6 +183,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeFirewallPolicyPacketMirroringRuleGVK, crdName: "computefirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewFirewallPolicyPacketMirroringRuleModel},
 	{gvk: computev1alpha1.ComputeFirewallPolicyRuleGVK, crdName: "computefirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewFirewallPolicyRuleModel},
 	{gvk: computev1alpha1.ComputeRegionSecurityPolicyRuleGVK, crdName: "computeregionsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionSecurityPolicyRuleModel},
+	{gvk: accesscontextmanagerv1beta1.AccessContextManagerGCPUserAccessBindingGVK, crdName: "accesscontextmanagergcpuseraccessbindings.accesscontextmanager.gcp.hfl.dev", model: accesscontextmanager.NewGCPUserAccessBindingModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 	{gvk: firestorev1beta1.FirestoreBackupScheduleGVK, crdName: "firestorebackupschedules.firestore.gcp.hfl.dev", model: firestore.NewFirestoreBackupScheduleModel},
 	{gvk: apigeev1beta1.ApigeeNATAddressGVK, crdName: "apigeenataddresses.apigee.gcp.hfl.dev", model: apigee.NewApigeeNATAddressModel},
@@ -226,6 +229,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		assetv1beta1.AddToScheme,
 		kmsv1alpha1.AddToScheme,
 		containerv1beta1.AddToScheme,
+		accesscontextmanagerv1beta1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

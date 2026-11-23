@@ -313,6 +313,14 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computefirewallpolicyrule_controller.go, pkg/controller/direct/compute/computefirewallpolicyrule_mapper.go, pkg/controller/direct/compute/firewallpolicyrule_resolverefs.go]}
   - here: [apis/compute/v1alpha1/computeregionsecuritypolicyrule_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computesecuritypolicy_types.go, apis/compute/v1beta1/types.generated.go]}
+  - here: [apis/accesscontextmanager/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/groupversion_info.go]}
+  - here: [apis/accesscontextmanager/v1beta1/accesscontextmanagergcpuseraccessbinding_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/accesscontextmanagergcpuseraccessbinding_types.go]}
+  - here: [apis/accesscontextmanager/v1beta1/accesscontextmanagergcpuseraccessbinding_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/accesscontextmanagergcpuseraccessbinding_identity.go, apis/accesscontextmanager/v1alpha1/accesscontextmanagergcpuseraccessbinding_identity.generated.go]}
+  - here: [pkg/controller/direct/accesscontextmanager/gcpuseraccessbinding_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/accesscontextmanager/accesscontextmanagergcpuseraccessbinding_controller.go]}
   - here: [apis/compute/v1beta1/computerouter_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computerouter_types.go]}
   - here: [apis/compute/v1beta1/computerouter_identity.go]

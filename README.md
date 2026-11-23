@@ -70,8 +70,8 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | security | `privateca.googleapis.com` | ![privateca.googleapis.com](docs/coverage/bars/privateca.googleapis.com.svg) | 71.3% | 5.8% | 22.9% | 94.6% | 94.6% |
 | 2 | application | `bigquery.googleapis.com` | ![bigquery.googleapis.com](docs/coverage/bars/bigquery.googleapis.com.svg) | 26.6% | 0.0% | 73.4% | 44.0% | 42.4% |
 | 2 | application | `clouddeploy.googleapis.com` | ![clouddeploy.googleapis.com](docs/coverage/bars/clouddeploy.googleapis.com.svg) | 56.7% | 2.5% | 40.8% | 90.8% | 90.8% |
+| 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 42.0% | 6.1% | 99.2% | 99.2% |
 | 2 | application | `notebooks.googleapis.com` | ![notebooks.googleapis.com](docs/coverage/bars/notebooks.googleapis.com.svg) | 91.7% | 0.0% | 8.3% | 30.1% | 30.1% |
-| 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 26.7% | 21.4% | 99.2% | 99.2% |
 | 2 | application | `sqladmin.googleapis.com` | ![sqladmin.googleapis.com](docs/coverage/bars/sqladmin.googleapis.com.svg) | 41.6% | 0.4% | 58.0% | 6.9% | 6.9% |
 | 2 | application | `appengine.googleapis.com` | ![appengine.googleapis.com](docs/coverage/bars/appengine.googleapis.com.svg) | 60.4% | 0.0% | 39.6% | 71.6% | 69.2% |
 | 2 | application | `gkebackup.googleapis.com` | ![gkebackup.googleapis.com](docs/coverage/bars/gkebackup.googleapis.com.svg) | 90.8% | 3.1% | 6.1% | 73.5% | 73.5% |

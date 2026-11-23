@@ -104,6 +104,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`AccessContextManagerGCPUserAccessBinding`**
+  (`accesscontextmanager.gcp.hfl.dev/v1beta1`): the stable equivalent of
+  Config Connector's alpha kind, binding a Google Group to an
+  organization's access levels, with `dryRunAccessLevels`,
+  `sessionSettings` (Google Cloud session length),
+  `restrictedClientApplications` and `scopedAccessSettings`, which Config
+  Connector's lacks. The server names a binding: its ID is written back to
+  `spec.resourceID` (`docs/kinds/AccessContextManagerGCPUserAccessBinding.md`).
+
 - **`ComputeRegionSecurityPolicyRule`** (`compute.gcp.hfl.dev/v1alpha1`):
   a rule of a regional Cloud Armor security policy (Terraform's
   `google_compute_region_security_policy_rule`), named by its policy
