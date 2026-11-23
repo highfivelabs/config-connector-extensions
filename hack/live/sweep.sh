@@ -16,7 +16,8 @@
 # Swept: Artifact Registry repositories (every location), Secret Manager
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
-# firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
+# firewall policies (their associations are removed first), service
+# attachments, forwarding rules, backend services and health checks, network endpoint groups (their endpoints go with
 # them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
 # (their route policies go with them), subnets and VPC
 # networks, which take no labels and are found by name, Cloud Storage
@@ -519,6 +520,21 @@ else
     failed=$((failed + 1))
   fi
 fi
+# Service attachments (the ComputeServiceAttachmentFields test's), then
+# forwarding rules, by name, before the backend services and subnets they
+# use.
+rows="$("${G[@]}" compute service-attachments list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "service attachment" "${name} ${region}" "${G[@]}" compute service-attachments delete "${name}" --region="${region}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute forwarding-rules list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "forwarding rule" "${name} ${region:-global}" "${G[@]}" compute forwarding-rules delete "${name}" "$(scope "${region}" "")"
+done <<<"${rows}"
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do

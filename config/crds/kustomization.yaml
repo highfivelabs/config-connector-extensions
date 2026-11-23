@@ -62,6 +62,7 @@ resources:
 - compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
+- compute.gcp.hfl.dev_computeserviceattachmentfields.yaml
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml

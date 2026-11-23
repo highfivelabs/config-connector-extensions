@@ -3000,6 +3000,13 @@ To raise confidence in `ArtifactRegistryRepository`:
     `keyAccessJustificationsPolicy` on a key outside Key Access
     Justifications enrollment (Assured Workloads), so `KMSCryptoKeyFields`
     cannot pass live in the live-test project; section 10 question 10.
+    **Built 2026-11-23** (`v1alpha1`, live pending), for the field rows
+    of `docs/coverage/foundation.md` (decision 19):
+    `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev`, item 11;
+    `reconcileConnections`, `propagatedConnectionLimit`,
+    `serviceAttachments.patch` as a merge patch with only those fields
+    and the fingerprint; Config Connector's DCL patch never sends them;
+    delete leaves them; patch 0054).
 
 ## 9. The operator: Config Connector's identity, per namespace
 

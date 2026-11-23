@@ -199,6 +199,7 @@ patches:
   - {file: patches/k8s-config-connector/0051-mockgcp-serviceusage-identity-done-operation.patch, pin: k8s-config-connector, upstream_candidate: "with 0022"}
   - {file: patches/k8s-config-connector/0052-mockgcp-kms-key-access-justifications-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0053-mockgcp-container-cluster-fields-updates.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0054-mockgcp-compute-merge-patch-scalars.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 

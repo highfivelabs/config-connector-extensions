@@ -155,6 +155,7 @@ var Kinds = []kind{
 	{gvk: kmsv1alpha1.KMSCryptoKeyFieldsGVK, crdName: "kmscryptokeyfields.kms.gcp.hfl.dev", model: kms.NewCryptoKeyFieldsModel},
 	{gvk: containerv1beta1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
 	{gvk: containerv1beta1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
+	{gvk: computev1alpha1.ComputeServiceAttachmentFieldsGVK, crdName: "computeserviceattachmentfields.compute.gcp.hfl.dev", model: compute.NewServiceAttachmentFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},

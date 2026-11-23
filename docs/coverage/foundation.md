@@ -77,7 +77,7 @@ What these numbers miss, for the foundation:
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 157 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 15 / 85 (51.8%) | none for the fields |
-| 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found. |
+| 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found (master read 2026-11-23 at c3af11d; open pull requests not listed from that session). |
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 6 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
@@ -248,8 +248,8 @@ What these numbers miss, for the foundation:
 - **Missing, whole resources:** `consumerAcceptLists[]` (project or network, with a connection limit), `domainNames`, `natIpsPerEndpoint`, `propagatedConnectionLimit`, `reconcileConnections`, `metadata{}` on `ComputeServiceAttachment`.
 - **Missing, attributes that matter:** The measured list; `consumerAcceptLists` and `reconcileConnections` matter.
   - uncovered in `compute.googleapis.com/ServiceAttachment` (measured): `consumerAcceptLists[].endpointUrl`, `consumerAcceptLists[].networkUrl`, `domainNames[]`, `metadata{}`, `natIpsPerEndpoint`, `producerForwardingRule`, `propagatedConnectionLimit`, `reconcileConnections`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Wait (decision 5).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (master read 2026-11-23 at c3af11d; open pull requests not listed from that session).
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns `reconcileConnections` and `propagatedConnectionLimit` (Config Connector's DCL patch never sends them); live pending. `consumerAcceptLists[].networkUrl` needs a whole-object kind (the DCL sends the whole list), `domainNames` a create-only one; not built.
 
 ### 12. Logging fields (buckets, sinks) and saved queries
 
@@ -510,6 +510,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRegionPerInstanceConfig | (not a create) no API resource named like regionperinstanceconfig/computeregionperinstanceconfig in compute.googleapis.com | n/a | false |
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
+| ComputeServiceAttachmentFields | (not a create) a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37) | n/a | false |
 | ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 7 | false |
 | ComputeWireGroup | compute.googleapis.com/WireGroup | 7 | false |
 | ContainerClusterFields | (not a create) a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37) | n/a | false |
@@ -537,29 +538,29 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
@@ -568,20 +569,20 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only

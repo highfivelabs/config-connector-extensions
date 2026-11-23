@@ -370,6 +370,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   anything, so a GPU `nodeSelector` is stored but never checked against
   the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
   serves.
+- **Compute Engine service attachments** (`ComputeServiceAttachmentFields`).
+  mockgcp's merge patch (`mergeProtos`) now replaces any scalar (patch
+  0054). It does not show: the API's fingerprint check (mockgcp ignores
+  a stale fingerprint), the defaults the API gives a new service
+  attachment (`propagatedConnectionLimit` 250, `reconcileConnections`),
+  that a target service must be a real forwarding rule and a NAT subnet
+  a `PRIVATE_SERVICE_CONNECT` one, or what `reconcileConnections` does to
+  connected endpoints (mockgcp has no consumers).
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and

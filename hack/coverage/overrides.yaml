@@ -165,6 +165,7 @@ no_resource:
   KMSCryptoKeyFields: a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37)
   ContainerClusterFields: a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37)
   ContainerNodePoolFields: a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37)
+  ComputeServiceAttachmentFields: a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37)
   DiscoveryEngineCmekConfig: a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method)
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
   SecretManagerSecretVersion: a secret version, written with secrets.addVersion

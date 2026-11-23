@@ -334,8 +334,12 @@ items:
       `consumerAcceptLists[]` (project or network, with a connection limit), `domainNames`, `natIpsPerEndpoint`,
       `propagatedConnectionLimit`, `reconcileConnections`, `metadata{}` on `ComputeServiceAttachment`.
     attributes: The measured list; `consumerAcceptLists` and `reconcileConnections` matter.
-    upstream: none found.
-    build: Wait (decision 5).
+    upstream: none found (master read 2026-11-23 at c3af11d; open pull requests not listed from that session).
+    build: >-
+      Field kind (decision 19, section 6.6 pattern 2): `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev/v1alpha1`,
+      built 2026-11-23) owns `reconcileConnections` and `propagatedConnectionLimit` (Config Connector's DCL patch never
+      sends them); live pending. `consumerAcceptLists[].networkUrl` needs a whole-object kind (the DCL sends the whole
+      list), `domainNames` a create-only one; not built.
   - title: Logging fields (buckets, sinks) and saved queries
     importance: A
     gap: field
