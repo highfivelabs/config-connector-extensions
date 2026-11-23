@@ -685,8 +685,25 @@ items:
       verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and
       is built.
     attributes: The measured lists.
-    upstream: none found.
-    build: Verify each gap against the CRD, then wait (decision 5).
+    upstream: >-
+      none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper,
+      2025-12-19) and #13232 (direct `PrivateCACertificateTemplate` types, 2026-09-18) move the kinds to direct, where
+      new fields would land; #12260 (mockgcp for `BinaryAuthorizationPlatformPolicy`) and #13053 (direct
+      `CertificateManagerTrustConfig`) are for the alpha kinds.
+    build: >-
+      Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's
+      `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the
+      platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on
+      `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s
+      `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable);
+      on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`,
+      `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on
+      `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable).
+      Next, as field kinds (decision 37) once a read of Config Connector's DCL update shows it masks only its
+      own fields (else its updates erase ours, as Terraform's node pool kubelet update does):
+      `PrivateCACAPoolFields` (the three issuance policy fields) and `PrivateCACertificateTemplateFields`.
+      The fields set at create (the pool's key, the authority's config) need a parallel kind owning the whole
+      resource (decision 19's pattern), size M each. Not started.
   - title: Secret Manager fields
     importance: B
     gap: field
