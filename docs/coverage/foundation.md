@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 19.3% | 41.8% |
+| Platform foundation | 150 | 101 | 3121 | 39.0% | 19.3% | 41.7% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 6.4% | 26.4% |
 
 By service:
@@ -20,7 +20,7 @@ By service:
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
 | foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 26.3% | 33.3% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
-| foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
+| foundation | `dns.googleapis.com` | 7 | 258 | 30.6% | 3.1% | 66.3% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 15.0% | 24.8% |
 | foundation | `orgpolicy.googleapis.com` | 4 | 121 | 67.8% | 0.0% | 32.2% |
@@ -81,7 +81,7 @@ What these numbers miss, for the foundation:
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 6 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
-| 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 20 / 87 (77.0%) | none found. |
+| 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 17 / 87 (80.5%) | none found |
 | 16 | [Network and subnetwork fields (BGP best path, IP collection, subnet overlap)](#16-network-and-subnetwork-fields-bgp-best-path-ip-collection-subnet-overlap) | A | field | 1 | S | 6 / 44 (65.9%) | none for the fields |
 | 17 | [Billing account log sink](#17-billing-account-log-sink) | A | field | 1 | S | 3 / 13 (0.0%) | none found. |
 | 18 | [KMS fields (key access justifications, key backend)](#18-kms-fields-key-access-justifications-key-backend) | A | field | 1 | S | 7 / 15 (53.3%) | open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would land |
@@ -291,16 +291,16 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** S, **modules** 2 (dns, net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `dns.googleapis.com/ResourceRecordSet`: 43 / 0 / 7 of 50; DNSRecordSet
+  - `dns.googleapis.com/ResourceRecordSet`: 46 / 0 / 4 of 50; DNSRecordSet
   - `dns.googleapis.com/ManagedZone`: 17 / 0 / 9 of 26; DNSManagedZone
   - `dns.googleapis.com/Policy`: 7 / 0 / 4 of 11; DNSPolicy
 - **Missing, whole resources:** `routingPolicy` (geo, weighted round robin, primary backup, with `enableFencing` and `trickleTraffic`) on `DNSRecordSet`; `forwardingConfig.targetNameServers[].ipv6Address`, `alternativeNameServerConfig` IPv6, `dns64Config` on `DNSPolicy`.
 - **Missing, attributes that matter:** The measured lists; `routingPolicy` is the one the dns module exposes.
-  - uncovered in `dns.googleapis.com/ResourceRecordSet` (measured): `routingPolicy.geo.enableFencing`, `routingPolicy.geo.items[].signatureRrdatas[]`, `routingPolicy.primaryBackup.backupGeoTargets.enableFencing`, `routingPolicy.primaryBackup.backupGeoTargets.items[].signatureRrdatas[]`, `routingPolicy.primaryBackup.trickleTraffic`, `routingPolicy.wrr.items[].signatureRrdatas[]`, `signatureRrdatas[]`
+  - uncovered in `dns.googleapis.com/ResourceRecordSet` (measured): `routingPolicy.geo.items[].signatureRrdatas[]`, `routingPolicy.primaryBackup.backupGeoTargets.items[].signatureRrdatas[]`, `routingPolicy.wrr.items[].signatureRrdatas[]`, `signatureRrdatas[]`
   - uncovered in `dns.googleapis.com/ManagedZone` (measured): `creationTime`, `forwardingConfig.outboundEndpoints[].name`, `forwardingConfig.targetNameServers[].domainName`, `forwardingConfig.targetNameServers[].ipv6Address`, `id`, `nameServerSet`, `nameServers[]`, `peeringConfig.targetNetwork.deactivateTime`, `serviceDirectoryConfig.namespace.deletionTime`
   - uncovered in `dns.googleapis.com/Policy` (measured): `alternativeNameServerConfig.outboundEndpoints[].name`, `alternativeNameServerConfig.targetNameServers[].ipv6Address`, `dns64Config.scope.allQueries`, `id`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy` replaces the whole policy and would clear it); live pending. `routingPolicy` is on `DNSRecordSet` already (only `enableFencing`, `trickleTraffic` and the DNSSEC `signatureRrdatas` are missing); those, the forwarding targets' `ipv6Address` and `domainName` (zone and policy) sit in objects Terraform sends whole, so they need whole-object kinds (upstream `master` has direct `DNSRecordSet` types and mappers, no controller yet); not built.
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0): no forwarding target `ipv6Address` or `domainName` in any DNS CRD or direct type; open PR #9783 (a direct `DNSRecordSet` controller, 2026-06-12) and #15420 (rrdatas to a routing policy, 2026-11-11) touch only record sets.
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy` replaces the whole policy and would clear it); live pending. `routingPolicy.geo.enableFencing`, `primaryBackup.backupGeoTargets.enableFencing` and `primaryBackup.trickleTraffic` are not gaps: `DNSRecordSet` has them under Terraform's names (`enableGeoFencing`, `enableGeoFencingForBackups`, `trickleRatio`), now aliases in `overrides.yaml` (2026-11-23). Deferred below the security-adjacent items (2026-11-23, section 6: a gap becomes a kind when a workload needs it, and no module here is known to set these): the DNSSEC `signatureRrdatas` (pre-signed records), and the forwarding targets' `ipv6Address` and `domainName` (zone and policy), which sit in objects Terraform sends whole (a zone's update is a PUT of the whole zone; a policy's patch sends `alternativeNameServerConfig` with any change), so they need whole-object `DNSManagedZone` and `DNSPolicy` kinds of ours, copied from upstream's opt-in direct controllers at the pin with the fields added.
 
 ### 16. Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
 
@@ -778,7 +778,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `dns.googleapis.com/ManagedZone` | DNSManagedZone | - | 26 | 17 | 0 | 9 | 15 |
 | foundation | `dns.googleapis.com/OutboundEndpoint` | - | DNSOutboundEndpoint | 8 | 0 | 8 | 0 | - |
 | foundation | `dns.googleapis.com/Policy` | DNSPolicy | - | 11 | 7 | 0 | 4 | 15 |
-| foundation | `dns.googleapis.com/ResourceRecordSet` | DNSRecordSet | - | 50 | 43 | 0 | 7 | 15 |
+| foundation | `dns.googleapis.com/ResourceRecordSet` | DNSRecordSet | - | 50 | 46 | 0 | 4 | 15 |
 | foundation | `dns.googleapis.com/ResponsePolicy` | DNSResponsePolicy (alpha) | DNSResponsePolicy | 6 | 3 | 0 | 3 | 8 |
 | foundation | `dns.googleapis.com/ResponsePolicyRule` | DNSResponsePolicyRule (alpha) | DNSResponsePolicyRule | 53 | 6 | 0 | 47 | 8 |
 | foundation | `essentialcontacts.googleapis.com/Contact` | EssentialContactsContact | - | 3 | 3 | 0 | 0 | - |

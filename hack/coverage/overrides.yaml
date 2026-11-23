@@ -241,3 +241,11 @@ aliases:
     config: nodeConfig
     locations: nodeLocations
     maxPodsConstraint.maxPodsPerNode: maxPodsPerNode
+  # Terraform's names for a record set's routing policy fencing and trickle
+  # traffic (google_dns_record_set's enable_geo_fencing,
+  # enable_geo_fencing_for_backups, trickle_ratio), which Config
+  # Connector's DNSRecordSet keeps (foundation item 15, checked 2026-11-23).
+  dns.googleapis.com/ResourceRecordSet:
+    routingPolicy.geo.enableFencing: routingPolicy.enableGeoFencing
+    routingPolicy.primaryBackup.backupGeoTargets.enableFencing: routingPolicy.primaryBackup.enableGeoFencingForBackups
+    routingPolicy.primaryBackup.trickleTraffic: routingPolicy.primaryBackup.trickleRatio

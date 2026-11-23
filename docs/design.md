@@ -2263,6 +2263,23 @@ kind, a mask-less upstream update rules it out too, and a create-only
 whole-object kind would take a mutable resource from Config Connector for
 no reason.
 
+**The field kinds' leftovers (2026-11-23).** Foundation items 11, 15 and
+16 left fields no field kind can own. Upstream read again first
+(read-only: `master` at `bc464f55`, releases `v1.161.0` and `v1.162.0`,
+open pull requests by search, #12521's head `4e94076d`): none has them.
+Items 11 and 16 rank above the security-adjacent items
+(`docs/coverage/foundation.md`: importance first), and `hack/discokind`
+generates a whole-object kind for each at little cost, so both were built
+as pattern 3: `ComputeServiceAttachment` (`consumerAcceptLists[].networkUrl`,
+`domainNames`, `metadata`, `natIpsPerEndpoint`) and `ComputeSubnetwork`
+(the fields the API takes only at insert), section 2.4. Item 15's
+leftovers were not built: its routing policy fields are not gaps
+(`DNSRecordSet` has them under Terraform's names; the coverage now says
+so), and the forwarding targets' `ipv6Address` and `domainName` need
+hand-written whole-object `DNSManagedZone` and `DNSPolicy` kinds (copies
+of upstream's opt-in direct controllers) that no known workload needs
+yet (section 6), so they wait below the security-adjacent items.
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:

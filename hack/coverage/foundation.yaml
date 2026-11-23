@@ -474,14 +474,22 @@ items:
       `DNSRecordSet`; `forwardingConfig.targetNameServers[].ipv6Address`, `alternativeNameServerConfig` IPv6,
       `dns64Config` on `DNSPolicy`.
     attributes: The measured lists; `routingPolicy` is the one the dns module exposes.
-    upstream: none found.
+    upstream: >-
+      none found. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0): no forwarding target
+      `ipv6Address` or `domainName` in any DNS CRD or direct type; open PR #9783 (a direct `DNSRecordSet` controller,
+      2026-06-12) and #15420 (rrdatas to a routing policy, 2026-11-11) touch only record sets.
     build: >-
       Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23)
       owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy`
-      replaces the whole policy and would clear it); live pending. `routingPolicy` is on `DNSRecordSet` already (only
-      `enableFencing`, `trickleTraffic` and the DNSSEC `signatureRrdatas` are missing); those, the forwarding targets'
-      `ipv6Address` and `domainName` (zone and policy) sit in objects Terraform sends whole, so they need whole-object
-      kinds (upstream `master` has direct `DNSRecordSet` types and mappers, no controller yet); not built.
+      replaces the whole policy and would clear it); live pending. `routingPolicy.geo.enableFencing`,
+      `primaryBackup.backupGeoTargets.enableFencing` and `primaryBackup.trickleTraffic` are not gaps: `DNSRecordSet`
+      has them under Terraform's names (`enableGeoFencing`, `enableGeoFencingForBackups`, `trickleRatio`), now
+      aliases in `overrides.yaml` (2026-11-23). Deferred below the security-adjacent items (2026-11-23, section 6: a
+      gap becomes a kind when a workload needs it, and no module here is known to set these): the DNSSEC
+      `signatureRrdatas` (pre-signed records), and the forwarding targets' `ipv6Address` and `domainName` (zone and
+      policy), which sit in objects Terraform sends whole (a zone's update is a PUT of the whole zone; a policy's patch
+      sends `alternativeNameServerConfig` with any change), so they need whole-object `DNSManagedZone` and `DNSPolicy`
+      kinds of ours, copied from upstream's opt-in direct controllers at the pin with the fields added.
   - title: Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
     importance: A
     gap: field
