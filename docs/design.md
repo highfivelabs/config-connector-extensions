@@ -2332,8 +2332,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     left: a live `mirror`
     rule (a security profile group with a custom mirroring profile and a
     mirroring endpoint group); the hierarchical policy's packet mirroring
-    rules (`firewallPolicies.addPacketMirroringRule`, beta only; live
-    pending the test folder); a regional kind, which the API has no rule
+    rules, built 2026-11-23 as `ComputeFirewallPolicyPacketMirroringRule`
+    (`compute.gcp.hfl.dev/v1alpha1`; `firewallPolicies.*PacketMirroringRule`
+    are beta only and in neither pinned Go client, so the controller sends
+    them as REST; mockgcp patch 0058), live pending the test folder; a
+    regional kind, which the API has no rule
     calls for; `targetSecureTags`, which no test sets.
 38. `EndpointsService`: a live run (needs `roles/servicemanagement.admin`
     for `cce-live-tests` and `servicemanagement.googleapis.com` on;

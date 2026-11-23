@@ -172,6 +172,7 @@ var Kinds = []kind{
 	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel, labels: slotguard.Metadata},
 	{gvk: dnsv1beta1.DNSResponsePolicyRuleGVK, crdName: "dnsresponsepolicyrules.dns.gcp.hfl.dev", model: dns.NewResponsePolicyRuleModel},
 	{gvk: computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
+	{gvk: computev1alpha1.ComputeFirewallPolicyPacketMirroringRuleGVK, crdName: "computefirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewFirewallPolicyPacketMirroringRuleModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 	{gvk: firestorev1beta1.FirestoreBackupScheduleGVK, crdName: "firestorebackupschedules.firestore.gcp.hfl.dev", model: firestore.NewFirestoreBackupScheduleModel},
 	{gvk: apigeev1beta1.ApigeeNATAddressGVK, crdName: "apigeenataddresses.apigee.gcp.hfl.dev", model: apigee.NewApigeeNATAddressModel},

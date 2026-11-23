@@ -104,6 +104,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ComputeFirewallPolicyPacketMirroringRule`**
+  (`compute.gcp.hfl.dev/v1alpha1`): a packet mirroring rule of a
+  hierarchical (organization or folder) firewall policy, which no Config
+  Connector kind has; the same fields as
+  `ComputeNetworkFirewallPolicyPacketMirroringRule`, on Config Connector's
+  `ComputeFirewallPolicy` (`firewallPolicyRef`). The API has these calls
+  in its beta version only.
+
 - **`DNSPolicyFields`** (`dns.gcp.hfl.dev/v1alpha1`, a field kind,
   `docs/design.md` decision 37): a Cloud DNS server policy's
   `dns64Config`, which Config Connector's `DNSPolicy` lacks, set on a

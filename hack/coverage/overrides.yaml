@@ -202,6 +202,7 @@ subresources:
   ComputeNetworkFirewallPolicyRule: compute.googleapis.com/NetworkFirewallPolicy:rules[]
   ComputeNetworkFirewallPolicyAssociation: compute.googleapis.com/NetworkFirewallPolicy:associations[]
   ComputeNetworkFirewallPolicyPacketMirroringRule: compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]
+  ComputeFirewallPolicyPacketMirroringRule: compute.googleapis.com/FirewallPolicy:packetMirroringRules[]
   ComputeOrganizationSecurityPolicyRule: compute.googleapis.com/OrganizationSecurityPolicy:rules[]
   ComputeOrganizationSecurityPolicyAssociation: compute.googleapis.com/OrganizationSecurityPolicy:associations[]
   ComputeInstanceGroupNamedPort: compute.googleapis.com/InstanceGroup:namedPorts[]

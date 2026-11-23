@@ -277,6 +277,8 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computerouters.compute.cnrm.cloud.google.com.yaml"),
 			// ComputeNetworkFirewallPolicyRule's policy.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computenetworkfirewallpolicies.compute.cnrm.cloud.google.com.yaml"),
+			// ComputeFirewallPolicyPacketMirroringRule's policy.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computefirewallpolicies.compute.cnrm.cloud.google.com.yaml"),
 			// StorageBucketObject's bucket.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
 			// A managed folder, which IAMMember names by name.

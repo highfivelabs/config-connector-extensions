@@ -398,6 +398,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   0057; it replaced the whole policy). It does not show: whether the API
   takes DNS64 on a policy bound to no network, or what DNS64 answers
   (mockgcp resolves nothing).
+- **Hierarchical firewall policies' packet mirroring rules**
+  (`ComputeFirewallPolicyPacketMirroringRule`). mockgcp's protos are v1
+  only and the calls are beta, so patch 0058 serves them on the HTTP
+  layer with the network policy's rules (patch 0032). It does not show:
+  whether the real API keeps fields a patch leaves out, which security
+  profile groups a folder's rule may name, a mirror rule's effect, or the
+  organization-level permissions a folder's policy needs.
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and

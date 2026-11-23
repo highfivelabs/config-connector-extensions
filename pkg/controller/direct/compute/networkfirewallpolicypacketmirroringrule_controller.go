@@ -217,7 +217,13 @@ func (a *networkFirewallPolicyPacketMirroringRuleAdapter) Update(ctx context.Con
 // empty list out, so a list the cloud's rule has and the spec has not is
 // sent as [], and a security profile group the spec drops as "".
 func (a *networkFirewallPolicyPacketMirroringRuleAdapter) patchBody() ([]byte, error) {
-	raw, err := protojson.Marshal(a.desired)
+	return packetMirroringRulePatchBody(a.desired, a.actual)
+}
+
+// packetMirroringRulePatchBody is patchBody for any policy's packet
+// mirroring rule (ComputeFirewallPolicyPacketMirroringRule's too).
+func packetMirroringRulePatchBody(desired, actual *pb.FirewallPolicyRule) ([]byte, error) {
+	raw, err := protojson.Marshal(desired)
 	if err != nil {
 		return nil, err
 	}
@@ -230,17 +236,17 @@ func (a *networkFirewallPolicyPacketMirroringRuleAdapter) patchBody() ([]byte, e
 		match = map[string]any{}
 		body["match"] = match
 	}
-	have, want := a.actual.GetMatch(), a.desired.GetMatch()
+	have, want := actual.GetMatch(), desired.GetMatch()
 	if len(have.GetSrcIpRanges()) > 0 && len(want.GetSrcIpRanges()) == 0 {
 		match["srcIpRanges"] = []string{}
 	}
 	if len(have.GetDestIpRanges()) > 0 && len(want.GetDestIpRanges()) == 0 {
 		match["destIpRanges"] = []string{}
 	}
-	if len(a.actual.GetTargetSecureTags()) > 0 && len(a.desired.GetTargetSecureTags()) == 0 {
+	if len(actual.GetTargetSecureTags()) > 0 && len(desired.GetTargetSecureTags()) == 0 {
 		body["targetSecureTags"] = []any{}
 	}
-	if a.actual.GetSecurityProfileGroup() != "" && a.desired.GetSecurityProfileGroup() == "" {
+	if actual.GetSecurityProfileGroup() != "" && desired.GetSecurityProfileGroup() == "" {
 		body["securityProfileGroup"] = ""
 	}
 	return json.Marshal(body)

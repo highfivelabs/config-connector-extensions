@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 17.8% | 43.3% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 18.1% | 43.0% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 4.7% | 28.1% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 20.1% | 39.5% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 21.7% | 37.9% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -68,7 +68,7 @@ What these numbers miss, for the foundation:
 | # | Item | Imp. | Gap | Modules | Size | Measured: attributes uncovered / total (official) | Upstream |
 | ---: | --- | :-: | --- | ---: | :-: | --- | --- |
 | 1 | [Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)](#1-hierarchy-and-project-settings-service-identity-at-folder-and-organization-default-service-accounts-default-network-tier) | A | whole | 3 | M | n/a (not a create, or not in the API's create requests) | none |
-| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 100 / 131 (0.0%) | none |
+| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 89 / 131 (0.0%) | none |
 | 3 | [Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)](#3-organization-level-custom-iam-roles-covered-by-config-connectors-iamcustomrole) | A | whole | 1 | S | 6 / 14 (57.1%) | `IAMCustomRole` (Terraform-based, `v1beta1`) has it |
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 5 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
@@ -111,16 +111,16 @@ What these numbers miss, for the foundation:
   - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]`: 0 / 11 / 21 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
-  - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule
+  - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 11 / 21 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule, ComputeFirewallPolicyPacketMirroringRule (ours)
 - **Missing, whole resources:** `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` and `ComputeRegionNetworkFirewallPolicyPacketMirroringRule`; the same packet mirroring rule for the global network policy (`google_compute_network_firewall_policy_packet_mirroring_rule`) and the hierarchical policy. Our `ComputeRegionNetworkFirewallPolicy` is the policy only (its `description`).
 - **Missing, attributes that matter:** All of a rule: `priority`, `action`, `direction`, `disabled`, `enableLogging`, `ruleName`, `description`, `match` (`srcIpRanges`, `destIpRanges`, `layer4Configs[]`, `srcFqdns`, `destFqdns`, `srcRegionCodes`, `destRegionCodes`, `srcThreatIntelligences`, `destThreatIntelligences`, `srcAddressGroups`, `destAddressGroups`, `srcSecureTags`, `srcNetworkType`, `destNetworkType`), `targetSecureTags`, `targetServiceAccounts`, `securityProfileGroup`, `tlsInspect`. An association is `attachmentTarget` (a network), `name` and `priority`.
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkContext`, `rules[].match.destNetworkType`, `rules[].match.srcNetworkContext`, `rules[].match.srcNetworkType`, `rules[].match.srcNetworks[]`, `rules[].match.srcSecureTags[].name`, `rules[].securityProfileGroup`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetSecureTags[].name` and 2 more
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]` (measured): `associations[].attachmentTarget`, `associations[].name`, `associations[].priority`
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]`, `packetMirroringRules[].match.srcAddressGroups[]`, `packetMirroringRules[].match.srcFqdns[]`, `packetMirroringRules[].match.srcNetworkContext` and 11 more
-  - uncovered in `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
+  - uncovered in `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]`, `packetMirroringRules[].match.srcAddressGroups[]`, `packetMirroringRules[].match.srcFqdns[]`, `packetMirroringRules[].match.srcNetworkContext` and 11 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kind or pull request for the regional policy; the global `ComputeNetworkFirewallPolicyRule` and `...Association` are Terraform-based (the rule is alpha-only, see the stability item), with no packet mirroring rule at all. `docs/design.md` 6.5 row 6 has the same finding.
-- **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version. `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, built at `v1alpha1`; written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields; mockgcp patch 0032). Next: the hierarchical policy's, on the beta API, live pending the test folder.
+- **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version. `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, built at `v1alpha1`; written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields; mockgcp patch 0032). The hierarchical policy's, `ComputeFirewallPolicyPacketMirroringRule`, built 2026-11-23 (`compute.gcp.hfl.dev/v1alpha1`, the global kind's fields on Config Connector's `ComputeFirewallPolicy`; the beta API's calls as REST, mockgcp patch 0058); live pending the test folder. The item is built but for the regional packet mirroring rule, which the API has no calls for.
 
 ### 3. Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
 
@@ -346,7 +346,7 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** M, **modules** 1 (net-firewall-policy).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/FirewallPolicy:rules[]`: 20 / 0 / 12 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule
+  - `compute.googleapis.com/FirewallPolicy:rules[]`: 20 / 0 / 12 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule, ComputeFirewallPolicyPacketMirroringRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy:rules[]`: 23 / 1 / 8 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/OrganizationSecurityPolicy:rules[]`: 8 / 0 / 42 of 50; ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha), ComputeOrganizationSecurityPolicy (ours), ComputeOrganizationSecurityPolicyAssociation (ours), ComputeOrganizationSecurityPolicyRule (ours)
 - **Missing, whole resources:** Fields of `ComputeFirewallPolicyRule`, `ComputeNetworkFirewallPolicyRule` and `ComputeOrganizationSecurityPolicyRule` that the API has and the Terraform-based kinds do not (the measured lists); the policy `displayName`/`shortName`.
@@ -491,6 +491,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
 | ComputeDiskResourcePolicyAttachment | (not a create) no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com | n/a | false |
+| ComputeFirewallPolicyPacketMirroringRule | compute.googleapis.com/FirewallPolicy | 11 | false |
 | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 15 | false |
 | ComputeInterconnectAttachment | compute.googleapis.com/InterconnectAttachment | 19 | false |
 | ComputeInterconnectAttachmentGroup | compute.googleapis.com/InterconnectAttachmentGroup | 5 | false |
@@ -541,52 +542,52 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only
@@ -737,7 +738,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/CrossSiteNetwork` | - | ComputeCrossSiteNetwork | 2 | 0 | 2 | 0 | 7 |
 | foundation | `compute.googleapis.com/ExternalVpnGateway` | ComputeExternalVPNGateway | - | 8 | 5 | 0 | 3 | - |
 | foundation | `compute.googleapis.com/Firewall` | ComputeFirewall | - | 19 | 17 | 0 | 2 | - |
-| foundation | `compute.googleapis.com/FirewallPolicy` | ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule | - | 73 | 24 | 0 | 49 | 2 |
+| foundation | `compute.googleapis.com/FirewallPolicy` | ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule | ComputeFirewallPolicyPacketMirroringRule | 73 | 24 | 11 | 38 | 2 |
 | foundation | `compute.googleapis.com/GlobalAddress` | ComputeAddress | - | 15 | 13 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/GlobalPublicDelegatedPrefix` | - | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/Interconnect` | ComputeInterconnect (alpha) | - | 25 | 16 | 0 | 9 | 10 |
