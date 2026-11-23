@@ -1,0 +1,277 @@
+config-connector-extensions patch 0063: a regional security policy's rules.
+
+mockgcp's regionSecurityPolicies served insert, get, patch, delete and
+list, but not addRule, getRule, patchRule or removeRule, which
+ComputeRegionSecurityPolicyRule (ours; foundation item 27) calls. They
+are served here (regionsecuritypolicyrules.go): a rule is addressed by its
+priority, patchRule replaces the fields its update mask names (a field
+unset in the body is cleared) and merges without one, and a missing rule
+is 404 (assumed; live pending). A CLOUD_ARMOR policy is made with the
+default rule the API adds (allow, priority 2147483647), which removeRule
+refuses. The regional patch also takes ddosProtectionConfig and
+userDefinedFields, which ComputeRegionSecurityPolicy changes, now that
+mockgcp serves that kind's collection. Upstream candidate: yes.
+
+--- a/mockgcp/mockcompute/securitypoliciesv1.go
++++ b/mockgcp/mockcompute/securitypoliciesv1.go
+@@ -481,6 +481,9 @@
+ 			rule.Kind = PtrTo("compute#securityPolicyRule")
+ 		}
+ 	}
++	// config-connector-extensions patch 0063: the API adds a CLOUD_ARMOR
++	// policy's default rule (allow everything, at the lowest priority).
++	addRegionSecurityPolicyDefaultRule(obj)
+ 
+ 	sort.Slice(obj.Rules, func(i, j int) bool {
+ 		return obj.Rules[i].GetPriority() < obj.Rules[j].GetPriority()
+@@ -527,6 +530,14 @@
+ 	if patchObj.RecaptchaOptionsConfig != nil {
+ 		obj.RecaptchaOptionsConfig = patchObj.RecaptchaOptionsConfig
+ 	}
++	// config-connector-extensions patch 0063: a network edge policy's DDoS
++	// protection and user-defined fields are patched too.
++	if patchObj.DdosProtectionConfig != nil {
++		obj.DdosProtectionConfig = patchObj.DdosProtectionConfig
++	}
++	if patchObj.UserDefinedFields != nil {
++		obj.UserDefinedFields = patchObj.UserDefinedFields
++	}
+ 	if patchObj.Rules != nil {
+ 		obj.Rules = patchObj.Rules
+ 	}
+--- /dev/null
++++ b/mockgcp/mockcompute/regionsecuritypolicyrules.go
+@@ -0,0 +1,233 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockcompute
++
++// config-connector-extensions patch 0063: a regional security policy's
++// rules (regionSecurityPolicies.addRule, getRule, patchRule, removeRule),
++// which mockgcp did not serve, for ComputeRegionSecurityPolicyRule.
++
++import (
++	"context"
++	"sort"
++	"strings"
++	"unicode"
++
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/reflect/protoreflect"
++)
++
++// regionSecurityPolicyDefaultPriority is the default rule's priority, the
++// lowest there is.
++const regionSecurityPolicyDefaultPriority = 2147483647
++
++// addRegionSecurityPolicyDefaultRule adds the default rule the API adds to
++// a CLOUD_ARMOR policy made without one.
++func addRegionSecurityPolicyDefaultRule(obj *pb.SecurityPolicy) {
++	if obj.GetType() != "CLOUD_ARMOR" {
++		return
++	}
++	for _, r := range obj.Rules {
++		if r.GetPriority() == regionSecurityPolicyDefaultPriority {
++			return
++		}
++	}
++	obj.Rules = append(obj.Rules, &pb.SecurityPolicyRule{
++		Kind:        PtrTo("compute#securityPolicyRule"),
++		Action:      PtrTo("allow"),
++		Description: PtrTo("default rule"),
++		Preview:     PtrTo(false),
++		Priority:    PtrTo(int32(regionSecurityPolicyDefaultPriority)),
++		Match: &pb.SecurityPolicyRuleMatcher{
++			VersionedExpr: PtrTo("SRC_IPS_V1"),
++			Config:        &pb.SecurityPolicyRuleMatcherConfig{SrcIpRanges: []string{"*"}},
++		},
++	})
++}
++
++func (s *RegionSecurityPoliciesV1) getPolicy(ctx context.Context, project, region, policy string) (*pb.SecurityPolicy, *securityPolicyName, error) {
++	name, err := s.parseSecurityPolicyName("projects/" + project + "/regions/" + region + "/securityPolicies/" + policy)
++	if err != nil {
++		return nil, nil, err
++	}
++	obj := &pb.SecurityPolicy{}
++	if err := s.storage.Get(ctx, name.String(), obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", name.String())
++		}
++		return nil, nil, err
++	}
++	return obj, name, nil
++}
++
++func (s *RegionSecurityPoliciesV1) saveRules(ctx context.Context, obj *pb.SecurityPolicy, name *securityPolicyName, opType string) (*pb.Operation, error) {
++	sort.Slice(obj.Rules, func(i, j int) bool {
++		return obj.Rules[i].GetPriority() < obj.Rules[j].GetPriority()
++	})
++	obj.Fingerprint = PtrTo("abcdef0123A=")
++	if err := s.storage.Update(ctx, name.String(), obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startRegionalLRO(ctx, name.Project.ID, name.Region, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}
++
++func regionSecurityPolicyRuleMissing(priority int32) error {
++	return status.Errorf(codes.NotFound, "Rule with priority %d not found", priority)
++}
++
++func (s *RegionSecurityPoliciesV1) GetRule(ctx context.Context, req *pb.GetRuleRegionSecurityPolicyRequest) (*pb.SecurityPolicyRule, error) {
++	obj, _, err := s.getPolicy(ctx, req.GetProject(), req.GetRegion(), req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	for _, r := range obj.GetRules() {
++		if r.GetPriority() == req.GetPriority() {
++			return r, nil
++		}
++	}
++	return nil, regionSecurityPolicyRuleMissing(req.GetPriority())
++}
++
++func (s *RegionSecurityPoliciesV1) AddRule(ctx context.Context, req *pb.AddRuleRegionSecurityPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.getPolicy(ctx, req.GetProject(), req.GetRegion(), req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	rule := proto.CloneOf(req.GetSecurityPolicyRuleResource())
++	if rule.Priority == nil {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': ''. Priority is required.")
++	}
++	for _, existing := range obj.GetRules() {
++		if existing.GetPriority() == rule.GetPriority() {
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '%d'. A rule with this priority already exists in the security policy.", rule.GetPriority())
++		}
++	}
++	if rule.Kind == nil {
++		rule.Kind = PtrTo("compute#securityPolicyRule")
++	}
++	if rule.Description == nil {
++		rule.Description = PtrTo("")
++	}
++	if rule.Preview == nil {
++		rule.Preview = PtrTo(false)
++	}
++	if err := validateAndNormalizeRateLimitOptions(rule); err != nil {
++		return nil, err
++	}
++	obj.Rules = append(obj.Rules, rule)
++	return s.saveRules(ctx, obj, name, "compute.regionSecurityPolicies.addRule")
++}
++
++// PatchRule replaces the fields its update mask names (a top-level field,
++// or one under it: network_match.srcIpRanges replaces networkMatch), unset
++// in the body clearing them; without a mask it merges the body into the
++// rule, as the global policy's does.
++func (s *RegionSecurityPoliciesV1) PatchRule(ctx context.Context, req *pb.PatchRuleRegionSecurityPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.getPolicy(ctx, req.GetProject(), req.GetRegion(), req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	var rule *pb.SecurityPolicyRule
++	for _, r := range obj.GetRules() {
++		if r.GetPriority() == req.GetPriority() {
++			rule = r
++		}
++	}
++	if rule == nil {
++		return nil, regionSecurityPolicyRuleMissing(req.GetPriority())
++	}
++	body := req.GetSecurityPolicyRuleResource()
++	if body.Priority != nil && body.GetPriority() != req.GetPriority() {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '%d'. The priority of a rule cannot be changed by patchRule here.", body.GetPriority())
++	}
++	if mask := req.GetUpdateMask(); mask != "" {
++		dst := rule.ProtoReflect()
++		src := body.ProtoReflect()
++		fields := dst.Descriptor().Fields()
++		for _, path := range strings.Split(mask, ",") {
++			top := snakeCase(strings.TrimSpace(strings.SplitN(path, ".", 2)[0]))
++			fd := fields.ByName(protoreflect.Name(top))
++			if fd == nil {
++				return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'updateMask': '%s'.", path)
++			}
++			if src.Has(fd) {
++				dst.Set(fd, src.Get(fd))
++			} else {
++				dst.Clear(fd)
++			}
++		}
++	} else {
++		proto.Merge(rule, body)
++	}
++	if rule.Kind == nil {
++		rule.Kind = PtrTo("compute#securityPolicyRule")
++	}
++	if err := validateAndNormalizeRateLimitOptions(rule); err != nil {
++		return nil, err
++	}
++	return s.saveRules(ctx, obj, name, "compute.regionSecurityPolicies.patchRule")
++}
++
++func (s *RegionSecurityPoliciesV1) RemoveRule(ctx context.Context, req *pb.RemoveRuleRegionSecurityPolicyRequest) (*pb.Operation, error) {
++	obj, name, err := s.getPolicy(ctx, req.GetProject(), req.GetRegion(), req.GetSecurityPolicy())
++	if err != nil {
++		return nil, err
++	}
++	if req.GetPriority() == regionSecurityPolicyDefaultPriority && obj.GetType() == "CLOUD_ARMOR" {
++		return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%d'. The default rule cannot be removed.", req.GetPriority())
++	}
++	var kept []*pb.SecurityPolicyRule
++	found := false
++	for _, r := range obj.GetRules() {
++		if r.GetPriority() == req.GetPriority() {
++			found = true
++			continue
++		}
++		kept = append(kept, r)
++	}
++	if !found {
++		return nil, regionSecurityPolicyRuleMissing(req.GetPriority())
++	}
++	obj.Rules = kept
++	return s.saveRules(ctx, obj, name, "compute.regionSecurityPolicies.removeRule")
++}
++
++// snakeCase is a mask path's field in the protos' spelling
++// (rateLimitOptions and rate_limit_options are the same field).
++func snakeCase(s string) string {
++	var b strings.Builder
++	for i, r := range s {
++		if unicode.IsUpper(r) {
++			if i > 0 {
++				b.WriteByte('_')
++			}
++			b.WriteRune(unicode.ToLower(r))
++			continue
++		}
++		b.WriteRune(r)
++	}
++	return b.String()
++}

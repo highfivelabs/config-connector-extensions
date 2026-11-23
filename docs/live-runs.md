@@ -487,13 +487,17 @@ load balancers, whose forwarding rules bill by the hour while they exist;
 the subnetwork's `insertonly` case skips live), `ComputeRegionSecurityPolicy`
 (package `compute`; a `CLOUD_ARMOR` policy, billed by Cloud Armor while it
 exists; the `network` case skips live without Cloud Armor Enterprise),
-`CertificateManagerTrustConfig` (package `certificatemanager`, free) and
+`ComputeRegionSecurityPolicyRule` (package `compute`; its test makes a
+`CLOUD_ARMOR` policy by a `ComputeRegionSecurityPolicy` object and a few
+rules in it, billed by Cloud Armor while they exist; the network case
+skips live), `CertificateManagerTrustConfig` (package `certificatemanager`, free) and
 `BinaryAuthorizationPlatformPolicy` (package `binaryauthorization`, free;
 needs `binaryauthorization.googleapis.com` on and
 `roles/binaryauthorization.policyAdmin` for the live-test account). The
 sweeper covers each: service attachments and subnetworks in their own
-sections, the regional policy and the trust config through
-`discokinds.tsv`, and GKE's platform policies in a section of their own.
+sections, the trust config through `discokinds.tsv`, regional security
+policies (with their rules) and GKE's platform policies in sections of
+their own.
 
 `PrivateCACAPoolFields` and `PrivateCACertificateTemplateFields`
 (package `privateca`) wait on Certificate Authority Service for the

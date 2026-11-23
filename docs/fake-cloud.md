@@ -419,6 +419,19 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   the API computes its own key ID, the API's checks of name constraints
   and URLs, the grace period (mockgcp deletes at once), or a KMS key the
   authority may not use.
+- **Regional security policies and their rules** (`ComputeRegionSecurityPolicy`,
+  `ComputeRegionSecurityPolicyRule`). mockgcp serves the policies (the
+  discokind fake left them to it from 2026-11-23, `mockgcp: true`) and,
+  with patch 0063, `regionSecurityPolicies.addRule`, `getRule`,
+  `patchRule` and `removeRule`: `patchRule` replaces the fields its update
+  mask names (one unset in the body is cleared), a missing rule is 404, a
+  `CLOUD_ARMOR` policy is made with the default rule (allow, priority
+  2147483647) and `removeRule` refuses it, and the regional `patch` takes
+  DDoS protection and user-defined fields. It does not show: the API's
+  answer for a missing rule (which may be a 400), which fields a policy's
+  type takes (`networkMatch` only on `CLOUD_ARMOR_NETWORK`), the
+  expression language, rate limit and WAF checks, the rule limits, or
+  billing.
 - **Hierarchical firewall policies' rules** (`ComputeFirewallPolicyRule`,
   ours). mockgcp serves `firewallPolicies.addRule`, `getRule`,
   `patchRule` and `removeRule`; patch 0061 makes `addRule` add a rule

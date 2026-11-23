@@ -381,6 +381,7 @@ var discoKinds = []*discokind.Kind{
 		Name:        "{parent}/regions/{region}/securityPolicies/{id}",
 		Parents:     []string{"project"},
 		InsertStyle: true, UpdatePUT: false,
+		Mockgcp:   true,
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"creationTimestamp", "fingerprint", "id", "kind", "parent", "region", "selfLink"},

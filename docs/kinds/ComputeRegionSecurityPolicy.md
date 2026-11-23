@@ -21,16 +21,19 @@ is global only, so a regional policy, and with it a network edge policy's
 `ddosProtectionConfig` and `userDefinedFields`, has no kind there. Ours is
 the policy without its rules: the API changes rules only by `addRule`,
 `patchRule` and `removeRule` and adds the default rule itself, so `rules`
-is left out of the spec, and a rule kind of ours
-(`ComputeRegionSecurityPolicyRule`) is not built yet. `labels` are left out
+is left out of the spec; the rules are our `ComputeRegionSecurityPolicyRule`
+(built the same day). `labels` are left out
 too: only `setLabels` changes them. `type` is immutable (Terraform forces a
 new policy for it).
 
-Tested by kindtest on `pkg/discokind/fake`: `TestComputeRegionSecurityPolicy`
+Tested by kindtest: `TestComputeRegionSecurityPolicy`
 (a `CLOUD_ARMOR` policy, its description and log level changed) and
 `TestComputeRegionSecurityPolicyNetwork` (a `CLOUD_ARMOR_NETWORK` policy
-with DDoS protection and user-defined fields, both changed). The fake does
-not add the default rule, check which fields a type takes, or bill.
+with DDoS protection and user-defined fields, both changed). Since the
+rule kind (2026-11-23) mockgcp serves the collection (`mockgcp: true`;
+patch 0063 adds a `CLOUD_ARMOR` policy's default rule and patches DDoS
+protection and user-defined fields), so a policy and its rules are in one
+fake. The fake does not check which fields a type takes, or bill.
 
 Live: pending. `task test-live PROJECT=$GCP_PROJECT KINDS=compute
 LIVE_RUN=TestComputeRegionSecurityPolicy` (Cloud Armor bills a policy by

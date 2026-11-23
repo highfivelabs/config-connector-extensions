@@ -207,6 +207,7 @@ subresources:
   ComputeNetworkFirewallPolicyPacketMirroringRule: compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]
   ComputeFirewallPolicyPacketMirroringRule: compute.googleapis.com/FirewallPolicy:packetMirroringRules[]
   ComputeOrganizationSecurityPolicyRule: compute.googleapis.com/OrganizationSecurityPolicy:rules[]
+  ComputeRegionSecurityPolicyRule: compute.googleapis.com/RegionSecurityPolicy:rules[]
   ComputeOrganizationSecurityPolicyAssociation: compute.googleapis.com/OrganizationSecurityPolicy:associations[]
   ComputeInstanceGroupNamedPort: compute.googleapis.com/InstanceGroup:namedPorts[]
   AccessContextManagerAccessLevelCondition: accesscontextmanager.googleapis.com/AccessPolicyAccessLevel:basic.conditions[]

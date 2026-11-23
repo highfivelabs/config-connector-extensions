@@ -67,6 +67,7 @@ resources:
 - compute.gcp.hfl.dev_computeregionnotificationendpoints.yaml
 - compute.gcp.hfl.dev_computeregionperinstanceconfigs.yaml
 - compute.gcp.hfl.dev_computeregionsecuritypolicies.yaml
+- compute.gcp.hfl.dev_computeregionsecuritypolicyrules.yaml
 - compute.gcp.hfl.dev_computerolloutplans.yaml
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml

@@ -322,6 +322,8 @@
 # userDefinedFields). Rules are left out: the API changes them only by
 # addRule, patchRule and removeRule (a rule kind is next), and adds the
 # default rule itself. Labels are left out too: only setLabels changes them.
+# mockgcp serves the collection (patch 0063, with its rules), so that our
+# ComputeRegionSecurityPolicyRule's test finds the policy its rules go in.
 - kind: ComputeRegionSecurityPolicy
   group: compute.gcp.hfl.dev
   version: v1alpha1
@@ -329,6 +331,7 @@
   resource: regionSecurityPolicies
   parents: [project]
   terraform: google_compute_region_security_policy
+  mockgcp: true
   immutable: [type]
   skip:
     rules: "the API changes rules only by addRule, patchRule and removeRule, and adds the default rule itself"

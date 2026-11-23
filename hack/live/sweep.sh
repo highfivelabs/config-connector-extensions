@@ -453,6 +453,18 @@ while IFS=$'\t' read -r dkind base coll field soft; do
     act "${dkind}" "${name}" disco_delete "${base}" "${name}"
   done <<<"${rows}"
 done <"${HERE}/discokinds.tsv"
+# Regional Cloud Armor security policies (ComputeRegionSecurityPolicy, a
+# discokind kind that mockgcp serves, so not in discokinds.tsv; its rules,
+# ComputeRegionSecurityPolicyRule's, go with the policy), in us-central1,
+# by the run's name.
+crsp="https://compute.googleapis.com/compute/v1/"
+rows="$(disco_api GET "${crsp}projects/${project}/regions/us-central1/securityPolicies?maxResults=500" \
+  | jq -r '.items[]?.name')"
+while read -r name; do
+  [[ -n "${name}" ]] || continue
+  by_run "${name}" "" || continue
+  act "regional security policy" "${name}" disco_delete "${crsp}" "projects/${project}/regions/us-central1/securityPolicies/${name}"
+done <<<"${rows}"
 # API Gateway and BigLake, which the loop above leaves alone (their
 # kinds' generated tests skip live, or their collections sit under a
 # parent) while TestAPIGatewayDeleteGatewayAndConfigTogether, the

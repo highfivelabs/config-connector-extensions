@@ -2634,9 +2634,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     skips live (Cloud Armor Enterprise). To be seen live: whether the
     API's default rule, which the spec does not hold, leaves a resync
     writing nothing, and whether `patch` takes `userDefinedFields` without
-    a mask. Not built: a regional policy's rules (a hand-written
-    `ComputeRegionSecurityPolicyRule` is next) and rule fields beyond
-    Config Connector's on a global policy.
+    a mask. A regional policy's rules: our `ComputeRegionSecurityPolicyRule`
+    (item 53). Not built: rule fields beyond Config Connector's on a
+    global policy (item 53 says why).
 
 48. `ComputeFirewallPolicyRule` (ours, foundation item 19, 2026-11-23;
     section 2.3): a live run, pending the test folder (`task test-live
@@ -2710,6 +2710,47 @@ To raise confidence in `ArtifactRegistryRepository`:
     survives its object's abandon (the Secret is owned and goes with it;
     a new object for the same credential writes it again, and a token's
     cannot be).
+
+53. `ComputeRegionSecurityPolicyRule` (ours, `compute.gcp.hfl.dev/v1alpha1`,
+    foundation item 27, 2026-11-23; `docs/kinds/ComputeRegionSecurityPolicyRule.md`).
+    Upstream read first (read-only: releases to `v1.162.0`, master at
+    `bc464f55`, and, since the GitHub API is refused from the session, the
+    heads of every pull request from #13500 to #16331 fetched without
+    blobs and their file lists searched): no regional security policy
+    rule, and no pull request adds one; Config Connector's opt-in direct
+    `ComputeSecurityPolicy` sends a policy's rules in the policy's own
+    body. Written here after Terraform's
+    `google_compute_region_security_policy_rule` (read, not copied): a
+    rule named by its policy and priority, `getRule`, `addRule`,
+    `patchRule` with an update mask of the fields that differ
+    (Terraform's paths) and `removeRule`; the rule's types copied from
+    Config Connector's `ComputeSecurityPolicy` rule (its names, so a rule
+    reads as `spec.rule[]` does there), with `networkMatch` for network
+    edge policies; the fields the API takes only on a global policy left
+    out. The default rule (priority 2147483647) can be taken over; a
+    delete leaves it. mockgcp patch 0063 serves the rule calls, and
+    `ComputeRegionSecurityPolicy`'s collection moved from the discokind
+    fake to mockgcp so that a policy and its rules share a fake. Fake
+    only; live: `task test-live PROJECT=$GCP_PROJECT KINDS=compute
+    LIVE_RUN=TestComputeRegionSecurityPolicyRule` (the network case skips
+    live). To be seen live: the answer for a missing rule (404 assumed,
+    or 400 about the priority), the mask paths, a field the mask names
+    and the body leaves out being cleared, and the default rule as made.
+    **Rule fields on a global policy: not built.** Config Connector's
+    `ComputeSecurityPolicy` is Terraform-based and keeps every rule in
+    `spec.rule`; when it is set, Terraform's update diffs that list and
+    adds, patches (whole) and removes rules to match it, so a rule of
+    ours at a priority it manages would be reset, and one at a priority
+    it does not manage removed by its next rule change; when it is not
+    set (the field is computed), whether Terraform keeps rules it did not
+    make is not established. Neither a field kind (section 6.6, pattern
+    2) nor a rule kind beside it is safe on that. The
+    uncovered rule fields (`networkMatch`, which a global policy does not
+    take; `match.exprOptions`; the WAF exclusions' request bodies; the
+    expression's title and location) would need a whole-object global
+    `ComputeSecurityPolicy` of ours with its rules (pattern 3, size L),
+    which no known workload needs; it waits below the remaining
+    foundation rows.
 
 43. A delete that still needs a reference (2026-11-16, `pkg/deleting`;
     updated 2026-11-17). Every kind now deletes by its recorded name and
