@@ -425,7 +425,7 @@ compute.googleapis.com,compute.googleapis.com/RolloutPlan,15,,0,ComputeRolloutPl
 compute.googleapis.com,compute.googleapis.com/Route,13,ComputeRoute,11,,0,2,false,api=v1:routes; official-spec-fields-unmatched=1/11
 compute.googleapis.com,compute.googleapis.com/Router,81,ComputeRouter;ComputeRouterInterface;ComputeRouterNAT;ComputeRouterPeer,57,ComputeRouter,19,5,true,api=v1:routers; ours-spec-fields-unmatched=6/81
 compute.googleapis.com,compute.googleapis.com/SecurityPolicy,86,ComputeSecurityPolicy,36,,0,50,false,api=v1:securityPolicies; official-spec-fields-unmatched=14/49
-compute.googleapis.com,compute.googleapis.com/ServiceAttachment,17,ComputeServiceAttachment,9,,0,8,false,api=v1:serviceAttachments; official-spec-fields-unmatched=3/11
+compute.googleapis.com,compute.googleapis.com/ServiceAttachment,17,ComputeServiceAttachment,9,ComputeServiceAttachment,7,1,false,api=v1:serviceAttachments; official-spec-fields-unmatched=3/11; ours-spec-fields-unmatched=3/18
 compute.googleapis.com,compute.googleapis.com/Snapshot,27,ComputeSnapshot,12,,0,15,false,api=v1:snapshots; official-spec-fields-unmatched=2/12
 compute.googleapis.com,compute.googleapis.com/SslCertificate,8,ComputeManagedSSLCertificate;ComputeSSLCertificate,6,,0,2,false,api=v1:sslCertificates
 compute.googleapis.com,compute.googleapis.com/SslPolicy,6,ComputeSSLPolicy,5,,0,1,false,api=v1:sslPolicies; official-spec-fields-unmatched=1/5

@@ -602,6 +602,21 @@ live: the attachment group needs Dedicated Interconnects, the endpoint
 Cloud DNS in the live project (as `DNSResponsePolicy`) and a network and
 subnetwork Setup.
 
+Then (2026-11-23) `ComputeServiceAttachment`
+(`compute.gcp.hfl.dev/v1alpha1`), generated, for foundation item 11's
+fields that no field kind can own: Config Connector's DCL-based kind sends
+`consumerAcceptLists` whole and has no `networkUrl` in it, and lacks
+`domainNames` (create only), `metadata` and `natIpsPerEndpoint`. Ours
+owns the whole attachment with the API's field set (decision 19, as
+`ComputeInterconnectAttachment`), at `v1alpha1` until it passes live
+(decisions 27 and 34). It is the first generated kind for a collection
+mockgcp already serves and other tests make resources in
+(`ComputeServiceAttachmentFields`'), so `kinds.yaml` gained `mockgcp`:
+`pkg/discokind/fake` passes the collection's requests to mockgcp instead
+of serving them (`Kind.Mockgcp`). Its live Setup makes a producer (an
+internal passthrough load balancer and a PSC NAT subnet) for the object
+and its abandoned one.
+
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
 characters" gets that `maxLength` in the CRD, and the fixture check
@@ -2559,6 +2574,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     network rule's `targetResources` (the regional rule's `srcNetworks`,
     network contexts, group and TLS inspection were added the same day,
     item 27).
+
+49. `ComputeServiceAttachment` (ours, generated; foundation item 11,
+    2026-11-23): a live run (`task test-live PROJECT=$GCP_PROJECT
+    KINDS=compute LIVE_RUN=TestComputeServiceAttachment`; its Setup makes
+    two producers, each an internal passthrough load balancer and a PSC
+    NAT subnet, free but for the forwarding rule's hourly price). To be
+    seen live: an accept list entry by `networkUrl`, `domainNames` at
+    create, the API's defaults (`propagatedConnectionLimit`) and whether a
+    resync then writes nothing, and `metadata` and `natIpsPerEndpoint`,
+    which mockgcp cannot show.
 
 46. `AccessContextManagerAuthorizedOrgsDesc` (foundation item 21,
     2026-11-23; section 2.3): a live run needs an organization's access

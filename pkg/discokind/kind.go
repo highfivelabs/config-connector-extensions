@@ -115,6 +115,11 @@ type Kind struct {
 	// along, and they then answer 403 (catalog repository run
 	// cat-11141549-4cb0).
 	MissingIs403 bool
+	// Mockgcp: the fake cloud (pkg/discokind/fake) leaves the collection to
+	// mockgcp, which already serves it and which other tests' requests for
+	// it rely on (a subnetwork, a service attachment): a parallel kind of
+	// ours for a resource Config Connector also manages (decision 19).
+	Mockgcp bool
 	// GetQuery are query parameters every get of the resource sends: API
 	// Gateway's view=FULL, without which a config's get leaves out its
 	// source files (openapiDocuments), which the spec sets, so the spec

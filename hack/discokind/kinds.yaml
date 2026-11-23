@@ -266,6 +266,27 @@
   immutable: [interconnect, type, router, edgeAvailabilityDomain, candidateSubnets, candidateIpv6Subnets, candidateCloudRouterIpAddress, candidateCloudRouterIpv6Address, candidateCustomerRouterIpAddress, candidateCustomerRouterIpv6Address, vlanTag8021q, ipsecInternalAddresses, encryption, subnetLength, pairingKey, l2Forwarding]
   note: "A VLAN attachment: an interconnect's connection to a Cloud Router, with the router and customer addresses chosen from candidates."
 
+# Foundation item 11 (2026-11-23): Config Connector's DCL-based
+# ComputeServiceAttachment sends consumerAcceptLists whole and has no
+# networkUrl in it, and takes no domainNames, metadata or
+# natIpsPerEndpoint. Ours is a parallel kind with the API's whole field set
+# (decision 19, as ComputeInterconnectAttachment); a workload moves to it by
+# acquiring the same attachment. mockgcp serves service attachments for the
+# field kind's test (patch 0054), so the fake leaves them to it.
+# Immutable as Terraform's google_compute_service_attachment forces a new
+# attachment for them; enableProxyProtocol as Config Connector's CRD says.
+- kind: ComputeServiceAttachment
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: serviceAttachments
+  parents: [project]
+  terraform: google_compute_service_attachment
+  mockgcp: true
+  immutable: [targetService, domainNames, enableProxyProtocol]
+  skip: {producerForwardingRule: "the API's older name for targetService, which replaces it"}
+  note: "A Private Service Connect producer's service attachment: the internal load balancer it publishes, its NAT subnets, and the consumer projects and networks it accepts."
+
 - kind: ComputeRegionInstanceTemplate
   group: compute.gcp.hfl.dev
   version: v1alpha1

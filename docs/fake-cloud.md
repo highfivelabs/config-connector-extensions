@@ -372,7 +372,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   anything, so a GPU `nodeSelector` is stored but never checked against
   the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
   serves.
-- **Compute Engine service attachments** (`ComputeServiceAttachmentFields`).
+- **Compute Engine service attachments** (`ComputeServiceAttachmentFields`,
+  and the generated `ComputeServiceAttachment`, which `pkg/discokind/fake`
+  leaves to mockgcp: `kinds.yaml` `mockgcp`). mockgcp's merge patch cannot
+  patch a map (`metadata`) and its protos lack `natIpsPerEndpoint`, so the
+  generated kind's fixtures set neither.
   mockgcp's merge patch (`mergeProtos`) now replaces any scalar (patch
   0054). It does not show: the API's fingerprint check (mockgcp ignores
   a stale fingerprint), the defaults the API gives a new service

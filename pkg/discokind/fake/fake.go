@@ -43,6 +43,9 @@
 // (a config its gateway serves) or that holds others refused in the
 // operation, FAILED_PRECONDITION, as the real API does.
 //
+// A kind with Kind.Mockgcp is not served here: its requests go to
+// mockgcp, which already serves the collection for other tests.
+//
 // What it cannot show (docs/testing.md): the API's validation (required
 // fields, enum values, cross-field rules), defaults the API fills in
 // beyond Kind.FakeDefaults, and quotas. Those are what a live run is for.
@@ -260,6 +263,10 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 		return c.Next.RoundTrip(req)
 	}
 	for _, k := range c.Kinds {
+		if k.Mockgcp {
+			// mockgcp serves this collection (Kind.Mockgcp).
+			continue
+		}
 		path, ok, wrongHost := kindPath(k, full)
 		if !ok {
 			continue

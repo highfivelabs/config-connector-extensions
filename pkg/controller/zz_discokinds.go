@@ -349,6 +349,18 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"attachmentGroup", "cloudRouterIpAddress", "cloudRouterIpv6Address", "configurationConstraints", "creationTimestamp", "customerRouterIpAddress", "customerRouterIpv6Address", "dataplaneVersion", "googleReferenceId", "id", "kind", "operationalStatus", "privateInterconnectInfo", "region", "remoteService", "satisfiesPzs", "selfLink", "state"},
 	},
 	{
+		GVK:         computev1alpha1.ComputeServiceAttachmentGVK,
+		CRDName:     "computeserviceattachments.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/serviceAttachments/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		Mockgcp:   true,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"connectedEndpoints", "creationTimestamp", "fingerprint", "id", "kind", "pscServiceAttachmentId", "region", "selfLink"},
+	},
+	{
 		GVK:         computev1alpha1.ComputeRegionInstanceTemplateGVK,
 		CRDName:     "computeregioninstancetemplates.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",

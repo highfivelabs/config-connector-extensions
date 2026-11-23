@@ -503,6 +503,9 @@ func registryFile(kinds []*built) []byte {
 		if c.MissingIs403 {
 			b.WriteString("MissingIs403: true,\n")
 		}
+		if c.Mockgcp {
+			b.WriteString("Mockgcp: true,\n")
+		}
 		if len(c.GetQuery) > 0 {
 			fmt.Fprintf(&b, "GetQuery: %#v,\n", c.GetQuery)
 		}

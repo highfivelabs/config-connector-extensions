@@ -99,6 +99,9 @@ func TestComputeRegionNotificationEndpoint(t *testing.T) {
 // TestComputeRolloutPlan runs testdata/discokind/ComputeRolloutPlan/ on the fake cloud, or live.
 func TestComputeRolloutPlan(t *testing.T) { kindtest.Run(t, "ComputeRolloutPlan") }
 
+// TestComputeServiceAttachment runs testdata/discokind/ComputeServiceAttachment/ on the fake cloud, or live.
+func TestComputeServiceAttachment(t *testing.T) { kindtest.Run(t, "ComputeServiceAttachment") }
+
 // TestComputeWireGroup runs testdata/discokind/ComputeWireGroup/ on the fake cloud, or live.
 func TestComputeWireGroup(t *testing.T) { kindtest.Run(t, "ComputeWireGroup") }
 

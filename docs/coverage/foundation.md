@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 18.7% | 42.3% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 19.0% | 42.1% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 6.4% | 26.4% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 23.9% | 35.7% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 24.9% | 34.7% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -77,7 +77,7 @@ What these numbers miss, for the foundation:
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 154 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 14 / 85 (51.8%) | none for the fields |
-| 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found (master read 2026-11-23 at c3af11d; open pull requests not listed from that session). |
+| 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 1 / 17 (52.9%) | none found (master read 2026-11-23 at bc464f55, and releases v1.161.0 and v1.162.0: the kind is still DCL-based, with direct types and a map... |
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 6 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
@@ -242,12 +242,12 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** S, **modules** 5 (net-lb-int, net-lb-app-int, net-swp, net-lb-app-int-cross-region, net-lb-proxy-int).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/ServiceAttachment`: 9 / 0 / 8 of 17; ComputeServiceAttachment
+  - `compute.googleapis.com/ServiceAttachment`: 9 / 7 / 1 of 17; ComputeServiceAttachment, ComputeServiceAttachment (ours)
 - **Missing, whole resources:** `consumerAcceptLists[]` (project or network, with a connection limit), `domainNames`, `natIpsPerEndpoint`, `propagatedConnectionLimit`, `reconcileConnections`, `metadata{}` on `ComputeServiceAttachment`.
 - **Missing, attributes that matter:** The measured list; `consumerAcceptLists` and `reconcileConnections` matter.
-  - uncovered in `compute.googleapis.com/ServiceAttachment` (measured): `consumerAcceptLists[].endpointUrl`, `consumerAcceptLists[].networkUrl`, `domainNames[]`, `metadata{}`, `natIpsPerEndpoint`, `producerForwardingRule`, `propagatedConnectionLimit`, `reconcileConnections`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (master read 2026-11-23 at c3af11d; open pull requests not listed from that session).
-- **Build:** Field kind (decision 19, section 6.6 pattern 2): `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns `reconcileConnections` and `propagatedConnectionLimit` (Config Connector's DCL patch never sends them); live pending. `consumerAcceptLists[].networkUrl` needs a whole-object kind (the DCL sends the whole list), `domainNames` a create-only one; not built.
+  - uncovered in `compute.googleapis.com/ServiceAttachment` (measured): `producerForwardingRule`
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (master read 2026-11-23 at bc464f55, and releases v1.161.0 and v1.162.0: the kind is still DCL-based, with direct types and a mapper but no controller, and none of these fields; no open pull request for a direct controller or the fields found).
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns `reconcileConnections` and `propagatedConnectionLimit` (Config Connector's DCL patch never sends them); live pending. The rest, `consumerAcceptLists[].networkUrl` (the DCL sends the whole list), `domainNames` (create only), `metadata` and `natIpsPerEndpoint`: our whole-object `ComputeServiceAttachment` (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind` 2026-11-23, the API's field set; tested on mockgcp's service attachments); live pending. `producerForwardingRule` is `targetService`'s older name.
 
 ### 12. Logging fields (buckets, sinks) and saved queries
 
@@ -511,6 +511,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | ComputeSecurityPolicyFields | (not a create) a field kind, Adaptive Protection threshold configs and the request body inspection size of a security policy Config Connector's ComputeSecurityPolicy owns, written with securityPolicies.patch (decision 37) | n/a | false |
+| ComputeServiceAttachment | compute.googleapis.com/ServiceAttachment | 7 | false |
 | ComputeServiceAttachmentFields | (not a create) a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37) | n/a | false |
 | ComputeSubnetworkFields | (not a create) a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37) | n/a | false |
 | ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 8 | false |
@@ -542,19 +543,19 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
@@ -565,10 +566,10 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | PrivateCACAPoolFields | (not a create) a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37) | n/a | false |
@@ -577,8 +578,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 13 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 3 | false |
@@ -763,7 +764,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/Route` | ComputeRoute | - | 13 | 11 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/Router` | ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer, ComputeRouter | ComputeRouter | 81 | 57 | 19 | 5 | 9 |
 | security | `compute.googleapis.com/SecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | 27 |
-| foundation | `compute.googleapis.com/ServiceAttachment` | ComputeServiceAttachment | - | 17 | 9 | 0 | 8 | 11 |
+| foundation | `compute.googleapis.com/ServiceAttachment` | ComputeServiceAttachment | ComputeServiceAttachment | 17 | 9 | 7 | 1 | 11 |
 | security | `compute.googleapis.com/SslPolicy` | ComputeSSLPolicy | - | 6 | 5 | 0 | 1 | - |
 | foundation | `compute.googleapis.com/Subnetwork` | ComputeSubnetwork | - | 30 | 20 | 0 | 10 | 16 |
 | foundation | `compute.googleapis.com/TargetVpnGateway` | ComputeTargetVPNGateway | - | 5 | 3 | 0 | 2 | - |

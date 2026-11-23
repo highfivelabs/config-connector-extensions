@@ -109,6 +109,10 @@ type Config struct {
 	// exist 403 PERMISSION_DENIED rather than 404 (BigLake catalogs), which
 	// the Discovery document does not say (Kind.MissingIs403).
 	MissingIs403 bool `json:"missingIs403,omitempty"`
+	// Mockgcp: the fake cloud leaves the collection to mockgcp, which
+	// serves it already (Kind.Mockgcp): a parallel kind for a resource
+	// Config Connector manages, whose other tests make it through mockgcp.
+	Mockgcp bool `json:"mockgcp,omitempty"`
 	// GetQuery are query parameters every get of the resource sends
 	// (Kind.GetQuery): API Gateway's view FULL, without which a config's
 	// source files are left out.

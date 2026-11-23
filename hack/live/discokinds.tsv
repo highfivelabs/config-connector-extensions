@@ -29,6 +29,7 @@ ComputeRegionHealthSource	https://compute.googleapis.com/compute/v1/	projects/{p
 ComputeRegionInstanceTemplate	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/instanceTemplates	items	-
 ComputeRegionNotificationEndpoint	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/notificationEndpoints	items	-
 ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}/global/rolloutPlans	items	-
+ComputeServiceAttachment	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/serviceAttachments	items	-
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
 DNSOutboundEndpoint	https://dns.googleapis.com/dns/v1/	projects/{project}/locations/us-central1/outboundEndpoints	outboundEndpoints	-
 DataplexAspectType	https://dataplex.googleapis.com/v1/	projects/{project}/locations/global/aspectTypes	aspectTypes	-
