@@ -147,7 +147,13 @@ items:
       master's direct `BigQueryDataset` (opt-in) has none of them; no pull request adds them.
     build: >-
       A field kind (`BigQueryDatasetFields`) if Terraform's dataset update (a PUT of the whole dataset) can be
-      shown to keep them, else wait; to be decided when the row is reached.
+      shown to keep them, else wait; to be decided when the row is reached. Decided 2026-11-23: wait. Terraform's
+      `google_bigquery_dataset` update (the default; read at the pin's fork) is a `datasets.update` PUT of the
+      dataset built from its own schema, which has none of these fields, and BigQuery's update replaces the whole
+      dataset: every Config Connector change would clear a field kind's fields (decision 11's case, not the
+      partial one). `externalDatasetReference` and `linkedDatasetSource` are taken only at create, so they need
+      a whole-object kind anyway. Built when a workload needs them: a whole-object `BigQueryDataset` of ours from
+      master's opt-in direct controller (which updates with a field mask, `DatasetMetadataToUpdate`).
   - title: Cloud Run job and worker pool template fields
     importance: A
     gap: field
@@ -165,7 +171,17 @@ items:
       both kinds have opt-in direct controllers on master; not read further.
     build: >-
       Not yet: measure what is really missing first. Our `RunService` (decision 11) is the pattern if a whole-object
-      kind is needed.
+      kind is needed. Measured by hand 2026-11-23 for `RunJob` (Terraform by default): most of the list is
+      naming or not configuration (the run tokens start executions; readiness probes, `cpuIdle` and
+      `startupCpuBoost` are a service's), or preview (`buildConfig`, `sourceCode`, `sandboxes`,
+      `workloadIdentityConfig`, Filestore volumes). Really missing: `labels` and `template.labels` (Config
+      Connector's service mapping ignores both), GPUs (`template.template.nodeSelector.accelerator`,
+      `gpuZonalRedundancyDisabled`), gRPC probes, `volumeMounts[].subPath`, `binaryAuthorization.policy`,
+      `baseImageUri`. A field kind is
+      unsafe: Terraform's `google_cloud_run_v2_job` update is a PATCH of the whole job with no update mask
+      (read at the pin's fork), as for services (decision 11). So it is a whole-object `RunJob` of ours, copied
+      from master's opt-in direct controller as `RunService` was from `RunWorkerPool` (size L, next).
+      `RunWorkerPool` is direct-only upstream (alpha); its measured gaps are mostly preview build fields.
   - title: Cloud SQL instance fields
     importance: A
     gap: field

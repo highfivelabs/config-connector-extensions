@@ -2409,6 +2409,27 @@ Not built: `platformLogsConfig` and `noCache` (newer than the pinned Go
 client and mockgcp's protos). Live pending
 (`docs/kinds/ArtifactRegistryRepository.md`).
 
+Row 5 (BigQuery dataset fields): wait, as the row said if Terraform's
+update could not be shown to keep them. Terraform's
+`google_bigquery_dataset` update (the default) is a `datasets.update` PUT
+of the dataset built from its own schema, which lacks the fields, and
+BigQuery's update replaces the whole dataset, so every Config Connector
+change would clear a field kind's fields; two of them
+(`externalDatasetReference`, `linkedDatasetSource`) are taken only at
+create. Built when a workload needs them, as a whole-object
+`BigQueryDataset` of ours from master's opt-in direct controller.
+
+Row 6 (Cloud Run jobs), measured by hand: the really missing fields are
+`labels` and `template.labels` (Config Connector's service mapping
+ignores both), GPUs (`nodeSelector.accelerator`,
+`gpuZonalRedundancyDisabled`), gRPC probes, `volumeMounts[].subPath`,
+`binaryAuthorization.policy` and `baseImageUri`; the rest of the measured list is
+naming, not configuration, or preview. Terraform's
+`google_cloud_run_v2_job` update is a PATCH of the whole job with no
+mask, so, as for services (decision 11), it needs a whole-object `RunJob`
+of ours copied from master's opt-in direct controller (size L; not built
+this session).
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:
