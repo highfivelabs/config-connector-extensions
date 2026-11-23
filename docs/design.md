@@ -629,7 +629,11 @@ by `expandIpCidrRange` and `setPrivateIpGoogleAccess`, which the generated
 controller does not call, so a subnet that needs those changes stays on
 Config Connector's kind. A second fixture set (`insertonly`) makes a
 BYOIP, tagged subnet on the fake; it skips live (no sub-prefix or tag in
-the live-test project).
+the live-test project). Then `ComputeRegionSecurityPolicy` (`compute.gcp.hfl.dev/v1alpha1`,
+the same day), foundation item 27's regional network edge policies: a
+regional Cloud Armor policy, which Config Connector has no kind for,
+without its rules (`skip`: the API changes them only by its rule
+methods) or labels (only `setLabels`), served by `pkg/discokind/fake`.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -2585,9 +2589,21 @@ To raise confidence in `ArtifactRegistryRepository`:
     API merges the sub-object Terraform's update sends or replaces it
     (ours come back at the next reconcile either way), whether it takes
     the nested mask paths that clear, and whether threshold configs need
-    Cloud Armor Enterprise. Not built from item 27: `userDefinedFields`,
-    `ddosProtectionConfig` (regional network edge policies) and rule
-    fields.
+    Cloud Armor Enterprise. Built from item 27 the same day:
+    `ComputeRegionSecurityPolicy` (ours, generated, `v1alpha1`), a
+    regional policy of either type with `ddosProtectionConfig` and
+    `userDefinedFields` (network edge policies), its rules left out (the
+    API changes them only by addRule, patchRule and removeRule, and adds
+    the default rule itself) and its labels too (only `setLabels` changes
+    them); live: `task test-live PROJECT=$GCP_PROJECT KINDS=compute
+    LIVE_RUN=TestComputeRegionSecurityPolicy` (a `CLOUD_ARMOR` policy,
+    billed monthly by Cloud Armor while it exists); the `network` case
+    skips live (Cloud Armor Enterprise). To be seen live: whether the
+    API's default rule, which the spec does not hold, leaves a resync
+    writing nothing, and whether `patch` takes `userDefinedFields` without
+    a mask. Not built: a regional policy's rules (a hand-written
+    `ComputeRegionSecurityPolicyRule` is next) and rule fields beyond
+    Config Connector's on a global policy.
 
 48. `ComputeFirewallPolicyRule` (ours, foundation item 19, 2026-11-23;
     section 2.3): a live run, pending the test folder (`task test-live

@@ -311,6 +311,29 @@
   skip: {enableFlowLogs: "deprecated by the API in favour of logConfig.enable"}
   note: "A VPC subnetwork, with what the API takes only at insert: a BYOIP IPv6 prefix (ipCollection), the IPv6 prefixes, subnet mask resolution and resource manager tags."
 
+# Foundation item 27 (2026-11-23): a regional Cloud Armor security policy,
+# which Config Connector has no kind for (its ComputeSecurityPolicy is
+# global and Terraform-based), for regional external load balancers and
+# network edge policies (CLOUD_ARMOR_NETWORK: ddosProtectionConfig and
+# userDefinedFields). Rules are left out: the API changes them only by
+# addRule, patchRule and removeRule (a rule kind is next), and adds the
+# default rule itself. Labels are left out too: only setLabels changes them.
+- kind: ComputeRegionSecurityPolicy
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionSecurityPolicies
+  parents: [project]
+  terraform: google_compute_region_security_policy
+  immutable: [type]
+  skip:
+    rules: "the API changes rules only by addRule, patchRule and removeRule, and adds the default rule itself"
+    labels: "the API sets labels only by setLabels, which the generated controller does not call"
+    labelFingerprint: "setLabels' optimistic-locking token"
+    associations: "an organization (hierarchical) security policy's; a regional policy has none"
+    shortName: "an organization (hierarchical) security policy's; a regional policy has none"
+  note: "A regional Cloud Armor security policy: a regional external load balancer's (CLOUD_ARMOR) or a network edge policy (CLOUD_ARMOR_NETWORK) with DDoS protection and user-defined fields. Its rules are not part of it."
+
 - kind: ComputeRegionInstanceTemplate
   group: compute.gcp.hfl.dev
   version: v1alpha1

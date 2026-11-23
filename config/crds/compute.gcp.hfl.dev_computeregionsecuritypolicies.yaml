@@ -1,0 +1,423 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computeregionsecuritypolicies.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeRegionSecurityPolicy
+    listKind: ComputeRegionSecurityPolicyList
+    plural: computeregionsecuritypolicies
+    shortNames:
+    - hflcomputeregionsecuritypolicy
+    - hflcomputeregionsecuritypolicys
+    singular: computeregionsecuritypolicy
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'ComputeRegionSecurityPolicy is a compute.v1 resource (https://compute.googleapis.com/compute/v1/{parent}/regions/{region}/securityPolicies/{id}),
+          from its Discovery document compute.v1 (hack/discokind). Terraform''s google_compute_region_security_policy.
+          A regional Cloud Armor security policy: a regional external load balancer''s
+          (CLOUD_ARMOR) or a network edge policy (CLOUD_ARMOR_NETWORK) with DDoS protection
+          and user-defined fields. Its rules are not part of it.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              adaptiveProtectionConfig:
+                properties:
+                  layer7DdosDefenseConfig:
+                    description: If set to true, enables Cloud Armor Machine Learning.
+                    properties:
+                      enable:
+                        description: If set to true, enables CAAP for L7 DDoS detection.
+                          This field is only supported in Global Security Policies
+                          of type CLOUD_ARMOR.
+                        type: boolean
+                      ruleVisibility:
+                        description: |-
+                          Rule visibility can be one of the following:
+                          STANDARD - opaque rules. (default)
+                          PREMIUM - transparent rules.
+                          This field is only supported in Global Security Policies of type
+                          CLOUD_ARMOR.
+
+                          One of PREMIUM, STANDARD.
+                        type: string
+                      thresholdConfigs:
+                        description: Configuration options for layer7 adaptive protection
+                          for various customizable thresholds.
+                        items:
+                          properties:
+                            autoDeployConfidenceThreshold:
+                              type: number
+                            autoDeployExpirationSec:
+                              format: int32
+                              type: integer
+                            autoDeployImpactedBaselineThreshold:
+                              type: number
+                            autoDeployLoadThreshold:
+                              type: number
+                            detectionAbsoluteQps:
+                              type: number
+                            detectionLoadThreshold:
+                              type: number
+                            detectionRelativeToBaselineQps:
+                              type: number
+                            name:
+                              description: The name must be 1-63 characters long,
+                                and comply withRFC1035. The name must be unique within
+                                the security policy.
+                              type: string
+                            trafficGranularityConfigs:
+                              description: Configuration options for enabling Adaptive
+                                Protection to operate on specified granular traffic
+                                units.
+                              items:
+                                properties:
+                                  enableEachUniqueValue:
+                                    description: If enabled, traffic matching each
+                                      unique value for the specified type constitutes
+                                      a separate traffic unit. It can only be set
+                                      to true if `value` is empty.
+                                    type: boolean
+                                  type:
+                                    description: |-
+                                      Type of this configuration.
+
+                                      One of HTTP_HEADER_HOST, HTTP_PATH, UNSPECIFIED_TYPE.
+                                    type: string
+                                  value:
+                                    description: Requests that match this value constitute
+                                      a granular traffic unit.
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        type: array
+                    type: object
+                type: object
+              advancedOptionsConfig:
+                properties:
+                  jsonCustomConfig:
+                    description: Custom configuration to apply the JSON parsing. Only
+                      applicable when json_parsing is set to STANDARD.
+                    properties:
+                      contentTypes:
+                        description: 'A list of custom Content-Type header values
+                          to apply the JSON parsing. As per RFC 1341, a Content-Type
+                          header value has the following format: Content-Type := type
+                          "/" subtype *[";" parameter] When configuring a custom Content-Type
+                          header value, only the type/subtype needs to be specified,
+                          and the parameters should be excluded.'
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  jsonParsing:
+                    description: One of DISABLED, STANDARD, STANDARD_WITH_GRAPHQL.
+                    type: string
+                  logLevel:
+                    description: One of NORMAL, VERBOSE.
+                    type: string
+                  requestBodyInspectionSize:
+                    description: The maximum request size chosen by the customer with
+                      Waf enabled. Values supported are "8KB", "16KB, "32KB", "48KB"
+                      and "64KB". Values are case insensitive.
+                    type: string
+                  userIpRequestHeaders:
+                    description: An optional list of case-insensitive request header
+                      names to use for resolving the callers client IP address.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              ddosProtectionConfig:
+                properties:
+                  ddosAdaptiveProtection:
+                    description: One of DDOS_ADAPTIVE_PROTECTION_UNSPECIFIED, DISABLED,
+                      ENABLED, PREVIEW, UNSPECIFIED_ADAPTIVE_PROTECTION.
+                    type: string
+                  ddosImpactedBaselineThreshold:
+                    description: DDoS Protection for Network Load Balancers (and VMs
+                      with public IPs) builds DDoS mitigations that minimize collateral
+                      damage. It quantifies this as the fraction of a non-abuse baseline
+                      that's inadvertently blocked. Rules whose collateral damage
+                      exceeds ddosImpactedBaselineThreshold will not be deployed.
+                      Using a lower value will prioritize keeping collateral damage
+                      low, possibly at the cost of its effectiveness in rate limiting
+                      some or all of the attack. It should typically be unset, so
+                      Advanced DDoS (and Adaptive Protection) uses the best mitigation
+                      it can find. Setting the threshold is advised if there are logs
+                      for false positive detections with high collateral damage, and
+                      will cause Advanced DDoS to attempt to find a less aggressive
+                      rule that satisfies the constraint. If a suitable rule cannot
+                      be found, the system falls back to either no mitigation for
+                      smaller attacks or broader network throttles for larger ones.
+                    type: number
+                  ddosProtection:
+                    description: One of ADVANCED, ADVANCED_PREVIEW, STANDARD.
+                    type: string
+                type: object
+              description:
+                description: An optional description of this resource. Provide this
+                  property when you create the resource.
+                type: string
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              recaptchaOptionsConfig:
+                properties:
+                  redirectSiteKey:
+                    description: An optional field to supply a reCAPTCHA site key
+                      to be used for all the rules using the redirect action with
+                      the type of GOOGLE_RECAPTCHA under the security policy. The
+                      specified site key needs to be created from the reCAPTCHA API.
+                      The user is responsible for the validity of the specified site
+                      key. If not specified, a Google-managed site key is used. This
+                      field is only supported in Global Security Policies of type
+                      CLOUD_ARMOR.
+                    type: string
+                type: object
+              region:
+                description: Immutable. The region, part of the resource's name ({parent}/regions/{region}/securityPolicies/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: region is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              type:
+                description: |-
+                  The type indicates the intended use of the security policy.
+                  - CLOUD_ARMOR: Cloud Armor backend security policies can
+                  be configured to filter incoming HTTP requests targeting backend services.
+                  They filter requests before they hit the origin servers.
+                  - CLOUD_ARMOR_EDGE: Cloud Armor edge security policies can
+                  be configured to filter incoming HTTP requests targeting backend services
+                  (including Cloud CDN-enabled) as well as backend buckets (Cloud Storage).
+                  They filter requests before the request is served from Google's cache.
+                  - CLOUD_ARMOR_INTERNAL_SERVICE (preview only): Cloud Armor
+                  internal service policies can be configured to filter HTTP requests
+                  targeting services managed by Traffic Director in a service mesh. They
+                  filter requests before the request is served from the application.
+                  - CLOUD_ARMOR_NETWORK: Cloud Armor network policies
+                  can be configured to filter packets targeting network load balancing
+                  resources such as backend services, target pools, target instances, and
+                  instances with external IPs. They filter requests before the request is
+                  served from the application.
+                  This field can be set only at resource creation time.
+
+                  One of CLOUD_ARMOR, CLOUD_ARMOR_EDGE, CLOUD_ARMOR_NETWORK.
+                type: string
+                x-kubernetes-validations:
+                - message: type is immutable
+                  rule: self == oldSelf
+              userDefinedFields:
+                description: 'Definitions of user-defined fields for CLOUD_ARMOR_NETWORK
+                  policies. A user-defined field consists of up to 4 bytes extracted
+                  from a fixed offset in the packet, relative to the IPv4, IPv6, TCP,
+                  or UDP header, with an optional mask to select certain bits. Rules
+                  may then specify matching values for these fields. Example: userDefinedFields:
+                  - name: "ipv4_fragment_offset" base: IPV4 offset: 6 size: 2 mask:
+                  "0x1fff"'
+                items:
+                  properties:
+                    base:
+                      description: |-
+                        The base relative to which 'offset' is measured. Possible values are:
+                        - IPV4: Points to the beginning of the IPv4 header.
+                        - IPV6: Points to the beginning of the IPv6 header.
+                        - TCP: Points to the beginning of the TCP header, skipping
+                        over any IPv4 options or IPv6 extension headers. Not present for
+                        non-first fragments.
+                        - UDP: Points to the beginning of the UDP header, skipping
+                        over any IPv4 options or IPv6 extension headers. Not present for
+                        non-first fragments.
+                        required
+
+                        One of IPV4, IPV6, TCP, UDP.
+                      type: string
+                    mask:
+                      description: If specified, apply this mask (bitwise AND) to
+                        the field to ignore bits before matching. Encoded as a hexadecimal
+                        number (starting with "0x"). The last byte of the field (in
+                        network byte order) corresponds to the least significant byte
+                        of the mask.
+                      type: string
+                    name:
+                      description: The name of this field. Must be unique within the
+                        policy.
+                      type: string
+                    offset:
+                      description: Offset of the first byte of the field (in network
+                        byte order) relative to 'base'.
+                      format: int32
+                      type: integer
+                    size:
+                      description: 'Size of the field in bytes. Valid values: 1-4.'
+                      format: int32
+                      type: integer
+                  type: object
+                type: array
+            required:
+            - projectRef
+            - region
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/regions/{region}/securityPolicies/{id}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  creationTimestamp:
+                    description: Output only. [Output Only] Creation timestamp inRFC3339
+                      text format.
+                    type: string
+                  fingerprint:
+                    description: Specifies a fingerprint for this resource, which
+                      is essentially a hash of the metadata's contents and used for
+                      optimistic locking. The fingerprint is initially generated by
+                      Compute Engine and changes after every request to modify or
+                      update metadata. You must always provide an up-to-date fingerprint
+                      hash in order to update or change metadata, otherwise the request
+                      will fail with error412 conditionNotMet. To see the latest fingerprint,
+                      make get() request to the security policy.
+                    type: string
+                  id:
+                    description: Output only. [Output Only] The unique identifier
+                      for the resource. This identifier is defined by the server.
+                    type: string
+                  kind:
+                    description: Output only. [Output only] Type of the resource.
+                      Alwayscompute#securityPolicyfor security policies
+                    type: string
+                  parent:
+                    description: Output only. [Output Only] The parent of the security
+                      policy.
+                    type: string
+                  region:
+                    description: Output only. [Output Only] URL of the region where
+                      the regional security policy resides. This field is not applicable
+                      to global security policies.
+                    type: string
+                  selfLink:
+                    description: Output only. [Output Only] Server-defined URL for
+                      the resource.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

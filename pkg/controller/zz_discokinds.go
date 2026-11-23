@@ -374,6 +374,17 @@ var discoKinds = []*discokind.Kind{
 		InputOnly: []string{"params.resourceManagerTags"},
 	},
 	{
+		GVK:         computev1alpha1.ComputeRegionSecurityPolicyGVK,
+		CRDName:     "computeregionsecuritypolicies.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/securityPolicies/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"creationTimestamp", "fingerprint", "id", "kind", "parent", "region", "selfLink"},
+	},
+	{
 		GVK:         computev1alpha1.ComputeRegionInstanceTemplateGVK,
 		CRDName:     "computeregioninstancetemplates.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",

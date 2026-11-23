@@ -28,6 +28,7 @@ ComputeRegionHealthCheckService	https://compute.googleapis.com/compute/v1/	proje
 ComputeRegionHealthSource	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/healthSources	items	-
 ComputeRegionInstanceTemplate	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/instanceTemplates	items	-
 ComputeRegionNotificationEndpoint	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/notificationEndpoints	items	-
+ComputeRegionSecurityPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/regions/us-central1/securityPolicies	items	-
 ComputeRolloutPlan	https://compute.googleapis.com/compute/v1/	projects/{project}/global/rolloutPlans	items	-
 ComputeZoneVmExtensionPolicy	https://compute.googleapis.com/compute/v1/	projects/{project}/zones/us-central1-a/vmExtensionPolicies	items	-
 DNSOutboundEndpoint	https://dns.googleapis.com/dns/v1/	projects/{project}/locations/us-central1/outboundEndpoints	outboundEndpoints	-

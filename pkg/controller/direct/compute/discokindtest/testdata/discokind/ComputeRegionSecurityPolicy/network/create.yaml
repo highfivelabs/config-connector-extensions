@@ -1,0 +1,18 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionSecurityPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  type: CLOUD_ARMOR_NETWORK
+  description: made by a config-connector-extensions test
+  ddosProtectionConfig:
+    ddosProtection: STANDARD
+  userDefinedFields:
+  - name: SIG1_AT_0
+    base: UDP
+    offset: 8
+    size: 2
+    mask: "0x8F00"

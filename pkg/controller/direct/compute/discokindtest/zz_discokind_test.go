@@ -96,6 +96,9 @@ func TestComputeRegionNotificationEndpoint(t *testing.T) {
 	kindtest.Run(t, "ComputeRegionNotificationEndpoint")
 }
 
+// TestComputeRegionSecurityPolicy runs testdata/discokind/ComputeRegionSecurityPolicy/ on the fake cloud, or live.
+func TestComputeRegionSecurityPolicy(t *testing.T) { kindtest.Run(t, "ComputeRegionSecurityPolicy") }
+
 // TestComputeRolloutPlan runs testdata/discokind/ComputeRolloutPlan/ on the fake cloud, or live.
 func TestComputeRolloutPlan(t *testing.T) { kindtest.Run(t, "ComputeRolloutPlan") }
 
