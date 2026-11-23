@@ -223,6 +223,16 @@ subresources:
   AccessContextManagerServicePerimeterResource: accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter:status.resources[]
   BigQueryDatasetAccess: bigquery.googleapis.com/Dataset:access[]
 
+# Our kinds that write the object's metadata.labels to the resource's
+# labels, as Config Connector's Terraform kinds do (pkg/controller's
+# slotLabelled, slotguard.Metadata).
+ours_metadata_labels:
+  - ArtifactRegistryRepository
+  - DNSResponsePolicy
+  - PrivateCACertificateAuthority
+  - RunJob
+  - SecretManagerSecret
+
 # A kind that also fills a list of another resource's body, in addition to
 # its own resource: "service/Resource:path".
 also:

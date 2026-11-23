@@ -7064,7 +7064,7 @@ artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,disal
 artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,dockerConfig.immutableTags,boolean,false,both,spec.dockerConfig.immutableTags,spec.dockerConfig.immutableTags
 artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,format,string,false,both,spec.format,spec.format
 artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,kmsKeyName,string,false,both,spec.kmsKeyRef,spec.kmsKeyRef
-artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,labels{},string,false,official,metadata.labels,
+artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,labels{},string,false,both,metadata.labels,metadata.labels
 artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,mavenConfig.allowSnapshotOverwrites,boolean,false,both,spec.mavenConfig.allowSnapshotOverwrites,spec.mavenConfig.allowSnapshotOverwrites
 artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,mavenConfig.versionPolicy,string,false,both,spec.mavenConfig.versionPolicy,spec.mavenConfig.versionPolicy
 artifactregistry.googleapis.com,artifactregistry.googleapis.com/Repository,mode,string,false,both,spec.mode,spec.mode
@@ -27644,7 +27644,7 @@ dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,type,string,false,offici
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,description,string,false,both,spec.description,spec.description
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,gkeClusters[].gkeClusterName,string,false,both,spec.gkeClusters[].gkeClusterName,spec.gkeClusters[].gkeClusterName
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,id,string,false,none,,
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,labels{},string,false,none,,
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,labels{},string,false,ours,,metadata.labels
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,networks[].networkUrl,string,false,both,spec.networks[].networkUrl,spec.networks[].networkUrl
 dns.googleapis.com,dns.googleapis.com/ResponsePolicy,responsePolicyName,string,false,none,,
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,behavior,string,false,both,spec.behavior,spec.behavior
@@ -38740,7 +38740,7 @@ privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,con
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,gcsBucket,string,false,both,spec.gcsBucketRef,spec.gcsBucketRef
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,keySpec.algorithm,string,false,both,spec.keySpec.algorithm,spec.keySpec.algorithm
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,keySpec.cloudKmsKeyVersion,string,false,both,spec.keySpec.cloudKmsKeyVersionRef,spec.keySpec.cloudKmsKeyVersionRef
-privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,labels{},string,false,none,,
+privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,labels{},string,false,ours,,metadata.labels
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,lifetime,string,true,both,spec.lifetime,spec.lifetime
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,name,string,false,both,metadata.name,metadata.name
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,subordinateConfig.certificateAuthority,string,true,none,,
@@ -39690,7 +39690,7 @@ run.googleapis.com,run.googleapis.com/Job,binaryAuthorization.useDefault,boolean
 run.googleapis.com,run.googleapis.com/Job,client,string,false,both,spec.client,spec.client
 run.googleapis.com,run.googleapis.com/Job,clientVersion,string,false,both,spec.clientVersion,spec.clientVersion
 run.googleapis.com,run.googleapis.com/Job,functionalType,string,false,none,,
-run.googleapis.com,run.googleapis.com/Job,labels{},string,false,none,,
+run.googleapis.com,run.googleapis.com/Job,labels{},string,false,ours,,metadata.labels
 run.googleapis.com,run.googleapis.com/Job,launchStage,string,false,both,spec.launchStage,spec.launchStage
 run.googleapis.com,run.googleapis.com/Job,name,string,false,both,metadata.name,metadata.name
 run.googleapis.com,run.googleapis.com/Job,runExecutionToken,string,false,none,,

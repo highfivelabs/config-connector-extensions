@@ -684,7 +684,7 @@ dns.googleapis.com,dns.googleapis.com/ManagedZone,26,DNSManagedZone,17,,0,9,fals
 dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,DNSOutboundEndpoint,8,0,false,api=v1:outboundEndpoints; ours-spec-fields-unmatched=3/10
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7
 dns.googleapis.com,dns.googleapis.com/ResourceRecordSet,50,DNSRecordSet,46,,0,4,false,api=v1:resourceRecordSets; official-spec-fields-unmatched=2/48
-dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,0,3,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5
+dns.googleapis.com,dns.googleapis.com/ResponsePolicy,6,DNSResponsePolicy,3,DNSResponsePolicy,1,2,false,api=v1:responsePolicies; official-spec-fields-unmatched=2/5; ours-spec-fields-unmatched=2/5
 dns.googleapis.com,dns.googleapis.com/ResponsePolicyRule,53,DNSResponsePolicyRule,6,DNSResponsePolicyRule,0,47,false,api=v1:responsePolicyRules; official-spec-fields-unmatched=3/9; ours-spec-fields-unmatched=3/9
 documentai.googleapis.com,documentai.googleapis.com/Processor,5,DocumentAIProcessor,3,,0,2,false,api=v1:projects.locations.processors; official-spec-fields-unmatched=3/6
 documentai.googleapis.com,documentai.googleapis.com/Schema,3,,0,,0,3,false,api=v1:projects.locations.schemas
@@ -1068,7 +1068,7 @@ policysimulator.googleapis.com,policysimulator.googleapis.com/organizations.loca
 policysimulator.googleapis.com,policysimulator.googleapis.com/projects.locations.replays,11,,0,,0,11,false,api=v1:projects.locations.replays
 privateca.googleapis.com,privateca.googleapis.com/CaPool,55,PrivateCACAPool,41,,0,14,false,api=v1:projects.locations.caPools; official-spec-fields-unmatched=4/44
 privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificate,60,PrivateCACertificate,42,,0,18,false,api=v1:projects.locations.caPools.certificates; official-spec-fields-unmatched=7/48
-privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,64,PrivateCACertificateAuthority,43,PrivateCACertificateAuthority,13,8,false,api=v1:projects.locations.caPools.certificateAuthorities; official-spec-fields-unmatched=5/47; ours-spec-fields-unmatched=5/60
+privateca.googleapis.com,privateca.googleapis.com/CaPoolCertificateAuthority,64,PrivateCACertificateAuthority,43,PrivateCACertificateAuthority,14,7,false,api=v1:projects.locations.caPools.certificateAuthorities; official-spec-fields-unmatched=5/47; ours-spec-fields-unmatched=5/60
 privateca.googleapis.com,privateca.googleapis.com/CertificateTemplate,44,PrivateCACertificateTemplate,33,,0,11,false,api=v1:projects.locations.certificateTemplates; official-spec-fields-unmatched=3/35
 privateca.googleapis.com,privateca.googleapis.com/PrivateCACAPoolFields,0,,0,PrivateCACAPoolFields,0,0,false,"outside-denominator; a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37)"
 privateca.googleapis.com,privateca.googleapis.com/PrivateCACertificateTemplateFields,0,,0,PrivateCACertificateTemplateFields,0,0,false,"outside-denominator; a field kind, maximumLifetime and name constraints of a certificate template Config Connector's PrivateCACertificateTemplate owns, written with certificateTemplates.patch (decision 37)"
@@ -1107,7 +1107,7 @@ retail.googleapis.com,retail.googleapis.com/CatalogModel,8,RetailModel,8,,0,0,fa
 retail.googleapis.com,retail.googleapis.com/CatalogServingConfig,20,RetailServingConfig,20,,0,0,false,api=v2:projects.locations.catalogs.servingConfigs; official-spec-fields-unmatched=3/22
 run.googleapis.com,run.googleapis.com/Domainmapping,32,,0,,0,32,false,api=v1:projects.locations.domainmappings
 run.googleapis.com,run.googleapis.com/Instance,121,,0,,0,121,false,api=v2:projects.locations.instances
-run.googleapis.com,run.googleapis.com/Job,128,RunJob,68,RunJob,11,49,false,api=v2:projects.locations.jobs; official-spec-fields-unmatched=3/70; ours-spec-fields-unmatched=3/81
+run.googleapis.com,run.googleapis.com/Job,128,RunJob,68,RunJob,12,48,false,api=v2:projects.locations.jobs; official-spec-fields-unmatched=3/70; ours-spec-fields-unmatched=3/81
 run.googleapis.com,run.googleapis.com/NamespaceDomainmapping,32,,0,,0,32,false,api=v1:namespaces.domainmappings
 run.googleapis.com,run.googleapis.com/Service,160,RunService,78,RunService,20,62,false,api=v2:projects.locations.services; official-spec-fields-unmatched=3/79; ours-spec-fields-unmatched=3/95
 run.googleapis.com,run.googleapis.com/WorkerPool,126,RunWorkerPool,82,,0,44,false,api=v2:projects.locations.workerPools; official-spec-fields-unmatched=3/84

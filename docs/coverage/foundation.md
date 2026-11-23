@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 39.0% | 19.3% | 41.7% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 12.6% | 20.2% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 12.7% | 20.1% |
 
 By service:
 
@@ -20,7 +20,7 @@ By service:
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
 | foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 26.3% | 33.3% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
-| foundation | `dns.googleapis.com` | 7 | 258 | 30.6% | 3.1% | 66.3% |
+| foundation | `dns.googleapis.com` | 7 | 258 | 30.6% | 3.5% | 65.9% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 15.0% | 24.8% |
 | foundation | `orgpolicy.googleapis.com` | 4 | 121 | 67.8% | 0.0% | 32.2% |
@@ -34,7 +34,7 @@ By service:
 | foundation | `essentialcontacts.googleapis.com` | 3 | 9 | 100.0% | 0.0% | 0.0% |
 | foundation | `servicenetworking.googleapis.com` | 2 | 4 | 100.0% | 0.0% | 0.0% |
 | security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 8.1% | 18.5% |
-| security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 5.8% | 22.9% |
+| security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 6.3% | 22.4% |
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 14.6% | 36.7% |
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 42.0% | 6.1% |
 | security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 15.3% | 25.8% |
@@ -74,7 +74,7 @@ What these numbers miss, for the foundation:
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 2 / 57 (0.0%) | none |
-| 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 154 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
+| 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 153 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 14 / 85 (51.8%) | none for the fields |
 | 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 1 / 17 (52.9%) | none found (master read 2026-11-23 at bc464f55, and releases v1.161.0 and v1.162.0: the kind is still DCL-based, with direct types and a map... |
@@ -91,7 +91,7 @@ What these numbers miss, for the foundation:
 | 22 | [Privileged Access Manager grants](#22-privileged-access-manager-grants) | B | whole | 0 | S | 7 / 18 (61.1%) | none found. |
 | 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 3 / 12 (0.0%) | none. |
 | 24 | [Cloud Identity SSO profiles, assignments and policies](#24-cloud-identity-sso-profiles-assignments-and-policies) | B | whole | 0 | M | 26 / 26 (0.0%) | none for these |
-| 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 39 / 209 (71.3%) | none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct... |
+| 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 38 / 209 (71.3%) | none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct... |
 | 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 4 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
 | 27 | [Cloud Armor security policy fields](#27-cloud-armor-security-policy-fields) | B | field | 1 | M | 122 / 172 (27.9%) | none found (read again 2026-11-23 at the pin: Config Connector's opt-in direct `ComputeSecurityPolicy` has no threshold configs or inspectio... |
 
@@ -199,13 +199,13 @@ What these numbers miss, for the foundation:
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `compute.googleapis.com/OrganizationSecurityPolicy`: 12 / 2 / 72 of 86; ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha), ComputeOrganizationSecurityPolicy (ours), ComputeOrganizationSecurityPolicyAssociation (ours), ComputeOrganizationSecurityPolicyRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy`: 26 / 15 / 32 of 73; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
-  - `dns.googleapis.com/ResponsePolicy`: 3 / 0 / 3 of 6; DNSResponsePolicy (alpha), DNSResponsePolicy (ours)
+  - `dns.googleapis.com/ResponsePolicy`: 3 / 1 / 2 of 6; DNSResponsePolicy (alpha), DNSResponsePolicy (ours)
   - `dns.googleapis.com/ResponsePolicyRule`: 6 / 0 / 47 of 53; DNSResponsePolicyRule (alpha), DNSResponsePolicyRule (ours)
 - **Missing, whole resources:** Nothing is missing; the kinds exist only as `v1alpha1` and the charts refuse alpha: `IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`, `IAMAccessBoundaryPolicy`, `IAMAccessPolicy`, `ComputeOrganizationSecurityPolicy` with its association and rule, `ComputeNetworkFirewallPolicyRule`, `DNSResponsePolicy`, `DNSResponsePolicyRule` (the measured list is "Official but alpha-only" below).
 - **Missing, attributes that matter:** None known beyond the field gaps in the field items; the work is promotion, not fields.
   - uncovered in `compute.googleapis.com/OrganizationSecurityPolicy` (measured): `adaptiveProtectionConfig.layer7DdosDefenseConfig.enable`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.ruleVisibility`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployConfidenceThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployExpirationSec`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployImpactedBaselineThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionAbsoluteQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionRelativeToBaselineQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].name` and 62 more
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy` (measured): `associations[].name`, `associations[].priority`, `displayName`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]` and 22 more
-  - uncovered in `dns.googleapis.com/ResponsePolicy` (measured): `id`, `labels{}`, `responsePolicyName`
+  - uncovered in `dns.googleapis.com/ResponsePolicy` (measured): `id`, `responsePolicyName`
   - uncovered in `dns.googleapis.com/ResponsePolicyRule` (measured): `localData.localDatas[].routingPolicy.geo.enableFencing`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[]`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipProtocol`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].loadBalancerType`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].networkUrl`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].port`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].project`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].region`, `localData.localDatas[].routingPolicy.geo.items[].location` and 37 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the release notes before building.
 - **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule. `IAMDenyPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp unpatched); live pending Deny Admin, which is granted on an organization. `ComputeOrganizationSecurityPolicy` and its association built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controllers copied; mockgcp unpatched); live pending the test folder. `ComputeOrganizationSecurityPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types copied; the controller written here on the compute beta API, as upstream's is Terraform-only; mockgcp patch 0028); live pending the test folder. `ComputeNetworkFirewallPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`; upstream has only the Terraform-based alpha CRD, so the types, identity and controller are adapted from our regional rule kind, with upstream's `ComputeNetworkFirewallPolicyRef`; mockgcp unpatched). `IAMPrincipalAccessBoundaryPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp patch 0030); live pending organization-level access. `DNSResponsePolicy` built 2026-11-10 (`dns.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied, with the object's labels; mockgcp unpatched); live pending Cloud DNS (`dns.googleapis.com` and `roles/dns.admin`) in the live project. Next: `DNSResponsePolicyRule`.
@@ -436,14 +436,14 @@ What these numbers miss, for the foundation:
   - `binaryauthorization.googleapis.com/Attestor`: 5 / 0 / 4 of 9; BinaryAuthorizationAttestor
   - `binaryauthorization.googleapis.com/PlatformPolicy`: 23 / 5 / 0 of 28; BinaryAuthorizationPlatformPolicy (alpha), BinaryAuthorizationPolicy, BinaryAuthorizationPlatformPolicy (ours)
   - `privateca.googleapis.com/CaPool`: 41 / 0 / 14 of 55; PrivateCACAPool
-  - `privateca.googleapis.com/CaPoolCertificateAuthority`: 43 / 13 / 8 of 64; PrivateCACertificateAuthority, PrivateCACertificateAuthority (ours)
+  - `privateca.googleapis.com/CaPoolCertificateAuthority`: 43 / 14 / 7 of 64; PrivateCACertificateAuthority, PrivateCACertificateAuthority (ours)
   - `privateca.googleapis.com/CertificateTemplate`: 33 / 0 / 11 of 44; PrivateCACertificateTemplate
   - `certificatemanager.googleapis.com/TrustConfig`: 4 / 3 / 2 of 9; CertificateManagerTrustConfig (alpha), CertificateManagerTrustConfig (ours)
 - **Missing, whole resources:** Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match; verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and is built.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `binaryauthorization.googleapis.com/Attestor` (measured): `userOwnedGrafeasNote.noteReference`, `userOwnedGrafeasNote.publicKeys[].comment`, `userOwnedGrafeasNote.publicKeys[].id`, `userOwnedGrafeasNote.publicKeys[].pkixPublicKey.keyId`
   - uncovered in `privateca.googleapis.com/CaPool` (measured): `encryptionSpec.cloudKmsKey`, `issuancePolicy.allowRequesterSpecifiedNotBeforeTime`, `issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints.critical`, `issuancePolicy.baselineValues.nameConstraints.excludedDnsNames[]`, `issuancePolicy.baselineValues.nameConstraints.excludedEmailAddresses[]`, `issuancePolicy.baselineValues.nameConstraints.excludedIpRanges[]`, `issuancePolicy.baselineValues.nameConstraints.excludedUris[]`, `issuancePolicy.baselineValues.nameConstraints.permittedDnsNames[]`, `issuancePolicy.baselineValues.nameConstraints.permittedEmailAddresses[]` and 4 more
-  - uncovered in `privateca.googleapis.com/CaPoolCertificateAuthority` (measured): `config.publicKey.format`, `config.publicKey.key`, `config.subjectConfig.subject.rdnSequence[].attributes[].objectId.objectIdPath[]`, `config.subjectConfig.subject.rdnSequence[].attributes[].type`, `config.subjectConfig.subject.rdnSequence[].attributes[].value`, `labels{}`, `subordinateConfig.certificateAuthority`, `subordinateConfig.pemIssuerChain.pemCertificates[]`
+  - uncovered in `privateca.googleapis.com/CaPoolCertificateAuthority` (measured): `config.publicKey.format`, `config.publicKey.key`, `config.subjectConfig.subject.rdnSequence[].attributes[].objectId.objectIdPath[]`, `config.subjectConfig.subject.rdnSequence[].attributes[].type`, `config.subjectConfig.subject.rdnSequence[].attributes[].value`, `subordinateConfig.certificateAuthority`, `subordinateConfig.pemIssuerChain.pemCertificates[]`
   - uncovered in `privateca.googleapis.com/CertificateTemplate` (measured): `labels{}`, `maximumLifetime`, `predefinedValues.nameConstraints.critical`, `predefinedValues.nameConstraints.excludedDnsNames[]`, `predefinedValues.nameConstraints.excludedEmailAddresses[]`, `predefinedValues.nameConstraints.excludedIpRanges[]`, `predefinedValues.nameConstraints.excludedUris[]`, `predefinedValues.nameConstraints.permittedDnsNames[]`, `predefinedValues.nameConstraints.permittedEmailAddresses[]`, `predefinedValues.nameConstraints.permittedIpRanges[]` and 1 more
   - uncovered in `certificatemanager.googleapis.com/TrustConfig` (measured): `spiffeTrustStores{}.intermediateCas[].pemCertificate`, `spiffeTrustStores{}.trustAnchors[].pemCertificate`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct `PrivateCACertificateTemplate` types, 2026-09-18) move the kinds to direct, where new fields would land; #12260 (mockgcp for `BinaryAuthorizationPlatformPolicy`) and #13053 (direct `CertificateManagerTrustConfig`) are for the alpha kinds.
@@ -524,7 +524,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ContainerNodePoolFields | (not a create) a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37) | n/a | false |
 | DNSOutboundEndpoint | dns.googleapis.com/OutboundEndpoint | 8 | false |
 | DNSPolicyFields | (not a create) a field kind, dns64Config of a DNS server policy Config Connector's DNSPolicy owns, written with policies.patch (decision 37) | n/a | false |
-| DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 0 | false |
+| DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 1 | false |
 | DNSResponsePolicyRule | dns.googleapis.com/ResponsePolicyRule | 0 | false |
 | DataCatalogTag | (not a create) no API resource named like tag/datacatalogtag in datacatalog.googleapis.com | n/a | false |
 | DiscoveryEngineCmekConfig | (not a create) a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method) | n/a | false |
@@ -579,7 +579,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | PrivateCACAPoolFields | (not a create) a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37) | n/a | false |
-| PrivateCACertificateAuthority | privateca.googleapis.com/CaPoolCertificateAuthority | 13 | false |
+| PrivateCACertificateAuthority | privateca.googleapis.com/CaPoolCertificateAuthority | 14 | false |
 | PrivateCACertificateTemplateFields | (not a create) a field kind, maximumLifetime and name constraints of a certificate template Config Connector's PrivateCACertificateTemplate owns, written with certificateTemplates.patch (decision 37) | n/a | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | PubSubSubscriptionFields | (not a create) a field kind, messageTransforms, bigtableConfig and export fields of a subscription Config Connector's PubSubSubscription owns, written with subscriptions.patch (decision 37) | n/a | false |
@@ -786,7 +786,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `dns.googleapis.com/OutboundEndpoint` | - | DNSOutboundEndpoint | 8 | 0 | 8 | 0 | - |
 | foundation | `dns.googleapis.com/Policy` | DNSPolicy | - | 11 | 7 | 0 | 4 | 15 |
 | foundation | `dns.googleapis.com/ResourceRecordSet` | DNSRecordSet | - | 50 | 46 | 0 | 4 | 15 |
-| foundation | `dns.googleapis.com/ResponsePolicy` | DNSResponsePolicy (alpha) | DNSResponsePolicy | 6 | 3 | 0 | 3 | 8 |
+| foundation | `dns.googleapis.com/ResponsePolicy` | DNSResponsePolicy (alpha) | DNSResponsePolicy | 6 | 3 | 1 | 2 | 8 |
 | foundation | `dns.googleapis.com/ResponsePolicyRule` | DNSResponsePolicyRule (alpha) | DNSResponsePolicyRule | 53 | 6 | 0 | 47 | 8 |
 | foundation | `essentialcontacts.googleapis.com/Contact` | EssentialContactsContact | - | 3 | 3 | 0 | 0 | - |
 | foundation | `essentialcontacts.googleapis.com/organizations.contacts` | EssentialContactsContact | - | 3 | 3 | 0 | 0 | - |
@@ -900,7 +900,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `orgpolicy.googleapis.com/projects.policies` | OrgPolicyPolicy | - | 38 | 25 | 0 | 13 | - |
 | security | `privateca.googleapis.com/CaPool` | PrivateCACAPool | - | 55 | 41 | 0 | 14 | 25 |
 | security | `privateca.googleapis.com/CaPoolCertificate` | PrivateCACertificate | - | 60 | 42 | 0 | 18 | - |
-| security | `privateca.googleapis.com/CaPoolCertificateAuthority` | PrivateCACertificateAuthority | PrivateCACertificateAuthority | 64 | 43 | 13 | 8 | 25 |
+| security | `privateca.googleapis.com/CaPoolCertificateAuthority` | PrivateCACertificateAuthority | PrivateCACertificateAuthority | 64 | 43 | 14 | 7 | 25 |
 | security | `privateca.googleapis.com/CertificateTemplate` | PrivateCACertificateTemplate | - | 44 | 33 | 0 | 11 | 25 |
 | security | `recaptchaenterprise.googleapis.com/Firewallpolicy` | ReCAPTCHAEnterpriseFirewallPolicy (alpha) | - | 11 | 11 | 0 | 0 | - |
 | security | `recaptchaenterprise.googleapis.com/Key` | RecaptchaEnterpriseKey | - | 24 | 15 | 0 | 9 | - |

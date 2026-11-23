@@ -23,7 +23,7 @@ By service:
 | application | `monitoring.googleapis.com` | 12 | 2082 | 45.7% | 0.0% | 54.3% |
 | application | `dataproc.googleapis.com` | 9 | 1093 | 47.5% | 0.0% | 52.5% |
 | application | `cloudbuild.googleapis.com` | 10 | 667 | 38.7% | 0.4% | 60.9% |
-| application | `run.googleapis.com` | 6 | 599 | 38.1% | 5.2% | 56.8% |
+| application | `run.googleapis.com` | 6 | 599 | 38.1% | 5.3% | 56.6% |
 | application | `discoveryengine.googleapis.com` | 27 | 573 | 59.2% | 0.0% | 40.8% |
 | application | `bigquery.googleapis.com` | 5 | 552 | 26.6% | 0.0% | 73.4% |
 | application | `apigee.googleapis.com` | 55 | 478 | 16.9% | 1.0% | 82.0% |
@@ -97,7 +97,7 @@ What these numbers miss, for the application services:
 | 3 | [Monitoring uptime checks and alert policies fields](#3-monitoring-uptime-checks-and-alert-policies-fields) | A | field | 2 | M | 30 / 117 (74.4%) | none found for these fields; `MonitoringAlertPolicy` has an opt-in direct controller on master |
 | 4 | [Artifact Registry repository fields (vulnerability scanning, platform logs)](#4-artifact-registry-repository-fields-vulnerability-scanning-platform-logs) | A | field | 1 | S | 3 / 47 (61.7%) | none: upstream's direct types generate `vulnerabilityScanningConfig` as unreachable and leave the others out; our `ArtifactRegistryRepositor... |
 | 5 | [BigQuery dataset fields (external catalog options, linked datasets, resource tags)](#5-bigquery-dataset-fields-external-catalog-options-linked-datasets-resource-tags) | A | field | 1 | S | 14 / 40 (65.0%) | master's direct `BigQueryDataset` (opt-in) has none of them; no pull request adds them. |
-| 6 | [Cloud Run job and worker pool template fields](#6-cloud-run-job-and-worker-pool-template-fields) | A | field | 1 | L | 93 / 254 (59.1%) | both kinds have opt-in direct controllers on master; not read further. |
+| 6 | [Cloud Run job and worker pool template fields](#6-cloud-run-job-and-worker-pool-template-fields) | A | field | 1 | L | 92 / 254 (59.1%) | both kinds have opt-in direct controllers on master; not read further. |
 | 7 | [Cloud SQL instance fields](#7-cloud-sql-instance-fields) | A | field | 1 | L | 116 / 199 (41.7%) | in progress: PRs #14854, #7227, #14419, #14431 on the direct kind (design section 6.3, rank 4). |
 | 8 | [Cloud Run domain mappings](#8-cloud-run-domain-mappings) | C | whole | 0 | M | 32 / 32 (0.0%) | none: no kind on master or in a pull request. |
 
@@ -164,11 +164,11 @@ What these numbers miss, for the application services:
 
 - **Importance** A, **gap** field, **size** L, **modules** 1 (cloud-run-v2).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `run.googleapis.com/Job`: 68 / 11 / 49 of 128; RunJob, RunJob (ours)
+  - `run.googleapis.com/Job`: 68 / 12 / 48 of 128; RunJob, RunJob (ours)
   - `run.googleapis.com/WorkerPool`: 82 / 0 / 44 of 126; RunWorkerPool (alpha)
 - **Missing, whole resources:** Measured as most of `template`: much of it is naming (Terraform's `template.template`), to be measured by hand before building; `binaryAuthorization` policies by name, `startExecutionToken`.
 - **Missing, attributes that matter:** To be measured by hand.
-  - uncovered in `run.googleapis.com/Job` (measured): `functionalType`, `labels{}`, `runExecutionToken`, `startExecutionToken`, `template.client`, `template.clientVersion`, `template.delayExecution`, `template.template.containers[].buildConfig.buildpacksBuild.buildBaseImageUri`, `template.template.containers[].buildConfig.buildpacksBuild.cacheImageUri`, `template.template.containers[].buildConfig.buildpacksBuild.environmentVariables{}` and 39 more
+  - uncovered in `run.googleapis.com/Job` (measured): `functionalType`, `runExecutionToken`, `startExecutionToken`, `template.client`, `template.clientVersion`, `template.delayExecution`, `template.template.containers[].buildConfig.buildpacksBuild.buildBaseImageUri`, `template.template.containers[].buildConfig.buildpacksBuild.cacheImageUri`, `template.template.containers[].buildConfig.buildpacksBuild.environmentVariables{}`, `template.template.containers[].buildConfig.dockerBuild` and 38 more
   - uncovered in `run.googleapis.com/WorkerPool` (measured): `binaryAuthorization.policy`, `template.client`, `template.clientVersion`, `template.containers[].buildConfig.buildpacksBuild.buildBaseImageUri`, `template.containers[].buildConfig.buildpacksBuild.cacheImageUri`, `template.containers[].buildConfig.buildpacksBuild.environmentVariables{}`, `template.containers[].buildConfig.dockerBuild`, `template.containers[].buildConfig.imageRepositoryUri`, `template.containers[].buildConfig.serviceAccount`, `template.containers[].buildConfig.tags[]` and 34 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-23): both kinds have opt-in direct controllers on master; not read further.
 - **Build:** Not yet: measure what is really missing first. Our `RunService` (decision 11) is the pattern if a whole-object kind is needed. Measured by hand 2026-11-23 for `RunJob` (Terraform by default): most of the list is naming or not configuration (the run tokens start executions; readiness probes, `cpuIdle` and `startupCpuBoost` are a service's), or preview (`buildConfig`, `sourceCode`, `sandboxes`, `workloadIdentityConfig`, Filestore volumes). Really missing: `labels` and `template.labels` (Config Connector's service mapping ignores both), GPUs (`template.template.nodeSelector.accelerator`, `gpuZonalRedundancyDisabled`), gRPC probes, `volumeMounts[].subPath`, `binaryAuthorization.policy`, `baseImageUri`. A field kind is unsafe: Terraform's `google_cloud_run_v2_job` update is a PATCH of the whole job with no update mask (read at the pin's fork), as for services (decision 11). So it is a whole-object `RunJob` of ours, copied from master's opt-in direct controller as `RunService` was from `RunWorkerPool` (size L, next). `RunWorkerPool` is direct-only upstream (alpha); its measured gaps are mostly preview build fields. Built 2026-11-23 for jobs: `RunJob` (`run.gcp.hfl.dev/v1alpha1`), copied from Config Connector's direct `RunJob` (upstream read again: master `5d27e1c6`'s job code is the pin's, and no open pull request touches it), with `metadata.labels`, `template.labels`, the task template's `nodeSelector` and `gpuZonalRedundancyDisabled`, gRPC probes (our `RunService`'s container type) and `binaryAuthorization.policy`; compared like our `RunService`, updated whole (`UpdateJob` takes no mask); mockgcp patch 0069; live pending. `baseImageUri` is no gap for a job (the API takes it only for services; CEL refuses it). Not built: `volumeMounts[].subPath` (mockgcp's protos lack it) and the preview fields.
@@ -250,7 +250,7 @@ Our kinds in the application category, from the coverage data (the gaps above ar
 | NetworkServicesAgentGateway | networkservices.googleapis.com/AgentGateway | 13 | false |
 | NetworkServicesAuthzExtension | networkservices.googleapis.com/AuthzExtension | 2 | false |
 | NetworkServicesGateway | networkservices.googleapis.com/Gateway | 10 | false |
-| RunJob | run.googleapis.com/Job | 11 | false |
+| RunJob | run.googleapis.com/Job | 12 | false |
 | RunService | run.googleapis.com/Service | 20 | false |
 | SQLAdminBackup | sqladmin.googleapis.com/BackupRun | 0 | true |
 | SQLUser | sqladmin.googleapis.com/User | 1 | false |
@@ -961,7 +961,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `redis.googleapis.com/Instance` | RedisInstance | - | 31 | 27 | 0 | 4 | - |
 | application | `run.googleapis.com/Domainmapping` | - | - | 32 | 0 | 0 | 32 | 8 |
 | application | `run.googleapis.com/Instance` | - | - | 121 | 0 | 0 | 121 | - |
-| application | `run.googleapis.com/Job` | RunJob | RunJob | 128 | 68 | 11 | 49 | 6 |
+| application | `run.googleapis.com/Job` | RunJob | RunJob | 128 | 68 | 12 | 48 | 6 |
 | application | `run.googleapis.com/NamespaceDomainmapping` | - | - | 32 | 0 | 0 | 32 | - |
 | application | `run.googleapis.com/Service` | RunService | RunService | 160 | 78 | 20 | 62 | - |
 | application | `run.googleapis.com/WorkerPool` | RunWorkerPool (alpha) | - | 126 | 82 | 0 | 44 | 6 |

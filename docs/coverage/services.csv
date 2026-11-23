@@ -88,7 +88,7 @@ devicestreaming.googleapis.com,1,1,0,9,7,0,2,77.8,0.0,22.2
 dialogflow.googleapis.com,44,19,0,2455,993,0,1462,40.4,0.0,59.6
 discoveryengine.googleapis.com,27,20,0,573,339,0,234,59.2,0.0,40.8
 dlp.googleapis.com,22,16,0,3138,1803,0,1335,57.5,0.0,42.5
-dns.googleapis.com,7,5,1,258,79,8,171,30.6,3.1,66.3
+dns.googleapis.com,7,5,1,258,79,9,170,30.6,3.5,65.9
 documentai.googleapis.com,3,1,0,27,3,0,24,11.1,0.0,88.9
 edgecontainer.googleapis.com,3,3,0,45,35,0,10,77.8,0.0,22.2
 edgenetwork.googleapis.com,4,4,0,40,38,0,2,95.0,0.0,5.0
@@ -155,7 +155,7 @@ oslogin.googleapis.com,1,1,0,2,2,0,0,100.0,0.0,0.0
 parallelstore.googleapis.com,1,1,0,9,9,0,0,100.0,0.0,0.0
 parametermanager.googleapis.com,4,2,0,15,6,0,9,40.0,0.0,60.0
 policysimulator.googleapis.com,4,0,0,80,0,0,80,0.0,0.0,100.0
-privateca.googleapis.com,4,4,0,223,159,13,51,71.3,5.8,22.9
+privateca.googleapis.com,4,4,0,223,159,14,50,71.3,6.3,22.4
 privilegedaccessmanager.googleapis.com,2,1,0,18,11,0,7,61.1,0.0,38.9
 publicca.googleapis.com,1,0,0,0,0,0,0,0.0,0.0,0.0
 pubsub.googleapis.com,4,4,0,111,41,0,70,36.9,0.0,63.1
@@ -167,7 +167,7 @@ redis.googleapis.com,3,2,0,82,59,0,23,72.0,0.0,28.0
 remoteworkers.googleapis.com,1,0,0,29,0,0,29,0.0,0.0,100.0
 resultstore.googleapis.com,6,0,0,245,0,0,245,0.0,0.0,100.0
 retail.googleapis.com,4,3,0,103,56,0,47,54.4,0.0,45.6
-run.googleapis.com,6,3,0,599,228,31,340,38.1,5.2,56.8
+run.googleapis.com,6,3,0,599,228,32,339,38.1,5.3,56.6
 saasservicemgmt.googleapis.com,8,6,0,92,48,0,44,52.2,0.0,47.8
 secretmanager.googleapis.com,2,1,1,30,10,16,4,33.3,53.3,13.3
 securesourcemanager.googleapis.com,8,4,0,48,28,0,20,58.3,0.0,41.7

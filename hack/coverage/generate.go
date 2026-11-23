@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -171,7 +172,7 @@ func buildModel(repo, kccDir, discDir, protoDir string) (*model, *Overrides, err
 		return nil, nil, err
 	}
 	for _, c := range ours {
-		c.Labels = false
+		c.Labels = slices.Contains(ov.OursMetadataLabels, c.Kind)
 		for _, p := range c.Paths {
 			if p.Path == "labels{}" {
 				c.Labels = true
