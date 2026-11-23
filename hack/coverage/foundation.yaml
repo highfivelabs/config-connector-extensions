@@ -553,8 +553,18 @@ items:
       `ComputeOrganizationSecurityPolicyRule` that the API has and the Terraform-based kinds do not (the measured
       lists); the policy `displayName`/`shortName`.
     attributes: The measured lists.
-    upstream: none found (`ComputeFirewall` has #12102 "validate direct promotion").
-    build: Wait (decision 5); revisit after the regional firewall item, whose rule kind will have the full field set.
+    upstream: >-
+      none found (`ComputeFirewall` has #12102 "validate direct promotion"). Read again 2026-11-23 at the pin:
+      Config Connector's `ComputeFirewallPolicyRule` (hierarchical) is direct, without `securityProfileGroup`,
+      `tlsInspect`, `targetSecureTags`, `ruleName`, `srcSecureTags`, `srcNetworks` and the network types, and its
+      update sends the whole rule (`patchRule`), so a field kind beside it would be reset by every change; open pull
+      requests not re-read (the GitHub API is not reachable from the session).
+    build: >-
+      Decision 19 replaces "wait". Built 2026-11-23 (fake only, live pending): our own
+      `ComputeNetworkFirewallPolicyRule` (global network policies) takes `securityProfileGroup`, `tlsInspect` and
+      `match.srcNetworks`. Next: the same on a hierarchical rule needs a whole-object kind of ours beside Config
+      Connector's direct `ComputeFirewallPolicyRule` (section 6.6 pattern 3, size M), whose live test needs the
+      test folder; the regional rule's `srcNetworks`; the network types; `targetResources`.
   # ---- B, whole resources ----
   - title: Security Command Center at folder and project level
     importance: B

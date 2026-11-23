@@ -25,6 +25,8 @@ var ComputeNetworkFirewallPolicyRuleGVK = GroupVersion.WithKind("ComputeNetworkF
 
 // ComputeNetworkFirewallPolicyRuleSpec is one rule of a global network
 // firewall policy. A rule is identified by its priority in the policy.
+// +kubebuilder:validation:XValidation:rule="(self.action == 'apply_security_profile_group') == has(self.securityProfileGroup)",message="securityProfileGroup is set exactly when action is apply_security_profile_group"
+// +kubebuilder:validation:XValidation:rule="!has(self.tlsInspect) || !self.tlsInspect || self.action == 'apply_security_profile_group'",message="tlsInspect needs action apply_security_profile_group"
 type ComputeNetworkFirewallPolicyRuleSpec struct {
 	// The project of the policy. Optional: the policy names its project.
 	// When set, it must be the policy's project. Immutable.
@@ -83,6 +85,21 @@ type ComputeNetworkFirewallPolicyRuleSpec struct {
 	// applies to. Not together with targetServiceAccounts.
 	// +optional
 	TargetSecureTags []NetworkFirewallPolicyRuleSecureTag `json:"targetSecureTags,omitempty"`
+
+	// The security profile group a matching connection is sent to, when
+	// action is apply_security_profile_group (and only then), as
+	// "//networksecurity.googleapis.com/organizations/{{organizationID}}/locations/global/securityProfileGroups/{{name}}"
+	// or the group's https://networksecurity.googleapis.com/v1/... URL;
+	// a project's group (projects/{{projectID}}/...) where the API allows
+	// one. Cloud NGFW Enterprise inspects the traffic with it.
+	// +optional
+	SecurityProfileGroup *string `json:"securityProfileGroup,omitempty"`
+
+	// Whether the traffic is TLS-decrypted for inspection (the network
+	// needs a TLS inspection policy on its firewall endpoint). Only with
+	// action apply_security_profile_group. Unset means false.
+	// +optional
+	TLSInspect *bool `json:"tlsInspect,omitempty"`
 }
 
 // NetworkFirewallPolicyRuleMatch is what traffic a rule matches.
@@ -130,6 +147,12 @@ type NetworkFirewallPolicyRuleMatch struct {
 	// NON_INTERNET.
 	// +optional
 	DestNetworkContext *string `json:"destNetworkContext,omitempty"`
+	// The VPC networks the source must be in (ingress rules, with
+	// srcNetworkContext VPC_NETWORKS), as
+	// "projects/{{projectID}}/global/networks/{{network}}" or the
+	// network's full URL.
+	// +optional
+	SrcNetworks []string `json:"srcNetworks,omitempty"`
 }
 
 // NetworkFirewallPolicyRuleLayer4Config is an IP protocol and its ports.

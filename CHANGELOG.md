@@ -104,6 +104,10 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ComputeNetworkFirewallPolicyRule`**: `spec.securityProfileGroup`
+  and `spec.tlsInspect` (Cloud NGFW Enterprise inspection, with action
+  `apply_security_profile_group`) and `spec.match.srcNetworks`.
+
 - **`ComputeSecurityPolicyFields`** (`compute.gcp.hfl.dev/v1alpha1`, a
   field kind, `docs/design.md` decision 37): a global Cloud Armor
   policy's Adaptive Protection `thresholdConfigs` and WAF

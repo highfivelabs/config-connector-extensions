@@ -30,6 +30,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	gcp "cloud.google.com/go/compute/apiv1"
@@ -258,6 +259,7 @@ func (a *networkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolic
 	emptied("SrcThreatIntelligences", len(have.GetSrcThreatIntelligences()), len(want.GetSrcThreatIntelligences()), m)
 	emptied("DestThreatIntelligences", len(have.GetDestThreatIntelligences()), len(want.GetDestThreatIntelligences()), m)
 	emptied("SrcSecureTags", len(have.GetSrcSecureTags()), len(want.GetSrcSecureTags()), m)
+	emptied("SrcNetworks", len(have.GetSrcNetworks()), len(want.GetSrcNetworks()), m)
 	// A network context is not cleared by "" (a live run: patchRule kept
 	// INTERNET when sent ""); it is cleared by UNSPECIFIED, one of the
 	// API's values.
@@ -272,6 +274,16 @@ func (a *networkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolic
 	// spec leaves them unset (the generated client did this for the proto's
 	// optional fields; this client leaves a zero value out unless forced).
 	*r = append(*r, "Priority", "Description", "RuleName", "Disabled", "EnableLogging")
+	// TLS inspection and a security profile group the spec no longer has
+	// are sent as false and "" (the action that needs them has changed
+	// too); otherwise they are sent only when the spec sets them, since
+	// the API takes them only with apply_security_profile_group.
+	if a.actual.GetTlsInspect() && !a.desired.GetTlsInspect() {
+		*r = append(*r, "TlsInspect")
+	}
+	if a.actual.GetSecurityProfileGroup() != "" && a.desired.GetSecurityProfileGroup() == "" {
+		*r = append(*r, "SecurityProfileGroup")
+	}
 	emptied("TargetServiceAccounts", len(a.actual.GetTargetServiceAccounts()), len(a.desired.GetTargetServiceAccounts()), r)
 	emptied("TargetSecureTags", len(a.actual.GetTargetSecureTags()), len(a.desired.GetTargetSecureTags()), r)
 	return body, nil
@@ -339,13 +351,15 @@ func (a *networkFirewallPolicyRuleAdapter) updateStatus(ctx context.Context, op 
 // the spec puts the default back.
 func networkFirewallPolicyRuleSpecToProto(in *krm.ComputeNetworkFirewallPolicyRuleSpec, serviceAccounts []string) *pb.FirewallPolicyRule {
 	out := &pb.FirewallPolicyRule{
-		Priority:      direct.PtrTo(int32(in.Priority)),
-		Action:        direct.PtrTo(in.Action),
-		Direction:     direct.PtrTo(in.Direction),
-		RuleName:      direct.PtrTo(direct.ValueOf(in.RuleName)),
-		Description:   direct.PtrTo(direct.ValueOf(in.Description)),
-		Disabled:      direct.PtrTo(direct.ValueOf(in.Disabled)),
-		EnableLogging: direct.PtrTo(direct.ValueOf(in.EnableLogging)),
+		Priority:             direct.PtrTo(int32(in.Priority)),
+		Action:               direct.PtrTo(in.Action),
+		Direction:            direct.PtrTo(in.Direction),
+		RuleName:             direct.PtrTo(direct.ValueOf(in.RuleName)),
+		Description:          direct.PtrTo(direct.ValueOf(in.Description)),
+		Disabled:             direct.PtrTo(direct.ValueOf(in.Disabled)),
+		EnableLogging:        direct.PtrTo(direct.ValueOf(in.EnableLogging)),
+		SecurityProfileGroup: in.SecurityProfileGroup,
+		TlsInspect:           in.TLSInspect,
 		Match: &pb.FirewallPolicyRuleMatcher{
 			SrcIpRanges:             in.Match.SrcIPRanges,
 			DestIpRanges:            in.Match.DestIPRanges,
@@ -359,6 +373,7 @@ func networkFirewallPolicyRuleSpecToProto(in *krm.ComputeNetworkFirewallPolicyRu
 			DestThreatIntelligences: in.Match.DestThreatIntelligences,
 			SrcNetworkContext:       in.Match.SrcNetworkContext,
 			DestNetworkContext:      in.Match.DestNetworkContext,
+			SrcNetworks:             in.Match.SrcNetworks,
 		},
 		TargetServiceAccounts: serviceAccounts,
 	}
@@ -378,10 +393,20 @@ func networkFirewallPolicyRuleSpecToProto(in *krm.ComputeNetworkFirewallPolicyRu
 }
 
 // comparableNetworkRule is comparableRule (the regional rule's) with the
-// network contexts, which this kind manages and the regional kind does not.
-// An unset context, an empty one and UNSPECIFIED are the same.
+// network contexts, the source networks, the security profile group and
+// TLS inspection, which this kind manages and the regional kind does not.
+// An unset context, an empty one and UNSPECIFIED are the same; a network
+// and a security profile group compare by their path (the API may answer
+// a full URL for a path sent); unset TLS inspection is false.
 func comparableNetworkRule(in *pb.FirewallPolicyRule) *pb.FirewallPolicyRule {
 	out := comparableRule(in)
+	out.TlsInspect = direct.PtrTo(in.GetTlsInspect())
+	if g := in.GetSecurityProfileGroup(); g != "" {
+		out.SecurityProfileGroup = direct.PtrTo(resourcePath(g))
+	}
+	for _, n := range in.GetMatch().GetSrcNetworks() {
+		out.Match.SrcNetworks = append(out.Match.SrcNetworks, resourcePath(n))
+	}
 	if c := in.GetMatch().GetSrcNetworkContext(); networkContextSet(c) {
 		out.Match.SrcNetworkContext = direct.PtrTo(c)
 	}
@@ -395,4 +420,19 @@ func comparableNetworkRule(in *pb.FirewallPolicyRule) *pb.FirewallPolicyRule {
 // UNSPECIFIED do not.
 func networkContextSet(c string) bool {
 	return c != "" && c != "UNSPECIFIED"
+}
+
+// resourcePath is a resource name without the scheme, host and API
+// version a URL form adds: "projects/p/global/networks/n" for
+// "https://www.googleapis.com/compute/v1/projects/p/global/networks/n",
+// "organizations/o/locations/global/securityProfileGroups/g" for
+// "//networksecurity.googleapis.com/organizations/o/..." or
+// "https://networksecurity.googleapis.com/v1/organizations/o/...".
+func resourcePath(s string) string {
+	for _, root := range []string{"projects/", "organizations/"} {
+		if i := strings.Index(s, "/"+root); i >= 0 && strings.Contains(s[:i], ".googleapis.com") {
+			return s[i+1:]
+		}
+	}
+	return s
 }

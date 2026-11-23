@@ -2328,10 +2328,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     as full URLs (compared either way).
 32. `ComputeNetworkFirewallPolicyRule`: the API's checks of a rule that
     mockgcp does not make (as item 27 for the regional rule), whether
-    `srcNetworkContext` is accepted for every value it lists
-    (`VPC_NETWORKS` wants `srcNetworks`, which this kind lacks), and the
-    fields it lacks (`securityProfileGroup`, `tlsInspect`,
-    `targetResources`, `srcNetworks`, the network types).
+    `srcNetworkContext` is accepted for every value it lists, and the
+    fields it lacks (`targetResources`, the network types).
+    `securityProfileGroup`, `tlsInspect` and `match.srcNetworks` were
+    added 2026-11-23 (foundation item 19, fake only): a live run of the
+    group case needs an existing security profile group,
+    `E2E_SECURITY_PROFILE_GROUP` (Cloud NGFW Enterprise); with it,
+    `task test-live PROJECT=$GCP_PROJECT KINDS=compute
+    LIVE_RUN=TestComputeNetworkFirewallPolicyRule`. To be seen live: the
+    form the API answers for the group and a network (compared by path),
+    and that `tlsInspect` and the group are cleared by `false` and `""`.
 33. `LoggingBillingAccountSink`: a live run (it needs a billing account
     the live-test service account administers logging on:
     `E2E_BILLING_ACCOUNT`); the writer identity's real address (the fake
