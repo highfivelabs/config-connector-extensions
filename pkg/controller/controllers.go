@@ -62,6 +62,7 @@ import (
 	kmsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/kms/v1alpha1"
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
+	monitoringv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/monitoring/v1alpha1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	privatecav1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/privateca/v1alpha1"
 	pubsubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/pubsub/v1alpha1"
@@ -89,6 +90,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/kms"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/monitoring"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/networksecurity"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/privateca"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/pubsub"
@@ -187,6 +189,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeRegionSecurityPolicyRuleGVK, crdName: "computeregionsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionSecurityPolicyRuleModel},
 	{gvk: pubsubv1alpha1.PubSubTopicFieldsGVK, crdName: "pubsubtopicfields.pubsub.gcp.hfl.dev", model: pubsub.NewTopicFieldsModel},
 	{gvk: pubsubv1alpha1.PubSubSubscriptionFieldsGVK, crdName: "pubsubsubscriptionfields.pubsub.gcp.hfl.dev", model: pubsub.NewSubscriptionFieldsModel},
+	{gvk: monitoringv1alpha1.MonitoringUptimeCheckConfigFieldsGVK, crdName: "monitoringuptimecheckconfigfields.monitoring.gcp.hfl.dev", model: monitoring.NewUptimeCheckConfigFieldsModel},
 	{gvk: accesscontextmanagerv1beta1.AccessContextManagerGCPUserAccessBindingGVK, crdName: "accesscontextmanagergcpuseraccessbindings.accesscontextmanager.gcp.hfl.dev", model: accesscontextmanager.NewGCPUserAccessBindingModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 	{gvk: firestorev1beta1.FirestoreBackupScheduleGVK, crdName: "firestorebackupschedules.firestore.gcp.hfl.dev", model: firestore.NewFirestoreBackupScheduleModel},
@@ -235,6 +238,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		containerv1beta1.AddToScheme,
 		accesscontextmanagerv1beta1.AddToScheme,
 		pubsubv1alpha1.AddToScheme,
+		monitoringv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

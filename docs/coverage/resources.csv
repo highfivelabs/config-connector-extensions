@@ -937,6 +937,7 @@ monitoring.googleapis.com,monitoring.googleapis.com/Dashboard,1776,MonitoringDas
 monitoring.googleapis.com,monitoring.googleapis.com/Group,4,MonitoringGroup,4,,0,0,false,api=v3:projects.groups; official-spec-fields-unmatched=2/6
 monitoring.googleapis.com,monitoring.googleapis.com/MetricDescriptor,15,MonitoringMetricDescriptor,14,,0,1,false,api=v3:projects.metricDescriptors; official-spec-fields-unmatched=1/14
 monitoring.googleapis.com,monitoring.googleapis.com/MetricsScope,1,MonitoringMonitoredProject,1,,0,0,false,api=v1:locations.global.metricsScopes.projects; official-spec-fields-unmatched=2/2
+monitoring.googleapis.com,monitoring.googleapis.com/MonitoringUptimeCheckConfigFields,0,,0,MonitoringUptimeCheckConfigFields,0,0,false,"outside-denominator; a field kind, userLabels and HTTP check fields of an uptime check Config Connector's MonitoringUptimeCheckConfig owns, written with uptimeCheckConfigs.patch (decision 37)"
 monitoring.googleapis.com,monitoring.googleapis.com/NotificationChannel,12,MonitoringNotificationChannel,5,,0,7,false,api=v3:projects.notificationChannels; official-spec-fields-unmatched=5/9
 monitoring.googleapis.com,monitoring.googleapis.com/Service,33,MonitoringService,3,,0,30,false,api=v3:services; official-spec-fields-unmatched=2/4
 monitoring.googleapis.com,monitoring.googleapis.com/ServiceServiceLevelObjective,37,MonitoringServiceLevelObjective,36,,0,1,false,api=v3:services.serviceLevelObjectives; official-spec-fields-unmatched=11/46

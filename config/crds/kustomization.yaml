@@ -122,6 +122,7 @@ resources:
 - logging.gcp.hfl.dev_loggingsavedqueries.yaml
 - logging.gcp.hfl.dev_loggingsettings.yaml
 - looker.gcp.hfl.dev_lookerinstances.yaml
+- monitoring.gcp.hfl.dev_monitoringuptimecheckconfigfields.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityautomateddnsrecords.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivitypscauthorizationpolicies.yaml
 - networkconnectivity.gcp.hfl.dev_networkconnectivityspokegatewayadvertisedroutes.yaml

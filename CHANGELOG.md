@@ -114,6 +114,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`MonitoringUptimeCheckConfigFields`** (`monitoring.gcp.hfl.dev/v1alpha1`,
+  a field kind, in a new API group): sets `userLabels` and an HTTP check's
+  `customContentType`, `acceptedResponseStatusCodes`, `pingConfig` and
+  `serviceAgentAuthentication` on an uptime check Config Connector's
+  `MonitoringUptimeCheckConfig` owns, and only those
+  (`docs/kinds/MonitoringUptimeCheckConfigFields.md`). Application queue
+  row 3, its uptime check half.
+
 - **`PubSubSubscriptionFields`** (`pubsub.gcp.hfl.dev/v1alpha1`, a field
   kind): sets `messageTransforms` (JavaScript UDFs), `bigtableConfig` (an
   export to a Bigtable table) and fields of the BigQuery and Cloud Storage

@@ -487,6 +487,16 @@ for the run's bindings.
 needs the same access policy and role, and a sweeper section for the
 run's perimeters.
 
+`MonitoringUptimeCheckConfigFields` (package `monitoring`, 2026-11-23, live
+pending): `task test-live PROJECT=$GCP_PROJECT KINDS=monitoring
+LIVE_RUN=TestMonitoringUptimeCheckConfigFields` makes two uptime checks of
+example.com (every 15 minutes, for the minutes they exist: free at that
+volume) and deletes them. It needs `monitoring.googleapis.com` on and
+`roles/monitoring.uptimeCheckConfigEditor` (or `roles/monitoring.editor`)
+for the live-test account. The sweeper deletes uptime checks whose
+display name carries a run ID. It shows whether the API takes
+`userLabels` and the nested `httpCheck.*` paths in an update mask.
+
 `PubSubSubscriptionFields` (package `pubsub`, 2026-11-23, live pending):
 `task test-live PROJECT=$GCP_PROJECT KINDS=pubsub
 LIVE_RUN=TestPubSubSubscriptionFields` makes one topic and one pull

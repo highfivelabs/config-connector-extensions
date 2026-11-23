@@ -95,9 +95,18 @@ items:
     attributes: The measured lists (output-only records excluded).
     upstream: >-
       none found for these fields; `MonitoringAlertPolicy` has an opt-in direct controller on master.
+      `MonitoringUptimeCheckConfig` is DCL-based on master too; read again 2026-11-23 (master `a5456d80`, open
+      pull request heads to #16337): no pull request touches either kind's fields.
     build: >-
-      Not yet: read how DCL's and Terraform's updates send these objects before choosing a field kind or a
-      whole-object kind.
+      Field kinds (decision 37). DCL's uptime check update sends a mask of the nested paths it changed
+      (`dcl.UpdateMask`), so fields DCL lacks are safe beside it. Built 2026-11-23:
+      `MonitoringUptimeCheckConfigFields` (`monitoring.gcp.hfl.dev/v1alpha1`) owns `userLabels` and the HTTP
+      check's `customContentType`, `acceptedResponseStatusCodes`, `pingConfig` and `serviceAgentAuthentication`,
+      patched by their own (nested) mask paths; mockgcp patch 0066; live pending. Not built: `checkerType` and
+      `syntheticMonitor` (create only), `contentMatchers[].jsonPathMatcher` (in a list Config Connector owns),
+      `disabled` and `logCheckFailures` (newer than mockgcp's protos). Alert policies: Terraform's update (the
+      default) sends `documentation` and `alertStrategy` whole, so their `subject`, `links` and
+      `notificationPrompts` are the partial case (as a node pool's `kubeletConfig` is).
   - title: Artifact Registry repository fields (vulnerability scanning, platform logs)
     importance: A
     gap: field

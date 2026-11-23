@@ -2364,6 +2364,30 @@ only the transform case runs live). Not built: `columnFamilyMapping`
 (newer than the pinned client and mockgcp), the `aiInference` and
 `compression` transforms, `tags` (create only).
 
+Row 3's uptime check half: `MonitoringUptimeCheckConfigFields`
+(`monitoring.gcp.hfl.dev/v1alpha1`, a new API group under the
+`<service>.gcp.hfl.dev` rule, 2026-11-23). Upstream read first (the same
+master and pull request heads): `MonitoringUptimeCheckConfig` is
+DCL-based on master too, its direct types hold these fields only as
+unreachable, and no pull request touches them. DCL's update sends a mask
+of the nested paths of the fields it changed (`dcl.UpdateMask`:
+`httpCheck.path`), so the fields DCL lacks are safe beside it: ours owns
+`userLabels` and the HTTP check's `customContentType`,
+`acceptedResponseStatusCodes`, `pingConfig` and
+`serviceAgentAuthentication`, each patched by its own nested path. Not
+built: `checkerType` and `syntheticMonitor` (create only: Terraform's
+`checker_type` is `ForceNew`), `contentMatchers[].jsonPathMatcher`
+(inside a list Config Connector owns), and `disabled` and
+`logCheckFailures` (mockgcp's pinned Monitoring protos lack them; they
+would need a fake of our own). mockgcp patch 0066 clears a masked field
+the request leaves unset. Fake only; live pending, and live must show
+whether the API takes `userLabels` in an update mask (its description
+lists the updatable fields without it) and the nested `httpCheck.*`
+paths. The alert policy half: Terraform's update (the default) and the
+opt-in direct controller send `documentation` and `alertStrategy` whole,
+so `documentation.subject`, `documentation.links` and
+`alertStrategy.notificationPrompts` are the partial case.
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:

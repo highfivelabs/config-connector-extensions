@@ -405,6 +405,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   secondary ranges, so the fixtures change only those; its protos lack a
   secondary range's `ipCollection` and `ipVersion`; and it checks no
   `ipCollection` against a public delegated prefix and binds no tags.
+- **Uptime checks' fields** (`MonitoringUptimeCheckConfigFields`).
+  mockgcp's `uptimeCheckConfigs.patch` takes any nested update mask path
+  (by its JSON name) and, with patch 0066, clears a masked field the
+  request leaves unset (it panicked on a list). It does not show: whether
+  the API refuses `userLabels` or a nested `httpCheck.*` path in the mask
+  (the fake takes every path), the checks themselves (nothing is probed:
+  no ping, no OIDC token, no status code), and `disabled` and
+  `logCheckFailures` (its protos lack them).
 - **Pub/Sub subscriptions' transforms and exports**
   (`PubSubSubscriptionFields`). mockgcp's `subscriptions.patch` takes the
   update mask paths `messageTransforms` and `bigtableConfig` (patch 0065;
