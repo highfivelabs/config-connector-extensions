@@ -141,6 +141,12 @@ type Config struct {
 	// DisableBeforeDelete is a top-level writable boolean field the API
 	// wants true before a delete (Kind.DisableBeforeDelete).
 	DisableBeforeDelete string `json:"disableBeforeDelete,omitempty"`
+	// UpdateMethod names a method that replaces the resource with a PUT to
+	// its name, for an API with no patch whose update is not called
+	// update (Binary Authorization's replacePlatformPolicy): the kind
+	// is updatable, and an update sends the whole spec with no mask
+	// (Kind.UpdatePUT outside Compute Engine's shape).
+	UpdateMethod string `json:"updateMethod,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -470,6 +476,14 @@ func build(c *Config, d *Discovery) (*built, error) {
 	}
 	if patch == nil && k.insertStyle && r.Methods["update"] != nil {
 		patch = r.Methods["update"]
+		k.updatePUT = true
+	}
+	if c.UpdateMethod != "" {
+		m := r.Methods[c.UpdateMethod]
+		if m == nil || m.HTTPMethod != "PUT" || patch != nil || k.insertStyle || k.patchCreates {
+			return nil, fmt.Errorf("updateMethod %s: not a PUT method of %s, or the collection has a patch already", c.UpdateMethod, c.Resource)
+		}
+		patch = m
 		k.updatePUT = true
 	}
 	k.updatable = patch != nil

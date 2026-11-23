@@ -95,10 +95,10 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `pubsub.googleapis.com` | ![pubsub.googleapis.com](docs/coverage/bars/pubsub.googleapis.com.svg) | 36.9% | 0.0% | 63.1% | 90.1% | 90.1% |
 | 2 | security | `certificatemanager.googleapis.com` | ![certificatemanager.googleapis.com](docs/coverage/bars/certificatemanager.googleapis.com.svg) | 75.0% | 11.4% | 13.6% | 86.4% | 86.4% |
 | 2 | application | `spanner.googleapis.com` | ![spanner.googleapis.com](docs/coverage/bars/spanner.googleapis.com.svg) | 42.5% | 0.0% | 57.5% | 68.8% | 68.8% |
+| 2 | security | `binaryauthorization.googleapis.com` | ![binaryauthorization.googleapis.com](docs/coverage/bars/binaryauthorization.googleapis.com.svg) | 75.7% | 13.5% | 10.8% | 18.9% | 18.9% |
 | 2 | application | `managedkafka.googleapis.com` | ![managedkafka.googleapis.com](docs/coverage/bars/managedkafka.googleapis.com.svg) | 54.5% | 0.0% | 45.5% | 50.9% | 50.9% |
 | 2 | application | `analyticshub.googleapis.com` | ![analyticshub.googleapis.com](docs/coverage/bars/analyticshub.googleapis.com.svg) | 66.7% | 0.0% | 33.3% | 88.1% | 88.1% |
 | 2 | application | `backupdr.googleapis.com` | ![backupdr.googleapis.com](docs/coverage/bars/backupdr.googleapis.com.svg) | 40.0% | 0.0% | 60.0% | 55.7% | 48.6% |
-| 2 | security | `binaryauthorization.googleapis.com` | ![binaryauthorization.googleapis.com](docs/coverage/bars/binaryauthorization.googleapis.com.svg) | 75.7% | 0.0% | 24.3% | 18.9% | 18.9% |
 | 2 | application | `cloudscheduler.googleapis.com` | ![cloudscheduler.googleapis.com](docs/coverage/bars/cloudscheduler.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 100.0% | 100.0% |
 | 2 | application | `securesourcemanager.googleapis.com` | ![securesourcemanager.googleapis.com](docs/coverage/bars/securesourcemanager.googleapis.com.svg) | 58.3% | 0.0% | 41.7% | 25.0% | 25.0% |
 | 2 | security | `cloudasset.googleapis.com` | ![cloudasset.googleapis.com](docs/coverage/bars/cloudasset.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 34.6% | 34.6% |

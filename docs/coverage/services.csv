@@ -33,7 +33,7 @@ bigqueryreservation.googleapis.com,4,4,0,32,17,0,15,53.1,0.0,46.9
 bigquerystorage.googleapis.com,2,0,0,14,0,0,14,0.0,0.0,100.0
 bigtableadmin.googleapis.com,9,9,0,135,41,0,94,30.4,0.0,69.6
 billingbudgets.googleapis.com,1,1,0,28,24,0,4,85.7,0.0,14.3
-binaryauthorization.googleapis.com,2,2,0,37,28,0,9,75.7,0.0,24.3
+binaryauthorization.googleapis.com,2,2,0,37,28,5,4,75.7,13.5,10.8
 blockchainnodeengine.googleapis.com,1,1,0,13,12,0,1,92.3,0.0,7.7
 certificatemanager.googleapis.com,6,6,0,44,33,5,6,75.0,11.4,13.6
 ces.googleapis.com,8,2,0,611,137,0,474,22.4,0.0,77.6

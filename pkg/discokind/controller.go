@@ -492,6 +492,11 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 			}
 		}
 		method, query := http.MethodPatch, map[string]string{"updateMask": strings.Join(mask, ",")}
+		if a.kind.UpdatePUT && !a.kind.InsertStyle {
+			// A replace (Kind.UpdatePUT, a named PUT method such as
+			// replacePlatformPolicy): the whole spec, no mask.
+			body, query = runtime.DeepCopyJSON(a.desired), nil
+		}
 		if a.kind.InsertStyle {
 			query = nil
 			if a.kind.UpdatePUT {

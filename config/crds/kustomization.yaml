@@ -16,6 +16,7 @@ resources:
 - biglake.gcp.hfl.dev_biglakecatalogs.yaml
 - biglake.gcp.hfl.dev_biglakedatabases.yaml
 - biglake.gcp.hfl.dev_biglaketables.yaml
+- binaryauthorization.gcp.hfl.dev_binaryauthorizationplatformpolicies.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagercertificateissuanceconfigs.yaml
 - certificatemanager.gcp.hfl.dev_certificatemanagertrustconfigs.yaml
 - chronicle.gcp.hfl.dev_chroniclereferencelists.yaml

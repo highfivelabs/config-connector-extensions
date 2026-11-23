@@ -68,7 +68,9 @@ type Kind struct {
 	// operations are compute operations, polled at their selfLink.
 	InsertStyle bool
 	// UpdatePUT: the API changes a resource with update (PUT, the whole
-	// resource) rather than patch.
+	// resource) rather than patch. Outside Compute Engine's shape the PUT
+	// may have another name (Binary Authorization's replacePlatformPolicy,
+	// kinds.yaml updateMethod); it takes the whole spec with no mask.
 	UpdatePUT bool
 	// PatchCreates: the API has no create method; patch, sent to the
 	// resource's name, makes the resource as well as changing it (Discovery

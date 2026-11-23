@@ -25,6 +25,7 @@ import (
 	apigeev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1alpha1"
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
 	biglakev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/biglake/v1beta1"
+	binaryauthorizationv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/binaryauthorization/v1beta1"
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
 	cloudbuildv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1alpha1"
 	cloudbuildv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1beta1"
@@ -531,6 +532,18 @@ var discoKinds = []*discokind.Kind{
 		InputOnly: []string{"tags"},
 	},
 	{
+		GVK:       binaryauthorizationv1beta1.BinaryAuthorizationPlatformPolicyGVK,
+		CRDName:   "binaryauthorizationplatformpolicies.binaryauthorization.gcp.hfl.dev",
+		BaseURL:   "https://binaryauthorization.googleapis.com/v1/",
+		Name:      "{parent}/platforms/{platform}/policies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "policyId",
+		UpdatePUT: true,
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"name", "updateTime"},
+	},
+	{
 		GVK:       backupdrv1beta1.BackupDRManagementServerGVK,
 		CRDName:   "backupdrmanagementservers.backupdr.gcp.hfl.dev",
 		BaseURL:   "https://backupdr.googleapis.com/v1/",
@@ -945,6 +958,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	resourcemanagerv1alpha1.AddToScheme,
 	networkconnectivityv1alpha1.AddToScheme,
 	certificatemanagerv1beta1.AddToScheme,
+	binaryauthorizationv1beta1.AddToScheme,
 	backupdrv1beta1.AddToScheme,
 	networksecurityv1beta1.AddToScheme,
 	gkebackupv1beta1.AddToScheme,

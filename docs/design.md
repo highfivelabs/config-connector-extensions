@@ -640,9 +640,15 @@ with `spiffeTrustStores` and `allowlistedCertificates` (which Config
 Connector's alpha kind lacks) and input-only `tags`; its fixtures hold
 self-signed test certificates made for them. Open PR #13053 (a direct
 controller for Config Connector's alpha kind) was not copied: the API
-has the standard shape. The alpha-only `BinaryAuthorizationPlatformPolicy`
-is not generated: its update is a PUT named `replacePlatformPolicy`, and
-`hack/discokind` takes a PUT update only in Compute Engine's shape.
+has the standard shape. Then `BinaryAuthorizationPlatformPolicy`
+(`binaryauthorization.gcp.hfl.dev/v1beta1`, the same day), item 25's
+other alpha-only kind, as a stable equivalent: the API has no patch and
+replaces a policy with a PUT named `replacePlatformPolicy`, so
+`kinds.yaml` gained `updateMethod` (a named PUT that replaces the
+resource: the controller sends the whole spec with no mask, where
+Compute Engine's `update` keeps its own path). Its update fixture changes
+only the description, so a replace that sent only the changed field would
+lose the policy's checks and fail the test (checked by breaking it once).
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -2599,6 +2605,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     self-signed certificates as anchors, intermediates and allowlisted
     certificates, and answers each PEM as sent (a trailing newline would
     be a difference on every resync).
+
+52. `BinaryAuthorizationPlatformPolicy` (ours, generated; foundation
+    item 25, 2026-11-23): a live run (`task test-live
+    PROJECT=$GCP_PROJECT KINDS=binaryauthorization
+    LIVE_RUN=TestBinaryAuthorizationPlatformPolicy`; needs
+    `binaryauthorization.googleapis.com` on and
+    `roles/binaryauthorization.policyAdmin` for the live-test account;
+    free). To be seen live: whether `replacePlatformPolicy` takes a body
+    without `etag` and `name`, and the API's checks of a check set. The
+    sweeper lists GKE's platform policies by the run's name.
 
 47. `ComputeSecurityPolicyFields` (foundation item 27, 2026-11-23): a
     live run (`E2E_CLOUD_ARMOR=true task test-live PROJECT=$GCP_PROJECT

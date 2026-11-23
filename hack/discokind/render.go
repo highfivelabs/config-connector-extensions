@@ -487,6 +487,8 @@ func registryFile(kinds []*built) []byte {
 		}
 		if k.insertStyle {
 			fmt.Fprintf(&b, "InsertStyle: true, UpdatePUT: %v,\n", k.updatePUT)
+		} else if k.updatePUT {
+			b.WriteString("UpdatePUT: true,\n")
 		}
 		if k.patchCreates {
 			fmt.Fprintf(&b, "PatchCreates: true, PatchNoMask: %v,\n", k.patchNoMask)

@@ -414,6 +414,20 @@ if ! compgen -G "${HERE}/../../pkg/controller/direct/dataplex/discokindtest/test
     done <<<"${zones}"
   done <<<"${lakes}"
 fi
+# Binary Authorization platform policies (BinaryAuthorizationPlatformPolicy,
+# under a platform, so not in discokinds.tsv): GKE's, by the run's name,
+# unless the kind's test skips live.
+bina="https://binaryauthorization.googleapis.com/v1/"
+if ! compgen -G "${HERE}/../../pkg/controller/direct/binaryauthorization/discokindtest/testdata/discokind/BinaryAuthorizationPlatformPolicy/live-skip" >/dev/null; then
+  rows="$(disco_api GET "${bina}projects/${project}/platforms/gke/policies?pageSize=1000" \
+    | jq -r '.platformPolicies[]? | "\(.name) \(.updateTime // "-")"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    act "Binary Authorization platform policy" "${name}" disco_delete "${bina}" "${name}"
+  done <<<"${rows}"
+fi
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   # A kind whose test never runs live (its fixtures' live-skip) makes
