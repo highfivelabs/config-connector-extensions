@@ -53,6 +53,7 @@ import (
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	containerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/container/v1beta1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
+	dnsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1alpha1"
 	dnsv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
 	firestorev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/firestore/v1beta1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
@@ -159,6 +160,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeServiceAttachmentFieldsGVK, crdName: "computeserviceattachmentfields.compute.gcp.hfl.dev", model: compute.NewServiceAttachmentFieldsModel},
 	{gvk: computev1alpha1.ComputeNetworkFieldsGVK, crdName: "computenetworkfields.compute.gcp.hfl.dev", model: compute.NewNetworkFieldsModel},
 	{gvk: computev1alpha1.ComputeSubnetworkFieldsGVK, crdName: "computesubnetworkfields.compute.gcp.hfl.dev", model: compute.NewSubnetworkFieldsModel},
+	{gvk: dnsv1alpha1.DNSPolicyFieldsGVK, crdName: "dnspolicyfields.dns.gcp.hfl.dev", model: dns.NewPolicyFieldsModel},
 	{gvk: loggingv1alpha1.LoggingLogBucketFieldsGVK, crdName: "logginglogbucketfields.logging.gcp.hfl.dev", model: logging.NewLogBucketFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},

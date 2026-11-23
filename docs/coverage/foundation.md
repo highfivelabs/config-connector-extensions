@@ -302,7 +302,7 @@ What these numbers miss, for the foundation:
   - uncovered in `dns.googleapis.com/ManagedZone` (measured): `creationTime`, `forwardingConfig.outboundEndpoints[].name`, `forwardingConfig.targetNameServers[].domainName`, `forwardingConfig.targetNameServers[].ipv6Address`, `id`, `nameServerSet`, `nameServers[]`, `peeringConfig.targetNetwork.deactivateTime`, `serviceDirectoryConfig.namespace.deletionTime`
   - uncovered in `dns.googleapis.com/Policy` (measured): `alternativeNameServerConfig.outboundEndpoints[].name`, `alternativeNameServerConfig.targetNameServers[].ipv6Address`, `dns64Config.scope.allQueries`, `id`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Wait (decision 5).
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy` replaces the whole policy and would clear it); live pending. `routingPolicy` is on `DNSRecordSet` already (only `enableFencing`, `trickleTraffic` and the DNSSEC `signatureRrdatas` are missing); those, the forwarding targets' `ipv6Address` and `domainName` (zone and policy) sit in objects Terraform sends whole, so they need whole-object kinds (upstream `master` has direct `DNSRecordSet` types and mappers, no controller yet); not built.
 
 ### 16. Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
 
@@ -518,6 +518,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ContainerClusterFields | (not a create) a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37) | n/a | false |
 | ContainerNodePoolFields | (not a create) a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37) | n/a | false |
 | DNSOutboundEndpoint | dns.googleapis.com/OutboundEndpoint | 8 | false |
+| DNSPolicyFields | (not a create) a field kind, dns64Config of a DNS server policy Config Connector's DNSPolicy owns, written with policies.patch (decision 37) | n/a | false |
 | DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 0 | false |
 | DNSResponsePolicyRule | dns.googleapis.com/ResponsePolicyRule | 0 | false |
 | DataCatalogTag | (not a create) no API resource named like tag/datacatalogtag in datacatalog.googleapis.com | n/a | false |
@@ -539,19 +540,19 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
-| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
@@ -562,30 +563,30 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only

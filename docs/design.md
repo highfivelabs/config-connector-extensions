@@ -3018,9 +3018,14 @@ To raise confidence in `ArtifactRegistryRepository`:
     `subnetworks.patch` as merge patches with only those fields;
     Terraform's updates send only the fields that changed, a network's
     `routingConfig` with `routingMode` alone; delete leaves them; patch
-    0056). Item 13 (`OrgPolicyPolicy.alternate`) is not built: the API
-    marks `alternate` deprecated, and `dryRunSpec`, which Config
-    Connector's kind has, replaces it.
+    0056); `DNSPolicyFields` (`dns.gcp.hfl.dev`, item 15;
+    `dns64Config`, `policies.patch`, a partial update, with only that
+    field; Terraform's patch never sends it, but Config Connector's
+    opt-in direct `DNSPolicy` sends `policies.update`, a whole replace,
+    and would clear it; delete turns DNS64 off; patch 0057).
+    Item 13 (`OrgPolicyPolicy.alternate`) is not built: the API marks
+    `alternate` deprecated, and `dryRunSpec`, which Config Connector's
+    kind has, replaces it.
 
 ## 9. The operator: Config Connector's identity, per namespace
 

@@ -393,6 +393,11 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   `LEGACY` (mockgcp drops them), a subnet patch's fingerprint check, or
   what the BGP settings or the overlap change for routes (mockgcp has no
   Cloud Routers learning routes, and checks no route against a subnet).
+- **Cloud DNS server policies** (`DNSPolicyFields`). mockgcp's
+  `policies.patch` now changes only the fields a request sets (patch
+  0057; it replaced the whole policy). It does not show: whether the API
+  takes DNS64 on a policy bound to no network, or what DNS64 answers
+  (mockgcp resolves nothing).
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and

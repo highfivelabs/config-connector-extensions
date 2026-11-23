@@ -432,7 +432,13 @@ items:
       `dns64Config` on `DNSPolicy`.
     attributes: The measured lists; `routingPolicy` is the one the dns module exposes.
     upstream: none found.
-    build: Wait (decision 5).
+    build: >-
+      Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23)
+      owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy`
+      replaces the whole policy and would clear it); live pending. `routingPolicy` is on `DNSRecordSet` already (only
+      `enableFencing`, `trickleTraffic` and the DNSSEC `signatureRrdatas` are missing); those, the forwarding targets'
+      `ipv6Address` and `domainName` (zone and policy) sit in objects Terraform sends whole, so they need whole-object
+      kinds (upstream `master` has direct `DNSRecordSet` types and mappers, no controller yet); not built.
   - title: Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
     importance: A
     gap: field

@@ -678,6 +678,7 @@ dlp.googleapis.com,dlp.googleapis.com/projects.locations.connections,7,DLPConnec
 dlp.googleapis.com,dlp.googleapis.com/projects.locations.discoveryConfigs,102,DLPDiscoveryConfig,97,,0,5,false,api=v2:projects.locations.discoveryConfigs; request-wrapper=GooglePrivacyDlpV2CreateDiscoveryConfigRequest; official-spec-fields-unmatched=3/100
 dlp.googleapis.com,dlp.googleapis.com/projects.storedInfoTypes,14,DLPStoredInfoType,11,,0,3,false,api=v2:projects.storedInfoTypes; request-wrapper=GooglePrivacyDlpV2CreateStoredInfoTypeRequest; official-spec-fields-unmatched=5/16
 dns.googleapis.com,dns.googleapis.com/Change,104,,0,,0,104,false,api=v1:changes
+dns.googleapis.com,dns.googleapis.com/DNSPolicyFields,0,,0,DNSPolicyFields,0,0,false,"outside-denominator; a field kind, dns64Config of a DNS server policy Config Connector's DNSPolicy owns, written with policies.patch (decision 37)"
 dns.googleapis.com,dns.googleapis.com/ManagedZone,26,DNSManagedZone,17,,0,9,false,api=v1:managedZones; official-spec-fields-unmatched=4/19
 dns.googleapis.com,dns.googleapis.com/OutboundEndpoint,8,,0,DNSOutboundEndpoint,8,0,false,api=v1:outboundEndpoints; ours-spec-fields-unmatched=3/10
 dns.googleapis.com,dns.googleapis.com/Policy,11,DNSPolicy,7,,0,4,false,api=v1:policies; official-spec-fields-unmatched=1/7

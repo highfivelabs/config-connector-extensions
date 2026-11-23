@@ -104,6 +104,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`DNSPolicyFields`** (`dns.gcp.hfl.dev/v1alpha1`, a field kind,
+  `docs/design.md` decision 37): a Cloud DNS server policy's
+  `dns64Config`, which Config Connector's `DNSPolicy` lacks, set on a
+  policy it (or anything else) made, by `spec.resourceRef`. It never
+  creates or deletes the policy; deleting it turns DNS64 off. Not safe
+  beside Config Connector's opt-in direct `DNSPolicy` controller, whose
+  update replaces the whole policy.
+
 - **`ComputeNetworkFields` and `ComputeSubnetworkFields`**
   (`compute.gcp.hfl.dev/v1alpha1`, field kinds, `docs/design.md` decision
   37): a VPC network's BGP best path selection
