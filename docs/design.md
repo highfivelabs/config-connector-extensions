@@ -2494,6 +2494,23 @@ protos lack them), `template.client` and `clientVersion` (newer than the
 pinned Go client). mockgcp needed no patch. Fake only; live pending
 (`docs/kinds/RunWorkerPool.md`).
 
+Rows 2 and 8, decided (2026-11-23), which ends the application queue for
+now. Row 2 (Storage bucket fields), measured by hand at the pin: its two
+pull requests (#13713 `rpo`, #15145 encryption enforcement) are still
+open, so those wait; `autoclass.terminalStorageClass` and `ipFilter` are
+in Config Connector's `StorageBucket` at the pin; the rest is naming,
+output only, allowlisted early access (`matchesPattern`), taken only at insert (`hierarchicalNamespace`,
+`objectRetention`), inside the lifecycle rule list Config Connector owns
+(`sizeAboveBytes`, `sizeBelowBytes`), or newer than the pinned Go client
+(`softDeletePolicy.hardDeletePause`). None is a field kind's; they wait
+for a workload that needs them, then a whole-object `StorageBucket` of
+ours (size L, from pull request #11533's direct controller if merged).
+Row 8 (Cloud Run domain mappings, importance C): not built. The v1 API is
+Knative-shaped (not a `discokind` collection), mockgcp serves no Cloud
+Run v1, so it needs a fake of our own, and a live run needs a domain
+verified for the live-test account; no tracked module creates one and the
+feature is in preview. Built when a workload asks, the domain first.
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:

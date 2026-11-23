@@ -79,6 +79,16 @@ items:
       Wait for the release for the two fields in pull requests (section 6.1); for the rest a field kind
       (`StorageBucketFields`): Terraform's bucket update is a `buckets.patch` of the bucket it builds from its own
       schema, and a patch leaves fields it does not send alone, so the pattern looks safe (to be confirmed live).
+      Decided 2026-11-23, measured by hand at the pin: no field kind is left to build. The two pull requests are
+      still open (wait). Of the rest, `autoclass.terminalStorageClass` and `ipFilter` are no gaps (Config
+      Connector's `StorageBucket` has them at the pin); `encryption.defaultKmsKeyName` is `encryption.kmsKeyRef`
+      and `lifecycle.rule[].condition.isLive` is `withState` (naming); `matchesPattern` is allowlisted early access; the times,
+      `id`, `owner`, `locationType` and `satisfiesPZ*` are output only. What is left cannot be a field kind's:
+      `hierarchicalNamespace` and `objectRetention` are taken only at insert (a bucket made by a kind of ours, a
+      whole-object `StorageBucket`, size L), the lifecycle conditions `sizeAboveBytes` and `sizeBelowBytes` are
+      inside the rule list Config Connector owns, and `softDeletePolicy.hardDeletePause` is newer than the pinned
+      Go client (`google.golang.org/api` v0.287.1). Built when a workload needs one of them, as that whole-object
+      kind, copied from pull request #11533's direct controller if it has merged by then.
   - title: Monitoring uptime checks and alert policies fields
     importance: A
     gap: field
@@ -227,3 +237,10 @@ items:
       none: no kind on master or in a pull request.
     build: >-
       A hand-written kind on the v1 namespaces API (the v2 API has no domain mappings); not before the A rows.
+      Decided 2026-11-23 (the A rows built or waiting): not built yet. Upstream still has no kind (master
+      `5d27e1c6`, open pull requests from #13500). The v1 API is Knative-shaped (the name in the body's metadata,
+      regional endpoints, no update), not a collection `hack/discokind` generates, and mockgcp serves no Cloud Run
+      v1 API, so the kind needs a fake of our own as well as hand-written code (size M to L); and a live run, which
+      a kind needs to be done, needs a domain verified for the live-test account, which the test project does not
+      have. No tracked module creates one, and the feature is in preview. Recommendation: build it when a
+      workload asks, with the verified domain arranged first.
