@@ -1,0 +1,241 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computesecuritypolicyfields.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeSecurityPolicyFields
+    listKind: ComputeSecurityPolicyFieldsList
+    plural: computesecuritypolicyfields
+    shortNames:
+    - hflcomputesecuritypolicyfields
+    singular: computesecuritypolicyfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ComputeSecurityPolicyFields sets fields of a Cloud Armor security
+          policy that Config Connector's ComputeSecurityPolicy has no field for (Adaptive
+          Protection's threshold configs and the WAF request body inspection size),
+          and only those. Deleting it clears the fields it set; with deletion-policy
+          abandon they stay.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'ComputeSecurityPolicyFieldsSpec is the fields of a security
+              policy this object owns. A field left out is not owned: it is never
+              read or written.'
+            properties:
+              adaptiveProtectionConfig:
+                description: The part of the policy's Adaptive Protection configuration
+                  this object owns.
+                properties:
+                  layer7DdosDefenseConfig:
+                    description: The part of the Layer 7 DDoS defense configuration
+                      this object owns.
+                    properties:
+                      thresholdConfigs:
+                        description: 'Adaptive Protection''s detection and auto-deploy
+                          thresholds, each named, owned whole: the list replaces the
+                          policy''s (an empty list removes them). Layer 7 DDoS defense
+                          (Config Connector''s adaptiveProtectionConfig.layer7DdosDefenseConfig.enable)
+                          must be on.'
+                        items:
+                          properties:
+                            autoDeployConfidenceThreshold:
+                              type: number
+                            autoDeployExpirationSec:
+                              format: int32
+                              type: integer
+                            autoDeployImpactedBaselineThreshold:
+                              type: number
+                            autoDeployLoadThreshold:
+                              type: number
+                            detectionAbsoluteQps:
+                              type: number
+                            detectionLoadThreshold:
+                              type: number
+                            detectionRelativeToBaselineQps:
+                              type: number
+                            name:
+                              description: The name must be 1-63 characters long,
+                                and comply with RFC1035. The name must be unique within
+                                the security policy.
+                              maxLength: 63
+                              minLength: 1
+                              type: string
+                            trafficGranularityConfigs:
+                              description: Configuration options for enabling Adaptive
+                                Protection to operate on specified granular traffic
+                                units.
+                              items:
+                                properties:
+                                  enableEachUniqueValue:
+                                    description: If enabled, traffic matching each
+                                      unique value for the specified type constitutes
+                                      a separate traffic unit. It can only be set
+                                      to true if `value` is empty.
+                                    type: boolean
+                                  type:
+                                    description: 'Type of this configuration: HTTP_HEADER_HOST
+                                      or HTTP_PATH.'
+                                    enum:
+                                    - HTTP_HEADER_HOST
+                                    - HTTP_PATH
+                                    type: string
+                                  value:
+                                    description: Requests that match this value constitute
+                                      a granular traffic unit.
+                                    type: string
+                                type: object
+                              type: array
+                              x-kubernetes-list-type: atomic
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-type: atomic
+                    required:
+                    - thresholdConfigs
+                    type: object
+                required:
+                - layer7DdosDefenseConfig
+                type: object
+              advancedOptionsConfig:
+                description: The part of the policy's advanced options this object
+                  owns.
+                properties:
+                  requestBodyInspectionSize:
+                    description: The maximum request size chosen by the customer with
+                      Waf enabled. Values supported are "8KB", "16KB, "32KB", "48KB"
+                      and "64KB". Values are case insensitive.
+                    type: string
+                required:
+                - requestBodyInspectionSize
+                type: object
+              resourceRef:
+                description: 'Immutable. The security policy: Config Connector''s
+                  ComputeSecurityPolicy by name (compute.cnrm.cloud.google.com), or
+                  any global security policy by external, as "projects/{{projectID}}/global/securityPolicies/{{name}}".
+                  The policy must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ComputeSecurityPolicy
+                      resource. Should be in the format "projects/{{projectID}}/global/securityPolicies/{{name}}".
+                    type: string
+                  name:
+                    description: The name of a ComputeSecurityPolicy resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ComputeSecurityPolicy resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set adaptiveProtectionConfig or advancedOptionsConfig
+              rule: has(self.adaptiveProtectionConfig) || has(self.advancedOptionsConfig)
+          status:
+            description: ComputeSecurityPolicyFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The security policy whose fields this object sets, as
+                  projects/{project}/global/securityPolicies/{name}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

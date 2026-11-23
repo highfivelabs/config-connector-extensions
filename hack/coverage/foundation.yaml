@@ -749,5 +749,18 @@ items:
       `userDefinedFields`, `ddosProtectionConfig`, `advancedOptionsConfig` details; rules beyond the common match
       and action. The hierarchical (organization) policy is alpha (the stability item).
     attributes: The measured lists (rules are `ComputeSecurityPolicy.spec.rule`).
-    upstream: none found.
-    build: Wait (decision 5).
+    upstream: >-
+      none found (read again 2026-11-23 at the pin: Config Connector's opt-in direct `ComputeSecurityPolicy` has no
+      threshold configs or inspection size, and its mapper reads a threshold config with auto-deploy fields as its
+      own `autoDeployConfig`; open pull requests not re-read, the GitHub API is not reachable from the session).
+    build: >-
+      Decision 19 replaces "wait". Built 2026-11-23, highest-value first, as a field kind (decision 37,
+      `compute.gcp.hfl.dev/v1alpha1`, live pending): `ComputeSecurityPolicyFields` owns
+      `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs` (Adaptive Protection's tuning) and
+      `advancedOptionsConfig.requestBodyInspectionSize` (the WAF's body limit) of a global policy, written with
+      `securityPolicies.patch` as a merge patch of the sub-objects as read with ours changed, and an update mask
+      only to clear. Terraform's update sends only the sub-objects it changed, no mask; if the API replaces one,
+      ours come back at the next reconcile (to be seen live). Not built: `userDefinedFields` and
+      `ddosProtectionConfig` (regional network edge policies, which Config Connector's Terraform kind does not
+      make); rule fields beyond Config Connector's (rules are written with addRule and patchRule, which
+      Terraform's update sends whole: a rule field kind would be reset by every rule change).

@@ -46,8 +46,9 @@
 # name, where the account may list them, and BigQuery datasets, by name,
 # where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), Cloud
 # Endpoints services, by name, where the project has Service Management,
-# and CA pools and certificate templates in us-central1, by name, where the
-# account has Private CA (E2E_PRIVATECA=true).
+# CA pools and certificate templates in us-central1, by name, where the
+# account has Private CA (E2E_PRIVATECA=true), and global Cloud Armor
+# security policies, by name, where E2E_CLOUD_ARMOR=true.
 # A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
@@ -960,6 +961,16 @@ elif jq -e '.error.code == 403' >/dev/null 2>&1 <<<"${out}"; then
 else
   echo "  FAILED to list endpoints services: ${out}" >&2
   failed=$((failed + 1))
+fi
+
+# Cloud Armor security policies (ComputeSecurityPolicyFields' test), global,
+# by name, only where the run made them (E2E_CLOUD_ARMOR=true); the test's
+# policy is attached to nothing.
+if [[ "${E2E_CLOUD_ARMOR:-}" == true ]]; then
+  rows="$("${G[@]}" compute security-policies list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
+  for name in ${rows}; do
+    act "security policy" "${name}" "${G[@]}" compute security-policies delete "${name}" --global
+  done
 fi
 
 # Certificate Authority Service CA pools and certificate templates (the

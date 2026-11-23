@@ -411,6 +411,8 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/logging/v1alpha1/groupversion_info.go]}
   - here: [pkg/controller/direct/accesscontextmanager/discokindtest/testdata/discokind/AccessContextManagerAuthorizedOrgsDesc/create.yaml, pkg/controller/direct/accesscontextmanager/discokindtest/testdata/discokind/AccessContextManagerAuthorizedOrgsDesc/update.yaml]
     from: {pr: GoogleCloudPlatform/k8s-config-connector#14202, paths: [pkg/test/resourcefixture/testdata/basic/accesscontextmanager/v1alpha1/accesscontextmanagerauthorizedorgsdesc/accesscontextmanagerauthorizedorgsdescbasic/create.yaml, pkg/test/resourcefixture/testdata/basic/accesscontextmanager/v1alpha1/accesscontextmanagerauthorizedorgsdesc/accesscontextmanagerauthorizedorgsdescbasic/update.yaml]}
+  - here: [apis/compute/v1alpha1/securitypolicy_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/types.generated.go]}
   - here: [apis/privateca/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/groupversion_info.go]}
   - here: [apis/privateca/v1alpha1/types.go]

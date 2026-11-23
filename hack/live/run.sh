@@ -67,7 +67,8 @@ source hack/live/projects.sh
 # test folder, E2E_TEST_FOLDER; dns's DNSPolicyFields, as the other DNS
 # kinds, without E2E_DNS_ADMIN=true;
 # privateca (PrivateCACAPoolFields, PrivateCACertificateTemplateFields)
-# skips live unless E2E_PRIVATECA=true;
+# skips live unless E2E_PRIVATECA=true; compute's ComputeSecurityPolicyFields
+# unless E2E_CLOUD_ARMOR=true (a Cloud Armor policy is billed, prorated);
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"

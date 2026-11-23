@@ -164,6 +164,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeSubnetworkFieldsGVK, crdName: "computesubnetworkfields.compute.gcp.hfl.dev", model: compute.NewSubnetworkFieldsModel},
 	{gvk: dnsv1alpha1.DNSPolicyFieldsGVK, crdName: "dnspolicyfields.dns.gcp.hfl.dev", model: dns.NewPolicyFieldsModel},
 	{gvk: loggingv1alpha1.LoggingLogBucketFieldsGVK, crdName: "logginglogbucketfields.logging.gcp.hfl.dev", model: logging.NewLogBucketFieldsModel},
+	{gvk: computev1alpha1.ComputeSecurityPolicyFieldsGVK, crdName: "computesecuritypolicyfields.compute.gcp.hfl.dev", model: compute.NewSecurityPolicyFieldsModel},
 	{gvk: privatecav1alpha1.PrivateCACAPoolFieldsGVK, crdName: "privatecacapoolfields.privateca.gcp.hfl.dev", model: privateca.NewCAPoolFieldsModel},
 	{gvk: privatecav1alpha1.PrivateCACertificateTemplateFieldsGVK, crdName: "privatecacertificatetemplatefields.privateca.gcp.hfl.dev", model: privateca.NewCertificateTemplateFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},

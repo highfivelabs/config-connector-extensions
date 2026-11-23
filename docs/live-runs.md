@@ -459,6 +459,15 @@ The test makes an engine with no code (sessions and memory only), which
 costs nothing while idle; the sweeper deletes engines in `us-central1`
 whose display name carries a run ID.
 
+`ComputeSecurityPolicyFields` (package `compute`) skips live unless
+`E2E_CLOUD_ARMOR=true`: its test makes a global Cloud Armor policy,
+attached to nothing, for a few minutes (Cloud Armor bills a policy by the
+month, prorated), and its threshold configs may need Cloud Armor
+Enterprise on the project. The account's `roles/compute.securityAdmin`
+covers security policies. With it:
+`E2E_CLOUD_ARMOR=true task test-live PROJECT=$GCP_PROJECT KINDS=compute LIVE_RUN=TestComputeSecurityPolicyFields`;
+the sweeper then deletes global policies whose name carries a run ID.
+
 `AccessContextManagerAuthorizedOrgsDesc` (package `accesscontextmanager`)
 skips live (`live-skip`): an authorized orgs description belongs to an
 organization's access policy, which a live run never touches, and the

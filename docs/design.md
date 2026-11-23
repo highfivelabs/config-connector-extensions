@@ -2453,6 +2453,16 @@ To raise confidence in `ArtifactRegistryRepository`:
     authority's `userDefinedAccessUrls`, and
     `allowRequesterSpecifiedNotBeforeTime` (not in the pinned Go client).
 
+47. `ComputeSecurityPolicyFields` (foundation item 27, 2026-11-23): a
+    live run (`E2E_CLOUD_ARMOR=true task test-live PROJECT=$GCP_PROJECT
+    KINDS=compute LIVE_RUN=TestComputeSecurityPolicyFields`): whether the
+    API merges the sub-object Terraform's update sends or replaces it
+    (ours come back at the next reconcile either way), whether it takes
+    the nested mask paths that clear, and whether threshold configs need
+    Cloud Armor Enterprise. Not built from item 27: `userDefinedFields`,
+    `ddosProtectionConfig` (regional network edge policies) and rule
+    fields.
+
 46. `AccessContextManagerAuthorizedOrgsDesc` (foundation item 21,
     2026-11-23; section 2.3): a live run needs an organization's access
     policy and Access Context Manager roles on it for the live-test
@@ -3109,7 +3119,14 @@ To raise confidence in `ArtifactRegistryRepository`:
     only ours changed; Config Connector's DCL and direct updates mask
     top-level fields of their own diffs, so its change of its issuance
     policy or predefined values clears ours until our next reconcile,
-    the node pool's partial case; delete clears them; patch 0060).
+    the node pool's partial case; delete clears them; patch 0060);
+    `ComputeSecurityPolicyFields` (`compute.gcp.hfl.dev`, item 27; a
+    global Cloud Armor policy's Adaptive Protection `thresholdConfigs`
+    and `requestBodyInspectionSize`, `securityPolicies.patch` as a merge
+    patch of the sub-objects as read with ours changed, an update mask
+    only to clear; Terraform's update sends only the sub-objects it
+    changed, no mask; not for a policy on Config Connector's opt-in
+    direct controller, which sends its whole object).
     Item 13 (`OrgPolicyPolicy.alternate`) is not built: the API marks
     `alternate` deprecated, and `dryRunSpec`, which Config Connector's
     kind has, replaces it.

@@ -407,6 +407,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   whether the real API keeps fields a patch leaves out, which security
   profile groups a folder's rule may name, a mirror rule's effect, or the
   organization-level permissions a folder's policy needs.
+- **Cloud Armor security policies** (`ComputeSecurityPolicyFields`).
+  mockgcp's `securityPolicies.patch` replaces a sub-object it is sent
+  (`adaptiveProtectionConfig`, `advancedOptionsConfig`) and ignores the
+  update mask. It does not show: whether the real patch merges a
+  sub-object (the API says it uses JSON merge patch rules), whether it
+  takes nested mask paths, the API's checks of a threshold config or of an
+  inspection size, a fingerprint conflict (mockgcp's never changes), or
+  whether threshold configs need Cloud Armor Enterprise.
 - **Certificate Authority Service** (`PrivateCACAPoolFields`,
   `PrivateCACertificateTemplateFields`). mockgcp stores a pool's issuance
   policy and a template's fields as sent, and its done-at-once
