@@ -704,7 +704,11 @@ items:
     upstream: 'regional secrets: PR #6651 (copied, `UPSTREAM.md`). No pull request for the others.'
     build: >-
       Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags`
-      there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`).
+      there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`). Built 2026-11-23: `versionDestroyTtl`,
+      a regional secret's `customerManagedEncryption` (both `NOTYET` in Config Connector's types, still so on master,
+      no pull request) and `tags` (input only, immutable), mockgcp patch 0059; `TestSecretFields`. Not built:
+      `secretType`. The measured `customerManagedEncryption.kmsKeyName` and `topics[].name` are ours as `kmsKeyRef`
+      and `topics[].topicRef`, which the matcher does not pair by name.
   - title: Cloud Armor security policy fields
     importance: B
     gap: field

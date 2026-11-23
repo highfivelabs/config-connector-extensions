@@ -103,9 +103,9 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `securesourcemanager.googleapis.com` | ![securesourcemanager.googleapis.com](docs/coverage/bars/securesourcemanager.googleapis.com.svg) | 58.3% | 0.0% | 41.7% | 25.0% | 25.0% |
 | 2 | security | `cloudasset.googleapis.com` | ![cloudasset.googleapis.com](docs/coverage/bars/cloudasset.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 34.6% | 34.6% |
 | 2 | security | `recaptchaenterprise.googleapis.com` | ![recaptchaenterprise.googleapis.com](docs/coverage/bars/recaptchaenterprise.googleapis.com.svg) | 25.7% | 0.0% | 74.3% | 18.8% | 18.8% |
+| 2 | security | `secretmanager.googleapis.com` | ![secretmanager.googleapis.com](docs/coverage/bars/secretmanager.googleapis.com.svg) | 33.3% | 53.3% | 13.3% | 100.0% | 100.0% |
 | 2 | security | `securitycentermanagement.googleapis.com` | ![securitycentermanagement.googleapis.com](docs/coverage/bars/securitycentermanagement.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 86.4% | 86.4% |
 | 2 | application | `apigateway.googleapis.com` | ![apigateway.googleapis.com](docs/coverage/bars/apigateway.googleapis.com.svg) | 81.0% | 19.0% | 0.0% | 76.2% | 0.0% |
-| 2 | security | `secretmanager.googleapis.com` | ![secretmanager.googleapis.com](docs/coverage/bars/secretmanager.googleapis.com.svg) | 33.3% | 33.3% | 33.3% | 100.0% | 100.0% |
 | 2 | application | `modelarmor.googleapis.com` | ![modelarmor.googleapis.com](docs/coverage/bars/modelarmor.googleapis.com.svg) | 65.5% | 0.0% | 34.5% | 89.7% | 89.7% |
 | 2 | security | `websecurityscanner.googleapis.com` | ![websecurityscanner.googleapis.com](docs/coverage/bars/websecurityscanner.googleapis.com.svg) | 90.0% | 0.0% | 10.0% | 80.0% | 0.0% |
 | 2 | application | `bigqueryreservation.googleapis.com` | ![bigqueryreservation.googleapis.com](docs/coverage/bars/bigqueryreservation.googleapis.com.svg) | 53.1% | 0.0% | 46.9% | 71.9% | 65.6% |

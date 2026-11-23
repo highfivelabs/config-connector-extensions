@@ -104,6 +104,12 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`SecretManagerSecret` `versionDestroyTtl`, `customerManagedEncryption`
+  and `tags`**: delayed destruction of a secret's versions, a regional
+  secret's own Cloud KMS key, and resource manager tags bound when the
+  secret is made (immutable). Config Connector's types have the first two
+  as not yet served.
+
 - **`ContainerNodePoolFields`: soft eviction, memory and topology
   managers, single-process OOM kill** (`spec.config.kubeletConfig`'s
   `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`,

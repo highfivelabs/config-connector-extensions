@@ -26,6 +26,7 @@ package secretmanager
 import (
 	"context"
 	"fmt"
+	"strings"
 	"reflect"
 	"regexp"
 
@@ -273,9 +274,18 @@ func (a *Adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 	// the GCP service use *name* to identify the resource.
 	resource.Name = a.id.String()
 	resource.Etag = a.actual.Etag
+	// tags are input only and immutable: sent with the create, never
+	// returned, never compared.
+	resource.Tags = a.actual.Tags
 	paths, err := common.CompareProtoMessage(resource, a.actual, common.BasicDiff)
 	if err != nil {
 		return err
+	}
+	// The key of a regional secret's encryption is sent whole.
+	for path := range paths {
+		if strings.HasPrefix(path, "customer_managed_encryption.") {
+			paths = paths.Delete(path).Insert("customer_managed_encryption")
+		}
 	}
 	if paths.Has("ttl") {
 		paths = paths.Delete("ttl")

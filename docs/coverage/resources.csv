@@ -1112,8 +1112,8 @@ saasservicemgmt.googleapis.com,saasservicemgmt.googleapis.com/Tenant,5,SaaSServi
 saasservicemgmt.googleapis.com,saasservicemgmt.googleapis.com/Unit,8,SaaSServiceMgmtUnit,5,,0,3,false,api=v1:projects.locations.units; official-spec-fields-unmatched=3/7
 saasservicemgmt.googleapis.com,saasservicemgmt.googleapis.com/UnitKind,26,SaaSServiceMgmtUnitKind,19,,0,7,false,api=v1:projects.locations.unitKinds; official-spec-fields-unmatched=3/21
 saasservicemgmt.googleapis.com,saasservicemgmt.googleapis.com/UnitOperation,18,,0,,0,18,false,api=v1:projects.locations.unitOperations
-secretmanager.googleapis.com,secretmanager.googleapis.com/LocationSecret,15,,0,SecretManagerSecret,10,5,false,api=v1:projects.locations.secrets; ours-spec-fields-unmatched=4/14
-secretmanager.googleapis.com,secretmanager.googleapis.com/Secret,15,SecretManagerSecret,10,SecretManagerSecret,0,5,false,api=v1:projects.secrets; official-spec-fields-unmatched=3/13; ours-spec-fields-unmatched=4/14
+secretmanager.googleapis.com,secretmanager.googleapis.com/LocationSecret,15,,0,SecretManagerSecret,13,2,false,api=v1:projects.locations.secrets; ours-spec-fields-unmatched=4/17
+secretmanager.googleapis.com,secretmanager.googleapis.com/Secret,15,SecretManagerSecret,10,SecretManagerSecret,3,2,false,api=v1:projects.secrets; official-spec-fields-unmatched=3/13; ours-spec-fields-unmatched=4/17
 secretmanager.googleapis.com,secretmanager.googleapis.com/SecretManagerSecretVersion,0,,0,SecretManagerSecretVersion,0,0,false,"outside-denominator; a secret version, written with secrets.addVersion"
 securesourcemanager.googleapis.com,securesourcemanager.googleapis.com/Instance,7,SecureSourceManagerInstance,5,,0,2,false,api=v1:projects.locations.instances; official-spec-fields-unmatched=3/7
 securesourcemanager.googleapis.com,securesourcemanager.googleapis.com/Repository,7,SecureSourceManagerRepository,6,,0,1,false,api=v1:projects.locations.repositories; official-spec-fields-unmatched=3/8

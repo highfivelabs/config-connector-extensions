@@ -114,8 +114,10 @@ func SecretManagerSecretSpec_ToProto(mapCtx *direct.MapContext, in *krm.SecretMa
 	out.VersionAliases = MapStringString_ToMapStringInt64(mapCtx, in.VersionAliases)
 	out.Annotations = in.Annotations
 	out.Labels = in.Labels
-	// MISSING: VersionDestroyTtl
-	// MISSING: CustomerManagedEncryption
+	// Served here, NOTYET in Config Connector's mapper (foundation item 26).
+	out.VersionDestroyTtl = direct.Duration_ToProto(mapCtx, in.VersionDestroyTtl)
+	out.CustomerManagedEncryption = CustomerManagedEncryption_ToProto(mapCtx, in.CustomerManagedEncryption)
+	out.Tags = in.Tags
 	return out
 }
 

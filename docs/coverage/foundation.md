@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 38.9% | 18.3% | 42.8% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 4.7% | 28.1% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 5.1% | 27.7% |
 
 By service:
 
@@ -42,7 +42,7 @@ By service:
 | security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 4.5% | 20.5% |
 | security | `binaryauthorization.googleapis.com` | 2 | 37 | 75.7% | 0.0% | 24.3% |
 | security | `recaptchaenterprise.googleapis.com` | 2 | 35 | 74.3% | 0.0% | 25.7% |
-| security | `secretmanager.googleapis.com` | 2 | 30 | 33.3% | 33.3% | 33.3% |
+| security | `secretmanager.googleapis.com` | 2 | 30 | 33.3% | 53.3% | 13.3% |
 | security | `cloudasset.googleapis.com` | 2 | 26 | 100.0% | 0.0% | 0.0% |
 | security | `securitycentermanagement.googleapis.com` | 2 | 22 | 100.0% | 0.0% | 0.0% |
 | security | `assuredworkloads.googleapis.com` | 1 | 20 | 45.0% | 0.0% | 55.0% |
@@ -92,7 +92,7 @@ What these numbers miss, for the foundation:
 | 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 3 / 12 (0.0%) | none. |
 | 24 | [Cloud Identity SSO profiles, assignments and policies](#24-cloud-identity-sso-profiles-assignments-and-policies) | B | whole | 0 | M | 26 / 26 (0.0%) | none for these |
 | 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 60 / 209 (71.3%) | none found. |
-| 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 10 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
+| 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 4 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
 | 27 | [Cloud Armor security policy fields](#27-cloud-armor-security-policy-fields) | B | field | 1 | M | 122 / 172 (27.9%) | none found. |
 
 ### 1. Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)
@@ -456,14 +456,14 @@ What these numbers miss, for the foundation:
 
 - **Importance** B, **gap** field, **size** S, **modules** 1 (secret-manager).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `secretmanager.googleapis.com/Secret`: 10 / 0 / 5 of 15; SecretManagerSecret, SecretManagerSecret (ours)
-  - `secretmanager.googleapis.com/LocationSecret`: 0 / 10 / 5 of 15; SecretManagerSecret (ours)
+  - `secretmanager.googleapis.com/Secret`: 10 / 3 / 2 of 15; SecretManagerSecret, SecretManagerSecret (ours)
+  - `secretmanager.googleapis.com/LocationSecret`: 0 / 13 / 2 of 15; SecretManagerSecret (ours)
 - **Missing, whole resources:** `versionDestroyTtl`, `secretType`, `tags{}`, `topics[]` (matched by name, to verify), customer-managed encryption on a regional secret. Our `SecretManagerSecret` already adds `spec.location` (regional secrets); `SecretManagerSecretVersion` is covered by upstream and ours.
 - **Missing, attributes that matter:** The measured lists.
-  - uncovered in `secretmanager.googleapis.com/Secret` (measured): `customerManagedEncryption.kmsKeyName`, `secretType`, `tags{}`, `topics[].name`, `versionDestroyTtl`
-  - uncovered in `secretmanager.googleapis.com/LocationSecret` (measured): `customerManagedEncryption.kmsKeyName`, `secretType`, `tags{}`, `topics[].name`, `versionDestroyTtl`
+  - uncovered in `secretmanager.googleapis.com/Secret` (measured): `secretType`, `topics[].name`
+  - uncovered in `secretmanager.googleapis.com/LocationSecret` (measured): `secretType`, `topics[].name`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): regional secrets: PR #6651 (copied, `UPSTREAM.md`). No pull request for the others.
-- **Build:** Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags` there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`).
+- **Build:** Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags` there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`). Built 2026-11-23: `versionDestroyTtl`, a regional secret's `customerManagedEncryption` (both `NOTYET` in Config Connector's types, still so on master, no pull request) and `tags` (input only, immutable), mockgcp patch 0059; `TestSecretFields`. Not built: `secretType`. The measured `customerManagedEncryption.kmsKeyName` and `topics[].name` are ours as `kmsKeyRef` and `topics[].topicRef`, which the matcher does not pair by name.
 
 ### 27. Cloud Armor security policy fields
 
@@ -576,8 +576,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 13 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/Secret | 3 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
@@ -891,8 +891,8 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `privateca.googleapis.com/CertificateTemplate` | PrivateCACertificateTemplate | - | 44 | 33 | 0 | 11 | 25 |
 | security | `recaptchaenterprise.googleapis.com/Firewallpolicy` | ReCAPTCHAEnterpriseFirewallPolicy (alpha) | - | 11 | 11 | 0 | 0 | - |
 | security | `recaptchaenterprise.googleapis.com/Key` | RecaptchaEnterpriseKey | - | 24 | 15 | 0 | 9 | - |
-| security | `secretmanager.googleapis.com/LocationSecret` | - | SecretManagerSecret | 15 | 0 | 10 | 5 | 26 |
-| security | `secretmanager.googleapis.com/Secret` | SecretManagerSecret | SecretManagerSecret | 15 | 10 | 0 | 5 | 26 |
+| security | `secretmanager.googleapis.com/LocationSecret` | - | SecretManagerSecret | 15 | 0 | 13 | 2 | 26 |
+| security | `secretmanager.googleapis.com/Secret` | SecretManagerSecret | SecretManagerSecret | 15 | 10 | 3 | 2 | 26 |
 | security | `securitycenter.googleapis.com/BigQueryExport` | SecurityCenterBigQueryExport (alpha) | SecurityCenterBigQueryExport | 5 | 4 | 1 | 0 | - |
 | security | `securitycenter.googleapis.com/EventThreatDetectionSettingCustomModule` | SecuritycenterEventThreatDetectionCustomModule (alpha) | - | 7 | 6 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/MuteConfig` | SecurityCenterMuteConfig (alpha) | SecurityCenterMuteConfig | 6 | 5 | 0 | 1 | - |
