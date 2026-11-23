@@ -104,6 +104,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`LoggingLogBucketFields`** (`logging.gcp.hfl.dev/v1alpha1`, a field
+  kind, `docs/design.md` decision 37): a log bucket's `indexConfigs`,
+  `restrictedFields` and `cmekSettings`, which Config Connector's
+  `LoggingLogBucket` lacks, set on a bucket it (or anything else) made, by
+  `spec.resourceRef`, with an update mask naming only them. It never
+  creates or deletes the bucket; deleting it clears the index configs and
+  restricted fields, and leaves the CMEK key (the API cannot remove it).
+
 - **`ComputeServiceAttachmentFields`** (`compute.gcp.hfl.dev/v1alpha1`,
   a field kind, `docs/design.md` decision 37): a Private Service Connect
   service attachment's `reconcileConnections` and

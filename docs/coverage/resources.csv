@@ -872,6 +872,7 @@ logging.googleapis.com,logging.googleapis.com/LocationBucket,8,LoggingLogBucket,
 logging.googleapis.com,logging.googleapis.com/LocationBucketLink,1,,0,LoggingLink,1,0,false,api=v2:projects.locations.buckets.links; ours-spec-fields-unmatched=8/9
 logging.googleapis.com,logging.googleapis.com/LocationBucketView,2,LoggingLogView,2,,0,0,false,api=v2:projects.locations.buckets.views; official-spec-fields-unmatched=7/9
 logging.googleapis.com,logging.googleapis.com/LogScope,2,LoggingLogScope,1,,0,1,false,api=v2:folders.locations.logScopes; official-spec-fields-unmatched=8/9
+logging.googleapis.com,logging.googleapis.com/LoggingLogBucketFields,0,,0,LoggingLogBucketFields,0,0,false,"outside-denominator; a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37)"
 logging.googleapis.com,logging.googleapis.com/LoggingSettings,0,,0,LoggingSettings,0,0,false,"outside-denominator; the Log Router settings of an organization or folder, written with updateSettings (they always exist)"
 logging.googleapis.com,logging.googleapis.com/Metric,30,LoggingLogMetric,23,,0,7,false,api=v2:projects.metrics; official-spec-fields-unmatched=3/25
 logging.googleapis.com,logging.googleapis.com/OrganizationExclusion,4,LoggingLogExclusion,4,,0,0,false,api=v2:organizations.exclusions; official-spec-fields-unmatched=5/8

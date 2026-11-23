@@ -100,6 +100,7 @@ resources:
 - kms.gcp.hfl.dev_kmscryptokeyfields.yaml
 - logging.gcp.hfl.dev_loggingbillingaccountsinks.yaml
 - logging.gcp.hfl.dev_logginglinks.yaml
+- logging.gcp.hfl.dev_logginglogbucketfields.yaml
 - logging.gcp.hfl.dev_logginglogsinks.yaml
 - logging.gcp.hfl.dev_loggingsavedqueries.yaml
 - logging.gcp.hfl.dev_loggingsettings.yaml

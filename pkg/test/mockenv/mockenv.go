@@ -306,11 +306,13 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_logginglogsinks.logging.cnrm.cloud.google.com.yaml"),
 			// The Config Connector objects the field kinds name by
 			// resourceRef (KMSCryptoKeyFields, ContainerClusterFields,
-			// ContainerNodePoolFields, ComputeServiceAttachmentFields).
+			// ContainerNodePoolFields, ComputeServiceAttachmentFields,
+			// LoggingLogBucketFields).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_kmscryptokeys.kms.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containerclusters.container.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containernodepools.container.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computeserviceattachments.compute.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_logginglogbuckets.logging.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}

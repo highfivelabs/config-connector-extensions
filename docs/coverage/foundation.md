@@ -258,12 +258,12 @@ What these numbers miss, for the foundation:
   - `logging.googleapis.com/Bucket`: 3 / 0 / 5 of 8; LoggingLogBucket
   - `logging.googleapis.com/Sink`: 11 / 1 / 1 of 13; LoggingLogSink, LoggingLogSink (ours)
   - `logging.googleapis.com/SavedQuery`: 0 / 77 / 0 of 77; LoggingSavedQuery (ours)
-- **Missing, whole resources:** On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is `cmekSettings`, present on the kind); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren` is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
+- **Missing, whole resources:** On `LoggingLogBucket`: `indexConfigs[]`, `restrictedFields[]`, `cmekSettings` (the kind has none; `analyticsEnabled` is its `enableAnalytics`, matched by name only, so it shows as uncovered); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren` is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `logging.googleapis.com/Bucket` (measured): `analyticsEnabled`, `cmekSettings.kmsKeyName`, `indexConfigs[].fieldPath`, `indexConfigs[].type`, `restrictedFields[]`
   - uncovered in `logging.googleapis.com/Sink` (measured): `outputVersionFormat`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for `LoggingLogSink`) and #14429 (project annotation in the sink) are fixes.
-- **Build:** Wait (decision 5) for the fields; `LoggingSavedQuery` is a small new kind (`logging.gcp.hfl.dev`, the API's `savedQueries` under a project, folder or organization location) if a team asks.
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `LoggingLogBucketFields` (`logging.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns `indexConfigs`, `restrictedFields` and `cmekSettings` with `buckets.patch` and a mask of only those (Config Connector's DCL and direct updates mask only their own fields); live pending. `LoggingSavedQuery` is built (generated). `outputVersionFormat` is deprecated: not built.
 
 ### 13. Organization policy fields (alternate policy)
 
@@ -537,18 +537,19 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
@@ -561,27 +562,27 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 

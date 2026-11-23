@@ -351,16 +351,18 @@ items:
       - logging.googleapis.com/Sink
       - logging.googleapis.com/SavedQuery
     missing: >-
-      On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is
-      `cmekSettings`, present on the kind); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren`
+      On `LoggingLogBucket`: `indexConfigs[]`, `restrictedFields[]`, `cmekSettings` (the kind has none; `analyticsEnabled`
+      is its `enableAnalytics`, matched by name only, so it shows as uncovered); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren`
       is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
     attributes: The measured lists.
     upstream: >-
       none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for
       `LoggingLogSink`) and #14429 (project annotation in the sink) are fixes.
     build: >-
-      Wait (decision 5) for the fields; `LoggingSavedQuery` is a small new kind (`logging.gcp.hfl.dev`, the API's
-      `savedQueries` under a project, folder or organization location) if a team asks.
+      Field kind (decision 19, section 6.6 pattern 2): `LoggingLogBucketFields` (`logging.gcp.hfl.dev/v1alpha1`, built
+      2026-11-23) owns `indexConfigs`, `restrictedFields` and `cmekSettings` with `buckets.patch` and a mask of only those
+      (Config Connector's DCL and direct updates mask only their own fields); live pending. `LoggingSavedQuery` is built
+      (generated). `outputVersionFormat` is deprecated: not built.
   - title: Organization policy fields (alternate policy)
     importance: A
     gap: field

@@ -43,8 +43,10 @@ source hack/live/projects.sh
 # needs the test folder, E2E_TEST_FOLDER; resourcemanager
 # (ProjectDefaultServiceAccounts) needs a test project under it,
 # E2E_TEST_FOLDER_PROJECT; logging's LoggingBillingAccountSink skips live
-# without a billing account, E2E_BILLING_ACCOUNT, and LoggingLogSink's folder
-# case without E2E_LOGGING_FOLDER; securitycenter
+# without a billing account, E2E_BILLING_ACCOUNT, LoggingLogSink's folder
+# case without E2E_LOGGING_FOLDER, and LoggingLogBucketFields' CMEK case
+# without E2E_LOGGING_BUCKET_KMS_KEY (the rest of it runs in the project,
+# LIVE_RUN=TestLoggingLogBucketFields); securitycenter
 # (SecurityCenterMuteConfig) skips live unless E2E_SECURITY_CENTER=true;
 # firestore (FirestoreBackupSchedule) skips live unless
 # E2E_FIRESTORE_DATABASE names a Firestore database;

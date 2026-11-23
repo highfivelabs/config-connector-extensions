@@ -378,6 +378,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   that a target service must be a real forwarding rule and a NAT subnet
   a `PRIVATE_SERVICE_CONNECT` one, or what `reconcileConnections` does to
   connected endpoints (mockgcp has no consumers).
+- **Cloud Logging buckets** (`LoggingLogBucketFields`). mockgcp's
+  `buckets.patch` takes index configs, restricted fields and a CMEK key
+  (patch 0055). It does not show: the API's checks of a field path or of
+  the index limit, whether the Log Router's service account may use a
+  CMEK key or the key is in the bucket's location (mockgcp takes any
+  name and makes up the service account), or the restricted fields'
+  effect on who may read entries (mockgcp stores no log entries).
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and

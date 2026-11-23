@@ -3006,7 +3006,12 @@ To raise confidence in `ArtifactRegistryRepository`:
     `reconcileConnections`, `propagatedConnectionLimit`,
     `serviceAttachments.patch` as a merge patch with only those fields
     and the fingerprint; Config Connector's DCL patch never sends them;
-    delete leaves them; patch 0054).
+    delete leaves them; patch 0054); `LoggingLogBucketFields`
+    (`logging.gcp.hfl.dev`, item 12; `indexConfigs`, `restrictedFields`,
+    `cmekSettings`, `buckets.patch` with a mask of only those; Config
+    Connector's DCL and direct updates mask only their own fields; delete
+    clears the two lists and leaves the CMEK key, which the API cannot
+    remove; patch 0055).
 
 ## 9. The operator: Config Connector's identity, per namespace
 

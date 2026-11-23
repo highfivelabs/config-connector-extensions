@@ -1,0 +1,206 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: logginglogbucketfields.logging.gcp.hfl.dev
+spec:
+  group: logging.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: LoggingLogBucketFields
+    listKind: LoggingLogBucketFieldsList
+    plural: logginglogbucketfields
+    shortNames:
+    - hfllogginglogbucketfields
+    singular: logginglogbucketfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'LoggingLogBucketFields sets fields of a Cloud Logging bucket
+          that Config Connector''s LoggingLogBucket has no field for (indexConfigs,
+          restrictedFields, cmekSettings), and only those: it patches the bucket with
+          an update mask naming them. Deleting it clears the index configs and restricted
+          fields it set; the CMEK key stays (the API cannot remove it). With deletion-policy
+          abandon everything stays.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'LoggingLogBucketFieldsSpec is the fields of a log bucket
+              this object owns. A field left out is not owned: it is never read or
+              written.'
+            properties:
+              cmekSettings:
+                description: The Cloud KMS key that encrypts the bucket's new log
+                  entries. The bucket's Log Router service account must be able to
+                  use it, and the key must be in the bucket's location. Once set it
+                  cannot be removed, only changed to another key.
+                properties:
+                  kmsKeyName:
+                    description: The key, as "projects/{{projectID}}/locations/{{location}}/keyRings/{{keyRing}}/cryptoKeys/{{cryptoKey}}".
+                    type: string
+                required:
+                - kmsKeyName
+                type: object
+              indexConfigs:
+                description: 'The bucket''s indexed fields, owned whole: the list
+                  replaces the bucket''s. An empty list removes every index.'
+                items:
+                  description: IndexConfig is Cloud Logging's IndexConfig.
+                  properties:
+                    fieldPath:
+                      description: The LogEntry field path to index, such as "jsonPayload.request.status".
+                        Indexing a field whose values are not of the type makes no
+                        index.
+                      type: string
+                    type:
+                      description: 'The type of the index: INDEX_TYPE_STRING or INDEX_TYPE_INTEGER.'
+                      enum:
+                      - INDEX_TYPE_STRING
+                      - INDEX_TYPE_INTEGER
+                      type: string
+                  required:
+                  - fieldPath
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
+              resourceRef:
+                description: 'Immutable. The log bucket: Config Connector''s LoggingLogBucket
+                  by name (logging.cnrm.cloud.google.com), or any log bucket by external,
+                  as "{{parent}}/locations/{{location}}/buckets/{{bucket}}" where
+                  the parent is projects/{{projectID}}, folders/{{folderID}}, organizations/{{organizationID}}
+                  or billingAccounts/{{billingAccountID}}. The bucket must exist;
+                  this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed LoggingLogBucket
+                      resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/buckets/{{bucketID}}".
+                    type: string
+                  kind:
+                    description: The kind of the LoggingLogBucket resource.
+                    type: string
+                  name:
+                    description: The name of a LoggingLogBucket resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a LoggingLogBucket resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+              restrictedFields:
+                description: Fields of the log entries that only principals with the
+                  fine-grained logging.fields.access permission may read, such as
+                  "jsonPayload.user.email"; owned whole. An empty list restricts none.
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: atomic
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set at least one of indexConfigs, restrictedFields and cmekSettings
+              rule: has(self.indexConfigs) || has(self.restrictedFields) || has(self.cmekSettings)
+          status:
+            description: LoggingLogBucketFieldsStatus defines the observed state.
+            properties:
+              cmekServiceAccountID:
+                description: The service account the Log Router uses with the bucket's
+                  CMEK key, as the API reports it once cmekSettings is set.
+                type: string
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The log bucket whose fields this object sets, as {parent}/locations/{location}/buckets/{bucket}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

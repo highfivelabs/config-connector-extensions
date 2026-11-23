@@ -58,6 +58,7 @@ import (
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	kmsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/kms/v1alpha1"
+	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
@@ -156,6 +157,7 @@ var Kinds = []kind{
 	{gvk: containerv1beta1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
 	{gvk: containerv1beta1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
 	{gvk: computev1alpha1.ComputeServiceAttachmentFieldsGVK, crdName: "computeserviceattachmentfields.compute.gcp.hfl.dev", model: compute.NewServiceAttachmentFieldsModel},
+	{gvk: loggingv1alpha1.LoggingLogBucketFieldsGVK, crdName: "logginglogbucketfields.logging.gcp.hfl.dev", model: logging.NewLogBucketFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},
@@ -200,6 +202,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		chroniclev1alpha1.AddToScheme,
 		chroniclev1beta1.AddToScheme,
 		storagev1beta1.AddToScheme,
+		loggingv1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
 		serviceusagev1beta1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
