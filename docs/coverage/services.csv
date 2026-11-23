@@ -50,7 +50,7 @@ cloudiot.googleapis.com,2,2,0,44,26,0,18,59.1,0.0,40.9
 cloudkms.googleapis.com,8,6,0,42,18,0,24,42.9,0.0,57.1
 cloudnumberregistry.googleapis.com,5,2,0,26,7,0,19,26.9,0.0,73.1
 cloudprofiler.googleapis.com,1,0,0,4,0,0,4,0.0,0.0,100.0
-cloudquotas.googleapis.com,1,0,0,9,0,0,9,0.0,0.0,100.0
+cloudquotas.googleapis.com,1,1,0,9,8,0,1,88.9,0.0,11.1
 cloudresourcemanager.googleapis.com,12,6,5,55,22,23,10,40.0,41.8,18.2
 cloudscheduler.googleapis.com,1,1,0,28,28,0,0,100.0,0.0,0.0
 cloudsecuritycompliance.googleapis.com,4,3,0,70,66,0,4,94.3,0.0,5.7
@@ -181,7 +181,7 @@ servicenetworking.googleapis.com,2,2,0,4,4,0,0,100.0,0.0,0.0
 spanner.googleapis.com,7,5,0,80,34,0,46,42.5,0.0,57.5
 speech.googleapis.com,2,2,0,9,4,0,5,44.4,0.0,55.6
 sqladmin.googleapis.com,6,5,0,245,102,1,142,41.6,0.4,58.0
-storage.googleapis.com,10,6,1,202,56,8,138,27.7,4.0,68.3
+storage.googleapis.com,10,8,1,202,64,8,130,31.7,4.0,64.4
 storagebatchoperations.googleapis.com,1,0,0,41,0,0,41,0.0,0.0,100.0
 storageinsights.googleapis.com,2,2,0,31,30,0,1,96.8,0.0,3.2
 storagetransfer.googleapis.com,2,2,0,120,48,0,72,40.0,0.0,60.0

@@ -2299,6 +2299,37 @@ hand-written whole-object `DNSManagedZone` and `DNSPolicy` kinds (copies
 of upstream's opt-in direct controllers) that no known workload needs
 yet (section 6), so they wait below the security-adjacent items.
 
+### 6.7 The application queue (2026-11-23)
+
+With the foundation queue worked down to its recorded skips and defers,
+the application category got a ranked queue of its own,
+[`docs/coverage/application.md`](coverage/application.md), built the way
+`foundation.md` was: the judgement by hand in
+`hack/coverage/application.yaml`, the numbers measured by `hack/coverage`
+(whose report code now takes either queue). Importance A is a resource
+the Cloud Foundation Fabric foundational modules create (gcs, pubsub,
+cloud-run-v2, cloudsql-instance, bigquery-dataset, artifact-registry, the
+project module's monitoring), B one other tracked modules create, C the
+rest; then gap, modules and size, as for the foundation. The catalog's
+inventory is not in this repository, so module counts are
+`priority.csv`'s, per service.
+
+What the measured whole-resource gaps turned out to be: most are runs and
+records (builds, jobs, reports, time series, tasks, releases), which no
+platform declares, and are left out; Monitoring snoozes are temporary and
+cannot be deleted; and three were the coverage's naming (Storage's Anywhere
+Cache and Rapid Cache, which "caches" made "cach", and Cloud Quotas' quota
+preference, `APIQuotaPreference`), now mapped in `overrides.yaml`. So the
+queue's A rows are all field gaps: Pub/Sub topic ingestion and message
+transforms (a field kind is safe: Terraform's topic update sends an update
+mask of what it changed), Storage bucket fields (two in open pull
+requests, wait), Monitoring uptime check and alert policy fields,
+Artifact Registry repository fields (ours already owns the repository),
+BigQuery dataset fields, Cloud Run job and worker pool templates (mostly
+naming, to measure by hand) and Cloud SQL instance fields (open pull
+requests, wait). Upstream was read for each (master `bc464f55`, releases
+to `v1.162.0`, the pull request heads from #13500).
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:

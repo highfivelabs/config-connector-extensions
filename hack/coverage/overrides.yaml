@@ -152,6 +152,11 @@ kinds:
   # A project's or, with the organization-id annotation, an organization's
   # custom role (config/servicemappings/iam.yaml containers).
   IAMCustomRole: [iam.googleapis.com/projects.roles, iam.googleapis.com/Role]
+  # The name rule makes "caches" "cach", and the quota preference kind is
+  # named for the API's API (checked 2026-11-23, building application.yaml).
+  StorageAnywhereCache: [storage.googleapis.com/AnywhereCach]
+  StorageRapidCache: [storage.googleapis.com/RapidCach]
+  APIQuotaPreference: [cloudquotas.googleapis.com/QuotaPreference]
 
 # Kinds that are not an API resource with a create method (IAM policy
 # attachments, associations), with the reason.

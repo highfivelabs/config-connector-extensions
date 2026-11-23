@@ -1,0 +1,177 @@
+# The application gap report's queue (docs/coverage/application.md): the
+# judgement, by hand, as foundation.yaml is for the foundation. The order
+# is the rank and must follow: importance (A, B, C), then gap (whole,
+# stability, field), then modules (most first), then size (S, M, L); the
+# generator refuses a file that does not. The numbers are measured.
+#
+# Importance, for the application category: A, a resource the Cloud
+# Foundation Fabric foundational modules create (gcs, pubsub, cloud-run-v2,
+# cloudsql-instance, bigquery-dataset, artifact-registry, and the project
+# module's monitoring); B, one other tracked modules create; C, the rest.
+# Modules are the tracked modules priority.csv names for the service
+# (catalog docs/gcp-inventory.md @ 6258f92; the inventory is not in this
+# repository, so a resource-level count is the service's).
+#
+# Built 2026-11-23 from the coverage data at the pin. Left out on purpose:
+# resources that are runs or records rather than configuration (Cloud Build
+# builds, Dataflow and DLP jobs, Vertex AI evaluation and batch jobs,
+# Monitoring time series, Cloud Tasks tasks, Cloud Deploy releases and
+# rollouts, Dataform compilations and invocations, Apigee reports and
+# queries, Chronicle retrohunts), which no platform declares; Monitoring
+# snoozes (temporary, and the API cannot delete them); and gaps that are
+# only the coverage's naming: Storage's Anywhere Cache and Rapid Cache and
+# Cloud Quotas' quota preference have kinds (StorageAnywhereCache,
+# StorageRapidCache, APIQuotaPreference), now mapped in overrides.yaml.
+# Upstream was read 2026-11-23 (master bc464f55, releases to v1.162.0, the
+# file lists of the pull request heads from #13500 to #16331), read-only.
+items:
+  # ---- A, field gaps ----
+  - title: Pub/Sub topic ingestion and message transforms, subscription exports
+    importance: A
+    gap: field
+    modules: 4
+    module_names: gcs, gke-cluster-standard, gke-cluster-autopilot, pubsub
+    size: M
+    resources:
+      - pubsub.googleapis.com/Topic
+      - pubsub.googleapis.com/Subscription
+    missing: >-
+      On `PubSubTopic`: `ingestionDataSourceSettings` (import from Kinesis, Cloud Storage, Event Hubs, MSK,
+      Confluent Cloud, with its platform logs settings) and `messageTransforms` (single message transforms, UDFs).
+      On `PubSubSubscription`: `messageTransforms`, a Cloud Storage export's Avro and service account settings, a
+      Bigtable export.
+    attributes: The measured lists; ingestion is how a topic is fed from outside Google Cloud.
+    upstream: >-
+      none. Master's direct `PubSubTopic` (opt-in; Terraform is the default) generates `IngestionDataSourceSettings`
+      as unreachable, and its CRD has neither field; no pull request adds them.
+    build: >-
+      A field kind (decision 37, `PubSubTopicFields`, `PubSubSubscriptionFields`): Terraform's
+      `google_pubsub_topic` update patches with an update mask of the fields it changed (read at the pin's fork), so a field kind that
+      patches only its own fields is safe beside Config Connector's (section 6.6, pattern 2); to be confirmed live,
+      as for the other field kinds.
+  - title: Cloud Storage bucket fields (soft delete, hierarchical namespace, encryption enforcement)
+    importance: A
+    gap: field
+    modules: 4
+    module_names: gcs, cloud-function-v1, cloud-function-v2, geap-agent-runtime
+    size: M
+    resources:
+      - storage.googleapis.com/Bucket
+    missing: >-
+      On `StorageBucket`: `encryption`'s enforcement configs (Google-managed, customer-managed, customer-supplied),
+      `softDeletePolicy`, `hierarchicalNamespace`, `ipFilter`, `rpo`, `autoclass.terminalStorageClass`,
+      `objectRetention`. Many of the measured `acl`/`defaultObjectAcl` attributes are Config Connector's separate
+      access control kinds (naming).
+    attributes: The measured list, less the ACLs and output-only fields (`softDeleteTime`, `hardDeleteTime`).
+    upstream: >-
+      in progress: PRs #13713 (`rpo`) and #15145 (encryption enforcement) on the Terraform-based kind, and #11533
+      (a direct controller), none merged (design section 6.3, rank 6: wait for the release unless critical).
+    build: >-
+      Wait for the release for the two fields in pull requests (section 6.1); for the rest a field kind
+      (`StorageBucketFields`): Terraform's bucket update is a `buckets.patch` of the bucket it builds from its own
+      schema, and a patch leaves fields it does not send alone, so the pattern looks safe (to be confirmed live).
+  - title: Monitoring uptime checks and alert policies fields
+    importance: A
+    gap: field
+    modules: 2
+    module_names: project, billing-account
+    size: M
+    resources:
+      - monitoring.googleapis.com/UptimeCheckConfig
+      - monitoring.googleapis.com/AlertPolicy
+    missing: >-
+      On `MonitoringUptimeCheckConfig` (DCL-based): `syntheticMonitor`, `logCheckFailures`, `disabled`, the HTTP
+      check's service agent authentication and ping config, `userLabels`. On `MonitoringAlertPolicy`: the
+      documentation's `subject` and `links`, `severity`-adjacent strategy fields.
+    attributes: The measured lists (output-only records excluded).
+    upstream: >-
+      none found for these fields; `MonitoringAlertPolicy` has an opt-in direct controller on master.
+    build: >-
+      Not yet: read how DCL's and Terraform's updates send these objects before choosing a field kind or a
+      whole-object kind.
+  - title: Artifact Registry repository fields (vulnerability scanning, platform logs)
+    importance: A
+    gap: field
+    modules: 1
+    module_names: artifact-registry
+    size: S
+    resources:
+      - artifactregistry.googleapis.com/Repository
+    missing: >-
+      `vulnerabilityScanningConfig`, `platformLogsConfig`, `disallowUnspecifiedMode`, and a remote repository's
+      `noCache` and Apt and Yum upstreams (public and custom).
+    attributes: The measured list.
+    upstream: >-
+      none: upstream's direct types generate `vulnerabilityScanningConfig` as unreachable and leave the others out;
+      our `ArtifactRegistryRepository` copies them (and PR #13517).
+    build: >-
+      Add the fields to our whole-object `ArtifactRegistryRepository` (`artifactregistry.gcp.hfl.dev/v1beta1`),
+      which owns the repository already: the smallest change in the queue.
+  - title: BigQuery dataset fields (external catalog options, linked datasets, resource tags)
+    importance: A
+    gap: field
+    modules: 1
+    module_names: bigquery-dataset
+    size: S
+    resources:
+      - bigquery.googleapis.com/Dataset
+    missing: >-
+      `externalCatalogDatasetOptions`, `externalDatasetReference`, `linkedDatasetSource`, `defaultRoundingMode`,
+      `resourceTags`.
+    attributes: The measured list.
+    upstream: >-
+      master's direct `BigQueryDataset` (opt-in) has none of them; no pull request adds them.
+    build: >-
+      A field kind (`BigQueryDatasetFields`) if Terraform's dataset update (a PUT of the whole dataset) can be
+      shown to keep them, else wait; to be decided when the row is reached.
+  - title: Cloud Run job and worker pool template fields
+    importance: A
+    gap: field
+    modules: 1
+    module_names: cloud-run-v2
+    size: L
+    resources:
+      - run.googleapis.com/Job
+      - run.googleapis.com/WorkerPool
+    missing: >-
+      Measured as most of `template`: much of it is naming (Terraform's `template.template`), to be measured by
+      hand before building; `binaryAuthorization` policies by name, `startExecutionToken`.
+    attributes: To be measured by hand.
+    upstream: >-
+      both kinds have opt-in direct controllers on master; not read further.
+    build: >-
+      Not yet: measure what is really missing first. Our `RunService` (decision 11) is the pattern if a whole-object
+      kind is needed.
+  - title: Cloud SQL instance fields
+    importance: A
+    gap: field
+    modules: 1
+    module_names: cloudsql-instance
+    size: L
+    resources:
+      - sqladmin.googleapis.com/Instance
+    missing: >-
+      `retainBackupsOnDelete`, disk encryption configuration, PSC auto connections, performance capture and the
+      rest of the measured list.
+    attributes: The measured list.
+    upstream: >-
+      in progress: PRs #14854, #7227, #14419, #14431 on the direct kind (design section 6.3, rank 4).
+    build: >-
+      Wait for the release (section 6.1) unless a workload needs a field first; `SQLInstance` is direct and large,
+      so a field kind would need its update to send a mask.
+  # ---- C, whole resources ----
+  - title: Cloud Run domain mappings
+    importance: C
+    gap: whole
+    modules: 0
+    module_names: none known (the inventory names the service, not this resource)
+    size: M
+    resources:
+      - run.googleapis.com/Domainmapping
+    missing: >-
+      `RunDomainMapping` (Terraform's `google_cloud_run_domain_mapping`): Cloud Run's v1 (Knative) domain mappings.
+    attributes: The measured list.
+    upstream: >-
+      none: no kind on master or in a pull request.
+    build: >-
+      A hand-written kind on the v1 namespaces API (the v2 API has no domain mappings); not before the A rows.

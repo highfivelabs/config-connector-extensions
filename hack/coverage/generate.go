@@ -583,6 +583,11 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 		return nil, err
 	}
 	files["docs/coverage/foundation.md"] = []byte(fr)
+	ar, err := applicationReport(m, prio, catSums, svcCat)
+	if err != nil {
+		return nil, err
+	}
+	files["docs/coverage/application.md"] = []byte(ar)
 	catFigs := make([]*tfFig, len(categories))
 	for i, k := range categories {
 		c, ok := tf.cat[tfBarProvider][k]

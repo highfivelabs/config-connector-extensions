@@ -307,7 +307,7 @@ cloudnumberregistry.googleapis.com,cloudnumberregistry.googleapis.com/OrgNumberR
 cloudnumberregistry.googleapis.com,cloudnumberregistry.googleapis.com/Realm,6,,0,,0,6,false,api=v1alpha:projects.locations.realms
 cloudnumberregistry.googleapis.com,cloudnumberregistry.googleapis.com/RegistryBook,3,CloudNumberRegistryRegistryBook,3,,0,0,false,api=v1alpha:projects.locations.registryBooks; official-spec-fields-unmatched=3/5
 cloudprofiler.googleapis.com,cloudprofiler.googleapis.com/Profile,4,,0,,0,4,false,api=v2:projects.profiles; request-wrapper=CreateProfileRequest
-cloudquotas.googleapis.com,cloudquotas.googleapis.com/QuotaPreference,9,,0,,0,9,false,api=v1:google.api.cloudquotas.v1.CloudQuotas.CreateQuotaPreference
+cloudquotas.googleapis.com,cloudquotas.googleapis.com/QuotaPreference,9,APIQuotaPreference,8,,0,1,false,api=v1:google.api.cloudquotas.v1.CloudQuotas.CreateQuotaPreference; official-spec-fields-unmatched=4/11
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Boundary,4,,0,ResourceManagerBoundary,4,0,false,api=v3:folders.boundaries; ours-spec-fields-unmatched=4/7
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/CapabilityConfig,5,,0,ResourceManagerCapabilityConfig,5,0,false,api=v3:folders.capabilityConfigs; ours-spec-fields-unmatched=5/9
 cloudresourcemanager.googleapis.com,cloudresourcemanager.googleapis.com/Folder,4,Folder,3,,0,1,false,api=v3:folders; official-spec-fields-unmatched=2/4
@@ -1172,7 +1172,7 @@ sqladmin.googleapis.com,sqladmin.googleapis.com/Database,7,SQLDatabase,4,,0,3,fa
 sqladmin.googleapis.com,sqladmin.googleapis.com/Instance,199,SQLInstance,83,,0,116,false,api=v1:instances; official-spec-fields-unmatched=10/92
 sqladmin.googleapis.com,sqladmin.googleapis.com/SslCert,1,SQLSSLCert,1,,0,0,false,api=v1:sslCerts; official-spec-fields-unmatched=2/3
 sqladmin.googleapis.com,sqladmin.googleapis.com/User,17,SQLUser,9,SQLUser,1,7,false,api=v1:users; official-spec-fields-unmatched=3/11; ours-spec-fields-unmatched=3/12
-storage.googleapis.com,storage.googleapis.com/AnywhereCach,11,,0,,0,11,false,api=v1:anywhereCaches
+storage.googleapis.com,storage.googleapis.com/AnywhereCach,11,StorageAnywhereCache,4,,0,7,false,api=v1:anywhereCaches; official-spec-fields-unmatched=2/6
 storage.googleapis.com,storage.googleapis.com/Bucket,89,StorageBucket,42,,0,47,false,api=v1:buckets; official-spec-fields-unmatched=3/43
 storage.googleapis.com,storage.googleapis.com/BucketAccessControl,8,StorageBucketAccessControl,3,,0,5,false,api=v1:bucketAccessControls; official-spec-fields-unmatched=0/3
 storage.googleapis.com,storage.googleapis.com/DefaultObjectAccessControl,9,StorageDefaultObjectAccessControl,4,,0,5,false,api=v1:defaultObjectAccessControls; official-spec-fields-unmatched=0/4
@@ -1181,7 +1181,7 @@ storage.googleapis.com,storage.googleapis.com/ManagedFolder,7,StorageManagedFold
 storage.googleapis.com,storage.googleapis.com/Notification,6,StorageNotification,5,,0,1,false,api=v1:notifications; official-spec-fields-unmatched=2/7
 storage.googleapis.com,storage.googleapis.com/Object,45,,0,StorageBucketObject,8,37,false,api=v1:objects; ours-spec-fields-unmatched=6/13
 storage.googleapis.com,storage.googleapis.com/ObjectAccessControl,9,,0,,0,9,false,api=v1:objectAccessControls
-storage.googleapis.com,storage.googleapis.com/RapidCach,12,,0,,0,12,false,api=v1:rapidCaches
+storage.googleapis.com,storage.googleapis.com/RapidCach,12,StorageRapidCache,4,,0,8,false,api=v1:rapidCaches; official-spec-fields-unmatched=2/6
 storagebatchoperations.googleapis.com,storagebatchoperations.googleapis.com/Job,41,,0,,0,41,false,api=v1:projects.locations.jobs
 storageinsights.googleapis.com,storageinsights.googleapis.com/DatasetConfig,18,StorageInsightsDatasetConfig,17,,0,1,false,api=v1:google.cloud.storageinsights.v1.StorageInsights.CreateDatasetConfig; official-spec-fields-unmatched=5/21
 storageinsights.googleapis.com,storageinsights.googleapis.com/ReportConfig,13,StorageInsightsReportConfig,13,,0,0,false,api=v1:google.cloud.storageinsights.v1.StorageInsights.CreateReportConfig; official-spec-fields-unmatched=8/20
