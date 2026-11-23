@@ -174,6 +174,36 @@ the existing resource), wait for it to be Ready, then delete ours with
 row in `UPSTREAM.md`. Until then `hack/upstream-pr.sh`'s table in
 `UPSTREAM.md` ("Copied from open pull requests") records the head read.
 
+**`ComputeFirewallPolicyRule`, ours beside Config Connector's**
+(foundation item 19, 2026-11-23). Config Connector's hierarchical
+`ComputeFirewallPolicyRule` is direct, without `ruleName`,
+`securityProfileGroup`, `tlsInspect`, `targetSecureTags` (its mapper
+marks the four `MISSING`), `match.srcSecureTags`, the network contexts
+and `match.srcNetworks`, and its update sends the whole rule to
+`patchRule`, so a field kind beside it (decision 37) would be reset by
+every change it makes: section 6.6's pattern 3, a kind that owns the
+whole rule, as `RunService` (decision 11) and `ComputeRouter` (decision
+14) do. Upstream was read again (master `bc464f5`; open pull requests
+searched for the kind and the fields): only #5440 (2025-10-16) touches
+the kind, changing its Go types' optionality, with no new field. Ours is
+`compute.gcp.hfl.dev/v1alpha1` `ComputeFirewallPolicyRule` (decision 18:
+Config Connector's name), with Config Connector's types and controller
+copied (`UPSTREAM.md`), so a spec written for Config Connector's kind
+works with ours by changing the `apiVersion`, and `status.externalRef`
+is spelled the same (`locations/global/firewallPolicies/{policy}/rules/{priority}`).
+The spec mapping, comparison and patch body are our
+`ComputeNetworkFirewallPolicyRule`'s (a list the spec empties is sent as
+`[]`, which `patchRule` needs; upstream's leaves it out).
+**Which to use:** Config Connector's kind for a rule that needs none of
+the added fields; ours for one that does. Never both for one rule: each
+would put back the other's change on every reconcile. To move a rule,
+create ours with the same `firewallPolicyRef` and `priority` (it finds
+the rule and patches only what differs, without `addRule`), wait for it
+to be Ready, then delete Config Connector's object with
+`cnrm.cloud.google.com/deletion-policy: abandon`. When Config Connector's
+kind gains the fields and a release has them, move back the same way and
+retire ours (section 3.4).
+
 ### 2.4 Generated kinds: standard collections from Discovery (`discokind`)
 
 Where the API resource is a standard collection (create with an ID query
@@ -2338,6 +2368,8 @@ To raise confidence in `ArtifactRegistryRepository`:
     LIVE_RUN=TestComputeNetworkFirewallPolicyRule`. To be seen live: the
     form the API answers for the group and a network (compared by path),
     and that `tlsInspect` and the group are cleared by `false` and `""`.
+    The hierarchical policy's rule with the same fields is our
+    `ComputeFirewallPolicyRule` (item 48).
 33. `LoggingBillingAccountSink`: a live run (it needs a billing account
     the live-test service account administers logging on:
     `E2E_BILLING_ACCOUNT`); the writer identity's real address (the fake
@@ -2468,6 +2500,21 @@ To raise confidence in `ArtifactRegistryRepository`:
     Cloud Armor Enterprise. Not built from item 27: `userDefinedFields`,
     `ddosProtectionConfig` (regional network edge policies) and rule
     fields.
+
+48. `ComputeFirewallPolicyRule` (ours, foundation item 19, 2026-11-23;
+    section 2.3): a live run, pending the test folder (`task test-live
+    PROJECT=$GCP_PROJECT KINDS=compute
+    LIVE_RUN=TestComputeFirewallPolicyRule` with `E2E_TEST_FOLDER`; the
+    security profile group case also needs `E2E_SECURITY_PROFILE_GROUP`, a
+    group a rule under the folder may use, and skips without it; the
+    secure tag case runs on the fake only). To be seen live: whether
+    `patchRule` keeps a list the body leaves out (the controller sends
+    `[]` either way), whether it takes the body without `priority` as
+    upstream sends it, the form the API answers for a network, a group
+    and a target network (compared by path), and its checks of a rule
+    that mockgcp does not make. Not built from item 19: the network
+    types, `targetForwardingRules` and `targetType`, a global network
+    rule's `targetResources`, the regional rule's `srcNetworks`.
 
 46. `AccessContextManagerAuthorizedOrgsDesc` (foundation item 21,
     2026-11-23; section 2.3): a live run needs an organization's access

@@ -104,6 +104,17 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ComputeFirewallPolicyRule`** (`compute.gcp.hfl.dev/v1alpha1`): a
+  rule of a hierarchical (organization or folder) firewall policy that
+  owns the whole rule, with Config Connector's `ComputeFirewallPolicyRule`
+  schema plus `ruleName`, `securityProfileGroup` and `tlsInspect` (Cloud
+  NGFW Enterprise inspection), `targetSecureTags`, `match.srcSecureTags`,
+  the network contexts and `match.srcNetworks`. Use it instead of Config
+  Connector's kind for a rule that needs one of these, never both for one
+  rule; to move a rule, make ours at the same policy and priority, then
+  delete Config Connector's with `cnrm.cloud.google.com/deletion-policy:
+  abandon` (`docs/kinds/ComputeFirewallPolicyRule.md`).
+
 - **`ComputeNetworkFirewallPolicyRule`**: `spec.securityProfileGroup`
   and `spec.tlsInspect` (Cloud NGFW Enterprise inspection, with action
   `apply_security_profile_group`) and `spec.match.srcNetworks`.

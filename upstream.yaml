@@ -211,6 +211,7 @@ patches:
   - {file: patches/k8s-config-connector/0058-mockgcp-compute-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "with 0032, once mockgcp has beta protos"}
   - {file: patches/k8s-config-connector/0059-mockgcp-secretmanager-version-destroy-ttl.patch, pin: k8s-config-connector, upstream_candidate: "yes, with the field"}
   - {file: patches/k8s-config-connector/0060-mockgcp-lro-with-done-result.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0061-mockgcp-compute-firewall-policy-add-rule-appends.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -294,6 +295,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_identity.go]}
   - here: [pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkfirewallpolicy_controller.go, pkg/controller/direct/compute/computenetworkfirewallpolicy_mapper.go]}
+  - here: [apis/compute/v1alpha1/computefirewallpolicyrule_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computefirewallpolicyrule_types.go]}
+  - here: [apis/compute/v1alpha1/computefirewallpolicyrule_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computefirewallpolicyrule_identity.go]}
+  - here: [pkg/controller/direct/compute/firewallpolicyrule_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computefirewallpolicyrule_controller.go, pkg/controller/direct/compute/computefirewallpolicyrule_mapper.go, pkg/controller/direct/compute/firewallpolicyrule_resolverefs.go]}
   - here: [apis/compute/v1beta1/computerouter_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computerouter_types.go]}
   - here: [apis/compute/v1beta1/computerouter_identity.go]

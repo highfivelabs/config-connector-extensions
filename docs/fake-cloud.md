@@ -400,6 +400,17 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   0057; it replaced the whole policy). It does not show: whether the API
   takes DNS64 on a policy bound to no network, or what DNS64 answers
   (mockgcp resolves nothing).
+- **Hierarchical firewall policies' rules** (`ComputeFirewallPolicyRule`,
+  ours). mockgcp serves `firewallPolicies.addRule`, `getRule`,
+  `patchRule` and `removeRule`; patch 0061 makes `addRule` add a rule
+  rather than replace the policy's rules. A patch replaces the rule
+  whole, so the fake cannot show whether the real API keeps a list the
+  body leaves out (the controller sends `[]` for one the spec empties, as
+  the global network rule does after a live run). It does not show: the
+  API's checks of a rule (a security profile group the folder may not
+  use, TLS inspection without a TLS inspection policy, secure tags not
+  bound for firewall use, `srcNetworks` without `VPC_NETWORKS`), what form
+  it answers for a network or a group, or the folder permissions.
 - **Hierarchical firewall policies' packet mirroring rules**
   (`ComputeFirewallPolicyPacketMirroringRule`). mockgcp's protos are v1
   only and the calls are beta, so patch 0058 serves them on the HTTP

@@ -63,8 +63,10 @@ source hack/live/projects.sh
 # container (ContainerClusterFields, ContainerNodePoolFields) skips live
 # unless E2E_GKE=true (it makes a GKE cluster, and takes over an hour:
 # set LIVE_TIMEOUT=150m, the live go test timeout, default 60m);
-# compute's ComputeFirewallPolicyPacketMirroringRule skips live without the
-# test folder, E2E_TEST_FOLDER; dns's DNSPolicyFields, as the other DNS
+# compute's ComputeFirewallPolicyPacketMirroringRule and
+# ComputeFirewallPolicyRule skip live without the test folder,
+# E2E_TEST_FOLDER (the rule's security profile group case also without
+# E2E_SECURITY_PROFILE_GROUP); dns's DNSPolicyFields, as the other DNS
 # kinds, without E2E_DNS_ADMIN=true;
 # privateca (PrivateCACAPoolFields, PrivateCACertificateTemplateFields)
 # skips live unless E2E_PRIVATECA=true; compute's ComputeSecurityPolicyFields

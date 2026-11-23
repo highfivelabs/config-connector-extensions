@@ -224,13 +224,19 @@ func (a *networkFirewallPolicyRuleAdapter) Update(ctx context.Context, updateOp 
 	return a.updateStatus(ctx, updateOp, updated)
 }
 
-// patchBody is the rule to send to patchRule. patchRule keeps a list the
-// request leaves out (a live run: a rule patched without its srcIpRanges
-// kept them), and the generated client leaves an empty list out, so a list
-// the cloud's rule has and the spec has not is sent as [] (a ForceSendFields
-// entry): that clears it.
 func (a *networkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolicyRule, error) {
-	raw, err := protojson.Marshal(a.desired)
+	return firewallPolicyRulePatchBody(a.desired, a.actual)
+}
+
+// firewallPolicyRulePatchBody is the rule to send to patchRule, desired
+// as a patch of actual; ComputeFirewallPolicyRule (a hierarchical policy's)
+// sends the same. patchRule keeps a list the request leaves out (a live
+// run: a rule patched without its srcIpRanges kept them), and the
+// generated client leaves an empty list out, so a list the cloud's rule
+// has and the spec has not is sent as [] (a ForceSendFields entry): that
+// clears it.
+func firewallPolicyRulePatchBody(desired, actual *pb.FirewallPolicyRule) (*computev1.FirewallPolicyRule, error) {
+	raw, err := protojson.Marshal(desired)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +247,7 @@ func (a *networkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolic
 	if body.Match == nil {
 		body.Match = &computev1.FirewallPolicyRuleMatcher{}
 	}
-	have, want := a.actual.GetMatch(), a.desired.GetMatch()
+	have, want := actual.GetMatch(), desired.GetMatch()
 	emptied := func(field string, haveLen, wantLen int, force *[]string) {
 		if haveLen > 0 && wantLen == 0 {
 			*force = append(*force, field)
@@ -278,14 +284,14 @@ func (a *networkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolic
 	// are sent as false and "" (the action that needs them has changed
 	// too); otherwise they are sent only when the spec sets them, since
 	// the API takes them only with apply_security_profile_group.
-	if a.actual.GetTlsInspect() && !a.desired.GetTlsInspect() {
+	if actual.GetTlsInspect() && !desired.GetTlsInspect() {
 		*r = append(*r, "TlsInspect")
 	}
-	if a.actual.GetSecurityProfileGroup() != "" && a.desired.GetSecurityProfileGroup() == "" {
+	if actual.GetSecurityProfileGroup() != "" && desired.GetSecurityProfileGroup() == "" {
 		*r = append(*r, "SecurityProfileGroup")
 	}
-	emptied("TargetServiceAccounts", len(a.actual.GetTargetServiceAccounts()), len(a.desired.GetTargetServiceAccounts()), r)
-	emptied("TargetSecureTags", len(a.actual.GetTargetSecureTags()), len(a.desired.GetTargetSecureTags()), r)
+	emptied("TargetServiceAccounts", len(actual.GetTargetServiceAccounts()), len(desired.GetTargetServiceAccounts()), r)
+	emptied("TargetSecureTags", len(actual.GetTargetSecureTags()), len(desired.GetTargetSecureTags()), r)
 	return body, nil
 }
 

@@ -29,6 +29,7 @@ resources:
 - compute.gcp.hfl.dev_computecrosssitenetworks.yaml
 - compute.gcp.hfl.dev_computediskresourcepolicyattachments.yaml
 - compute.gcp.hfl.dev_computefirewallpolicypacketmirroringrules.yaml
+- compute.gcp.hfl.dev_computefirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeglobalnetworkendpointgroups.yaml
 - compute.gcp.hfl.dev_computeglobalpublicdelegatedprefixes.yaml
 - compute.gcp.hfl.dev_computeglobalvmextensionpolicies.yaml

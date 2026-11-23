@@ -557,14 +557,21 @@ items:
       none found (`ComputeFirewall` has #12102 "validate direct promotion"). Read again 2026-11-23 at the pin:
       Config Connector's `ComputeFirewallPolicyRule` (hierarchical) is direct, without `securityProfileGroup`,
       `tlsInspect`, `targetSecureTags`, `ruleName`, `srcSecureTags`, `srcNetworks` and the network types, and its
-      update sends the whole rule (`patchRule`), so a field kind beside it would be reset by every change; open pull
-      requests not re-read (the GitHub API is not reachable from the session).
+      update sends the whole rule (`patchRule`), so a field kind beside it would be reset by every change. Read
+      again 2026-11-23 (master `bc464f5`, open pull requests searched for `ComputeFirewallPolicyRule`,
+      `securityProfileGroup` and `tlsInspect`): master's mapper still marks the four fields `MISSING`; the only open
+      pull request on the kind, #5440 (2025-10-16), changes its Go types' optionality and adds no field.
     build: >-
       Decision 19 replaces "wait". Built 2026-11-23 (fake only, live pending): our own
       `ComputeNetworkFirewallPolicyRule` (global network policies) takes `securityProfileGroup`, `tlsInspect` and
-      `match.srcNetworks`. Next: the same on a hierarchical rule needs a whole-object kind of ours beside Config
-      Connector's direct `ComputeFirewallPolicyRule` (section 6.6 pattern 3, size M), whose live test needs the
-      test folder; the regional rule's `srcNetworks`; the network types; `targetResources`.
+      `match.srcNetworks`; and our own `ComputeFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, a
+      whole-object kind beside Config Connector's direct one, section 6.6 pattern 3; `docs/design.md` section 2.3
+      says which to pick) copies Config Connector's types and controller and adds `ruleName`,
+      `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `match.srcSecureTags`, the network contexts and
+      `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Left: the regional rule's
+      `srcNetworks`; the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their
+      newer names); a global network rule's `targetResources`; `targetForwardingRules` and `targetType`;
+      `ComputeOrganizationSecurityPolicyRule`'s Cloud Armor fields; the policy's `displayName`/`shortName`.
   # ---- B, whole resources ----
   - title: Security Command Center at folder and project level
     importance: B

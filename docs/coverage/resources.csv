@@ -357,7 +357,7 @@ compute.googleapis.com,compute.googleapis.com/CrossSiteNetwork,2,,0,ComputeCross
 compute.googleapis.com,compute.googleapis.com/Disk,48,ComputeDisk,27,,0,21,false,api=v1:disks; official-spec-fields-unmatched=8/33
 compute.googleapis.com,compute.googleapis.com/ExternalVpnGateway,8,ComputeExternalVPNGateway,5,,0,3,false,api=v1:externalVpnGateways; official-spec-fields-unmatched=1/5
 compute.googleapis.com,compute.googleapis.com/Firewall,19,ComputeFirewall,17,,0,2,false,api=v1:firewalls; official-spec-fields-unmatched=2/18
-compute.googleapis.com,compute.googleapis.com/FirewallPolicy,73,ComputeFirewallPolicy;ComputeFirewallPolicyAssociation;ComputeFirewallPolicyRule,24,ComputeFirewallPolicyPacketMirroringRule,11,38,false,api=v1:firewallPolicies; ours-spec-fields-unmatched=2/13
+compute.googleapis.com,compute.googleapis.com/FirewallPolicy,73,ComputeFirewallPolicy;ComputeFirewallPolicyAssociation;ComputeFirewallPolicyRule,24,ComputeFirewallPolicyPacketMirroringRule;ComputeFirewallPolicyRule,17,32,false,api=v1:firewallPolicies
 compute.googleapis.com,compute.googleapis.com/ForwardingRule,31,ComputeForwardingRule,27,,0,4,false,api=v1:forwardingRules; official-spec-fields-unmatched=14/38
 compute.googleapis.com,compute.googleapis.com/FutureReservation,47,ComputeFutureReservation,36,,0,11,false,api=v1:futureReservations; official-spec-fields-unmatched=4/39
 compute.googleapis.com,compute.googleapis.com/GlobalAddress,15,ComputeAddress,13,,0,2,false,api=v1:globalAddresses; official-spec-fields-unmatched=2/13
