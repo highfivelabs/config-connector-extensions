@@ -104,6 +104,18 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`PrivateCACAPoolFields`** and **`PrivateCACertificateTemplateFields`**
+  (`privateca.gcp.hfl.dev/v1alpha1`, field kinds, `docs/design.md`
+  decision 37): a CA pool's `issuancePolicy.backdateDuration` and
+  `issuancePolicy.baselineValues.nameConstraints`, and a certificate
+  template's `maximumLifetime` and `predefinedValues.nameConstraints`,
+  which Config Connector's `PrivateCACAPool` and
+  `PrivateCACertificateTemplate` lack, set on a pool or template it (or
+  anything else) made, by `spec.resourceRef`. They never create or delete
+  the resource; deleting one clears the fields it set. When Config
+  Connector changes its own issuance policy or predefined values, the API
+  clears ours until the next reconcile puts them back.
+
 - **`SecretManagerSecret` `versionDestroyTtl`, `customerManagedEncryption`
   and `tags`**: delayed destruction of a secret's versions, a regional
   secret's own Cloud KMS key, and resource manager tags bound when the

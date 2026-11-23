@@ -310,7 +310,8 @@ func startCluster(t *testing.T) *cluster {
 			// resourceRef (KMSCryptoKeyFields, ContainerClusterFields,
 			// ContainerNodePoolFields, ComputeServiceAttachmentFields,
 			// LoggingLogBucketFields, ComputeNetworkFields,
-			// ComputeSubnetworkFields, DNSPolicyFields).
+			// ComputeSubnetworkFields, DNSPolicyFields,
+			// PrivateCACAPoolFields, PrivateCACertificateTemplateFields).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_kmscryptokeys.kms.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containerclusters.container.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containernodepools.container.cnrm.cloud.google.com.yaml"),
@@ -319,6 +320,8 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computenetworks.compute.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computesubnetworks.compute.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_dnspolicies.dns.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_privatecacapools.privateca.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_privatecacertificatetemplates.privateca.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}

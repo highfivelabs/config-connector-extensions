@@ -44,8 +44,10 @@
 # gateways, APIs and configs and BigLake catalogs, by name, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
 # name, where the account may list them, and BigQuery datasets, by name,
-# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), and Cloud
-# Endpoints services, by name, where the project has Service Management.
+# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), Cloud
+# Endpoints services, by name, where the project has Service Management,
+# and CA pools and certificate templates in us-central1, by name, where the
+# account has Private CA (E2E_PRIVATECA=true).
 # A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
@@ -958,6 +960,24 @@ elif jq -e '.error.code == 403' >/dev/null 2>&1 <<<"${out}"; then
 else
   echo "  FAILED to list endpoints services: ${out}" >&2
   failed=$((failed + 1))
+fi
+
+# Certificate Authority Service CA pools and certificate templates (the
+# Private CA field kinds' tests), by the run's name, in us-central1, only
+# where the live-test account has Private CA (E2E_PRIVATECA=true:
+# privateca.googleapis.com on and roles/privateca.admin); without it the
+# tests do not run live. The tests' pools hold no certificate authority.
+if [[ "${E2E_PRIVATECA:-}" == true ]]; then
+  rows="$("${G[@]}" privateca templates list --location=us-central1 --verbosity=error --format='value(name.basename())')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    act "certificate template" "${name}" "${G[@]}" privateca templates delete "${name}" --location=us-central1
+  done
+  rows="$("${G[@]}" privateca pools list --location=us-central1 --verbosity=error --format='value(name.basename())')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    act "CA pool" "${name}" "${G[@]}" privateca pools delete "${name}" --location=us-central1
+  done
 fi
 
 # GKE clusters (the container field kinds' test cluster, labelled

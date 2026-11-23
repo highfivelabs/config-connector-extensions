@@ -459,6 +459,17 @@ The test makes an engine with no code (sessions and memory only), which
 costs nothing while idle; the sweeper deletes engines in `us-central1`
 whose display name carries a run ID.
 
+`PrivateCACAPoolFields` and `PrivateCACertificateTemplateFields`
+(package `privateca`) wait on Certificate Authority Service for the
+account: whether `privateca.googleapis.com` is on in `$GCP_PROJECT` and
+`cce-live-tests` has `roles/privateca.admin` has not been checked. Until
+both are, a live `privateca` run skips the tests and the sweeper leaves
+Private CA alone. With them:
+`E2E_PRIVATECA=true task test-live PROJECT=$GCP_PROJECT KINDS=privateca`.
+The tests make a DevOps-tier CA pool with no certificate authority and a
+certificate template, both in us-central1 and free, and delete them; the
+sweeper deletes pools and templates there whose name carries a run ID.
+
 `EndpointsService` (package `servicemanagement`) waits on Service
 Management for the account: run `cce-11130544-c338` (2026-11-13) was
 refused `servicemanagement.services.list` on `$GCP_PROJECT` (403), so

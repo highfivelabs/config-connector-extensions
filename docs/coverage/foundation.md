@@ -450,7 +450,7 @@ What these numbers miss, for the foundation:
   - uncovered in `privateca.googleapis.com/CertificateTemplate` (measured): `labels{}`, `maximumLifetime`, `predefinedValues.nameConstraints.critical`, `predefinedValues.nameConstraints.excludedDnsNames[]`, `predefinedValues.nameConstraints.excludedEmailAddresses[]`, `predefinedValues.nameConstraints.excludedIpRanges[]`, `predefinedValues.nameConstraints.excludedUris[]`, `predefinedValues.nameConstraints.permittedDnsNames[]`, `predefinedValues.nameConstraints.permittedEmailAddresses[]`, `predefinedValues.nameConstraints.permittedIpRanges[]` and 1 more
   - uncovered in `certificatemanager.googleapis.com/TrustConfig` (measured): `allowlistedCertificates[].pemCertificate`, `labels{}`, `spiffeTrustStores{}.intermediateCas[].pemCertificate`, `spiffeTrustStores{}.trustAnchors[].pemCertificate`, `tags{}`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct `PrivateCACertificateTemplate` types, 2026-09-18) move the kinds to direct, where new fields would land; #12260 (mockgcp for `BinaryAuthorizationPlatformPolicy`) and #13053 (direct `CertificateManagerTrustConfig`) are for the alpha kinds.
-- **Build:** Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable); on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable). Next, as field kinds (decision 37) once a read of Config Connector's DCL update shows it masks only its own fields (else its updates erase ours, as Terraform's node pool kubelet update does): `PrivateCACAPoolFields` (the three issuance policy fields) and `PrivateCACertificateTemplateFields`. The fields set at create (the pool's key, the authority's config) need a parallel kind owning the whole resource (decision 19's pattern), size M each. Not started.
+- **Build:** Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable); on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable). Built 2026-11-23 as field kinds (decision 37, `privateca.gcp.hfl.dev/v1alpha1`, live pending): `PrivateCACAPoolFields` (`issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints`) and `PrivateCACertificateTemplateFields` (`maximumLifetime`, `predefinedValues.nameConstraints`). Config Connector's DCL update was read: its mask is the top-level names of its own diffs (`TopLevelUpdateMask`), and the direct controller's is top-level too, so neither sees ours; but when it changes its own issuance policy or predefined values it sends them whole without ours, and the API clears them until our next reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime` (in neither the Go client at the pin nor mockgcp's protos); the fields set at create (the pool's `encryptionSpec`, the authority's `config`) need a parallel kind owning the whole resource (decision 19's pattern), size M each; the authority's `userDefinedAccessUrls` (patchable) waits for that kind.
 
 ### 26. Secret Manager fields
 
@@ -542,17 +542,17 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
@@ -570,12 +570,14 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
+| PrivateCACAPoolFields | (not a create) a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37) | n/a | false |
+| PrivateCACertificateTemplateFields | (not a create) a field kind, maximumLifetime and name constraints of a certificate template Config Connector's PrivateCACertificateTemplate owns, written with certificateTemplates.patch (decision 37) | n/a | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 13 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 3 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |

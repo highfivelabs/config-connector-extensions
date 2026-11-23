@@ -205,6 +205,7 @@ patches:
   - {file: patches/k8s-config-connector/0057-mockgcp-dns-policy-partial-patch.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0058-mockgcp-compute-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "with 0032, once mockgcp has beta protos"}
   - {file: patches/k8s-config-connector/0059-mockgcp-secretmanager-version-destroy-ttl.patch, pin: k8s-config-connector, upstream_candidate: "yes, with the field"}
+  - {file: patches/k8s-config-connector/0060-mockgcp-lro-with-done-result.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -403,6 +404,12 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/kms/v1alpha1/groupversion_info.go]}
   - here: [apis/logging/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/logging/v1alpha1/groupversion_info.go]}
+  - here: [apis/privateca/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/groupversion_info.go]}
+  - here: [apis/privateca/v1alpha1/types.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/types.generated.go]}
+  - here: [pkg/controller/direct/privateca/fields.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/privateca/client.go]}
   - here: [apis/container/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/container/v1beta1/groupversion_info.go]}
   - here: [pkg/controller/direct/container/operation.go]

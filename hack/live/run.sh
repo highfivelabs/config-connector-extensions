@@ -66,6 +66,8 @@ source hack/live/projects.sh
 # compute's ComputeFirewallPolicyPacketMirroringRule skips live without the
 # test folder, E2E_TEST_FOLDER; dns's DNSPolicyFields, as the other DNS
 # kinds, without E2E_DNS_ADMIN=true;
+# privateca (PrivateCACAPoolFields, PrivateCACertificateTemplateFields)
+# skips live unless E2E_PRIVATECA=true;
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"

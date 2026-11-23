@@ -3049,7 +3049,18 @@ To raise confidence in `ArtifactRegistryRepository`:
     `dns64Config`, `policies.patch`, a partial update, with only that
     field; Terraform's patch never sends it, but Config Connector's
     opt-in direct `DNSPolicy` sends `policies.update`, a whole replace,
-    and would clear it; delete turns DNS64 off; patch 0057).
+    and would clear it; delete turns DNS64 off; patch 0057);
+    `PrivateCACAPoolFields` and `PrivateCACertificateTemplateFields`
+    (`privateca.gcp.hfl.dev`, item 25; a pool's
+    `issuancePolicy.backdateDuration` and
+    `issuancePolicy.baselineValues.nameConstraints`, a template's
+    `maximumLifetime` and `predefinedValues.nameConstraints`;
+    `caPools.patch` and `certificateTemplates.patch` with top-level
+    masks, the issuance policy and predefined values sent as read with
+    only ours changed; Config Connector's DCL and direct updates mask
+    top-level fields of their own diffs, so its change of its issuance
+    policy or predefined values clears ours until our next reconcile,
+    the node pool's partial case; delete clears them; patch 0060).
     Item 13 (`OrgPolicyPolicy.alternate`) is not built: the API marks
     `alternate` deprecated, and `dryRunSpec`, which Config Connector's
     kind has, replaces it.

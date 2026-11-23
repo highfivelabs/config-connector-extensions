@@ -699,11 +699,17 @@ items:
       on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`,
       `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on
       `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable).
-      Next, as field kinds (decision 37) once a read of Config Connector's DCL update shows it masks only its
-      own fields (else its updates erase ours, as Terraform's node pool kubelet update does):
-      `PrivateCACAPoolFields` (the three issuance policy fields) and `PrivateCACertificateTemplateFields`.
-      The fields set at create (the pool's key, the authority's config) need a parallel kind owning the whole
-      resource (decision 19's pattern), size M each. Not started.
+      Built 2026-11-23 as field kinds (decision 37, `privateca.gcp.hfl.dev/v1alpha1`, live pending):
+      `PrivateCACAPoolFields` (`issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints`)
+      and `PrivateCACertificateTemplateFields` (`maximumLifetime`, `predefinedValues.nameConstraints`). Config
+      Connector's DCL update was read: its mask is the top-level names of its own diffs (`TopLevelUpdateMask`),
+      and the direct controller's is top-level too, so neither sees ours; but when it changes its own issuance
+      policy or predefined values it sends them whole without ours, and the API clears them until our next
+      reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's
+      `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime`
+      (in neither the Go client at the pin nor mockgcp's protos); the fields set at create (the pool's
+      `encryptionSpec`, the authority's `config`) need a parallel kind owning the whole resource (decision
+      19's pattern), size M each; the authority's `userDefinedAccessUrls` (patchable) waits for that kind.
   - title: Secret Manager fields
     importance: B
     gap: field

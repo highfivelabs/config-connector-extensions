@@ -407,6 +407,15 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   whether the real API keeps fields a patch leaves out, which security
   profile groups a folder's rule may name, a mirror rule's effect, or the
   organization-level permissions a folder's policy needs.
+- **Certificate Authority Service** (`PrivateCACAPoolFields`,
+  `PrivateCACertificateTemplateFields`). mockgcp stores a pool's issuance
+  policy and a template's fields as sent, and its done-at-once
+  operations (templates) answer with their result (patch 0060). It does
+  not show: the API's checks of a backdate over 48 hours, of name
+  constraint values (a DNS name, a CIDR range, a URI host), or whether the
+  API takes back every issuance policy field it returned; that a name
+  constraint is put into the certificates a pool or template issues
+  (mockgcp issues none here); or what the pool's tier allows.
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and

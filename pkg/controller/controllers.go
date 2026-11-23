@@ -62,6 +62,7 @@ import (
 	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
+	privatecav1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/privateca/v1alpha1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
 	runv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
@@ -86,6 +87,7 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/kms"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/networksecurity"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/privateca"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/resourcemanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
@@ -162,6 +164,8 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeSubnetworkFieldsGVK, crdName: "computesubnetworkfields.compute.gcp.hfl.dev", model: compute.NewSubnetworkFieldsModel},
 	{gvk: dnsv1alpha1.DNSPolicyFieldsGVK, crdName: "dnspolicyfields.dns.gcp.hfl.dev", model: dns.NewPolicyFieldsModel},
 	{gvk: loggingv1alpha1.LoggingLogBucketFieldsGVK, crdName: "logginglogbucketfields.logging.gcp.hfl.dev", model: logging.NewLogBucketFieldsModel},
+	{gvk: privatecav1alpha1.PrivateCACAPoolFieldsGVK, crdName: "privatecacapoolfields.privateca.gcp.hfl.dev", model: privateca.NewCAPoolFieldsModel},
+	{gvk: privatecav1alpha1.PrivateCACertificateTemplateFieldsGVK, crdName: "privatecacertificatetemplatefields.privateca.gcp.hfl.dev", model: privateca.NewCertificateTemplateFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},
@@ -208,6 +212,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		chroniclev1beta1.AddToScheme,
 		storagev1beta1.AddToScheme,
 		loggingv1alpha1.AddToScheme,
+		privatecav1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
 		serviceusagev1beta1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
