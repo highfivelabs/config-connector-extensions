@@ -247,6 +247,20 @@ with `spec.resourceID` naming it (acquired, then updated to the spec) and
 deleting Config Connector's object with `deletion-policy: abandon`. Never
 both for one job.
 
+**`RunWorkerPool`, a stable copy of Config Connector's alpha kind**
+(decision 26, application item 6, 2026-11-23). Config Connector's
+`RunWorkerPool` is `v1alpha1` and direct only (master too), so the
+catalog's charts refuse it; ours, `run.gcp.hfl.dev/v1beta1`
+`RunWorkerPool`, copies its types, identity, mappers and controller
+(`UPSTREAM.md`) with the template's `labels` and
+`binaryAuthorization.policy` added (the latter in the Binary
+Authorization type it shares with `RunService`, which gains it too). Its
+update is upstream's: an update mask of the top-level fields that differ.
+**Which to use:** ours where an alpha kind is refused or those fields are
+needed; a worker pool moves between the kinds by acquiring it with
+`spec.resourceID` and abandoning the other object. Never both for one
+worker pool.
+
 ### 2.4 Generated kinds: standard collections from Discovery (`discokind`)
 
 Where the API resource is a standard collection (create with an ID query
@@ -768,7 +782,7 @@ namespace):
 **Kinds the guard cannot mark** (their resources have no labels): every
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
-`DNSResponsePolicy`, `RunService`, `RunJob`, `ComputeVPNTunnel`, the three
+`DNSResponsePolicy`, `RunService`, `RunJob`, `RunWorkerPool`, `ComputeVPNTunnel`, the three
 `NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, `NetworkSecurityAuthzPolicy`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine`, `SpannerInstanceConfig` and `DNSOutboundEndpoint`. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
@@ -2463,11 +2477,22 @@ no gap for a job: the API takes it only for services, and a CEL rule
 refuses it with the service-only `cpuIdle` and `startupCPUBoost`. Not built: `volumeMounts[].subPath` (mockgcp's protos
 lack it, so the fake cannot show it; section 7 item 54). mockgcp patch
 0069 makes `UpdateJob` replace the job's settable fields, not only its
-template. Fake only; live pending (`docs/kinds/RunJob.md`). The worker
-pool half of the row is not built: `RunWorkerPool` is direct-only
-upstream (alpha), and its measured gaps are preview build fields (the
-row's measurement), so nothing in it is a configuration gap worth a kind
-of ours.
+template. Fake only; live pending (`docs/kinds/RunJob.md`).
+
+Row 6's worker pool half, built (2026-11-23): `RunWorkerPool`
+(`run.gcp.hfl.dev/v1beta1`, section 2.3). Measured by hand: past the
+preview build, source and sandbox fields and the readiness probes (a
+service's), the worker pool's gaps are the template's `labels` and
+`gpuZonalRedundancyDisabled`, `binaryAuthorization.policy`,
+`template.client` and `clientVersion`, and `volumeMounts[].subPath`; and
+the kind is alpha only (decision 26 makes ours the stable equivalent).
+Upstream as for jobs: master's `RunWorkerPool` is the pin's, alpha, and
+no open pull request touches it. Built: the stable kind, the template's
+`labels` and `binaryAuthorization.policy` (shared with `RunService`, which
+gains it). Not built: `gpuZonalRedundancyDisabled` and `subPath` (mockgcp's
+protos lack them), `template.client` and `clientVersion` (newer than the
+pinned Go client). mockgcp needed no patch. Fake only; live pending
+(`docs/kinds/RunWorkerPool.md`).
 
 ## 7. What is left
 
@@ -2949,6 +2974,19 @@ To raise confidence in `ArtifactRegistryRepository`:
     it needs mockgcp's Cloud Run protos regenerated, as a patch, or a
     live-only case; and the preview fields. Promote to `v1beta1` after a
     live pass (decision 27).
+
+55. `RunWorkerPool` (ours, `run.gcp.hfl.dev/v1beta1`, decision 26,
+    application item 6, 2026-11-23; `docs/kinds/RunWorkerPool.md`). Fake
+    only; live pending: `task test-live PROJECT=$GCP_PROJECT KINDS=run
+    LIVE_RUN=TestRunWorkerPool` (free: no instances). To be seen live: the
+    server defaults the API gives a worker pool beyond mockgcp's, a
+    `binary_authorization` update mask, and `RunService`'s new
+    `binaryAuthorization.policy` with a real cloudRun platform policy.
+    Not built: the template's `gpuZonalRedundancyDisabled` and
+    `volumeMounts[].subPath` (the pinned Go client has them, mockgcp's
+    protos do not: they need the protos regenerated in a patch, or a
+    live-only case), and `template.client` and `clientVersion` (newer
+    than the pinned Go client).
 
 43. A delete that still needs a reference (2026-11-16, `pkg/deleting`;
     updated 2026-11-17). Every kind now deletes by its recorded name and

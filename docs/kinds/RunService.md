@@ -17,6 +17,13 @@ schema unchanged (`docs/design.md` decision 27, which covers field-gap
 kinds since section 10 question 9 was answered); `v1alpha1` is no longer
 served, and `CHANGELOG.md` says how to upgrade.
 
+2026-11-23: `binaryAuthorization.policy` (a Binary Authorization
+platform policy by name), with a CEL rule that it and `useDefault` are not
+both set, in the Binary Authorization type `RunService` shares with the
+new `RunWorkerPool` (whose test exercises it; `docs/kinds/RunWorkerPool.md`).
+An optional field added: no other schema change. Live: not yet run with a
+policy (it needs a cloudRun platform policy in the project).
+
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 

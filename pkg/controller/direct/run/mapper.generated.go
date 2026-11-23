@@ -19,7 +19,8 @@
 // (RunWorkerPool) functions, without the worker pool's instance splits and
 // scaling; the KRM types are this project's (run.gcp.hfl.dev); the worker
 // pool's template functions map a service's RevisionTemplate, with the
-// fields marked "Written here" added from the Cloud Run v2 API. The spec
+// fields marked "Written here" added from the Cloud Run v2 API (and
+// binaryAuthorization.policy, upstream's MISSING). The spec
 // mapping is in runservice_mapper.go. The three Condition reason helpers the
 // copied functions use are copied too, at the end.
 
@@ -46,7 +47,10 @@ func BinaryAuthorization_v1alpha1_ToProto(mapCtx *direct.MapContext, in *krmrunv
 	if oneof := BinaryAuthorization_UseDefault_ToProto(mapCtx, in.UseDefault); oneof != nil {
 		out.BinauthzMethod = oneof
 	}
-	// MISSING: Policy
+	// Written here: the policy, the other side of the oneof.
+	if in.Policy != nil {
+		out.BinauthzMethod = &pb.BinaryAuthorization_Policy{Policy: *in.Policy}
+	}
 	out.BreakglassJustification = direct.ValueOf(in.BreakglassJustification)
 	return out
 }

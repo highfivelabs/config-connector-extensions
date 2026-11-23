@@ -23,7 +23,7 @@
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
-# what is in them) and Cloud Run services and jobs, by name, and Network Security
+# what is in them) and Cloud Run services, jobs and worker pools, by name, and Network Security
 # address groups (global and the regions in ADDRESS_GROUP_REGIONS), by
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
@@ -853,6 +853,17 @@ while read -r name region made; do
   [[ -n "${name}" ]] || continue
   by_run "${name}" "${made}" || continue
   act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
+done <<<"${rows}"
+
+# Cloud Run worker pools (RunWorkerPool's test), in us-central1, the test's
+# region, by name, through the v2 API (gcloud lists them only in beta).
+rows="$(disco_api GET "https://run.googleapis.com/v2/projects/${project}/locations/us-central1/workerPools?pageSize=1000" \
+  | jq -r '.workerPools[]? | "\(.name) \(.createTime // "-")"')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  [[ "${made}" != "-" ]] || made=""
+  by_run "${name##*/}" "${made}" || continue
+  act "Cloud Run worker pool" "${name}" disco_delete "https://run.googleapis.com/v2/" "${name}"
 done <<<"${rows}"
 
 # Cloud Run jobs (RunJob's test), every region, by name.

@@ -384,6 +384,12 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   exist (any name is kept), a GPU's quota, or an execution (it runs
   none). Its protos lack `volumeMounts[].subPath`, which `RunJob` does not
   build for that reason.
+- **Cloud Run worker pools in mockgcp** (`RunWorkerPool`, ours, unpatched).
+  `workerPools.patch` honours an update mask. Its worker pool template
+  protos lack `gpuZonalRedundancyDisabled` and `volumeMounts[].subPath`
+  (which `RunWorkerPool` does not build for that reason). It does not
+  show: the real API's server defaults, a Binary Authorization policy that
+  must exist (any name is kept), or an instance (it runs none).
 - **Compute Engine service attachments** (`ComputeServiceAttachmentFields`,
   and the generated `ComputeServiceAttachment`, which `pkg/discokind/fake`
   leaves to mockgcp: `kinds.yaml` `mockgcp`). mockgcp's merge patch cannot

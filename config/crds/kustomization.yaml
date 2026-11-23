@@ -150,6 +150,7 @@ resources:
 - resourcemanager.gcp.hfl.dev_resourcemanagercapabilityconfigs.yaml
 - run.gcp.hfl.dev_runjobs.yaml
 - run.gcp.hfl.dev_runservices.yaml
+- run.gcp.hfl.dev_runworkerpools.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml
 - securitycenter.gcp.hfl.dev_securitycenterbigqueryexports.yaml

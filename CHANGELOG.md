@@ -114,6 +114,13 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`RunWorkerPool`** (`run.gcp.hfl.dev/v1beta1`): a stable Cloud Run
+  worker pool, where Config Connector's `RunWorkerPool` is alpha only, with
+  the revision template's `labels` and `binaryAuthorization.policy`
+  (`docs/kinds/RunWorkerPool.md` says how to move a worker pool to it).
+  `RunService` takes `binaryAuthorization.policy` too. Application queue
+  row 6.
+
 - **`RunJob`** (`run.gcp.hfl.dev/v1alpha1`): a Cloud Run job that owns the
   whole job, with what Config Connector's `RunJob` cannot express: the
   job's labels (`metadata.labels`) and its executions'

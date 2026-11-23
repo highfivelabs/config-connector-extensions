@@ -16,7 +16,8 @@
 
 // Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/run/resolverefs.go (UPSTREAM.md): ResolveRunWorkerPoolRefs
-// becomes ResolveRunServiceRefs, and ResolveRunJobRefs is for our RunJob
+// becomes ResolveRunServiceRefs, ResolveRunWorkerPoolRefs is for our
+// RunWorkerPool, and ResolveRunJobRefs is for our RunJob
 // (whose template's containers and volumes are RunService's types); the
 // v1beta1 cases are left out; the KRM types are this project's.
 
@@ -38,6 +39,42 @@ import (
 )
 
 func ResolveRunServiceRefs(ctx context.Context, kube client.Reader, desired *krmrunv1beta1.RunService) error {
+	if desired.Spec.Template == nil {
+		return nil
+	}
+	template := desired.Spec.Template
+	if err := resolveCommonTemplateRefs(ctx, kube, desired, template.ServiceAccountRef, template.VPCAccess); err != nil {
+		return err
+	}
+
+	if template.ServiceMesh != nil && template.ServiceMesh.MeshRef != nil {
+		if err := template.ServiceMesh.MeshRef.Normalize(ctx, kube, desired.GetNamespace()); err != nil {
+			return err
+		}
+	}
+
+	for i := range template.Containers {
+		c := &template.Containers[i]
+		for j := range c.Env {
+			env := &c.Env[j]
+			if env.ValueSource != nil && env.ValueSource.SecretKeyRef != nil {
+				sm := env.ValueSource.SecretKeyRef
+				if err := resolveSecretKeySelector(ctx, kube, desired.GetNamespace(), &sm.SecretRef, sm.VersionRef); err != nil {
+					return fmt.Errorf("resolving .spec.template.containers[%d].env[%d].valueSource.secretKeyRef: %w", i, j, err)
+				}
+			}
+		}
+	}
+	for i := range template.Volumes {
+		v := &template.Volumes[i]
+		if err := resolveCommonVolumeRefs(ctx, kube, desired, v.Secret, v.CloudSQLInstance, v.GCS); err != nil {
+			return fmt.Errorf("resolving .spec.template.volumes[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func ResolveRunWorkerPoolRefs(ctx context.Context, kube client.Reader, desired *krmrunv1beta1.RunWorkerPool) error {
 	if desired.Spec.Template == nil {
 		return nil
 	}

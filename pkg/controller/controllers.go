@@ -135,6 +135,7 @@ var Kinds = []kind{
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
 	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
 	{gvk: runv1beta1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
+	{gvk: runv1beta1.RunWorkerPoolGVK, crdName: "runworkerpools.run.gcp.hfl.dev", model: run.NewWorkerPoolModel, labels: slotguard.Spec},
 	{gvk: runv1alpha1.RunJobGVK, crdName: "runjobs.run.gcp.hfl.dev", model: run.NewRunJobModel, labels: slotguard.Metadata},
 	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},

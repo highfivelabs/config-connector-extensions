@@ -189,7 +189,11 @@ items:
       `binaryAuthorization.policy`; compared like our `RunService`, updated whole (`UpdateJob` takes no mask);
       mockgcp patch 0069; live pending. `baseImageUri` is no gap for a job (the API takes it only for
       services; CEL refuses it). Not built: `volumeMounts[].subPath` (mockgcp's protos lack it) and the preview
-      fields.
+      fields. Built 2026-11-23 for worker pools: `RunWorkerPool` (`run.gcp.hfl.dev/v1beta1`), the stable
+      equivalent of Config Connector's alpha kind (decision 26), copied from it, with the template's `labels`
+      and `binaryAuthorization.policy` (shared with `RunService`); live pending. Not built for worker pools:
+      `gpuZonalRedundancyDisabled` and `subPath` (mockgcp's protos lack them), `template.client` and
+      `clientVersion` (newer than the pinned Go client), the preview fields.
   - title: Cloud SQL instance fields
     importance: A
     gap: field
