@@ -2337,8 +2337,32 @@ them with a mask naming only them. Config Connector's Terraform-based
 `PubSubTopic` patches with a mask of the fields it changed (read at the
 pin's fork), and its opt-in direct controller diffs only its spec's fields,
 so neither sends these (to be confirmed live). mockgcp patch 0064 takes
-the two mask paths. Live pending (`docs/kinds/PubSubTopicFields.md`); the
-subscription half (`PubSubSubscriptionFields`) is next.
+the two mask paths. Live pending (`docs/kinds/PubSubTopicFields.md`).
+
+Row 1's subscription half: `PubSubSubscriptionFields`
+(`pubsub.gcp.hfl.dev/v1alpha1`, 2026-11-23). Upstream read again first
+(read-only: master `a5456d80`, releases to `v1.162.0`, the heads of the
+open pull requests from #13500 to #16337, an open one known by its
+`refs/pull/N/merge`): master's `PubSubSubscription` has none of the
+fields, and the one pull request that touches its types, #13712, adds
+`bigqueryConfig.useTableSchema`, which is left to it (section 6.1).
+Terraform's `google_pubsub_subscription` update builds its mask from the
+top-level fields it changed and the opt-in direct controller from its
+spec's (both read at the pin), so `messageTransforms` and
+`bigtableConfig` are ours alone, as the topic's fields are. The export
+fields (`serviceAccountEmail` of the BigQuery and Cloud Storage exports,
+the latter's `filenameDatetimeFormat`, `maxMessages` and
+`avroConfig.useTopicSchema`) are the partial case, as a node pool's
+`kubeletConfig` is (section 6.6): the API takes an export whole, so ours
+sends it as read with its fields set, and Config Connector's change of
+the same export drops them until our next reconcile; recorded in the kind's
+doc. A Bigtable export where the subscription pushes or exports elsewhere,
+and export fields without their export, are refused before any call.
+mockgcp patch 0065 takes the two mask paths and keeps an Avro export's
+format. Fake only; live pending (`docs/kinds/PubSubSubscriptionFields.md`;
+only the transform case runs live). Not built: `columnFamilyMapping`
+(newer than the pinned client and mockgcp), the `aiInference` and
+`compression` transforms, `tags` (create only).
 
 ## 7. What is left
 

@@ -313,7 +313,8 @@ func startCluster(t *testing.T) *cluster {
 			// LoggingLogBucketFields, ComputeNetworkFields,
 			// ComputeSubnetworkFields, DNSPolicyFields,
 			// PrivateCACAPoolFields, PrivateCACertificateTemplateFields,
-			// ComputeSecurityPolicyFields, PubSubTopicFields).
+			// ComputeSecurityPolicyFields, PubSubTopicFields,
+			// PubSubSubscriptionFields).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_kmscryptokeys.kms.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containerclusters.container.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containernodepools.container.cnrm.cloud.google.com.yaml"),
@@ -326,6 +327,7 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_privatecacertificatetemplates.privateca.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computesecuritypolicies.compute.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_pubsubtopics.pubsub.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_pubsubsubscriptions.pubsub.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}

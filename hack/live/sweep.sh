@@ -989,8 +989,16 @@ else
   failed=$((failed + 1))
 fi
 
-# Pub/Sub topics (PubSubTopicFields' test, and AssetFeed's), by the run's
-# name.
+# Pub/Sub subscriptions (PubSubSubscriptionFields' test), by the run's
+# name, before their topics.
+rows="$("${G[@]}" pubsub subscriptions list --verbosity=error --format='value(name.basename())')"
+for name in ${rows}; do
+  by_run "${name}" || continue
+  act "Pub/Sub subscription" "${name}" "${G[@]}" pubsub subscriptions delete "${name}"
+done
+
+# Pub/Sub topics (PubSubTopicFields' and PubSubSubscriptionFields' tests,
+# and AssetFeed's), by the run's name.
 rows="$("${G[@]}" pubsub topics list --verbosity=error --format='value(name.basename())')"
 for name in ${rows}; do
   by_run "${name}" || continue

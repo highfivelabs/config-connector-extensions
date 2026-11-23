@@ -487,6 +487,17 @@ for the run's bindings.
 needs the same access policy and role, and a sweeper section for the
 run's perimeters.
 
+`PubSubSubscriptionFields` (package `pubsub`, 2026-11-23, live pending):
+`task test-live PROJECT=$GCP_PROJECT KINDS=pubsub
+LIVE_RUN=TestPubSubSubscriptionFields` makes one topic and one pull
+subscription (free with no messages) with a JavaScript transform and
+deletes them; the Bigtable, BigQuery and Cloud Storage export cases skip
+live (a Bigtable instance costs money; the exports need a table or bucket
+the project's Pub/Sub service agent can write to). It needs
+`pubsub.googleapis.com` on and `roles/pubsub.editor` for the live-test
+account. The sweeper deletes subscriptions and topics whose name carries
+a run ID.
+
 `PubSubTopicFields` (package `pubsub`, 2026-11-23, live pending): `task
 test-live PROJECT=$GCP_PROJECT KINDS=pubsub` makes one topic (free with no
 messages) with a JavaScript transform and deletes it; the Cloud Storage

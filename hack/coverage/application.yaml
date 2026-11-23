@@ -51,8 +51,13 @@ items:
       as for the other field kinds. Built 2026-11-23 for the topic: `PubSubTopicFields`
       (`pubsub.gcp.hfl.dev/v1alpha1`) owns `ingestionDataSourceSettings` and `messageTransforms`, patched with a
       mask naming only them (the opt-in direct controller's mask leaves them out too: it diffs only its spec's
-      fields); mockgcp patch 0064; live pending. Not built: `PubSubSubscriptionFields` (the subscription's
-      transforms and export fields), next.
+      fields); mockgcp patch 0064; live pending. Built 2026-11-23 for the subscription:
+      `PubSubSubscriptionFields` owns `messageTransforms` and `bigtableConfig` (neither Config Connector path
+      sends them) and, the partial case, the BigQuery and Cloud Storage exports' `serviceAccountEmail`,
+      `filenameDatetimeFormat`, `maxMessages` and `avroConfig.useTopicSchema` (sent with the export as read,
+      since the API takes an export whole); mockgcp patch 0065; live pending. Left: `bigqueryConfig.useTableSchema`
+      (open pull request #13712), `bigtableConfig.columnFamilyMapping` (newer than the pinned client), the
+      `aiInference` and `compression` transforms, and `tags` (create only).
   - title: Cloud Storage bucket fields (soft delete, hierarchical namespace, encryption enforcement)
     importance: A
     gap: field

@@ -186,6 +186,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeFirewallPolicyRuleGVK, crdName: "computefirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewFirewallPolicyRuleModel},
 	{gvk: computev1alpha1.ComputeRegionSecurityPolicyRuleGVK, crdName: "computeregionsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionSecurityPolicyRuleModel},
 	{gvk: pubsubv1alpha1.PubSubTopicFieldsGVK, crdName: "pubsubtopicfields.pubsub.gcp.hfl.dev", model: pubsub.NewTopicFieldsModel},
+	{gvk: pubsubv1alpha1.PubSubSubscriptionFieldsGVK, crdName: "pubsubsubscriptionfields.pubsub.gcp.hfl.dev", model: pubsub.NewSubscriptionFieldsModel},
 	{gvk: accesscontextmanagerv1beta1.AccessContextManagerGCPUserAccessBindingGVK, crdName: "accesscontextmanagergcpuseraccessbindings.accesscontextmanager.gcp.hfl.dev", model: accesscontextmanager.NewGCPUserAccessBindingModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 	{gvk: firestorev1beta1.FirestoreBackupScheduleGVK, crdName: "firestorebackupschedules.firestore.gcp.hfl.dev", model: firestore.NewFirestoreBackupScheduleModel},

@@ -405,6 +405,17 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   secondary ranges, so the fixtures change only those; its protos lack a
   secondary range's `ipCollection` and `ipVersion`; and it checks no
   `ipCollection` against a public delegated prefix and binds no tags.
+- **Pub/Sub subscriptions' transforms and exports**
+  (`PubSubSubscriptionFields`). mockgcp's `subscriptions.patch` takes the
+  update mask paths `messageTransforms` and `bigtableConfig` (patch 0065;
+  it refused them), keeps a Cloud Storage export's Avro format (it set
+  text on every update), and a Bigtable export reads `ACTIVE`. It does not
+  show: whether the API refuses a second delivery (a Bigtable export
+  beside a push endpoint or another export; the controller refuses that
+  before any call), the export's table, bucket or service account
+  existing or being writable (an export's `state` stays `ACTIVE`), the
+  JavaScript of a transform (never parsed or run), and subscription
+  creation's eventual consistency beyond its fixed two seconds.
 - **Pub/Sub topics' ingestion and transforms** (`PubSubTopicFields`).
   mockgcp's `topics.patch` takes the update mask paths
   `ingestionDataSourceSettings` and `messageTransforms` (patch 0064; it

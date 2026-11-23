@@ -114,6 +114,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`PubSubSubscriptionFields`** (`pubsub.gcp.hfl.dev/v1alpha1`, a field
+  kind): sets `messageTransforms` (JavaScript UDFs), `bigtableConfig` (an
+  export to a Bigtable table) and fields of the BigQuery and Cloud Storage
+  exports (`serviceAccountEmail`, `filenameDatetimeFormat`, `maxMessages`,
+  `avroConfig.useTopicSchema`) on a subscription Config Connector's
+  `PubSubSubscription` owns, and only those
+  (`docs/kinds/PubSubSubscriptionFields.md`). Application queue row 1's
+  second half.
+
 - **`PubSubTopicFields`** (`pubsub.gcp.hfl.dev/v1alpha1`, a field kind):
   sets `ingestionDataSourceSettings` (an import topic: Amazon Kinesis,
   Cloud Storage, Azure Event Hubs, Amazon MSK or Confluent Cloud, with

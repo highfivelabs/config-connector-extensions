@@ -141,6 +141,7 @@ resources:
 - privateca.gcp.hfl.dev_privatecacapoolfields.yaml
 - privateca.gcp.hfl.dev_privatecacertificateauthorities.yaml
 - privateca.gcp.hfl.dev_privatecacertificatetemplatefields.yaml
+- pubsub.gcp.hfl.dev_pubsubsubscriptionfields.yaml
 - pubsub.gcp.hfl.dev_pubsubtopicfields.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml
