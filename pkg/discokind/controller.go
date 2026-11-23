@@ -449,12 +449,20 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 	// out what a get shows.
 	got, err := a.api.Get(ctx, a.name)
 	if err != nil {
+		if a.secrets != nil {
+			// The next reconcile finds the resource and reads the rest, but
+			// only this create's answer holds Kind.CreateOnlyOutputs: keep
+			// what it has now.
+			if werr := a.secrets.write(ctx, secretValues(a.kind, nil, created), true); werr != nil {
+				return fmt.Errorf("reading %s %s after create: %w; and %v", a.kind.GVK.Kind, a.name, err, werr)
+			}
+		}
 		return fmt.Errorf("reading %s %s after create: %w", a.kind.GVK.Kind, a.name, err)
 	}
 	if a.secrets != nil {
 		// The create's answer holds what only a create returns
 		// (Kind.CreateOnlyOutputs); a read holds the rest.
-		if err := a.secrets.write(ctx, secretValues(a.kind, got, created)); err != nil {
+		if err := a.secrets.write(ctx, secretValues(a.kind, got, created), false); err != nil {
 			return fmt.Errorf("%s %s was made, but %w", a.kind.GVK.Kind, a.name, err)
 		}
 	}
@@ -546,7 +554,7 @@ func (a *adapter) writeSecrets(ctx context.Context, got map[string]any) error {
 	if a.secrets == nil {
 		return nil
 	}
-	if err := a.secrets.write(ctx, secretValues(a.kind, got, nil)); err != nil {
+	if err := a.secrets.write(ctx, secretValues(a.kind, got, nil), false); err != nil {
 		return fmt.Errorf("%s %s: %w", a.kind.GVK.Kind, a.name, err)
 	}
 	return nil

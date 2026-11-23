@@ -61,6 +61,16 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **An `IAMWorkforcePoolProviderScimToken` no longer loses its token
+  when the manager's cache is behind.** The write after the create read
+  the Secret it had just reserved through the manager's cache, found
+  nothing, tried to make it again and failed, so the token the API
+  returns only once never reached the Secret and the object stayed not
+  Ready ("delete this object and make it again"). Now the write updates
+  the Secret the reservation made, tries again while the cache catches
+  up, and keeps the create's values even when the read after the create
+  fails (`docs/design.md` decision 38).
+
 - **Deleting or abandoning an object no longer waits forever when an
   object its spec names is already gone** (everything deleted at once: a
   namespace, a Helm release, a catalog chart). `LoggingSettings` stuck

@@ -3485,7 +3485,29 @@ To raise confidence in `ArtifactRegistryRepository`:
       and errors;
     - the Secret goes with the object through garbage collection, also
       when it is abandoned (`deletion-policy: abandon` keeps the
-      resource in the cloud, not the Secret).
+      resource in the cloud, not the Secret);
+    - the writes do not trust the manager's cache (fixed 2026-11-23).
+      The manager's client reads Secrets from an informer, which can lag
+      its own writes: the write after the create read the Secret the
+      reservation had just made as not found, tried to make it again,
+      failed as "already exists", and so lost a token the API returns
+      once; the next reconcile found the token and, rightly, made the
+      object not Ready with "delete this object and make it again".
+      `TestIAMWorkforcePoolProviderScimToken` failed this way in 6 of 36
+      runs, three at once (either of its two objects; the create's error,
+      printed, was "already exists"). Now the reservation keeps the
+      Secret it made or read and the write updates that copy, reading
+      again only on a conflict; "already exists" and "conflict" are
+      tried again for about 6 s while the cache catches up; and if the
+      read after the create fails, the create-only values are written
+      first, so the next reconcile still has them.
+      `TestSecretOutputWriteWithLaggingCache`,
+      `TestSecretOutputReserveWithLaggingCache` and
+      `TestSecretOutputWriteSome` (`pkg/discokind`, a client whose
+      Secret reads lag its writes) fail without it. A token is still
+      lost, and the object says so, only when the Secret cannot be
+      written at all after the create (an API server down, or a
+      Secret taken between the reservation and the write).
     Kinds: `IAMOauthClientCredential` (`clientSecret`, returned on every
     read) and `IAMWorkforcePoolProviderScimToken` (`securityToken`,
     returned only by the create), foundation item 4, both

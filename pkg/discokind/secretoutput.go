@@ -27,23 +27,44 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// secretOutput is the Secret one object's SecretOutputs go to.
+// secretOutput is the Secret one object's SecretOutputs go to, for one
+// reconcile.
 type secretOutput struct {
 	kind  *Kind
 	kube  client.Client
 	key   types.NamespacedName
 	owner metav1.OwnerReference
+	// held is the Secret as this reconcile last made, read or wrote it.
+	// The manager's client reads from its cache, which can lag its own
+	// writes: a Secret reserve has just made can read as not found, and
+	// writing it again would fail as already there, after the API has
+	// made a secret it returns only once (a SCIM token's). So write
+	// starts from held, and reads only when held is stale.
+	held *corev1.Secret
+}
+
+// cacheLag is how long reserve and write try again while the manager's
+// cache has not caught up with a write (a create answered "already
+// exists", an update "conflict"): about 6 s in all.
+var cacheLag = wait.Backoff{Duration: 50 * time.Millisecond, Factor: 2, Jitter: 0.1, Steps: 8, Cap: 2 * time.Second}
+
+// stale is an error the cache's lag explains: the Secret exists though
+// the cache had not seen it, or changed since the copy written.
+func stale(err error) bool {
+	return apierrors.IsConflict(err) || apierrors.IsAlreadyExists(err)
 }
 
 // SecretOutputName is the name of the Secret the object u writes its
@@ -110,21 +131,27 @@ func (s *secretOutput) notOurs() error {
 // reserve makes the object's Secret, empty, unless it is there already,
 // and fails if a Secret of that name is someone else's.
 func (s *secretOutput) reserve(ctx context.Context) error {
-	sec := &corev1.Secret{}
-	err := s.kube.Get(ctx, s.key, sec)
-	switch {
-	case err == nil:
-		if !s.ours(sec) {
-			return s.notOurs()
+	return retry.OnError(cacheLag, stale, func() error {
+		sec := &corev1.Secret{}
+		err := s.kube.Get(ctx, s.key, sec)
+		switch {
+		case err == nil:
+			if !s.ours(sec) {
+				return s.notOurs()
+			}
+			s.held = sec
+			return nil
+		case !apierrors.IsNotFound(err):
+			return fmt.Errorf("reading the Secret %s: %w", s.key, err)
 		}
+		sec = s.newSecret(nil)
+		if err := s.kube.Create(ctx, sec); err != nil {
+			// Already there and the cache had not seen it: read again.
+			return fmt.Errorf("making the Secret %s for %s: %w", s.key, strings.Join(s.kind.SecretOutputs, ", "), err)
+		}
+		s.held = sec
 		return nil
-	case !apierrors.IsNotFound(err):
-		return fmt.Errorf("reading the Secret %s: %w", s.key, err)
-	}
-	if err := s.kube.Create(ctx, s.newSecret(nil)); err != nil {
-		return fmt.Errorf("making the Secret %s for %s: %w", s.key, strings.Join(s.kind.SecretOutputs, ", "), err)
-	}
-	return nil
+	})
 }
 
 func (s *secretOutput) newSecret(data map[string][]byte) *corev1.Secret {
@@ -148,37 +175,49 @@ func (s *secretOutput) missing(field string) error {
 }
 
 // write makes the Secret hold values, each under its field's name. A field
-// values lacks must be in the Secret already.
-func (s *secretOutput) write(ctx context.Context, values map[string]string) error {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		sec := &corev1.Secret{}
-		err := s.kube.Get(ctx, s.key, sec)
-		if apierrors.IsNotFound(err) {
-			data := map[string][]byte{}
-			for _, f := range s.kind.SecretOutputs {
-				v, ok := values[f]
-				if !ok {
-					return s.missing(f)
+// values lacks must be in the Secret already, unless some is set: then it
+// is left as it is (keeping a create's answer when the read after it
+// failed).
+func (s *secretOutput) write(ctx context.Context, values map[string]string, some bool) error {
+	return retry.OnError(cacheLag, stale, func() error {
+		sec := s.held
+		s.held = nil
+		if sec == nil {
+			sec = &corev1.Secret{}
+			err := s.kube.Get(ctx, s.key, sec)
+			if apierrors.IsNotFound(err) {
+				data := map[string][]byte{}
+				for _, f := range s.kind.SecretOutputs {
+					v, ok := values[f]
+					if !ok {
+						if some {
+							continue
+						}
+						return s.missing(f)
+					}
+					data[f] = []byte(v)
 				}
-				data[f] = []byte(v)
+				sec = s.newSecret(data)
+				if err := s.kube.Create(ctx, sec); err != nil {
+					// Already there and the cache had not seen it: read again.
+					return fmt.Errorf("writing the Secret %s: %w", s.key, err)
+				}
+				s.held = sec
+				klog.FromContext(ctx).Info("wrote the API's secrets to a Secret", "kind", s.kind.GVK.Kind, "secret", s.key.String(), "fields", s.kind.SecretOutputs)
+				return nil
 			}
-			if err := s.kube.Create(ctx, s.newSecret(data)); err != nil {
-				return fmt.Errorf("writing the Secret %s: %w", s.key, err)
+			if err != nil {
+				return fmt.Errorf("reading the Secret %s: %w", s.key, err)
 			}
-			klog.FromContext(ctx).Info("wrote the API's secrets to a Secret", "kind", s.kind.GVK.Kind, "secret", s.key.String(), "fields", s.kind.SecretOutputs)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("reading the Secret %s: %w", s.key, err)
-		}
-		if !s.ours(sec) {
-			return s.notOurs()
+			if !s.ours(sec) {
+				return s.notOurs()
+			}
 		}
 		changed := false
 		for _, f := range s.kind.SecretOutputs {
 			v, ok := values[f]
 			if !ok {
-				if len(sec.Data[f]) == 0 {
+				if len(sec.Data[f]) == 0 && !some {
 					return s.missing(f)
 				}
 				continue
@@ -192,11 +231,15 @@ func (s *secretOutput) write(ctx context.Context, values map[string]string) erro
 			}
 		}
 		if !changed {
+			s.held = sec
 			return nil
 		}
 		if err := s.kube.Update(ctx, sec); err != nil {
+			// A conflict: the Secret changed since the copy held, or the
+			// cache gave an old one. Read again.
 			return fmt.Errorf("writing the Secret %s: %w", s.key, err)
 		}
+		s.held = sec
 		klog.FromContext(ctx).Info("wrote the API's secrets to a Secret", "kind", s.kind.GVK.Kind, "secret", s.key.String(), "fields", s.kind.SecretOutputs)
 		return nil
 	})

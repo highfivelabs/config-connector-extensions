@@ -28,10 +28,12 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/funcr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -101,20 +103,40 @@ func (l *logBuffer) String() string {
 // captureLogs sends every log line, klog's and controller-runtime's, at
 // every verbosity, to a buffer until the test ends. Call it before
 // mockenv.New, so the manager logs there from its start.
+//
+// controller-runtime takes its logger once per process (ctrl.SetLogger
+// does nothing to loggers already handed out after the first call), so
+// the logger is made once and writes to the buffer of the test that runs
+// now: the test stays right under go test -count=N.
 func captureLogs(t *testing.T) *logBuffer {
 	buf := &logBuffer{}
-	logger := funcr.New(buf.write, funcr.Options{Verbosity: 10})
+	logTo.Store(buf)
+	logOnce.Do(func() {
+		logger = funcr.New(func(prefix, args string) {
+			if b := logTo.Load(); b != nil {
+				b.write(prefix, args)
+			}
+		}, funcr.Options{Verbosity: 10})
+		ctrl.SetLogger(logger)
+	})
 	var fs flag.FlagSet
 	klog.InitFlags(&fs)
 	_ = fs.Set("v", "10")
 	klog.SetLoggerWithOptions(logger, klog.ContextualLogger(true))
-	ctrl.SetLogger(logger)
 	t.Cleanup(func() {
+		logTo.Store(nil)
 		_ = fs.Set("v", "0")
 		klog.ClearLogger()
 	})
 	return buf
 }
+
+var (
+	logOnce sync.Once
+	logger  logr.Logger
+	// logTo is the buffer of the test running now (nil: none).
+	logTo atomic.Pointer[logBuffer]
+)
 
 const outputNS = "secret-outputs"
 
