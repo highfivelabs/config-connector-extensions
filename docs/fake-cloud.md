@@ -405,6 +405,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   secondary ranges, so the fixtures change only those; its protos lack a
   secondary range's `ipCollection` and `ipVersion`; and it checks no
   `ipCollection` against a public delegated prefix and binds no tags.
+- **Pub/Sub topics' ingestion and transforms** (`PubSubTopicFields`).
+  mockgcp's `topics.patch` takes the update mask paths
+  `ingestionDataSourceSettings` and `messageTransforms` (patch 0064; it
+  refused them); its create already kept both. It does not show: whether
+  the API reaches an import source (an import topic's `state` stays as
+  sent, never `INGESTION_RESOURCE_ERROR`), the JavaScript of a transform
+  (never parsed or run), the API's checks of which sources and formats go
+  together, and the service agent's permissions.
 - **Cloud DNS server policies** (`DNSPolicyFields`). mockgcp's
   `policies.patch` now changes only the fields a request sets (patch
   0057; it replaced the whole policy). It does not show: whether the API

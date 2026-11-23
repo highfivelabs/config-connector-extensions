@@ -214,6 +214,7 @@ patches:
   - {file: patches/k8s-config-connector/0061-mockgcp-compute-firewall-policy-add-rule-appends.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0062-mockgcp-privateca-authority-update-mask-and-delete.patch, pin: k8s-config-connector, upstream_candidate: "yes, once Config Connector's fixtures disable first"}
   - {file: patches/k8s-config-connector/0063-mockgcp-compute-region-security-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0064-mockgcp-pubsub-topic-ingestion-and-transforms.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -313,6 +314,10 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computefirewallpolicyrule_controller.go, pkg/controller/direct/compute/computefirewallpolicyrule_mapper.go, pkg/controller/direct/compute/firewallpolicyrule_resolverefs.go]}
   - here: [apis/compute/v1alpha1/computeregionsecuritypolicyrule_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computesecuritypolicy_types.go, apis/compute/v1beta1/types.generated.go]}
+  - here: [apis/pubsub/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/pubsub/v1beta1/groupversion_info.go]}
+  - here: [apis/pubsub/v1alpha1/pubsubtopicfields_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/pubsub/v1beta1/types.generated.go]}
   - here: [apis/accesscontextmanager/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/groupversion_info.go]}
   - here: [apis/accesscontextmanager/v1beta1/accesscontextmanagergcpuseraccessbinding_types.go]

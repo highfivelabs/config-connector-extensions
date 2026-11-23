@@ -48,7 +48,11 @@ items:
       A field kind (decision 37, `PubSubTopicFields`, `PubSubSubscriptionFields`): Terraform's
       `google_pubsub_topic` update patches with an update mask of the fields it changed (read at the pin's fork), so a field kind that
       patches only its own fields is safe beside Config Connector's (section 6.6, pattern 2); to be confirmed live,
-      as for the other field kinds.
+      as for the other field kinds. Built 2026-11-23 for the topic: `PubSubTopicFields`
+      (`pubsub.gcp.hfl.dev/v1alpha1`) owns `ingestionDataSourceSettings` and `messageTransforms`, patched with a
+      mask naming only them (the opt-in direct controller's mask leaves them out too: it diffs only its spec's
+      fields); mockgcp patch 0064; live pending. Not built: `PubSubSubscriptionFields` (the subscription's
+      transforms and export fields), next.
   - title: Cloud Storage bucket fields (soft delete, hierarchical namespace, encryption enforcement)
     importance: A
     gap: field

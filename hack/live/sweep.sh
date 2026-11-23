@@ -989,6 +989,14 @@ else
   failed=$((failed + 1))
 fi
 
+# Pub/Sub topics (PubSubTopicFields' test, and AssetFeed's), by the run's
+# name.
+rows="$("${G[@]}" pubsub topics list --verbosity=error --format='value(name.basename())')"
+for name in ${rows}; do
+  by_run "${name}" || continue
+  act "Pub/Sub topic" "${name}" "${G[@]}" pubsub topics delete "${name}"
+done
+
 # Cloud Armor security policies (ComputeSecurityPolicyFields' test), global,
 # by name, only where the run made them (E2E_CLOUD_ARMOR=true); the test's
 # policy is attached to nothing.

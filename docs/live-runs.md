@@ -487,6 +487,14 @@ for the run's bindings.
 needs the same access policy and role, and a sweeper section for the
 run's perimeters.
 
+`PubSubTopicFields` (package `pubsub`, 2026-11-23, live pending): `task
+test-live PROJECT=$GCP_PROJECT KINDS=pubsub` makes one topic (free with no
+messages) with a JavaScript transform and deletes it; the Cloud Storage
+import case skips live (the topic's service agent would need to read a
+bucket). It needs `pubsub.googleapis.com` on and `roles/pubsub.editor`
+for the live-test account (AssetFeed's test already uses topics). The
+sweeper deletes topics whose name carries a run ID.
+
 Live pending, built 2026-11-23 (each kind's `docs/kinds/` file has the
 command): `ComputeServiceAttachment` and `ComputeSubnetwork` (package
 `compute`; the service attachment's Setup makes two internal passthrough

@@ -104,6 +104,13 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`PubSubTopicFields`** (`pubsub.gcp.hfl.dev/v1alpha1`, a field kind):
+  sets `ingestionDataSourceSettings` (an import topic: Amazon Kinesis,
+  Cloud Storage, Azure Event Hubs, Amazon MSK or Confluent Cloud, with
+  platform logs) and `messageTransforms` (JavaScript UDFs) on a topic
+  Config Connector's `PubSubTopic` owns, and only those
+  (`docs/kinds/PubSubTopicFields.md`). The application queue's first row.
+
 - **`AccessContextManagerGCPUserAccessBinding`**
   (`accesscontextmanager.gcp.hfl.dev/v1beta1`): the stable equivalent of
   Config Connector's alpha kind, binding a Google Group to an

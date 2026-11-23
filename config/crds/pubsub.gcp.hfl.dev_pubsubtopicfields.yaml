@@ -1,0 +1,359 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: pubsubtopicfields.pubsub.gcp.hfl.dev
+spec:
+  group: pubsub.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: PubSubTopicFields
+    listKind: PubSubTopicFieldsList
+    plural: pubsubtopicfields
+    shortNames:
+    - hflpubsubtopicfields
+    singular: pubsubtopicfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'PubSubTopicFields sets fields of a Pub/Sub topic that Config
+          Connector''s PubSubTopic has no field for (ingestionDataSourceSettings,
+          messageTransforms), and only those: it patches the topic with an update
+          mask naming them. Deleting it clears them.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'PubSubTopicFieldsSpec is the fields of a topic this object
+              owns. A field left unset is not owned: this object never sends it.'
+            properties:
+              ingestionDataSourceSettings:
+                description: 'Settings for an import topic: where Pub/Sub ingests
+                  messages from (Amazon Kinesis, Cloud Storage, Azure Event Hubs,
+                  Amazon MSK or Confluent Cloud), and its platform logs.'
+                properties:
+                  awsKinesis:
+                    description: Optional. Amazon Kinesis Data Streams.
+                    properties:
+                      awsRoleArn:
+                        description: Required. AWS role ARN to be used for Federated
+                          Identity authentication with Kinesis. Check the Pub/Sub
+                          docs for how to set up this role and the required permissions
+                          that need to be attached to it.
+                        type: string
+                      consumerArn:
+                        description: Required. The Kinesis consumer ARN to used for
+                          ingestion in Enhanced Fan-Out mode. The consumer must be
+                          already created and ready to be used.
+                        type: string
+                      gcpServiceAccount:
+                        description: Required. The GCP service account to be used
+                          for Federated Identity authentication with Kinesis (via
+                          a `AssumeRoleWithWebIdentity` call for the provided role).
+                          The `aws_role_arn` must be set up with `accounts.google.com:sub`
+                          equals to this service account number.
+                        type: string
+                      streamArn:
+                        description: Required. The Kinesis stream ARN to ingest data
+                          from.
+                        type: string
+                    type: object
+                  awsMsk:
+                    description: Optional. Amazon MSK.
+                    properties:
+                      awsRoleArn:
+                        description: Required. AWS role ARN to be used for Federated
+                          Identity authentication with Amazon MSK. Check the Pub/Sub
+                          docs for how to set up this role and the required permissions
+                          that need to be attached to it.
+                        type: string
+                      clusterArn:
+                        description: Required. The Amazon Resource Name (ARN) that
+                          uniquely identifies the cluster.
+                        type: string
+                      gcpServiceAccount:
+                        description: Required. The GCP service account to be used
+                          for Federated Identity authentication with Amazon MSK (via
+                          a `AssumeRoleWithWebIdentity` call for the provided role).
+                          The `aws_role_arn` must be set up with `accounts.google.com:sub`
+                          equals to this service account number.
+                        type: string
+                      topic:
+                        description: Required. The name of the topic in the Amazon
+                          MSK cluster that Pub/Sub will import from.
+                        type: string
+                    type: object
+                  azureEventHubs:
+                    description: Optional. Azure Event Hubs.
+                    properties:
+                      clientId:
+                        description: Optional. The client id of the Azure application
+                          that is being used to authenticate Pub/Sub.
+                        type: string
+                      eventHub:
+                        description: Optional. The name of the Event Hub.
+                        type: string
+                      gcpServiceAccount:
+                        description: Optional. The GCP service account to be used
+                          for Federated Identity authentication.
+                        type: string
+                      namespace:
+                        description: Optional. The name of the Event Hubs namespace.
+                        type: string
+                      resourceGroup:
+                        description: Optional. Name of the resource group within the
+                          azure subscription.
+                        type: string
+                      subscriptionId:
+                        description: Optional. The Azure subscription id.
+                        type: string
+                      tenantId:
+                        description: Optional. The tenant id of the Azure application
+                          that is being used to authenticate Pub/Sub.
+                        type: string
+                    type: object
+                  cloudStorage:
+                    description: Optional. Cloud Storage.
+                    properties:
+                      avroFormat:
+                        description: Optional. Data from Cloud Storage will be interpreted
+                          in Avro format.
+                        type: object
+                      bucket:
+                        description: Optional. Cloud Storage bucket. The bucket name
+                          must be without any prefix like "gs://". See the [bucket
+                          naming requirements] (https://cloud.google.com/storage/docs/buckets#naming).
+                        type: string
+                      matchGlob:
+                        description: Optional. Glob pattern used to match objects
+                          that will be ingested. If unset, all objects will be ingested.
+                          See the [supported patterns](https://cloud.google.com/storage/docs/json_api/v1/objects/list#list-objects-and-prefixes-using-glob).
+                        type: string
+                      minimumObjectCreateTime:
+                        description: Optional. Only objects with a larger or equal
+                          creation timestamp will be ingested (RFC 3339).
+                        type: string
+                      pubsubAvroFormat:
+                        description: Optional. It will be assumed data from Cloud
+                          Storage was written via [Cloud Storage subscriptions](https://cloud.google.com/pubsub/docs/cloudstorage).
+                        type: object
+                      textFormat:
+                        description: Optional. Data from Cloud Storage will be interpreted
+                          as text.
+                        properties:
+                          delimiter:
+                            description: Optional. When unset, '\n' is used.
+                            type: string
+                        type: object
+                    type: object
+                    x-kubernetes-validations:
+                    - message: set at most one of textFormat, avroFormat and pubsubAvroFormat
+                      rule: '[has(self.textFormat), has(self.avroFormat), has(self.pubsubAvroFormat)].filter(x,
+                        x).size() <= 1'
+                  confluentCloud:
+                    description: Optional. Confluent Cloud.
+                    properties:
+                      bootstrapServer:
+                        description: Required. The address of the bootstrap server.
+                          The format is url:port.
+                        type: string
+                      clusterId:
+                        description: Required. The id of the cluster.
+                        type: string
+                      gcpServiceAccount:
+                        description: Required. The GCP service account to be used
+                          for Federated Identity authentication with `identity_pool_id`.
+                        type: string
+                      identityPoolId:
+                        description: Required. The id of the identity pool to be used
+                          for Federated Identity authentication with Confluent Cloud.
+                        type: string
+                      topic:
+                        description: Required. The name of the topic in the Confluent
+                          Cloud cluster that Pub/Sub will import from.
+                        type: string
+                    type: object
+                  platformLogsSettings:
+                    description: Optional. Platform Logs settings. If unset, no Platform
+                      Logs will be generated.
+                    properties:
+                      severity:
+                        description: 'Optional. The minimum severity level of Platform
+                          Logs that will be written: DISABLED, DEBUG, INFO, WARNING
+                          or ERROR.'
+                        enum:
+                        - SEVERITY_UNSPECIFIED
+                        - DISABLED
+                        - DEBUG
+                        - INFO
+                        - WARNING
+                        - ERROR
+                        type: string
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: set at most one ingestion source
+                  rule: '[has(self.awsKinesis), has(self.cloudStorage), has(self.azureEventHubs),
+                    has(self.awsMsk), has(self.confluentCloud)].filter(x, x).size()
+                    <= 1'
+              messageTransforms:
+                description: Transforms applied to messages published to the topic,
+                  in order.
+                items:
+                  properties:
+                    disabled:
+                      description: Optional. If true, the transform is disabled and
+                        will not be applied to messages. Defaults to `false`.
+                      type: boolean
+                    enabled:
+                      description: Optional. This field is deprecated, use the `disabled`
+                        field to disable transforms.
+                      type: boolean
+                    javascriptUdf:
+                      description: Optional. JavaScript User Defined Function. If
+                        multiple JavaScriptUDF's are specified on a resource, each
+                        must have a unique `function_name`.
+                      properties:
+                        code:
+                          description: Required. JavaScript code that contains a function
+                            `function_name` taking (message, metadata) and returning
+                            the message to publish ({data, attributes}) or null to
+                            filter it out.
+                          type: string
+                        functionName:
+                          description: Required. Name of the JavasScript function
+                            that should applied to Pub/Sub messages.
+                          type: string
+                      required:
+                      - code
+                      - functionName
+                      type: object
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
+              resourceRef:
+                description: 'Immutable. The topic: Config Connector''s PubSubTopic
+                  by name (pubsub.cnrm.cloud.google.com), or any topic by external,
+                  as "projects/{{projectID}}/topics/{{topicID}}". The topic must exist;
+                  this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed PubSubTopic
+                      resource. Should be in the format "projects/{{projectID}}/topics/{{topicID}}".
+                    type: string
+                  name:
+                    description: The name of a PubSubTopic resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a PubSubTopic resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set at least one of ingestionDataSourceSettings and messageTransforms
+              rule: has(self.ingestionDataSourceSettings) || has(self.messageTransforms)
+          status:
+            description: PubSubTopicFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The topic whose fields this object sets, as projects/{project}/topics/{topic}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              state:
+                description: 'The topic''s state as the API answers it: ACTIVE, or
+                  INGESTION_RESOURCE_ERROR when an import topic cannot reach its source.'
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

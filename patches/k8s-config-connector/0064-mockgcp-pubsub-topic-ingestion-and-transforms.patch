@@ -1,0 +1,23 @@
+config-connector-extensions patch 0064: a topic's update takes its
+ingestion source and message transforms.
+
+UpdateTopic refused the update mask paths ingestion_data_source_settings
+and message_transforms (either spelling), which PubSubTopicFields (ours;
+application queue item 1) sends; CreateTopic already keeps both as sent.
+Upstream candidate: yes.
+
+--- a/mockgcp/mockpubsub/topic.go
++++ b/mockgcp/mockpubsub/topic.go
+@@ -135,6 +135,12 @@
+ 			updated.MessageStoragePolicy = req.GetTopic().GetMessageStoragePolicy()
+ 		case "kms_key_name", "kmsKeyName":
+ 			updated.KmsKeyName = req.GetTopic().GetKmsKeyName()
++		// config-connector-extensions patch 0064: an import topic's source and
++		// a topic's message transforms (PubSubTopicFields).
++		case "ingestion_data_source_settings", "ingestionDataSourceSettings":
++			updated.IngestionDataSourceSettings = req.GetTopic().GetIngestionDataSourceSettings()
++		case "message_transforms", "messageTransforms":
++			updated.MessageTransforms = req.GetTopic().GetMessageTransforms()
+ 		default:
+ 			return nil, status.Errorf(codes.InvalidArgument, "update_mask path %q not valid", path)
+ 		}

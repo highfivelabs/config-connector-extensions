@@ -1073,6 +1073,7 @@ privateca.googleapis.com,privateca.googleapis.com/PrivateCACertificateTemplateFi
 privilegedaccessmanager.googleapis.com,privilegedaccessmanager.googleapis.com/Entitlement,14,PrivilegedAccessManagerEntitlement,11,,0,3,false,api=v1:google.cloud.privilegedaccessmanager.v1.PrivilegedAccessManager.CreateEntitlement; official-spec-fields-unmatched=7/17
 privilegedaccessmanager.googleapis.com,privilegedaccessmanager.googleapis.com/Grant,4,,0,,0,4,false,api=v1:google.cloud.privilegedaccessmanager.v1.PrivilegedAccessManager.CreateGrant
 publicca.googleapis.com,publicca.googleapis.com/ExternalAccountKey,0,,0,,0,0,false,api=v1:projects.locations.externalAccountKeys
+pubsub.googleapis.com,pubsub.googleapis.com/PubSubTopicFields,0,,0,PubSubTopicFields,0,0,false,"outside-denominator; a field kind, ingestionDataSourceSettings and messageTransforms of a topic Config Connector's PubSubTopic owns, written with topics.patch (decision 37)"
 pubsub.googleapis.com,pubsub.googleapis.com/Schema,5,PubSubSchema,3,,0,2,false,api=v1:projects.schemas; official-spec-fields-unmatched=2/4
 pubsub.googleapis.com,pubsub.googleapis.com/Snapshot,3,PubSubSnapshot,1,,0,2,false,api=v1:projects.snapshots; official-spec-fields-unmatched=4/5
 pubsub.googleapis.com,pubsub.googleapis.com/Subscription,55,PubSubSubscription,29,,0,26,false,api=v1:projects.subscriptions; official-spec-fields-unmatched=2/29

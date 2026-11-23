@@ -2330,6 +2330,16 @@ naming, to measure by hand) and Cloud SQL instance fields (open pull
 requests, wait). Upstream was read for each (master `bc464f55`, releases
 to `v1.162.0`, the pull request heads from #13500).
 
+**Built from it (2026-11-23).** Row 1's topic half: `PubSubTopicFields`
+(`pubsub.gcp.hfl.dev/v1alpha1`, a field kind, decision 37), which owns a
+topic's `ingestionDataSourceSettings` and `messageTransforms` and patches
+them with a mask naming only them. Config Connector's Terraform-based
+`PubSubTopic` patches with a mask of the fields it changed (read at the
+pin's fork), and its opt-in direct controller diffs only its spec's fields,
+so neither sends these (to be confirmed live). mockgcp patch 0064 takes
+the two mask paths. Live pending (`docs/kinds/PubSubTopicFields.md`); the
+subscription half (`PubSubSubscriptionFields`) is next.
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:
