@@ -2383,10 +2383,21 @@ would need a fake of our own). mockgcp patch 0066 clears a masked field
 the request leaves unset. Fake only; live pending, and live must show
 whether the API takes `userLabels` in an update mask (its description
 lists the updatable fields without it) and the nested `httpCheck.*`
-paths. The alert policy half: Terraform's update (the default) and the
-opt-in direct controller send `documentation` and `alertStrategy` whole,
-so `documentation.subject`, `documentation.links` and
-`alertStrategy.notificationPrompts` are the partial case.
+paths.
+
+Row 3's alert policy half: `MonitoringAlertPolicyFields`
+(`monitoring.gcp.hfl.dev/v1alpha1`, 2026-11-23). Upstream as above: no
+pull request adds the fields. Terraform's update (the default; its schema
+at the pin lacks the fields) and the opt-in direct controller name
+`documentation` and `alertStrategy` whole in their masks, so
+`documentation.subject`, `documentation.links` and
+`alertStrategy.notificationPrompts` are the partial case: ours sends the
+two objects as read with its fields set, and Config Connector's change of
+either drops them until our next reconcile (the test shows both). Not
+built: a PromQL condition's `disableMetricValidation` (in a list Config
+Connector owns); `userLabels` is no gap (Config Connector writes
+`metadata.labels` there). mockgcp patch 0067 takes the `alertStrategy`
+mask path. Fake only; live pending.
 
 ## 7. What is left
 

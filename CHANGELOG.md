@@ -114,6 +114,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`MonitoringAlertPolicyFields`** (`monitoring.gcp.hfl.dev/v1alpha1`, a
+  field kind): sets `documentation.subject`, `documentation.links` and
+  `alertStrategy.notificationPrompts` on an alert policy Config
+  Connector's `MonitoringAlertPolicy` owns, and only those
+  (`docs/kinds/MonitoringAlertPolicyFields.md`). A change Config Connector
+  makes to the policy's documentation or alert strategy drops them until
+  the next reconcile puts them back. Application queue row 3, its alert
+  policy half.
+
 - **`MonitoringUptimeCheckConfigFields`** (`monitoring.gcp.hfl.dev/v1alpha1`,
   a field kind, in a new API group): sets `userLabels` and an HTTP check's
   `customContentType`, `acceptedResponseStatusCodes`, `pingConfig` and

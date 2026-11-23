@@ -1013,6 +1013,14 @@ while IFS=$'\t' read -r id display; do
   act "uptime check" "${display} (${id})" "${G[@]}" monitoring uptime delete "${id}" --quiet
 done < <("${G[@]}" monitoring uptime list-configs --verbosity=error --format='value[separator="\t"](name.basename(),displayName)')
 
+# Alert policies (MonitoringAlertPolicyFields' test), by the run's name in
+# their display name: the API names a policy itself.
+while IFS=$'\t' read -r id display; do
+  [[ -n "${id}" ]] || continue
+  by_run "${display}" || continue
+  act "alert policy" "${display} (${id})" "${G[@]}" monitoring policies delete "${id}" --quiet
+done < <("${G[@]}" monitoring policies list --verbosity=error --format='value[separator="\t"](name.basename(),displayName)')
+
 # Cloud Armor security policies (ComputeSecurityPolicyFields' test), global,
 # by name, only where the run made them (E2E_CLOUD_ARMOR=true); the test's
 # policy is attached to nothing.

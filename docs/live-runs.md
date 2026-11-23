@@ -487,6 +487,14 @@ for the run's bindings.
 needs the same access policy and role, and a sweeper section for the
 run's perimeters.
 
+`MonitoringAlertPolicyFields` (package `monitoring`, 2026-11-23, live
+pending): `task test-live PROJECT=$GCP_PROJECT KINDS=monitoring
+LIVE_RUN=TestMonitoringAlertPolicyFields` makes one alert policy (a CPU
+threshold, no notification channel: free) and deletes it. It needs
+`roles/monitoring.alertPolicyEditor` (or `roles/monitoring.editor`) for
+the live-test account. The sweeper deletes alert policies whose display
+name carries a run ID.
+
 `MonitoringUptimeCheckConfigFields` (package `monitoring`, 2026-11-23, live
 pending): `task test-live PROJECT=$GCP_PROJECT KINDS=monitoring
 LIVE_RUN=TestMonitoringUptimeCheckConfigFields` makes two uptime checks of

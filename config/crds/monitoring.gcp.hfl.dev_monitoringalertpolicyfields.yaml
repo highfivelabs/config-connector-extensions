@@ -1,0 +1,219 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: monitoringalertpolicyfields.monitoring.gcp.hfl.dev
+spec:
+  group: monitoring.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: MonitoringAlertPolicyFields
+    listKind: MonitoringAlertPolicyFieldsList
+    plural: monitoringalertpolicyfields
+    shortNames:
+    - hflmonitoringalertpolicyfields
+    singular: monitoringalertpolicyfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MonitoringAlertPolicyFields sets fields of a Cloud Monitoring
+          alert policy that Config Connector's MonitoringAlertPolicy has no field
+          for (documentation.subject, documentation.links, alertStrategy.notificationPrompts),
+          and only those. Deleting it clears them.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'MonitoringAlertPolicyFieldsSpec is the fields of an alert
+              policy this object owns. A field left unset is not owned: this object
+              never sends it.'
+            properties:
+              alertStrategy:
+                description: Fields of the policy's alert strategy that Config Connector's
+                  MonitoringAlertPolicy has no field for (its spec.alertStrategy sets
+                  autoClose, notificationRateLimit and notificationChannelStrategy).
+                properties:
+                  notificationPrompts:
+                    description: For log-based alert policies, the notification prompts
+                      is always [OPENED]. For non log-based alert policies, the notification
+                      prompts can be [OPENED] or [OPENED, CLOSED].
+                    items:
+                      enum:
+                      - OPENED
+                      - CLOSED
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: atomic
+                required:
+                - notificationPrompts
+                type: object
+              documentation:
+                description: Fields of the policy's documentation that Config Connector's
+                  MonitoringAlertPolicy has no field for (its spec.documentation sets
+                  content and mimeType).
+                properties:
+                  links:
+                    description: Optional. Links to content such as playbooks, repositories,
+                      and other resources. This field can contain up to 3 entries.
+                    items:
+                      properties:
+                        displayName:
+                          description: 'A short display name for the link. The display
+                            name must not be empty or exceed 63 characters. Example:
+                            "playbook".'
+                          type: string
+                        url:
+                          description: 'The url of a webpage. A url can be templatized
+                            by using variables in the path or the query parameters.
+                            The total length of a URL should not exceed 2083 characters
+                            before and after variable expansion. Example: "https://my_domain.com/playbook?name=${resource.name}"'
+                          type: string
+                      required:
+                      - displayName
+                      - url
+                      type: object
+                    maxItems: 3
+                    type: array
+                    x-kubernetes-list-type: atomic
+                  subject:
+                    description: |-
+                      Optional. The subject line of the notification. The subject line may not
+                       exceed 10,240 bytes. In notifications generated by this policy, the
+                       contents of the subject line after variable expansion will be truncated
+                       to 255 bytes or shorter at the latest UTF-8 character boundary. The
+                       255-byte limit is recommended by [this
+                       thread](https://stackoverflow.com/questions/1592291/what-is-the-email-subject-length-limit).
+                       It is both the limit imposed by some third-party ticketing products and
+                       it is common to define textual fields in databases as VARCHAR(255).
+
+                       The contents of the subject line can be [templatized by using
+                       variables](https://cloud.google.com/monitoring/alerts/doc-variables#doc-vars).
+                       If this field is missing or empty, a default subject line will be
+                       generated.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: set at least one of subject and links
+                  rule: has(self.subject) || has(self.links)
+              resourceRef:
+                description: 'Immutable. The alert policy: Config Connector''s MonitoringAlertPolicy
+                  by name (monitoring.cnrm.cloud.google.com), or any alert policy
+                  by external, as "projects/{{projectID}}/alertPolicies/{{alertPolicyID}}".
+                  The policy must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed MonitoringAlertPolicy
+                      resource. Should be in the format "projects/{{projectID}}/alertPolicies/{{alertPolicyID}}".
+                    type: string
+                  name:
+                    description: The name of a MonitoringAlertPolicy resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a MonitoringAlertPolicy resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set at least one of documentation and alertStrategy
+              rule: has(self.documentation) || has(self.alertStrategy)
+          status:
+            description: MonitoringAlertPolicyFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The alert policy whose fields this object sets, as projects/{project}/alertPolicies/{alertPolicy}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

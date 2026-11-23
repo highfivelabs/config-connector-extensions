@@ -177,6 +177,7 @@ no_resource:
   PubSubTopicFields: a field kind, ingestionDataSourceSettings and messageTransforms of a topic Config Connector's PubSubTopic owns, written with topics.patch (decision 37)
   PubSubSubscriptionFields: a field kind, messageTransforms, bigtableConfig and export fields of a subscription Config Connector's PubSubSubscription owns, written with subscriptions.patch (decision 37)
   MonitoringUptimeCheckConfigFields: a field kind, userLabels and HTTP check fields of an uptime check Config Connector's MonitoringUptimeCheckConfig owns, written with uptimeCheckConfigs.patch (decision 37)
+  MonitoringAlertPolicyFields: a field kind, the documentation's subject and links and the notification prompts of an alert policy Config Connector's MonitoringAlertPolicy owns, written with alertPolicies.patch (decision 37)
   DNSPolicyFields: a field kind, dns64Config of a DNS server policy Config Connector's DNSPolicy owns, written with policies.patch (decision 37)
   ComputeSecurityPolicyFields: a field kind, Adaptive Protection threshold configs and the request body inspection size of a security policy Config Connector's ComputeSecurityPolicy owns, written with securityPolicies.patch (decision 37)
   PrivateCACAPoolFields: a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37)

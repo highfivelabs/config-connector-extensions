@@ -106,7 +106,10 @@ items:
       `syntheticMonitor` (create only), `contentMatchers[].jsonPathMatcher` (in a list Config Connector owns),
       `disabled` and `logCheckFailures` (newer than mockgcp's protos). Alert policies: Terraform's update (the
       default) sends `documentation` and `alertStrategy` whole, so their `subject`, `links` and
-      `notificationPrompts` are the partial case (as a node pool's `kubeletConfig` is).
+      `notificationPrompts` are the partial case (as a node pool's `kubeletConfig` is). Built 2026-11-23:
+      `MonitoringAlertPolicyFields` owns them, sending `documentation` and `alertStrategy` as read with its
+      fields set; mockgcp patch 0067; live pending. Not built: a PromQL condition's `disableMetricValidation`
+      (in a list Config Connector owns); `userLabels` is the object's `metadata.labels` (naming).
   - title: Artifact Registry repository fields (vulnerability scanning, platform logs)
     importance: A
     gap: field

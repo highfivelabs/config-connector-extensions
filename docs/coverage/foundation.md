@@ -549,18 +549,19 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
-| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
+| MonitoringAlertPolicyFields | (not a create) a field kind, the documentation's subject and links and the notification prompts of an alert policy Config Connector's MonitoringAlertPolicy owns, written with alertPolicies.patch (decision 37) | n/a | false |
 | MonitoringUptimeCheckConfigFields | (not a create) a field kind, userLabels and HTTP check fields of an uptime check Config Connector's MonitoringUptimeCheckConfig owns, written with uptimeCheckConfigs.patch (decision 37) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |

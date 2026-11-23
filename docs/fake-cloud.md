@@ -405,6 +405,12 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   secondary ranges, so the fixtures change only those; its protos lack a
   secondary range's `ipCollection` and `ipVersion`; and it checks no
   `ipCollection` against a public delegated prefix and binds no tags.
+- **Alert policies' documentation and strategy fields**
+  (`MonitoringAlertPolicyFields`). mockgcp's `alertPolicies.patch` takes
+  the `alertStrategy` mask path (patch 0067; it refused it). It does not
+  show: what the API reads back for cleared notification prompts (perhaps
+  `[OPENED]`; the test takes either), the subject's and links' variable
+  expansion, and notifications (no channel is called).
 - **Uptime checks' fields** (`MonitoringUptimeCheckConfigFields`).
   mockgcp's `uptimeCheckConfigs.patch` takes any nested update mask path
   (by its JSON name) and, with patch 0066, clears a masked field the
