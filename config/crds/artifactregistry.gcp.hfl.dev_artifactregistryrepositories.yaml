@@ -130,6 +130,13 @@ spec:
               description:
                 description: The user-provided description of the repository.
                 type: string
+              disallowUnspecifiedMode:
+                description: Immutable. Optional. If this is true, an unspecified
+                  repo type will be treated as error rather than defaulting to standard.
+                type: boolean
+                x-kubernetes-validations:
+                - message: disallowUnspecifiedMode is immutable
+                  rule: self == oldSelf
               dockerConfig:
                 description: Docker repository config contains repository level configuration
                   for the repositories of docker type.
@@ -198,6 +205,39 @@ spec:
               remoteRepositoryConfig:
                 description: Configuration specific for a Remote Repository.
                 properties:
+                  aptRepository:
+                    description: Specific settings for an Apt remote repository (uncommented
+                      from upstream's generated types).
+                    properties:
+                      customRepository:
+                        description: Customer-specified remote repository.
+                        properties:
+                          uri:
+                            description: 'An http/https uri reference to the upstream
+                              remote repository, for ex: "https://my.apt.registry/".'
+                            type: string
+                        type: object
+                      publicRepository:
+                        description: One of the publicly available Apt repositories
+                          supported by Artifact Registry.
+                        properties:
+                          repositoryBase:
+                            description: 'A common public repository base for Apt:
+                              DEBIAN, UBUNTU or DEBIAN_SNAPSHOT.'
+                            enum:
+                            - DEBIAN
+                            - UBUNTU
+                            - DEBIAN_SNAPSHOT
+                            type: string
+                          repositoryPath:
+                            description: A custom field to define a path to a specific
+                              repository from the base.
+                            type: string
+                        type: object
+                    type: object
+                    x-kubernetes-validations:
+                    - message: set one of publicRepository and customRepository
+                      rule: has(self.publicRepository) != has(self.customRepository)
                   commonRepository:
                     description: Common remote repository settings.
                     properties:
@@ -322,6 +362,43 @@ spec:
                             type: string
                         type: object
                     type: object
+                  yumRepository:
+                    description: Specific settings for a Yum remote repository (uncommented
+                      from upstream's generated types).
+                    properties:
+                      customRepository:
+                        description: Customer-specified remote repository.
+                        properties:
+                          uri:
+                            description: 'An http/https uri reference to the upstream
+                              remote repository, for ex: "https://my.yum.registry/".'
+                            type: string
+                        type: object
+                      publicRepository:
+                        description: One of the publicly available Yum repositories
+                          supported by Artifact Registry.
+                        properties:
+                          repositoryBase:
+                            description: 'A common public repository base for Yum:
+                              CENTOS, CENTOS_DEBUG, CENTOS_VAULT, CENTOS_STREAM, ROCKY
+                              or EPEL.'
+                            enum:
+                            - CENTOS
+                            - CENTOS_DEBUG
+                            - CENTOS_VAULT
+                            - CENTOS_STREAM
+                            - ROCKY
+                            - EPEL
+                            type: string
+                          repositoryPath:
+                            description: A custom field to define a path to a specific
+                              repository from the base.
+                            type: string
+                        type: object
+                    type: object
+                    x-kubernetes-validations:
+                    - message: set one of publicRepository and customRepository
+                      rule: has(self.publicRepository) != has(self.customRepository)
                 type: object
               resourceID:
                 description: The ArtifactRegistryRepository name. If not given, the
@@ -377,6 +454,20 @@ spec:
                           type: object
                       type: object
                     type: array
+                type: object
+              vulnerabilityScanningConfig:
+                description: Optional. Config for vulnerability scanning of resources
+                  within this Repository. Unset, the repository keeps what it has
+                  (by default INHERITED).
+                properties:
+                  enablementConfig:
+                    description: 'Optional. Config for whether this repository has
+                      vulnerability scanning disabled: INHERITED (scanning follows
+                      the project''s Container Scanning API) or DISABLED.'
+                    enum:
+                    - INHERITED
+                    - DISABLED
+                    type: string
                 type: object
             required:
             - location

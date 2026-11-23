@@ -405,6 +405,13 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   secondary ranges, so the fixtures change only those; its protos lack a
   secondary range's `ipCollection` and `ipVersion`; and it checks no
   `ipCollection` against a public delegated prefix and binds no tags.
+- **Artifact Registry repositories' scanning config**
+  (`ArtifactRegistryRepository`). mockgcp's `repositories.patch` takes the
+  `vulnerabilityScanningConfig` mask path and a sent config gets a state
+  (patch 0068: always "scanning disabled", for the reason the enablement
+  config gives). It does not show: real scanning (the Container Scanning
+  API), the state the API reads for `INHERITED`, and whether an Apt or Yum
+  public upstream's path exists (no upstream is checked).
 - **Alert policies' documentation and strategy fields**
   (`MonitoringAlertPolicyFields`). mockgcp's `alertPolicies.patch` takes
   the `alertStrategy` mask path (patch 0067; it refused it). It does not

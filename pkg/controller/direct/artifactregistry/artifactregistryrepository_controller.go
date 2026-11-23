@@ -374,7 +374,8 @@ func compareRepository(ctx context.Context, actual *pb.Repository, desiredKRM *k
 
 	populateCleanupPolicyDefaults(desiredPb)
 	populateCleanupPolicyDefaults(maskedActual)
-	ignoreInputOnlyRemoteFields(desiredPb, maskedActual) // Written here.
+	ignoreInputOnlyRemoteFields(desiredPb, maskedActual)                   // Written here.
+	keepUnownedRepositoryFields(&desiredKRM.Spec, desiredPb, maskedActual) // Written here.
 
 	if desiredKRM.Spec.CleanupPolicyDryRun == nil {
 		desiredPb.CleanupPolicyDryRun = actual.CleanupPolicyDryRun

@@ -127,7 +127,10 @@ items:
       our `ArtifactRegistryRepository` copies them (and PR #13517).
     build: >-
       Add the fields to our whole-object `ArtifactRegistryRepository` (`artifactregistry.gcp.hfl.dev/v1beta1`),
-      which owns the repository already: the smallest change in the queue.
+      which owns the repository already: the smallest change in the queue. Built 2026-11-23:
+      `vulnerabilityScanningConfig`, `disallowUnspecifiedMode` and the Apt and Yum upstreams, from upstream's
+      unreachable generated types; mockgcp patch 0068; live pending. Not built: `platformLogsConfig` and
+      `remoteRepositoryConfig.noCache` (newer than the pinned Go client and mockgcp's protos).
   - title: BigQuery dataset fields (external catalog options, linked datasets, resource tags)
     importance: A
     gap: field

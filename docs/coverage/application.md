@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Application | 549 | 345 | 24523 | 39.9% | 1.5% | 58.6% |
+| Application | 549 | 345 | 24523 | 39.9% | 1.5% | 58.5% |
 
 By service:
 
@@ -50,7 +50,7 @@ By service:
 | application | `eventarc.googleapis.com` | 7 | 78 | 88.5% | 0.0% | 11.5% |
 | application | `tpu.googleapis.com` | 2 | 71 | 91.5% | 0.0% | 8.5% |
 | application | `backupdr.googleapis.com` | 9 | 70 | 40.0% | 0.0% | 60.0% |
-| application | `artifactregistry.googleapis.com` | 4 | 63 | 68.3% | 14.3% | 17.5% |
+| application | `artifactregistry.googleapis.com` | 4 | 63 | 68.3% | 27.0% | 4.8% |
 | application | `cloudfunctions.googleapis.com` | 1 | 61 | 80.3% | 19.7% | 0.0% |
 | application | `looker.googleapis.com` | 2 | 57 | 0.0% | 98.2% | 1.8% |
 | application | `managedkafka.googleapis.com` | 8 | 55 | 54.5% | 0.0% | 45.5% |
@@ -95,7 +95,7 @@ What these numbers miss, for the application services:
 | 1 | [Pub/Sub topic ingestion and message transforms, subscription exports](#1-pubsub-topic-ingestion-and-message-transforms-subscription-exports) | A | field | 4 | M | 66 / 103 (35.9%) | none |
 | 2 | [Cloud Storage bucket fields (soft delete, hierarchical namespace, encryption enforcement)](#2-cloud-storage-bucket-fields-soft-delete-hierarchical-namespace-encryption-enforcement) | A | field | 4 | M | 47 / 89 (47.2%) | in progress: PRs #13713 (`rpo`) and #15145 (encryption enforcement) on the Terraform-based kind, and #11533 (a direct controller), none merg... |
 | 3 | [Monitoring uptime checks and alert policies fields](#3-monitoring-uptime-checks-and-alert-policies-fields) | A | field | 2 | M | 30 / 117 (74.4%) | none found for these fields; `MonitoringAlertPolicy` has an opt-in direct controller on master |
-| 4 | [Artifact Registry repository fields (vulnerability scanning, platform logs)](#4-artifact-registry-repository-fields-vulnerability-scanning-platform-logs) | A | field | 1 | S | 11 / 47 (61.7%) | none: upstream's direct types generate `vulnerabilityScanningConfig` as unreachable and leave the others out; our `ArtifactRegistryRepositor... |
+| 4 | [Artifact Registry repository fields (vulnerability scanning, platform logs)](#4-artifact-registry-repository-fields-vulnerability-scanning-platform-logs) | A | field | 1 | S | 3 / 47 (61.7%) | none: upstream's direct types generate `vulnerabilityScanningConfig` as unreachable and leave the others out; our `ArtifactRegistryRepositor... |
 | 5 | [BigQuery dataset fields (external catalog options, linked datasets, resource tags)](#5-bigquery-dataset-fields-external-catalog-options-linked-datasets-resource-tags) | A | field | 1 | S | 14 / 40 (65.0%) | master's direct `BigQueryDataset` (opt-in) has none of them; no pull request adds them. |
 | 6 | [Cloud Run job and worker pool template fields](#6-cloud-run-job-and-worker-pool-template-fields) | A | field | 1 | L | 104 / 254 (59.1%) | both kinds have opt-in direct controllers on master; not read further. |
 | 7 | [Cloud SQL instance fields](#7-cloud-sql-instance-fields) | A | field | 1 | L | 116 / 199 (41.7%) | in progress: PRs #14854, #7227, #14419, #14431 on the direct kind (design section 6.3, rank 4). |
@@ -142,12 +142,12 @@ What these numbers miss, for the application services:
 
 - **Importance** A, **gap** field, **size** S, **modules** 1 (artifact-registry).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `artifactregistry.googleapis.com/Repository`: 29 / 7 / 11 of 47; ArtifactRegistryRepository, ArtifactRegistryRepository (ours)
+  - `artifactregistry.googleapis.com/Repository`: 29 / 15 / 3 of 47; ArtifactRegistryRepository, ArtifactRegistryRepository (ours)
 - **Missing, whole resources:** `vulnerabilityScanningConfig`, `platformLogsConfig`, `disallowUnspecifiedMode`, and a remote repository's `noCache` and Apt and Yum upstreams (public and custom).
 - **Missing, attributes that matter:** The measured list.
-  - uncovered in `artifactregistry.googleapis.com/Repository` (measured): `disallowUnspecifiedMode`, `platformLogsConfig.loggingState`, `platformLogsConfig.severityLevel`, `remoteRepositoryConfig.aptRepository.customRepository.uri`, `remoteRepositoryConfig.aptRepository.publicRepository.repositoryBase`, `remoteRepositoryConfig.aptRepository.publicRepository.repositoryPath`, `remoteRepositoryConfig.noCache`, `remoteRepositoryConfig.yumRepository.customRepository.uri`, `remoteRepositoryConfig.yumRepository.publicRepository.repositoryBase`, `remoteRepositoryConfig.yumRepository.publicRepository.repositoryPath` and 1 more
+  - uncovered in `artifactregistry.googleapis.com/Repository` (measured): `platformLogsConfig.loggingState`, `platformLogsConfig.severityLevel`, `remoteRepositoryConfig.noCache`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-23): none: upstream's direct types generate `vulnerabilityScanningConfig` as unreachable and leave the others out; our `ArtifactRegistryRepository` copies them (and PR #13517).
-- **Build:** Add the fields to our whole-object `ArtifactRegistryRepository` (`artifactregistry.gcp.hfl.dev/v1beta1`), which owns the repository already: the smallest change in the queue.
+- **Build:** Add the fields to our whole-object `ArtifactRegistryRepository` (`artifactregistry.gcp.hfl.dev/v1beta1`), which owns the repository already: the smallest change in the queue. Built 2026-11-23: `vulnerabilityScanningConfig`, `disallowUnspecifiedMode` and the Apt and Yum upstreams, from upstream's unreachable generated types; mockgcp patch 0068; live pending. Not built: `platformLogsConfig` and `remoteRepositoryConfig.noCache` (newer than the pinned Go client and mockgcp's protos).
 
 ### 5. BigQuery dataset fields (external catalog options, linked datasets, resource tags)
 
@@ -207,7 +207,7 @@ Our kinds in the application category, from the coverage data (the gaps above ar
 | APIGatewayGateway | apigateway.googleapis.com/Gateway | 2 | false |
 | ApigeeDnsZone | apigee.googleapis.com/DnsZone | 5 | false |
 | ApigeeNATAddress | apigee.googleapis.com/InstanceNatAddress | 0 | false |
-| ArtifactRegistryRepository | artifactregistry.googleapis.com/Repository | 7 | true |
+| ArtifactRegistryRepository | artifactregistry.googleapis.com/Repository | 15 | true |
 | ArtifactRegistryTag | artifactregistry.googleapis.com/RepositoryPackageTag | 2 | false |
 | BackupDRManagementServer | backupdr.googleapis.com/ManagementServer | 0 | false |
 | BigLakeCatalog | biglake.googleapis.com/Catalog | 0 | false |
@@ -604,7 +604,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `appengine.googleapis.com/AppServiceVersion` | AppEngineFlexibleAppVersion (alpha), AppEngineStandardAppVersion (alpha) | - | 128 | 100 | 0 | 28 | - |
 | application | `appengine.googleapis.com/ApplicationAuthorizedCertificate` | - | - | 7 | 0 | 0 | 7 | - |
 | application | `appengine.googleapis.com/ApplicationDomainMapping` | - | - | 3 | 0 | 0 | 3 | - |
-| application | `artifactregistry.googleapis.com/Repository` | ArtifactRegistryRepository | ArtifactRegistryRepository | 47 | 29 | 7 | 11 | 4 |
+| application | `artifactregistry.googleapis.com/Repository` | ArtifactRegistryRepository | ArtifactRegistryRepository | 47 | 29 | 15 | 3 | 4 |
 | application | `artifactregistry.googleapis.com/RepositoryAttachment` | ArtifactRegistryAttachment (alpha) | - | 6 | 6 | 0 | 0 | - |
 | application | `artifactregistry.googleapis.com/RepositoryPackageTag` | - | ArtifactRegistryTag | 2 | 0 | 2 | 0 | - |
 | application | `artifactregistry.googleapis.com/RepositoryRule` | ArtifactRegistryRule (alpha) | - | 8 | 8 | 0 | 0 | - |

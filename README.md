@@ -85,10 +85,10 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `tpu.googleapis.com` | ![tpu.googleapis.com](docs/coverage/bars/tpu.googleapis.com.svg) | 91.5% | 0.0% | 8.5% | 59.2% | 0.0% |
 | 2 | application | `alloydb.googleapis.com` | ![alloydb.googleapis.com](docs/coverage/bars/alloydb.googleapis.com.svg) | 56.2% | 0.0% | 43.8% | 68.8% | 62.5% |
 | 2 | application | `cloudfunctions.googleapis.com` | ![cloudfunctions.googleapis.com](docs/coverage/bars/cloudfunctions.googleapis.com.svg) | 80.3% | 19.7% | 0.0% | 86.9% | 86.9% |
+| 2 | application | `artifactregistry.googleapis.com` | ![artifactregistry.googleapis.com](docs/coverage/bars/artifactregistry.googleapis.com.svg) | 68.3% | 27.0% | 4.8% | 84.1% | 84.1% |
 | 2 | application | `redis.googleapis.com` | ![redis.googleapis.com](docs/coverage/bars/redis.googleapis.com.svg) | 72.0% | 0.0% | 28.0% | 78.0% | 78.0% |
 | 2 | security | `securityposture.googleapis.com` | ![securityposture.googleapis.com](docs/coverage/bars/securityposture.googleapis.com.svg) | 93.7% | 0.0% | 6.3% | 87.3% | 87.3% |
 | 2 | application | `looker.googleapis.com` | ![looker.googleapis.com](docs/coverage/bars/looker.googleapis.com.svg) | 0.0% | 98.2% | 1.8% | 77.2% | 77.2% |
-| 2 | application | `artifactregistry.googleapis.com` | ![artifactregistry.googleapis.com](docs/coverage/bars/artifactregistry.googleapis.com.svg) | 68.3% | 14.3% | 17.5% | 84.1% | 84.1% |
 | 2 | application | `dataform.googleapis.com` | ![dataform.googleapis.com](docs/coverage/bars/dataform.googleapis.com.svg) | 53.8% | 0.0% | 46.2% | 47.3% | 19.4% |
 | 2 | application | `workstations.googleapis.com` | ![workstations.googleapis.com](docs/coverage/bars/workstations.googleapis.com.svg) | 52.3% | 0.0% | 47.7% | 87.5% | 86.4% |
 | 2 | application | `bigtableadmin.googleapis.com` | ![bigtableadmin.googleapis.com](docs/coverage/bars/bigtableadmin.googleapis.com.svg) | 30.4% | 0.0% | 69.6% | 15.6% | 15.6% |

@@ -15,7 +15,7 @@ apim.googleapis.com,2,0,0,5,0,0,5,0.0,0.0,100.0
 appengine.googleapis.com,7,2,0,169,102,0,67,60.4,0.0,39.6
 apphub.googleapis.com,4,4,0,38,38,0,0,100.0,0.0,0.0
 appoptimize.googleapis.com,1,1,0,6,6,0,0,100.0,0.0,0.0
-artifactregistry.googleapis.com,4,3,1,63,43,9,11,68.3,14.3,17.5
+artifactregistry.googleapis.com,4,3,1,63,43,17,3,68.3,27.0,4.8
 assuredworkloads.googleapis.com,1,1,0,20,9,0,11,45.0,0.0,55.0
 auditmanager.googleapis.com,3,0,0,48,0,0,48,0.0,0.0,100.0
 automl.googleapis.com,2,1,0,29,9,0,20,31.0,0.0,69.0

@@ -114,6 +114,11 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ArtifactRegistryRepository`** takes `vulnerabilityScanningConfig`
+  (turn scanning off per repository), `disallowUnspecifiedMode`, and a
+  remote repository's `aptRepository` and `yumRepository` (Debian, Ubuntu,
+  CentOS, Rocky, EPEL bases, or a custom URI). Application queue row 4.
+
 - **`MonitoringAlertPolicyFields`** (`monitoring.gcp.hfl.dev/v1alpha1`, a
   field kind): sets `documentation.subject`, `documentation.links` and
   `alertStrategy.notificationPrompts` on an alert policy Config

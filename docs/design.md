@@ -2399,6 +2399,16 @@ Connector owns); `userLabels` is no gap (Config Connector writes
 `metadata.labels` there). mockgcp patch 0067 takes the `alertStrategy`
 mask path. Fake only; live pending.
 
+Row 4: our whole-object `ArtifactRegistryRepository` gained
+`vulnerabilityScanningConfig`, `disallowUnspecifiedMode` (immutable) and
+a remote repository's Apt and Yum upstreams (2026-11-23), uncommented from
+upstream's generated types (master still has them as unreachable; no pull
+request maps them). A spec without the scanning config or
+`disallowUnspecifiedMode` leaves the repository's own. mockgcp patch 0068.
+Not built: `platformLogsConfig` and `noCache` (newer than the pinned Go
+client and mockgcp's protos). Live pending
+(`docs/kinds/ArtifactRegistryRepository.md`).
+
 ## 7. What is left
 
 Before config-connector-extensions can run on a real cluster:

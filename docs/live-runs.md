@@ -487,6 +487,15 @@ for the run's bindings.
 needs the same access policy and role, and a sweeper section for the
 run's perimeters.
 
+`ArtifactRegistryRepository`'s scanning config, `disallowUnspecifiedMode`
+and Apt and Yum upstreams (package `artifactregistry`, 2026-11-23, live
+pending): `task test-live PROJECT=$GCP_PROJECT KINDS=artifactregistry
+LIVE_RUN='TestArtifactRegistryRepositoryFields|TestArtifactRegistryAptYumRemoteRepositories'`
+makes five empty repositories (free) and deletes them; the public Debian
+and Rocky upstreams are validated live (the API must reach them), the
+custom Yum one is not. The live-test account already has
+`roles/artifactregistry.admin` for the kind's other tests.
+
 `MonitoringAlertPolicyFields` (package `monitoring`, 2026-11-23, live
 pending): `task test-live PROJECT=$GCP_PROJECT KINDS=monitoring
 LIVE_RUN=TestMonitoringAlertPolicyFields` makes one alert policy (a CPU
