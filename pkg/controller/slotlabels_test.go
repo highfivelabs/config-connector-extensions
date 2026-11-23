@@ -36,6 +36,7 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"SecretManagerSecret":                            slotguard.Metadata,
 	"ArtifactRegistryRepository":                     slotguard.Metadata,
 	"DNSResponsePolicy":                              slotguard.Metadata,
+	"PrivateCACertificateAuthority":                  slotguard.Metadata,
 	"RunService":                                     slotguard.Spec,
 	"ComputeVPNTunnel":                               slotguard.Spec,
 	"ComputeInterconnectAttachment":                  slotguard.Spec,
