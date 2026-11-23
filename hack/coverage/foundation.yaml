@@ -141,13 +141,23 @@ items:
       OAuth client: `clientType`, `allowedGrantTypes[]`, `allowedRedirectUris[]`, `allowedScopes[]`, `disabled`.
       Also on the provider: `extendedAttributesOauth2Client`, `extraAttributesOauth2Client`, `scimUsage`,
       `vendorType`, `detailedAuditLogging` (field gaps on `IAMWorkforcePoolProvider`).
-    upstream: none. No kinds or pull requests for these resources.
+    upstream: >-
+      none. No kinds or pull requests for these resources (pull requests searched again 2026-11-23 for
+      `OauthClientCredential`, `ScimToken` and `scim`: none, open or closed).
     build: >-
       Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same
-      location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, `...ScimTenantToken`
-      (secret output, like a service account key), `IAMWorkforcePoolProviderKey`, `IAMOauthClient`,
-      `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`,
-      `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant).
+      location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, its token,
+      `IAMWorkforcePoolProviderKey`, `IAMOauthClient`, `IAMOauthClientCredential`. API iam v1
+      `locations.workforcePools.providers.scimTenants` and `.keys`, `projects.locations.oauthClients`.
+      Tenants and tokens first (the module needs the tenant). The tenant, key and client were built
+      2026-11-11. Built 2026-11-23, by `hack/discokind` with its new `secretOutputs` option (`docs/design.md`
+      decision 38: a secret the API returns goes to a Kubernetes Secret owned by the object, never to status):
+      `IAMOauthClientCredential` (its `clientSecret`, returned on every read; a delete disables it first, as
+      the API asks) and the token as `IAMWorkforcePoolProviderScimToken` (decision 18: Terraform's
+      `google_iam_workforce_pool_provider_scim_token`, which did not exist when this item was written; its
+      `securityToken` is returned only by the create, so a lost Secret means deleting and making the token
+      again). Live pending: the credential in the live-test project, the token needs organization-level
+      access and a SCIM tenant.
   - title: A fleet's RBAC role bindings and rollout sequences
     importance: A
     gap: whole

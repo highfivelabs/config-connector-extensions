@@ -30160,9 +30160,9 @@ iam.googleapis.com,iam.googleapis.com/OauthClient,description,string,false,ours,
 iam.googleapis.com,iam.googleapis.com/OauthClient,disabled,boolean,false,ours,,spec.disabled
 iam.googleapis.com,iam.googleapis.com/OauthClient,displayName,string,false,ours,,spec.displayName
 iam.googleapis.com,iam.googleapis.com/OauthClient,name,string,false,ours,,metadata.name
-iam.googleapis.com,iam.googleapis.com/OauthClientCredential,disabled,boolean,false,none,,
-iam.googleapis.com,iam.googleapis.com/OauthClientCredential,displayName,string,false,none,,
-iam.googleapis.com,iam.googleapis.com/OauthClientCredential,name,string,false,none,,
+iam.googleapis.com,iam.googleapis.com/OauthClientCredential,disabled,boolean,false,ours,,spec.disabled
+iam.googleapis.com,iam.googleapis.com/OauthClientCredential,displayName,string,false,ours,,spec.displayName
+iam.googleapis.com,iam.googleapis.com/OauthClientCredential,name,string,false,ours,,metadata.name
 iam.googleapis.com,iam.googleapis.com/Role,deleted,boolean,false,none,,
 iam.googleapis.com,iam.googleapis.com/Role,description,string,false,official,spec.description,
 iam.googleapis.com,iam.googleapis.com/Role,includedPermissions[],string,false,none,,
@@ -30218,8 +30218,8 @@ iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenant,claimMappi
 iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenant,description,string,false,ours,,spec.description
 iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenant,displayName,string,false,ours,,spec.displayName
 iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenant,name,string,false,ours,,metadata.name
-iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenantToken,displayName,string,false,none,,
-iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenantToken,name,string,false,none,,
+iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenantToken,displayName,string,false,ours,,spec.displayName
+iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenantToken,name,string,false,ours,,metadata.name
 iam.googleapis.com,iam.googleapis.com/WorkloadIdentityPool,description,string,false,official,spec.description,
 iam.googleapis.com,iam.googleapis.com/WorkloadIdentityPool,disabled,boolean,false,official,spec.disabled,
 iam.googleapis.com,iam.googleapis.com/WorkloadIdentityPool,displayName,string,false,official,spec.displayName,

@@ -1,0 +1,11 @@
+apiVersion: iam.gcp.hfl.dev/v1alpha1
+kind: IAMOauthClientCredential
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  oauthClient: ${KIND_NAME}-client
+  resourceID: ${SHORT_ID}
+  displayName: cce test

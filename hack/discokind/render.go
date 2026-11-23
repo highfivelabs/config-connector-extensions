@@ -263,7 +263,8 @@ func (k *built) typesFile() []byte {
 	status := &typeGen{k: k, status: true, defs: map[string]string{}, inStack: map[string]bool{}}
 	obs := &Schema{Properties: map[string]*Schema{}}
 	for _, f := range k.output {
-		if f != "name" {
+		// A secret the API returns is never in status (decision 38).
+		if f != "name" && !contains(c.SecretOutputs, f) {
 			obs.Properties[f] = k.schema.Properties[f]
 		}
 	}
@@ -329,6 +330,14 @@ func (k *built) typesFile() []byte {
 	head.WriteString("// Immutable. The resource's ID, the last part of its name. When unset,\n// metadata.name is used.\n// +optional\n")
 	head.WriteString("// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"resourceID is immutable\"\n")
 	head.WriteString("ResourceID *string `json:\"resourceID,omitempty\"`\n\n")
+	if len(c.SecretOutputs) > 0 {
+		head.WriteString(comment("Immutable. The Kubernetes Secret, in the object's namespace, the controller writes the secrets the API returns to (" + strings.Join(c.SecretOutputs, ", ") + "), each under its field's name; never status. The object owns it, so it goes when the object goes. A Secret of that name that is not the object's is left alone, and the object is not Ready."))
+		if len(c.CreateOnlyOutputs) > 0 {
+			head.WriteString("//\n" + comment("The API returns "+strings.Join(c.CreateOnlyOutputs, ", ")+" only when it makes the resource: if the Secret is lost, delete the object (which deletes the resource) and make it again."))
+		}
+		head.WriteString("// +optional\n// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"secretOutput is immutable\"\n")
+		fmt.Fprintf(&head, "SecretOutput *%sSecretOutput `json:\"secretOutput,omitempty\"`\n\n", c.Kind)
+	}
 	for _, q := range c.Query {
 		p := k.query[q]
 		head.WriteString(comment(p.Description))
@@ -345,6 +354,10 @@ func (k *built) typesFile() []byte {
 
 	for _, n := range spec.order {
 		b.WriteString(spec.defs[n] + "\n")
+	}
+	if len(c.SecretOutputs) > 0 {
+		fmt.Fprintf(&b, "// %sSecretOutput names the Secret the API's secrets go to.\ntype %[1]sSecretOutput struct {\n", c.Kind)
+		b.WriteString("// The Secret's name. When unset, metadata.name is used.\n// +optional\nName *string `json:\"name,omitempty\"`\n}\n\n")
 	}
 	if obsBody != "" {
 		fmt.Fprintf(&b, "// %sObservedState is the API's read-only fields.\n", c.Kind)
@@ -505,6 +518,15 @@ func registryFile(kinds []*built) []byte {
 		}
 		if len(c.InputOnly) > 0 {
 			fmt.Fprintf(&b, "InputOnly: %#v,\n", c.InputOnly)
+		}
+		if len(c.SecretOutputs) > 0 {
+			fmt.Fprintf(&b, "SecretOutputs: %#v,\n", c.SecretOutputs)
+		}
+		if len(c.CreateOnlyOutputs) > 0 {
+			fmt.Fprintf(&b, "CreateOnlyOutputs: %#v,\n", c.CreateOnlyOutputs)
+		}
+		if c.DisableBeforeDelete != "" {
+			fmt.Fprintf(&b, "DisableBeforeDelete: %q,\n", c.DisableBeforeDelete)
 		}
 		if len(c.FakeDefaults) > 0 {
 			var keys []string

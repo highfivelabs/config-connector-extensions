@@ -160,7 +160,9 @@ since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
 `docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
 references beyond the parent (the other parts of a name are IDs), no
-secrets in status. A string field the API takes as a secret can take
+secrets in status: a secret the API returns (`secretOutputs` in
+`kinds.yaml`) goes to a Kubernetes Secret the object owns, named by
+`spec.secretOutput.name`, never to status (decision 38, 2026-11-23). A string field the API takes as a secret can take
 Config Connector's `secret.Legacy` instead (`secrets` in `kinds.yaml`:
 `value`, or `valueFrom.secretKeyRef` to a Secret in the object's
 namespace, read by the controller and sent as the string), and a field
@@ -2405,6 +2407,19 @@ To raise confidence in `ArtifactRegistryRepository`:
     candidates and `l2Forwarding`, `ComputeInterconnect`'s
     `applicationAwareInterconnect`), the next field-gap PRs.
 
+44. `IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`
+    (decision 38, 2026-11-23): a live run. The credential's
+    (`task test-live KINDS=iam LIVE_RUN=TestIAMOauthClientCredential`,
+    which makes its own OAuth client) shows whether the API returns
+    `clientSecret` on every read as its description says, and whether
+    it refuses to delete an enabled credential (the controller disables
+    it first either way; the fake refuses). The token's needs
+    organization-level access and a SCIM tenant (Gemini Enterprise
+    only), as the tenant's does (`live-skip`). Not built: a Secret that
+    survives its object's abandon (the Secret is owned and goes with it;
+    a new object for the same credential writes it again, and a token's
+    cannot be).
+
 43. A delete that still needs a reference (2026-11-16, `pkg/deleting`;
     updated 2026-11-17). Every kind now deletes by its recorded name and
     resolves nothing, and abandon resolves nothing, except two:
@@ -3030,6 +3045,64 @@ To raise confidence in `ArtifactRegistryRepository`:
     `alternate` deprecated, and `dryRunSpec`, which Config Connector's
     kind has, replaces it.
 
+38. **A secret the API returns goes to a Kubernetes Secret, never to
+    status** (the builder, 2026-11-23, answering section 10 question 11:
+    option (b), as recommended). A generated kind whose API returns a
+    secret writes it to a Secret in the object's namespace, owned by the
+    object, named by a new `spec.secretOutput.name` (default the object's
+    name), holding the value under the field's name; never in status.
+    The `hack/discokind` option is `secretOutputs` (top-level read-only
+    string fields), the mirror of decision 33's `secrets`, with
+    `createOnlyOutputs` for one the API returns only in the create's
+    answer. The manager's ClusterRole gains `create` and `update` on
+    Secrets (`config/operator/rbac.yaml`;
+    `TestManagerRoleWritesSecretOutputs`). A token returned only at create
+    is written once; if its Secret is lost, the token must be deleted and
+    made again.
+    **Built 2026-11-23** (`pkg/discokind/secretoutput.go`):
+    - the Secret is made, empty, before the create, so a Secret of that
+      name the object does not own (no owner reference to it) is left
+      alone and stops the create before the API makes a secret it
+      returns once; the object is not Ready and says why;
+    - after the create, the values come from the create's answer (or its
+      operation's response) and a read; on every later reconcile, from a
+      read, so a lost Secret of a value the API reads back is written
+      again, and one it does not (`createOnlyOutputs`) makes the object
+      not Ready with what to do: delete the object, which deletes the
+      resource, and make it again;
+    - the generated types leave the fields out of `status.observedState`
+      (and the CRD's schema would prune them if the controller wrote
+      them); only the Secret's and the fields' names reach logs, events
+      and errors;
+    - the Secret goes with the object through garbage collection, also
+      when it is abandoned (`deletion-policy: abandon` keeps the
+      resource in the cloud, not the Secret).
+    Kinds: `IAMOauthClientCredential` (`clientSecret`, returned on every
+    read) and `IAMWorkforcePoolProviderScimToken` (`securityToken`,
+    returned only by the create), foundation item 4, both
+    `iam.gcp.hfl.dev/v1alpha1`. The token is named after Terraform's
+    `google_iam_workforce_pool_provider_scim_token` (decision 18); item 4
+    and question 11 called it `IAMWorkforcePoolProviderScimTenantToken`
+    before Terraform had it. One more `hack/discokind` option came with
+    the credential: `disableBeforeDelete` (the API's description says a
+    credential "should first be disabled" before a delete; Terraform's
+    example sets `disabled = true`), so the controller patches
+    `disabled: true` before the delete. Upstream (2026-11-23): no Config
+    Connector kind or pull request, open or closed, for either
+    (searches for `OauthClientCredential`, `ScimToken`, `scim`).
+    Tested on the fake (`pkg/discokind/fake` makes a random secret, and
+    answers a create-only one only in the create's answer):
+    `TestIAMOauthClientCredential` and
+    `TestIAMWorkforcePoolProviderScimToken` (the generated kind tests,
+    which now check every secret-output kind's Secret, its owner, and
+    that no value is in the object) and `TestSecretOutputs` (a taken
+    Secret name stops the create with no API call and the Secret
+    untouched; a lost `clientSecret` is written again; a lost
+    `securityToken` makes the object not Ready and no second token is
+    made; delete disables the credential first; and no value is in any
+    log line, at every verbosity, or any event). Live: pending (section
+    7, item 44).
+
 ## 9. The operator: Config Connector's identity, per namespace
 
 The goal: install the CRDs and run the managers so that a gap kind acts
@@ -3407,3 +3480,13 @@ moves to section 8.
     one get it without hand-written code; the manager's ClusterRole
     already writes Secrets for nothing else, so it gains `create` and
     `update` on Secrets. Until answered, neither kind is built.
+
+    **Answered** 2026-11-23: option (b), as recommended: a generated kind
+    writes a secret the API returns into a Kubernetes Secret, never into
+    status, in the object's namespace, owned by the object, named by
+    `spec.secretOutput.name` (default the object's name), the value under
+    the field's name; a `hack/discokind` option `secretOutputs`; the
+    manager's ClusterRole gains create and update on Secrets; a token
+    returned only at create is written once, and if its Secret is lost it
+    must be deleted and made again. Decision 38; both kinds are built (the
+    token as `IAMWorkforcePoolProviderScimToken`, decision 18).

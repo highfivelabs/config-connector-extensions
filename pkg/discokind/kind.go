@@ -134,7 +134,28 @@ type Kind struct {
 	// (never a Secret's value), kept in status.inputVersion, as
 	// ComputeRouter keeps md5AuthenticationKeysVersion.
 	InputOnly []string
+	// SecretOutputs are top-level read-only string fields that hold a
+	// secret the API returns (an OAuth client credential's clientSecret, a
+	// SCIM token's securityToken). They never go to status: the controller
+	// writes them to a Kubernetes Secret in the object's namespace, owned
+	// by the object, named by spec.secretOutput.name (default the object's
+	// name), each under the field's name (docs/design.md decision 38).
+	SecretOutputs []string
+	// CreateOnlyOutputs are SecretOutputs the API returns only in the
+	// create's answer, never on a read (a SCIM token's securityToken): if
+	// their Secret is lost, the value is gone, and the resource must be
+	// deleted and made again.
+	CreateOnlyOutputs []string
+	// DisableBeforeDelete is a top-level boolean field the API wants true
+	// before it deletes the resource (an OAuth client credential's
+	// disabled: "Before deleting an OauthClientCredential, it should first
+	// be disabled"); the controller patches it to true first.
+	DisableBeforeDelete string
 }
+
+// SecretOutputSpec is the spec field that names the Secret a kind with
+// SecretOutputs writes to.
+const SecretOutputSpec = "secretOutput"
 
 // writeOnly are InputOnly and Secrets.
 func (k *Kind) writeOnly() []string {

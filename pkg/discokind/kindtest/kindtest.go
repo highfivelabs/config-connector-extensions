@@ -28,7 +28,13 @@
 // ${RUN_ID}, ${ORGANIZATION} (E2E_ORGANIZATION live, 123456789 in the
 // fake), and ${KIND_NAME} (${NAME} of the first object, also in the
 // abandoned object's fixture, whose ${NAME} ends in -kept: for a parent a
-// Setup makes once for both).
+// Setup makes once for both), and ${SHORT_ID} (a 12-character ID made from
+// ${NAME}, for an API whose IDs are shorter than a live run's names: an
+// OAuth client credential's are 4 to 32 characters).
+//
+// A kind with secret outputs (Kind.SecretOutputs) is checked for them
+// too: each object's Secret holds every one, the object owns it, and no
+// value is anywhere in the object (status included).
 //
 // The test: the object becomes Ready and the cloud holds what its spec
 // says; a forced resync writes nothing; the update's spec is patched in
@@ -38,6 +44,9 @@
 package kindtest
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
@@ -48,6 +57,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/controller/direct"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -153,6 +163,16 @@ func run(t *testing.T, kindName, caseName string) {
 				return
 			}
 			err := RetryQuota(func() error {
+				if f := k.DisableBeforeDelete; f != "" {
+					// The API deletes it only once it is disabled.
+					op, err := api.Do(env.Ctx, http.MethodPatch, name, map[string]string{"updateMask": f}, map[string]any{f: true})
+					if err == nil && k.UpdateLRO {
+						_, err = api.Wait(env.Ctx, op)
+					}
+					if err != nil {
+						return err
+					}
+				}
 				op, err := api.Do(env.Ctx, http.MethodDelete, name, nil, nil)
 				if err == nil && k.DeleteLRO {
 					_, err = api.Wait(env.Ctx, op)
@@ -214,6 +234,7 @@ func run(t *testing.T, kindName, caseName string) {
 			t.Errorf("status.externalRef %q is not a %s name (%s)", cloudName, kindName, k.Name)
 		}
 		waitCloud(obj.GetName(), cloudName, spec(create))
+		CheckSecretOutputs(t, env, k, get(obj.GetName()))
 	})
 	if cloudName == "" {
 		t.FailNow()
@@ -279,6 +300,7 @@ func run(t *testing.T, kindName, caseName string) {
 		u := env.WaitReady(gvk, namespace, kept.GetName())
 		name, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
 		cleanup(name)
+		CheckSecretOutputs(t, env, k, u)
 		if err := env.Kube.Delete(env.Ctx, u); err != nil {
 			t.Fatal(err)
 		}
@@ -332,7 +354,9 @@ func load(t *testing.T, path, base, kindBase string) *unstructured.Unstructured 
 	if mockenv.Live() {
 		org = os.Getenv("E2E_ORGANIZATION")
 	}
+	sum := sha256.Sum256([]byte(name))
 	s := strings.NewReplacer(
+		"${SHORT_ID}", "t"+hex.EncodeToString(sum[:])[:11],
 		"${PROJECT}", mockenv.Project,
 		"${NAME}", name,
 		"${ID}", strings.ReplaceAll(name, "-", ""),
@@ -349,4 +373,53 @@ func load(t *testing.T, path, base, kindBase string) *unstructured.Unstructured 
 	}
 	u.SetNamespace(namespace)
 	return u
+}
+
+// CheckSecretOutputs checks the object u of k, which has made its
+// resource, for its secret outputs (Kind.SecretOutputs; nothing for a kind
+// without): its Secret (spec.secretOutput.name, else the object's name)
+// holds a value under each field's name, the object owns the Secret, and
+// no value shows anywhere in the object, its status included. It returns
+// the values, by field.
+func CheckSecretOutputs(t *testing.T, env *mockenv.Env, k *discokind.Kind, u *unstructured.Unstructured) map[string]string {
+	t.Helper()
+	if len(k.SecretOutputs) == 0 {
+		return nil
+	}
+	sec := &corev1.Secret{}
+	key := client.ObjectKey{Namespace: u.GetNamespace(), Name: discokind.SecretOutputName(u)}
+	if err := env.Kube.Get(env.Ctx, key, sec); err != nil {
+		t.Fatalf("the Secret %s for %s: %v", key, strings.Join(k.SecretOutputs, ", "), err)
+	}
+	owned := false
+	for _, o := range sec.OwnerReferences {
+		owned = owned || (o.UID == u.GetUID() && o.Kind == k.GVK.Kind && o.Controller != nil && *o.Controller)
+	}
+	if !owned {
+		t.Errorf("the Secret %s is not owned by %s %s: %v", key, k.GVK.Kind, u.GetName(), sec.OwnerReferences)
+	}
+	obj, err := json.Marshal(u.Object)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[string]string{}
+	for _, f := range k.SecretOutputs {
+		v := string(sec.Data[f])
+		if v == "" {
+			t.Errorf("the Secret %s holds no %s", key, f)
+			continue
+		}
+		out[f] = v
+		if strings.Contains(string(obj), v) {
+			t.Errorf("the %s object holds the value of %s (its status or elsewhere)", k.GVK.Kind, f)
+		}
+	}
+	if st, _, _ := unstructured.NestedMap(u.Object, "status", "observedState"); st != nil {
+		for _, f := range k.SecretOutputs {
+			if _, ok := st[f]; ok {
+				t.Errorf("status.observedState has %s", f)
+			}
+		}
+	}
+	return out
 }

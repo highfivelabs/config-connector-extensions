@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 18.1% | 43.0% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 18.3% | 42.8% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 4.7% | 28.1% |
 
 By service:
@@ -24,7 +24,7 @@ By service:
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 15.0% | 24.8% |
 | foundation | `orgpolicy.googleapis.com` | 4 | 121 | 67.8% | 0.0% | 32.2% |
-| foundation | `iam.googleapis.com` | 16 | 113 | 39.8% | 21.2% | 38.9% |
+| foundation | `iam.googleapis.com` | 16 | 113 | 39.8% | 25.7% | 34.5% |
 | foundation | `cloudresourcemanager.googleapis.com` | 12 | 55 | 40.0% | 41.8% | 18.2% |
 | foundation | `cloudidentity.googleapis.com` | 8 | 47 | 21.3% | 0.0% | 78.7% |
 | foundation | `cloudkms.googleapis.com` | 8 | 42 | 42.9% | 0.0% | 57.1% |
@@ -70,7 +70,7 @@ What these numbers miss, for the foundation:
 | 1 | [Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)](#1-hierarchy-and-project-settings-service-identity-at-folder-and-organization-default-service-accounts-default-network-tier) | A | whole | 3 | M | n/a (not a create, or not in the API's create requests) | none |
 | 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 89 / 131 (0.0%) | none |
 | 3 | [Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)](#3-organization-level-custom-iam-roles-covered-by-config-connectors-iamcustomrole) | A | whole | 1 | S | 6 / 14 (57.1%) | `IAMCustomRole` (Terraform-based, `v1beta1`) has it |
-| 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 5 / 20 (0.0%) | none |
+| 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 0 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 2 / 57 (0.0%) | none |
@@ -140,16 +140,14 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** whole, **size** M, **modules** 1 (organization).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `iam.googleapis.com/WorkforcePoolProviderScimTenant`: 0 / 4 / 0 of 4; IAMWorkforcePoolProviderScimTenant (ours)
-  - `iam.googleapis.com/WorkforcePoolProviderScimTenantToken`: 0 / 0 / 2 of 2; no kind
+  - `iam.googleapis.com/WorkforcePoolProviderScimTenantToken`: 0 / 2 / 0 of 2; IAMWorkforcePoolProviderScimToken (ours)
   - `iam.googleapis.com/WorkforcePoolProviderKey`: 0 / 3 / 0 of 3; IAMWorkforcePoolProviderKey (ours)
   - `iam.googleapis.com/OauthClient`: 0 / 8 / 0 of 8; IAMOauthClient (ours)
-  - `iam.googleapis.com/OauthClientCredential`: 0 / 0 / 3 of 3; no kind
+  - `iam.googleapis.com/OauthClientCredential`: 0 / 3 / 0 of 3; IAMOauthClientCredential (ours)
 - **Missing, whole resources:** `IAMWorkforcePoolProviderScimTenant` (`google_iam_workforce_pool_provider_scim_tenant`), its token, `IAMWorkforcePoolProviderKey`, `IAMOauthClient` and its credential. Config Connector has `IAMWorkforcePool` and `IAMWorkforcePoolProvider`.
 - **Missing, attributes that matter:** Tenant: `displayName`, `description`, `claimMapping{}`; token: `displayName`; key: `use`, `keyData`; OAuth client: `clientType`, `allowedGrantTypes[]`, `allowedRedirectUris[]`, `allowedScopes[]`, `disabled`. Also on the provider: `extendedAttributesOauth2Client`, `extraAttributesOauth2Client`, `scimUsage`, `vendorType`, `detailedAuditLogging` (field gaps on `IAMWorkforcePoolProvider`).
-  - uncovered in `iam.googleapis.com/WorkforcePoolProviderScimTenantToken` (measured): `displayName`, `name`
-  - uncovered in `iam.googleapis.com/OauthClientCredential` (measured): `disabled`, `displayName`, `name`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kinds or pull requests for these resources.
-- **Build:** Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, `...ScimTenantToken` (secret output, like a service account key), `IAMWorkforcePoolProviderKey`, `IAMOauthClient`, `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`, `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kinds or pull requests for these resources (pull requests searched again 2026-11-23 for `OauthClientCredential`, `ScimToken` and `scim`: none, open or closed).
+- **Build:** Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, its token, `IAMWorkforcePoolProviderKey`, `IAMOauthClient`, `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`, `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant). The tenant, key and client were built 2026-11-11. Built 2026-11-23, by `hack/discokind` with its new `secretOutputs` option (`docs/design.md` decision 38: a secret the API returns goes to a Kubernetes Secret owned by the object, never to status): `IAMOauthClientCredential` (its `clientSecret`, returned on every read; a delete disables it first, as the API asks) and the token as `IAMWorkforcePoolProviderScimToken` (decision 18: Terraform's `google_iam_workforce_pool_provider_scim_token`, which did not exist when this item was written; its `securityToken` is returned only by the create, so a lost Secret means deleting and making the token again). Live pending: the credential in the live-test project, the token needs organization-level access and a SCIM tenant.
 
 ### 5. A fleet's RBAC role bindings and rollout sequences
 
@@ -531,48 +529,50 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMDenyPolicy | (not a create) an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted) | n/a | false |
 | IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMOauthClient | iam.googleapis.com/OauthClient | 8 | false |
+| IAMOauthClientCredential | iam.googleapis.com/OauthClientCredential | 3 | false |
 | IAMPolicyBinding | (not a create) an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted) | n/a | false |
 | IAMPrincipalAccessBoundaryPolicy | (not a create) no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com | n/a | false |
 | IAMWorkforcePoolProviderKey | iam.googleapis.com/WorkforcePoolProviderKey | 3 | false |
 | IAMWorkforcePoolProviderScimTenant | iam.googleapis.com/WorkforcePoolProviderScimTenant | 4 | false |
+| IAMWorkforcePoolProviderScimToken | iam.googleapis.com/WorkforcePoolProviderScimTenantToken | 2 | false |
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
-| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
@@ -788,7 +788,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `gkehub.googleapis.com/ScopeNamespace` | GKEHubNamespace (alpha) | - | 4 | 4 | 0 | 0 | - |
 | foundation | `gkehub.googleapis.com/ScopeRbacrolebinding` | GKEHubScopeRBACRoleBinding (alpha) | - | 6 | 6 | 0 | 0 | - |
 | foundation | `iam.googleapis.com/OauthClient` | - | IAMOauthClient | 8 | 0 | 8 | 0 | 4 |
-| foundation | `iam.googleapis.com/OauthClientCredential` | - | - | 3 | 0 | 0 | 3 | 4 |
+| foundation | `iam.googleapis.com/OauthClientCredential` | - | IAMOauthClientCredential | 3 | 0 | 3 | 0 | 4 |
 | foundation | `iam.googleapis.com/Role` | IAMCustomRole | - | 7 | 4 | 0 | 3 | 3 |
 | foundation | `iam.googleapis.com/ServiceAccount` | IAMServiceAccount | - | 4 | 3 | 0 | 1 | - |
 | foundation | `iam.googleapis.com/ServiceAccountKey` | IAMServiceAccountKey | - | 2 | 2 | 0 | 0 | - |
@@ -796,7 +796,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `iam.googleapis.com/WorkforcePoolProvider` | IAMWorkforcePoolProvider | - | 27 | 13 | 0 | 14 | - |
 | foundation | `iam.googleapis.com/WorkforcePoolProviderKey` | - | IAMWorkforcePoolProviderKey | 3 | 0 | 3 | 0 | 4 |
 | foundation | `iam.googleapis.com/WorkforcePoolProviderScimTenant` | - | IAMWorkforcePoolProviderScimTenant | 4 | 0 | 4 | 0 | 4 |
-| foundation | `iam.googleapis.com/WorkforcePoolProviderScimTenantToken` | - | - | 2 | 0 | 0 | 2 | 4 |
+| foundation | `iam.googleapis.com/WorkforcePoolProviderScimTenantToken` | - | IAMWorkforcePoolProviderScimToken | 2 | 0 | 2 | 0 | 4 |
 | foundation | `iam.googleapis.com/WorkloadIdentityPool` | IAMWorkloadIdentityPool | - | 13 | 4 | 0 | 9 | - |
 | foundation | `iam.googleapis.com/WorkloadIdentityPoolNamespace` | - | IAMWorkloadIdentityPoolNamespace | 3 | 0 | 3 | 0 | - |
 | foundation | `iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity` | - | IAMWorkloadIdentityPoolManagedIdentity | 3 | 0 | 3 | 0 | - |

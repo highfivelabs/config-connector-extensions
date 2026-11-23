@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -108,7 +109,13 @@ func (m *model) AdapterForObject(ctx context.Context, op *directbase.AdapterForO
 		// compare them.
 		resend = m.kind.WriteOnlySet(body)
 	}
-	return &adapter{kind: m.kind, api: api, name: name, desired: body, inputVersion: inputVersion, query: m.kind.QueryOf(spec), recorded: ext != "", deleting: deleting, resend: resend}, nil
+	a := &adapter{kind: m.kind, api: api, name: name, desired: body, inputVersion: inputVersion, query: m.kind.QueryOf(spec), recorded: ext != "", deleting: deleting, resend: resend}
+	if len(m.kind.SecretOutputs) > 0 && !deleting {
+		if a.secrets, err = newSecretOutput(m.kind, op.Reader, u); err != nil {
+			return nil, err
+		}
+	}
+	return a, nil
 }
 
 // AdapterForURL is not supported: these kinds are not exported.
@@ -229,10 +236,13 @@ func (k *Kind) resolveSecrets(ctx context.Context, reader client.Reader, namespa
 
 // Body is the request body a spec asks for: the spec without the parent
 // reference, the fields that make up the name, the query parameters
-// (Query) and resourceID.
+// (Query), resourceID and, for a kind with SecretOutputs, secretOutput.
 func (k *Kind) Body(spec map[string]any) map[string]any {
 	body := runtime.DeepCopyJSON(spec)
 	delete(body, "resourceID")
+	if len(k.SecretOutputs) > 0 {
+		delete(body, SecretOutputSpec)
+	}
 	for _, f := range k.Query {
 		delete(body, f)
 	}
@@ -334,6 +344,9 @@ type adapter struct {
 	// (Kind.InputOnly, Kind.Secrets) that Update sends whatever the read
 	// shows, because status.inputVersion is not inputVersion.
 	resend []string
+	// secrets is where the API's secrets go (Kind.SecretOutputs); nil for
+	// a kind without them, and while deleting.
+	secrets *secretOutput
 }
 
 var _ directbase.Adapter = &adapter{}
@@ -399,6 +412,13 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 		}
 		return op.UpdateStatus(ctx, a.status(got), nil)
 	}
+	if a.secrets != nil {
+		// Before the resource exists: a Secret that cannot be ours stops the
+		// create here, not after the API has made a secret it returns once.
+		if err := a.secrets.reserve(ctx); err != nil {
+			return err
+		}
+	}
 	coll := CollectionOf(a.name)
 	id := a.name[len(coll)+1:]
 	query := map[string]string{}
@@ -417,8 +437,9 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 	if err != nil {
 		return fmt.Errorf("creating %s %s: %w", a.kind.GVK.Kind, a.name, err)
 	}
+	created := resp
 	if a.kind.CreateLRO {
-		if _, err := a.api.Wait(ctx, resp); err != nil {
+		if created, err = a.api.Wait(ctx, resp); err != nil {
 			return fmt.Errorf("creating %s %s: %w", a.kind.GVK.Kind, a.name, err)
 		}
 	}
@@ -427,6 +448,13 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 	got, err := a.api.Get(ctx, a.name)
 	if err != nil {
 		return fmt.Errorf("reading %s %s after create: %w", a.kind.GVK.Kind, a.name, err)
+	}
+	if a.secrets != nil {
+		// The create's answer holds what only a create returns
+		// (Kind.CreateOnlyOutputs); a read holds the rest.
+		if err := a.secrets.write(ctx, secretValues(a.kind, got, created)); err != nil {
+			return fmt.Errorf("%s %s was made, but %w", a.kind.GVK.Kind, a.name, err)
+		}
 	}
 	return op.UpdateStatus(ctx, a.status(got), nil)
 }
@@ -449,6 +477,9 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 			got, err := a.api.Get(ctx, a.name)
 			if err != nil {
 				return fmt.Errorf("reading %s %s after update: %w", a.kind.GVK.Kind, a.name, err)
+			}
+			if err := a.writeSecrets(ctx, got); err != nil {
+				return err
 			}
 			return op.UpdateStatus(ctx, a.status(got), nil)
 		}
@@ -495,7 +526,23 @@ func (a *adapter) Update(ctx context.Context, op *directbase.UpdateOperation) er
 			return fmt.Errorf("reading %s %s after update: %w", a.kind.GVK.Kind, a.name, err)
 		}
 	}
+	if err := a.writeSecrets(ctx, got); err != nil {
+		return err
+	}
 	return op.UpdateStatus(ctx, a.status(got), nil)
+}
+
+// writeSecrets keeps the object's Secret holding what a read of the
+// resource shows of its SecretOutputs, and fails when it lacks one a read
+// cannot give back (Kind.CreateOnlyOutputs).
+func (a *adapter) writeSecrets(ctx context.Context, got map[string]any) error {
+	if a.secrets == nil {
+		return nil
+	}
+	if err := a.secrets.write(ctx, secretValues(a.kind, got, nil)); err != nil {
+		return fmt.Errorf("%s %s: %w", a.kind.GVK.Kind, a.name, err)
+	}
+	return nil
 }
 
 // patch sends body to the resource's name, with the spec's query
@@ -679,6 +726,10 @@ type status struct {
 func (a *adapter) status(got map[string]any) *status {
 	observed := map[string]any{}
 	for _, f := range a.kind.Output {
+		if slices.Contains(a.kind.SecretOutputs, f) {
+			// Never in status: the object's Secret holds it (secretOutput).
+			continue
+		}
 		if v, ok := got[f]; ok && f != "name" {
 			observed[f] = v
 		}
@@ -710,6 +761,17 @@ func (a *adapter) Delete(ctx context.Context, op *directbase.DeleteOperation) (b
 		wait = 2 * time.Second
 	}
 	deadline := time.Now().Add(DeleteRetryFor)
+	if f := a.kind.DisableBeforeDelete; f != "" && a.actual != nil && a.actual[f] != true {
+		// The API wants the resource disabled before it deletes it.
+		klog.FromContext(ctx).V(2).Info("disabling before the delete", "kind", a.kind.GVK.Kind, "name", a.name, "field", f)
+		resp, err := a.api.Do(ctx, http.MethodPatch, a.name, map[string]string{"updateMask": f}, map[string]any{f: true})
+		if err == nil && a.kind.UpdateLRO {
+			_, err = a.api.Wait(ctx, resp)
+		}
+		if err != nil && !direct.IsNotFound(err) {
+			return false, fmt.Errorf("disabling %s %s before deleting it: %w", a.kind.GVK.Kind, a.name, err)
+		}
+	}
 	for {
 		err := a.deleteOnce(ctx)
 		if err == nil {

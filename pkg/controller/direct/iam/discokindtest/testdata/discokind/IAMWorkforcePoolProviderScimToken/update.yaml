@@ -1,0 +1,11 @@
+apiVersion: iam.gcp.hfl.dev/v1alpha1
+kind: IAMWorkforcePoolProviderScimToken
+metadata:
+  name: ${NAME}
+spec:
+  location: global
+  workforcePool: ${KIND_NAME}-pool
+  provider: ${KIND_NAME}-provider
+  scimTenant: ${KIND_NAME}-tenant
+  resourceID: ${SHORT_ID}
+  displayName: cce test, changed

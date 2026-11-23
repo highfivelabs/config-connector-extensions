@@ -104,6 +104,17 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`**
+  (`iam.gcp.hfl.dev/v1alpha1`): an OAuth client's credential and a
+  workforce pool provider SCIM tenant's token, which no Config Connector
+  kind has. The secret the API returns (`clientSecret`, `securityToken`)
+  is written to a Kubernetes Secret in the object's namespace, owned by the
+  object and named by `spec.secretOutput.name` (default the object's name),
+  never to status (`docs/design.md` decision 38). The API returns a SCIM
+  token only when it makes it: if its Secret is lost, delete the object and
+  make it again. The manager's ClusterRole now creates and updates
+  Secrets (`config/operator/rbac.yaml`).
+
 - **`ComputeFirewallPolicyPacketMirroringRule`**
   (`compute.gcp.hfl.dev/v1alpha1`): a packet mirroring rule of a
   hierarchical (organization or folder) firewall policy, which no Config

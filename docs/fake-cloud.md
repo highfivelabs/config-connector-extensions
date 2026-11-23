@@ -478,6 +478,19 @@ ignores a get's `view` (API Gateway's `FULL`): it always answers with
 every field, where the real API leaves a config's source files out
 without it.
 
+A secret the API returns (`secretOutputs`, decision 38, 2026-11-23:
+`IAMOauthClientCredential`'s `clientSecret`,
+`IAMWorkforcePoolProviderScimToken`'s `securityToken`) is a random string
+the fake makes at create; `Stored` shows it to a test. One the API
+returns only at create (`createOnlyOutputs`) is in the create's answer and
+in no get, list, patch or delete answer. A kind with
+`disableBeforeDelete` (the credential's `disabled`) is refused a delete,
+FAILED_PRECONDITION, until that field is true, as the API's description
+asks. What the fake cannot show: whether the real API returns
+`clientSecret` on every read (its description says so), whether it
+really refuses to delete an enabled credential, a secret's real format,
+and that a SCIM tenant and its pool exist (the fake checks no parent).
+
 A collection with no create (`PatchCreates`, Discovery Engine's CMEK
 configs): a patch of a missing name makes the resource, as the API's
 does. A `locationHost` kind's location other than `global` is served only

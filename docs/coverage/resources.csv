@@ -803,7 +803,7 @@ iam.googleapis.com,iam.googleapis.com/IAMMember,0,,0,IAMMember,0,0,false,"outsid
 iam.googleapis.com,iam.googleapis.com/IAMPolicyBinding,0,,0,IAMPolicyBinding,0,0,true,"outside-denominator; an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted)"
 iam.googleapis.com,iam.googleapis.com/IAMPrincipalAccessBoundaryPolicy,0,,0,IAMPrincipalAccessBoundaryPolicy,0,0,false,outside-denominator; no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com
 iam.googleapis.com,iam.googleapis.com/OauthClient,8,,0,IAMOauthClient,8,0,false,api=v1:projects.locations.oauthClients; ours-spec-fields-unmatched=3/10
-iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,,0,3,false,api=v1:projects.locations.oauthClients.credentials
+iam.googleapis.com,iam.googleapis.com/OauthClientCredential,3,,0,IAMOauthClientCredential,3,0,false,api=v1:projects.locations.oauthClients.credentials; ours-spec-fields-unmatched=5/7
 iam.googleapis.com,iam.googleapis.com/Role,7,IAMCustomRole,4,,0,3,false,api=v1:organizations.roles; request-wrapper=CreateRoleRequest; official-spec-fields-unmatched=2/5
 iam.googleapis.com,iam.googleapis.com/ServiceAccount,4,IAMServiceAccount,3,,0,1,false,api=v1:projects.serviceAccounts; request-wrapper=CreateServiceAccountRequest; official-spec-fields-unmatched=2/4
 iam.googleapis.com,iam.googleapis.com/ServiceAccountKey,2,IAMServiceAccountKey,2,,0,0,false,api=v1:projects.serviceAccounts.keys; official-spec-fields-unmatched=3/5
@@ -811,7 +811,7 @@ iam.googleapis.com,iam.googleapis.com/WorkforcePool,8,IAMWorkforcePool,6,,0,2,fa
 iam.googleapis.com,iam.googleapis.com/WorkforcePoolProvider,27,IAMWorkforcePoolProvider,13,,0,14,false,api=v1:locations.workforcePools.providers; official-spec-fields-unmatched=4/16
 iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderKey,3,,0,IAMWorkforcePoolProviderKey,3,0,false,api=v1:locations.workforcePools.providers.keys; ours-spec-fields-unmatched=4/6
 iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenant,4,,0,IAMWorkforcePoolProviderScimTenant,4,0,false,api=v1:locations.workforcePools.providers.scimTenants; ours-spec-fields-unmatched=4/7
-iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenantToken,2,,0,,0,2,false,api=v1:locations.workforcePools.providers.scimTenants.tokens
+iam.googleapis.com,iam.googleapis.com/WorkforcePoolProviderScimTenantToken,2,,0,IAMWorkforcePoolProviderScimToken,2,0,false,api=v1:locations.workforcePools.providers.scimTenants.tokens; ours-spec-fields-unmatched=6/7
 iam.googleapis.com,iam.googleapis.com/WorkloadIdentityPool,13,IAMWorkloadIdentityPool,4,,0,9,false,api=v1:projects.locations.workloadIdentityPools; official-spec-fields-unmatched=3/6
 iam.googleapis.com,iam.googleapis.com/WorkloadIdentityPoolNamespace,3,,0,IAMWorkloadIdentityPoolNamespace,3,0,true,api=v1:projects.locations.workloadIdentityPools.namespaces; ours-spec-fields-unmatched=4/6
 iam.googleapis.com,iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity,3,,0,IAMWorkloadIdentityPoolManagedIdentity,3,0,true,api=v1:projects.locations.workloadIdentityPools.namespaces.managedIdentities; ours-spec-fields-unmatched=5/7

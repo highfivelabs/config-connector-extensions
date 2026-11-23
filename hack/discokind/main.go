@@ -121,6 +121,18 @@ type Config struct {
 	// returns ("Input only." in their descriptions), so they are never a
 	// difference (Kind.InputOnly).
 	InputOnly []string `json:"inputOnly,omitempty"`
+	// SecretOutputs are top-level read-only string fields that hold a
+	// secret the API returns (an OAuth client credential's clientSecret).
+	// They are left out of status; the controller writes them to a
+	// Kubernetes Secret named by spec.secretOutput.name (decision 38,
+	// Kind.SecretOutputs): the mirror of Secrets.
+	SecretOutputs []string `json:"secretOutputs,omitempty"`
+	// CreateOnlyOutputs are SecretOutputs the API returns only in the
+	// create's answer (a SCIM token's securityToken; Kind.CreateOnlyOutputs).
+	CreateOnlyOutputs []string `json:"createOnlyOutputs,omitempty"`
+	// DisableBeforeDelete is a top-level writable boolean field the API
+	// wants true before a delete (Kind.DisableBeforeDelete).
+	DisableBeforeDelete string `json:"disableBeforeDelete,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -532,6 +544,26 @@ func build(c *Config, d *Discovery) (*built, error) {
 		f := fieldAt(d, k.schema, p)
 		if f == nil || isOutput(f) {
 			return nil, fmt.Errorf("secrets/inputOnly: %s is not a writable field of %s", p, create.Request.Ref)
+		}
+	}
+	if len(c.SecretOutputs) > 0 && k.schema.Properties["secretOutput"] != nil {
+		return nil, fmt.Errorf("secretOutputs: %s has a field secretOutput, which the spec's Secret name would hide", create.Request.Ref)
+	}
+	for _, p := range c.SecretOutputs {
+		f := k.schema.Properties[p]
+		if f == nil || !isOutput(f) || f.Type != "string" || f.Format != "" {
+			return nil, fmt.Errorf("secretOutputs: %s is not a top-level read-only string field of %s", p, create.Request.Ref)
+		}
+	}
+	for _, p := range c.CreateOnlyOutputs {
+		if !contains(c.SecretOutputs, p) {
+			return nil, fmt.Errorf("createOnlyOutputs: %s is not in secretOutputs", p)
+		}
+	}
+	if p := c.DisableBeforeDelete; p != "" {
+		f := k.schema.Properties[p]
+		if f == nil || isOutput(f) || f.Type != "boolean" || !k.updatable {
+			return nil, fmt.Errorf("disableBeforeDelete: %s is not a top-level writable boolean field of %s that patch can set", p, create.Request.Ref)
 		}
 	}
 	for f, s := range k.schema.Properties {
