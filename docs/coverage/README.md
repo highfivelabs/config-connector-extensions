@@ -15,7 +15,7 @@ the root `README.md` live here.
 | [`priority.csv`](priority.csv) | service (or resource) | `service,tier,category,rationale,source`; hand-edited, read by the generator |
 | [`foundation.md`](foundation.md) | | the ranked foundation gap report: the work queue for the kind agents |
 | [`bars/`](bars) | service | `<service>.svg`, `_total.svg`, `_tiers.svg` and `_categories.svg` (one bar per tier or category): blue is official, green is ours beyond official, grey is uncovered; under it, purple is Terraform `google-beta` with a dark tick at its strict figure (see "Terraform") |
-| [`inputs/terraform/`](inputs/terraform) | service, resource | `terraform.csv` and `terraform-resources.csv`, the Terraform comparison copied from the catalog repository at the pin (see "Terraform"); an input, not generated here |
+| [`inputs/terraform/`](inputs/terraform) | service, resource | `terraform.csv` and `terraform-resources.csv`, the Terraform comparison copied from the krm-packages repository at the pin (see "Terraform"); an input, not generated here |
 | [`sources.yaml`](sources.yaml) | | the pinned inputs: commits, dates, digests |
 
 The schema is the same in `config-connector-extensions`, `ack-extensions`
@@ -67,7 +67,7 @@ files read from each; the generator refuses to run when an input differs.
 | [googleapis protos](https://github.com/googleapis/googleapis) (`google/**/*.proto`) | `855217a6b3054992d6d0cb58370312bda024af04`, committed 2026-11-09T18:22:51Z | the denominator for gRPC-only APIs Discovery does not describe |
 | [Config Connector](https://github.com/GoogleCloudPlatform/k8s-config-connector) `config/crds/resources/`, `config/servicemappings/`, `apis/*/*/*_types.go` | `672414b8191fc2d2c12fff53f6faccf5ae291eef` (a `master` commit, committed 2026-11-07T03:04:32Z; nearest release `v1.160.0`), the pin of `UPSTREAM.md` | official |
 | this repository's `config/crds/` | the working tree | ours |
-| [catalog](https://github.com/highfivelabs/catalog) `docs/terraform/config-connector-extensions/` (`terraform.csv`, `terraform-resources.csv`), vendored in `inputs/terraform/` | `13064af34996c47f1a5498bb17aca16194c4574e`, committed 2026-11-09T22:36:38-06:00, copied 2026-11-10; a sha256 per file | the Terraform bar (see "Terraform") |
+| [krm-packages](https://github.com/highfivelabs/krm-packages) `docs/terraform/config-connector-extensions/` (`terraform.csv`, `terraform-resources.csv`), vendored in `inputs/terraform/` | `13064af34996c47f1a5498bb17aca16194c4574e`, committed 2026-11-09T22:36:38-06:00, copied 2026-11-10; a sha256 per file | the Terraform bar (see "Terraform") |
 
 "Official at the pin" is `master` at that commit, not a release: it includes
 CRDs of kinds not yet in a release. A CRD existing does not mean a controller
@@ -106,7 +106,7 @@ each resource in its own category, while the per-tier rollup
 
 The file was first written by the generator's binary with
 `-derive-priority <catalog checkout>` from `docs/gcp-inventory.md` of the
-catalog repository (Cloud Foundation Fabric v60.0.0 modules, their Terraform
+krm-packages repository (Cloud Foundation Fabric v60.0.0 modules, their Terraform
 resource types, the module ranks): each Terraform resource type is mapped to its
 service by prefix (`tfService` in `hack/coverage/priority.go`), a `*_iam_*`
 resource of another service's resource does not count as using that service, the
@@ -406,7 +406,7 @@ Each bar has a purple bar under it: how much of the same denominator the
 Terraform provider [`google-beta`](https://registry.terraform.io/providers/hashicorp/google-beta)
 covers, so that official (blue) and ours (green) can be read against what a
 Terraform user gets. It is the K9 decision and follows the Recommendation of
-the catalog repository's `docs/terraform-leverage.md` ("Dashboard integration,
+the krm-packages repository's `docs/terraform-leverage.md` ("Dashboard integration,
 without changing the shared CSV schemas").
 
 - **The figure** is `pct_terraform_l2` of the catalog's `terraform.csv`: the
@@ -433,14 +433,14 @@ without changing the shared CSV schemas").
   tables. `terraform-resources.csv` (one row per resource and provider) lists
   the Terraform resources each figure relied on; the generator does not read
   it, it is kept for the reader.
-- **Source and pin.** The catalog repository is private, so the two files are
+- **Source and pin.** The krm-packages repository is private, so the two files are
   vendored byte for byte in `inputs/terraform/`; the `terraform` section of
-  `sources.yaml` names the catalog commit and path and holds a sha256 per
+  `sources.yaml` names the krm-packages commit and path and holds a sha256 per
   file, and the generator refuses to run when a file differs from it. To
   move the pin: change `commit`, `commit_date` and `fetched` there, run
   `CATALOG_DIR=<catalog checkout with that commit> hack/coverage/run.sh --update-sources`
   (it copies the two files with `git show` and records their digests;
-  `CATALOG_DIR` defaults to `../catalog`), then `hack/coverage/run.sh`, and
+  `CATALOG_DIR` defaults to `../krm-packages`), then `hack/coverage/run.sh`, and
   commit the result.
 
 ## Regenerating

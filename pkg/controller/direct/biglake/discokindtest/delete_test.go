@@ -17,7 +17,7 @@ package discokindtest
 
 // Deleting BigLake objects whose resources BigLake has already deleted:
 // a catalog's delete takes its databases and tables along, and they then
-// answer 403, not 404 (the catalog repository's live run
+// answer 403, not 404 (the krm-packages repository's live run
 // cat-11141549-4cb0 deleted its whole biglake-catalog chart at once, and
 // the database's and table's finalizers held for 30 minutes). A delete
 // takes such a 403 for gone only when a listing proves it

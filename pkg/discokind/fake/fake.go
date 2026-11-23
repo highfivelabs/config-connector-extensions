@@ -30,7 +30,7 @@
 // of a collection whose parent is such a resource the fake does not hold
 // answers 403 too. Deleting a BigLake resource deletes the resources under
 // its name with it (a catalog's databases and tables, a database's
-// tables), as the cloud does (catalog repository run cat-11141549-4cb0);
+// tables), as the cloud does (krm-packages repository run cat-11141549-4cb0);
 // they then answer 403. SetDeny makes a name answer 403 while it is held:
 // a real denial, which a delete must not take for a resource gone. Two
 // switches, off by default, make deletes behave as API Gateway's do
@@ -188,7 +188,7 @@ func (c *Cloud) cascade(k *discokind.Kind, key string) {
 
 // cascadeAPIs are the APIs whose delete of a resource deletes the
 // resources under its name with it: BigLake's catalog delete takes its
-// databases and tables (catalog repository run cat-11141549-4cb0).
+// databases and tables (krm-packages repository run cat-11141549-4cb0).
 var cascadeAPIs = []string{"https://biglake.googleapis.com/"}
 
 func cascades(k *discokind.Kind) bool {

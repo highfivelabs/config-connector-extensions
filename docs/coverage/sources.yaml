@@ -29,13 +29,13 @@ config_connector:
   # sha256 over config/crds/resources/*, config/servicemappings/* and apis/*/*/*_types.go
   digest: 1aca77e2fdc159c3f859927ac5e46d344b544a3de50c0abfee24a42ff278a3ba
 terraform:
-  # The Terraform comparison (google, google-beta) of the catalog repository,
+  # The Terraform comparison (google, google-beta) of the krm-packages repository,
   # a private repository: the two files of path/ are vendored byte for byte
   # under docs/coverage/inputs/terraform/. To move the pin: change commit,
   # commit_date and fetched, then run with CATALOG_DIR set to a catalog
-  # checkout that has the commit (default ../catalog):
+  # checkout that has the commit (default ../krm-packages):
   # `hack/coverage/run.sh --update-sources`, then `hack/coverage/run.sh`.
-  repo: https://github.com/highfivelabs/catalog
+  repo: https://github.com/highfivelabs/krm-packages
   commit: 13064af34996c47f1a5498bb17aca16194c4574e
   commit_date: "2026-11-09T22:36:38-06:00"
   fetched: "2026-11-10"

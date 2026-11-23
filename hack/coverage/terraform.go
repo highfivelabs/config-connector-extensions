@@ -15,11 +15,11 @@ import (
 )
 
 // The Terraform comparison: how much of the same denominator the Terraform
-// providers' writable attributes match, from the catalog repository's
+// providers' writable attributes match, from the krm-packages repository's
 // docs/terraform/config-connector-extensions/ (method and error in its
 // docs/terraform-leverage.md, "Method and error"). The two files are
 // vendored byte for byte under docs/coverage/inputs/terraform/ at the
-// catalog commit pinned in sources.yaml, which also holds their sha256.
+// krm-packages commit pinned in sources.yaml, which also holds their sha256.
 
 const (
 	tfDir = "docs/coverage/inputs/terraform"

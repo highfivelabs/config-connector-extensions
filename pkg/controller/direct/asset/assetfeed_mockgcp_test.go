@@ -21,7 +21,7 @@ package asset_test
 // renders fabric's asset_feeds. Google Cloud names the feed
 // projects/<number>/feeds/<id> while the projectRef names the project by
 // its ID (or a Project object); Config Connector's AssetFeed refuses every
-// reconcile after the create for that (catalog PR #215) and its feed can
+// reconcile after the create for that (krm-packages PR #215) and its feed can
 // never be deleted. Ours treats the number and the ID as the same project.
 //
 // A live run needs cloudasset.feeds.* for the live-test service account
