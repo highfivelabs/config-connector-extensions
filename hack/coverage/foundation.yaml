@@ -332,9 +332,21 @@ items:
       `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`,
       built 2026-11-10): Config Connector's direct types and mapper copied,
       a whole tunnel made by insert with every field but labels immutable
-      (`docs/design.md` 6.6, the create-only pattern; patch 0033). The
-      interconnect attachment and interconnect fields are next (decision
-      19); track #11260.
+      (`docs/design.md` 6.6, the create-only pattern; patch 0033). Built
+      2026-11-23 on the same kind: `params.resourceManagerTags` (input only,
+      at insert; Terraform's `params` block), so the VPN tunnel's create
+      request is covered but for `sharedSecretHash`, which the API sets and
+      our kind keeps in status. The interconnect attachment's
+      `candidateIpv6Subnets`, the IPv6 router candidates and `l2Forwarding`
+      are in our generated `ComputeInterconnectAttachment` (built
+      2026-11-13); the measured `l2Forwarding.applianceMappings{}` fields
+      are in a map the CRD keeps as JSON, which the matcher cannot see into.
+      Not built: `applicationAwareInterconnect`, `aaiEnabled` and `params`
+      on the interconnect itself, whose only Config Connector kind is the
+      alpha `ComputeInterconnect`; they need a stable `ComputeInterconnect`
+      of ours (decision 26), which `hack/discokind` could generate, but a
+      real interconnect is a physical circuit no live run can order, so it
+      waits for a builder's call; track #11260.
   - title: Service attachment fields (Private Service Connect producers)
     importance: A
     gap: field

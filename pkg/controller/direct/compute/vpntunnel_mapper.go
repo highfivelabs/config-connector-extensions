@@ -65,6 +65,10 @@ func ComputeVPNTunnelSpec_v1beta1_ToProto(mapCtx *direct.MapContext, in *krm.Com
 		out.VpnGateway = &in.VpnGatewayRef.External
 	}
 	out.CipherSuite = VPNTunnelCipherSuite_ToProto(mapCtx, in.CipherSuite)
+	if in.Params != nil && len(in.Params.ResourceManagerTags) > 0 {
+		// Input only: sent with the insert, never read back.
+		out.Params = &pb.VpnTunnelParams{ResourceManagerTags: in.Params.ResourceManagerTags}
+	}
 	out.Labels = in.Labels
 
 	return out

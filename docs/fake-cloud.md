@@ -287,7 +287,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   network, or that the interfaces match; not that the peer's address is
   public (the API refuses a reserved one, RFC 5735); not the cipher suite's
   algorithm names or combinations; and it keeps the references as sent
-  (the real API answers with full URLs). The patch also makes HA VPN
+  (the real API answers with full URLs). It keeps and returns `params`
+  (resource manager tags at insert), which the real API never returns,
+  and binds no tag. The patch also makes HA VPN
   gateway writes answer with a regional operation, as the API does:
   upstream's mock answered with a global one, which the regional client's
   `Wait` could not find (the test's gateway failed with a 404 on it).

@@ -104,6 +104,10 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ComputeVPNTunnel` `spec.params.resourceManagerTags`**: resource
+  manager tags bound to the tunnel when it is made (Terraform's `params`
+  block). Immutable; the API takes them only at insert.
+
 - **`IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`**
   (`iam.gcp.hfl.dev/v1alpha1`): an OAuth client's credential and a
   workforce pool provider SCIM tenant's token, which no Config Connector

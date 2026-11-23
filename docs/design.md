@@ -2402,10 +2402,15 @@ To raise confidence in `ArtifactRegistryRepository`:
 33. `ComputeVPNTunnel`: a rotated shared secret is not applied (the API
     takes it only at insert; make a new tunnel); the API's checks of a
     cipher suite (which algorithm names and combinations it takes) and
-    whether `vpnTunnels.get` returns the suite as sent; the other fields
-    of foundation item 10 (`ComputeInterconnectAttachment`'s IPv6
-    candidates and `l2Forwarding`, `ComputeInterconnect`'s
-    `applicationAwareInterconnect`), the next field-gap PRs.
+    whether `vpnTunnels.get` returns the suite as sent; a live
+    `params.resourceManagerTags` (added 2026-11-23, fake only: the
+    live-test project has no tag to bind). Of the other fields of
+    foundation item 10, `ComputeInterconnectAttachment`'s IPv6 candidates
+    and `l2Forwarding` are in our generated kind (2026-11-13);
+    `ComputeInterconnect`'s `applicationAwareInterconnect` and
+    `aaiEnabled` need a stable `ComputeInterconnect` of ours (Config
+    Connector's is alpha only; decision 26), not built: a real
+    interconnect is a physical circuit no live run can order.
 
 44. `IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`
     (decision 38, 2026-11-23): a live run. The credential's

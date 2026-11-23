@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 21.7% | 37.9% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 21.8% | 37.8% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -76,7 +76,7 @@ What these numbers miss, for the foundation:
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 2 / 57 (0.0%) | none |
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 157 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
-| 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 15 / 85 (51.8%) | none for the fields |
+| 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 14 / 85 (51.8%) | none for the fields |
 | 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found (master read 2026-11-23 at c3af11d; open pull requests not listed from that session). |
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 6 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
@@ -227,16 +227,16 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** S, **modules** 5 (net-vpn-ha, net-vpn-static, net-vpn-dynamic, net-ipsec-over-interconnect, net-vlan-attachment).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/VpnTunnel`: 15 / 7 / 2 of 24; ComputeVPNTunnel, ComputeVPNTunnel (ours)
+  - `compute.googleapis.com/VpnTunnel`: 15 / 8 / 1 of 24; ComputeVPNTunnel, ComputeVPNTunnel (ours)
   - `compute.googleapis.com/InterconnectAttachment`: 13 / 19 / 4 of 36; ComputeInterconnectAttachment, ComputeInterconnectAttachment (ours)
   - `compute.googleapis.com/Interconnect`: 16 / 0 / 9 of 25; ComputeInterconnect (alpha)
 - **Missing, whole resources:** `cipherSuite` on `ComputeVPNTunnel`; `candidateIpv6Subnets`, `candidateCloudRouterIpv6Address`, `candidateCustomerRouterIpv6Address`, `l2Forwarding`, `partnerMetadata` on `ComputeInterconnectAttachment`; `applicationAwareInterconnect` on `ComputeInterconnect`.
 - **Missing, attributes that matter:** The measured lists; `cipherSuite` (IKE phase 1 and 2 algorithms) and the IPv6 candidates matter.
-  - uncovered in `compute.googleapis.com/VpnTunnel` (measured): `params.resourceManagerTags{}`, `sharedSecretHash`
+  - uncovered in `compute.googleapis.com/VpnTunnel` (measured): `sharedSecretHash`
   - uncovered in `compute.googleapis.com/InterconnectAttachment` (measured): `l2Forwarding.applianceMappings{}.applianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerApplianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerVlanTags[]`, `l2Forwarding.applianceMappings{}.name`
   - uncovered in `compute.googleapis.com/Interconnect` (measured): `aaiEnabled`, `applicationAwareInterconnect.bandwidthPercentagePolicy.bandwidthPercentages[].percentage`, `applicationAwareInterconnect.bandwidthPercentagePolicy.bandwidthPercentages[].trafficClass`, `applicationAwareInterconnect.profileDescription`, `applicationAwareInterconnect.shapeAveragePercentages[].percentage`, `applicationAwareInterconnect.shapeAveragePercentages[].trafficClass`, `applicationAwareInterconnect.strictPriorityPolicy`, `params.resourceManagerTags{}`, `subzone`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #11260 (2026-08-21) moves `ComputeInterconnectAttachment` to the identity and refs pattern (a step to direct).
-- **Build:** `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, built 2026-11-10): Config Connector's direct types and mapper copied, a whole tunnel made by insert with every field but labels immutable (`docs/design.md` 6.6, the create-only pattern; patch 0033). The interconnect attachment and interconnect fields are next (decision 19); track #11260.
+- **Build:** `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, built 2026-11-10): Config Connector's direct types and mapper copied, a whole tunnel made by insert with every field but labels immutable (`docs/design.md` 6.6, the create-only pattern; patch 0033). Built 2026-11-23 on the same kind: `params.resourceManagerTags` (input only, at insert; Terraform's `params` block), so the VPN tunnel's create request is covered but for `sharedSecretHash`, which the API sets and our kind keeps in status. The interconnect attachment's `candidateIpv6Subnets`, the IPv6 router candidates and `l2Forwarding` are in our generated `ComputeInterconnectAttachment` (built 2026-11-13); the measured `l2Forwarding.applianceMappings{}` fields are in a map the CRD keeps as JSON, which the matcher cannot see into. Not built: `applicationAwareInterconnect`, `aaiEnabled` and `params` on the interconnect itself, whose only Config Connector kind is the alpha `ComputeInterconnect`; they need a stable `ComputeInterconnect` of ours (decision 26), which `hack/discokind` could generate, but a real interconnect is a physical circuit no live run can order, so it waits for a builder's call; track #11260.
 
 ### 11. Service attachment fields (Private Service Connect producers)
 
@@ -512,7 +512,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | ComputeServiceAttachmentFields | (not a create) a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37) | n/a | false |
 | ComputeSubnetworkFields | (not a create) a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37) | n/a | false |
-| ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 7 | false |
+| ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 8 | false |
 | ComputeWireGroup | compute.googleapis.com/WireGroup | 7 | false |
 | ContainerClusterFields | (not a create) a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37) | n/a | false |
 | ContainerNodePoolFields | (not a create) a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37) | n/a | false |
@@ -764,7 +764,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/Subnetwork` | ComputeSubnetwork | - | 30 | 20 | 0 | 10 | 16 |
 | foundation | `compute.googleapis.com/TargetVpnGateway` | ComputeTargetVPNGateway | - | 5 | 3 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/VpnGateway` | ComputeVPNGateway | - | 8 | 5 | 0 | 3 | - |
-| foundation | `compute.googleapis.com/VpnTunnel` | ComputeVPNTunnel | ComputeVPNTunnel | 24 | 15 | 7 | 2 | 10 |
+| foundation | `compute.googleapis.com/VpnTunnel` | ComputeVPNTunnel | ComputeVPNTunnel | 24 | 15 | 8 | 1 | 10 |
 | foundation | `compute.googleapis.com/WireGroup` | - | ComputeWireGroup | 9 | 0 | 7 | 2 | 7 |
 | foundation | `container.googleapis.com/Cluster` | ContainerCluster, ContainerNodePool | - | 715 | 294 | 0 | 421 | 14 |
 | foundation | `container.googleapis.com/ClusterNodePool` | ContainerNodePool | - | 213 | 108 | 0 | 105 | 14 |

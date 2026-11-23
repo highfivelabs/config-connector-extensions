@@ -14642,7 +14642,7 @@ compute.googleapis.com,compute.googleapis.com/VpnTunnel,ikeVersion,integer,false
 compute.googleapis.com,compute.googleapis.com/VpnTunnel,labels{},string,false,both,metadata.labels,spec.labels{}
 compute.googleapis.com,compute.googleapis.com/VpnTunnel,localTrafficSelector[],string,false,both,spec.localTrafficSelector[],spec.localTrafficSelector[]
 compute.googleapis.com,compute.googleapis.com/VpnTunnel,name,string,false,both,metadata.name,metadata.name
-compute.googleapis.com,compute.googleapis.com/VpnTunnel,params.resourceManagerTags{},string,false,none,,
+compute.googleapis.com,compute.googleapis.com/VpnTunnel,params.resourceManagerTags{},string,false,ours,,spec.params.resourceManagerTags{}
 compute.googleapis.com,compute.googleapis.com/VpnTunnel,peerExternalGateway,string,false,both,spec.peerExternalGatewayRef,spec.peerExternalGatewayRef
 compute.googleapis.com,compute.googleapis.com/VpnTunnel,peerExternalGatewayInterface,integer,false,both,spec.peerExternalGatewayInterface,spec.peerExternalGatewayInterface
 compute.googleapis.com,compute.googleapis.com/VpnTunnel,peerGcpGateway,string,false,both,spec.peerGCPGatewayRef,spec.peerGCPGatewayRef
