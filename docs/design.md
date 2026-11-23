@@ -3015,7 +3015,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     reads it and sends it with only its fields changed, and Terraform's
     update of Config Connector's own kubelet fields can reset ours until
     our next reconcile). Their files in `docs/kinds/` have the details
-    and the live runs. Patches 0052 and 0053 teach mockgcp the writes.
+    and the live runs. 2026-11-23 (foundation item 14):
+    `ContainerNodePoolFields` also owns `kubeletConfig`'s soft eviction
+    settings, `memoryManager`, `topologyManager` and
+    `singleProcessOomKill` (no upstream field or pull request); fake
+    tested, live pending. Patches 0052 and 0053 teach mockgcp the writes.
     Live (2026-11-16): `ContainerClusterFields` and
     `ContainerNodePoolFields` passed (run `cce-11160848-7b8d`, every
     case, on a real zonal cluster) with their CRDs unchanged since, so

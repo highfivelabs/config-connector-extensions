@@ -85,6 +85,67 @@ spec:
                           it is rotated, as a quantity with a unit ("10Mi"); 10Mi
                           to 500Mi.
                         type: string
+                      evictionMaxPodGracePeriodSeconds:
+                        description: The longest grace period, in seconds, a pod evicted
+                          for a soft threshold gets; 0 to 300.
+                        format: int32
+                        type: integer
+                      evictionMinimumReclaim:
+                        description: How much of each resource the kubelet reclaims,
+                          beyond the threshold, when it evicts, as a percentage ("5%",
+                          at most "10%"). Owned whole.
+                        properties:
+                          imagefsAvailable:
+                            type: string
+                          imagefsInodesFree:
+                            type: string
+                          memoryAvailable:
+                            type: string
+                          nodefsAvailable:
+                            type: string
+                          nodefsInodesFree:
+                            type: string
+                          pidAvailable:
+                            type: string
+                        type: object
+                      evictionSoft:
+                        description: 'Soft eviction thresholds: the kubelet evicts
+                          pods, after the grace period in evictionSoftGracePeriod,
+                          when a signal falls below its threshold. Memory as a quantity
+                          ("100Mi"), the others as a percentage ("10%"). Owned whole:
+                          a signal left out is unset.'
+                        properties:
+                          imagefsAvailable:
+                            type: string
+                          imagefsInodesFree:
+                            type: string
+                          memoryAvailable:
+                            type: string
+                          nodefsAvailable:
+                            type: string
+                          nodefsInodesFree:
+                            type: string
+                          pidAvailable:
+                            type: string
+                        type: object
+                      evictionSoftGracePeriod:
+                        description: How long each soft eviction threshold must hold
+                          before pods are evicted, as a duration ("30s", at most "5m").
+                          Owned whole.
+                        properties:
+                          imagefsAvailable:
+                            type: string
+                          imagefsInodesFree:
+                            type: string
+                          memoryAvailable:
+                            type: string
+                          nodefsAvailable:
+                            type: string
+                          nodefsInodesFree:
+                            type: string
+                          pidAvailable:
+                            type: string
+                        type: object
                       insecureKubeletReadonlyPortEnabled:
                         description: Enable the kubelet's insecure read-only port
                           (10255).
@@ -94,12 +155,38 @@ spec:
                           to 5.
                         format: int32
                         type: integer
+                      memoryManager:
+                        description: The kubelet's memory manager.
+                        properties:
+                          policy:
+                            description: 'The policy: None (the default) or Static.'
+                            type: string
+                        type: object
+                      singleProcessOomKill:
+                        description: Whether the OOM killer kills single processes
+                          rather than the whole container (cgroup v2's memory.oom.group
+                          off).
+                        type: boolean
+                      topologyManager:
+                        description: The kubelet's topology manager.
+                        properties:
+                          policy:
+                            description: 'The policy: none (the default), best-effort,
+                              restricted or single-numa-node.'
+                            type: string
+                          scope:
+                            description: 'The scope: container (the default) or pod.'
+                            type: string
+                        type: object
                     type: object
                     x-kubernetes-validations:
                     - message: set at least one field
                       rule: has(self.insecureKubeletReadonlyPortEnabled) || has(self.containerLogMaxSize)
                         || has(self.containerLogMaxFiles) || has(self.allowedUnsafeSysctls)
-                        || has(self.maxParallelImagePulls)
+                        || has(self.maxParallelImagePulls) || has(self.evictionSoft)
+                        || has(self.evictionSoftGracePeriod) || has(self.evictionMinimumReclaim)
+                        || has(self.evictionMaxPodGracePeriodSeconds) || has(self.memoryManager)
+                        || has(self.topologyManager) || has(self.singleProcessOomKill)
                 required:
                 - kubeletConfig
                 type: object

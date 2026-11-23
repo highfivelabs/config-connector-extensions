@@ -53,7 +53,7 @@ type NodePoolFieldsConfig struct {
 
 // NodePoolKubeletConfig is the part of GKE's NodeKubeletConfig this kind
 // owns.
-// +kubebuilder:validation:XValidation:rule="has(self.insecureKubeletReadonlyPortEnabled) || has(self.containerLogMaxSize) || has(self.containerLogMaxFiles) || has(self.allowedUnsafeSysctls) || has(self.maxParallelImagePulls)",message="set at least one field"
+// +kubebuilder:validation:XValidation:rule="has(self.insecureKubeletReadonlyPortEnabled) || has(self.containerLogMaxSize) || has(self.containerLogMaxFiles) || has(self.allowedUnsafeSysctls) || has(self.maxParallelImagePulls) || has(self.evictionSoft) || has(self.evictionSoftGracePeriod) || has(self.evictionMinimumReclaim) || has(self.evictionMaxPodGracePeriodSeconds) || has(self.memoryManager) || has(self.topologyManager) || has(self.singleProcessOomKill)",message="set at least one field"
 type NodePoolKubeletConfig struct {
 	// Enable the kubelet's insecure read-only port (10255).
 	// +optional
@@ -75,6 +75,78 @@ type NodePoolKubeletConfig struct {
 	// How many images the kubelet pulls at once; 2 to 5.
 	// +optional
 	MaxParallelImagePulls *int32 `json:"maxParallelImagePulls,omitempty"`
+
+	// Soft eviction thresholds: the kubelet evicts pods, after the grace
+	// period in evictionSoftGracePeriod, when a signal falls below its
+	// threshold. Memory as a quantity ("100Mi"), the others as a
+	// percentage ("10%"). Owned whole: a signal left out is unset.
+	// +optional
+	EvictionSoft *NodePoolEvictionSignals `json:"evictionSoft,omitempty"`
+
+	// How long each soft eviction threshold must hold before pods are
+	// evicted, as a duration ("30s", at most "5m"). Owned whole.
+	// +optional
+	EvictionSoftGracePeriod *NodePoolEvictionSignals `json:"evictionSoftGracePeriod,omitempty"`
+
+	// How much of each resource the kubelet reclaims, beyond the
+	// threshold, when it evicts, as a percentage ("5%", at most "10%").
+	// Owned whole.
+	// +optional
+	EvictionMinimumReclaim *NodePoolEvictionSignals `json:"evictionMinimumReclaim,omitempty"`
+
+	// The longest grace period, in seconds, a pod evicted for a soft
+	// threshold gets; 0 to 300.
+	// +optional
+	EvictionMaxPodGracePeriodSeconds *int32 `json:"evictionMaxPodGracePeriodSeconds,omitempty"`
+
+	// The kubelet's memory manager.
+	// +optional
+	MemoryManager *NodePoolMemoryManager `json:"memoryManager,omitempty"`
+
+	// The kubelet's topology manager.
+	// +optional
+	TopologyManager *NodePoolTopologyManager `json:"topologyManager,omitempty"`
+
+	// Whether the OOM killer kills single processes rather than the whole
+	// container (cgroup v2's memory.oom.group off).
+	// +optional
+	SingleProcessOomKill *bool `json:"singleProcessOomKill,omitempty"`
+}
+
+// NodePoolEvictionSignals are the API's eviction signals (EvictionSignals,
+// EvictionGracePeriod and EvictionMinimumReclaim have the same fields).
+type NodePoolEvictionSignals struct {
+	// +optional
+	MemoryAvailable *string `json:"memoryAvailable,omitempty"`
+	// +optional
+	NodefsAvailable *string `json:"nodefsAvailable,omitempty"`
+	// +optional
+	NodefsInodesFree *string `json:"nodefsInodesFree,omitempty"`
+	// +optional
+	ImagefsAvailable *string `json:"imagefsAvailable,omitempty"`
+	// +optional
+	ImagefsInodesFree *string `json:"imagefsInodesFree,omitempty"`
+	// +optional
+	PidAvailable *string `json:"pidAvailable,omitempty"`
+}
+
+// NodePoolMemoryManager is the API's MemoryManager.
+type NodePoolMemoryManager struct {
+	// The policy: None (the default) or Static.
+	// +optional
+	Policy *string `json:"policy,omitempty"`
+}
+
+// NodePoolTopologyManager is the API's TopologyManager.
+type NodePoolTopologyManager struct {
+	// The policy: none (the default), best-effort, restricted or
+	// single-numa-node.
+	// +optional
+	Policy *string `json:"policy,omitempty"`
+
+	// The scope: container (the default) or pod.
+	// +optional
+	Scope *string `json:"scope,omitempty"`
 }
 
 // ContainerNodePoolFieldsStatus defines the observed state.

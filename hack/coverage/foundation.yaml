@@ -439,8 +439,21 @@ items:
       (`controlPlaneDiskEncryptionKey`), #12906 (Managed Lustre CSI driver addon), #14239 (`nodePoolAutoConfig.networkTags`
       fix). They arrive with the releases.
     build: >-
-      Wait for the releases (decision 5): this is the kind where upstream is fastest. Re-measure after each Config
-      Connector release; do not build a parallel `ContainerCluster`.
+      Wait for the releases (decision 5) where upstream has a pull request: this is the kind where upstream is
+      fastest. Re-measure after each Config Connector release; do not build a parallel `ContainerCluster`. Where
+      upstream has none, a field the API changes in place goes in our field kinds (decision 37). Built
+      2026-11-16: `ContainerClusterFields` and `ContainerNodePoolFields` (`v1beta1`). Built 2026-11-23 on
+      `ContainerNodePoolFields` (pull requests searched for `eviction`, `memoryManager`, `kubeletConfig`: none
+      but #14187): `kubeletConfig`'s `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`,
+      `evictionMaxPodGracePeriodSeconds`, `memoryManager`, `topologyManager`, `singleProcessOomKill`, tested
+      on the fake, live pending (`E2E_GKE=true`). Not built: `reservedResourcesConfig` (not in the pinned Go
+      client's `NodeKubeletConfig`); `bootDisk` (it restates Config Connector's `diskType` and `diskSizeGb`,
+      which Terraform's update would send against it); `ephemeralStorageLocalSsdConfig`, `gpuDirectConfig`,
+      `bestEffortProvisioning`, `flexStart`, `containerdConfig.registryHosts` and
+      `advancedMachineFeatures.performanceMonitoringUnit` (set when the node pool is made, which a field kind
+      never does; they need our own node pool kind, which this item says not to build); and the cluster's
+      `controlPlaneDiskEncryptionKey`, maintenance exclusion `endTimeBehavior` and Managed Lustre CSI add-on,
+      which have upstream pull requests (#8135, #14193, #12906).
   - title: Cloud DNS fields (routing policies, forwarding and peering zones)
     importance: A
     gap: field

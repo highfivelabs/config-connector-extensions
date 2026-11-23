@@ -104,6 +104,13 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ContainerNodePoolFields`: soft eviction, memory and topology
+  managers, single-process OOM kill** (`spec.config.kubeletConfig`'s
+  `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`,
+  `evictionMaxPodGracePeriodSeconds`, `memoryManager`, `topologyManager`,
+  `singleProcessOomKill`): kubelet settings Config Connector's
+  `ContainerNodePool` lacks. Optional; the CRD stays `v1beta1`.
+
 - **`ComputeVPNTunnel` `spec.params.resourceManagerTags`**: resource
   manager tags bound to the tunnel when it is made (Terraform's `params`
   block). Immutable; the API takes them only at insert.
