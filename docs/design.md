@@ -633,7 +633,16 @@ the live-test project). Then `ComputeRegionSecurityPolicy` (`compute.gcp.hfl.dev
 the same day), foundation item 27's regional network edge policies: a
 regional Cloud Armor policy, which Config Connector has no kind for,
 without its rules (`skip`: the API changes them only by its rule
-methods) or labels (only `setLabels`), served by `pkg/discokind/fake`.
+methods) or labels (only `setLabels`), served by `pkg/discokind/fake`. Then `CertificateManagerTrustConfig`
+(`certificatemanager.gcp.hfl.dev/v1beta1`, the same day), foundation
+item 25's alpha-only trust config as a stable equivalent (decision 26),
+with `spiffeTrustStores` and `allowlistedCertificates` (which Config
+Connector's alpha kind lacks) and input-only `tags`; its fixtures hold
+self-signed test certificates made for them. Open PR #13053 (a direct
+controller for Config Connector's alpha kind) was not copied: the API
+has the standard shape. The alpha-only `BinaryAuthorizationPlatformPolicy`
+is not generated: its update is a PUT named `replacePlatformPolicy`, and
+`hack/discokind` takes a PUT update only in Compute Engine's shape.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -2582,6 +2591,14 @@ To raise confidence in `ArtifactRegistryRepository`:
     the authority's `subordinateConfig` (activation of a subordinate
     authority) and the subject's `rdnSequence`; and
     `allowRequesterSpecifiedNotBeforeTime` (not in the pinned Go client).
+
+51. `CertificateManagerTrustConfig` (ours, generated; foundation item
+    25, 2026-11-23): a live run (`task test-live PROJECT=$GCP_PROJECT
+    KINDS=certificatemanager LIVE_RUN=TestCertificateManagerTrustConfig`;
+    free). To be seen live: whether the API takes the fixtures'
+    self-signed certificates as anchors, intermediates and allowlisted
+    certificates, and answers each PEM as sent (a trailing newline would
+    be a difference on every resync).
 
 47. `ComputeSecurityPolicyFields` (foundation item 27, 2026-11-23): a
     live run (`E2E_CLOUD_ARMOR=true task test-live PROJECT=$GCP_PROJECT

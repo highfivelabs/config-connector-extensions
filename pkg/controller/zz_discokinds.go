@@ -519,6 +519,18 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"createTime", "updateTime"},
 	},
 	{
+		GVK:       certificatemanagerv1beta1.CertificateManagerTrustConfigGVK,
+		CRDName:   "certificatemanagertrustconfigs.certificatemanager.gcp.hfl.dev",
+		BaseURL:   "https://certificatemanager.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/trustConfigs/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "trustConfigId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+		InputOnly: []string{"tags"},
+	},
+	{
 		GVK:       backupdrv1beta1.BackupDRManagementServerGVK,
 		CRDName:   "backupdrmanagementservers.backupdr.gcp.hfl.dev",
 		BaseURL:   "https://backupdr.googleapis.com/v1/",

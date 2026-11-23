@@ -462,6 +462,22 @@
   terraform: google_certificate_manager_certificate_issuance_config
   note: "How Certificate Manager issues certificates from a Certificate Authority Service pool."
 
+# Foundation item 25 (2026-11-23): Config Connector's
+# CertificateManagerTrustConfig is alpha-only (and lacks
+# spiffeTrustStores and allowlistedCertificates); open PR #13053 moves it
+# to a direct controller, still alpha. Ours is the stable equivalent.
+- kind: CertificateManagerTrustConfig
+  group: certificatemanager.gcp.hfl.dev
+  version: v1beta1
+  discovery: certificatemanager.v1
+  resource: projects.locations.trustConfigs
+  parents: [project]
+  terraform: google_certificate_manager_trust_config
+  immutable: [tags]
+  inputOnly: [tags]
+  skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
+  note: "The trust anchors, intermediate CAs, allowlisted certificates and SPIFFE trust stores a load balancer checks client certificates against (mTLS)."
+
 - kind: BackupDRManagementServer
   group: backupdr.gcp.hfl.dev
   version: v1beta1

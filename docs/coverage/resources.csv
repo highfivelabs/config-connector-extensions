@@ -231,7 +231,7 @@ certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateI
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateMap,4,CertificateManagerCertificateMap,3,,0,1,false,api=v1:projects.locations.certificateMaps; official-spec-fields-unmatched=2/3
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/CertificateMapCertificateMapEntry,6,CertificateManagerCertificateMapEntry,6,,0,0,false,api=v1:projects.locations.certificateMaps.certificateMapEntries; official-spec-fields-unmatched=3/7
 certificatemanager.googleapis.com,certificatemanager.googleapis.com/DnsAuthorization,6,CertificateManagerDNSAuthorization,5,,0,1,false,api=v1:projects.locations.dnsAuthorizations; official-spec-fields-unmatched=3/6
-certificatemanager.googleapis.com,certificatemanager.googleapis.com/TrustConfig,9,CertificateManagerTrustConfig,4,,0,5,false,api=v1:projects.locations.trustConfigs; official-spec-fields-unmatched=3/6
+certificatemanager.googleapis.com,certificatemanager.googleapis.com/TrustConfig,9,CertificateManagerTrustConfig,4,CertificateManagerTrustConfig,3,2,false,api=v1:projects.locations.trustConfigs; official-spec-fields-unmatched=3/6; ours-spec-fields-unmatched=4/10
 ces.googleapis.com,ces.googleapis.com/App,110,CESApp,90,,0,20,false,api=v1:projects.locations.apps; recursive-cut=6; official-spec-fields-unmatched=17/88
 ces.googleapis.com,ces.googleapis.com/AppAgent,80,CesAgent,47,,0,33,false,api=v1:projects.locations.apps.agents; official-spec-fields-unmatched=4/50
 ces.googleapis.com,ces.googleapis.com/AppDeployment,36,,0,,0,36,false,api=v1:projects.locations.apps.deployments

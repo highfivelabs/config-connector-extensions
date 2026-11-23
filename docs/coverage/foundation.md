@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 39.0% | 19.3% | 41.7% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 10.0% | 22.8% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 10.2% | 22.6% |
 
 By service:
 
@@ -39,7 +39,7 @@ By service:
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 26.7% | 21.4% |
 | security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 15.3% | 25.8% |
 | security | `securityposture.googleapis.com` | 2 | 63 | 93.7% | 0.0% | 6.3% |
-| security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 4.5% | 20.5% |
+| security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 11.4% | 13.6% |
 | security | `binaryauthorization.googleapis.com` | 2 | 37 | 75.7% | 0.0% | 24.3% |
 | security | `recaptchaenterprise.googleapis.com` | 2 | 35 | 74.3% | 0.0% | 25.7% |
 | security | `secretmanager.googleapis.com` | 2 | 30 | 33.3% | 53.3% | 13.3% |
@@ -91,7 +91,7 @@ What these numbers miss, for the foundation:
 | 22 | [Privileged Access Manager grants](#22-privileged-access-manager-grants) | B | whole | 0 | S | 7 / 18 (61.1%) | none found. |
 | 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 3 / 12 (0.0%) | none. |
 | 24 | [Cloud Identity SSO profiles, assignments and policies](#24-cloud-identity-sso-profiles-assignments-and-policies) | B | whole | 0 | M | 26 / 26 (0.0%) | none for these |
-| 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 47 / 209 (71.3%) | none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct... |
+| 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 44 / 209 (71.3%) | none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct... |
 | 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 4 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
 | 27 | [Cloud Armor security policy fields](#27-cloud-armor-security-policy-fields) | B | field | 1 | M | 122 / 172 (27.9%) | none found (read again 2026-11-23 at the pin: Config Connector's opt-in direct `ComputeSecurityPolicy` has no threshold configs or inspectio... |
 
@@ -438,7 +438,7 @@ What these numbers miss, for the foundation:
   - `privateca.googleapis.com/CaPool`: 41 / 0 / 14 of 55; PrivateCACAPool
   - `privateca.googleapis.com/CaPoolCertificateAuthority`: 43 / 13 / 8 of 64; PrivateCACertificateAuthority, PrivateCACertificateAuthority (ours)
   - `privateca.googleapis.com/CertificateTemplate`: 33 / 0 / 11 of 44; PrivateCACertificateTemplate
-  - `certificatemanager.googleapis.com/TrustConfig`: 4 / 0 / 5 of 9; CertificateManagerTrustConfig (alpha)
+  - `certificatemanager.googleapis.com/TrustConfig`: 4 / 3 / 2 of 9; CertificateManagerTrustConfig (alpha), CertificateManagerTrustConfig (ours)
 - **Missing, whole resources:** Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match; verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and is built.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `binaryauthorization.googleapis.com/Attestor` (measured): `userOwnedGrafeasNote.noteReference`, `userOwnedGrafeasNote.publicKeys[].comment`, `userOwnedGrafeasNote.publicKeys[].id`, `userOwnedGrafeasNote.publicKeys[].pkixPublicKey.keyId`
@@ -446,9 +446,9 @@ What these numbers miss, for the foundation:
   - uncovered in `privateca.googleapis.com/CaPool` (measured): `encryptionSpec.cloudKmsKey`, `issuancePolicy.allowRequesterSpecifiedNotBeforeTime`, `issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints.critical`, `issuancePolicy.baselineValues.nameConstraints.excludedDnsNames[]`, `issuancePolicy.baselineValues.nameConstraints.excludedEmailAddresses[]`, `issuancePolicy.baselineValues.nameConstraints.excludedIpRanges[]`, `issuancePolicy.baselineValues.nameConstraints.excludedUris[]`, `issuancePolicy.baselineValues.nameConstraints.permittedDnsNames[]`, `issuancePolicy.baselineValues.nameConstraints.permittedEmailAddresses[]` and 4 more
   - uncovered in `privateca.googleapis.com/CaPoolCertificateAuthority` (measured): `config.publicKey.format`, `config.publicKey.key`, `config.subjectConfig.subject.rdnSequence[].attributes[].objectId.objectIdPath[]`, `config.subjectConfig.subject.rdnSequence[].attributes[].type`, `config.subjectConfig.subject.rdnSequence[].attributes[].value`, `labels{}`, `subordinateConfig.certificateAuthority`, `subordinateConfig.pemIssuerChain.pemCertificates[]`
   - uncovered in `privateca.googleapis.com/CertificateTemplate` (measured): `labels{}`, `maximumLifetime`, `predefinedValues.nameConstraints.critical`, `predefinedValues.nameConstraints.excludedDnsNames[]`, `predefinedValues.nameConstraints.excludedEmailAddresses[]`, `predefinedValues.nameConstraints.excludedIpRanges[]`, `predefinedValues.nameConstraints.excludedUris[]`, `predefinedValues.nameConstraints.permittedDnsNames[]`, `predefinedValues.nameConstraints.permittedEmailAddresses[]`, `predefinedValues.nameConstraints.permittedIpRanges[]` and 1 more
-  - uncovered in `certificatemanager.googleapis.com/TrustConfig` (measured): `allowlistedCertificates[].pemCertificate`, `labels{}`, `spiffeTrustStores{}.intermediateCas[].pemCertificate`, `spiffeTrustStores{}.trustAnchors[].pemCertificate`, `tags{}`
+  - uncovered in `certificatemanager.googleapis.com/TrustConfig` (measured): `spiffeTrustStores{}.intermediateCas[].pemCertificate`, `spiffeTrustStores{}.trustAnchors[].pemCertificate`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct `PrivateCACertificateTemplate` types, 2026-09-18) move the kinds to direct, where new fields would land; #12260 (mockgcp for `BinaryAuthorizationPlatformPolicy`) and #13053 (direct `CertificateManagerTrustConfig`) are for the alpha kinds.
-- **Build:** Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable); on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable). Built 2026-11-23 as field kinds (decision 37, `privateca.gcp.hfl.dev/v1alpha1`, live pending): `PrivateCACAPoolFields` (`issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints`) and `PrivateCACertificateTemplateFields` (`maximumLifetime`, `predefinedValues.nameConstraints`). Config Connector's DCL update was read: its mask is the top-level names of its own diffs (`TopLevelUpdateMask`), and the direct controller's is top-level too, so neither sees ours; but when it changes its own issuance policy or predefined values it sends them whole without ours, and the API clears them until our next reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime` (in neither the Go client at the pin nor mockgcp's protos). Built 2026-11-23 (fake only, live pending): our own `PrivateCACertificateAuthority` (`privateca.gcp.hfl.dev/v1alpha1`, `docs/design.md` section 6.6 pattern 1, a create-only whole-object kind; section 2.3 says which kind to pick), Config Connector's direct types and controller copied, with `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` and `userDefinedAccessUrls`; everything but the labels and the URLs immutable; a self-signed authority enabled after create and disabled before delete (mockgcp patch 0062). Not built: the pool's `encryptionSpec` (CMEK), which neither the pinned Go client (`cloud.google.com/go/security` v1.24.0) nor mockgcp's protos have: a kind for it needs the REST client and a fake that keeps a field its protos lack, or the pin's next Go client (recorded in `docs/design.md` section 7, item 45); the authority's `subordinateConfig` and the subject's `rdnSequence`.
+- **Build:** Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable); on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable). Built 2026-11-23 as field kinds (decision 37, `privateca.gcp.hfl.dev/v1alpha1`, live pending): `PrivateCACAPoolFields` (`issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints`) and `PrivateCACertificateTemplateFields` (`maximumLifetime`, `predefinedValues.nameConstraints`). Config Connector's DCL update was read: its mask is the top-level names of its own diffs (`TopLevelUpdateMask`), and the direct controller's is top-level too, so neither sees ours; but when it changes its own issuance policy or predefined values it sends them whole without ours, and the API clears them until our next reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime` (in neither the Go client at the pin nor mockgcp's protos). Built 2026-11-23 (fake only, live pending): our own `PrivateCACertificateAuthority` (`privateca.gcp.hfl.dev/v1alpha1`, `docs/design.md` section 6.6 pattern 1, a create-only whole-object kind; section 2.3 says which kind to pick), Config Connector's direct types and controller copied, with `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` and `userDefinedAccessUrls`; everything but the labels and the URLs immutable; a self-signed authority enabled after create and disabled before delete (mockgcp patch 0062). Not built: the pool's `encryptionSpec` (CMEK), which neither the pinned Go client (`cloud.google.com/go/security` v1.24.0) nor mockgcp's protos have: a kind for it needs the REST client and a fake that keeps a field its protos lack, or the pin's next Go client (recorded in `docs/design.md` section 7, item 45); the authority's `subordinateConfig` and the subject's `rdnSequence`. The alpha-only trust config (decision 26): our stable `CertificateManagerTrustConfig` (`certificatemanager.gcp.hfl.dev/v1beta1`, generated by `hack/discokind` 2026-11-23, with `spiffeTrustStores`, `allowlistedCertificates`, labels and tags; #13053, still alpha, was not copied: the API has the standard shape); live pending. Not built: the alpha-only platform policy, whose update is a PUT named `replacePlatformPolicy`, which `hack/discokind` does not generate outside Compute Engine's shape.
 
 ### 26. Secret Manager fields
 
@@ -486,6 +486,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | AccessContextManagerServicePerimeter | accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter | 30 | false |
 | AssetFeed | cloudasset.googleapis.com/Feed | 0 | false |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
+| CertificateManagerTrustConfig | certificatemanager.googleapis.com/TrustConfig | 3 | false |
 | ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
 | ComputeDiskResourcePolicyAttachment | (not a create) no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com | n/a | false |
@@ -545,31 +546,31 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
-| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
-| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
+| NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
@@ -580,8 +581,8 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 13 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 3 | false |
@@ -706,7 +707,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `certificatemanager.googleapis.com/CertificateMap` | CertificateManagerCertificateMap | - | 4 | 3 | 0 | 1 | - |
 | security | `certificatemanager.googleapis.com/CertificateMapCertificateMapEntry` | CertificateManagerCertificateMapEntry | - | 6 | 6 | 0 | 0 | - |
 | security | `certificatemanager.googleapis.com/DnsAuthorization` | CertificateManagerDNSAuthorization | - | 6 | 5 | 0 | 1 | - |
-| security | `certificatemanager.googleapis.com/TrustConfig` | CertificateManagerTrustConfig (alpha) | - | 9 | 4 | 0 | 5 | 25 |
+| security | `certificatemanager.googleapis.com/TrustConfig` | CertificateManagerTrustConfig (alpha) | CertificateManagerTrustConfig | 9 | 4 | 3 | 2 | 25 |
 | security | `cloudasset.googleapis.com/Feed` | AssetFeed, CloudAssetFolderFeed (alpha), CloudAssetOrganizationFeed (alpha), CloudAssetProjectFeed (alpha) | AssetFeed | 11 | 11 | 0 | 0 | - |
 | security | `cloudasset.googleapis.com/SavedQuery` | AssetSavedQuery | - | 15 | 15 | 0 | 0 | - |
 | foundation | `cloudbilling.googleapis.com/BillingAccount` | BillingAccount (alpha) | - | 3 | 2 | 0 | 1 | - |

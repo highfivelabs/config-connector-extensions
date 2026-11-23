@@ -53,6 +53,7 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"NetworkConnectivityAutomatedDnsRecord":          slotguard.Spec,
 	"NetworkConnectivitySpokeGatewayAdvertisedRoute": slotguard.Spec,
 	"CertificateManagerCertificateIssuanceConfig":    slotguard.Spec,
+	"CertificateManagerTrustConfig":                  slotguard.Spec,
 	"BackupDRManagementServer":                       slotguard.Spec,
 	"NetworkSecurityDNSThreatDetector":               slotguard.Spec,
 	"NetworkSecurityAuthzPolicy":                     slotguard.Spec,

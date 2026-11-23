@@ -1,0 +1,255 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: certificatemanagertrustconfigs.certificatemanager.gcp.hfl.dev
+spec:
+  group: certificatemanager.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: CertificateManagerTrustConfig
+    listKind: CertificateManagerTrustConfigList
+    plural: certificatemanagertrustconfigs
+    shortNames:
+    - hflcertificatemanagertrustconfig
+    - hflcertificatemanagertrustconfigs
+    singular: certificatemanagertrustconfig
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: CertificateManagerTrustConfig is a certificatemanager.v1 resource
+          (https://certificatemanager.googleapis.com/v1/{parent}/locations/{location}/trustConfigs/{id}),
+          from its Discovery document certificatemanager.v1 (hack/discokind). Terraform's
+          google_certificate_manager_trust_config. The trust anchors, intermediate
+          CAs, allowlisted certificates and SPIFFE trust stores a load balancer checks
+          client certificates against (mTLS).
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              allowlistedCertificates:
+                description: Optional. A certificate matching an allowlisted certificate
+                  is always considered valid as long as the certificate is parseable,
+                  proof of private key possession is established, and constraints
+                  on the certificate's SAN field are met.
+                items:
+                  properties:
+                    pemCertificate:
+                      description: Required. PEM certificate that is allowlisted.
+                        The certificate can be up to 5k bytes, and must be a parseable
+                        X.509 certificate.
+                      type: string
+                  required:
+                  - pemCertificate
+                  type: object
+                type: array
+              description:
+                description: Optional. One or more paragraphs of text description
+                  of a TrustConfig.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Optional. Set of labels associated with a TrustConfig.
+                type: object
+              location:
+                description: Immutable. The location, part of the resource's name
+                  ({parent}/locations/{location}/trustConfigs/{id}).
+                type: string
+                x-kubernetes-validations:
+                - message: location is immutable
+                  rule: self == oldSelf
+              projectRef:
+                description: Immutable. The project the resource belongs to.
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: The `projectID` field of a project, when not managed
+                      by Config Connector.
+                    type: string
+                  kind:
+                    description: The kind of the Project resource; optional but must
+                      be `Project` if provided.
+                    type: string
+                  name:
+                    description: The `name` field of a `Project` resource.
+                    type: string
+                  namespace:
+                    description: The `namespace` field of a `Project` resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: projectRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. The resource's ID, the last part of its name.
+                  When unset, metadata.name is used.
+                type: string
+                x-kubernetes-validations:
+                - message: resourceID is immutable
+                  rule: self == oldSelf
+              spiffeTrustStores:
+                description: Optional. Defines a mapping from a trust domain to a
+                  TrustStore. This is used for SPIFFE certificate validation.
+                x-kubernetes-preserve-unknown-fields: true
+              tags:
+                additionalProperties:
+                  type: string
+                description: |-
+                  Optional. Input only. Immutable. Tag keys/values directly bound to this
+                  resource. For example: "123/environment": "production", "123/costCenter":
+                  "marketing"
+
+                  The API never returns it: it is sent when the spec changes, and a
+                  change made in the cloud is not seen.
+                type: object
+                x-kubernetes-validations:
+                - message: tags is immutable
+                  rule: self == oldSelf
+              trustStores:
+                description: Optional. Set of trust stores to perform validation against.
+                  This field is supported when TrustConfig is configured with Load
+                  Balancers, currently not supported for SPIFFE certificate validation.
+                  Only one TrustStore specified is currently allowed.
+                items:
+                  properties:
+                    intermediateCas:
+                      description: Optional. Set of intermediate CA certificates used
+                        for the path building phase of chain validation. The field
+                        is currently not supported if TrustConfig is used for the
+                        workload certificate feature.
+                      items:
+                        properties:
+                          pemCertificate:
+                            description: PEM intermediate certificate used for building
+                              up paths for validation. Each certificate provided in
+                              PEM format may occupy up to 5kB.
+                            type: string
+                        type: object
+                      type: array
+                    trustAnchors:
+                      description: Optional. List of Trust Anchors to be used while
+                        performing validation against a given TrustStore.
+                      items:
+                        properties:
+                          pemCertificate:
+                            description: PEM root certificate of the PKI used for
+                              validation. Each certificate provided in PEM format
+                              may occupy up to 5kB.
+                            type: string
+                        type: object
+                      type: array
+                  type: object
+                type: array
+            required:
+            - location
+            - projectRef
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The resource's name, {parent}/locations/{location}/trustConfigs/{id}.
+                type: string
+              inputVersion:
+                description: 'A digest of the input-only fields last sent (tags):
+                  their values, and each Secret''s name, key and resourceVersion,
+                  never its value. The API never returns these fields, so they are
+                  sent again when it changes.'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the controller.
+                format: int64
+                type: integer
+              observedState:
+                description: The API's read-only fields.
+                properties:
+                  createTime:
+                    description: Output only. The creation timestamp of a TrustConfig.
+                    type: string
+                  updateTime:
+                    description: Output only. The last update timestamp of a TrustConfig.
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
