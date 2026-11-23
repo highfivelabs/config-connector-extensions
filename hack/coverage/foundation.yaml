@@ -448,7 +448,13 @@ items:
       none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork"
       (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no
       pull request.
-    build: Wait (decision 5); the subnetwork's direct migration is the vehicle.
+    build: >-
+      Field kinds (decision 19, section 6.6 pattern 2), built 2026-11-23, live pending: `ComputeNetworkFields`
+      (`compute.gcp.hfl.dev/v1alpha1`; `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`,
+      `bgpInterRegionCost`) and `ComputeSubnetworkFields` (`allowSubnetCidrRoutesOverlap`); Terraform's updates send
+      only the fields that changed. Not built: `ipCollection`, the IPv6 prefixes, `resolveSubnetMask` and
+      `params.resourceManagerTags` are taken only at create (a create-only whole-object kind), the secondary ranges'
+      `ipCollection` and `ipVersion` sit in a list Terraform sends whole, and `enableFlowLogs` is deprecated.
   - title: Billing account log sink
     importance: A
     gap: field

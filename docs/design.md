@@ -3011,7 +3011,14 @@ To raise confidence in `ArtifactRegistryRepository`:
     `cmekSettings`, `buckets.patch` with a mask of only those; Config
     Connector's DCL and direct updates mask only their own fields; delete
     clears the two lists and leaves the CMEK key, which the API cannot
-    remove; patch 0055).
+    remove; patch 0055); `ComputeNetworkFields` and
+    `ComputeSubnetworkFields` (`compute.gcp.hfl.dev`, item 16; a network's
+    `routingConfig` BGP best path selection and a subnet's
+    `allowSubnetCidrRoutesOverlap`, `networks.patch` and
+    `subnetworks.patch` as merge patches with only those fields;
+    Terraform's updates send only the fields that changed, a network's
+    `routingConfig` with `routingMode` alone; delete leaves them; patch
+    0056).
 
 ## 9. The operator: Config Connector's identity, per namespace
 

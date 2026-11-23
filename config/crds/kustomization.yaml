@@ -35,6 +35,7 @@ resources:
 - compute.gcp.hfl.dev_computeinterconnectgroups.yaml
 - compute.gcp.hfl.dev_computenetworkattachments.yaml
 - compute.gcp.hfl.dev_computenetworkendpoints.yaml
+- compute.gcp.hfl.dev_computenetworkfields.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicypacketmirroringrules.yaml
 - compute.gcp.hfl.dev_computenetworkfirewallpolicyrules.yaml
 - compute.gcp.hfl.dev_computeorganizationsecuritypolicies.yaml
@@ -63,6 +64,7 @@ resources:
 - compute.gcp.hfl.dev_computerouterroutepolicies.yaml
 - compute.gcp.hfl.dev_computerouters.yaml
 - compute.gcp.hfl.dev_computeserviceattachmentfields.yaml
+- compute.gcp.hfl.dev_computesubnetworkfields.yaml
 - compute.gcp.hfl.dev_computevpntunnels.yaml
 - compute.gcp.hfl.dev_computewiregroups.yaml
 - compute.gcp.hfl.dev_computezonevmextensionpolicies.yaml

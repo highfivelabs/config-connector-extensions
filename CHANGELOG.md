@@ -104,6 +104,16 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`ComputeNetworkFields` and `ComputeSubnetworkFields`**
+  (`compute.gcp.hfl.dev/v1alpha1`, field kinds, `docs/design.md` decision
+  37): a VPC network's BGP best path selection
+  (`routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`,
+  `bgpInterRegionCost`) and a subnet's `allowSubnetCidrRoutesOverlap`,
+  which Config Connector's `ComputeNetwork` and `ComputeSubnetwork` lack,
+  set on a network or subnet it (or anything else) made, by
+  `spec.resourceRef`. They never create or delete the resource; deleting
+  them leaves the fields.
+
 - **`LoggingLogBucketFields`** (`logging.gcp.hfl.dev/v1alpha1`, a field
   kind, `docs/design.md` decision 37): a log bucket's `indexConfigs`,
   `restrictedFields` and `cmekSettings`, which Config Connector's

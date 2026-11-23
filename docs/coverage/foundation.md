@@ -315,7 +315,7 @@ What these numbers miss, for the foundation:
   - uncovered in `compute.googleapis.com/Network` (measured): `IPv4Range`, `params.resourceManagerTags{}`, `routingConfig.bgpAlwaysCompareMed`, `routingConfig.bgpBestPathSelectionMode`, `routingConfig.bgpInterRegionCost`
   - uncovered in `compute.googleapis.com/Subnetwork` (measured): `allowSubnetCidrRoutesOverlap`, `enableFlowLogs`, `externalIpv6Prefix`, `internalIpv6Prefix`, `ipCollection`, `logConfig.enable`, `params.resourceManagerTags{}`, `resolveSubnetMask`, `secondaryIpRanges[].ipCollection`, `secondaryIpRanges[].ipVersion`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork" (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no pull request.
-- **Build:** Wait (decision 5); the subnetwork's direct migration is the vehicle.
+- **Build:** Field kinds (decision 19, section 6.6 pattern 2), built 2026-11-23, live pending: `ComputeNetworkFields` (`compute.gcp.hfl.dev/v1alpha1`; `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost`) and `ComputeSubnetworkFields` (`allowSubnetCidrRoutesOverlap`); Terraform's updates send only the fields that changed. Not built: `ipCollection`, the IPv6 prefixes, `resolveSubnetMask` and `params.resourceManagerTags` are taken only at create (a create-only whole-object kind), the secondary ranges' `ipCollection` and `ipVersion` sit in a list Terraform sends whole, and `enableFlowLogs` is deprecated.
 
 ### 17. Billing account log sink
 
@@ -497,6 +497,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
 | ComputeNetworkEndpoint | (not a create) no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com | n/a | false |
+| ComputeNetworkFields | (not a create) a field kind, the BGP best path selection of a network Config Connector's ComputeNetwork owns, written with networks.patch (decision 37) | n/a | false |
 | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 12 | false |
 | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | compute.googleapis.com/OrganizationSecurityPolicy | 2 | false |
 | ComputePerInstanceConfig | (not a create) no API resource named like perinstanceconfig/computeperinstanceconfig in compute.googleapis.com | n/a | false |
@@ -511,6 +512,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
 | ComputeServiceAttachmentFields | (not a create) a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37) | n/a | false |
+| ComputeSubnetworkFields | (not a create) a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37) | n/a | false |
 | ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 7 | false |
 | ComputeWireGroup | compute.googleapis.com/WireGroup | 7 | false |
 | ContainerClusterFields | (not a create) a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37) | n/a | false |
@@ -537,53 +539,53 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
-| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only

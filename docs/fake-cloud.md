@@ -385,6 +385,14 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   CMEK key or the key is in the bucket's location (mockgcp takes any
   name and makes up the service account), or the restricted fields'
   effect on who may read entries (mockgcp stores no log entries).
+- **Networks and subnets** (`ComputeNetworkFields`,
+  `ComputeSubnetworkFields`). mockgcp merges a network's BGP best path
+  selection fields and takes a subnet's `allowSubnetCidrRoutesOverlap`
+  (patch 0056). It does not show: whether the API resets
+  `bgpAlwaysCompareMed` and `bgpInterRegionCost` when the mode goes back to
+  `LEGACY` (mockgcp drops them), a subnet patch's fingerprint check, or
+  what the BGP settings or the overlap change for routes (mockgcp has no
+  Cloud Routers learning routes, and checks no route against a subnet).
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and

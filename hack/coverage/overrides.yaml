@@ -167,6 +167,8 @@ no_resource:
   ContainerNodePoolFields: a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37)
   ComputeServiceAttachmentFields: a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37)
   LoggingLogBucketFields: a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37)
+  ComputeNetworkFields: a field kind, the BGP best path selection of a network Config Connector's ComputeNetwork owns, written with networks.patch (decision 37)
+  ComputeSubnetworkFields: a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37)
   DiscoveryEngineCmekConfig: a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method)
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
   SecretManagerSecretVersion: a secret version, written with secrets.addVersion

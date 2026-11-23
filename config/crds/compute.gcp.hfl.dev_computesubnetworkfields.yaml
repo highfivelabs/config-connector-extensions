@@ -1,0 +1,154 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: computesubnetworkfields.compute.gcp.hfl.dev
+spec:
+  group: compute.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: ComputeSubnetworkFields
+    listKind: ComputeSubnetworkFieldsList
+    plural: computesubnetworkfields
+    shortNames:
+    - hflcomputesubnetworkfields
+    singular: computesubnetworkfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'ComputeSubnetworkFields sets fields of a subnet that Config
+          Connector''s ComputeSubnetwork has no field for (allowSubnetCidrRoutesOverlap),
+          and only those: it patches the subnet with a body naming them and its fingerprint.
+          Deleting it leaves them as they are.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ComputeSubnetworkFieldsSpec is the fields of a subnet this
+              object owns.
+            properties:
+              allowSubnetCidrRoutesOverlap:
+                description: Whether the subnet's primary and secondary ranges may
+                  overlap (or contain) the destination of a static or dynamic route
+                  that is more specific, so that such a route is not refused.
+                type: boolean
+              resourceRef:
+                description: 'Immutable. The subnet: Config Connector''s ComputeSubnetwork
+                  by name (compute.cnrm.cloud.google.com), or any subnet by external,
+                  as "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetwork}}".
+                  The subnet must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed ComputeSubnetwork
+                      resource. Should be in the format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+                    type: string
+                  name:
+                    description: The name of a ComputeSubnetwork resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a ComputeSubnetwork resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - allowSubnetCidrRoutesOverlap
+            - resourceRef
+            type: object
+          status:
+            description: ComputeSubnetworkFieldsStatus defines the observed state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The subnet whose fields this object sets, as projects/{project}/regions/{region}/subnetworks/{subnetwork}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

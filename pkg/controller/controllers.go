@@ -157,6 +157,8 @@ var Kinds = []kind{
 	{gvk: containerv1beta1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
 	{gvk: containerv1beta1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
 	{gvk: computev1alpha1.ComputeServiceAttachmentFieldsGVK, crdName: "computeserviceattachmentfields.compute.gcp.hfl.dev", model: compute.NewServiceAttachmentFieldsModel},
+	{gvk: computev1alpha1.ComputeNetworkFieldsGVK, crdName: "computenetworkfields.compute.gcp.hfl.dev", model: compute.NewNetworkFieldsModel},
+	{gvk: computev1alpha1.ComputeSubnetworkFieldsGVK, crdName: "computesubnetworkfields.compute.gcp.hfl.dev", model: compute.NewSubnetworkFieldsModel},
 	{gvk: loggingv1alpha1.LoggingLogBucketFieldsGVK, crdName: "logginglogbucketfields.logging.gcp.hfl.dev", model: logging.NewLogBucketFieldsModel},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
