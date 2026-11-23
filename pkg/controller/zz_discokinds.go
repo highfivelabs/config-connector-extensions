@@ -20,6 +20,7 @@ package controller
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	accesscontextmanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/accesscontextmanager/v1alpha1"
 	apigatewayv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigateway/v1beta1"
 	apigeev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1alpha1"
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
@@ -862,6 +863,15 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
 	},
+	{
+		GVK:        accesscontextmanagerv1alpha1.AccessContextManagerAuthorizedOrgsDescGVK,
+		CRDName:    "accesscontextmanagerauthorizedorgsdescs.accesscontextmanager.gcp.hfl.dev",
+		BaseURL:    "https://accesscontextmanager.googleapis.com/v1/",
+		Name:       "accessPolicies/{accessPolicy}/authorizedOrgsDescs/{id}",
+		NameInBody: true,
+		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -892,6 +902,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	discoveryenginev1alpha1.AddToScheme,
 	securitycenterv1beta1.AddToScheme,
 	dnsv1alpha1.AddToScheme,
+	accesscontextmanagerv1alpha1.AddToScheme,
 }
 
 func init() {

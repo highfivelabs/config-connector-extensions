@@ -13,7 +13,8 @@
 # descriptions call Immutable); skip {field: why}; note; sweepLocation (the
 # location the live sweeper lists, for a collection with no global one;
 # the live fixtures use it); nameInBody (create also sends the full name
-# as the body's name, beside the ID parameter, for an API that needs it);
+# as the body's name, beside the ID parameter, for an API that needs it,
+# or instead of it where the create takes none);
 # missingIs403 (the API answers a get of a missing resource 403, not 404);
 # getQuery (query parameters every get sends, such as view: FULL);
 # secrets (dotted paths of string fields taken as value or
@@ -738,3 +739,20 @@
   terraform: google_dns_outbound_endpoint
   sweepLocation: us-central1
   note: "An address on a subnetwork that Cloud DNS sends a VPC network's outbound forwarded queries from."
+
+# Foundation item 21 (2026-11-23): an access policy's authorized orgs
+# descriptions. Config Connector's open pull request #14202 adds the kind
+# as a Terraform-based one (google_access_context_manager_authorized_orgs_desc,
+# accesscontextmanager.cnrm.cloud.google.com/v1alpha1), which this
+# manager cannot run; its field names are the API's, as here, and its
+# fixtures are copied into this kind's (UPSTREAM.md, docs/design.md 2.3).
+
+- kind: AccessContextManagerAuthorizedOrgsDesc
+  group: accesscontextmanager.gcp.hfl.dev
+  version: v1alpha1
+  discovery: accesscontextmanager.v1
+  resource: accessPolicies.authorizedOrgsDescs
+  terraform: google_access_context_manager_authorized_orgs_desc
+  nameInBody: true
+  immutable: [assetType, authorizationDirection, authorizationType]
+  note: "The organizations an organization's access policy trusts for, or lets evaluate, device and credential strength signals; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."

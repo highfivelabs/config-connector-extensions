@@ -1,7 +1,7 @@
 service,resource,attributes_total,official_kinds,attributes_official,ours_kinds,attributes_ours_beyond,attributes_uncovered,ours_from_upstream_pr,notes
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicy,3,AccessContextManagerAccessPolicy,1,,0,2,false,api=v1:accessPolicies; official-spec-fields-unmatched=1/2
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAccessLevel,23,AccessContextManagerAccessLevel;AccessContextManagerAccessLevelCondition,21,,0,2,false,api=v1:accessPolicies.accessLevels
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,5,,0,,0,5,false,api=v1:accessPolicies.authorizedOrgsDescs
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,5,,0,AccessContextManagerAuthorizedOrgsDesc,5,0,false,api=v1:accessPolicies.authorizedOrgsDescs; ours-spec-fields-unmatched=2/6
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,73,AccessContextManagerServicePerimeter;AccessContextManagerServicePerimeterResource,43,,0,30,false,api=v1:accessPolicies.servicePerimeters
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/GcpUserAccessBinding,27,AccessContextManagerGCPUserAccessBinding,3,,0,24,false,api=v1:organizations.gcpUserAccessBindings; official-spec-fields-unmatched=2/4
 agentidentity.googleapis.com,agentidentity.googleapis.com/AuthProvider,31,,0,,0,31,false,api=v1:projects.locations.authProviders

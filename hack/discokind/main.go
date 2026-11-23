@@ -101,7 +101,9 @@ type Config struct {
 	Query []string `json:"query,omitempty"`
 	// NameInBody: the API's create also needs the resource's full name in
 	// the request body, beside the ID parameter (Cloud Functions v2
-	// refuses one without it: "Invalid resource name ''").
+	// refuses one without it: "Invalid resource name ''"), or, where the
+	// create has no ID parameter, instead of it (Access Context Manager's
+	// authorized orgs descriptions).
 	NameInBody bool `json:"nameInBody,omitempty"`
 	// MissingIs403: the API answers a get of a resource that does not
 	// exist 403 PERMISSION_DENIED rather than 404 (BigLake catalogs), which
@@ -482,8 +484,8 @@ func build(c *Config, d *Discovery) (*built, error) {
 				k.idParam = n
 			}
 		}
-		if k.idParam == "" {
-			return nil, fmt.Errorf("%s.create has no ID query parameter", c.Resource)
+		if k.idParam == "" && !c.NameInBody {
+			return nil, fmt.Errorf("%s.create has no ID query parameter (nameInBody, if it takes the name in the body)", c.Resource)
 		}
 	}
 	prefix, flat := "", get.FlatPath

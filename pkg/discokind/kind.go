@@ -91,6 +91,9 @@ type Kind struct {
 	// name, beside the ID parameter, as Terraform does for the kind; the
 	// API refuses a create without it (Cloud Functions v2: "Invalid
 	// resource name '' for pattern projects/*/locations/*/functions/*").
+	// With no IDParam, the name in the body is the only place the ID goes
+	// (Access Context Manager's authorized orgs descriptions, whose create
+	// takes no ID parameter).
 	NameInBody bool
 	// Output are the API's read-only top-level fields that go to
 	// status.observedState (name goes to status.externalRef instead).

@@ -25,11 +25,11 @@ accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPo
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAccessLevel,description,string,false,official,AccessContextManagerAccessLevel:spec.description,
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAccessLevel,name,string,false,official,AccessContextManagerAccessLevel:metadata.name,
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAccessLevel,title,string,false,official,AccessContextManagerAccessLevel:spec.title,
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,assetType,string,false,none,,
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,authorizationDirection,string,false,none,,
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,authorizationType,string,false,none,,
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,name,string,false,none,,
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,orgs[],string,false,none,,
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,assetType,string,false,ours,,spec.assetType
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,authorizationDirection,string,false,ours,,spec.authorizationDirection
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,authorizationType,string,false,ours,,spec.authorizationType
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,name,string,false,ours,,metadata.name
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc,orgs[],string,false,ours,,spec.orgs[]
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,description,string,false,official,AccessContextManagerServicePerimeter:spec.description,
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,name,string,false,official,AccessContextManagerServicePerimeter:metadata.name,
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,perimeterType,string,false,official,AccessContextManagerServicePerimeter:spec.perimeterType,

@@ -69,6 +69,11 @@ pull_requests:
     read_on: "2026-11-08"
     role: copied
     for: ArtifactRegistryRepository with customRepository
+  - ref: GoogleCloudPlatform/k8s-config-connector#14202
+    head: 2fe675c285623d7de638513ba9862f69a7679c77
+    read_on: "2026-11-23"
+    role: copied
+    for: AccessContextManagerAuthorizedOrgsDesc fixtures, field names and immutable fields; the kind is generated here (hack/discokind)
   - ref: GoogleCloudPlatform/k8s-config-connector#15278
     head: 8dc3b755721a756d8f46e50c089abde88a980879
     read_on: "2026-11-10"
@@ -404,6 +409,8 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/kms/v1alpha1/groupversion_info.go]}
   - here: [apis/logging/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/logging/v1alpha1/groupversion_info.go]}
+  - here: [pkg/controller/direct/accesscontextmanager/discokindtest/testdata/discokind/AccessContextManagerAuthorizedOrgsDesc/create.yaml, pkg/controller/direct/accesscontextmanager/discokindtest/testdata/discokind/AccessContextManagerAuthorizedOrgsDesc/update.yaml]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14202, paths: [pkg/test/resourcefixture/testdata/basic/accesscontextmanager/v1alpha1/accesscontextmanagerauthorizedorgsdesc/accesscontextmanagerauthorizedorgsdescbasic/create.yaml, pkg/test/resourcefixture/testdata/basic/accesscontextmanager/v1alpha1/accesscontextmanagerauthorizedorgsdesc/accesscontextmanagerauthorizedorgsdescbasic/update.yaml]}
   - here: [apis/privateca/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/groupversion_info.go]}
   - here: [apis/privateca/v1alpha1/types.go]

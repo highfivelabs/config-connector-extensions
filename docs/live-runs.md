@@ -459,6 +459,13 @@ The test makes an engine with no code (sessions and memory only), which
 costs nothing while idle; the sweeper deletes engines in `us-central1`
 whose display name carries a run ID.
 
+`AccessContextManagerAuthorizedOrgsDesc` (package `accesscontextmanager`)
+skips live (`live-skip`): an authorized orgs description belongs to an
+organization's access policy, which a live run never touches, and the
+live-test account has no Access Context Manager role. Before its first
+live run: an access policy for the tests, its number in the fixtures, the
+role on it, and a sweeper section for the run's descriptions.
+
 `PrivateCACAPoolFields` and `PrivateCACertificateTemplateFields`
 (package `privateca`) wait on Certificate Authority Service for the
 account: whether `privateca.googleapis.com` is on in `$GCP_PROJECT` and

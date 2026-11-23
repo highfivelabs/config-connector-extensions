@@ -426,8 +426,10 @@ func (a *adapter) Create(ctx context.Context, op *directbase.CreateOperation) er
 	if a.kind.InsertStyle {
 		body = runtime.DeepCopyJSON(a.desired)
 		body["name"] = id
-	} else if a.kind.IDParam != "" {
-		query[a.kind.IDParam] = id
+	} else if a.kind.IDParam != "" || a.kind.NameInBody {
+		if a.kind.IDParam != "" {
+			query[a.kind.IDParam] = id
+		}
 		if a.kind.NameInBody {
 			body = runtime.DeepCopyJSON(a.desired)
 			body["name"] = a.name

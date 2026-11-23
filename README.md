@@ -78,8 +78,8 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `apigee.googleapis.com` | ![apigee.googleapis.com](docs/coverage/bars/apigee.googleapis.com.svg) | 16.9% | 1.0% | 82.0% | 42.7% | 42.7% |
 | 2 | application | `composer.googleapis.com` | ![composer.googleapis.com](docs/coverage/bars/composer.googleapis.com.svg) | 95.3% | 0.0% | 4.7% | 88.4% | 88.4% |
 | 2 | application | `chronicle.googleapis.com` | ![chronicle.googleapis.com](docs/coverage/bars/chronicle.googleapis.com.svg) | 15.6% | 0.0% | 84.4% | 83.5% | 83.5% |
+| 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 3.8% | 44.3% | 99.2% | 99.2% |
 | 2 | application | `eventarc.googleapis.com` | ![eventarc.googleapis.com](docs/coverage/bars/eventarc.googleapis.com.svg) | 88.5% | 0.0% | 11.5% | 79.5% | 79.5% |
-| 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 0.0% | 48.1% | 99.2% | 99.2% |
 | 2 | application | `vmwareengine.googleapis.com` | ![vmwareengine.googleapis.com](docs/coverage/bars/vmwareengine.googleapis.com.svg) | 79.8% | 0.0% | 20.2% | 65.5% | 65.5% |
 | 2 | application | `tpu.googleapis.com` | ![tpu.googleapis.com](docs/coverage/bars/tpu.googleapis.com.svg) | 91.5% | 0.0% | 8.5% | 59.2% | 0.0% |
 | 2 | application | `storage.googleapis.com` | ![storage.googleapis.com](docs/coverage/bars/storage.googleapis.com.svg) | 27.7% | 4.0% | 68.3% | 47.0% | 47.0% |

@@ -294,6 +294,11 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 		id, _ = body["name"].(string)
 	case k.IDParam != "":
 		id = req.URL.Query().Get(k.IDParam)
+	case k.NameInBody:
+		// No ID parameter: the ID is the last segment of the body's name.
+		if got, _ := body["name"].(string); strings.HasPrefix(got, coll+"/") {
+			id = got[len(coll)+1:]
+		}
 	}
 	if id == "" {
 		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", "the resource's ID is required")
