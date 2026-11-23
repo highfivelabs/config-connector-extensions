@@ -23,7 +23,7 @@
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
-# what is in them) and Cloud Run services, by name, and Network Security
+# what is in them) and Cloud Run services and jobs, by name, and Network Security
 # address groups (global and the regions in ADDRESS_GROUP_REGIONS), by
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
@@ -853,6 +853,15 @@ while read -r name region made; do
   [[ -n "${name}" ]] || continue
   by_run "${name}" "${made}" || continue
   act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
+done <<<"${rows}"
+
+# Cloud Run jobs (RunJob's test), every region, by name.
+rows="$("${G[@]}" run jobs list --verbosity=error \
+  --format='value(metadata.name,metadata.labels."cloud.googleapis.com/location",metadata.creationTimestamp)')"
+while read -r name region made; do
+  [[ -n "${name}" ]] || continue
+  by_run "${name}" "${made}" || continue
+  act "Cloud Run job" "${name} ${region}" "${G[@]}" run jobs delete "${name}" --region="${region}"
 done <<<"${rows}"
 
 # Log buckets (a live LoggingLink test's, with Log Analytics on), global,

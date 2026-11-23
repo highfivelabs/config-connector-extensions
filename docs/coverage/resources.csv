@@ -1107,7 +1107,7 @@ retail.googleapis.com,retail.googleapis.com/CatalogModel,8,RetailModel,8,,0,0,fa
 retail.googleapis.com,retail.googleapis.com/CatalogServingConfig,20,RetailServingConfig,20,,0,0,false,api=v2:projects.locations.catalogs.servingConfigs; official-spec-fields-unmatched=3/22
 run.googleapis.com,run.googleapis.com/Domainmapping,32,,0,,0,32,false,api=v1:projects.locations.domainmappings
 run.googleapis.com,run.googleapis.com/Instance,121,,0,,0,121,false,api=v2:projects.locations.instances
-run.googleapis.com,run.googleapis.com/Job,128,RunJob,68,,0,60,false,api=v2:projects.locations.jobs; official-spec-fields-unmatched=3/70
+run.googleapis.com,run.googleapis.com/Job,128,RunJob,68,RunJob,11,49,false,api=v2:projects.locations.jobs; official-spec-fields-unmatched=3/70; ours-spec-fields-unmatched=3/81
 run.googleapis.com,run.googleapis.com/NamespaceDomainmapping,32,,0,,0,32,false,api=v1:namespaces.domainmappings
 run.googleapis.com,run.googleapis.com/Service,160,RunService,78,RunService,20,62,false,api=v2:projects.locations.services; official-spec-fields-unmatched=3/79; ours-spec-fields-unmatched=3/95
 run.googleapis.com,run.googleapis.com/WorkerPool,126,RunWorkerPool,82,,0,44,false,api=v2:projects.locations.workerPools; official-spec-fields-unmatched=3/84

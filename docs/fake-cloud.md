@@ -372,6 +372,18 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   anything, so a GPU `nodeSelector` is stored but never checked against
   the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
   serves.
+- **Cloud Run jobs in mockgcp** (`RunJob`, ours). Patch 0069: `jobs.patch`
+  (`UpdateJob`, which takes no mask) replaces the job's labels,
+  annotations, client fields, launch stage and Binary Authorization
+  settings with the request's (it kept only the template), moves the
+  generation on and recomputes the etag. It does not show: which server
+  defaults the real API gives a job (the fake gives a task count of 1, a
+  600s timeout, 3 retries, the compute default service account, the
+  second generation environment and 1 CPU / 512Mi), whether the API takes
+  probes on a job's container, a Binary Authorization policy that must
+  exist (any name is kept), a GPU's quota, or an execution (it runs
+  none). Its protos lack `volumeMounts[].subPath`, which `RunJob` does not
+  build for that reason.
 - **Compute Engine service attachments** (`ComputeServiceAttachmentFields`,
   and the generated `ComputeServiceAttachment`, which `pkg/discokind/fake`
   leaves to mockgcp: `kinds.yaml` `mockgcp`). mockgcp's merge patch cannot

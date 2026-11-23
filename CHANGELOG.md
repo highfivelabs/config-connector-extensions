@@ -114,6 +114,14 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`RunJob`** (`run.gcp.hfl.dev/v1alpha1`): a Cloud Run job that owns the
+  whole job, with what Config Connector's `RunJob` cannot express: the
+  job's labels (`metadata.labels`) and its executions'
+  (`template.labels`), GPUs (`template.template.nodeSelector`,
+  `gpuZonalRedundancyDisabled`), gRPC probes and a Binary Authorization
+  policy by name (`binaryAuthorization.policy`) (`docs/kinds/RunJob.md`
+  says how to move a job to it). Application queue row 6.
+
 - **`ArtifactRegistryRepository`** takes `vulnerabilityScanningConfig`
   (turn scanning off per repository), `disallowUnspecifiedMode`, and a
   remote repository's `aptRepository` and `yumRepository` (Debian, Ubuntu,

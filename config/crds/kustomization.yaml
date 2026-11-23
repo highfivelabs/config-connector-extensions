@@ -148,6 +148,7 @@ resources:
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagercapabilityconfigs.yaml
+- run.gcp.hfl.dev_runjobs.yaml
 - run.gcp.hfl.dev_runservices.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecrets.yaml
 - secretmanager.gcp.hfl.dev_secretmanagersecretversions.yaml

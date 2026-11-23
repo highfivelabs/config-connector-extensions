@@ -148,10 +148,10 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/cloudasset.owner` | project | `AssetFeed` (not granted yet; the account has `roles/cloudasset.viewer`, which cannot make a feed, and `roles/pubsub.admin` for the test's topic: the test skips live without `E2E_CLOUD_ASSET=true`) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
-| `roles/run.admin` | project | `RunService` |
+| `roles/run.admin` | project | `RunService`, `RunJob` |
 | `roles/apigateway.admin` | project | `APIGatewayAPIConfig`, `APIGatewayGateway` (`TestAPIGatewayDeleteGatewayAndConfigTogether`, with its API) |
 | `roles/biglake.admin` | project | `BigLakeCatalog`, `BigLakeDatabase`, `BigLakeTable` (`TestBigLake*MissingIs403` and the kind tests, with their catalogs and databases) |
-| `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
+| `roles/iam.serviceAccountUser` | the compute default service account | `RunService`, `RunJob` (a service or job runs as it) |
 | `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
 | `roles/cloudkms.admin` | project | `KMSCryptoKeyFields` (the test's key ring `cce-e2e-fields` and its keys; held by 2026-11-16) |
 | `roles/container.clusterAdmin` | project | `ContainerClusterFields`, `ContainerNodePoolFields` (the test's cluster; held by 2026-11-16; the test skips live without `E2E_GKE=true`) |
@@ -513,6 +513,19 @@ volume) and deletes them. It needs `monitoring.googleapis.com` on and
 for the live-test account. The sweeper deletes uptime checks whose
 display name carries a run ID. It shows whether the API takes
 `userLabels` and the nested `httpCheck.*` paths in an update mask.
+
+`RunJob` (package `run`, 2026-11-23, live pending): `task test-live
+PROJECT=$GCP_PROJECT KINDS=run LIVE_RUN=TestRunJob` makes two Cloud Run
+jobs on Cloud Run's public sample job image (free: a job is billed only
+while an execution runs, and the test runs none) and deletes them. Without
+`E2E_RUN_GPU=true` the jobs ask for no GPU (as `RunService`'s test); without
+`E2E_RUN_BINAUTHZ_POLICY` (a cloudRun platform policy's name) they use the
+project's default Binary Authorization policy. The account's
+`roles/run.admin` and `roles/iam.serviceAccountUser` on the compute
+default service account cover it. The sweeper deletes jobs whose name
+carries a run ID. It shows the server defaults the real API gives a job
+beyond mockgcp's, whether it takes a gRPC startup probe on a job's
+container, and whether it keeps `maxRetries` 0.
 
 `PubSubSubscriptionFields` (package `pubsub`, 2026-11-23, live pending):
 `task test-live PROJECT=$GCP_PROJECT KINDS=pubsub

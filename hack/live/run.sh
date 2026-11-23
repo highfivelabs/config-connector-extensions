@@ -72,7 +72,9 @@ source hack/live/projects.sh
 # PrivateCACertificateAuthority)
 # skips live unless E2E_PRIVATECA=true; compute's ComputeSecurityPolicyFields
 # unless E2E_CLOUD_ARMOR=true (a Cloud Armor policy is billed, prorated);
-# (docs/live-runs.md).
+# run's RunService and RunJob ask for a GPU only with E2E_RUN_GPU=true, and
+# RunJob names a Binary Authorization policy only with
+# E2E_RUN_BINAUTHZ_POLICY (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 

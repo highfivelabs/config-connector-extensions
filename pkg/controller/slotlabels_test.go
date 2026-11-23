@@ -38,6 +38,7 @@ var slotLabelled = map[string]slotguard.LabelSource{
 	"DNSResponsePolicy":                              slotguard.Metadata,
 	"PrivateCACertificateAuthority":                  slotguard.Metadata,
 	"RunService":                                     slotguard.Spec,
+	"RunJob":                                         slotguard.Metadata,
 	"ComputeVPNTunnel":                               slotguard.Spec,
 	"ComputeInterconnectAttachment":                  slotguard.Spec,
 	"NetworkSecurityAddressGroup":                    slotguard.Spec,

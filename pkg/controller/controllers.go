@@ -67,6 +67,7 @@ import (
 	privatecav1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/privateca/v1alpha1"
 	pubsubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/pubsub/v1alpha1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
+	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	runv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
@@ -134,6 +135,7 @@ var Kinds = []kind{
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
 	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
 	{gvk: runv1beta1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
+	{gvk: runv1alpha1.RunJobGVK, crdName: "runjobs.run.gcp.hfl.dev", model: run.NewRunJobModel, labels: slotguard.Metadata},
 	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
@@ -214,6 +216,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		artifactregistryv1beta1.AddToScheme,
 		iamv1alpha1.AddToScheme,
 		iamv1beta1.AddToScheme,
+		runv1alpha1.AddToScheme,
 		runv1beta1.AddToScheme,
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,

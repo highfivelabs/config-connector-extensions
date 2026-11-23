@@ -228,6 +228,25 @@ stays on Config Connector's kind; an object of ours for an existing
 authority acquires it (its config is not compared) and from then owns
 its labels and URLs. Never both for one authority.
 
+**`RunJob`, ours beside Config Connector's** (application item 6,
+2026-11-23). Config Connector's `RunJob` is Terraform-based by default
+(master too), and Terraform's `google_cloud_run_v2_job` update sends the
+whole job with no update mask; the API's `UpdateJob` takes none. So, as
+for services (decision 11), the fields Config Connector's lacks (the
+job's and its executions' labels, GPUs, gRPC probes, a Binary
+Authorization policy by name) need a kind that owns the whole job. Ours,
+`run.gcp.hfl.dev/v1alpha1` `RunJob`, copies Config Connector's opt-in
+direct `RunJob` (types, identity, mappers, reference resolution and
+controller, `UPSTREAM.md`), uncomments the fields upstream generates as
+unreachable, and uses our `RunService`'s container, volume and VPC access
+types. Its controller compares the spec with the job as read, as
+`RunService`'s does, rather than upstream's cookie of the whole job.
+**Which to use:** Config Connector's kind for a job that needs none of
+the added fields; ours for one that does. A job moves by creating ours
+with `spec.resourceID` naming it (acquired, then updated to the spec) and
+deleting Config Connector's object with `deletion-policy: abandon`. Never
+both for one job.
+
 ### 2.4 Generated kinds: standard collections from Discovery (`discokind`)
 
 Where the API resource is a standard collection (create with an ID query
@@ -749,7 +768,7 @@ namespace):
 **Kinds the guard cannot mark** (their resources have no labels): every
 kind not in `slotLabelled` (`pkg/controller/slotlabels_test.go`), that is
 all but `SecretManagerSecret`, `ArtifactRegistryRepository`,
-`DNSResponsePolicy`, `RunService`, `ComputeVPNTunnel`, the three
+`DNSResponsePolicy`, `RunService`, `RunJob`, `ComputeVPNTunnel`, the three
 `NetworkSecurity*` kinds, the two `GKEHub*` kinds, the two `NetworkServicesAgent*` kinds and three `NetworkConnectivity*` kinds (the PSC authorization policy, the automated DNS record and the spoke gateway route), the four `GKEBackup*` kinds, `CertificateManagerCertificateIssuanceConfig`, `BackupDRManagementServer`, `NetworkSecurityDNSThreatDetector`, `NetworkSecurityAuthzPolicy`, the two `APIGateway*` kinds, the three `CloudDeploy*` kinds, `CloudFunctions2Function`, the five `Dataplex*` kinds, `AIPlatformReasoningEngine`, `SpannerInstanceConfig` and `DNSOutboundEndpoint`. These move the same
 way, but nothing in the cloud stops a resumed old slot, so Bundt must
 keep the old slot's object paused (or abandoned) for the whole move, as
@@ -2427,8 +2446,28 @@ ignores both), GPUs (`nodeSelector.accelerator`,
 naming, not configuration, or preview. Terraform's
 `google_cloud_run_v2_job` update is a PATCH of the whole job with no
 mask, so, as for services (decision 11), it needs a whole-object `RunJob`
-of ours copied from master's opt-in direct controller (size L; not built
-this session).
+of ours copied from master's opt-in direct controller (size L).
+
+Row 6, built (2026-11-23): `RunJob` (`run.gcp.hfl.dev/v1alpha1`, section
+2.3). Upstream read again first (read-only: master `5d27e1c6`, releases
+to `v1.162.0`, and the heads of the open pull requests from #13500,
+fetched without blobs, their changed paths searched for `apis/run`,
+`pkg/controller/direct/run`, `mockgcp/mockrun` and anything named for a
+run job): master's `RunJob` types, controller and mockgcp's jobs are
+byte-for-byte the pin's, its default controller is still Terraform, and
+no open pull request touches them. Built: `metadata.labels` and
+`template.labels`, `template.template.nodeSelector` and
+`gpuZonalRedundancyDisabled`, the gRPC probe (our `RunService`'s container
+type), and `binaryAuthorization.policy`. `baseImageUri`, on the measured list, is
+no gap for a job: the API takes it only for services, and a CEL rule
+refuses it with the service-only `cpuIdle` and `startupCPUBoost`. Not built: `volumeMounts[].subPath` (mockgcp's protos
+lack it, so the fake cannot show it; section 7 item 54). mockgcp patch
+0069 makes `UpdateJob` replace the job's settable fields, not only its
+template. Fake only; live pending (`docs/kinds/RunJob.md`). The worker
+pool half of the row is not built: `RunWorkerPool` is direct-only
+upstream (alpha), and its measured gaps are preview build fields (the
+row's measurement), so nothing in it is a configuration gap worth a kind
+of ours.
 
 ## 7. What is left
 
@@ -2896,6 +2935,20 @@ To raise confidence in `ArtifactRegistryRepository`:
     `ComputeSecurityPolicy` of ours with its rules (pattern 3, size L),
     which no known workload needs; it waits below the remaining
     foundation rows.
+
+54. `RunJob` (ours, `run.gcp.hfl.dev/v1alpha1`, application item 6,
+    2026-11-23; `docs/kinds/RunJob.md`). Fake only; live pending:
+    `task test-live PROJECT=$GCP_PROJECT KINDS=run LIVE_RUN=TestRunJob`
+    (free: no execution runs; GPU with `E2E_RUN_GPU=true`, a named Binary
+    Authorization policy with `E2E_RUN_BINAUTHZ_POLICY`). To be seen live:
+    the server defaults the API gives a job beyond mockgcp's (each must be
+    taken from what was read, as `RunService`'s ports and startup probe
+    were), whether the API takes probes on a job's container, and
+    `maxRetries` 0. Not built: `volumeMounts[].subPath`, which the pinned
+    Go client has but mockgcp's protos do not (the fake would drop it):
+    it needs mockgcp's Cloud Run protos regenerated, as a patch, or a
+    live-only case; and the preview fields. Promote to `v1beta1` after a
+    live pass (decision 27).
 
 43. A delete that still needs a reference (2026-11-16, `pkg/deleting`;
     updated 2026-11-17). Every kind now deletes by its recorded name and

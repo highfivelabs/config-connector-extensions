@@ -16,8 +16,9 @@
 
 // Modified by High Five Labs for config-connector-extensions. Copied from Config Connector
 // pkg/controller/direct/run/resolverefs.go (UPSTREAM.md): ResolveRunWorkerPoolRefs
-// becomes ResolveRunServiceRefs; RunJob's resolver and the v1beta1 cases are
-// left out; the KRM types are this project's.
+// becomes ResolveRunServiceRefs, and ResolveRunJobRefs is for our RunJob
+// (whose template's containers and volumes are RunService's types); the
+// v1beta1 cases are left out; the KRM types are this project's.
 
 package run
 
@@ -32,6 +33,7 @@ import (
 	vpcaccessv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/vpcaccess/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	krmrunv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	krmrunv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 )
 
@@ -66,6 +68,36 @@ func ResolveRunServiceRefs(ctx context.Context, kube client.Reader, desired *krm
 		v := &template.Volumes[i]
 		if err := resolveCommonVolumeRefs(ctx, kube, desired, v.Secret, v.CloudSQLInstance, v.GCS); err != nil {
 			return fmt.Errorf("resolving .spec.template.volumes[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func ResolveRunJobRefs(ctx context.Context, kube client.Reader, desired *krmrunv1alpha1.RunJob) error {
+	if desired.Spec.Template == nil || desired.Spec.Template.Template == nil {
+		return nil
+	}
+	template := desired.Spec.Template.Template
+	if err := resolveCommonTemplateRefs(ctx, kube, desired, template.ServiceAccountRef, template.VPCAccess); err != nil {
+		return err
+	}
+
+	for i := range template.Containers {
+		c := &template.Containers[i]
+		for j := range c.Env {
+			env := &c.Env[j]
+			if env.ValueSource != nil && env.ValueSource.SecretKeyRef != nil {
+				sm := env.ValueSource.SecretKeyRef
+				if err := resolveSecretKeySelector(ctx, kube, desired.GetNamespace(), &sm.SecretRef, sm.VersionRef); err != nil {
+					return fmt.Errorf("resolving .spec.template.template.containers[%d].env[%d].valueSource.secretKeyRef: %w", i, j, err)
+				}
+			}
+		}
+	}
+	for i := range template.Volumes {
+		v := &template.Volumes[i]
+		if err := resolveCommonVolumeRefs(ctx, kube, desired, v.Secret, v.CloudSQLInstance, v.GCS); err != nil {
+			return fmt.Errorf("resolving .spec.template.template.volumes[%d]: %w", i, err)
 		}
 	}
 	return nil

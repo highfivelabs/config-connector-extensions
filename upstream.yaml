@@ -219,6 +219,7 @@ patches:
   - {file: patches/k8s-config-connector/0066-mockgcp-monitoring-update-clears-unset-masked-fields.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0067-mockgcp-monitoring-alert-policy-alert-strategy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0068-mockgcp-artifactregistry-vulnerability-scanning-config.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0069-mockgcp-run-job-update-replaces-the-job.patch, pin: k8s-config-connector, upstream_candidate: "yes, with the golden logs of Config Connector's RunJob fixtures updated"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -681,6 +682,16 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_mapper.go]}
   - here: [pkg/controller/direct/run/resolverefs.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/resolverefs.go]}
+  - here: [apis/run/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1beta1/groupversion_info.go]}
+  - here: [apis/run/v1alpha1/runjob_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1beta1/runjob_types.go, apis/run/v1beta1/types.generated.go]}
+  - here: [apis/run/v1alpha1/runjob_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1beta1/runjob_identity.go]}
+  - here: [pkg/controller/direct/run/runjob_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runjob_controller.go]}
+  - here: [pkg/controller/direct/run/runjob_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/mapper.generated.go]}
   - here:
       - apis/iam/v1beta1/iambinding_types.go
       - apis/iam/v1beta1/iambinding_identity.go

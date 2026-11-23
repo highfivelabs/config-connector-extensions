@@ -182,6 +182,14 @@ items:
       (read at the pin's fork), as for services (decision 11). So it is a whole-object `RunJob` of ours, copied
       from master's opt-in direct controller as `RunService` was from `RunWorkerPool` (size L, next).
       `RunWorkerPool` is direct-only upstream (alpha); its measured gaps are mostly preview build fields.
+      Built 2026-11-23 for jobs: `RunJob` (`run.gcp.hfl.dev/v1alpha1`), copied from Config Connector's direct
+      `RunJob` (upstream read again: master `5d27e1c6`'s job code is the pin's, and no open pull request touches
+      it), with `metadata.labels`, `template.labels`, the task template's `nodeSelector` and
+      `gpuZonalRedundancyDisabled`, gRPC probes (our `RunService`'s container type) and
+      `binaryAuthorization.policy`; compared like our `RunService`, updated whole (`UpdateJob` takes no mask);
+      mockgcp patch 0069; live pending. `baseImageUri` is no gap for a job (the API takes it only for
+      services; CEL refuses it). Not built: `volumeMounts[].subPath` (mockgcp's protos lack it) and the preview
+      fields.
   - title: Cloud SQL instance fields
     importance: A
     gap: field
