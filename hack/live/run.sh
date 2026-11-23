@@ -63,6 +63,9 @@ source hack/live/projects.sh
 # container (ContainerClusterFields, ContainerNodePoolFields) skips live
 # unless E2E_GKE=true (it makes a GKE cluster, and takes over an hour:
 # set LIVE_TIMEOUT=150m, the live go test timeout, default 60m);
+# compute's ComputeFirewallPolicyPacketMirroringRule skips live without the
+# test folder, E2E_TEST_FOLDER; dns's DNSPolicyFields, as the other DNS
+# kinds, without E2E_DNS_ADMIN=true;
 # (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
