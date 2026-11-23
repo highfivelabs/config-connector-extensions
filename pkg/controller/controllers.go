@@ -167,6 +167,7 @@ var Kinds = []kind{
 	{gvk: computev1alpha1.ComputeSecurityPolicyFieldsGVK, crdName: "computesecuritypolicyfields.compute.gcp.hfl.dev", model: compute.NewSecurityPolicyFieldsModel},
 	{gvk: privatecav1alpha1.PrivateCACAPoolFieldsGVK, crdName: "privatecacapoolfields.privateca.gcp.hfl.dev", model: privateca.NewCAPoolFieldsModel},
 	{gvk: privatecav1alpha1.PrivateCACertificateTemplateFieldsGVK, crdName: "privatecacertificatetemplatefields.privateca.gcp.hfl.dev", model: privateca.NewCertificateTemplateFieldsModel},
+	{gvk: privatecav1alpha1.PrivateCACertificateAuthorityGVK, crdName: "privatecacertificateauthorities.privateca.gcp.hfl.dev", model: privateca.NewCertificateAuthorityModel, labels: slotguard.Metadata},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},

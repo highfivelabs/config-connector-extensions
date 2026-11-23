@@ -727,9 +727,16 @@ items:
       policy or predefined values it sends them whole without ours, and the API clears them until our next
       reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's
       `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime`
-      (in neither the Go client at the pin nor mockgcp's protos); the fields set at create (the pool's
-      `encryptionSpec`, the authority's `config`) need a parallel kind owning the whole resource (decision
-      19's pattern), size M each; the authority's `userDefinedAccessUrls` (patchable) waits for that kind.
+      (in neither the Go client at the pin nor mockgcp's protos). Built 2026-11-23 (fake only, live pending):
+      our own `PrivateCACertificateAuthority` (`privateca.gcp.hfl.dev/v1alpha1`, `docs/design.md` section 6.6
+      pattern 1, a create-only whole-object kind; section 2.3 says which kind to pick), Config Connector's
+      direct types and controller copied, with `config.x509Config.nameConstraints` and `aiaOcspServers`,
+      `config.subjectKeyId` and `userDefinedAccessUrls`; everything but the labels and the URLs immutable; a
+      self-signed authority enabled after create and disabled before delete (mockgcp patch 0062). Not built:
+      the pool's `encryptionSpec` (CMEK), which neither the pinned Go client (`cloud.google.com/go/security`
+      v1.24.0) nor mockgcp's protos have: a kind for it needs the REST client and a fake that keeps a field
+      its protos lack, or the pin's next Go client (recorded in `docs/design.md` section 7, item 45); the
+      authority's `subordinateConfig` and the subject's `rdnSequence`.
   - title: Secret Manager fields
     importance: B
     gap: field

@@ -155,7 +155,7 @@ oslogin.googleapis.com,1,1,0,2,2,0,0,100.0,0.0,0.0
 parallelstore.googleapis.com,1,1,0,9,9,0,0,100.0,0.0,0.0
 parametermanager.googleapis.com,4,2,0,15,6,0,9,40.0,0.0,60.0
 policysimulator.googleapis.com,4,0,0,80,0,0,80,0.0,0.0,100.0
-privateca.googleapis.com,4,4,0,223,159,0,64,71.3,0.0,28.7
+privateca.googleapis.com,4,4,0,223,159,13,51,71.3,5.8,22.9
 privilegedaccessmanager.googleapis.com,2,1,0,18,11,0,7,61.1,0.0,38.9
 publicca.googleapis.com,1,0,0,0,0,0,0,0.0,0.0,0.0
 pubsub.googleapis.com,4,4,0,111,41,0,70,36.9,0.0,63.1

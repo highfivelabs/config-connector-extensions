@@ -973,11 +973,18 @@ if [[ "${E2E_CLOUD_ARMOR:-}" == true ]]; then
   done
 fi
 
-# Certificate Authority Service CA pools and certificate templates (the
-# Private CA field kinds' tests), by the run's name, in us-central1, only
-# where the live-test account has Private CA (E2E_PRIVATECA=true:
-# privateca.googleapis.com on and roles/privateca.admin); without it the
-# tests do not run live. The tests' pools hold no certificate authority.
+# Certificate Authority Service CA pools, their certificate authorities
+# and certificate templates (the Private CA kinds' tests), by the run's
+# name, in us-central1, only where the live-test account has Private CA
+# (E2E_PRIVATECA=true: privateca.googleapis.com on and roles/privateca.admin);
+# without it the tests do not run live. Only
+# TestPrivateCACertificateAuthority puts an authority in its pool; one left
+# behind is disabled and deleted without the grace period (a pool with an
+# authority in it, even one in its grace period, is not deleted).
+delete_root() { # delete_root POOL NAME: disable (if enabled), then delete
+  "${G[@]}" privateca roots disable "$2" --pool="$1" --location=us-central1 --quiet >/dev/null 2>&1 || true
+  "${G[@]}" privateca roots delete "$2" --pool="$1" --location=us-central1 --skip-grace-period --ignore-active-certificates --quiet
+}
 if [[ "${E2E_PRIVATECA:-}" == true ]]; then
   rows="$("${G[@]}" privateca templates list --location=us-central1 --verbosity=error --format='value(name.basename())')"
   for name in ${rows}; do
@@ -987,6 +994,10 @@ if [[ "${E2E_PRIVATECA:-}" == true ]]; then
   rows="$("${G[@]}" privateca pools list --location=us-central1 --verbosity=error --format='value(name.basename())')"
   for name in ${rows}; do
     by_run "${name}" || continue
+    roots="$("${G[@]}" privateca roots list --pool="${name}" --location=us-central1 --verbosity=error --filter='state!=DELETED' --format='value(name.basename())')"
+    for root in ${roots}; do
+      act "certificate authority" "${name}/${root}" delete_root "${name}" "${root}"
+    done
     act "CA pool" "${name}" "${G[@]}" privateca pools delete "${name}" --location=us-central1
   done
 fi

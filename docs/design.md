@@ -204,6 +204,30 @@ to be Ready, then delete Config Connector's object with
 kind gains the fields and a release has them, move back the same way and
 retire ours (section 3.4).
 
+**`PrivateCACertificateAuthority`, ours beside Config Connector's**
+(foundation item 25, 2026-11-23). The API takes an authority's
+`config` (its subject, X.509 extensions, `subjectKeyId`), key, lifetime,
+type and bucket only at create, so the fields Config Connector's kind
+lacks there (`config.x509Config.nameConstraints` and `aiaOcspServers`,
+`config.subjectKeyId`) can only come from a kind that makes the
+authority: section 6.6's pattern 1, a create-only whole-object kind, as
+`ComputeVPNTunnel` is. Ours, `privateca.gcp.hfl.dev/v1alpha1`
+`PrivateCACertificateAuthority`, copies Config Connector's direct types,
+mapper and controller (`UPSTREAM.md`); every field but the labels and
+`userDefinedAccessUrls` (which the API changes) is immutable by CEL, and
+nothing else is compared after create. As Terraform does (read, not
+copied), a self-signed authority is enabled after create and an enabled
+one disabled before the delete; `spec.skipGracePeriod` (Terraform's
+`skip_grace_period`) deletes it without the 30-day grace period. Upstream
+(the pin and master): Config Connector's direct controller has none of
+these fields and enables nothing; no pull request adds them.
+**Which to use:** Config Connector's kind for an authority that needs
+none of the added fields; ours for a new authority that does. An existing
+authority cannot gain them (the API takes them only at create), so it
+stays on Config Connector's kind; an object of ours for an existing
+authority acquires it (its config is not compared) and from then owns
+its labels and URLs. Never both for one authority.
+
 ### 2.4 Generated kinds: standard collections from Discovery (`discokind`)
 
 Where the API resource is a standard collection (create with an ID query
@@ -2485,10 +2509,25 @@ To raise confidence in `ArtifactRegistryRepository`:
     account has Private CA (`E2E_PRIVATECA=true task test-live
     PROJECT=$GCP_PROJECT KINDS=privateca`): whether the API takes back a
     whole issuance policy or predefined values as read, and its checks of
-    the name constraints and the backdate. Not built from item 25: a
-    pool's `encryptionSpec` and an authority's `config` fields (taken at
-    create only: a parallel whole-resource kind each, size M), the
-    authority's `userDefinedAccessUrls`, and
+    the name constraints and the backdate. Built 2026-11-23 from item 25:
+    `PrivateCACertificateAuthority` (ours, section 2.3; fake only): a live
+    run (`E2E_PRIVATECA=true task test-live PROJECT=$GCP_PROJECT
+    KINDS=privateca LIVE_RUN=TestPrivateCACertificateAuthority`; a root
+    authority in a DevOps tier pool, billed by the hour while it exists,
+    deleted with `skipGracePeriod`): whether the API keeps a
+    `subjectKeyId` sent or computes its own, the error for deleting an
+    enabled authority (patch 0062 assumes FailedPrecondition), whether an
+    update with the mask `labels,user_defined_access_urls` is taken, and
+    whether the pool can be deleted at once after a delete without the
+    grace period. Not built from item 25: a pool's `encryptionSpec`
+    (CMEK): neither the pinned Go client (`cloud.google.com/go/security`
+    v1.24.0, Config Connector's pin) nor mockgcp's protos have it, so a
+    kind for it would send REST (`google.golang.org/api` has the field)
+    and need an HTTP-layer fake that keeps a field the protos lack; wait
+    for the pin's Go client to have it (a newer client than Config
+    Connector's pin would be a dependency change, the builder's call);
+    the authority's `subordinateConfig` (activation of a subordinate
+    authority) and the subject's `rdnSequence`; and
     `allowRequesterSpecifiedNotBeforeTime` (not in the pinned Go client).
 
 47. `ComputeSecurityPolicyFields` (foundation item 27, 2026-11-23): a

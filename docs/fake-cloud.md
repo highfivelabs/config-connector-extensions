@@ -400,6 +400,15 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   0057; it replaced the whole policy). It does not show: whether the API
   takes DNS64 on a policy bound to no network, or what DNS64 answers
   (mockgcp resolves nothing).
+- **Certificate authorities** (`PrivateCACertificateAuthority`, ours).
+  Patch 0062: an update replaces the masked labels and
+  `user_defined_access_urls` (it merged the request whatever the mask),
+  and an enabled authority is not deleted (FailedPrecondition; the real
+  error text is assumed). mockgcp makes up the certificate and keeps a
+  `subjectKeyId` sent. It does not show: the real certificate, whether
+  the API computes its own key ID, the API's checks of name constraints
+  and URLs, the grace period (mockgcp deletes at once), or a KMS key the
+  authority may not use.
 - **Hierarchical firewall policies' rules** (`ComputeFirewallPolicyRule`,
   ours). mockgcp serves `firewallPolicies.addRule`, `getRule`,
   `patchRule` and `removeRule`; patch 0061 makes `addRule` add a rule

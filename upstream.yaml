@@ -212,6 +212,7 @@ patches:
   - {file: patches/k8s-config-connector/0059-mockgcp-secretmanager-version-destroy-ttl.patch, pin: k8s-config-connector, upstream_candidate: "yes, with the field"}
   - {file: patches/k8s-config-connector/0060-mockgcp-lro-with-done-result.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0061-mockgcp-compute-firewall-policy-add-rule-appends.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0062-mockgcp-privateca-authority-update-mask-and-delete.patch, pin: k8s-config-connector, upstream_candidate: "yes, once Config Connector's fixtures disable first"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -295,6 +296,14 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_identity.go]}
   - here: [pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkfirewallpolicy_controller.go, pkg/controller/direct/compute/computenetworkfirewallpolicy_mapper.go]}
+  - here: [apis/privateca/v1alpha1/privatecacertificateauthority_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/privatecacertificateauthority_types.go, apis/privateca/v1beta1/types.generated.go]}
+  - here: [apis/privateca/v1alpha1/privatecacertificateauthority_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/privatecacertificateauthority_identity.go]}
+  - here: [pkg/controller/direct/privateca/certificateauthority_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/privateca/mapper.go, pkg/controller/direct/privateca/mapper.generated.go]}
+  - here: [pkg/controller/direct/privateca/certificateauthority_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/privateca/privatecacertificateauthority_controller.go]}
   - here: [apis/compute/v1alpha1/computefirewallpolicyrule_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computefirewallpolicyrule_types.go]}
   - here: [apis/compute/v1alpha1/computefirewallpolicyrule_identity.go]

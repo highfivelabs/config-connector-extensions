@@ -68,7 +68,8 @@ source hack/live/projects.sh
 # E2E_TEST_FOLDER (the rule's security profile group case also without
 # E2E_SECURITY_PROFILE_GROUP); dns's DNSPolicyFields, as the other DNS
 # kinds, without E2E_DNS_ADMIN=true;
-# privateca (PrivateCACAPoolFields, PrivateCACertificateTemplateFields)
+# privateca (PrivateCACAPoolFields, PrivateCACertificateTemplateFields,
+# PrivateCACertificateAuthority)
 # skips live unless E2E_PRIVATECA=true; compute's ComputeSecurityPolicyFields
 # unless E2E_CLOUD_ARMOR=true (a Cloud Armor policy is billed, prorated);
 # (docs/live-runs.md).

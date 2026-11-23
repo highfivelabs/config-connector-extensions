@@ -131,6 +131,7 @@ resources:
 - networkservices.gcp.hfl.dev_networkservicesauthzextensions.yaml
 - networkservices.gcp.hfl.dev_networkservicesgateways.yaml
 - privateca.gcp.hfl.dev_privatecacapoolfields.yaml
+- privateca.gcp.hfl.dev_privatecacertificateauthorities.yaml
 - privateca.gcp.hfl.dev_privatecacertificatetemplatefields.yaml
 - resourcemanager.gcp.hfl.dev_projectdefaultserviceaccounts.yaml
 - resourcemanager.gcp.hfl.dev_resourcemanagerboundaries.yaml

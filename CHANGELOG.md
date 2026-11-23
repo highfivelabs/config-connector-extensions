@@ -104,6 +104,15 @@ has been released yet; each release moves its entries out of
 
 ### Added
 
+- **`PrivateCACertificateAuthority`** (`privateca.gcp.hfl.dev/v1alpha1`):
+  a Certificate Authority Service authority made with the fields the API
+  takes only at create and Config Connector's kind lacks:
+  `config.x509Config.nameConstraints` and `aiaOcspServers`,
+  `config.subjectKeyId`, and `userDefinedAccessUrls` (which can change,
+  with the labels; everything else is immutable). A self-signed authority
+  is enabled after create and disabled before delete;
+  `spec.skipGracePeriod` deletes it without the 30-day grace period.
+
 - **`ComputeFirewallPolicyRule`** (`compute.gcp.hfl.dev/v1alpha1`): a
   rule of a hierarchical (organization or folder) firewall policy that
   owns the whole rule, with Config Connector's `ComputeFirewallPolicyRule`
