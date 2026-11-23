@@ -599,7 +599,10 @@ func sweepFile(kinds []*built) []byte {
 	sorted := append([]*built(nil), kinds...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].c.Kind < sorted[j].c.Kind })
 	for _, k := range sorted {
-		if k.sweep == "" {
+		if k.sweep == "" || k.c.Mockgcp {
+			// A Mockgcp kind's resources (a subnetwork, a service
+			// attachment) are swept by sweep.sh's own section, in the
+			// order their dependents need, not by the discokind loop.
 			continue
 		}
 		coll, ok := k.sweep, true

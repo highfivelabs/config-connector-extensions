@@ -112,6 +112,8 @@ type Config struct {
 	// Mockgcp: the fake cloud leaves the collection to mockgcp, which
 	// serves it already (Kind.Mockgcp): a parallel kind for a resource
 	// Config Connector manages, whose other tests make it through mockgcp.
+	// Such a kind is not in hack/live/discokinds.tsv: sweep.sh sweeps the
+	// resource in its own section, before what it depends on.
 	Mockgcp bool `json:"mockgcp,omitempty"`
 	// GetQuery are query parameters every get of the resource sends
 	// (Kind.GetQuery): API Gateway's view FULL, without which a config's
