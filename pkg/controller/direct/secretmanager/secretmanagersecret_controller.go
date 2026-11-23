@@ -26,9 +26,9 @@ package secretmanager
 import (
 	"context"
 	"fmt"
-	"strings"
 	"reflect"
 	"regexp"
+	"strings"
 
 	gcp "cloud.google.com/go/secretmanager/apiv1"
 	secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
