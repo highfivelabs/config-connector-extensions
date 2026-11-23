@@ -381,7 +381,10 @@ items:
     upstream: >-
       none. Open PRs #12756 (stop `UpdatePolicy` on every reconcile) and #6719 (structured diff) are fixes to the
       existing kind.
-    build: Wait (decision 5); `dryRunSpec` covers the use for now.
+    build: >-
+      Not built (checked 2026-11-23): the API marks `Policy.alternate` deprecated ("Deprecated." in orgpolicy v2's
+      Discovery document), and `dryRunSpec`, which `OrgPolicyPolicy` has, replaces it. Every uncovered attribute of
+      the row is under `alternate`.
   - title: GKE cluster and node pool fields
     importance: A
     gap: field

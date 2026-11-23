@@ -3018,7 +3018,9 @@ To raise confidence in `ArtifactRegistryRepository`:
     `subnetworks.patch` as merge patches with only those fields;
     Terraform's updates send only the fields that changed, a network's
     `routingConfig` with `routingMode` alone; delete leaves them; patch
-    0056).
+    0056). Item 13 (`OrgPolicyPolicy.alternate`) is not built: the API
+    marks `alternate` deprecated, and `dryRunSpec`, which Config
+    Connector's kind has, replaces it.
 
 ## 9. The operator: Config Connector's identity, per namespace
 

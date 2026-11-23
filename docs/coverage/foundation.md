@@ -274,7 +274,7 @@ What these numbers miss, for the foundation:
 - **Missing, attributes that matter:** `alternate.spec.rules[]` (`allowAll`, `denyAll`, `enforce`, `values`, `condition`, `parameters`), `alternate.spec.inheritFromParent`, `alternate.spec.reset`, `alternate.launch`.
   - uncovered in `orgpolicy.googleapis.com/Policy` (measured): `alternate.launch`, `alternate.spec.inheritFromParent`, `alternate.spec.reset`, `alternate.spec.rules[].allowAll`, `alternate.spec.rules[].condition.description`, `alternate.spec.rules[].condition.expression`, `alternate.spec.rules[].condition.location`, `alternate.spec.rules[].condition.title`, `alternate.spec.rules[].denyAll`, `alternate.spec.rules[].enforce` and 3 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. Open PRs #12756 (stop `UpdatePolicy` on every reconcile) and #6719 (structured diff) are fixes to the existing kind.
-- **Build:** Wait (decision 5); `dryRunSpec` covers the use for now.
+- **Build:** Not built (checked 2026-11-23): the API marks `Policy.alternate` deprecated ("Deprecated." in orgpolicy v2's Discovery document), and `dryRunSpec`, which `OrgPolicyPolicy` has, replaces it. Every uncovered attribute of the row is under `alternate`.
 
 ### 14. GKE cluster and node pool fields
 
