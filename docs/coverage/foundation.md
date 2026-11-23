@@ -11,7 +11,7 @@ By category, counted in attributes of the create requests of the resources in it
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Platform foundation | 150 | 101 | 3121 | 39.0% | 19.3% | 41.7% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 6.4% | 26.4% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 8.5% | 24.3% |
 
 By service:
 
@@ -36,7 +36,7 @@ By service:
 | security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 8.1% | 18.5% |
 | security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 5.8% | 22.9% |
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 0.0% | 51.3% |
-| security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 3.8% | 44.3% |
+| security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 26.7% | 21.4% |
 | security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 15.3% | 25.8% |
 | security | `securityposture.googleapis.com` | 2 | 63 | 93.7% | 0.0% | 6.3% |
 | security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 4.5% | 20.5% |
@@ -87,7 +87,7 @@ What these numbers miss, for the foundation:
 | 18 | [KMS fields (key access justifications, key backend)](#18-kms-fields-key-access-justifications-key-backend) | A | field | 1 | S | 7 / 15 (53.3%) | open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would land |
 | 19 | [Hierarchical firewall policy rule fields](#19-hierarchical-firewall-policy-rule-fields) | A | field | 1 | M | 53 / 114 (44.7%) | none found (`ComputeFirewall` has #12102 "validate direct promotion") |
 | 20 | [Security Command Center at folder and project level](#20-security-command-center-at-folder-and-project-level) | B | whole | 3 | M | 25 / 40 (0.0%) | in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCusto... |
-| 21 | [VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)](#21-vpc-service-controls-authorized-orgs-descriptions-dry-run-spec-user-access-bindings) | B | whole | 3 | M | 54 / 105 (43.8%) | partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08) |
+| 21 | [VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)](#21-vpc-service-controls-authorized-orgs-descriptions-dry-run-spec-user-access-bindings) | B | whole | 3 | M | 24 / 105 (43.8%) | partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08) |
 | 22 | [Privileged Access Manager grants](#22-privileged-access-manager-grants) | B | whole | 0 | S | 7 / 18 (61.1%) | none found. |
 | 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 3 / 12 (0.0%) | none. |
 | 24 | [Cloud Identity SSO profiles, assignments and policies](#24-cloud-identity-sso-profiles-assignments-and-policies) | B | whole | 0 | M | 26 / 26 (0.0%) | none for these |
@@ -378,14 +378,13 @@ What these numbers miss, for the foundation:
 - **Importance** B, **gap** whole, **size** M, **modules** 3 (vpc-sc, organization, project).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc`: 0 / 5 / 0 of 5; AccessContextManagerAuthorizedOrgsDesc (ours)
-  - `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter`: 43 / 0 / 30 of 73; AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter
+  - `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter`: 43 / 30 / 0 of 73; AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter, AccessContextManagerServicePerimeter (ours)
   - `accesscontextmanager.googleapis.com/GcpUserAccessBinding`: 3 / 0 / 24 of 27; AccessContextManagerGCPUserAccessBinding (alpha)
 - **Missing, whole resources:** `AccessContextManagerAuthorizedOrgsDesc`; on `AccessContextManagerServicePerimeter` the dry-run `spec` (ingress and egress policies, `vpcAccessibleServices`) and its `egressFrom.sources`; on `AccessContextManagerGCPUserAccessBinding` (alpha-only) `scopedAccessSettings`, session settings, `principal`, `dryRunAccessLevels`.
 - **Missing, attributes that matter:** The measured lists; the perimeter's dry-run `spec` is the one every VPC-SC rollout uses.
-  - uncovered in `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter` (measured): `spec.egressPolicies[].egressFrom.sourceRestriction`, `spec.egressPolicies[].egressFrom.sources[].accessLevel`, `spec.egressPolicies[].egressFrom.sources[].pscEndpoint.forwardingRule`, `spec.egressPolicies[].egressFrom.sources[].resource`, `spec.egressPolicies[].egressTo.roles[]`, `spec.egressPolicies[].title`, `spec.ingressPolicies[].ingressFrom.sources[].pscEndpoint.forwardingRule`, `spec.ingressPolicies[].ingressFrom.sources[].resource`, `spec.ingressPolicies[].ingressTo.roles[]`, `spec.ingressPolicies[].title` and 20 more
   - uncovered in `accesscontextmanager.googleapis.com/GcpUserAccessBinding` (measured): `dryRunAccessLevels[]`, `principal.federatedPrincipal`, `principal.serviceAccount`, `principal.serviceAccountProjectNumber`, `scopedAccessSettings[].activeSettings.accessLevels[]`, `scopedAccessSettings[].activeSettings.sessionSettings.maxInactivity`, `scopedAccessSettings[].activeSettings.sessionSettings.sessionLength`, `scopedAccessSettings[].activeSettings.sessionSettings.sessionLengthEnabled`, `scopedAccessSettings[].activeSettings.sessionSettings.sessionReauthMethod`, `scopedAccessSettings[].activeSettings.sessionSettings.useOidcMaxAge` and 14 more
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08). Nothing for the perimeter's dry-run fields.
-- **Build:** `AccessContextManagerAuthorizedOrgsDesc` built 2026-11-23 (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind`, live pending): #14202 is a Terraform-based kind (a service mapping, no Go code), which this manager cannot run, so its fixtures, field names and immutable fields are copied (`UPSTREAM.md`) and `docs/design.md` section 2.3 says how objects move to Config Connector's kind once it is released. The perimeter fields: wait (decision 5).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08). Nothing for the perimeter's dry-run fields: read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0), the perimeter is still Terraform-based, with direct types on master (no controller) that lack them.
+- **Build:** `AccessContextManagerAuthorizedOrgsDesc` built 2026-11-23 (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind`, live pending): #14202 is a Terraform-based kind (a service mapping, no Go code), which this manager cannot run, so its fixtures, field names and immutable fields are copied (`UPSTREAM.md`) and `docs/design.md` section 2.3 says how objects move to Config Connector's kind once it is released. The perimeter fields (decision 19 replaces "wait"): our whole-object `AccessContextManagerServicePerimeter` (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated 2026-11-23, the API's field set for both `status` and the dry-run `spec`; Terraform's update sends either whole, so no field kind can own them); live pending, as the authorized orgs description (organization access). Not built: the user access binding's fields; the API names a binding itself (create takes no ID), which `hack/discokind` does not generate, so it needs a hand-written stable kind (decision 26).
 
 ### 22. Privileged Access Manager grants
 
@@ -484,6 +483,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | Kind | Resource | Ours beyond official | From an open PR |
 | --- | --- | ---: | :-: |
 | AccessContextManagerAuthorizedOrgsDesc | accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc | 5 | false |
+| AccessContextManagerServicePerimeter | accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter | 30 | false |
 | AssetFeed | cloudasset.googleapis.com/Feed | 0 | false |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
 | ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
@@ -544,25 +544,25 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | KMSCryptoKeyFields | (not a create) a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37) | n/a | false |
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
-| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
 | LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
-| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAddressGroup | networksecurity.googleapis.com/AddressGroup | 7 | false |
+| NetworkSecurityAddressGroup | networksecurity.googleapis.com/projects.locations.addressGroups | 0 | false |
 | NetworkSecurityAuthzPolicy | networksecurity.googleapis.com/AuthzPolicy | 5 | false |
 | NetworkSecurityDNSThreatDetector | networksecurity.googleapis.com/DnsThreatDetector | 0 | false |
 | NetworkSecurityGatewaySecurityPolicy | networksecurity.googleapis.com/GatewaySecurityPolicy | 0 | false |
@@ -577,10 +577,10 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | PrivateCACertificateAuthority | privateca.googleapis.com/CaPoolCertificateAuthority | 13 | false |
 | PrivateCACertificateTemplateFields | (not a create) a field kind, maximumLifetime and name constraints of a certificate template Config Connector's PrivateCACertificateTemplate owns, written with certificateTemplates.patch (decision 37) | n/a | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 13 | false |
 | SecretManagerSecret | secretmanager.googleapis.com/Secret | 3 | false |
@@ -694,7 +694,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `accesscontextmanager.googleapis.com/AccessPolicy` | AccessContextManagerAccessPolicy | - | 3 | 1 | 0 | 2 | - |
 | security | `accesscontextmanager.googleapis.com/AccessPolicyAccessLevel` | AccessContextManagerAccessLevelCondition (alpha), AccessContextManagerAccessLevel | - | 23 | 21 | 0 | 2 | - |
 | security | `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc` | - | AccessContextManagerAuthorizedOrgsDesc | 5 | 0 | 5 | 0 | 21 |
-| security | `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter` | AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter | - | 73 | 43 | 0 | 30 | 21 |
+| security | `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter` | AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter | AccessContextManagerServicePerimeter | 73 | 43 | 30 | 0 | 21 |
 | security | `accesscontextmanager.googleapis.com/GcpUserAccessBinding` | AccessContextManagerGCPUserAccessBinding (alpha) | - | 27 | 3 | 0 | 24 | 21 |
 | security | `assuredworkloads.googleapis.com/Workload` | AssuredWorkloadsWorkload (alpha) | - | 20 | 9 | 0 | 11 | - |
 | foundation | `billingbudgets.googleapis.com/Budget` | BillingBudgetsBudget | - | 28 | 24 | 0 | 4 | - |

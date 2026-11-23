@@ -2631,9 +2631,23 @@ To raise confidence in `ArtifactRegistryRepository`:
     2026-11-23; section 2.3): a live run needs an organization's access
     policy and Access Context Manager roles on it for the live-test
     account, which a live run does not touch (`live-skip`); and the move
-    to Config Connector's kind once #14202 is released. Item 21's other
-    gaps (the perimeter's dry-run `spec` fields, the alpha-only user
-    access binding's fields) are not built.
+    to Config Connector's kind once #14202 is released. Item 21's
+    perimeter fields are in our generated
+    `AccessContextManagerServicePerimeter`
+    (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, 2026-11-23): Config
+    Connector's Terraform-based perimeter lacks, in both `status` and the
+    dry-run `spec`, an egress rule's `sources` and `sourceRestriction`, the
+    rules' `roles` and `title`, PSC endpoint sources and
+    `vpcAccessibleServices.allowedServicePatterns`, and Terraform's update
+    sends either configuration whole, so ours owns the whole perimeter.
+    Its live run waits as this kind's does (`live-skip`); to be seen live:
+    whether `servicePerimeters.patch` takes the top-level mask
+    (`status`, `spec`) the controller sends, and whether the API answers
+    rules as sent (order, `*`). It cannot be used beside Config
+    Connector's perimeter or `AccessContextManagerServicePerimeterResource`
+    for the same perimeter. The alpha-only user access binding's fields are
+    not built: the API names a binding itself, which `hack/discokind` does
+    not generate.
 
 44. `IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`
     (decision 38, 2026-11-23): a live run. The credential's

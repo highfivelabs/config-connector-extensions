@@ -801,3 +801,22 @@
   nameInBody: true
   immutable: [assetType, authorizationDirection, authorizationType]
   note: "The organizations an organization's access policy trusts for, or lets evaluate, device and credential strength signals; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."
+
+# Foundation item 21's perimeter fields (2026-11-23): Config Connector's
+# Terraform-based AccessContextManagerServicePerimeter lacks, in both the
+# enforced (status) and the dry-run (spec) configuration, an egress rule's
+# sources and sourceRestriction, the rules' roles and titles, PSC endpoint
+# sources and VPC accessible services' allowedServicePatterns; Terraform's
+# update sends status or spec whole, so no field kind can own them. Ours is
+# a parallel kind with the API's field set (decision 19); upstream master
+# has direct types for the perimeter (no controller) without these fields.
+- kind: AccessContextManagerServicePerimeter
+  group: accesscontextmanager.gcp.hfl.dev
+  version: v1alpha1
+  discovery: accesscontextmanager.v1
+  resource: accessPolicies.servicePerimeters
+  terraform: google_access_context_manager_service_perimeter
+  nameInBody: true
+  immutable: [perimeterType]
+  skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
+  note: "A VPC Service Controls perimeter of an access policy, with its enforced (status) and dry-run (spec) configurations; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."

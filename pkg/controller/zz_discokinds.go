@@ -897,6 +897,15 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 	},
+	{
+		GVK:        accesscontextmanagerv1alpha1.AccessContextManagerServicePerimeterGVK,
+		CRDName:    "accesscontextmanagerserviceperimeters.accesscontextmanager.gcp.hfl.dev",
+		BaseURL:    "https://accesscontextmanager.googleapis.com/v1/",
+		Name:       "accessPolicies/{accessPolicy}/servicePerimeters/{id}",
+		NameInBody: true,
+		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{

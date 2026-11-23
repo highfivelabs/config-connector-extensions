@@ -27,3 +27,8 @@ import (
 func TestAccessContextManagerAuthorizedOrgsDesc(t *testing.T) {
 	kindtest.Run(t, "AccessContextManagerAuthorizedOrgsDesc")
 }
+
+// TestAccessContextManagerServicePerimeter runs testdata/discokind/AccessContextManagerServicePerimeter/ on the fake cloud, or live.
+func TestAccessContextManagerServicePerimeter(t *testing.T) {
+	kindtest.Run(t, "AccessContextManagerServicePerimeter")
+}
