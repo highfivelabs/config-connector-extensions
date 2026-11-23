@@ -124,6 +124,11 @@ has been released yet; each release moves its entries out of
   delete Config Connector's with `cnrm.cloud.google.com/deletion-policy:
   abandon` (`docs/kinds/ComputeFirewallPolicyRule.md`).
 
+- **`ComputeRegionNetworkFirewallPolicyRule`**: `spec.securityProfileGroup`
+  and `spec.tlsInspect` (with action `apply_security_profile_group`),
+  `spec.match.srcNetworkContext`, `destNetworkContext` and `srcNetworks`,
+  as on `ComputeNetworkFirewallPolicyRule`.
+
 - **`ComputeNetworkFirewallPolicyRule`**: `spec.securityProfileGroup`
   and `spec.tlsInspect` (Cloud NGFW Enterprise inspection, with action
   `apply_security_profile_group`) and `spec.match.srcNetworks`.

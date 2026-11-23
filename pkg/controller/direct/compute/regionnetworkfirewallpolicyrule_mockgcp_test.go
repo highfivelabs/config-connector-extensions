@@ -25,6 +25,7 @@ package compute_test
 // how the sweeper finds it.
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -230,6 +231,76 @@ func TestComputeRegionNetworkFirewallPolicyRule(t *testing.T) {
 		if n := writes() - before; n != 0 {
 			t.Errorf("a resync wrote %d times", n)
 		}
+	})
+
+	t.Run("a security profile group without its action is refused by the CRD", func(t *testing.T) {
+		r := newRule("bad-group", 1100)
+		r.Spec.SecurityProfileGroup = mockenv.Ptr("//networksecurity.googleapis.com/organizations/123/locations/global/securityProfileGroups/g")
+		if err := env.Kube.Create(env.Ctx, r); err == nil || !strings.Contains(err.Error(), "securityProfileGroup is set exactly when action is apply_security_profile_group") {
+			t.Errorf("creating a group on an allow rule: %v, want refused", err)
+		}
+		r = newRule("bad-tls", 1100)
+		r.Spec.TLSInspect = mockenv.Ptr(true)
+		if err := env.Kube.Create(env.Ctx, r); err == nil || !strings.Contains(err.Error(), "tlsInspect needs action apply_security_profile_group") {
+			t.Errorf("creating TLS inspection on an allow rule: %v, want refused", err)
+		}
+	})
+
+	t.Run("a security profile group, TLS inspection, network contexts and source networks are set and taken off", func(t *testing.T) {
+		// Live, the group must exist: an organization's security profile
+		// group the project may use (Cloud NGFW Enterprise).
+		group := "//networksecurity.googleapis.com/organizations/123456789/locations/global/securityProfileGroups/" + mockenv.Name("spg")
+		if mockenv.Live() {
+			group = os.Getenv("E2E_SECURITY_PROFILE_GROUP")
+			if group == "" {
+				t.Skip("E2E_SECURITY_PROFILE_GROUP is not set: a live apply_security_profile_group rule needs an existing security profile group (docs/kinds/ComputeRegionNetworkFirewallPolicyRule.md)")
+			}
+		}
+		network := "projects/" + mockenv.Project + "/global/networks/" + mockenv.Name("src")
+		settle := func(t *testing.T, ok func(*pb.FirewallPolicyRule) bool) {
+			t.Helper()
+			deadline := time.Now().Add(mockenv.Timeout())
+			for {
+				got, err := cloudRule(t, 1000)
+				if err == nil && ok(got) {
+					break
+				}
+				if time.Now().After(deadline) {
+					t.Fatalf("the cloud rule did not change: %v, %v", got, err)
+				}
+				time.Sleep(time.Second)
+			}
+			env.WaitReady(ruleGVK, namespace, health)
+		}
+		update(t, health, func(o *computev1beta1.ComputeRegionNetworkFirewallPolicyRule) {
+			o.Spec.Action = "apply_security_profile_group"
+			o.Spec.SecurityProfileGroup = mockenv.Ptr(group)
+			o.Spec.TLSInspect = mockenv.Ptr(true)
+			o.Spec.Match.SrcNetworkContext = mockenv.Ptr("VPC_NETWORKS")
+			o.Spec.Match.SrcNetworks = []string{network}
+		})
+		settle(t, func(got *pb.FirewallPolicyRule) bool {
+			return got.GetSecurityProfileGroup() != "" && got.GetTlsInspect() && got.GetMatch().GetSrcNetworkContext() == "VPC_NETWORKS" && len(got.GetMatch().GetSrcNetworks()) == 1
+		})
+		before := writes()
+		resync(t, health)
+		time.Sleep(3 * time.Second)
+		env.WaitReady(ruleGVK, namespace, health)
+		if n := writes() - before; n != 0 {
+			t.Errorf("a resync wrote %d times", n)
+		}
+		update(t, health, func(o *computev1beta1.ComputeRegionNetworkFirewallPolicyRule) {
+			o.Spec.Action = "allow"
+			o.Spec.SecurityProfileGroup = nil
+			o.Spec.TLSInspect = nil
+			o.Spec.Match.SrcNetworkContext = nil
+			o.Spec.Match.SrcNetworks = nil
+		})
+		settle(t, func(got *pb.FirewallPolicyRule) bool {
+			c := got.GetMatch().GetSrcNetworkContext()
+			return got.GetAction() == "allow" && got.GetSecurityProfileGroup() == "" && !got.GetTlsInspect() &&
+				(c == "" || c == "UNSPECIFIED") && len(got.GetMatch().GetSrcNetworks()) == 0
+		})
 	})
 
 	t.Run("a rule changed out of band is put back", func(t *testing.T) {

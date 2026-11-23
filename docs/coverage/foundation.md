@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 18.6% | 42.5% |
+| Platform foundation | 150 | 101 | 3121 | 38.9% | 18.7% | 42.3% |
 | Security-adjacent | 82 | 69 | 1406 | 67.2% | 6.4% | 26.4% |
 
 By service:
@@ -18,7 +18,7 @@ By service:
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 23.2% | 36.4% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 23.9% | 35.7% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
@@ -68,7 +68,7 @@ What these numbers miss, for the foundation:
 | # | Item | Imp. | Gap | Modules | Size | Measured: attributes uncovered / total (official) | Upstream |
 | ---: | --- | :-: | --- | ---: | :-: | --- | --- |
 | 1 | [Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)](#1-hierarchy-and-project-settings-service-identity-at-folder-and-organization-default-service-accounts-default-network-tier) | A | whole | 3 | M | n/a (not a create, or not in the API's create requests) | none |
-| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 89 / 131 (0.0%) | none |
+| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 84 / 131 (0.0%) | none |
 | 3 | [Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)](#3-organization-level-custom-iam-roles-covered-by-config-connectors-iamcustomrole) | A | whole | 1 | S | 6 / 14 (57.1%) | `IAMCustomRole` (Terraform-based, `v1beta1`) has it |
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 0 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
@@ -107,14 +107,14 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** whole, **size** M, **modules** 2 (net-firewall-policy, net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 20 / 12 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 25 / 7 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]`: 0 / 11 / 21 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 11 / 21 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule, ComputeFirewallPolicyPacketMirroringRule (ours), ComputeFirewallPolicyRule (ours)
 - **Missing, whole resources:** `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` and `ComputeRegionNetworkFirewallPolicyPacketMirroringRule`; the same packet mirroring rule for the global network policy (`google_compute_network_firewall_policy_packet_mirroring_rule`) and the hierarchical policy. Our `ComputeRegionNetworkFirewallPolicy` is the policy only (its `description`).
 - **Missing, attributes that matter:** All of a rule: `priority`, `action`, `direction`, `disabled`, `enableLogging`, `ruleName`, `description`, `match` (`srcIpRanges`, `destIpRanges`, `layer4Configs[]`, `srcFqdns`, `destFqdns`, `srcRegionCodes`, `destRegionCodes`, `srcThreatIntelligences`, `destThreatIntelligences`, `srcAddressGroups`, `destAddressGroups`, `srcSecureTags`, `srcNetworkType`, `destNetworkType`), `targetSecureTags`, `targetServiceAccounts`, `securityProfileGroup`, `tlsInspect`. An association is `attachmentTarget` (a network), `name` and `priority`.
-  - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkContext`, `rules[].match.destNetworkType`, `rules[].match.srcNetworkContext`, `rules[].match.srcNetworkType`, `rules[].match.srcNetworks[]`, `rules[].match.srcSecureTags[].name`, `rules[].securityProfileGroup`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetSecureTags[].name` and 2 more
+  - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkType`, `rules[].match.srcNetworkType`, `rules[].match.srcSecureTags[].name`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetSecureTags[].name`, `rules[].targetType`
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]` (measured): `associations[].attachmentTarget`, `associations[].name`, `associations[].priority`
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]`, `packetMirroringRules[].match.srcAddressGroups[]`, `packetMirroringRules[].match.srcFqdns[]`, `packetMirroringRules[].match.srcNetworkContext` and 11 more
@@ -353,7 +353,7 @@ What these numbers miss, for the foundation:
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkType`, `rules[].match.srcNetworkType`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetType`
   - uncovered in `compute.googleapis.com/OrganizationSecurityPolicy:rules[]` (measured): `rules[].headerAction.requestHeadersToAdds[].headerName`, `rules[].headerAction.requestHeadersToAdds[].headerValue`, `rules[].match.expr.expression`, `rules[].match.expr.location`, `rules[].match.expr.title`, `rules[].match.exprOptions.recaptchaOptions.actionTokenSiteKeys[]`, `rules[].match.exprOptions.recaptchaOptions.sessionTokenSiteKeys[]`, `rules[].networkMatch.destPorts[]`, `rules[].networkMatch.srcAsns[]`, `rules[].networkMatch.srcIpRanges[]` and 32 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (`ComputeFirewall` has #12102 "validate direct promotion"). Read again 2026-11-23 at the pin: Config Connector's `ComputeFirewallPolicyRule` (hierarchical) is direct, without `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `ruleName`, `srcSecureTags`, `srcNetworks` and the network types, and its update sends the whole rule (`patchRule`), so a field kind beside it would be reset by every change. Read again 2026-11-23 (master `bc464f5`, open pull requests searched for `ComputeFirewallPolicyRule`, `securityProfileGroup` and `tlsInspect`): master's mapper still marks the four fields `MISSING`; the only open pull request on the kind, #5440 (2025-10-16), changes its Go types' optionality and adds no field.
-- **Build:** Decision 19 replaces "wait". Built 2026-11-23 (fake only, live pending): our own `ComputeNetworkFirewallPolicyRule` (global network policies) takes `securityProfileGroup`, `tlsInspect` and `match.srcNetworks`; and our own `ComputeFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, a whole-object kind beside Config Connector's direct one, section 6.6 pattern 3; `docs/design.md` section 2.3 says which to pick) copies Config Connector's types and controller and adds `ruleName`, `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `match.srcSecureTags`, the network contexts and `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Left: the regional rule's `srcNetworks`; the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their newer names); a global network rule's `targetResources`; `targetForwardingRules` and `targetType`; `ComputeOrganizationSecurityPolicyRule`'s Cloud Armor fields; the policy's `displayName`/`shortName`.
+- **Build:** Decision 19 replaces "wait". Built 2026-11-23 (fake only, live pending): our own `ComputeNetworkFirewallPolicyRule` (global network policies) takes `securityProfileGroup`, `tlsInspect` and `match.srcNetworks`; and our own `ComputeFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, a whole-object kind beside Config Connector's direct one, section 6.6 pattern 3; `docs/design.md` section 2.3 says which to pick) copies Config Connector's types and controller and adds `ruleName`, `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `match.srcSecureTags`, the network contexts and `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Our regional `ComputeRegionNetworkFirewallPolicyRule` (item 2) takes the group, TLS inspection, the network contexts and `match.srcNetworks` too (2026-11-23, fake only). Left: the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their newer names); a global or regional network rule's `targetResources`; `targetForwardingRules` and `targetType`; `ComputeOrganizationSecurityPolicyRule`'s Cloud Armor fields; the policy's `displayName`/`shortName`.
 
 ### 20. Security Command Center at folder and project level
 
@@ -506,7 +506,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputePublicDelegatedPrefix | compute.googleapis.com/PublicDelegatedPrefix | 15 | false |
 | ComputeRegionDiskResourcePolicyAttachment | (not a create) no API resource named like regiondiskresourcepolicyattachment/computeregiondiskresourcepolicyattachment in compute.googleapis.com | n/a | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
-| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
+| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 27 | false |
 | ComputeRegionPerInstanceConfig | (not a create) no API resource named like regionperinstanceconfig/computeregionperinstanceconfig in compute.googleapis.com | n/a | false |
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
@@ -757,7 +757,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `compute.googleapis.com/PacketMirroring` | ComputePacketMirroring | - | 12 | 12 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | - | ComputePublicAdvertisedPrefix | 7 | 0 | 7 | 0 | 7 |
 | foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
-| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 22 | 51 | 2 |
+| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 27 | 46 | 2 |
 | security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | - |
 | security | `compute.googleapis.com/RegionSslPolicy` | ComputeRegionSSLPolicy (alpha) | - | 6 | 5 | 0 | 1 | - |
 | foundation | `compute.googleapis.com/Route` | ComputeRoute | - | 13 | 11 | 0 | 2 | - |

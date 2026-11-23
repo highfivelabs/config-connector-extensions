@@ -2341,8 +2341,11 @@ To raise confidence in `ArtifactRegistryRepository`:
     API's checks of a rule (`goto_next` with logging, secure tags together
     with target service accounts, FQDNs or region codes on the wrong
     direction, the policy's tuple limit), which mockgcp does not make;
-    `securityProfileGroup`, `tlsInspect` and `targetResources`, the
-    fields this kind lacks; how long a changed rule stays "not ready".
+    `targetResources`, the field this kind lacks (`securityProfileGroup`,
+    `tlsInspect`, the network contexts and `match.srcNetworks` were added
+    2026-11-23, fake only; the group case live needs
+    `E2E_SECURITY_PROFILE_GROUP`); how long a changed rule stays "not
+    ready".
 28. `ComputeRouter`: a rotated MD5 key Secret is noticed at the next
     reconcile (Config Connector's resync interval), not when the Secret
     changes (no watch, as item 22); peers and interfaces the API manages
@@ -2552,8 +2555,10 @@ To raise confidence in `ArtifactRegistryRepository`:
     upstream sends it, the form the API answers for a network, a group
     and a target network (compared by path), and its checks of a rule
     that mockgcp does not make. Not built from item 19: the network
-    types, `targetForwardingRules` and `targetType`, a global network
-    rule's `targetResources`, the regional rule's `srcNetworks`.
+    types, `targetForwardingRules` and `targetType`, a global or regional
+    network rule's `targetResources` (the regional rule's `srcNetworks`,
+    network contexts, group and TLS inspection were added the same day,
+    item 27).
 
 46. `AccessContextManagerAuthorizedOrgsDesc` (foundation item 21,
     2026-11-23; section 2.3): a live run needs an organization's access

@@ -568,9 +568,10 @@ items:
       whole-object kind beside Config Connector's direct one, section 6.6 pattern 3; `docs/design.md` section 2.3
       says which to pick) copies Config Connector's types and controller and adds `ruleName`,
       `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `match.srcSecureTags`, the network contexts and
-      `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Left: the regional rule's
-      `srcNetworks`; the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their
-      newer names); a global network rule's `targetResources`; `targetForwardingRules` and `targetType`;
+      `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Our regional
+      `ComputeRegionNetworkFirewallPolicyRule` (item 2) takes the group, TLS inspection, the network contexts and
+      `match.srcNetworks` too (2026-11-23, fake only). Left: the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their
+      newer names); a global or regional network rule's `targetResources`; `targetForwardingRules` and `targetType`;
       `ComputeOrganizationSecurityPolicyRule`'s Cloud Armor fields; the policy's `displayName`/`shortName`.
   # ---- B, whole resources ----
   - title: Security Command Center at folder and project level
