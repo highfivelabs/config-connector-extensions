@@ -287,7 +287,9 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   network, or that the interfaces match; not that the peer's address is
   public (the API refuses a reserved one, RFC 5735); not the cipher suite's
   algorithm names or combinations; and it keeps the references as sent
-  (the real API answers with full URLs). The patch also makes HA VPN
+  (the real API answers with full URLs). It keeps and returns `params`
+  (resource manager tags at insert), which the real API never returns,
+  and binds no tag. The patch also makes HA VPN
   gateway writes answer with a regional operation, as the API does:
   upstream's mock answered with a global one, which the regional client's
   `Wait` could not find (the test's gateway failed with a 404 on it).
@@ -370,6 +372,159 @@ holds only CRDs: by default the `sql`, `iam`, `resourcemanager` and
   anything, so a GPU `nodeSelector` is stored but never checked against
   the region's GPUs or quota, and `invokerIamDisabled` changes nothing it
   serves.
+- **Cloud Run jobs in mockgcp** (`RunJob`, ours). Patch 0069: `jobs.patch`
+  (`UpdateJob`, which takes no mask) replaces the job's labels,
+  annotations, client fields, launch stage and Binary Authorization
+  settings with the request's (it kept only the template), moves the
+  generation on and recomputes the etag. It does not show: which server
+  defaults the real API gives a job (the fake gives a task count of 1, a
+  600s timeout, 3 retries, the compute default service account, the
+  second generation environment and 1 CPU / 512Mi), whether the API takes
+  probes on a job's container, a Binary Authorization policy that must
+  exist (any name is kept), a GPU's quota, or an execution (it runs
+  none). Its protos lack `volumeMounts[].subPath`, which `RunJob` does not
+  build for that reason.
+- **Cloud Run worker pools in mockgcp** (`RunWorkerPool`, ours, unpatched).
+  `workerPools.patch` honours an update mask. Its worker pool template
+  protos lack `gpuZonalRedundancyDisabled` and `volumeMounts[].subPath`
+  (which `RunWorkerPool` does not build for that reason). It does not
+  show: the real API's server defaults, a Binary Authorization policy that
+  must exist (any name is kept), or an instance (it runs none).
+- **Compute Engine service attachments** (`ComputeServiceAttachmentFields`,
+  and the generated `ComputeServiceAttachment`, which `pkg/discokind/fake`
+  leaves to mockgcp: `kinds.yaml` `mockgcp`). mockgcp's merge patch cannot
+  patch a map (`metadata`) and its protos lack `natIpsPerEndpoint`, so the
+  generated kind's fixtures set neither.
+  mockgcp's merge patch (`mergeProtos`) now replaces any scalar (patch
+  0054). It does not show: the API's fingerprint check (mockgcp ignores
+  a stale fingerprint), the defaults the API gives a new service
+  attachment (`propagatedConnectionLimit` 250, `reconcileConnections`),
+  that a target service must be a real forwarding rule and a NAT subnet
+  a `PRIVATE_SERVICE_CONNECT` one, or what `reconcileConnections` does to
+  connected endpoints (mockgcp has no consumers).
+- **Cloud Logging buckets** (`LoggingLogBucketFields`). mockgcp's
+  `buckets.patch` takes index configs, restricted fields and a CMEK key
+  (patch 0055). It does not show: the API's checks of a field path or of
+  the index limit, whether the Log Router's service account may use a
+  CMEK key or the key is in the bucket's location (mockgcp takes any
+  name and makes up the service account), or the restricted fields'
+  effect on who may read entries (mockgcp stores no log entries).
+- **Networks and subnets** (`ComputeNetworkFields`,
+  `ComputeSubnetworkFields`). mockgcp merges a network's BGP best path
+  selection fields and takes a subnet's `allowSubnetCidrRoutesOverlap`
+  (patch 0056). It does not show: whether the API resets
+  `bgpAlwaysCompareMed` and `bgpInterRegionCost` when the mode goes back to
+  `LEGACY` (mockgcp drops them), a subnet patch's fingerprint check, or
+  what the BGP settings or the overlap change for routes (mockgcp has no
+  Cloud Routers learning routes, and checks no route against a subnet).
+  The generated `ComputeSubnetwork` runs on mockgcp's subnetworks
+  (`kinds.yaml` `mockgcp`). mockgcp's patch changes only the description,
+  `privateIpGoogleAccess`, `role`, `allowSubnetCidrRoutesOverlap` and the
+  secondary ranges, so the fixtures change only those; its protos lack a
+  secondary range's `ipCollection` and `ipVersion`; and it checks no
+  `ipCollection` against a public delegated prefix and binds no tags.
+- **Artifact Registry repositories' scanning config**
+  (`ArtifactRegistryRepository`). mockgcp's `repositories.patch` takes the
+  `vulnerabilityScanningConfig` mask path and a sent config gets a state
+  (patch 0068: always "scanning disabled", for the reason the enablement
+  config gives). It does not show: real scanning (the Container Scanning
+  API), the state the API reads for `INHERITED`, and whether an Apt or Yum
+  public upstream's path exists (no upstream is checked).
+- **Alert policies' documentation and strategy fields**
+  (`MonitoringAlertPolicyFields`). mockgcp's `alertPolicies.patch` takes
+  the `alertStrategy` mask path (patch 0067; it refused it). It does not
+  show: what the API reads back for cleared notification prompts (perhaps
+  `[OPENED]`; the test takes either), the subject's and links' variable
+  expansion, and notifications (no channel is called).
+- **Uptime checks' fields** (`MonitoringUptimeCheckConfigFields`).
+  mockgcp's `uptimeCheckConfigs.patch` takes any nested update mask path
+  (by its JSON name) and, with patch 0066, clears a masked field the
+  request leaves unset (it panicked on a list). It does not show: whether
+  the API refuses `userLabels` or a nested `httpCheck.*` path in the mask
+  (the fake takes every path), the checks themselves (nothing is probed:
+  no ping, no OIDC token, no status code), and `disabled` and
+  `logCheckFailures` (its protos lack them).
+- **Pub/Sub subscriptions' transforms and exports**
+  (`PubSubSubscriptionFields`). mockgcp's `subscriptions.patch` takes the
+  update mask paths `messageTransforms` and `bigtableConfig` (patch 0065;
+  it refused them), keeps a Cloud Storage export's Avro format (it set
+  text on every update), and a Bigtable export reads `ACTIVE`. It does not
+  show: whether the API refuses a second delivery (a Bigtable export
+  beside a push endpoint or another export; the controller refuses that
+  before any call), the export's table, bucket or service account
+  existing or being writable (an export's `state` stays `ACTIVE`), the
+  JavaScript of a transform (never parsed or run), and subscription
+  creation's eventual consistency beyond its fixed two seconds.
+- **Pub/Sub topics' ingestion and transforms** (`PubSubTopicFields`).
+  mockgcp's `topics.patch` takes the update mask paths
+  `ingestionDataSourceSettings` and `messageTransforms` (patch 0064; it
+  refused them); its create already kept both. It does not show: whether
+  the API reaches an import source (an import topic's `state` stays as
+  sent, never `INGESTION_RESOURCE_ERROR`), the JavaScript of a transform
+  (never parsed or run), the API's checks of which sources and formats go
+  together, and the service agent's permissions.
+- **Cloud DNS server policies** (`DNSPolicyFields`). mockgcp's
+  `policies.patch` now changes only the fields a request sets (patch
+  0057; it replaced the whole policy). It does not show: whether the API
+  takes DNS64 on a policy bound to no network, or what DNS64 answers
+  (mockgcp resolves nothing).
+- **Certificate authorities** (`PrivateCACertificateAuthority`, ours).
+  Patch 0062: an update replaces the masked labels and
+  `user_defined_access_urls` (it merged the request whatever the mask),
+  and an enabled authority is not deleted (FailedPrecondition; the real
+  error text is assumed). mockgcp makes up the certificate and keeps a
+  `subjectKeyId` sent. It does not show: the real certificate, whether
+  the API computes its own key ID, the API's checks of name constraints
+  and URLs, the grace period (mockgcp deletes at once), or a KMS key the
+  authority may not use.
+- **Regional security policies and their rules** (`ComputeRegionSecurityPolicy`,
+  `ComputeRegionSecurityPolicyRule`). mockgcp serves the policies (the
+  discokind fake left them to it from 2026-11-23, `mockgcp: true`) and,
+  with patch 0063, `regionSecurityPolicies.addRule`, `getRule`,
+  `patchRule` and `removeRule`: `patchRule` replaces the fields its update
+  mask names (one unset in the body is cleared), a missing rule is 404, a
+  `CLOUD_ARMOR` policy is made with the default rule (allow, priority
+  2147483647) and `removeRule` refuses it, and the regional `patch` takes
+  DDoS protection and user-defined fields. It does not show: the API's
+  answer for a missing rule (which may be a 400), which fields a policy's
+  type takes (`networkMatch` only on `CLOUD_ARMOR_NETWORK`), the
+  expression language, rate limit and WAF checks, the rule limits, or
+  billing.
+- **Hierarchical firewall policies' rules** (`ComputeFirewallPolicyRule`,
+  ours). mockgcp serves `firewallPolicies.addRule`, `getRule`,
+  `patchRule` and `removeRule`; patch 0061 makes `addRule` add a rule
+  rather than replace the policy's rules. A patch replaces the rule
+  whole, so the fake cannot show whether the real API keeps a list the
+  body leaves out (the controller sends `[]` for one the spec empties, as
+  the global network rule does after a live run). It does not show: the
+  API's checks of a rule (a security profile group the folder may not
+  use, TLS inspection without a TLS inspection policy, secure tags not
+  bound for firewall use, `srcNetworks` without `VPC_NETWORKS`), what form
+  it answers for a network or a group, or the folder permissions.
+- **Hierarchical firewall policies' packet mirroring rules**
+  (`ComputeFirewallPolicyPacketMirroringRule`). mockgcp's protos are v1
+  only and the calls are beta, so patch 0058 serves them on the HTTP
+  layer with the network policy's rules (patch 0032). It does not show:
+  whether the real API keeps fields a patch leaves out, which security
+  profile groups a folder's rule may name, a mirror rule's effect, or the
+  organization-level permissions a folder's policy needs.
+- **Cloud Armor security policies** (`ComputeSecurityPolicyFields`).
+  mockgcp's `securityPolicies.patch` replaces a sub-object it is sent
+  (`adaptiveProtectionConfig`, `advancedOptionsConfig`) and ignores the
+  update mask. It does not show: whether the real patch merges a
+  sub-object (the API says it uses JSON merge patch rules), whether it
+  takes nested mask paths, the API's checks of a threshold config or of an
+  inspection size, a fingerprint conflict (mockgcp's never changes), or
+  whether threshold configs need Cloud Armor Enterprise.
+- **Certificate Authority Service** (`PrivateCACAPoolFields`,
+  `PrivateCACertificateTemplateFields`). mockgcp stores a pool's issuance
+  policy and a template's fields as sent, and its done-at-once
+  operations (templates) answer with their result (patch 0060). It does
+  not show: the API's checks of a backdate over 48 hours, of name
+  constraint values (a DNS name, a CIDR range, a URI host), or whether the
+  API takes back every issuance policy field it returned; that a name
+  constraint is put into the certificates a pool or template issues
+  (mockgcp issues none here); or what the pool's tier allows.
 - **Found by live runs** (`docs/live-runs.md`). Where mockgcp and the
   real API were seen to differ, the fake was patched to match: a deleted
   Cloud SQL backup run is kept with status `DELETED` (patch 0015), and
@@ -443,6 +598,19 @@ ignores a get's `view` (API Gateway's `FULL`): it always answers with
 every field, where the real API leaves a config's source files out
 without it.
 
+A secret the API returns (`secretOutputs`, decision 38, 2026-11-23:
+`IAMOauthClientCredential`'s `clientSecret`,
+`IAMWorkforcePoolProviderScimToken`'s `securityToken`) is a random string
+the fake makes at create; `Stored` shows it to a test. One the API
+returns only at create (`createOnlyOutputs`) is in the create's answer and
+in no get, list, patch or delete answer. A kind with
+`disableBeforeDelete` (the credential's `disabled`) is refused a delete,
+FAILED_PRECONDITION, until that field is true, as the API's description
+asks. What the fake cannot show: whether the real API returns
+`clientSecret` on every read (its description says so), whether it
+really refuses to delete an enabled credential, a secret's real format,
+and that a SCIM tenant and its pool exist (the fake checks no parent).
+
 A collection with no create (`PatchCreates`, Discovery Engine's CMEK
 configs): a patch of a missing name makes the resource, as the API's
 does. A `locationHost` kind's location other than `global` is served only
@@ -490,6 +658,28 @@ Service Management protos or service to extend, as the generated kinds'
 fake was. As there, a custom IAM method on a service (`:getIamPolicy`,
 `:setIamPolicy`, `:testIamPermissions`) goes on to mockgcp, which serves
 it for every resource (patch 0018).
+
+## The user access binding fake (`pkg/controller/direct/accesscontextmanager/fake`)
+
+mockgcp serves Access Context Manager's GCP user access bindings from the
+pinned protos (`cloud.google.com/go/accesscontextmanager` v1.14.0), which
+have only a binding's `groupKey` and `accessLevels`: it drops the fields
+`AccessContextManagerGCPUserAccessBinding` adds, and its patch takes only
+`access_levels`. A small in-memory fake therefore serves
+`organizations/{org}/gcpUserAccessBindings` in front of mockgcp (in
+`pkg/test/mockenv` and both fake-cloud binaries), keeping each binding as
+the JSON it was sent: create (the server's ID; a name in the body, a
+missing group key, or a second binding of one group key in an
+organization refused; `restrictedClientApplications` with
+`scopedAccessSettings` refused), get, list, patch of the fields its update
+mask names, in either spelling (`groupKey` refused; a field the mask names
+and the body leaves out is cleared), and delete, each answered with a done
+operation that a get of the operation also finds. Other Access Context
+Manager requests go on to mockgcp. It does not show: organizations, Google
+Groups and access levels (any is taken), the API's checks of a duration, a
+session reauth method or an application, and permissions. A new fake was
+chosen over a mockgcp patch because the fields are in no proto mockgcp has
+(a newer Go client would be a dependency change, the builder's call).
 
 ## The Chronicle fake (`pkg/controller/direct/chronicle/fake`)
 

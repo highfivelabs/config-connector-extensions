@@ -1,0 +1,15 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeSubnetwork
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  network: projects/${PROJECT}/global/networks/${NAME}-net
+  ipCidrRange: 10.30.0.0/24
+  description: made by a config-connector-extensions test
+  privateIpGoogleAccess: true
+  secondaryIpRanges:
+  - rangeName: pods
+    ipCidrRange: 10.31.0.0/20

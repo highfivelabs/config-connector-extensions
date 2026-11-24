@@ -1,0 +1,67 @@
+config-connector-extensions patch 0056: mockgcp's networks.patch merges a
+network's BGP best path selection fields, and subnetworks.patch takes
+allowSubnetCidrRoutesOverlap.
+
+ComputeNetworkFields and ComputeSubnetworkFields (compute.gcp.hfl.dev,
+docs/design.md decision 37) patch fields Config Connector's
+ComputeNetwork and ComputeSubnetwork lack. mockgcp's networks.patch took
+only routingConfig.routingMode and enableUlaInternalIpv6, and
+subnetworks.patch only a few fields, so both dropped them.
+routingConfig.bgpBestPathSelectionMode, bgpAlwaysCompareMed and
+bgpInterRegionCost are now merged as the rest of a JSON merge patch;
+the last two are refused unless the mode is STANDARD, and dropped when
+it is not, as the API documents. Upstream candidate: yes.
+
+diff --git a/mockgcp/mockcompute/networksv1.go b/mockgcp/mockcompute/networksv1.go
+index 880abc4..c824c27 100644
+--- a/mockgcp/mockcompute/networksv1.go
++++ b/mockgcp/mockcompute/networksv1.go
+@@ -147,6 +147,33 @@ func (s *NetworksV1) Patch(ctx context.Context, req *pb.PatchNetworkRequest) (*p
+ 			}
+ 			obj.RoutingConfig.RoutingMode = req.GetNetworkResource().GetRoutingConfig().RoutingMode
+ 		}
++		// BGP best path selection (config-connector-extensions'
++		// ComputeNetworkFields): merged as the rest of a JSON merge patch;
++		// the MED comparison and inter-region cost only with STANDARD.
++		patch := req.GetNetworkResource().GetRoutingConfig()
++		if patch.BgpBestPathSelectionMode != nil || patch.BgpAlwaysCompareMed != nil || patch.BgpInterRegionCost != nil {
++			if obj.RoutingConfig == nil {
++				obj.RoutingConfig = &pb.NetworkRoutingConfig{}
++			}
++			rc := proto.CloneOf(obj.RoutingConfig)
++			if patch.BgpBestPathSelectionMode != nil {
++				rc.BgpBestPathSelectionMode = patch.BgpBestPathSelectionMode
++			}
++			if patch.BgpAlwaysCompareMed != nil {
++				rc.BgpAlwaysCompareMed = patch.BgpAlwaysCompareMed
++			}
++			if patch.BgpInterRegionCost != nil {
++				rc.BgpInterRegionCost = patch.BgpInterRegionCost
++			}
++			if rc.GetBgpBestPathSelectionMode() != "STANDARD" {
++				if patch.BgpAlwaysCompareMed != nil || patch.BgpInterRegionCost != nil {
++					return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.routingConfig': bgpAlwaysCompareMed and bgpInterRegionCost can only be set when bgpBestPathSelectionMode is STANDARD.")
++				}
++				rc.BgpAlwaysCompareMed = nil
++				rc.BgpInterRegionCost = nil
++			}
++			obj.RoutingConfig = rc
++		}
+ 	}
+ 
+ 	operationType := "compute.networks.patch"
+diff --git a/mockgcp/mockcompute/subnetsv1.go b/mockgcp/mockcompute/subnetsv1.go
+index a4654f4..8bc1b52 100644
+--- a/mockgcp/mockcompute/subnetsv1.go
++++ b/mockgcp/mockcompute/subnetsv1.go
+@@ -368,6 +368,10 @@ func (s *SubnetsV1) Patch(ctx context.Context, req *pb.PatchSubnetworkRequest) (
+ 		if patch.Role != nil {
+ 			obj.Role = patch.Role
+ 		}
++		if patch.AllowSubnetCidrRoutesOverlap != nil {
++			// config-connector-extensions' ComputeSubnetworkFields.
++			obj.AllowSubnetCidrRoutesOverlap = patch.AllowSubnetCidrRoutesOverlap
++		}
+ 		if patch.SecondaryIpRanges != nil {
+ 			obj.SecondaryIpRanges = patch.SecondaryIpRanges
+ 			for i, sec := range obj.SecondaryIpRanges {

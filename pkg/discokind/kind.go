@@ -68,7 +68,9 @@ type Kind struct {
 	// operations are compute operations, polled at their selfLink.
 	InsertStyle bool
 	// UpdatePUT: the API changes a resource with update (PUT, the whole
-	// resource) rather than patch.
+	// resource) rather than patch. Outside Compute Engine's shape the PUT
+	// may have another name (Binary Authorization's replacePlatformPolicy,
+	// kinds.yaml updateMethod); it takes the whole spec with no mask.
 	UpdatePUT bool
 	// PatchCreates: the API has no create method; patch, sent to the
 	// resource's name, makes the resource as well as changing it (Discovery
@@ -91,6 +93,9 @@ type Kind struct {
 	// name, beside the ID parameter, as Terraform does for the kind; the
 	// API refuses a create without it (Cloud Functions v2: "Invalid
 	// resource name '' for pattern projects/*/locations/*/functions/*").
+	// With no IDParam, the name in the body is the only place the ID goes
+	// (Access Context Manager's authorized orgs descriptions, whose create
+	// takes no ID parameter).
 	NameInBody bool
 	// Output are the API's read-only top-level fields that go to
 	// status.observedState (name goes to status.externalRef instead).
@@ -112,6 +117,11 @@ type Kind struct {
 	// along, and they then answer 403 (catalog repository run
 	// cat-11141549-4cb0).
 	MissingIs403 bool
+	// Mockgcp: the fake cloud (pkg/discokind/fake) leaves the collection to
+	// mockgcp, which already serves it and which other tests' requests for
+	// it rely on (a subnetwork, a service attachment): a parallel kind of
+	// ours for a resource Config Connector also manages (decision 19).
+	Mockgcp bool
 	// GetQuery are query parameters every get of the resource sends: API
 	// Gateway's view=FULL, without which a config's get leaves out its
 	// source files (openapiDocuments), which the spec sets, so the spec
@@ -134,7 +144,28 @@ type Kind struct {
 	// (never a Secret's value), kept in status.inputVersion, as
 	// ComputeRouter keeps md5AuthenticationKeysVersion.
 	InputOnly []string
+	// SecretOutputs are top-level read-only string fields that hold a
+	// secret the API returns (an OAuth client credential's clientSecret, a
+	// SCIM token's securityToken). They never go to status: the controller
+	// writes them to a Kubernetes Secret in the object's namespace, owned
+	// by the object, named by spec.secretOutput.name (default the object's
+	// name), each under the field's name (docs/design.md decision 38).
+	SecretOutputs []string
+	// CreateOnlyOutputs are SecretOutputs the API returns only in the
+	// create's answer, never on a read (a SCIM token's securityToken): if
+	// their Secret is lost, the value is gone, and the resource must be
+	// deleted and made again.
+	CreateOnlyOutputs []string
+	// DisableBeforeDelete is a top-level boolean field the API wants true
+	// before it deletes the resource (an OAuth client credential's
+	// disabled: "Before deleting an OauthClientCredential, it should first
+	// be disabled"); the controller patches it to true first.
+	DisableBeforeDelete string
 }
+
+// SecretOutputSpec is the spec field that names the Secret a kind with
+// SecretOutputs writes to.
+const SecretOutputSpec = "secretOutput"
 
 // writeOnly are InputOnly and Secrets.
 func (k *Kind) writeOnly() []string {

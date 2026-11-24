@@ -43,8 +43,10 @@ source hack/live/projects.sh
 # needs the test folder, E2E_TEST_FOLDER; resourcemanager
 # (ProjectDefaultServiceAccounts) needs a test project under it,
 # E2E_TEST_FOLDER_PROJECT; logging's LoggingBillingAccountSink skips live
-# without a billing account, E2E_BILLING_ACCOUNT, and LoggingLogSink's folder
-# case without E2E_LOGGING_FOLDER; securitycenter
+# without a billing account, E2E_BILLING_ACCOUNT, LoggingLogSink's folder
+# case without E2E_LOGGING_FOLDER, and LoggingLogBucketFields' CMEK case
+# without E2E_LOGGING_BUCKET_KMS_KEY (the rest of it runs in the project,
+# LIVE_RUN=TestLoggingLogBucketFields); securitycenter
 # (SecurityCenterMuteConfig) skips live unless E2E_SECURITY_CENTER=true;
 # firestore (FirestoreBackupSchedule) skips live unless
 # E2E_FIRESTORE_DATABASE names a Firestore database;
@@ -61,7 +63,18 @@ source hack/live/projects.sh
 # container (ContainerClusterFields, ContainerNodePoolFields) skips live
 # unless E2E_GKE=true (it makes a GKE cluster, and takes over an hour:
 # set LIVE_TIMEOUT=150m, the live go test timeout, default 60m);
-# (docs/live-runs.md).
+# compute's ComputeFirewallPolicyPacketMirroringRule and
+# ComputeFirewallPolicyRule skip live without the test folder,
+# E2E_TEST_FOLDER (the rule's security profile group case also without
+# E2E_SECURITY_PROFILE_GROUP); dns's DNSPolicyFields, as the other DNS
+# kinds, without E2E_DNS_ADMIN=true;
+# privateca (PrivateCACAPoolFields, PrivateCACertificateTemplateFields,
+# PrivateCACertificateAuthority)
+# skips live unless E2E_PRIVATECA=true; compute's ComputeSecurityPolicyFields
+# unless E2E_CLOUD_ARMOR=true (a Cloud Armor policy is billed, prorated);
+# run's RunService and RunJob ask for a GPU only with E2E_RUN_GPU=true, and
+# RunJob names a Binary Authorization policy only with
+# E2E_RUN_BINAUTHZ_POLICY (docs/live-runs.md).
 DEFAULT_KINDS=(sqladmin secretmanager sql artifactregistry storage compute iam run networksecurity)
 ZONE="${LIVE_ZONE:-us-central1-a}"
 

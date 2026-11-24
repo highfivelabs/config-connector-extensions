@@ -218,7 +218,7 @@ func rootSection(sums []svcSum, prio *Priority, tierSums [3]counts, tierSvcs [3]
 	b.WriteString("![Coverage by category](docs/coverage/bars/_categories.svg)\n\n")
 	b.WriteString("By tier, counted per service:\n\n")
 	b.WriteString("![Coverage by tier](docs/coverage/bars/_tiers.svg)\n\n")
-	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Purple: Terraform `google-beta` (L2), the dark tick L1. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md).</sub>\n\n")
+	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Purple: Terraform `google-beta` (L2), the dark tick L1. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md); then for the application services: [`application.md`](docs/coverage/application.md).</sub>\n\n")
 	row := func(s svcSum) string {
 		tb, okB := tf.service(tfBarProvider, s.host)
 		tg, okG := tf.service(tfOtherProvider, s.host)

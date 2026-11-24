@@ -1,0 +1,23 @@
+apiVersion: binaryauthorization.gcp.hfl.dev/v1beta1
+kind: BinaryAuthorizationPlatformPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  platform: gke
+  description: changed by a config-connector-extensions test
+  gkePolicy:
+    imageAllowlist:
+      allowPattern: [gcr.io/google-containers/*]
+    checkSets:
+    - displayName: default namespace
+      scope:
+        kubernetesNamespace: default
+      checks:
+      - displayName: fresh images
+        imageFreshnessCheck:
+          maxUploadAgeDays: 30
+      - displayName: trusted registry
+        trustedDirectoryCheck:
+          trustedDirPatterns: [us-docker.pkg.dev/${PROJECT}/*]

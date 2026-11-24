@@ -1,0 +1,239 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: monitoringuptimecheckconfigfields.monitoring.gcp.hfl.dev
+spec:
+  group: monitoring.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: MonitoringUptimeCheckConfigFields
+    listKind: MonitoringUptimeCheckConfigFieldsList
+    plural: monitoringuptimecheckconfigfields
+    shortNames:
+    - hflmonitoringuptimecheckconfigfields
+    singular: monitoringuptimecheckconfigfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'MonitoringUptimeCheckConfigFields sets fields of a Cloud Monitoring
+          uptime check that Config Connector''s MonitoringUptimeCheckConfig has no
+          field for (userLabels, and an HTTP check''s customContentType, acceptedResponseStatusCodes,
+          pingConfig and serviceAgentAuthentication), and only those: it patches the
+          check with an update mask naming them. Deleting it clears them.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'MonitoringUptimeCheckConfigFieldsSpec is the fields of an
+              uptime check this object owns. A field left unset is not owned: this
+              object never sends it.'
+            properties:
+              httpCheck:
+                description: 'Fields of the HTTP check that Config Connector''s MonitoringUptimeCheckConfig
+                  sets (its spec.httpCheck): the check must be an HTTP check.'
+                properties:
+                  acceptedResponseStatusCodes:
+                    description: If present, the check will only pass if the HTTP
+                      response status code is in this set of status codes. If empty,
+                      the HTTP status code will only pass if the HTTP status code
+                      is 200-299.
+                    items:
+                      properties:
+                        statusClass:
+                          description: 'A class of status codes to accept: STATUS_CLASS_1XX,
+                            STATUS_CLASS_2XX, STATUS_CLASS_3XX, STATUS_CLASS_4XX,
+                            STATUS_CLASS_5XX or STATUS_CLASS_ANY.'
+                          enum:
+                          - STATUS_CLASS_1XX
+                          - STATUS_CLASS_2XX
+                          - STATUS_CLASS_3XX
+                          - STATUS_CLASS_4XX
+                          - STATUS_CLASS_5XX
+                          - STATUS_CLASS_ANY
+                          type: string
+                        statusValue:
+                          description: A status code to accept.
+                          format: int32
+                          type: integer
+                      type: object
+                      x-kubernetes-validations:
+                      - message: set one of statusValue and statusClass
+                        rule: has(self.statusValue) != has(self.statusClass)
+                    type: array
+                    x-kubernetes-list-type: atomic
+                  customContentType:
+                    description: 'A user provided content type header to use for the
+                      check. The invalid configurations outlined in the `content_type`
+                      field apply to `custom_content_type`, as well as the following:
+                      1. `content_type` is `URL_ENCODED` and `custom_content_type`
+                      is set. 2. `content_type` is `USER_PROVIDED` and `custom_content_type`
+                      is not set.'
+                    type: string
+                  pingConfig:
+                    description: Contains information needed to add pings to an HTTP
+                      check.
+                    properties:
+                      pingsCount:
+                        description: Number of ICMP pings. A maximum of 3 ICMP pings
+                          is currently supported.
+                        format: int32
+                        maximum: 3
+                        minimum: 1
+                        type: integer
+                    required:
+                    - pingsCount
+                    type: object
+                  serviceAgentAuthentication:
+                    description: If specified, Uptime will generate and attach an
+                      OIDC JWT token for the Monitoring service agent service account
+                      as an `Authorization` header in the HTTP request when probing.
+                    properties:
+                      type:
+                        description: 'Type of authentication: OIDC_TOKEN.'
+                        enum:
+                        - OIDC_TOKEN
+                        type: string
+                    required:
+                    - type
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: set at least one field of httpCheck
+                  rule: has(self.customContentType) || has(self.acceptedResponseStatusCodes)
+                    || has(self.pingConfig) || has(self.serviceAgentAuthentication)
+              resourceRef:
+                description: 'Immutable. The uptime check: Config Connector''s MonitoringUptimeCheckConfig
+                  by name (monitoring.cnrm.cloud.google.com), or any uptime check
+                  by external, as "projects/{{projectID}}/uptimeCheckConfigs/{{uptimeCheckConfigID}}".
+                  The check must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed MonitoringUptimeCheckConfig
+                      resource. Should be in the format "projects/{{projectID}}/uptimeCheckConfigs/{{uptimeCheckConfigID}}".
+                    type: string
+                  name:
+                    description: The name of a MonitoringUptimeCheckConfig resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a MonitoringUptimeCheckConfig resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+              userLabels:
+                additionalProperties:
+                  type: string
+                description: |-
+                  User-supplied key/value data to be used for organizing and
+                   identifying the `UptimeCheckConfig` objects.
+
+                   The field can contain up to 64 entries. Each key and value is limited to
+                   63 Unicode characters or 128 bytes, whichever is smaller. Labels and
+                   values can contain only lowercase letters, numerals, underscores, and
+                   dashes. Keys must begin with a letter.
+                type: object
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set at least one of userLabels and httpCheck
+              rule: has(self.userLabels) || has(self.httpCheck)
+          status:
+            description: MonitoringUptimeCheckConfigFieldsStatus defines the observed
+              state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The uptime check whose fields this object sets, as projects/{project}/uptimeCheckConfigs/{uptimeCheckConfig}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

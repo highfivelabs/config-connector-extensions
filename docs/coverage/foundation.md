@@ -10,21 +10,21 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 38.9% | 17.8% | 43.3% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 4.7% | 28.1% |
+| Platform foundation | 150 | 101 | 3121 | 39.0% | 19.3% | 41.7% |
+| Security-adjacent | 82 | 69 | 1406 | 67.2% | 12.7% | 20.1% |
 
 By service:
 
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 20.1% | 39.5% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 26.3% | 33.3% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
-| foundation | `dns.googleapis.com` | 7 | 258 | 29.5% | 3.1% | 67.4% |
+| foundation | `dns.googleapis.com` | 7 | 258 | 30.6% | 3.5% | 65.9% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 15.0% | 24.8% |
 | foundation | `orgpolicy.googleapis.com` | 4 | 121 | 67.8% | 0.0% | 32.2% |
-| foundation | `iam.googleapis.com` | 16 | 113 | 39.8% | 21.2% | 38.9% |
+| foundation | `iam.googleapis.com` | 16 | 113 | 39.8% | 25.7% | 34.5% |
 | foundation | `cloudresourcemanager.googleapis.com` | 12 | 55 | 40.0% | 41.8% | 18.2% |
 | foundation | `cloudidentity.googleapis.com` | 8 | 47 | 21.3% | 0.0% | 78.7% |
 | foundation | `cloudkms.googleapis.com` | 8 | 42 | 42.9% | 0.0% | 57.1% |
@@ -34,15 +34,15 @@ By service:
 | foundation | `essentialcontacts.googleapis.com` | 3 | 9 | 100.0% | 0.0% | 0.0% |
 | foundation | `servicenetworking.googleapis.com` | 2 | 4 | 100.0% | 0.0% | 0.0% |
 | security | `networksecurity.googleapis.com` | 31 | 432 | 73.4% | 8.1% | 18.5% |
-| security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 0.0% | 28.7% |
-| security | `compute.googleapis.com` | 6 | 199 | 48.7% | 0.0% | 51.3% |
-| security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 0.0% | 48.1% |
+| security | `privateca.googleapis.com` | 4 | 223 | 71.3% | 6.3% | 22.4% |
+| security | `compute.googleapis.com` | 6 | 199 | 48.7% | 14.6% | 36.7% |
+| security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 42.0% | 6.1% |
 | security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 15.3% | 25.8% |
 | security | `securityposture.googleapis.com` | 2 | 63 | 93.7% | 0.0% | 6.3% |
-| security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 4.5% | 20.5% |
-| security | `binaryauthorization.googleapis.com` | 2 | 37 | 75.7% | 0.0% | 24.3% |
+| security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 11.4% | 13.6% |
+| security | `binaryauthorization.googleapis.com` | 2 | 37 | 75.7% | 13.5% | 10.8% |
 | security | `recaptchaenterprise.googleapis.com` | 2 | 35 | 74.3% | 0.0% | 25.7% |
-| security | `secretmanager.googleapis.com` | 2 | 30 | 33.3% | 33.3% | 33.3% |
+| security | `secretmanager.googleapis.com` | 2 | 30 | 33.3% | 53.3% | 13.3% |
 | security | `cloudasset.googleapis.com` | 2 | 26 | 100.0% | 0.0% | 0.0% |
 | security | `securitycentermanagement.googleapis.com` | 2 | 22 | 100.0% | 0.0% | 0.0% |
 | security | `assuredworkloads.googleapis.com` | 1 | 20 | 45.0% | 0.0% | 55.0% |
@@ -68,32 +68,32 @@ What these numbers miss, for the foundation:
 | # | Item | Imp. | Gap | Modules | Size | Measured: attributes uncovered / total (official) | Upstream |
 | ---: | --- | :-: | --- | ---: | :-: | --- | --- |
 | 1 | [Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)](#1-hierarchy-and-project-settings-service-identity-at-folder-and-organization-default-service-accounts-default-network-tier) | A | whole | 3 | M | n/a (not a create, or not in the API's create requests) | none |
-| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 100 / 131 (0.0%) | none |
+| 2 | [Regional network firewall policy rules, associations and packet mirroring rules](#2-regional-network-firewall-policy-rules-associations-and-packet-mirroring-rules) | A | whole | 2 | M | 84 / 131 (0.0%) | none |
 | 3 | [Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)](#3-organization-level-custom-iam-roles-covered-by-config-connectors-iamcustomrole) | A | whole | 1 | S | 6 / 14 (57.1%) | `IAMCustomRole` (Terraform-based, `v1beta1`) has it |
-| 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 5 / 20 (0.0%) | none |
+| 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 0 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
 | 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 2 / 57 (0.0%) | none |
-| 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 157 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
+| 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 153 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
-| 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 15 / 85 (51.8%) | none for the fields |
-| 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 8 / 17 (52.9%) | none found. |
+| 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 14 / 85 (51.8%) | none for the fields |
+| 11 | [Service attachment fields (Private Service Connect producers)](#11-service-attachment-fields-private-service-connect-producers) | A | field | 5 | S | 1 / 17 (52.9%) | none found (master read 2026-11-23 at bc464f55, and releases v1.161.0 and v1.162.0: the kind is still DCL-based, with direct types and a map... |
 | 12 | [Logging fields (buckets, sinks) and saved queries](#12-logging-fields-buckets-sinks-and-saved-queries) | A | field | 4 | S | 6 / 98 (14.3%) | none for these fields |
 | 13 | [Organization policy fields (alternate policy)](#13-organization-policy-fields-alternate-policy) | A | field | 3 | S | 13 / 38 (65.8%) | none |
 | 14 | [GKE cluster and node pool fields](#14-gke-cluster-and-node-pool-fields) | A | field | 3 | M | 526 / 928 (43.3%) | active |
-| 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 20 / 87 (77.0%) | none found. |
-| 16 | [Network and subnetwork fields (BGP best path, IP collection, subnet overlap)](#16-network-and-subnetwork-fields-bgp-best-path-ip-collection-subnet-overlap) | A | field | 1 | S | 15 / 44 (65.9%) | none for the fields |
+| 15 | [Cloud DNS fields (routing policies, forwarding and peering zones)](#15-cloud-dns-fields-routing-policies-forwarding-and-peering-zones) | A | field | 2 | S | 17 / 87 (80.5%) | none found |
+| 16 | [Network and subnetwork fields (BGP best path, IP collection, subnet overlap)](#16-network-and-subnetwork-fields-bgp-best-path-ip-collection-subnet-overlap) | A | field | 1 | S | 6 / 44 (65.9%) | none for the fields |
 | 17 | [Billing account log sink](#17-billing-account-log-sink) | A | field | 1 | S | 3 / 13 (0.0%) | none found. |
 | 18 | [KMS fields (key access justifications, key backend)](#18-kms-fields-key-access-justifications-key-backend) | A | field | 1 | S | 7 / 15 (53.3%) | open PR #7377 "Migrate KMSCryptoKey from TF-based to Direct (Beta)" (2026-07-10), where new fields would land |
-| 19 | [Hierarchical firewall policy rule fields](#19-hierarchical-firewall-policy-rule-fields) | A | field | 1 | M | 62 / 114 (44.7%) | none found (`ComputeFirewall` has |
+| 19 | [Hierarchical firewall policy rule fields](#19-hierarchical-firewall-policy-rule-fields) | A | field | 1 | M | 53 / 114 (44.7%) | none found (`ComputeFirewall` has #12102 "validate direct promotion") |
 | 20 | [Security Command Center at folder and project level](#20-security-command-center-at-folder-and-project-level) | B | whole | 3 | M | 25 / 40 (0.0%) | in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCusto... |
-| 21 | [VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)](#21-vpc-service-controls-authorized-orgs-descriptions-dry-run-spec-user-access-bindings) | B | whole | 3 | M | 59 / 105 (43.8%) | partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08) |
+| 21 | [VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)](#21-vpc-service-controls-authorized-orgs-descriptions-dry-run-spec-user-access-bindings) | B | whole | 3 | M | 4 / 105 (43.8%) | partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08) |
 | 22 | [Privileged Access Manager grants](#22-privileged-access-manager-grants) | B | whole | 0 | S | 7 / 18 (61.1%) | none found. |
 | 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 3 / 12 (0.0%) | none. |
 | 24 | [Cloud Identity SSO profiles, assignments and policies](#24-cloud-identity-sso-profiles-assignments-and-policies) | B | whole | 0 | M | 26 / 26 (0.0%) | none for these |
-| 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 60 / 209 (71.3%) | none found. |
-| 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 10 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
-| 27 | [Cloud Armor security policy fields](#27-cloud-armor-security-policy-fields) | B | field | 1 | M | 122 / 172 (27.9%) | none found. |
+| 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 38 / 209 (71.3%) | none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct... |
+| 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 4 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
+| 27 | [Cloud Armor security policy fields](#27-cloud-armor-security-policy-fields) | B | field | 1 | M | 122 / 172 (27.9%) | none found (read again 2026-11-23 at the pin: Config Connector's opt-in direct `ComputeSecurityPolicy` has no threshold configs or inspectio... |
 
 ### 1. Hierarchy and project settings (service identity at folder and organization, default service accounts, default network tier)
 
@@ -107,20 +107,20 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** whole, **size** M, **modules** 2 (net-firewall-policy, net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 20 / 12 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]`: 0 / 25 / 7 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]`: 0 / 0 / 3 of 3; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeRegionNetworkFirewallPolicy (ours), ComputeRegionNetworkFirewallPolicyAssociation (ours), ComputeRegionNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]`: 0 / 11 / 21 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
-  - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 0 / 32 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule
+  - `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]`: 0 / 11 / 21 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule, ComputeFirewallPolicyPacketMirroringRule (ours), ComputeFirewallPolicyRule (ours)
 - **Missing, whole resources:** `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation` and `ComputeRegionNetworkFirewallPolicyPacketMirroringRule`; the same packet mirroring rule for the global network policy (`google_compute_network_firewall_policy_packet_mirroring_rule`) and the hierarchical policy. Our `ComputeRegionNetworkFirewallPolicy` is the policy only (its `description`).
 - **Missing, attributes that matter:** All of a rule: `priority`, `action`, `direction`, `disabled`, `enableLogging`, `ruleName`, `description`, `match` (`srcIpRanges`, `destIpRanges`, `layer4Configs[]`, `srcFqdns`, `destFqdns`, `srcRegionCodes`, `destRegionCodes`, `srcThreatIntelligences`, `destThreatIntelligences`, `srcAddressGroups`, `destAddressGroups`, `srcSecureTags`, `srcNetworkType`, `destNetworkType`), `targetSecureTags`, `targetServiceAccounts`, `securityProfileGroup`, `tlsInspect`. An association is `attachmentTarget` (a network), `name` and `priority`.
-  - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkContext`, `rules[].match.destNetworkType`, `rules[].match.srcNetworkContext`, `rules[].match.srcNetworkType`, `rules[].match.srcNetworks[]`, `rules[].match.srcSecureTags[].name`, `rules[].securityProfileGroup`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetSecureTags[].name` and 2 more
+  - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkType`, `rules[].match.srcNetworkType`, `rules[].match.srcSecureTags[].name`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetSecureTags[].name`, `rules[].targetType`
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:associations[]` (measured): `associations[].attachmentTarget`, `associations[].name`, `associations[].priority`
   - uncovered in `compute.googleapis.com/RegionNetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
   - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]`, `packetMirroringRules[].match.srcAddressGroups[]`, `packetMirroringRules[].match.srcFqdns[]`, `packetMirroringRules[].match.srcNetworkContext` and 11 more
-  - uncovered in `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].action`, `packetMirroringRules[].description`, `packetMirroringRules[].direction`, `packetMirroringRules[].disabled`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destIpRanges[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType` and 22 more
+  - uncovered in `compute.googleapis.com/FirewallPolicy:packetMirroringRules[]` (measured): `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]`, `packetMirroringRules[].match.srcAddressGroups[]`, `packetMirroringRules[].match.srcFqdns[]`, `packetMirroringRules[].match.srcNetworkContext` and 11 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kind or pull request for the regional policy; the global `ComputeNetworkFirewallPolicyRule` and `...Association` are Terraform-based (the rule is alpha-only, see the stability item), with no packet mirroring rule at all. `docs/design.md` 6.5 row 6 has the same finding.
-- **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version. `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, built at `v1alpha1`; written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields; mockgcp patch 0032). Next: the hierarchical policy's, on the beta API, live pending the test folder.
+- **Build:** Three kinds in `compute.gcp.hfl.dev/v1alpha1`, `ComputeRegionNetworkFirewallPolicyRule`, `...Association`, `...PacketMirroringRule`, each with `policyRef` (our `ComputeRegionNetworkFirewallPolicy` by name or `external`) and `region`. Copy `pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go` and `apis/compute/v1alpha1/computeregionnetworkfirewallpolicy_*` as the pattern (direct controller on the regional client; the policy's mockgcp patch is `0014`). API: `regionNetworkFirewallPolicies.addRule`, `patchRule`, `removeRule`, `getRule`, `addAssociation`, `removeAssociation`, `addPacketMirroringRule`, `patchPacketMirroringRule`, `removePacketMirroringRule`; identity `projects/{p}/regions/{r}/firewallPolicies/{policy}` plus `priority` for a rule and `name` for an association; every change goes through the policy's fingerprint. Fields from Terraform's `google_compute_region_network_firewall_policy_rule` (read, not copied). Extend mockgcp with a numbered patch (check `mockgcp/mockcompute` for what the policy's patch `0014` already serves); write the end-to-end test on `pkg/test/mockenv` and record a live row. The regional rule and association are built. Packet mirroring rules (checked 2026-11-10): the API has rule calls for a global network policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version. `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, built at `v1alpha1`; written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields; mockgcp patch 0032). The hierarchical policy's, `ComputeFirewallPolicyPacketMirroringRule`, built 2026-11-23 (`compute.gcp.hfl.dev/v1alpha1`, the global kind's fields on Config Connector's `ComputeFirewallPolicy`; the beta API's calls as REST, mockgcp patch 0058); live pending the test folder. The item is built but for the regional packet mirroring rule, which the API has no calls for.
 
 ### 3. Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
 
@@ -140,16 +140,14 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** whole, **size** M, **modules** 1 (organization).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `iam.googleapis.com/WorkforcePoolProviderScimTenant`: 0 / 4 / 0 of 4; IAMWorkforcePoolProviderScimTenant (ours)
-  - `iam.googleapis.com/WorkforcePoolProviderScimTenantToken`: 0 / 0 / 2 of 2; no kind
+  - `iam.googleapis.com/WorkforcePoolProviderScimTenantToken`: 0 / 2 / 0 of 2; IAMWorkforcePoolProviderScimToken (ours)
   - `iam.googleapis.com/WorkforcePoolProviderKey`: 0 / 3 / 0 of 3; IAMWorkforcePoolProviderKey (ours)
   - `iam.googleapis.com/OauthClient`: 0 / 8 / 0 of 8; IAMOauthClient (ours)
-  - `iam.googleapis.com/OauthClientCredential`: 0 / 0 / 3 of 3; no kind
+  - `iam.googleapis.com/OauthClientCredential`: 0 / 3 / 0 of 3; IAMOauthClientCredential (ours)
 - **Missing, whole resources:** `IAMWorkforcePoolProviderScimTenant` (`google_iam_workforce_pool_provider_scim_tenant`), its token, `IAMWorkforcePoolProviderKey`, `IAMOauthClient` and its credential. Config Connector has `IAMWorkforcePool` and `IAMWorkforcePoolProvider`.
 - **Missing, attributes that matter:** Tenant: `displayName`, `description`, `claimMapping{}`; token: `displayName`; key: `use`, `keyData`; OAuth client: `clientType`, `allowedGrantTypes[]`, `allowedRedirectUris[]`, `allowedScopes[]`, `disabled`. Also on the provider: `extendedAttributesOauth2Client`, `extraAttributesOauth2Client`, `scimUsage`, `vendorType`, `detailedAuditLogging` (field gaps on `IAMWorkforcePoolProvider`).
-  - uncovered in `iam.googleapis.com/WorkforcePoolProviderScimTenantToken` (measured): `displayName`, `name`
-  - uncovered in `iam.googleapis.com/OauthClientCredential` (measured): `disabled`, `displayName`, `name`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kinds or pull requests for these resources.
-- **Build:** Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, `...ScimTenantToken` (secret output, like a service account key), `IAMWorkforcePoolProviderKey`, `IAMOauthClient`, `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`, `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. No kinds or pull requests for these resources (pull requests searched again 2026-11-23 for `OauthClientCredential`, `ScimToken` and `scim`: none, open or closed).
+- **Build:** Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, its token, `IAMWorkforcePoolProviderKey`, `IAMOauthClient`, `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`, `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant). The tenant, key and client were built 2026-11-11. Built 2026-11-23, by `hack/discokind` with its new `secretOutputs` option (`docs/design.md` decision 38: a secret the API returns goes to a Kubernetes Secret owned by the object, never to status): `IAMOauthClientCredential` (its `clientSecret`, returned on every read; a delete disables it first, as the API asks) and the token as `IAMWorkforcePoolProviderScimToken` (decision 18: Terraform's `google_iam_workforce_pool_provider_scim_token`, which did not exist when this item was written; its `securityToken` is returned only by the create, so a lost Secret means deleting and making the token again). Live pending: the credential in the live-test project, the token needs organization-level access and a SCIM tenant.
 
 ### 5. A fleet's RBAC role bindings and rollout sequences
 
@@ -200,14 +198,14 @@ What these numbers miss, for the foundation:
 - **Importance** A, **gap** stability, **size** L, **modules** 6 (organization, folder, project, net-cloud-armor, net-firewall-policy, dns-response-policy).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `compute.googleapis.com/OrganizationSecurityPolicy`: 12 / 2 / 72 of 86; ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha), ComputeOrganizationSecurityPolicy (ours), ComputeOrganizationSecurityPolicyAssociation (ours), ComputeOrganizationSecurityPolicyRule (ours)
-  - `compute.googleapis.com/NetworkFirewallPolicy`: 26 / 12 / 35 of 73; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
-  - `dns.googleapis.com/ResponsePolicy`: 3 / 0 / 3 of 6; DNSResponsePolicy (alpha), DNSResponsePolicy (ours)
+  - `compute.googleapis.com/NetworkFirewallPolicy`: 26 / 15 / 32 of 73; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
+  - `dns.googleapis.com/ResponsePolicy`: 3 / 1 / 2 of 6; DNSResponsePolicy (alpha), DNSResponsePolicy (ours)
   - `dns.googleapis.com/ResponsePolicyRule`: 6 / 0 / 47 of 53; DNSResponsePolicyRule (alpha), DNSResponsePolicyRule (ours)
 - **Missing, whole resources:** Nothing is missing; the kinds exist only as `v1alpha1` and the charts refuse alpha: `IAMDenyPolicy`, `IAMPrincipalAccessBoundaryPolicy`, `IAMAccessBoundaryPolicy`, `IAMAccessPolicy`, `ComputeOrganizationSecurityPolicy` with its association and rule, `ComputeNetworkFirewallPolicyRule`, `DNSResponsePolicy`, `DNSResponsePolicyRule` (the measured list is "Official but alpha-only" below).
 - **Missing, attributes that matter:** None known beyond the field gaps in the field items; the work is promotion, not fields.
   - uncovered in `compute.googleapis.com/OrganizationSecurityPolicy` (measured): `adaptiveProtectionConfig.layer7DdosDefenseConfig.enable`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.ruleVisibility`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployConfidenceThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployExpirationSec`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployImpactedBaselineThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionAbsoluteQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionRelativeToBaselineQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].name` and 62 more
-  - uncovered in `compute.googleapis.com/NetworkFirewallPolicy` (measured): `associations[].name`, `associations[].priority`, `displayName`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]` and 25 more
-  - uncovered in `dns.googleapis.com/ResponsePolicy` (measured): `id`, `labels{}`, `responsePolicyName`
+  - uncovered in `compute.googleapis.com/NetworkFirewallPolicy` (measured): `associations[].name`, `associations[].priority`, `displayName`, `packetMirroringRules[].enableLogging`, `packetMirroringRules[].match.destAddressGroups[]`, `packetMirroringRules[].match.destFqdns[]`, `packetMirroringRules[].match.destNetworkContext`, `packetMirroringRules[].match.destNetworkType`, `packetMirroringRules[].match.destRegionCodes[]`, `packetMirroringRules[].match.destThreatIntelligences[]` and 22 more
+  - uncovered in `dns.googleapis.com/ResponsePolicy` (measured): `id`, `responsePolicyName`
   - uncovered in `dns.googleapis.com/ResponsePolicyRule` (measured): `localData.localDatas[].routingPolicy.geo.enableFencing`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.externalEndpoints[]`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipAddress`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].ipProtocol`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].loadBalancerType`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].networkUrl`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].port`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].project`, `localData.localDatas[].routingPolicy.geo.items[].healthCheckedTargets.internalLoadBalancers[].region`, `localData.localDatas[].routingPolicy.geo.items[].location` and 37 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required). No pull request found for the others. Config Connector promotes a kind from alpha to beta with its releases; check the release notes before building.
 - **Build:** Do not copy alpha kinds. Per kind: wait for the promotion when upstream has a pull request; otherwise ship a stable kind in our group that is the same schema on the direct reconciler. Deny policy first (the organization, folder and project modules all need it; its API is IAM v2 `policies` with `createPolicy`, which the Discovery denominator does not count as a create). Order: `IAMDenyPolicy`, `ComputeOrganizationSecurityPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `IAMPrincipalAccessBoundaryPolicy`, `DNSResponsePolicy` and its rule. `IAMDenyPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp unpatched); live pending Deny Admin, which is granted on an organization. `ComputeOrganizationSecurityPolicy` and its association built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controllers copied; mockgcp unpatched); live pending the test folder. `ComputeOrganizationSecurityPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`, upstream's alpha types copied; the controller written here on the compute beta API, as upstream's is Terraform-only; mockgcp patch 0028); live pending the test folder. `ComputeNetworkFirewallPolicyRule` built 2026-11-10 (`compute.gcp.hfl.dev/v1beta1`; upstream has only the Terraform-based alpha CRD, so the types, identity and controller are adapted from our regional rule kind, with upstream's `ComputeNetworkFirewallPolicyRef`; mockgcp unpatched). `IAMPrincipalAccessBoundaryPolicy` built 2026-11-10 (`iam.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied; mockgcp patch 0030); live pending organization-level access. `DNSResponsePolicy` built 2026-11-10 (`dns.gcp.hfl.dev/v1beta1`, upstream's alpha types and direct controller copied, with the object's labels; mockgcp unpatched); live pending Cloud DNS (`dns.googleapis.com` and `roles/dns.admin`) in the live project. Next: `DNSResponsePolicyRule`.
@@ -229,27 +227,27 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** S, **modules** 5 (net-vpn-ha, net-vpn-static, net-vpn-dynamic, net-ipsec-over-interconnect, net-vlan-attachment).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/VpnTunnel`: 15 / 7 / 2 of 24; ComputeVPNTunnel, ComputeVPNTunnel (ours)
+  - `compute.googleapis.com/VpnTunnel`: 15 / 8 / 1 of 24; ComputeVPNTunnel, ComputeVPNTunnel (ours)
   - `compute.googleapis.com/InterconnectAttachment`: 13 / 19 / 4 of 36; ComputeInterconnectAttachment, ComputeInterconnectAttachment (ours)
   - `compute.googleapis.com/Interconnect`: 16 / 0 / 9 of 25; ComputeInterconnect (alpha)
 - **Missing, whole resources:** `cipherSuite` on `ComputeVPNTunnel`; `candidateIpv6Subnets`, `candidateCloudRouterIpv6Address`, `candidateCustomerRouterIpv6Address`, `l2Forwarding`, `partnerMetadata` on `ComputeInterconnectAttachment`; `applicationAwareInterconnect` on `ComputeInterconnect`.
 - **Missing, attributes that matter:** The measured lists; `cipherSuite` (IKE phase 1 and 2 algorithms) and the IPv6 candidates matter.
-  - uncovered in `compute.googleapis.com/VpnTunnel` (measured): `params.resourceManagerTags{}`, `sharedSecretHash`
+  - uncovered in `compute.googleapis.com/VpnTunnel` (measured): `sharedSecretHash`
   - uncovered in `compute.googleapis.com/InterconnectAttachment` (measured): `l2Forwarding.applianceMappings{}.applianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerApplianceIpAddress`, `l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerVlanTags[]`, `l2Forwarding.applianceMappings{}.name`
   - uncovered in `compute.googleapis.com/Interconnect` (measured): `aaiEnabled`, `applicationAwareInterconnect.bandwidthPercentagePolicy.bandwidthPercentages[].percentage`, `applicationAwareInterconnect.bandwidthPercentagePolicy.bandwidthPercentages[].trafficClass`, `applicationAwareInterconnect.profileDescription`, `applicationAwareInterconnect.shapeAveragePercentages[].percentage`, `applicationAwareInterconnect.shapeAveragePercentages[].trafficClass`, `applicationAwareInterconnect.strictPriorityPolicy`, `params.resourceManagerTags{}`, `subzone`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #11260 (2026-08-21) moves `ComputeInterconnectAttachment` to the identity and refs pattern (a step to direct).
-- **Build:** `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, built 2026-11-10): Config Connector's direct types and mapper copied, a whole tunnel made by insert with every field but labels immutable (`docs/design.md` 6.6, the create-only pattern; patch 0033). The interconnect attachment and interconnect fields are next (decision 19); track #11260.
+- **Build:** `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`, built 2026-11-10): Config Connector's direct types and mapper copied, a whole tunnel made by insert with every field but labels immutable (`docs/design.md` 6.6, the create-only pattern; patch 0033). Built 2026-11-23 on the same kind: `params.resourceManagerTags` (input only, at insert; Terraform's `params` block), so the VPN tunnel's create request is covered but for `sharedSecretHash`, which the API sets and our kind keeps in status. The interconnect attachment's `candidateIpv6Subnets`, the IPv6 router candidates and `l2Forwarding` are in our generated `ComputeInterconnectAttachment` (built 2026-11-13); the measured `l2Forwarding.applianceMappings{}` fields are in a map the CRD keeps as JSON, which the matcher cannot see into. Not built: `applicationAwareInterconnect`, `aaiEnabled` and `params` on the interconnect itself, whose only Config Connector kind is the alpha `ComputeInterconnect`; they need a stable `ComputeInterconnect` of ours (decision 26), which `hack/discokind` could generate, but a real interconnect is a physical circuit no live run can order, so it waits for a builder's call; track #11260.
 
 ### 11. Service attachment fields (Private Service Connect producers)
 
 - **Importance** A, **gap** field, **size** S, **modules** 5 (net-lb-int, net-lb-app-int, net-swp, net-lb-app-int-cross-region, net-lb-proxy-int).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/ServiceAttachment`: 9 / 0 / 8 of 17; ComputeServiceAttachment
+  - `compute.googleapis.com/ServiceAttachment`: 9 / 7 / 1 of 17; ComputeServiceAttachment, ComputeServiceAttachment (ours)
 - **Missing, whole resources:** `consumerAcceptLists[]` (project or network, with a connection limit), `domainNames`, `natIpsPerEndpoint`, `propagatedConnectionLimit`, `reconcileConnections`, `metadata{}` on `ComputeServiceAttachment`.
 - **Missing, attributes that matter:** The measured list; `consumerAcceptLists` and `reconcileConnections` matter.
-  - uncovered in `compute.googleapis.com/ServiceAttachment` (measured): `consumerAcceptLists[].endpointUrl`, `consumerAcceptLists[].networkUrl`, `domainNames[]`, `metadata{}`, `natIpsPerEndpoint`, `producerForwardingRule`, `propagatedConnectionLimit`, `reconcileConnections`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Wait (decision 5).
+  - uncovered in `compute.googleapis.com/ServiceAttachment` (measured): `producerForwardingRule`
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (master read 2026-11-23 at bc464f55, and releases v1.161.0 and v1.162.0: the kind is still DCL-based, with direct types and a mapper but no controller, and none of these fields; no open pull request for a direct controller or the fields found).
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns `reconcileConnections` and `propagatedConnectionLimit` (Config Connector's DCL patch never sends them); live pending. The rest, `consumerAcceptLists[].networkUrl` (the DCL sends the whole list), `domainNames` (create only), `metadata` and `natIpsPerEndpoint`: our whole-object `ComputeServiceAttachment` (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind` 2026-11-23, the API's field set; tested on mockgcp's service attachments); live pending. `producerForwardingRule` is `targetService`'s older name.
 
 ### 12. Logging fields (buckets, sinks) and saved queries
 
@@ -258,12 +256,12 @@ What these numbers miss, for the foundation:
   - `logging.googleapis.com/Bucket`: 3 / 0 / 5 of 8; LoggingLogBucket
   - `logging.googleapis.com/Sink`: 11 / 1 / 1 of 13; LoggingLogSink, LoggingLogSink (ours)
   - `logging.googleapis.com/SavedQuery`: 0 / 77 / 0 of 77; LoggingSavedQuery (ours)
-- **Missing, whole resources:** On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is `cmekSettings`, present on the kind); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren` is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
+- **Missing, whole resources:** On `LoggingLogBucket`: `indexConfigs[]`, `restrictedFields[]`, `cmekSettings` (the kind has none; `analyticsEnabled` is its `enableAnalytics`, matched by name only, so it shows as uncovered); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren` is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `logging.googleapis.com/Bucket` (measured): `analyticsEnabled`, `cmekSettings.kmsKeyName`, `indexConfigs[].fieldPath`, `indexConfigs[].type`, `restrictedFields[]`
   - uncovered in `logging.googleapis.com/Sink` (measured): `outputVersionFormat`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for `LoggingLogSink`) and #14429 (project annotation in the sink) are fixes.
-- **Build:** Wait (decision 5) for the fields; `LoggingSavedQuery` is a small new kind (`logging.gcp.hfl.dev`, the API's `savedQueries` under a project, folder or organization location) if a team asks.
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `LoggingLogBucketFields` (`logging.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns `indexConfigs`, `restrictedFields` and `cmekSettings` with `buckets.patch` and a mask of only those (Config Connector's DCL and direct updates mask only their own fields); live pending. `LoggingSavedQuery` is built (generated). `outputVersionFormat` is deprecated: not built.
 
 ### 13. Organization policy fields (alternate policy)
 
@@ -274,7 +272,7 @@ What these numbers miss, for the foundation:
 - **Missing, attributes that matter:** `alternate.spec.rules[]` (`allowAll`, `denyAll`, `enforce`, `values`, `condition`, `parameters`), `alternate.spec.inheritFromParent`, `alternate.spec.reset`, `alternate.launch`.
   - uncovered in `orgpolicy.googleapis.com/Policy` (measured): `alternate.launch`, `alternate.spec.inheritFromParent`, `alternate.spec.reset`, `alternate.spec.rules[].allowAll`, `alternate.spec.rules[].condition.description`, `alternate.spec.rules[].condition.expression`, `alternate.spec.rules[].condition.location`, `alternate.spec.rules[].condition.title`, `alternate.spec.rules[].denyAll`, `alternate.spec.rules[].enforce` and 3 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none. Open PRs #12756 (stop `UpdatePolicy` on every reconcile) and #6719 (structured diff) are fixes to the existing kind.
-- **Build:** Wait (decision 5); `dryRunSpec` covers the use for now.
+- **Build:** Not built (checked 2026-11-23): the API marks `Policy.alternate` deprecated ("Deprecated." in orgpolicy v2's Discovery document), and `dryRunSpec`, which `OrgPolicyPolicy` has, replaces it. Every uncovered attribute of the row is under `alternate`.
 
 ### 14. GKE cluster and node pool fields
 
@@ -287,35 +285,35 @@ What these numbers miss, for the foundation:
   - uncovered in `container.googleapis.com/Cluster` (measured): `addonsConfig.agentSandboxConfig.enabled`, `addonsConfig.highScaleCheckpointingConfig.enabled`, `addonsConfig.kubernetesDashboard.disabled`, `addonsConfig.lustreCsiDriverConfig.disableMultiNic`, `addonsConfig.lustreCsiDriverConfig.enableLegacyLustrePort`, `addonsConfig.lustreCsiDriverConfig.enabled`, `addonsConfig.nodeReadinessConfig.enabled`, `addonsConfig.podSnapshotConfig.enabled`, `addonsConfig.rayOperatorConfig.enabled`, `addonsConfig.rayOperatorConfig.rayClusterLoggingConfig.enabled` and 411 more
   - uncovered in `container.googleapis.com/ClusterNodePool` (measured): `autopilotConfig.enabled`, `autoscaling.autoprovisioned`, `autoscaling.enabled`, `bestEffortProvisioning.enabled`, `bestEffortProvisioning.minProvisionNodes`, `config.accelerators[].gpuDriverInstallationConfig.specificVersion`, `config.advancedMachineFeatures.performanceMonitoringUnit`, `config.bootDisk.diskType`, `config.bootDisk.provisionedIops`, `config.bootDisk.provisionedThroughput` and 95 more
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): active. Open PRs: #14187 (`kubeletConfig.allowedUnsafeSysctls`, node pool and cluster, 2026-11-08), #14182 (`ContainerNodePool` `spec.autoscaling.enabled`), #14193 (maintenance exclusion `EndTimeBehavior`), #8135 (`controlPlaneDiskEncryptionKey`), #12906 (Managed Lustre CSI driver addon), #14239 (`nodePoolAutoConfig.networkTags` fix). They arrive with the releases.
-- **Build:** Wait for the releases (decision 5): this is the kind where upstream is fastest. Re-measure after each Config Connector release; do not build a parallel `ContainerCluster`.
+- **Build:** Wait for the releases (decision 5) where upstream has a pull request: this is the kind where upstream is fastest. Re-measure after each Config Connector release; do not build a parallel `ContainerCluster`. Where upstream has none, a field the API changes in place goes in our field kinds (decision 37). Built 2026-11-16: `ContainerClusterFields` and `ContainerNodePoolFields` (`v1beta1`). Built 2026-11-23 on `ContainerNodePoolFields` (pull requests searched for `eviction`, `memoryManager`, `kubeletConfig`: none but #14187): `kubeletConfig`'s `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`, `evictionMaxPodGracePeriodSeconds`, `memoryManager`, `topologyManager`, `singleProcessOomKill`, tested on the fake, live pending (`E2E_GKE=true`). Not built: `reservedResourcesConfig` (not in the pinned Go client's `NodeKubeletConfig`); `bootDisk` (it restates Config Connector's `diskType` and `diskSizeGb`, which Terraform's update would send against it); `ephemeralStorageLocalSsdConfig`, `gpuDirectConfig`, `bestEffortProvisioning`, `flexStart`, `containerdConfig.registryHosts` and `advancedMachineFeatures.performanceMonitoringUnit` (set when the node pool is made, which a field kind never does; they need our own node pool kind, which this item says not to build); and the cluster's `controlPlaneDiskEncryptionKey`, maintenance exclusion `endTimeBehavior` and Managed Lustre CSI add-on, which have upstream pull requests (#8135, #14193, #12906).
 
 ### 15. Cloud DNS fields (routing policies, forwarding and peering zones)
 
 - **Importance** A, **gap** field, **size** S, **modules** 2 (dns, net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `dns.googleapis.com/ResourceRecordSet`: 43 / 0 / 7 of 50; DNSRecordSet
+  - `dns.googleapis.com/ResourceRecordSet`: 46 / 0 / 4 of 50; DNSRecordSet
   - `dns.googleapis.com/ManagedZone`: 17 / 0 / 9 of 26; DNSManagedZone
   - `dns.googleapis.com/Policy`: 7 / 0 / 4 of 11; DNSPolicy
 - **Missing, whole resources:** `routingPolicy` (geo, weighted round robin, primary backup, with `enableFencing` and `trickleTraffic`) on `DNSRecordSet`; `forwardingConfig.targetNameServers[].ipv6Address`, `alternativeNameServerConfig` IPv6, `dns64Config` on `DNSPolicy`.
 - **Missing, attributes that matter:** The measured lists; `routingPolicy` is the one the dns module exposes.
-  - uncovered in `dns.googleapis.com/ResourceRecordSet` (measured): `routingPolicy.geo.enableFencing`, `routingPolicy.geo.items[].signatureRrdatas[]`, `routingPolicy.primaryBackup.backupGeoTargets.enableFencing`, `routingPolicy.primaryBackup.backupGeoTargets.items[].signatureRrdatas[]`, `routingPolicy.primaryBackup.trickleTraffic`, `routingPolicy.wrr.items[].signatureRrdatas[]`, `signatureRrdatas[]`
+  - uncovered in `dns.googleapis.com/ResourceRecordSet` (measured): `routingPolicy.geo.items[].signatureRrdatas[]`, `routingPolicy.primaryBackup.backupGeoTargets.items[].signatureRrdatas[]`, `routingPolicy.wrr.items[].signatureRrdatas[]`, `signatureRrdatas[]`
   - uncovered in `dns.googleapis.com/ManagedZone` (measured): `creationTime`, `forwardingConfig.outboundEndpoints[].name`, `forwardingConfig.targetNameServers[].domainName`, `forwardingConfig.targetNameServers[].ipv6Address`, `id`, `nameServerSet`, `nameServers[]`, `peeringConfig.targetNetwork.deactivateTime`, `serviceDirectoryConfig.namespace.deletionTime`
   - uncovered in `dns.googleapis.com/Policy` (measured): `alternativeNameServerConfig.outboundEndpoints[].name`, `alternativeNameServerConfig.targetNameServers[].ipv6Address`, `dns64Config.scope.allQueries`, `id`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Wait (decision 5).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0): no forwarding target `ipv6Address` or `domainName` in any DNS CRD or direct type; open PR #9783 (a direct `DNSRecordSet` controller, 2026-06-12) and #15420 (rrdatas to a routing policy, 2026-11-11) touch only record sets.
+- **Build:** Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23) owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy` replaces the whole policy and would clear it); live pending. `routingPolicy.geo.enableFencing`, `primaryBackup.backupGeoTargets.enableFencing` and `primaryBackup.trickleTraffic` are not gaps: `DNSRecordSet` has them under Terraform's names (`enableGeoFencing`, `enableGeoFencingForBackups`, `trickleRatio`), now aliases in `overrides.yaml` (2026-11-23). Deferred below the security-adjacent items (2026-11-23, section 6: a gap becomes a kind when a workload needs it, and no module here is known to set these): the DNSSEC `signatureRrdatas` (pre-signed records), and the forwarding targets' `ipv6Address` and `domainName` (zone and policy), which sit in objects Terraform sends whole (a zone's update is a PUT of the whole zone; a policy's patch sends `alternativeNameServerConfig` with any change), so they need whole-object `DNSManagedZone` and `DNSPolicy` kinds of ours, copied from upstream's opt-in direct controllers at the pin with the fields added.
 
 ### 16. Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
 
 - **Importance** A, **gap** field, **size** S, **modules** 1 (net-vpc).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `compute.googleapis.com/Network`: 9 / 0 / 5 of 14; ComputeNetwork
-  - `compute.googleapis.com/Subnetwork`: 20 / 0 / 10 of 30; ComputeSubnetwork
+  - `compute.googleapis.com/Subnetwork`: 20 / 9 / 1 of 30; ComputeSubnetwork, ComputeSubnetwork (ours)
 - **Missing, whole resources:** `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost` on `ComputeNetwork`; `ipCollection`, `allowSubnetCidrRoutesOverlap`, `internalIpv6Prefix`/`externalIpv6Prefix` on `ComputeSubnetwork` and status `networkId`. (`docs/design.md` 6.5 row 9.)
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `compute.googleapis.com/Network` (measured): `IPv4Range`, `params.resourceManagerTags{}`, `routingConfig.bgpAlwaysCompareMed`, `routingConfig.bgpBestPathSelectionMode`, `routingConfig.bgpInterRegionCost`
-  - uncovered in `compute.googleapis.com/Subnetwork` (measured): `allowSubnetCidrRoutesOverlap`, `enableFlowLogs`, `externalIpv6Prefix`, `internalIpv6Prefix`, `ipCollection`, `logConfig.enable`, `params.resourceManagerTags{}`, `resolveSubnetMask`, `secondaryIpRanges[].ipCollection`, `secondaryIpRanges[].ipVersion`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork" (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no pull request.
-- **Build:** Wait (decision 5); the subnetwork's direct migration is the vehicle.
+  - uncovered in `compute.googleapis.com/Subnetwork` (measured): `enableFlowLogs`
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork" (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no pull request. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0, #12521's head 4e94076d of 2026-08-27): no release or pull request has `ipCollection`, `resolveSubnetMask` or `params` on a subnetwork.
+- **Build:** Field kinds (decision 19, section 6.6 pattern 2), built 2026-11-23, live pending: `ComputeNetworkFields` (`compute.gcp.hfl.dev/v1alpha1`; `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`, `bgpInterRegionCost`) and `ComputeSubnetworkFields` (`allowSubnetCidrRoutesOverlap`); Terraform's updates send only the fields that changed. The rest, built 2026-11-23, live pending: our whole-object `ComputeSubnetwork` (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind`, the API's field set, tested on mockgcp's subnetworks) takes `ipCollection`, the IPv6 prefixes, `resolveSubnetMask` and `params.resourceManagerTags` at insert and the secondary ranges' `ipCollection` and `ipVersion`; `ipCidrRange` and `privateIpGoogleAccess` are immutable there (the API changes them only by `expandIpCidrRange` and `setPrivateIpGoogleAccess`, which the generated controller does not call), so a subnet that needs either change stays on Config Connector's kind. `enableFlowLogs` is deprecated (`logConfig.enable`) and left out.
 
 ### 17. Billing account log sink
 
@@ -346,16 +344,16 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** field, **size** M, **modules** 1 (net-firewall-policy).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/FirewallPolicy:rules[]`: 20 / 0 / 12 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule
-  - `compute.googleapis.com/NetworkFirewallPolicy:rules[]`: 23 / 1 / 8 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
+  - `compute.googleapis.com/FirewallPolicy:rules[]`: 20 / 6 / 6 of 32; ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule, ComputeFirewallPolicyPacketMirroringRule (ours), ComputeFirewallPolicyRule (ours)
+  - `compute.googleapis.com/NetworkFirewallPolicy:rules[]`: 23 / 4 / 5 of 32; ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha), ComputeNetworkFirewallPolicyPacketMirroringRule (ours), ComputeNetworkFirewallPolicyRule (ours)
   - `compute.googleapis.com/OrganizationSecurityPolicy:rules[]`: 8 / 0 / 42 of 50; ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha), ComputeOrganizationSecurityPolicy (ours), ComputeOrganizationSecurityPolicyAssociation (ours), ComputeOrganizationSecurityPolicyRule (ours)
 - **Missing, whole resources:** Fields of `ComputeFirewallPolicyRule`, `ComputeNetworkFirewallPolicyRule` and `ComputeOrganizationSecurityPolicyRule` that the API has and the Terraform-based kinds do not (the measured lists); the policy `displayName`/`shortName`.
 - **Missing, attributes that matter:** The measured lists.
-  - uncovered in `compute.googleapis.com/FirewallPolicy:rules[]` (measured): `rules[].match.destNetworkContext`, `rules[].match.destNetworkType`, `rules[].match.srcNetworkContext`, `rules[].match.srcNetworkType`, `rules[].match.srcNetworks[]`, `rules[].match.srcSecureTags[].name`, `rules[].ruleName`, `rules[].securityProfileGroup`, `rules[].targetForwardingRules[]`, `rules[].targetSecureTags[].name` and 2 more
-  - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkType`, `rules[].match.srcNetworkType`, `rules[].match.srcNetworks[]`, `rules[].securityProfileGroup`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetType`, `rules[].tlsInspect`
+  - uncovered in `compute.googleapis.com/FirewallPolicy:rules[]` (measured): `rules[].match.destNetworkType`, `rules[].match.srcNetworkType`, `rules[].match.srcSecureTags[].name`, `rules[].targetForwardingRules[]`, `rules[].targetSecureTags[].name`, `rules[].targetType`
+  - uncovered in `compute.googleapis.com/NetworkFirewallPolicy:rules[]` (measured): `rules[].match.destNetworkType`, `rules[].match.srcNetworkType`, `rules[].targetForwardingRules[]`, `rules[].targetResources[]`, `rules[].targetType`
   - uncovered in `compute.googleapis.com/OrganizationSecurityPolicy:rules[]` (measured): `rules[].headerAction.requestHeadersToAdds[].headerName`, `rules[].headerAction.requestHeadersToAdds[].headerValue`, `rules[].match.expr.expression`, `rules[].match.expr.location`, `rules[].match.expr.title`, `rules[].match.exprOptions.recaptchaOptions.actionTokenSiteKeys[]`, `rules[].match.exprOptions.recaptchaOptions.sessionTokenSiteKeys[]`, `rules[].networkMatch.destPorts[]`, `rules[].networkMatch.srcAsns[]`, `rules[].networkMatch.srcIpRanges[]` and 32 more
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (`ComputeFirewall` has
-- **Build:** Wait (decision 5); revisit after the regional firewall item, whose rule kind will have the full field set.
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (`ComputeFirewall` has #12102 "validate direct promotion"). Read again 2026-11-23 at the pin: Config Connector's `ComputeFirewallPolicyRule` (hierarchical) is direct, without `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `ruleName`, `srcSecureTags`, `srcNetworks` and the network types, and its update sends the whole rule (`patchRule`), so a field kind beside it would be reset by every change. Read again 2026-11-23 (master `bc464f5`, open pull requests searched for `ComputeFirewallPolicyRule`, `securityProfileGroup` and `tlsInspect`): master's mapper still marks the four fields `MISSING`; the only open pull request on the kind, #5440 (2025-10-16), changes its Go types' optionality and adds no field.
+- **Build:** Decision 19 replaces "wait". Built 2026-11-23 (fake only, live pending): our own `ComputeNetworkFirewallPolicyRule` (global network policies) takes `securityProfileGroup`, `tlsInspect` and `match.srcNetworks`; and our own `ComputeFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, a whole-object kind beside Config Connector's direct one, section 6.6 pattern 3; `docs/design.md` section 2.3 says which to pick) copies Config Connector's types and controller and adds `ruleName`, `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `match.srcSecureTags`, the network contexts and `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Our regional `ComputeRegionNetworkFirewallPolicyRule` (item 2) takes the group, TLS inspection, the network contexts and `match.srcNetworks` too (2026-11-23, fake only). Left: the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their newer names); a global or regional network rule's `targetResources`; `targetForwardingRules` and `targetType`; `ComputeOrganizationSecurityPolicyRule`'s Cloud Armor fields; the policy's `displayName`/`shortName`.
 
 ### 20. Security Command Center at folder and project level
 
@@ -379,16 +377,14 @@ What these numbers miss, for the foundation:
 
 - **Importance** B, **gap** whole, **size** M, **modules** 3 (vpc-sc, organization, project).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc`: 0 / 0 / 5 of 5; no kind
-  - `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter`: 43 / 0 / 30 of 73; AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter
-  - `accesscontextmanager.googleapis.com/GcpUserAccessBinding`: 3 / 0 / 24 of 27; AccessContextManagerGCPUserAccessBinding (alpha)
+  - `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc`: 0 / 5 / 0 of 5; AccessContextManagerAuthorizedOrgsDesc (ours)
+  - `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter`: 43 / 30 / 0 of 73; AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter, AccessContextManagerServicePerimeter (ours)
+  - `accesscontextmanager.googleapis.com/GcpUserAccessBinding`: 3 / 20 / 4 of 27; AccessContextManagerGCPUserAccessBinding (alpha), AccessContextManagerGCPUserAccessBinding (ours)
 - **Missing, whole resources:** `AccessContextManagerAuthorizedOrgsDesc`; on `AccessContextManagerServicePerimeter` the dry-run `spec` (ingress and egress policies, `vpcAccessibleServices`) and its `egressFrom.sources`; on `AccessContextManagerGCPUserAccessBinding` (alpha-only) `scopedAccessSettings`, session settings, `principal`, `dryRunAccessLevels`.
 - **Missing, attributes that matter:** The measured lists; the perimeter's dry-run `spec` is the one every VPC-SC rollout uses.
-  - uncovered in `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc` (measured): `assetType`, `authorizationDirection`, `authorizationType`, `name`, `orgs[]`
-  - uncovered in `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter` (measured): `spec.egressPolicies[].egressFrom.sourceRestriction`, `spec.egressPolicies[].egressFrom.sources[].accessLevel`, `spec.egressPolicies[].egressFrom.sources[].pscEndpoint.forwardingRule`, `spec.egressPolicies[].egressFrom.sources[].resource`, `spec.egressPolicies[].egressTo.roles[]`, `spec.egressPolicies[].title`, `spec.ingressPolicies[].ingressFrom.sources[].pscEndpoint.forwardingRule`, `spec.ingressPolicies[].ingressFrom.sources[].resource`, `spec.ingressPolicies[].ingressTo.roles[]`, `spec.ingressPolicies[].title` and 20 more
-  - uncovered in `accesscontextmanager.googleapis.com/GcpUserAccessBinding` (measured): `dryRunAccessLevels[]`, `principal.federatedPrincipal`, `principal.serviceAccount`, `principal.serviceAccountProjectNumber`, `scopedAccessSettings[].activeSettings.accessLevels[]`, `scopedAccessSettings[].activeSettings.sessionSettings.maxInactivity`, `scopedAccessSettings[].activeSettings.sessionSettings.sessionLength`, `scopedAccessSettings[].activeSettings.sessionSettings.sessionLengthEnabled`, `scopedAccessSettings[].activeSettings.sessionSettings.sessionReauthMethod`, `scopedAccessSettings[].activeSettings.sessionSettings.useOidcMaxAge` and 14 more
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08). Nothing for the perimeter's dry-run fields.
-- **Build:** Take `AuthorizedOrgsDesc` from #14202 when it merges (while it is open, copy its code under the copy-upstream rule: `UPSTREAM.md`, "Copied from open pull requests"). The perimeter fields: wait (decision 5).
+  - uncovered in `accesscontextmanager.googleapis.com/GcpUserAccessBinding` (measured): `principal.federatedPrincipal`, `principal.serviceAccount`, `principal.serviceAccountProjectNumber`, `scopedAccessSettings[].scope.clientScope.restrictedProject.name`
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08). Nothing for the perimeter's dry-run fields: read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0), the perimeter is still Terraform-based, with direct types on master (no controller) that lack them. The user access binding, read again 2026-11-23 (the same, and the heads of every pull request from #13500 to #16331): Config Connector's direct alpha kind and controller are unchanged since the pin but for a label, and no pull request adds the fields.
+- **Build:** `AccessContextManagerAuthorizedOrgsDesc` built 2026-11-23 (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind`, live pending): #14202 is a Terraform-based kind (a service mapping, no Go code), which this manager cannot run, so its fixtures, field names and immutable fields are copied (`UPSTREAM.md`) and `docs/design.md` section 2.3 says how objects move to Config Connector's kind once it is released. The perimeter fields (decision 19 replaces "wait"): our whole-object `AccessContextManagerServicePerimeter` (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated 2026-11-23, the API's field set for both `status` and the dry-run `spec`; Terraform's update sends either whole, so no field kind can own them); live pending, as the authorized orgs description (organization access). The user access binding's fields: our `AccessContextManagerGCPUserAccessBinding` (`accesscontextmanager.gcp.hfl.dev/v1beta1`, 2026-11-23, decision 26), Config Connector's direct types and controller copied, with `dryRunAccessLevels`, `sessionSettings`, `restrictedClientApplications` and `scopedAccessSettings`, sent as REST (the pinned Go client lacks them) and tested on an HTTP fake of ours; live skips (organization access). Not built: `principal` (not in the pinned REST client).
 
 ### 22. Privileged Access Manager grants
 
@@ -438,34 +434,33 @@ What these numbers miss, for the foundation:
 - **Importance** B, **gap** field, **size** M, **modules** 3 (binauthz, certificate-authority-service, certificate-manager).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `binaryauthorization.googleapis.com/Attestor`: 5 / 0 / 4 of 9; BinaryAuthorizationAttestor
-  - `binaryauthorization.googleapis.com/PlatformPolicy`: 23 / 0 / 5 of 28; BinaryAuthorizationPlatformPolicy (alpha), BinaryAuthorizationPolicy
+  - `binaryauthorization.googleapis.com/PlatformPolicy`: 23 / 5 / 0 of 28; BinaryAuthorizationPlatformPolicy (alpha), BinaryAuthorizationPolicy, BinaryAuthorizationPlatformPolicy (ours)
   - `privateca.googleapis.com/CaPool`: 41 / 0 / 14 of 55; PrivateCACAPool
-  - `privateca.googleapis.com/CaPoolCertificateAuthority`: 43 / 0 / 21 of 64; PrivateCACertificateAuthority
+  - `privateca.googleapis.com/CaPoolCertificateAuthority`: 43 / 14 / 7 of 64; PrivateCACertificateAuthority, PrivateCACertificateAuthority (ours)
   - `privateca.googleapis.com/CertificateTemplate`: 33 / 0 / 11 of 44; PrivateCACertificateTemplate
-  - `certificatemanager.googleapis.com/TrustConfig`: 4 / 0 / 5 of 9; CertificateManagerTrustConfig (alpha)
+  - `certificatemanager.googleapis.com/TrustConfig`: 4 / 3 / 2 of 9; CertificateManagerTrustConfig (alpha), CertificateManagerTrustConfig (ours)
 - **Missing, whole resources:** Attestor `userOwnedGrafeasNote`; platform policy `gkePolicy`; CA pool `issuancePolicy`; authority `config`, `subordinateConfig`, `userDefinedAccessUrls`; template `predefinedValues`; trust config `spiffeTrustStores`, `allowlistedCertificates`. (Some are Terraform's renames the generator cannot match; verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and is built.
 - **Missing, attributes that matter:** The measured lists.
   - uncovered in `binaryauthorization.googleapis.com/Attestor` (measured): `userOwnedGrafeasNote.noteReference`, `userOwnedGrafeasNote.publicKeys[].comment`, `userOwnedGrafeasNote.publicKeys[].id`, `userOwnedGrafeasNote.publicKeys[].pkixPublicKey.keyId`
-  - uncovered in `binaryauthorization.googleapis.com/PlatformPolicy` (measured): `gkePolicy.checkSets[].checks[].simpleSigningAttestationCheck.attestationAuthenticators[].pkixPublicKeySet.pkixPublicKeys[].keyId`, `gkePolicy.checkSets[].checks[].slsaCheck.rules[].attestationSource.containerAnalysisAttestationProjects[]`, `gkePolicy.checkSets[].checks[].slsaCheck.rules[].configBasedBuildRequired`, `gkePolicy.checkSets[].checks[].slsaCheck.rules[].customConstraints`, `gkePolicy.checkSets[].scope.kubernetesServiceAccount`
   - uncovered in `privateca.googleapis.com/CaPool` (measured): `encryptionSpec.cloudKmsKey`, `issuancePolicy.allowRequesterSpecifiedNotBeforeTime`, `issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints.critical`, `issuancePolicy.baselineValues.nameConstraints.excludedDnsNames[]`, `issuancePolicy.baselineValues.nameConstraints.excludedEmailAddresses[]`, `issuancePolicy.baselineValues.nameConstraints.excludedIpRanges[]`, `issuancePolicy.baselineValues.nameConstraints.excludedUris[]`, `issuancePolicy.baselineValues.nameConstraints.permittedDnsNames[]`, `issuancePolicy.baselineValues.nameConstraints.permittedEmailAddresses[]` and 4 more
-  - uncovered in `privateca.googleapis.com/CaPoolCertificateAuthority` (measured): `config.publicKey.format`, `config.publicKey.key`, `config.subjectConfig.subject.rdnSequence[].attributes[].objectId.objectIdPath[]`, `config.subjectConfig.subject.rdnSequence[].attributes[].type`, `config.subjectConfig.subject.rdnSequence[].attributes[].value`, `config.subjectKeyId.keyId`, `config.x509Config.aiaOcspServers[]`, `config.x509Config.nameConstraints.critical`, `config.x509Config.nameConstraints.excludedDnsNames[]`, `config.x509Config.nameConstraints.excludedEmailAddresses[]` and 11 more
+  - uncovered in `privateca.googleapis.com/CaPoolCertificateAuthority` (measured): `config.publicKey.format`, `config.publicKey.key`, `config.subjectConfig.subject.rdnSequence[].attributes[].objectId.objectIdPath[]`, `config.subjectConfig.subject.rdnSequence[].attributes[].type`, `config.subjectConfig.subject.rdnSequence[].attributes[].value`, `subordinateConfig.certificateAuthority`, `subordinateConfig.pemIssuerChain.pemCertificates[]`
   - uncovered in `privateca.googleapis.com/CertificateTemplate` (measured): `labels{}`, `maximumLifetime`, `predefinedValues.nameConstraints.critical`, `predefinedValues.nameConstraints.excludedDnsNames[]`, `predefinedValues.nameConstraints.excludedEmailAddresses[]`, `predefinedValues.nameConstraints.excludedIpRanges[]`, `predefinedValues.nameConstraints.excludedUris[]`, `predefinedValues.nameConstraints.permittedDnsNames[]`, `predefinedValues.nameConstraints.permittedEmailAddresses[]`, `predefinedValues.nameConstraints.permittedIpRanges[]` and 1 more
-  - uncovered in `certificatemanager.googleapis.com/TrustConfig` (measured): `allowlistedCertificates[].pemCertificate`, `labels{}`, `spiffeTrustStores{}.intermediateCas[].pemCertificate`, `spiffeTrustStores{}.trustAnchors[].pemCertificate`, `tags{}`
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Verify each gap against the CRD, then wait (decision 5).
+  - uncovered in `certificatemanager.googleapis.com/TrustConfig` (measured): `spiffeTrustStores{}.intermediateCas[].pemCertificate`, `spiffeTrustStores{}.trustAnchors[].pemCertificate`
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct `PrivateCACertificateTemplate` types, 2026-09-18) move the kinds to direct, where new fields would land; #12260 (mockgcp for `BinaryAuthorizationPlatformPolicy`) and #13053 (direct `CertificateManagerTrustConfig`) are for the alpha kinds.
+- **Build:** Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable); on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable). Built 2026-11-23 as field kinds (decision 37, `privateca.gcp.hfl.dev/v1alpha1`, live pending): `PrivateCACAPoolFields` (`issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints`) and `PrivateCACertificateTemplateFields` (`maximumLifetime`, `predefinedValues.nameConstraints`). Config Connector's DCL update was read: its mask is the top-level names of its own diffs (`TopLevelUpdateMask`), and the direct controller's is top-level too, so neither sees ours; but when it changes its own issuance policy or predefined values it sends them whole without ours, and the API clears them until our next reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime` (in neither the Go client at the pin nor mockgcp's protos). Built 2026-11-23 (fake only, live pending): our own `PrivateCACertificateAuthority` (`privateca.gcp.hfl.dev/v1alpha1`, `docs/design.md` section 6.6 pattern 1, a create-only whole-object kind; section 2.3 says which kind to pick), Config Connector's direct types and controller copied, with `config.x509Config.nameConstraints` and `aiaOcspServers`, `config.subjectKeyId` and `userDefinedAccessUrls`; everything but the labels and the URLs immutable; a self-signed authority enabled after create and disabled before delete (mockgcp patch 0062). Not built: the pool's `encryptionSpec` (CMEK), which neither the pinned Go client (`cloud.google.com/go/security` v1.24.0) nor mockgcp's protos have: a kind for it needs the REST client and a fake that keeps a field its protos lack, or the pin's next Go client (recorded in `docs/design.md` section 7, item 45); the authority's `subordinateConfig` and the subject's `rdnSequence`. The alpha-only trust config (decision 26): our stable `CertificateManagerTrustConfig` (`certificatemanager.gcp.hfl.dev/v1beta1`, generated by `hack/discokind` 2026-11-23, with `spiffeTrustStores`, `allowlistedCertificates`, labels and tags; #13053, still alpha, was not copied: the API has the standard shape); live pending. The alpha-only platform policy: our stable `BinaryAuthorizationPlatformPolicy` (`binaryauthorization.gcp.hfl.dev/v1beta1`, generated 2026-11-23, the API's `gkePolicy` with SLSA, attestation, vulnerability, freshness and trusted directory checks and a check set's Kubernetes service account scope; its update is a PUT named `replacePlatformPolicy`, now `hack/discokind`'s `updateMethod`); live pending.
 
 ### 26. Secret Manager fields
 
 - **Importance** B, **gap** field, **size** S, **modules** 1 (secret-manager).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `secretmanager.googleapis.com/Secret`: 10 / 0 / 5 of 15; SecretManagerSecret, SecretManagerSecret (ours)
-  - `secretmanager.googleapis.com/LocationSecret`: 0 / 10 / 5 of 15; SecretManagerSecret (ours)
+  - `secretmanager.googleapis.com/Secret`: 10 / 3 / 2 of 15; SecretManagerSecret, SecretManagerSecret (ours)
+  - `secretmanager.googleapis.com/LocationSecret`: 0 / 13 / 2 of 15; SecretManagerSecret (ours)
 - **Missing, whole resources:** `versionDestroyTtl`, `secretType`, `tags{}`, `topics[]` (matched by name, to verify), customer-managed encryption on a regional secret. Our `SecretManagerSecret` already adds `spec.location` (regional secrets); `SecretManagerSecretVersion` is covered by upstream and ours.
 - **Missing, attributes that matter:** The measured lists.
-  - uncovered in `secretmanager.googleapis.com/Secret` (measured): `customerManagedEncryption.kmsKeyName`, `secretType`, `tags{}`, `topics[].name`, `versionDestroyTtl`
-  - uncovered in `secretmanager.googleapis.com/LocationSecret` (measured): `customerManagedEncryption.kmsKeyName`, `secretType`, `tags{}`, `topics[].name`, `versionDestroyTtl`
+  - uncovered in `secretmanager.googleapis.com/Secret` (measured): `secretType`, `topics[].name`
+  - uncovered in `secretmanager.googleapis.com/LocationSecret` (measured): `secretType`, `topics[].name`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): regional secrets: PR #6651 (copied, `UPSTREAM.md`). No pull request for the others.
-- **Build:** Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags` there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`).
+- **Build:** Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags` there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`). Built 2026-11-23: `versionDestroyTtl`, a regional secret's `customerManagedEncryption` (both `NOTYET` in Config Connector's types, still so on master, no pull request) and `tags` (input only, immutable), mockgcp patch 0059; `TestSecretFields`. Not built: `secretType`. The measured `customerManagedEncryption.kmsKeyName` and `topics[].name` are ours as `kmsKeyRef` and `topics[].topicRef`, which the matcher does not pair by name.
 
 ### 27. Cloud Armor security policy fields
 
@@ -477,8 +472,8 @@ What these numbers miss, for the foundation:
 - **Missing, attributes that matter:** The measured lists (rules are `ComputeSecurityPolicy.spec.rule`).
   - uncovered in `compute.googleapis.com/SecurityPolicy` (measured): `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployConfidenceThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployExpirationSec`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployImpactedBaselineThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionAbsoluteQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionRelativeToBaselineQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].name`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].trafficGranularityConfigs[].enableEachUniqueValue`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].trafficGranularityConfigs[].type` and 40 more
   - uncovered in `compute.googleapis.com/OrganizationSecurityPolicy` (measured): `adaptiveProtectionConfig.layer7DdosDefenseConfig.enable`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.ruleVisibility`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployConfidenceThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployExpirationSec`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployImpactedBaselineThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].autoDeployLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionAbsoluteQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionLoadThreshold`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].detectionRelativeToBaselineQps`, `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs[].name` and 62 more
-- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found.
-- **Build:** Wait (decision 5).
+- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none found (read again 2026-11-23 at the pin: Config Connector's opt-in direct `ComputeSecurityPolicy` has no threshold configs or inspection size, and its mapper reads a threshold config with auto-deploy fields as its own `autoDeployConfig`). For the regional rules, read again 2026-11-23 (master `bc464f55`, releases to `v1.162.0`, the file lists of every pull request head from #13500 to #16331 fetched read-only): no regional security policy rule anywhere.
+- **Build:** Decision 19 replaces "wait". Built 2026-11-23, highest-value first, as a field kind (decision 37, `compute.gcp.hfl.dev/v1alpha1`, live pending): `ComputeSecurityPolicyFields` owns `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs` (Adaptive Protection's tuning) and `advancedOptionsConfig.requestBodyInspectionSize` (the WAF's body limit) of a global policy, written with `securityPolicies.patch` as a merge patch of the sub-objects as read with ours changed, and an update mask only to clear. Terraform's update sends only the sub-objects it changed, no mask; if the API replaces one, ours come back at the next reconcile (to be seen live). `userDefinedFields` and `ddosProtectionConfig` (regional network edge policies, which Config Connector has no kind for): our `ComputeRegionSecurityPolicy` (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind` 2026-11-23; a regional policy of either type, without its rules, which the API changes only by its rule methods); live pending, the network edge case skips live (Cloud Armor Enterprise). A regional policy's rules: our hand-written `ComputeRegionSecurityPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, 2026-11-23, Terraform's `google_compute_region_security_policy_rule`; getRule, addRule, patchRule with a mask, removeRule; mockgcp patch 0063; live pending). Not built: rule fields beyond Config Connector's on a global policy (its Terraform-based update adds, patches whole and removes rules to match `spec.rule`, so neither a field kind nor a rule kind beside it is safe; `docs/design.md` section 7 item 53), and `headerAction` and `redirectOptions` on a regional rule (the API takes them only on a global policy).
 
 ## Already built here
 
@@ -486,18 +481,25 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 
 | Kind | Resource | Ours beyond official | From an open PR |
 | --- | --- | ---: | :-: |
+| AccessContextManagerAuthorizedOrgsDesc | accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc | 5 | false |
+| AccessContextManagerGCPUserAccessBinding | accesscontextmanager.googleapis.com/GcpUserAccessBinding | 20 | false |
+| AccessContextManagerServicePerimeter | accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter | 30 | false |
 | AssetFeed | cloudasset.googleapis.com/Feed | 0 | false |
+| BinaryAuthorizationPlatformPolicy | binaryauthorization.googleapis.com/PlatformPolicy | 5 | false |
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
+| CertificateManagerTrustConfig | certificatemanager.googleapis.com/TrustConfig | 3 | false |
 | ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
 | ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
 | ComputeDiskResourcePolicyAttachment | (not a create) no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com | n/a | false |
+| ComputeFirewallPolicyPacketMirroringRule, ComputeFirewallPolicyRule | compute.googleapis.com/FirewallPolicy | 17 | false |
 | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 15 | false |
 | ComputeInterconnectAttachment | compute.googleapis.com/InterconnectAttachment | 19 | false |
 | ComputeInterconnectAttachmentGroup | compute.googleapis.com/InterconnectAttachmentGroup | 5 | false |
 | ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
 | ComputeNetworkEndpoint | (not a create) no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com | n/a | false |
-| ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 12 | false |
+| ComputeNetworkFields | (not a create) a field kind, the BGP best path selection of a network Config Connector's ComputeNetwork owns, written with networks.patch (decision 37) | n/a | false |
+| ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 15 | false |
 | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | compute.googleapis.com/OrganizationSecurityPolicy | 2 | false |
 | ComputePerInstanceConfig | (not a create) no API resource named like perinstanceconfig/computeperinstanceconfig in compute.googleapis.com | n/a | false |
 | ComputeProjectDefaultNetworkTier | (not a create) a project's default network tier, written with projects.setDefaultNetworkTier (it always exists) | n/a | false |
@@ -506,16 +508,23 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputePublicDelegatedPrefix | compute.googleapis.com/PublicDelegatedPrefix | 15 | false |
 | ComputeRegionDiskResourcePolicyAttachment | (not a create) no API resource named like regiondiskresourcepolicyattachment/computeregiondiskresourcepolicyattachment in compute.googleapis.com | n/a | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
-| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 22 | false |
+| ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | compute.googleapis.com/RegionNetworkFirewallPolicy | 27 | false |
 | ComputeRegionPerInstanceConfig | (not a create) no API resource named like regionperinstanceconfig/computeregionperinstanceconfig in compute.googleapis.com | n/a | false |
+| ComputeRegionSecurityPolicy, ComputeRegionSecurityPolicyRule | compute.googleapis.com/RegionSecurityPolicy | 29 | false |
 | ComputeRouter | compute.googleapis.com/Router | 19 | true |
 | ComputeRouterRoutePolicy | (not a create) a route policy of a Cloud Router, written with routers.patchRoutePolicy | n/a | false |
-| ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 7 | false |
+| ComputeSecurityPolicyFields | (not a create) a field kind, Adaptive Protection threshold configs and the request body inspection size of a security policy Config Connector's ComputeSecurityPolicy owns, written with securityPolicies.patch (decision 37) | n/a | false |
+| ComputeServiceAttachment | compute.googleapis.com/ServiceAttachment | 7 | false |
+| ComputeServiceAttachmentFields | (not a create) a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37) | n/a | false |
+| ComputeSubnetwork | compute.googleapis.com/Subnetwork | 9 | false |
+| ComputeSubnetworkFields | (not a create) a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37) | n/a | false |
+| ComputeVPNTunnel | compute.googleapis.com/VpnTunnel | 8 | false |
 | ComputeWireGroup | compute.googleapis.com/WireGroup | 7 | false |
 | ContainerClusterFields | (not a create) a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37) | n/a | false |
 | ContainerNodePoolFields | (not a create) a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37) | n/a | false |
 | DNSOutboundEndpoint | dns.googleapis.com/OutboundEndpoint | 8 | false |
-| DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 0 | false |
+| DNSPolicyFields | (not a create) a field kind, dns64Config of a DNS server policy Config Connector's DNSPolicy owns, written with policies.patch (decision 37) | n/a | false |
+| DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 1 | false |
 | DNSResponsePolicyRule | dns.googleapis.com/ResponsePolicyRule | 0 | false |
 | DataCatalogTag | (not a create) no API resource named like tag/datacatalogtag in datacatalog.googleapis.com | n/a | false |
 | DiscoveryEngineCmekConfig | (not a create) a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method) | n/a | false |
@@ -526,10 +535,12 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | IAMDenyPolicy | (not a create) an IAM v2 deny policy on a project, folder or organization, made with policies.createPolicy (IAM v2 is not in the Discovery documents counted) | n/a | false |
 | IAMMember | (not a create) one member of one role in another resource's IAM policy, written with setIamPolicy | n/a | false |
 | IAMOauthClient | iam.googleapis.com/OauthClient | 8 | false |
+| IAMOauthClientCredential | iam.googleapis.com/OauthClientCredential | 3 | false |
 | IAMPolicyBinding | (not a create) an IAM v3 policy binding of a project, folder or organization, made with policyBindings.create (IAM v3 is not in the Discovery documents counted) | n/a | false |
 | IAMPrincipalAccessBoundaryPolicy | (not a create) no API resource named like principalaccessboundarypolicy/iamprincipalaccessboundarypolicy in iam.googleapis.com | n/a | false |
 | IAMWorkforcePoolProviderKey | iam.googleapis.com/WorkforcePoolProviderKey | 3 | false |
 | IAMWorkforcePoolProviderScimTenant | iam.googleapis.com/WorkforcePoolProviderScimTenant | 4 | false |
+| IAMWorkforcePoolProviderScimToken | iam.googleapis.com/WorkforcePoolProviderScimTenantToken | 2 | false |
 | IAMWorkloadIdentityPoolManagedIdentity | iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity | 3 | true |
 | IAMWorkloadIdentityPoolNamespace | iam.googleapis.com/WorkloadIdentityPoolNamespace | 3 | true |
 | IAMWorkloadIdentityPoolProviderKey | iam.googleapis.com/WorkloadIdentityPoolProviderKey | 3 | false |
@@ -537,18 +548,21 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | LoggingBillingAccountSink | logging.googleapis.com/BillingAccountSink | 10 | false |
 | LoggingBillingAccountSink, LoggingLogSink | logging.googleapis.com/sinks | 1 | false |
 | LoggingLink | logging.googleapis.com/BucketLink | 0 | false |
-| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
-| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/LocationBucketLink | 1 | false |
 | LoggingLink | logging.googleapis.com/FolderLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/OrganizationLocationBucketLink | 1 | false |
+| LoggingLink | logging.googleapis.com/BillingAccountLocationBucketLink | 1 | false |
+| LoggingLogBucketFields | (not a create) a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37) | n/a | false |
 | LoggingLogSink | logging.googleapis.com/Sink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/OrganizationSink | 1 | false |
 | LoggingLogSink | logging.googleapis.com/FolderSink | 1 | false |
-| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
-| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
 | LoggingSavedQuery | logging.googleapis.com/SavedQuery | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/folders.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/organizations.locations.savedQueries | 77 | false |
+| LoggingSavedQuery | logging.googleapis.com/projects.locations.savedQueries | 77 | false |
 | LoggingSettings | (not a create) the Log Router settings of an organization or folder, written with updateSettings (they always exist) | n/a | false |
+| MonitoringAlertPolicyFields | (not a create) a field kind, the documentation's subject and links and the notification prompts of an alert policy Config Connector's MonitoringAlertPolicy owns, written with alertPolicies.patch (decision 37) | n/a | false |
+| MonitoringUptimeCheckConfigFields | (not a create) a field kind, userLabels and HTTP check fields of an uptime check Config Connector's MonitoringUptimeCheckConfig owns, written with uptimeCheckConfigs.patch (decision 37) | n/a | false |
 | NetworkConnectivityAutomatedDnsRecord | networkconnectivity.googleapis.com/AutomatedDnsRecord | 11 | false |
 | NetworkConnectivityPscAuthorizationPolicy | networkconnectivity.googleapis.com/PscAuthorizationPolicy | 6 | false |
 | NetworkConnectivitySpokeGatewayAdvertisedRoute | networkconnectivity.googleapis.com/SpokeGatewayAdvertisedRoute | 6 | false |
@@ -560,28 +574,33 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | NetworkSecurityGatewaySecurityPolicyRule | networksecurity.googleapis.com/GatewaySecurityPolicyRule | 0 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/SecurityProfile | 15 | false |
 | NetworkSecuritySecurityProfile | networksecurity.googleapis.com/projects.locations.securityProfiles | 0 | false |
-| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/projects.locations.securityProfileGroups | 0 | false |
+| NetworkSecuritySecurityProfileGroup | networksecurity.googleapis.com/SecurityProfileGroup | 7 | false |
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 1 | false |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 0 | false |
+| PrivateCACAPoolFields | (not a create) a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37) | n/a | false |
+| PrivateCACertificateAuthority | privateca.googleapis.com/CaPoolCertificateAuthority | 14 | false |
+| PrivateCACertificateTemplateFields | (not a create) a field kind, maximumLifetime and name constraints of a certificate template Config Connector's PrivateCACertificateTemplate owns, written with certificateTemplates.patch (decision 37) | n/a | false |
 | ProjectDefaultServiceAccounts | (not a create) what a project does to its default service accounts, written with serviceAccounts.delete, disable and the project's setIamPolicy (no create method) | n/a | false |
-| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
+| PubSubSubscriptionFields | (not a create) a field kind, messageTransforms, bigtableConfig and export fields of a subscription Config Connector's PubSubSubscription owns, written with subscriptions.patch (decision 37) | n/a | false |
+| PubSubTopicFields | (not a create) a field kind, ingestionDataSourceSettings and messageTransforms of a topic Config Connector's PubSubTopic owns, written with topics.patch (decision 37) | n/a | false |
 | ResourceManagerBoundary | cloudresourcemanager.googleapis.com/Boundary | 4 | false |
+| ResourceManagerBoundary | cloudresourcemanager.googleapis.com/organizations.boundaries | 4 | false |
+| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/projects.capabilityConfigs | 5 | false |
 | ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/CapabilityConfig | 5 | false |
-| ResourceManagerCapabilityConfig | cloudresourcemanager.googleapis.com/organizations.capabilityConfigs | 5 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 10 | false |
-| SecretManagerSecret | secretmanager.googleapis.com/Secret | 0 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/LocationSecret | 13 | false |
+| SecretManagerSecret | secretmanager.googleapis.com/Secret | 3 | false |
 | SecretManagerSecretVersion | (not a create) a secret version, written with secrets.addVersion | n/a | false |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 1 | false |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/projects.bigQueryExports | 5 | false |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 1 | false |
+| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 0 | false |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/projects.muteConfigs | 5 | false |
-| SecurityCenterMuteConfig | securitycenter.googleapis.com/organizations.muteConfigs | 0 | false |
-| SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 1 | false |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 1 | false |
+| SecurityCenterNotificationConfig | securitycenter.googleapis.com/projects.notificationConfigs | 5 | false |
 | ServiceIdentity | (not a create) a folder's or organization's service agent, made with services.generateServiceIdentity (nothing reads or deletes it) | n/a | false |
 
 ## Official but alpha-only
@@ -681,19 +700,19 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | :-: |
 | security | `accesscontextmanager.googleapis.com/AccessPolicy` | AccessContextManagerAccessPolicy | - | 3 | 1 | 0 | 2 | - |
 | security | `accesscontextmanager.googleapis.com/AccessPolicyAccessLevel` | AccessContextManagerAccessLevelCondition (alpha), AccessContextManagerAccessLevel | - | 23 | 21 | 0 | 2 | - |
-| security | `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc` | - | - | 5 | 0 | 0 | 5 | 21 |
-| security | `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter` | AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter | - | 73 | 43 | 0 | 30 | 21 |
-| security | `accesscontextmanager.googleapis.com/GcpUserAccessBinding` | AccessContextManagerGCPUserAccessBinding (alpha) | - | 27 | 3 | 0 | 24 | 21 |
+| security | `accesscontextmanager.googleapis.com/AccessPolicyAuthorizedOrgsDesc` | - | AccessContextManagerAuthorizedOrgsDesc | 5 | 0 | 5 | 0 | 21 |
+| security | `accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter` | AccessContextManagerServicePerimeterResource, AccessContextManagerServicePerimeter | AccessContextManagerServicePerimeter | 73 | 43 | 30 | 0 | 21 |
+| security | `accesscontextmanager.googleapis.com/GcpUserAccessBinding` | AccessContextManagerGCPUserAccessBinding (alpha) | AccessContextManagerGCPUserAccessBinding | 27 | 3 | 20 | 4 | 21 |
 | security | `assuredworkloads.googleapis.com/Workload` | AssuredWorkloadsWorkload (alpha) | - | 20 | 9 | 0 | 11 | - |
 | foundation | `billingbudgets.googleapis.com/Budget` | BillingBudgetsBudget | - | 28 | 24 | 0 | 4 | - |
 | security | `binaryauthorization.googleapis.com/Attestor` | BinaryAuthorizationAttestor | - | 9 | 5 | 0 | 4 | 25 |
-| security | `binaryauthorization.googleapis.com/PlatformPolicy` | BinaryAuthorizationPlatformPolicy (alpha), BinaryAuthorizationPolicy | - | 28 | 23 | 0 | 5 | 25 |
+| security | `binaryauthorization.googleapis.com/PlatformPolicy` | BinaryAuthorizationPlatformPolicy (alpha), BinaryAuthorizationPolicy | BinaryAuthorizationPlatformPolicy | 28 | 23 | 5 | 0 | 25 |
 | security | `certificatemanager.googleapis.com/Certificate` | CertificateManagerCertificate | - | 11 | 9 | 0 | 2 | - |
 | security | `certificatemanager.googleapis.com/CertificateIssuanceConfig` | CertificateManagerCertificateIssuanceConfig (alpha) | CertificateManagerCertificateIssuanceConfig | 8 | 6 | 2 | 0 | - |
 | security | `certificatemanager.googleapis.com/CertificateMap` | CertificateManagerCertificateMap | - | 4 | 3 | 0 | 1 | - |
 | security | `certificatemanager.googleapis.com/CertificateMapCertificateMapEntry` | CertificateManagerCertificateMapEntry | - | 6 | 6 | 0 | 0 | - |
 | security | `certificatemanager.googleapis.com/DnsAuthorization` | CertificateManagerDNSAuthorization | - | 6 | 5 | 0 | 1 | - |
-| security | `certificatemanager.googleapis.com/TrustConfig` | CertificateManagerTrustConfig (alpha) | - | 9 | 4 | 0 | 5 | 25 |
+| security | `certificatemanager.googleapis.com/TrustConfig` | CertificateManagerTrustConfig (alpha) | CertificateManagerTrustConfig | 9 | 4 | 3 | 2 | 25 |
 | security | `cloudasset.googleapis.com/Feed` | AssetFeed, CloudAssetFolderFeed (alpha), CloudAssetOrganizationFeed (alpha), CloudAssetProjectFeed (alpha) | AssetFeed | 11 | 11 | 0 | 0 | - |
 | security | `cloudasset.googleapis.com/SavedQuery` | AssetSavedQuery | - | 15 | 15 | 0 | 0 | - |
 | foundation | `cloudbilling.googleapis.com/BillingAccount` | BillingAccount (alpha) | - | 3 | 2 | 0 | 1 | - |
@@ -732,7 +751,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/CrossSiteNetwork` | - | ComputeCrossSiteNetwork | 2 | 0 | 2 | 0 | 7 |
 | foundation | `compute.googleapis.com/ExternalVpnGateway` | ComputeExternalVPNGateway | - | 8 | 5 | 0 | 3 | - |
 | foundation | `compute.googleapis.com/Firewall` | ComputeFirewall | - | 19 | 17 | 0 | 2 | - |
-| foundation | `compute.googleapis.com/FirewallPolicy` | ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule | - | 73 | 24 | 0 | 49 | 2 |
+| foundation | `compute.googleapis.com/FirewallPolicy` | ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule | ComputeFirewallPolicyPacketMirroringRule, ComputeFirewallPolicyRule | 73 | 24 | 17 | 32 | 2 |
 | foundation | `compute.googleapis.com/GlobalAddress` | ComputeAddress | - | 15 | 13 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/GlobalPublicDelegatedPrefix` | - | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/Interconnect` | ComputeInterconnect (alpha) | - | 25 | 16 | 0 | 9 | 10 |
@@ -742,23 +761,23 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/Network` | ComputeNetwork | - | 14 | 9 | 0 | 5 | 16 |
 | foundation | `compute.googleapis.com/NetworkAttachment` | ComputeNetworkAttachment (alpha) | ComputeNetworkAttachment | 6 | 6 | 0 | 0 | - |
 | security | `compute.googleapis.com/NetworkEdgeSecurityService` | ComputeNetworkEdgeSecurityService (alpha) | - | 3 | 3 | 0 | 0 | - |
-| foundation | `compute.googleapis.com/NetworkFirewallPolicy` | ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha) | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | 73 | 26 | 12 | 35 | 2 |
+| foundation | `compute.googleapis.com/NetworkFirewallPolicy` | ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha) | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | 73 | 26 | 15 | 32 | 2 |
 | foundation | `compute.googleapis.com/OrganizationSecurityPolicy` | ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha) | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | 86 | 12 | 2 | 72 | 8 |
 | security | `compute.googleapis.com/PacketMirroring` | ComputePacketMirroring | - | 12 | 12 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | - | ComputePublicAdvertisedPrefix | 7 | 0 | 7 | 0 | 7 |
 | foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
-| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 22 | 51 | 2 |
-| security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | - |
+| foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 27 | 46 | 2 |
+| security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | ComputeRegionSecurityPolicy, ComputeRegionSecurityPolicyRule | 86 | 36 | 29 | 21 | - |
 | security | `compute.googleapis.com/RegionSslPolicy` | ComputeRegionSSLPolicy (alpha) | - | 6 | 5 | 0 | 1 | - |
 | foundation | `compute.googleapis.com/Route` | ComputeRoute | - | 13 | 11 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/Router` | ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer, ComputeRouter | ComputeRouter | 81 | 57 | 19 | 5 | 9 |
 | security | `compute.googleapis.com/SecurityPolicy` | ComputeSecurityPolicy | - | 86 | 36 | 0 | 50 | 27 |
-| foundation | `compute.googleapis.com/ServiceAttachment` | ComputeServiceAttachment | - | 17 | 9 | 0 | 8 | 11 |
+| foundation | `compute.googleapis.com/ServiceAttachment` | ComputeServiceAttachment | ComputeServiceAttachment | 17 | 9 | 7 | 1 | 11 |
 | security | `compute.googleapis.com/SslPolicy` | ComputeSSLPolicy | - | 6 | 5 | 0 | 1 | - |
-| foundation | `compute.googleapis.com/Subnetwork` | ComputeSubnetwork | - | 30 | 20 | 0 | 10 | 16 |
+| foundation | `compute.googleapis.com/Subnetwork` | ComputeSubnetwork | ComputeSubnetwork | 30 | 20 | 9 | 1 | 16 |
 | foundation | `compute.googleapis.com/TargetVpnGateway` | ComputeTargetVPNGateway | - | 5 | 3 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/VpnGateway` | ComputeVPNGateway | - | 8 | 5 | 0 | 3 | - |
-| foundation | `compute.googleapis.com/VpnTunnel` | ComputeVPNTunnel | ComputeVPNTunnel | 24 | 15 | 7 | 2 | 10 |
+| foundation | `compute.googleapis.com/VpnTunnel` | ComputeVPNTunnel | ComputeVPNTunnel | 24 | 15 | 8 | 1 | 10 |
 | foundation | `compute.googleapis.com/WireGroup` | - | ComputeWireGroup | 9 | 0 | 7 | 2 | 7 |
 | foundation | `container.googleapis.com/Cluster` | ContainerCluster, ContainerNodePool | - | 715 | 294 | 0 | 421 | 14 |
 | foundation | `container.googleapis.com/ClusterNodePool` | ContainerNodePool | - | 213 | 108 | 0 | 105 | 14 |
@@ -766,8 +785,8 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `dns.googleapis.com/ManagedZone` | DNSManagedZone | - | 26 | 17 | 0 | 9 | 15 |
 | foundation | `dns.googleapis.com/OutboundEndpoint` | - | DNSOutboundEndpoint | 8 | 0 | 8 | 0 | - |
 | foundation | `dns.googleapis.com/Policy` | DNSPolicy | - | 11 | 7 | 0 | 4 | 15 |
-| foundation | `dns.googleapis.com/ResourceRecordSet` | DNSRecordSet | - | 50 | 43 | 0 | 7 | 15 |
-| foundation | `dns.googleapis.com/ResponsePolicy` | DNSResponsePolicy (alpha) | DNSResponsePolicy | 6 | 3 | 0 | 3 | 8 |
+| foundation | `dns.googleapis.com/ResourceRecordSet` | DNSRecordSet | - | 50 | 46 | 0 | 4 | 15 |
+| foundation | `dns.googleapis.com/ResponsePolicy` | DNSResponsePolicy (alpha) | DNSResponsePolicy | 6 | 3 | 1 | 2 | 8 |
 | foundation | `dns.googleapis.com/ResponsePolicyRule` | DNSResponsePolicyRule (alpha) | DNSResponsePolicyRule | 53 | 6 | 0 | 47 | 8 |
 | foundation | `essentialcontacts.googleapis.com/Contact` | EssentialContactsContact | - | 3 | 3 | 0 | 0 | - |
 | foundation | `essentialcontacts.googleapis.com/organizations.contacts` | EssentialContactsContact | - | 3 | 3 | 0 | 0 | - |
@@ -782,7 +801,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `gkehub.googleapis.com/ScopeNamespace` | GKEHubNamespace (alpha) | - | 4 | 4 | 0 | 0 | - |
 | foundation | `gkehub.googleapis.com/ScopeRbacrolebinding` | GKEHubScopeRBACRoleBinding (alpha) | - | 6 | 6 | 0 | 0 | - |
 | foundation | `iam.googleapis.com/OauthClient` | - | IAMOauthClient | 8 | 0 | 8 | 0 | 4 |
-| foundation | `iam.googleapis.com/OauthClientCredential` | - | - | 3 | 0 | 0 | 3 | 4 |
+| foundation | `iam.googleapis.com/OauthClientCredential` | - | IAMOauthClientCredential | 3 | 0 | 3 | 0 | 4 |
 | foundation | `iam.googleapis.com/Role` | IAMCustomRole | - | 7 | 4 | 0 | 3 | 3 |
 | foundation | `iam.googleapis.com/ServiceAccount` | IAMServiceAccount | - | 4 | 3 | 0 | 1 | - |
 | foundation | `iam.googleapis.com/ServiceAccountKey` | IAMServiceAccountKey | - | 2 | 2 | 0 | 0 | - |
@@ -790,7 +809,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `iam.googleapis.com/WorkforcePoolProvider` | IAMWorkforcePoolProvider | - | 27 | 13 | 0 | 14 | - |
 | foundation | `iam.googleapis.com/WorkforcePoolProviderKey` | - | IAMWorkforcePoolProviderKey | 3 | 0 | 3 | 0 | 4 |
 | foundation | `iam.googleapis.com/WorkforcePoolProviderScimTenant` | - | IAMWorkforcePoolProviderScimTenant | 4 | 0 | 4 | 0 | 4 |
-| foundation | `iam.googleapis.com/WorkforcePoolProviderScimTenantToken` | - | - | 2 | 0 | 0 | 2 | 4 |
+| foundation | `iam.googleapis.com/WorkforcePoolProviderScimTenantToken` | - | IAMWorkforcePoolProviderScimToken | 2 | 0 | 2 | 0 | 4 |
 | foundation | `iam.googleapis.com/WorkloadIdentityPool` | IAMWorkloadIdentityPool | - | 13 | 4 | 0 | 9 | - |
 | foundation | `iam.googleapis.com/WorkloadIdentityPoolNamespace` | - | IAMWorkloadIdentityPoolNamespace | 3 | 0 | 3 | 0 | - |
 | foundation | `iam.googleapis.com/WorkloadIdentityPoolNamespaceManagedIdentity` | - | IAMWorkloadIdentityPoolManagedIdentity | 3 | 0 | 3 | 0 | - |
@@ -881,12 +900,12 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `orgpolicy.googleapis.com/projects.policies` | OrgPolicyPolicy | - | 38 | 25 | 0 | 13 | - |
 | security | `privateca.googleapis.com/CaPool` | PrivateCACAPool | - | 55 | 41 | 0 | 14 | 25 |
 | security | `privateca.googleapis.com/CaPoolCertificate` | PrivateCACertificate | - | 60 | 42 | 0 | 18 | - |
-| security | `privateca.googleapis.com/CaPoolCertificateAuthority` | PrivateCACertificateAuthority | - | 64 | 43 | 0 | 21 | 25 |
+| security | `privateca.googleapis.com/CaPoolCertificateAuthority` | PrivateCACertificateAuthority | PrivateCACertificateAuthority | 64 | 43 | 14 | 7 | 25 |
 | security | `privateca.googleapis.com/CertificateTemplate` | PrivateCACertificateTemplate | - | 44 | 33 | 0 | 11 | 25 |
 | security | `recaptchaenterprise.googleapis.com/Firewallpolicy` | ReCAPTCHAEnterpriseFirewallPolicy (alpha) | - | 11 | 11 | 0 | 0 | - |
 | security | `recaptchaenterprise.googleapis.com/Key` | RecaptchaEnterpriseKey | - | 24 | 15 | 0 | 9 | - |
-| security | `secretmanager.googleapis.com/LocationSecret` | - | SecretManagerSecret | 15 | 0 | 10 | 5 | 26 |
-| security | `secretmanager.googleapis.com/Secret` | SecretManagerSecret | SecretManagerSecret | 15 | 10 | 0 | 5 | 26 |
+| security | `secretmanager.googleapis.com/LocationSecret` | - | SecretManagerSecret | 15 | 0 | 13 | 2 | 26 |
+| security | `secretmanager.googleapis.com/Secret` | SecretManagerSecret | SecretManagerSecret | 15 | 10 | 3 | 2 | 26 |
 | security | `securitycenter.googleapis.com/BigQueryExport` | SecurityCenterBigQueryExport (alpha) | SecurityCenterBigQueryExport | 5 | 4 | 1 | 0 | - |
 | security | `securitycenter.googleapis.com/EventThreatDetectionSettingCustomModule` | SecuritycenterEventThreatDetectionCustomModule (alpha) | - | 7 | 6 | 0 | 1 | - |
 | security | `securitycenter.googleapis.com/MuteConfig` | SecurityCenterMuteConfig (alpha) | SecurityCenterMuteConfig | 6 | 5 | 0 | 1 | - |

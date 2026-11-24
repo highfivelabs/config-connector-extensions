@@ -13,12 +13,17 @@
 # descriptions call Immutable); skip {field: why}; note; sweepLocation (the
 # location the live sweeper lists, for a collection with no global one;
 # the live fixtures use it); nameInBody (create also sends the full name
-# as the body's name, beside the ID parameter, for an API that needs it);
+# as the body's name, beside the ID parameter, for an API that needs it,
+# or instead of it where the create takes none);
 # missingIs403 (the API answers a get of a missing resource 403, not 404);
 # getQuery (query parameters every get sends, such as view: FULL);
 # secrets (dotted paths of string fields taken as value or
 # valueFrom.secretKeyRef, Config Connector's secret.Legacy, decision 33);
-# inputOnly (dotted paths of fields the API never returns).
+# inputOnly (dotted paths of fields the API never returns); mockgcp (the
+# fake leaves the collection to mockgcp, which serves it for other tests;
+# not swept by the discokind loop); updateMethod (a PUT method that
+# replaces the resource, for an API with no patch: the whole spec, no
+# mask).
 
 - kind: LoggingSavedQuery
   group: logging.gcp.hfl.dev
@@ -58,6 +63,29 @@
   softDelete: {field: state, value: DELETED}
   fakeDefaults: {state: ACTIVE}
   note: A workforce pool belongs to an organization; workforcePool and provider are the pool's and the provider's IDs.
+
+- kind: IAMOauthClientCredential
+  group: iam.gcp.hfl.dev
+  version: v1alpha1
+  discovery: iam.v1
+  resource: projects.locations.oauthClients.credentials
+  parents: [project]
+  terraform: google_iam_oauth_client_credential
+  secretOutputs: [clientSecret]
+  disableBeforeDelete: disabled
+  note: oauthClient is the OAuth client's ID. The client secret goes to a Secret (spec.secretOutput), never to status.
+
+- kind: IAMWorkforcePoolProviderScimToken
+  group: iam.gcp.hfl.dev
+  version: v1alpha1
+  discovery: iam.v1
+  resource: locations.workforcePools.providers.scimTenants.tokens
+  terraform: google_iam_workforce_pool_provider_scim_token
+  softDelete: {field: state, value: DELETED}
+  fakeDefaults: {state: ACTIVE}
+  secretOutputs: [securityToken]
+  createOnlyOutputs: [securityToken]
+  note: A workforce pool belongs to an organization; workforcePool, provider and scimTenant are the pool's, the provider's and the SCIM tenant's IDs. The token goes to a Secret (spec.secretOutput), never to status; the API returns it only when it makes the token.
 
 - kind: GKEHubMembershipRBACRoleBinding
   group: gkehub.gcp.hfl.dev
@@ -242,6 +270,77 @@
   immutable: [interconnect, type, router, edgeAvailabilityDomain, candidateSubnets, candidateIpv6Subnets, candidateCloudRouterIpAddress, candidateCloudRouterIpv6Address, candidateCustomerRouterIpAddress, candidateCustomerRouterIpv6Address, vlanTag8021q, ipsecInternalAddresses, encryption, subnetLength, pairingKey, l2Forwarding]
   note: "A VLAN attachment: an interconnect's connection to a Cloud Router, with the router and customer addresses chosen from candidates."
 
+# Foundation item 11 (2026-11-23): Config Connector's DCL-based
+# ComputeServiceAttachment sends consumerAcceptLists whole and has no
+# networkUrl in it, and takes no domainNames, metadata or
+# natIpsPerEndpoint. Ours is a parallel kind with the API's whole field set
+# (decision 19, as ComputeInterconnectAttachment); a workload moves to it by
+# acquiring the same attachment. mockgcp serves service attachments for the
+# field kind's test (patch 0054), so the fake leaves them to it.
+# Immutable as Terraform's google_compute_service_attachment forces a new
+# attachment for them; enableProxyProtocol as Config Connector's CRD says.
+- kind: ComputeServiceAttachment
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: serviceAttachments
+  parents: [project]
+  terraform: google_compute_service_attachment
+  mockgcp: true
+  immutable: [targetService, domainNames, enableProxyProtocol]
+  skip: {producerForwardingRule: "the API's older name for targetService, which replaces it"}
+  note: "A Private Service Connect producer's service attachment: the internal load balancer it publishes, its NAT subnets, and the consumer projects and networks it accepts."
+
+# Foundation item 16 (2026-11-23): Config Connector's Terraform-based
+# ComputeSubnetwork lacks ipCollection, externalIpv6Prefix,
+# internalIpv6Prefix, resolveSubnetMask and params.resourceManagerTags,
+# which the API takes only at insert, and the secondary ranges'
+# ipCollection and ipVersion (a list Terraform sends whole). Ours is a
+# parallel kind with the API's field set (decision 19); mockgcp serves
+# subnetworks for many other tests, so the fake leaves them to it. Immutable:
+# what the API takes only at insert, and ipCidrRange and
+# privateIpGoogleAccess, which it changes only by expandIpCidrRange and
+# setPrivateIpGoogleAccess, not by patch (a subnet that needs either stays
+# on Config Connector's kind).
+- kind: ComputeSubnetwork
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: subnetworks
+  parents: [project]
+  terraform: google_compute_subnetwork
+  mockgcp: true
+  immutable: [description, network, ipCidrRange, privateIpGoogleAccess, purpose, ipCollection, externalIpv6Prefix, internalIpv6Prefix, resolveSubnetMask, reservedInternalRange, params]
+  inputOnly: [params.resourceManagerTags]
+  skip: {enableFlowLogs: "deprecated by the API in favour of logConfig.enable"}
+  note: "A VPC subnetwork, with what the API takes only at insert: a BYOIP IPv6 prefix (ipCollection), the IPv6 prefixes, subnet mask resolution and resource manager tags."
+
+# Foundation item 27 (2026-11-23): a regional Cloud Armor security policy,
+# which Config Connector has no kind for (its ComputeSecurityPolicy is
+# global and Terraform-based), for regional external load balancers and
+# network edge policies (CLOUD_ARMOR_NETWORK: ddosProtectionConfig and
+# userDefinedFields). Rules are left out: the API changes them only by
+# addRule, patchRule and removeRule (a rule kind is next), and adds the
+# default rule itself. Labels are left out too: only setLabels changes them.
+# mockgcp serves the collection (patch 0063, with its rules), so that our
+# ComputeRegionSecurityPolicyRule's test finds the policy its rules go in.
+- kind: ComputeRegionSecurityPolicy
+  group: compute.gcp.hfl.dev
+  version: v1alpha1
+  discovery: compute.v1
+  resource: regionSecurityPolicies
+  parents: [project]
+  terraform: google_compute_region_security_policy
+  mockgcp: true
+  immutable: [type]
+  skip:
+    rules: "the API changes rules only by addRule, patchRule and removeRule, and adds the default rule itself"
+    labels: "the API sets labels only by setLabels, which the generated controller does not call"
+    labelFingerprint: "setLabels' optimistic-locking token"
+    associations: "an organization (hierarchical) security policy's; a regional policy has none"
+    shortName: "an organization (hierarchical) security policy's; a regional policy has none"
+  note: "A regional Cloud Armor security policy: a regional external load balancer's (CLOUD_ARMOR) or a network edge policy (CLOUD_ARMOR_NETWORK) with DDoS protection and user-defined fields. Its rules are not part of it."
+
 - kind: ComputeRegionInstanceTemplate
   group: compute.gcp.hfl.dev
   version: v1alpha1
@@ -369,6 +468,37 @@
   parents: [project]
   terraform: google_certificate_manager_certificate_issuance_config
   note: "How Certificate Manager issues certificates from a Certificate Authority Service pool."
+
+# Foundation item 25 (2026-11-23): Config Connector's
+# CertificateManagerTrustConfig is alpha-only (and lacks
+# spiffeTrustStores and allowlistedCertificates); open PR #13053 moves it
+# to a direct controller, still alpha. Ours is the stable equivalent.
+- kind: CertificateManagerTrustConfig
+  group: certificatemanager.gcp.hfl.dev
+  version: v1beta1
+  discovery: certificatemanager.v1
+  resource: projects.locations.trustConfigs
+  parents: [project]
+  terraform: google_certificate_manager_trust_config
+  immutable: [tags]
+  inputOnly: [tags]
+  skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
+  note: "The trust anchors, intermediate CAs, allowlisted certificates and SPIFFE trust stores a load balancer checks client certificates against (mTLS)."
+
+# Foundation item 25 (2026-11-23): Config Connector's
+# BinaryAuthorizationPlatformPolicy is alpha-only (#12260 adds its mockgcp,
+# no promotion). Ours is the stable equivalent. The API has no patch: it
+# replaces a policy with replacePlatformPolicy (a PUT).
+- kind: BinaryAuthorizationPlatformPolicy
+  group: binaryauthorization.gcp.hfl.dev
+  version: v1beta1
+  discovery: binaryauthorization.v1
+  resource: projects.platforms.policies
+  parents: [project]
+  terraform: google_binary_authorization_platform_policy
+  updateMethod: replacePlatformPolicy
+  skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
+  note: "A Binary Authorization platform policy: the checks GKE's continuous validation runs on a cluster's pods (platform is gke)."
 
 - kind: BackupDRManagementServer
   group: backupdr.gcp.hfl.dev
@@ -715,3 +845,39 @@
   terraform: google_dns_outbound_endpoint
   sweepLocation: us-central1
   note: "An address on a subnetwork that Cloud DNS sends a VPC network's outbound forwarded queries from."
+
+# Foundation item 21 (2026-11-23): an access policy's authorized orgs
+# descriptions. Config Connector's open pull request #14202 adds the kind
+# as a Terraform-based one (google_access_context_manager_authorized_orgs_desc,
+# accesscontextmanager.cnrm.cloud.google.com/v1alpha1), which this
+# manager cannot run; its field names are the API's, as here, and its
+# fixtures are copied into this kind's (UPSTREAM.md, docs/design.md 2.3).
+
+- kind: AccessContextManagerAuthorizedOrgsDesc
+  group: accesscontextmanager.gcp.hfl.dev
+  version: v1alpha1
+  discovery: accesscontextmanager.v1
+  resource: accessPolicies.authorizedOrgsDescs
+  terraform: google_access_context_manager_authorized_orgs_desc
+  nameInBody: true
+  immutable: [assetType, authorizationDirection, authorizationType]
+  note: "The organizations an organization's access policy trusts for, or lets evaluate, device and credential strength signals; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."
+
+# Foundation item 21's perimeter fields (2026-11-23): Config Connector's
+# Terraform-based AccessContextManagerServicePerimeter lacks, in both the
+# enforced (status) and the dry-run (spec) configuration, an egress rule's
+# sources and sourceRestriction, the rules' roles and titles, PSC endpoint
+# sources and VPC accessible services' allowedServicePatterns; Terraform's
+# update sends status or spec whole, so no field kind can own them. Ours is
+# a parallel kind with the API's field set (decision 19); upstream master
+# has direct types for the perimeter (no controller) without these fields.
+- kind: AccessContextManagerServicePerimeter
+  group: accesscontextmanager.gcp.hfl.dev
+  version: v1alpha1
+  discovery: accesscontextmanager.v1
+  resource: accessPolicies.servicePerimeters
+  terraform: google_access_context_manager_service_perimeter
+  nameInBody: true
+  immutable: [perimeterType]
+  skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
+  note: "A VPC Service Controls perimeter of an access policy, with its enforced (status) and dry-run (spec) configurations; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."

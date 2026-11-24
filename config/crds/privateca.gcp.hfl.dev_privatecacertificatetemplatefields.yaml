@@ -1,0 +1,252 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: privatecacertificatetemplatefields.privateca.gcp.hfl.dev
+spec:
+  group: privateca.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: PrivateCACertificateTemplateFields
+    listKind: PrivateCACertificateTemplateFieldsList
+    plural: privatecacertificatetemplatefields
+    shortNames:
+    - hflprivatecacertificatetemplatefields
+    singular: privatecacertificatetemplatefields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: PrivateCACertificateTemplateFields sets fields of a Certificate
+          Authority Service certificate template that Config Connector's PrivateCACertificateTemplate
+          has no field for (maximumLifetime and predefinedValues.nameConstraints),
+          and only those. Deleting it clears the fields it set; with deletion-policy
+          abandon they stay.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'PrivateCACertificateTemplateFieldsSpec is the fields of
+              a certificate template this object owns. A field left out is not owned:
+              it is never read or written.'
+            properties:
+              maximumLifetime:
+                description: Optional. The maximum lifetime allowed for issued certificates
+                  that use this template. If the issuing CA pool's issuance policy
+                  has a maximum lifetime, the shorter of the two applies; a certificate
+                  outliving its issuing authority is cut to the authority's expiry.
+                  A duration in seconds, such as "2592000s".
+                pattern: ^[0-9]+(\.[0-9]{1,9})?s$
+                type: string
+              predefinedValues:
+                description: The part of the template's predefined X.509 values this
+                  object owns.
+                properties:
+                  nameConstraints:
+                    description: 'The name constraints every certificate issued with
+                      the template carries (RFC 5280 section 4.2.1.10), owned whole:
+                      each list replaces the template''s.'
+                    properties:
+                      critical:
+                        description: Indicates whether or not the name constraints
+                          are marked critical.
+                        type: boolean
+                      excludedDNSNames:
+                        description: Contains excluded DNS names. Any DNS name that
+                          can be constructed by simply adding zero or more labels
+                          to the left-hand side of the name satisfies the name constraint.
+                          For example, `example.com`, `www.example.com`, `www.sub.example.com`
+                          would satisfy `example.com` while `example1.com` does not.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      excludedEmailAddresses:
+                        description: Contains the excluded email addresses. The value
+                          can be a particular email address, a hostname to indicate
+                          all email addresses on that host or a domain with a leading
+                          period (e.g. `.example.com`) to indicate all email addresses
+                          in that domain.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      excludedIPRanges:
+                        description: Contains the excluded IP ranges. For IPv4 addresses,
+                          the ranges are expressed using CIDR notation as specified
+                          in RFC 4632. For IPv6 addresses, the ranges are expressed
+                          in similar encoding as IPv4 addresses.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      excludedUris:
+                        description: Contains the excluded URIs that apply to the
+                          host part of the name. The value can be a hostname or a
+                          domain with a leading period (like `.example.com`)
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      permittedDNSNames:
+                        description: Contains permitted DNS names. Any DNS name that
+                          can be constructed by simply adding zero or more labels
+                          to the left-hand side of the name satisfies the name constraint.
+                          For example, `example.com`, `www.example.com`, `www.sub.example.com`
+                          would satisfy `example.com` while `example1.com` does not.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      permittedEmailAddresses:
+                        description: Contains the permitted email addresses. The value
+                          can be a particular email address, a hostname to indicate
+                          all email addresses on that host or a domain with a leading
+                          period (e.g. `.example.com`) to indicate all email addresses
+                          in that domain.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      permittedIPRanges:
+                        description: Contains the permitted IP ranges. For IPv4 addresses,
+                          the ranges are expressed using CIDR notation as specified
+                          in RFC 4632. For IPv6 addresses, the ranges are expressed
+                          in similar encoding as IPv4 addresses.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      permittedUris:
+                        description: Contains the permitted URIs that apply to the
+                          host part of the name. The value can be a hostname or a
+                          domain with a leading period (like `.example.com`)
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                    type: object
+                type: object
+              resourceRef:
+                description: 'Immutable. The certificate template: Config Connector''s
+                  PrivateCACertificateTemplate by name (privateca.cnrm.cloud.google.com),
+                  or any template by external, as "projects/{{projectID}}/locations/{{location}}/certificateTemplates/{{certificateTemplateID}}".
+                  The template must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed PrivateCACertificateTemplate
+                      resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/certificateTemplates/{{certificateTemplateID}}".
+                    type: string
+                  name:
+                    description: The name of a PrivateCACertificateTemplate resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a PrivateCACertificateTemplate resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set maximumLifetime or predefinedValues.nameConstraints
+              rule: has(self.maximumLifetime) || (has(self.predefinedValues) && has(self.predefinedValues.nameConstraints))
+          status:
+            description: PrivateCACertificateTemplateFieldsStatus defines the observed
+              state.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The certificate template whose fields this object sets,
+                  as projects/{project}/locations/{location}/certificateTemplates/{certificateTemplate}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

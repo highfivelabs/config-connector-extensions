@@ -54,6 +54,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	acmfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/accesscontextmanager/fake"
 	chroniclefake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle/fake"
 	smfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/servicemanagement/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
@@ -92,8 +93,9 @@ func run(ctx context.Context, projects []string) error {
 		}
 	}()
 	mockConn := mock.NewGRPCConnection(ctx)
-	// The discokind kinds' collections, Service Management and the Chronicle API in front of mockgcp.
-	httpClient := &http.Client{Transport: discofake.New(chroniclefake.New(smfake.New(mock)), discokind.Kinds())}
+	// The discokind kinds' collections, Service Management, the Chronicle API
+	// and Access Context Manager's user access bindings in front of mockgcp.
+	httpClient := &http.Client{Transport: discofake.New(chroniclefake.New(smfake.New(acmfake.New(mock))), discokind.Kinds())}
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 
 	// As the harness does for mock mode: Terraform-based and DCL-based

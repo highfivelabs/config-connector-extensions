@@ -20,7 +20,8 @@
 // without instance splits; the KRM types are this project's. Written here: the
 // spec's FromProto (generated upstream for the worker pool), the service's
 // ingress, invokerIamDisabled, defaultUriDisabled and scaling, the URIs in
-// observed state, and the scaling mappings.
+// observed state, the scaling mappings, and binaryAuthorization.policy
+// (shared with RunWorkerPool).
 
 package run
 
@@ -49,6 +50,9 @@ func BinaryAuthorization_v1alpha1_FromProto(mapCtx *direct.MapContext, in *pb.Bi
 	case *pb.BinaryAuthorization_UseDefault:
 		val := x.UseDefault
 		out.UseDefault = &val
+	case *pb.BinaryAuthorization_Policy: // Written here.
+		val := x.Policy
+		out.Policy = &val
 	}
 	out.BreakglassJustification = direct.LazyPtr(in.GetBreakglassJustification())
 	return out

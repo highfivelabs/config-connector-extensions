@@ -1,0 +1,13 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeRegionSecurityPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  type: CLOUD_ARMOR
+  description: changed by a config-connector-extensions test
+  advancedOptionsConfig:
+    jsonParsing: STANDARD
+    logLevel: VERBOSE

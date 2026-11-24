@@ -29,19 +29,19 @@ By tier, counted per service:
 
 ![Coverage by tier](docs/coverage/bars/_tiers.svg)
 
-<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Purple: Terraform `google-beta` (L2), the dark tick L1. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md).</sub>
+<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Purple: Terraform `google-beta` (L2), the dark tick L1. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md); then for the application services: [`application.md`](docs/coverage/application.md).</sub>
 
 Tier 1, 16 services, most covered attributes first:
 
 | Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered | Terraform `google-beta` | Terraform `google` |
 | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 9.0% | 40.5% | 56.0% | 53.2% |
+| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 50.6% | 11.0% | 38.4% | 56.0% | 53.2% |
 | 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 67.4% | 8.7% | 37.6% | 37.6% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
 | 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 15.0% | 24.8% | 74.5% | 73.2% |
-| 1 | foundation | `dns.googleapis.com` | ![dns.googleapis.com](docs/coverage/bars/dns.googleapis.com.svg) | 29.5% | 3.1% | 67.4% | 33.3% | 32.6% |
+| 1 | foundation | `dns.googleapis.com` | ![dns.googleapis.com](docs/coverage/bars/dns.googleapis.com.svg) | 30.6% | 3.5% | 65.9% | 33.3% | 32.6% |
 | 1 | foundation | `orgpolicy.googleapis.com` | ![orgpolicy.googleapis.com](docs/coverage/bars/orgpolicy.googleapis.com.svg) | 67.8% | 0.0% | 32.2% | 92.6% | 92.6% |
-| 1 | foundation | `iam.googleapis.com` | ![iam.googleapis.com](docs/coverage/bars/iam.googleapis.com.svg) | 39.8% | 21.2% | 38.9% | 78.8% | 78.8% |
+| 1 | foundation | `iam.googleapis.com` | ![iam.googleapis.com](docs/coverage/bars/iam.googleapis.com.svg) | 39.8% | 25.7% | 34.5% | 78.8% | 78.8% |
 | 1 | foundation | `cloudresourcemanager.googleapis.com` | ![cloudresourcemanager.googleapis.com](docs/coverage/bars/cloudresourcemanager.googleapis.com.svg) | 40.0% | 41.8% | 18.2% | 65.5% | 65.5% |
 | 1 | foundation | `gkehub.googleapis.com` | ![gkehub.googleapis.com](docs/coverage/bars/gkehub.googleapis.com.svg) | 16.5% | 8.0% | 75.6% | 54.0% | 54.0% |
 | 1 | foundation | `billingbudgets.googleapis.com` | ![billingbudgets.googleapis.com](docs/coverage/bars/billingbudgets.googleapis.com.svg) | 85.7% | 0.0% | 14.3% | 78.6% | 78.6% |
@@ -64,12 +64,13 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | security | `networksecurity.googleapis.com` | ![networksecurity.googleapis.com](docs/coverage/bars/networksecurity.googleapis.com.svg) | 73.4% | 8.1% | 18.5% | 95.8% | 91.2% |
 | 2 | application | `discoveryengine.googleapis.com` | ![discoveryengine.googleapis.com](docs/coverage/bars/discoveryengine.googleapis.com.svg) | 59.2% | 0.0% | 40.8% | 35.8% | 35.8% |
 | 2 | application | `dataplex.googleapis.com` | ![dataplex.googleapis.com](docs/coverage/bars/dataplex.googleapis.com.svg) | 84.1% | 7.5% | 8.4% | 70.1% | 70.1% |
+| 2 | application | `run.googleapis.com` | ![run.googleapis.com](docs/coverage/bars/run.googleapis.com.svg) | 38.1% | 5.8% | 56.1% | 71.0% | 69.6% |
 | 2 | application | `cloudbuild.googleapis.com` | ![cloudbuild.googleapis.com](docs/coverage/bars/cloudbuild.googleapis.com.svg) | 38.7% | 0.4% | 60.9% | 45.3% | 45.3% |
-| 2 | application | `run.googleapis.com` | ![run.googleapis.com](docs/coverage/bars/run.googleapis.com.svg) | 38.1% | 3.3% | 58.6% | 71.0% | 69.6% |
 | 2 | application | `networkservices.googleapis.com` | ![networkservices.googleapis.com](docs/coverage/bars/networkservices.googleapis.com.svg) | 54.2% | 11.2% | 34.6% | 75.3% | 74.7% |
-| 2 | security | `privateca.googleapis.com` | ![privateca.googleapis.com](docs/coverage/bars/privateca.googleapis.com.svg) | 71.3% | 0.0% | 28.7% | 94.6% | 94.6% |
+| 2 | security | `privateca.googleapis.com` | ![privateca.googleapis.com](docs/coverage/bars/privateca.googleapis.com.svg) | 71.3% | 6.3% | 22.4% | 94.6% | 94.6% |
 | 2 | application | `bigquery.googleapis.com` | ![bigquery.googleapis.com](docs/coverage/bars/bigquery.googleapis.com.svg) | 26.6% | 0.0% | 73.4% | 44.0% | 42.4% |
 | 2 | application | `clouddeploy.googleapis.com` | ![clouddeploy.googleapis.com](docs/coverage/bars/clouddeploy.googleapis.com.svg) | 56.7% | 2.5% | 40.8% | 90.8% | 90.8% |
+| 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 42.0% | 6.1% | 99.2% | 99.2% |
 | 2 | application | `notebooks.googleapis.com` | ![notebooks.googleapis.com](docs/coverage/bars/notebooks.googleapis.com.svg) | 91.7% | 0.0% | 8.3% | 30.1% | 30.1% |
 | 2 | application | `sqladmin.googleapis.com` | ![sqladmin.googleapis.com](docs/coverage/bars/sqladmin.googleapis.com.svg) | 41.6% | 0.4% | 58.0% | 6.9% | 6.9% |
 | 2 | application | `appengine.googleapis.com` | ![appengine.googleapis.com](docs/coverage/bars/appengine.googleapis.com.svg) | 60.4% | 0.0% | 39.6% | 71.6% | 69.2% |
@@ -78,34 +79,33 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `apigee.googleapis.com` | ![apigee.googleapis.com](docs/coverage/bars/apigee.googleapis.com.svg) | 16.9% | 1.0% | 82.0% | 42.7% | 42.7% |
 | 2 | application | `composer.googleapis.com` | ![composer.googleapis.com](docs/coverage/bars/composer.googleapis.com.svg) | 95.3% | 0.0% | 4.7% | 88.4% | 88.4% |
 | 2 | application | `chronicle.googleapis.com` | ![chronicle.googleapis.com](docs/coverage/bars/chronicle.googleapis.com.svg) | 15.6% | 0.0% | 84.4% | 83.5% | 83.5% |
+| 2 | application | `storage.googleapis.com` | ![storage.googleapis.com](docs/coverage/bars/storage.googleapis.com.svg) | 31.7% | 4.0% | 64.4% | 47.0% | 47.0% |
 | 2 | application | `eventarc.googleapis.com` | ![eventarc.googleapis.com](docs/coverage/bars/eventarc.googleapis.com.svg) | 88.5% | 0.0% | 11.5% | 79.5% | 79.5% |
-| 2 | security | `accesscontextmanager.googleapis.com` | ![accesscontextmanager.googleapis.com](docs/coverage/bars/accesscontextmanager.googleapis.com.svg) | 51.9% | 0.0% | 48.1% | 99.2% | 99.2% |
 | 2 | application | `vmwareengine.googleapis.com` | ![vmwareengine.googleapis.com](docs/coverage/bars/vmwareengine.googleapis.com.svg) | 79.8% | 0.0% | 20.2% | 65.5% | 65.5% |
 | 2 | application | `tpu.googleapis.com` | ![tpu.googleapis.com](docs/coverage/bars/tpu.googleapis.com.svg) | 91.5% | 0.0% | 8.5% | 59.2% | 0.0% |
-| 2 | application | `storage.googleapis.com` | ![storage.googleapis.com](docs/coverage/bars/storage.googleapis.com.svg) | 27.7% | 4.0% | 68.3% | 47.0% | 47.0% |
 | 2 | application | `alloydb.googleapis.com` | ![alloydb.googleapis.com](docs/coverage/bars/alloydb.googleapis.com.svg) | 56.2% | 0.0% | 43.8% | 68.8% | 62.5% |
 | 2 | application | `cloudfunctions.googleapis.com` | ![cloudfunctions.googleapis.com](docs/coverage/bars/cloudfunctions.googleapis.com.svg) | 80.3% | 19.7% | 0.0% | 86.9% | 86.9% |
+| 2 | application | `artifactregistry.googleapis.com` | ![artifactregistry.googleapis.com](docs/coverage/bars/artifactregistry.googleapis.com.svg) | 68.3% | 27.0% | 4.8% | 84.1% | 84.1% |
 | 2 | application | `redis.googleapis.com` | ![redis.googleapis.com](docs/coverage/bars/redis.googleapis.com.svg) | 72.0% | 0.0% | 28.0% | 78.0% | 78.0% |
 | 2 | security | `securityposture.googleapis.com` | ![securityposture.googleapis.com](docs/coverage/bars/securityposture.googleapis.com.svg) | 93.7% | 0.0% | 6.3% | 87.3% | 87.3% |
 | 2 | application | `looker.googleapis.com` | ![looker.googleapis.com](docs/coverage/bars/looker.googleapis.com.svg) | 0.0% | 98.2% | 1.8% | 77.2% | 77.2% |
-| 2 | application | `artifactregistry.googleapis.com` | ![artifactregistry.googleapis.com](docs/coverage/bars/artifactregistry.googleapis.com.svg) | 68.3% | 14.3% | 17.5% | 84.1% | 84.1% |
 | 2 | application | `dataform.googleapis.com` | ![dataform.googleapis.com](docs/coverage/bars/dataform.googleapis.com.svg) | 53.8% | 0.0% | 46.2% | 47.3% | 19.4% |
 | 2 | application | `workstations.googleapis.com` | ![workstations.googleapis.com](docs/coverage/bars/workstations.googleapis.com.svg) | 52.3% | 0.0% | 47.7% | 87.5% | 86.4% |
 | 2 | application | `bigtableadmin.googleapis.com` | ![bigtableadmin.googleapis.com](docs/coverage/bars/bigtableadmin.googleapis.com.svg) | 30.4% | 0.0% | 69.6% | 15.6% | 15.6% |
 | 2 | application | `pubsub.googleapis.com` | ![pubsub.googleapis.com](docs/coverage/bars/pubsub.googleapis.com.svg) | 36.9% | 0.0% | 63.1% | 90.1% | 90.1% |
-| 2 | security | `certificatemanager.googleapis.com` | ![certificatemanager.googleapis.com](docs/coverage/bars/certificatemanager.googleapis.com.svg) | 75.0% | 4.5% | 20.5% | 86.4% | 86.4% |
+| 2 | security | `certificatemanager.googleapis.com` | ![certificatemanager.googleapis.com](docs/coverage/bars/certificatemanager.googleapis.com.svg) | 75.0% | 11.4% | 13.6% | 86.4% | 86.4% |
 | 2 | application | `spanner.googleapis.com` | ![spanner.googleapis.com](docs/coverage/bars/spanner.googleapis.com.svg) | 42.5% | 0.0% | 57.5% | 68.8% | 68.8% |
+| 2 | security | `binaryauthorization.googleapis.com` | ![binaryauthorization.googleapis.com](docs/coverage/bars/binaryauthorization.googleapis.com.svg) | 75.7% | 13.5% | 10.8% | 18.9% | 18.9% |
 | 2 | application | `managedkafka.googleapis.com` | ![managedkafka.googleapis.com](docs/coverage/bars/managedkafka.googleapis.com.svg) | 54.5% | 0.0% | 45.5% | 50.9% | 50.9% |
 | 2 | application | `analyticshub.googleapis.com` | ![analyticshub.googleapis.com](docs/coverage/bars/analyticshub.googleapis.com.svg) | 66.7% | 0.0% | 33.3% | 88.1% | 88.1% |
 | 2 | application | `backupdr.googleapis.com` | ![backupdr.googleapis.com](docs/coverage/bars/backupdr.googleapis.com.svg) | 40.0% | 0.0% | 60.0% | 55.7% | 48.6% |
-| 2 | security | `binaryauthorization.googleapis.com` | ![binaryauthorization.googleapis.com](docs/coverage/bars/binaryauthorization.googleapis.com.svg) | 75.7% | 0.0% | 24.3% | 18.9% | 18.9% |
 | 2 | application | `cloudscheduler.googleapis.com` | ![cloudscheduler.googleapis.com](docs/coverage/bars/cloudscheduler.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 100.0% | 100.0% |
 | 2 | application | `securesourcemanager.googleapis.com` | ![securesourcemanager.googleapis.com](docs/coverage/bars/securesourcemanager.googleapis.com.svg) | 58.3% | 0.0% | 41.7% | 25.0% | 25.0% |
 | 2 | security | `cloudasset.googleapis.com` | ![cloudasset.googleapis.com](docs/coverage/bars/cloudasset.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 34.6% | 34.6% |
 | 2 | security | `recaptchaenterprise.googleapis.com` | ![recaptchaenterprise.googleapis.com](docs/coverage/bars/recaptchaenterprise.googleapis.com.svg) | 25.7% | 0.0% | 74.3% | 18.8% | 18.8% |
+| 2 | security | `secretmanager.googleapis.com` | ![secretmanager.googleapis.com](docs/coverage/bars/secretmanager.googleapis.com.svg) | 33.3% | 53.3% | 13.3% | 100.0% | 100.0% |
 | 2 | security | `securitycentermanagement.googleapis.com` | ![securitycentermanagement.googleapis.com](docs/coverage/bars/securitycentermanagement.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 86.4% | 86.4% |
 | 2 | application | `apigateway.googleapis.com` | ![apigateway.googleapis.com](docs/coverage/bars/apigateway.googleapis.com.svg) | 81.0% | 19.0% | 0.0% | 76.2% | 0.0% |
-| 2 | security | `secretmanager.googleapis.com` | ![secretmanager.googleapis.com](docs/coverage/bars/secretmanager.googleapis.com.svg) | 33.3% | 33.3% | 33.3% | 100.0% | 100.0% |
 | 2 | application | `modelarmor.googleapis.com` | ![modelarmor.googleapis.com](docs/coverage/bars/modelarmor.googleapis.com.svg) | 65.5% | 0.0% | 34.5% | 89.7% | 89.7% |
 | 2 | security | `websecurityscanner.googleapis.com` | ![websecurityscanner.googleapis.com](docs/coverage/bars/websecurityscanner.googleapis.com.svg) | 90.0% | 0.0% | 10.0% | 80.0% | 0.0% |
 | 2 | application | `bigqueryreservation.googleapis.com` | ![bigqueryreservation.googleapis.com](docs/coverage/bars/bigqueryreservation.googleapis.com.svg) | 53.1% | 0.0% | 46.9% | 71.9% | 65.6% |
@@ -117,12 +117,12 @@ Tier 1, 16 services, most covered attributes first:
 | 2 | application | `privilegedaccessmanager.googleapis.com` | ![privilegedaccessmanager.googleapis.com](docs/coverage/bars/privilegedaccessmanager.googleapis.com.svg) | 61.1% | 0.0% | 38.9% | 66.7% | 66.7% |
 | 2 | application | `biglake.googleapis.com` | ![biglake.googleapis.com](docs/coverage/bars/biglake.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 100.0% | 100.0% |
 | 2 | security | `assuredworkloads.googleapis.com` | ![assuredworkloads.googleapis.com](docs/coverage/bars/assuredworkloads.googleapis.com.svg) | 45.0% | 0.0% | 55.0% | 90.0% | 90.0% |
+| 2 | application | `cloudquotas.googleapis.com` | ![cloudquotas.googleapis.com](docs/coverage/bars/cloudquotas.googleapis.com.svg) | 88.9% | 0.0% | 11.1% | 88.9% | 88.9% |
 | 2 | application | `datacatalog.googleapis.com` | ![datacatalog.googleapis.com](docs/coverage/bars/datacatalog.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 75.0% | 75.0% |
 | 2 | application | `servicedirectory.googleapis.com` | ![servicedirectory.googleapis.com](docs/coverage/bars/servicedirectory.googleapis.com.svg) | 77.8% | 0.0% | 22.2% | 44.4% | 44.4% |
 | 2 | application | `workflows.googleapis.com` | ![workflows.googleapis.com](docs/coverage/bars/workflows.googleapis.com.svg) | 70.0% | 0.0% | 30.0% | 100.0% | 100.0% |
 | 2 | application | `dataflow.googleapis.com` | ![dataflow.googleapis.com](docs/coverage/bars/dataflow.googleapis.com.svg) | 1.5% | 0.0% | 98.5% | 8.3% | 8.3% |
 | 2 | application | `datastore.googleapis.com` | ![datastore.googleapis.com](docs/coverage/bars/datastore.googleapis.com.svg) | 100.0% | 0.0% | 0.0% | 0.0% | 0.0% |
-| 2 | application | `cloudquotas.googleapis.com` | ![cloudquotas.googleapis.com](docs/coverage/bars/cloudquotas.googleapis.com.svg) | 0.0% | 0.0% | 100.0% | 88.9% | 88.9% |
 | 2 | application | `servicemanagement.googleapis.com` | ![servicemanagement.googleapis.com](docs/coverage/bars/servicemanagement.googleapis.com.svg) | 0.0% | 0.0% | 100.0% | 0.4% | 0.4% |
 
 </details>

@@ -1,0 +1,31 @@
+config-connector-extensions patch 0054: mockgcp's compute patches (the
+JSON merge patch of mergeProtos) replace every scalar field, not only
+strings.
+
+ComputeServiceAttachmentFields (compute.gcp.hfl.dev, docs/design.md
+decision 37) patches a service attachment's reconcileConnections (a bool)
+and propagatedConnectionLimit (a uint32); mergeProtos answered 500
+"unhandled kind for field" for any scalar but a string, so no patch
+could set either (nor enableProxyProtocol). Each scalar is now replaced,
+as a string was. Upstream candidate: yes.
+
+diff --git a/mockgcp/mockcompute/regionalserviceattachmentv1.go b/mockgcp/mockcompute/regionalserviceattachmentv1.go
+index d7b0fd2..c09f039 100644
+--- a/mockgcp/mockcompute/regionalserviceattachmentv1.go
++++ b/mockgcp/mockcompute/regionalserviceattachmentv1.go
+@@ -207,7 +207,14 @@ func mergeProtos(dst protoreflect.Message, src protoreflect.Message) error {
+ 			errs = append(errs, fmt.Errorf("unhandled list for field %v: %v", fd, fd.Kind()))
+ 		} else {
+ 			switch fd.Kind() {
+-			case protoreflect.StringKind:
++			case protoreflect.StringKind,
++				// Every other scalar is replaced, as a string is
++				// (reconcileConnections, propagatedConnectionLimit,
++				// enableProxyProtocol).
++				protoreflect.BoolKind, protoreflect.EnumKind,
++				protoreflect.Int32Kind, protoreflect.Int64Kind,
++				protoreflect.Uint32Kind, protoreflect.Uint64Kind,
++				protoreflect.FloatKind, protoreflect.DoubleKind:
+ 				dst.Set(fd, srcVal)
+ 			default:
+ 				errs = append(errs, fmt.Errorf("unhandled kind for field %v: %v", fd, fd.Kind()))

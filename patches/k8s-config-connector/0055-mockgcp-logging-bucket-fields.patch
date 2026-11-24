@@ -1,0 +1,59 @@
+config-connector-extensions patch 0055: mockgcp's buckets.patch takes
+index_configs, restricted_fields and cmek_settings in its update mask.
+
+LoggingLogBucketFields (logging.gcp.hfl.dev, docs/design.md decision 37)
+sets a log bucket's indexed fields, restricted fields and CMEK key with
+buckets.patch and a mask naming only those; mockgcp refused every path
+but description and retention ("update_mask path not valid"). Index
+configs and restricted fields are replaced whole (an index keeps its
+creation time while its field and type stay); a CMEK key can be set or
+changed, never removed, as the API says. Upstream candidate: yes.
+
+diff --git a/mockgcp/mocklogging/logbucket.go b/mockgcp/mocklogging/logbucket.go
+index 9401cb1..08c007a 100644
+--- a/mockgcp/mocklogging/logbucket.go
++++ b/mockgcp/mocklogging/logbucket.go
+@@ -203,6 +203,43 @@ func (s *configServiceV2) UpdateBucket(ctx context.Context, req *pb.UpdateBucket
+ 			updated.Description = req.GetBucket().GetDescription()
+ 		case "retentionDays":
+ 			updated.RetentionDays = req.GetBucket().GetRetentionDays()
++		case "index_configs", "indexConfigs":
++			// Replaced whole; each index is stamped with its creation time
++			// (config-connector-extensions' LoggingLogBucketFields).
++			updated.IndexConfigs = nil
++			for _, ic := range req.GetBucket().GetIndexConfigs() {
++				ic = proto.CloneOf(ic)
++				if ic.GetFieldPath() == "" || ic.GetType() == pb.IndexType_INDEX_TYPE_UNSPECIFIED {
++					return nil, status.Errorf(codes.InvalidArgument, "an index config needs a field path and a type")
++				}
++				for _, prev := range existing.GetIndexConfigs() {
++					if prev.GetFieldPath() == ic.GetFieldPath() && prev.GetType() == ic.GetType() {
++						ic.CreateTime = prev.GetCreateTime()
++					}
++				}
++				if ic.CreateTime == nil {
++					ic.CreateTime = timestamppb.New(now)
++				}
++				updated.IndexConfigs = append(updated.IndexConfigs, ic)
++			}
++		case "restricted_fields", "restrictedFields":
++			updated.RestrictedFields = req.GetBucket().GetRestrictedFields()
++		case "cmek_settings", "cmekSettings":
++			// A bucket's CMEK can be set or its key changed, never removed,
++			// as the API says.
++			key := req.GetBucket().GetCmekSettings().GetKmsKeyName()
++			if key == "" {
++				return nil, status.Errorf(codes.InvalidArgument, "CMEK cannot be disabled on a log bucket that has it")
++			}
++			number := int64(0)
++			if name.project != nil {
++				number = name.project.Number
++			}
++			updated.CmekSettings = &pb.CmekSettings{
++				KmsKeyName:        key,
++				KmsKeyVersionName: key + "/cryptoKeyVersions/1",
++				ServiceAccountId:  fmt.Sprintf("service-%d@gcp-sa-logging.iam.gserviceaccount.com", number),
++			}
+ 		// case "labels":
+ 		// 	updated.Labels = req.GetDnsAuthorization().GetLabels()
+ 		default:

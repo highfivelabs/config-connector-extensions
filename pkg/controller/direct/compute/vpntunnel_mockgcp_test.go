@@ -234,6 +234,14 @@ func TestComputeVPNTunnel(t *testing.T) {
 	}
 
 	tunnel := newTunnel("tunnel", tunnelName)
+	// Resource manager tags at insert (params, input only). Live they need
+	// a tag key and value in the project, which the live-test project does
+	// not have, so only the fake runs them; the fake returns params, which
+	// the real API never does, and the controller never reads them.
+	tags := map[string]string{"tagKeys/1234": "tagValues/5678"}
+	if !mockenv.Live() {
+		tunnel.Spec.Params = &computev1beta1.VPNTunnelParams{ResourceManagerTags: tags}
+	}
 	if err := env.Kube.Create(ctx, tunnel); err != nil {
 		t.Fatal(err)
 	}
@@ -259,6 +267,9 @@ func TestComputeVPNTunnel(t *testing.T) {
 		}
 		if !strings.HasSuffix(got.GetRouter(), "/routers/"+router) || !strings.HasSuffix(got.GetPeerExternalGateway(), "/externalVpnGateways/"+peer) {
 			t.Errorf("cloud router %q and peer %q, want %s and %s", got.GetRouter(), got.GetPeerExternalGateway(), router, peer)
+		}
+		if !mockenv.Live() && !maps.Equal(got.GetParams().GetResourceManagerTags(), tags) {
+			t.Errorf("the insert's params.resourceManagerTags = %v, want %v", got.GetParams().GetResourceManagerTags(), tags)
 		}
 	})
 
@@ -287,6 +298,18 @@ func TestComputeVPNTunnel(t *testing.T) {
 		waitFor(t, func() bool { return maps.Equal(cloudTunnel(t, tunnelName).GetLabels(), want) })
 		if id := cloudTunnel(t, tunnelName).GetId(); id == 0 {
 			t.Errorf("the tunnel has no id")
+		}
+	})
+
+	t.Run("params cannot be changed", func(t *testing.T) {
+		if mockenv.Live() {
+			t.Skip("the live tunnel has no params (no tag in the live-test project)")
+		}
+		o := getObj(t, "tunnel")
+		o.Spec.Params.ResourceManagerTags = map[string]string{"tagKeys/1234": "tagValues/9999"}
+		err := env.Kube.Update(ctx, o)
+		if err == nil || !strings.Contains(err.Error(), "params is immutable") {
+			t.Errorf("update error = %v, want params is immutable", err)
 		}
 	})
 

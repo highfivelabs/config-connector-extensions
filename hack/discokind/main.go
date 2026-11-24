@@ -101,12 +101,20 @@ type Config struct {
 	Query []string `json:"query,omitempty"`
 	// NameInBody: the API's create also needs the resource's full name in
 	// the request body, beside the ID parameter (Cloud Functions v2
-	// refuses one without it: "Invalid resource name ''").
+	// refuses one without it: "Invalid resource name ''"), or, where the
+	// create has no ID parameter, instead of it (Access Context Manager's
+	// authorized orgs descriptions).
 	NameInBody bool `json:"nameInBody,omitempty"`
 	// MissingIs403: the API answers a get of a resource that does not
 	// exist 403 PERMISSION_DENIED rather than 404 (BigLake catalogs), which
 	// the Discovery document does not say (Kind.MissingIs403).
 	MissingIs403 bool `json:"missingIs403,omitempty"`
+	// Mockgcp: the fake cloud leaves the collection to mockgcp, which
+	// serves it already (Kind.Mockgcp): a parallel kind for a resource
+	// Config Connector manages, whose other tests make it through mockgcp.
+	// Such a kind is not in hack/live/discokinds.tsv: sweep.sh sweeps the
+	// resource in its own section, before what it depends on.
+	Mockgcp bool `json:"mockgcp,omitempty"`
 	// GetQuery are query parameters every get of the resource sends
 	// (Kind.GetQuery): API Gateway's view FULL, without which a config's
 	// source files are left out.
@@ -121,6 +129,24 @@ type Config struct {
 	// returns ("Input only." in their descriptions), so they are never a
 	// difference (Kind.InputOnly).
 	InputOnly []string `json:"inputOnly,omitempty"`
+	// SecretOutputs are top-level read-only string fields that hold a
+	// secret the API returns (an OAuth client credential's clientSecret).
+	// They are left out of status; the controller writes them to a
+	// Kubernetes Secret named by spec.secretOutput.name (decision 38,
+	// Kind.SecretOutputs): the mirror of Secrets.
+	SecretOutputs []string `json:"secretOutputs,omitempty"`
+	// CreateOnlyOutputs are SecretOutputs the API returns only in the
+	// create's answer (a SCIM token's securityToken; Kind.CreateOnlyOutputs).
+	CreateOnlyOutputs []string `json:"createOnlyOutputs,omitempty"`
+	// DisableBeforeDelete is a top-level writable boolean field the API
+	// wants true before a delete (Kind.DisableBeforeDelete).
+	DisableBeforeDelete string `json:"disableBeforeDelete,omitempty"`
+	// UpdateMethod names a method that replaces the resource with a PUT to
+	// its name, for an API with no patch whose update is not called
+	// update (Binary Authorization's replacePlatformPolicy): the kind
+	// is updatable, and an update sends the whole spec with no mask
+	// (Kind.UpdatePUT outside Compute Engine's shape).
+	UpdateMethod string `json:"updateMethod,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -452,6 +478,14 @@ func build(c *Config, d *Discovery) (*built, error) {
 		patch = r.Methods["update"]
 		k.updatePUT = true
 	}
+	if c.UpdateMethod != "" {
+		m := r.Methods[c.UpdateMethod]
+		if m == nil || m.HTTPMethod != "PUT" || patch != nil || k.insertStyle || k.patchCreates {
+			return nil, fmt.Errorf("updateMethod %s: not a PUT method of %s, or the collection has a patch already", c.UpdateMethod, c.Resource)
+		}
+		patch = m
+		k.updatePUT = true
+	}
 	k.updatable = patch != nil
 	k.createLRO, k.updateLRO, k.deleteLRO = isLRO(d, create), isLRO(d, patch), isLRO(d, del)
 	if !k.insertStyle && !k.patchCreates {
@@ -470,8 +504,8 @@ func build(c *Config, d *Discovery) (*built, error) {
 				k.idParam = n
 			}
 		}
-		if k.idParam == "" {
-			return nil, fmt.Errorf("%s.create has no ID query parameter", c.Resource)
+		if k.idParam == "" && !c.NameInBody {
+			return nil, fmt.Errorf("%s.create has no ID query parameter (nameInBody, if it takes the name in the body)", c.Resource)
 		}
 	}
 	prefix, flat := "", get.FlatPath
@@ -532,6 +566,26 @@ func build(c *Config, d *Discovery) (*built, error) {
 		f := fieldAt(d, k.schema, p)
 		if f == nil || isOutput(f) {
 			return nil, fmt.Errorf("secrets/inputOnly: %s is not a writable field of %s", p, create.Request.Ref)
+		}
+	}
+	if len(c.SecretOutputs) > 0 && k.schema.Properties["secretOutput"] != nil {
+		return nil, fmt.Errorf("secretOutputs: %s has a field secretOutput, which the spec's Secret name would hide", create.Request.Ref)
+	}
+	for _, p := range c.SecretOutputs {
+		f := k.schema.Properties[p]
+		if f == nil || !isOutput(f) || f.Type != "string" || f.Format != "" {
+			return nil, fmt.Errorf("secretOutputs: %s is not a top-level read-only string field of %s", p, create.Request.Ref)
+		}
+	}
+	for _, p := range c.CreateOnlyOutputs {
+		if !contains(c.SecretOutputs, p) {
+			return nil, fmt.Errorf("createOnlyOutputs: %s is not in secretOutputs", p)
+		}
+	}
+	if p := c.DisableBeforeDelete; p != "" {
+		f := k.schema.Properties[p]
+		if f == nil || isOutput(f) || f.Type != "boolean" || !k.updatable {
+			return nil, fmt.Errorf("disableBeforeDelete: %s is not a top-level writable boolean field of %s that patch can set", p, create.Request.Ref)
 		}
 	}
 	for f, s := range k.schema.Properties {

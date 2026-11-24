@@ -1,0 +1,293 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: pubsubsubscriptionfields.pubsub.gcp.hfl.dev
+spec:
+  group: pubsub.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: PubSubSubscriptionFields
+    listKind: PubSubSubscriptionFieldsList
+    plural: pubsubsubscriptionfields
+    shortNames:
+    - hflpubsubsubscriptionfields
+    singular: pubsubsubscriptionfields
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: 'PubSubSubscriptionFields sets fields of a Pub/Sub subscription
+          that Config Connector''s PubSubSubscription has no field for (messageTransforms,
+          bigtableConfig, and a few fields of its BigQuery and Cloud Storage exports),
+          and only those: it patches the subscription with an update mask naming them.
+          Deleting it clears them.'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'PubSubSubscriptionFieldsSpec is the fields of a subscription
+              this object owns. A field left unset is not owned: this object never
+              sends it.'
+            properties:
+              bigqueryConfig:
+                description: 'Fields of the BigQuery export that Config Connector''s
+                  PubSubSubscription sets (its spec.bigqueryConfig): the export must
+                  exist.'
+                properties:
+                  serviceAccountEmail:
+                    description: Optional. The service account to use to write to
+                      BigQuery. The subscription creator or updater that specifies
+                      this field must have `iam.serviceAccounts.actAs` permission
+                      on the service account. If not specified, the Pub/Sub [service
+                      agent](https://cloud.google.com/iam/docs/service-agents), service-{project_number}@gcp-sa-pubsub.iam.gserviceaccount.com,
+                      is used.
+                    type: string
+                required:
+                - serviceAccountEmail
+                type: object
+              bigtableConfig:
+                description: 'A Bigtable export: Pub/Sub writes the subscription''s
+                  messages to a Bigtable table. The subscription must not push or
+                  export elsewhere (Config Connector''s PubSubSubscription sets none
+                  of pushConfig''s pushEndpoint, bigqueryConfig and cloudStorageConfig):
+                  a subscription delivers to one place.'
+                properties:
+                  appProfileId:
+                    description: Optional. The app profile to use for the Bigtable
+                      writes. If not specified, the "default" application profile
+                      is used. The app profile must use single-cluster routing.
+                    type: string
+                  serviceAccountEmail:
+                    description: Optional. The service account to use to write to
+                      Bigtable. The subscription creator or updater that specifies
+                      this field must have `iam.serviceAccounts.actAs` permission
+                      on the service account. If not specified, the Pub/Sub service
+                      agent, service-{project_number}@gcp-sa-pubsub.iam.gserviceaccount.com,
+                      is used.
+                    type: string
+                  table:
+                    description: Required. The unique name of the table to write messages
+                      to, as "projects/{{projectID}}/instances/{{instanceID}}/tables/{{tableID}}".
+                    type: string
+                  writeMetadata:
+                    description: Optional. When true, write the subscription name,
+                      message_id, publish_time, attributes, and ordering_key to additional
+                      columns in the table under the pubsub_metadata column family.
+                    type: boolean
+                required:
+                - table
+                type: object
+              cloudStorageConfig:
+                description: 'Fields of the Cloud Storage export that Config Connector''s
+                  PubSubSubscription sets (its spec.cloudStorageConfig): the export
+                  must exist.'
+                properties:
+                  avroConfig:
+                    description: 'Fields of the export''s Avro format, which Config
+                      Connector''s PubSubSubscription sets (its spec.cloudStorageConfig.avroConfig):
+                      the export must write Avro.'
+                    properties:
+                      useTopicSchema:
+                        description: Optional. When true, the output Cloud Storage
+                          file will be serialized using the topic schema, if it exists.
+                        type: boolean
+                    required:
+                    - useTopicSchema
+                    type: object
+                  filenameDatetimeFormat:
+                    description: Optional. User-provided format string specifying
+                      how to represent datetimes in Cloud Storage filenames. See the
+                      [datetime format guidance](https://cloud.google.com/pubsub/docs/create-cloudstorage-subscription#file_names).
+                    type: string
+                  maxMessages:
+                    description: Optional. The maximum number of messages that can
+                      be written to a Cloud Storage file before a new file is created.
+                      Min 1000 messages.
+                    format: int64
+                    minimum: 1000
+                    type: integer
+                  serviceAccountEmail:
+                    description: Optional. The service account to use to write to
+                      Cloud Storage. The subscription creator or updater that specifies
+                      this field must have `iam.serviceAccounts.actAs` permission
+                      on the service account. If not specified, the Pub/Sub [service
+                      agent](https://cloud.google.com/iam/docs/service-agents), service-{project_number}@gcp-sa-pubsub.iam.gserviceaccount.com,
+                      is used.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: set at least one field of cloudStorageConfig
+                  rule: has(self.serviceAccountEmail) || has(self.filenameDatetimeFormat)
+                    || has(self.maxMessages) || has(self.avroConfig)
+              messageTransforms:
+                description: Transforms applied to messages delivered by the subscription,
+                  in order.
+                items:
+                  properties:
+                    disabled:
+                      description: Optional. If true, the transform is disabled and
+                        will not be applied to messages. Defaults to `false`.
+                      type: boolean
+                    enabled:
+                      description: Optional. This field is deprecated, use the `disabled`
+                        field to disable transforms.
+                      type: boolean
+                    javascriptUdf:
+                      description: Optional. JavaScript User Defined Function. If
+                        multiple JavaScriptUDF's are specified on a resource, each
+                        must have a unique `function_name`.
+                      properties:
+                        code:
+                          description: Required. JavaScript code that contains a function
+                            `function_name` taking (message, metadata) and returning
+                            the message to publish ({data, attributes}) or null to
+                            filter it out.
+                          type: string
+                        functionName:
+                          description: Required. Name of the JavasScript function
+                            that should applied to Pub/Sub messages.
+                          type: string
+                      required:
+                      - code
+                      - functionName
+                      type: object
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
+              resourceRef:
+                description: 'Immutable. The subscription: Config Connector''s PubSubSubscription
+                  by name (pubsub.cnrm.cloud.google.com), or any subscription by external,
+                  as "projects/{{projectID}}/subscriptions/{{subscriptionID}}". The
+                  subscription must exist; this object never creates or deletes it.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed PubSubSubscription
+                      resource. Should be in the format "projects/{{projectID}}/subscriptions/{{subscriptionID}}".
+                    type: string
+                  name:
+                    description: The name of a PubSubSubscription resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a PubSubSubscription resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: resourceRef is immutable
+                  rule: self == oldSelf
+            required:
+            - resourceRef
+            type: object
+            x-kubernetes-validations:
+            - message: set at least one of messageTransforms, bigtableConfig, bigqueryConfig
+                and cloudStorageConfig
+              rule: has(self.messageTransforms) || has(self.bigtableConfig) || has(self.bigqueryConfig)
+                || has(self.cloudStorageConfig)
+            - message: 'a subscription exports to one place: bigtableConfig goes with
+                neither bigqueryConfig nor cloudStorageConfig'
+              rule: '!has(self.bigtableConfig) || (!has(self.bigqueryConfig) && !has(self.cloudStorageConfig))'
+          status:
+            description: PubSubSubscriptionFieldsStatus defines the observed state.
+            properties:
+              bigtableConfigState:
+                description: The Bigtable export's state as the API answers it (ACTIVE,
+                  NOT_FOUND, APP_PROFILE_MISCONFIGURED, PERMISSION_DENIED, SCHEMA_MISMATCH,
+                  IN_TRANSIT_LOCATION_RESTRICTION, ...), when spec.bigtableConfig
+                  is set.
+                type: string
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the object's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The subscription whose fields this object sets, as projects/{project}/subscriptions/{subscription}.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+              state:
+                description: 'The subscription''s state as the API answers it: ACTIVE,
+                  or RESOURCE_ERROR when it cannot write to its export.'
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -30,6 +30,8 @@
 //     executionEnvironment, sessionAffinity, healthCheckDisabled and
 //     gpuZonalRedundancyDisabled (with nodeSelector, already in the
 //     template, for GPUs); and in status, the service's URIs.
+//   - written here (2026-11-23, with RunWorkerPool): binaryAuthorization.policy,
+//     and a CEL rule that it and useDefault are not both set;
 //   - secret references are typed SecretManagerSecretRef and
 //     SecretManagerSecretVersionRef, not their aliases SecretRef and
 //     SecretVersionRef (controller-gen v0.16.5 panics on aliases under Go
@@ -511,6 +513,7 @@ type BuildInfoObservedState struct {
 }
 
 // +kcc:proto=google.cloud.run.v2.BinaryAuthorization
+// +kubebuilder:validation:XValidation:rule="!(has(self.useDefault) && has(self.policy))",message="binaryAuthorization takes one of useDefault and policy"
 type BinaryAuthorization struct {
 	// Optional. If True, indicates to use the default project's binary
 	//  authorization policy. If False, binary authorization will be disabled.
@@ -518,9 +521,8 @@ type BinaryAuthorization struct {
 
 	// Optional. The path to a binary authorization policy.
 	//  Format: `projects/{project}/platforms/cloudRun/{policy-name}`
-	//  Commented out because this field refers to Binary Authorization Platform Policies,
-	//  which are not yet supported as a KRM resource in KCC.
-	// Policy *string `json:"policy,omitempty"`
+	//  Written here (upstream comments it out: no KRM kind for the policy).
+	Policy *string `json:"policy,omitempty"`
 
 	// Optional. If present, indicates to use Breakglass using this justification.
 	//  If use_default is False, then it must be empty.

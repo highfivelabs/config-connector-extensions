@@ -169,7 +169,64 @@ func apply(actual *pb.NodeKubeletConfig, d *krm.NodePoolKubeletConfig, clear boo
 			out.MaxParallelImagePulls = *d.MaxParallelImagePulls
 		}
 	}
+	// The messages below are owned whole: a part the spec leaves out is
+	// unset.
+	if d.EvictionSoft != nil {
+		out.EvictionSoft = nil
+		if !clear {
+			e := d.EvictionSoft
+			out.EvictionSoft = &pb.EvictionSignals{MemoryAvailable: direct.ValueOf(e.MemoryAvailable), NodefsAvailable: direct.ValueOf(e.NodefsAvailable), NodefsInodesFree: direct.ValueOf(e.NodefsInodesFree), ImagefsAvailable: direct.ValueOf(e.ImagefsAvailable), ImagefsInodesFree: direct.ValueOf(e.ImagefsInodesFree), PidAvailable: direct.ValueOf(e.PidAvailable)}
+		}
+	}
+	if d.EvictionSoftGracePeriod != nil {
+		out.EvictionSoftGracePeriod = nil
+		if !clear {
+			e := d.EvictionSoftGracePeriod
+			out.EvictionSoftGracePeriod = &pb.EvictionGracePeriod{MemoryAvailable: direct.ValueOf(e.MemoryAvailable), NodefsAvailable: direct.ValueOf(e.NodefsAvailable), NodefsInodesFree: direct.ValueOf(e.NodefsInodesFree), ImagefsAvailable: direct.ValueOf(e.ImagefsAvailable), ImagefsInodesFree: direct.ValueOf(e.ImagefsInodesFree), PidAvailable: direct.ValueOf(e.PidAvailable)}
+		}
+	}
+	if d.EvictionMinimumReclaim != nil {
+		out.EvictionMinimumReclaim = nil
+		if !clear {
+			e := d.EvictionMinimumReclaim
+			out.EvictionMinimumReclaim = &pb.EvictionMinimumReclaim{MemoryAvailable: direct.ValueOf(e.MemoryAvailable), NodefsAvailable: direct.ValueOf(e.NodefsAvailable), NodefsInodesFree: direct.ValueOf(e.NodefsInodesFree), ImagefsAvailable: direct.ValueOf(e.ImagefsAvailable), ImagefsInodesFree: direct.ValueOf(e.ImagefsInodesFree), PidAvailable: direct.ValueOf(e.PidAvailable)}
+		}
+	}
+	if d.EvictionMaxPodGracePeriodSeconds != nil {
+		out.EvictionMaxPodGracePeriodSeconds = 0
+		if !clear {
+			out.EvictionMaxPodGracePeriodSeconds = *d.EvictionMaxPodGracePeriodSeconds
+		}
+	}
+	if d.MemoryManager != nil {
+		out.MemoryManager = nil
+		if !clear {
+			out.MemoryManager = &pb.MemoryManager{Policy: direct.ValueOf(d.MemoryManager.Policy)}
+		}
+	}
+	if d.TopologyManager != nil {
+		out.TopologyManager = nil
+		if !clear {
+			out.TopologyManager = &pb.TopologyManager{Policy: direct.ValueOf(d.TopologyManager.Policy), Scope: direct.ValueOf(d.TopologyManager.Scope)}
+		}
+	}
+	if d.SingleProcessOomKill != nil {
+		out.SingleProcessOomKill = nil
+		if !clear {
+			out.SingleProcessOomKill = direct.PtrTo(*d.SingleProcessOomKill)
+		}
+	}
 	return out, !sameOwned(actual, out, d)
+}
+
+// sameMessage: two of a message the spec owns whole are the same, an
+// unset one and an empty one alike (the API answers either).
+func sameMessage(a, b proto.Message) bool {
+	empty := func(m proto.Message) bool { return m == nil || !m.ProtoReflect().IsValid() || proto.Size(m) == 0 }
+	if empty(a) || empty(b) {
+		return empty(a) && empty(b)
+	}
+	return proto.Equal(a, b)
 }
 
 // sameOwned compares only the fields d owns: the API fills in defaults
@@ -197,6 +254,30 @@ func sameOwned(a, b *pb.NodeKubeletConfig, d *krm.NodePoolKubeletConfig) bool {
 		}
 	}
 	if d.MaxParallelImagePulls != nil && a.GetMaxParallelImagePulls() != b.GetMaxParallelImagePulls() {
+		return false
+	}
+	if d.EvictionSoft != nil && !sameMessage(a.GetEvictionSoft(), b.GetEvictionSoft()) {
+		return false
+	}
+	if d.EvictionSoftGracePeriod != nil && !sameMessage(a.GetEvictionSoftGracePeriod(), b.GetEvictionSoftGracePeriod()) {
+		return false
+	}
+	if d.EvictionMinimumReclaim != nil && !sameMessage(a.GetEvictionMinimumReclaim(), b.GetEvictionMinimumReclaim()) {
+		return false
+	}
+	if d.EvictionMaxPodGracePeriodSeconds != nil && a.GetEvictionMaxPodGracePeriodSeconds() != b.GetEvictionMaxPodGracePeriodSeconds() {
+		return false
+	}
+	if d.MemoryManager != nil && !sameMessage(a.GetMemoryManager(), b.GetMemoryManager()) {
+		return false
+	}
+	if d.TopologyManager != nil && !sameMessage(a.GetTopologyManager(), b.GetTopologyManager()) {
+		return false
+	}
+	if d.SingleProcessOomKill != nil && (a.SingleProcessOomKill == nil) != (b.SingleProcessOomKill == nil) {
+		return false
+	}
+	if d.SingleProcessOomKill != nil && a.GetSingleProcessOomKill() != b.GetSingleProcessOomKill() {
 		return false
 	}
 	return true

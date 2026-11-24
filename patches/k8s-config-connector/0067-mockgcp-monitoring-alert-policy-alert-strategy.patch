@@ -1,0 +1,23 @@
+config-connector-extensions patch 0067: an alert policy's update takes
+its alert strategy.
+
+UpdateAlertPolicy refused the update mask path alert_strategy (either
+spelling), which Terraform's google_monitoring_alert_policy update sends
+when the strategy changes, and MonitoringAlertPolicyFields (ours;
+application queue item 3) sends to set its notification prompts; create
+already kept it. Upstream candidate: yes.
+
+--- a/mockgcp/mockmonitoring/alertpolicy.go
++++ b/mockgcp/mockmonitoring/alertpolicy.go
+@@ -157,6 +157,11 @@
+ 			updated.Severity = req.GetAlertPolicy().GetSeverity()
+ 		case "userLabels", "user_labels":
+ 			updated.UserLabels = req.GetAlertPolicy().GetUserLabels()
++		// config-connector-extensions patch 0067: the alert strategy, which
++		// Terraform's update names when it changes it, and
++		// MonitoringAlertPolicyFields (ours) to set its notification prompts.
++		case "alertStrategy", "alert_strategy":
++			updated.AlertStrategy = req.GetAlertPolicy().GetAlertStrategy()
+ 		default:
+ 			return nil, status.Errorf(codes.InvalidArgument, "update_mask path %q not supported by mock (full update_mask=%v)", path, req.GetUpdateMask())
+ 		}

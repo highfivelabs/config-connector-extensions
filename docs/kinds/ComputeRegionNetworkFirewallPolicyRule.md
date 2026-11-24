@@ -19,6 +19,21 @@ served, and `CHANGELOG.md` says how to upgrade.
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
+2026-11-23 (foundation items 2 and 19): `spec.securityProfileGroup` and
+`spec.tlsInspect` (with action `apply_security_profile_group`, CEL rules as
+`ComputeNetworkFirewallPolicyRule`'s), and `spec.match.srcNetworkContext`,
+`destNetworkContext` and `srcNetworks`. The controller now compares and
+patches as the global network rule does (the same functions): taken off,
+a group is sent as `""`, TLS inspection as `false`, a network context as
+`UNSPECIFIED` and `srcNetworks` as `[]`; a group and a network compare by
+path. Tested on the fake (`TestComputeRegionNetworkFirewallPolicyRule`:
+the CEL refusals; set, a resync with no write, taken off). Live pending:
+the group case needs `E2E_SECURITY_PROFILE_GROUP` and skips without it
+(`task test-live PROJECT=$GCP_PROJECT KINDS=compute
+LIVE_RUN=TestComputeRegionNetworkFirewallPolicyRule`); to be seen live:
+whether a regional rule takes an organization's security profile group
+and `srcNetworks`, and the form the API answers for them.
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

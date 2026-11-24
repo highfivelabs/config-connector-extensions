@@ -1,0 +1,40 @@
+config-connector-extensions patch 0057: mockgcp's policies.patch (Cloud
+DNS) is a partial update.
+
+DNSPolicyFields (dns.gcp.hfl.dev, docs/design.md decision 37) sets a DNS
+server policy's dns64Config with policies.patch; Config Connector's
+DNSPolicy (Terraform) patches the policy's other fields without it.
+mockgcp's patch replaced the whole policy with the request, so either
+write erased the other's fields. The API's patch "applies a partial
+update": only the fields the request sets now change. Upstream
+candidate: yes.
+
+diff --git a/mockgcp/mockdns/policy.go b/mockgcp/mockdns/policy.go
+index fe6c4c9..5421170 100644
+--- a/mockgcp/mockdns/policy.go
++++ b/mockgcp/mockdns/policy.go
+@@ -22,6 +22,7 @@ import (
+ 	"google.golang.org/grpc/codes"
+ 	"google.golang.org/grpc/status"
+ 	"google.golang.org/protobuf/proto"
++	"google.golang.org/protobuf/reflect/protoreflect"
+ 	"google.golang.org/protobuf/types/known/emptypb"
+ 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+ 
+@@ -166,7 +167,15 @@ func (s *policiesService) PatchPolicy(ctx context.Context, req *pb.PatchPolicyRe
+ 		return nil, err
+ 	}
+ 
+-	updated := proto.CloneOf(req.Policy)
++	// A partial update, as the API's patch: only the fields the request
++	// sets change, so a patch from a client that does not know a field
++	// (Terraform's DNSPolicy and dns64Config) leaves it alone
++	// (config-connector-extensions' DNSPolicyFields).
++	updated := proto.CloneOf(&existing)
++	req.GetPolicy().ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
++		updated.ProtoReflect().Set(fd, v)
++		return true
++	})
+ 
+ 	updated.Id = existing.Id
+ 	updated.Kind = existing.Kind

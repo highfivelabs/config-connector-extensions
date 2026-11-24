@@ -418,6 +418,61 @@ func TestContainerFields(t *testing.T) {
 			}
 		})
 
+		// Soft eviction, the memory and topology managers and single-process
+		// OOM kill (2026-11-23, foundation item 14): kubelet settings with no
+		// Config Connector field or pull request, added to the spec.
+		t.Run("eviction and manager fields are written, the others kept", func(t *testing.T) {
+			o := &hflcontainer.ContainerNodePoolFields{}
+			if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: "pool"}, o); err != nil {
+				t.Fatal(err)
+			}
+			kc := o.Spec.Config.KubeletConfig
+			kc.EvictionSoft = &hflcontainer.NodePoolEvictionSignals{MemoryAvailable: mockenv.Ptr("200Mi"), NodefsAvailable: mockenv.Ptr("15%")}
+			kc.EvictionSoftGracePeriod = &hflcontainer.NodePoolEvictionSignals{MemoryAvailable: mockenv.Ptr("30s"), NodefsAvailable: mockenv.Ptr("1m")}
+			kc.EvictionMinimumReclaim = &hflcontainer.NodePoolEvictionSignals{MemoryAvailable: mockenv.Ptr("5%")}
+			kc.EvictionMaxPodGracePeriodSeconds = mockenv.Ptr(int32(60))
+			kc.TopologyManager = &hflcontainer.NodePoolTopologyManager{Policy: mockenv.Ptr("best-effort"), Scope: mockenv.Ptr("container")}
+			kc.SingleProcessOomKill = mockenv.Ptr(true)
+			if err := env.Kube.Update(env.Ctx, o); err != nil {
+				t.Fatal(err)
+			}
+			timeout := mockenv.Timeout()
+			if mockenv.Live() {
+				timeout = 30 * time.Minute
+			}
+			k := getPool(t).GetConfig().GetKubeletConfig()
+			for deadline := time.Now().Add(timeout); k.GetEvictionMaxPodGracePeriodSeconds() != 60 && time.Now().Before(deadline); time.Sleep(5 * time.Second) {
+				k = getPool(t).GetConfig().GetKubeletConfig()
+			}
+			if e := k.GetEvictionSoft(); e.GetMemoryAvailable() != "200Mi" || e.GetNodefsAvailable() != "15%" {
+				t.Errorf("evictionSoft = %v, want the spec's", e)
+			}
+			if e := k.GetEvictionSoftGracePeriod(); e.GetMemoryAvailable() != "30s" || e.GetNodefsAvailable() != "1m" {
+				t.Errorf("evictionSoftGracePeriod = %v, want the spec's", e)
+			}
+			if e := k.GetEvictionMinimumReclaim(); e.GetMemoryAvailable() != "5%" {
+				t.Errorf("evictionMinimumReclaim = %v, want the spec's", e)
+			}
+			if tm := k.GetTopologyManager(); tm.GetPolicy() != "best-effort" || tm.GetScope() != "container" {
+				t.Errorf("topologyManager = %v, want the spec's", tm)
+			}
+			if k.SingleProcessOomKill == nil || !k.GetSingleProcessOomKill() {
+				t.Errorf("singleProcessOomKill = %v, want true", k.SingleProcessOomKill)
+			}
+			ours(t, k)
+			if k.GetPodPidsLimit() != 2048 {
+				t.Errorf("podPidsLimit = %d, want Config Connector's 2048 kept", k.GetPodPidsLimit())
+			}
+			before := poolUpdates()
+			if err := env.Kube.Get(env.Ctx, types.NamespacedName{Namespace: namespace, Name: "pool"}, o); err != nil {
+				t.Fatal(err)
+			}
+			resync(t, gvk, o)
+			if n := poolUpdates() - before; n != 0 {
+				t.Errorf("a resync after the change updated the node pool %d times", n)
+			}
+		})
+
 		t.Run("delete clears the fields and keeps Config Connector's", func(t *testing.T) {
 			if err := env.Kube.Delete(env.Ctx, obj); err != nil {
 				t.Fatal(err)
@@ -426,6 +481,9 @@ func TestContainerFields(t *testing.T) {
 			k := getPool(t).GetConfig().GetKubeletConfig()
 			if k.GetContainerLogMaxSize() == "20Mi" || k.GetContainerLogMaxFiles() == 3 || len(k.GetAllowedUnsafeSysctls()) != 0 {
 				t.Errorf("after delete kubeletConfig = %v, want this object's fields unset", k)
+			}
+			if k.GetEvictionSoft() != nil || k.GetEvictionSoftGracePeriod() != nil || k.GetEvictionMinimumReclaim() != nil || k.GetEvictionMaxPodGracePeriodSeconds() != 0 || k.GetTopologyManager() != nil || k.SingleProcessOomKill != nil {
+				t.Errorf("after delete kubeletConfig = %v, want the eviction and manager fields unset", k)
 			}
 			if !k.GetCpuCfsQuota().GetValue() || k.GetPodPidsLimit() != 2048 {
 				t.Errorf("after delete kubeletConfig = %v: Config Connector's fields changed", k)

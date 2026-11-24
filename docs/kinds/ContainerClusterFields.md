@@ -6,7 +6,7 @@ apiVersion: container.gcp.hfl.dev/v1beta1
 
 `container.gcp.hfl.dev/v1beta1` (since 2026-11-16, decision 27; first `v1alpha1`)
 
-**Gap it fills.** GKE cluster and node pool fields Config Connector's `ContainerCluster` and `ContainerNodePool` lack, set beside them as field kinds (`docs/design.md` section 6.6, pattern 2, and decision 37): on a cluster, `secretManagerConfig`, `rbacBindingConfig`, `anonymousAuthenticationConfig`, `addonsConfig.statefulHaConfig` and `nodePoolAutoConfig.nodeKubeletConfig.insecureKubeletReadonlyPortEnabled`; on a node pool, `config.kubeletConfig`'s `insecureKubeletReadonlyPortEnabled`, `containerLogMaxSize`, `containerLogMaxFiles`, `allowedUnsafeSysctls` and `maxParallelImagePulls`
+**Gap it fills.** GKE cluster and node pool fields Config Connector's `ContainerCluster` and `ContainerNodePool` lack, set beside them as field kinds (`docs/design.md` section 6.6, pattern 2, and decision 37): on a cluster, `secretManagerConfig`, `rbacBindingConfig`, `anonymousAuthenticationConfig`, `addonsConfig.statefulHaConfig` and `nodePoolAutoConfig.nodeKubeletConfig.insecureKubeletReadonlyPortEnabled`; on a node pool, `config.kubeletConfig`'s `insecureKubeletReadonlyPortEnabled`, `containerLogMaxSize`, `containerLogMaxFiles`, `allowedUnsafeSysctls` and `maxParallelImagePulls`, and (2026-11-23) `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`, `evictionMaxPodGracePeriodSeconds`, `memoryManager`, `topologyManager` and `singleProcessOomKill`
 
 **Source.** written here from the GKE API; the references are Config Connector's `ContainerClusterRef` and `ContainerNodePoolRef`, and the operation wait is copied from Config Connector's direct `ContainerNodePool`
 
@@ -92,6 +92,25 @@ webhook always sets it on its objects; the managers do not read
 namespaces). The fake-cloud test covers the bare name and the full id.
 No live run: the change reads Kubernetes objects only and makes no new
 API call.
+
+2026-11-23 (foundation item 14): `ContainerNodePoolFields` gains seven
+more kubelet settings with no Config Connector field and no upstream pull
+request (pull requests searched for `eviction`, `memoryManager` and
+`kubeletConfig`: only #14187, `allowedUnsafeSysctls`, which this kind
+already has): soft eviction (`evictionSoft`, `evictionSoftGracePeriod`,
+`evictionMinimumReclaim`, each owned whole, and
+`evictionMaxPodGracePeriodSeconds`), the memory and topology managers,
+and `singleProcessOomKill`. They go in the same whole-`kubeletConfig`
+write and are cleared on delete. Tested on the fake
+(`TestContainerFields`, "eviction and manager fields are written, the
+others kept": the spec gains them, the node pool holds them with this
+object's earlier fields and Config Connector's `podPidsLimit` kept, a
+resync writes nothing, delete clears them). The `v1beta1` CRD gains
+optional fields only. Live pending (`E2E_GKE=true`): the API's checks
+of the values (a soft threshold without its grace period, the
+topology manager's policies), and whether it answers a cleared message
+as unset or empty (the comparison takes the two as one). The rest of
+item 14 is recorded in `hack/coverage/foundation.yaml`.
 
 ## Live runs
 

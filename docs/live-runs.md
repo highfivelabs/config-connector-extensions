@@ -148,10 +148,10 @@ with the roles the live-test account in the previous dev project was given on 20
 | `roles/compute.securityAdmin` | project | `ComputeRegionNetworkFirewallPolicy`, `ComputeRegionNetworkFirewallPolicyRule`, `ComputeRegionNetworkFirewallPolicyAssociation`, `ComputeNetworkFirewallPolicyRule`, `ComputeNetworkFirewallPolicyPacketMirroringRule` (and the tests' global policies) |
 | `roles/cloudasset.owner` | project | `AssetFeed` (not granted yet; the account has `roles/cloudasset.viewer`, which cannot make a feed, and `roles/pubsub.admin` for the test's topic: the test skips live without `E2E_CLOUD_ASSET=true`) |
 | `roles/iam.workloadIdentityPoolAdmin` | project | `IAMWorkloadIdentityPoolNamespace`, `IAMWorkloadIdentityPoolManagedIdentity`, `IAMWorkloadIdentityPoolProviderKey` (the tests' pools and providers) |
-| `roles/run.admin` | project | `RunService` |
+| `roles/run.admin` | project | `RunService`, `RunJob`, `RunWorkerPool` |
 | `roles/apigateway.admin` | project | `APIGatewayAPIConfig`, `APIGatewayGateway` (`TestAPIGatewayDeleteGatewayAndConfigTogether`, with its API) |
 | `roles/biglake.admin` | project | `BigLakeCatalog`, `BigLakeDatabase`, `BigLakeTable` (`TestBigLake*MissingIs403` and the kind tests, with their catalogs and databases) |
-| `roles/iam.serviceAccountUser` | the compute default service account | `RunService` (a service runs as it) |
+| `roles/iam.serviceAccountUser` | the compute default service account | `RunService`, `RunJob`, `RunWorkerPool` (a service, job or worker pool runs as it) |
 | `roles/iam.serviceAccountUser` | project | `ComputeProjectMetadataItem` (`setCommonInstanceMetadata` checks `actAs` on the project) |
 | `roles/cloudkms.admin` | project | `KMSCryptoKeyFields` (the test's key ring `cce-e2e-fields` and its keys; held by 2026-11-16) |
 | `roles/container.clusterAdmin` | project | `ContainerClusterFields`, `ContainerNodePoolFields` (the test's cluster; held by 2026-11-16; the test skips live without `E2E_GKE=true`) |
@@ -458,6 +458,131 @@ the test and the sweeper leaves reasoning engines alone. With them:
 The test makes an engine with no code (sessions and memory only), which
 costs nothing while idle; the sweeper deletes engines in `us-central1`
 whose display name carries a run ID.
+
+`ComputeSecurityPolicyFields` (package `compute`) skips live unless
+`E2E_CLOUD_ARMOR=true`: its test makes a global Cloud Armor policy,
+attached to nothing, for a few minutes (Cloud Armor bills a policy by the
+month, prorated), and its threshold configs may need Cloud Armor
+Enterprise on the project. The account's `roles/compute.securityAdmin`
+covers security policies. With it:
+`E2E_CLOUD_ARMOR=true task test-live PROJECT=$GCP_PROJECT KINDS=compute LIVE_RUN=TestComputeSecurityPolicyFields`;
+the sweeper then deletes global policies whose name carries a run ID.
+
+`AccessContextManagerAuthorizedOrgsDesc` (package `accesscontextmanager`)
+skips live (`live-skip`): an authorized orgs description belongs to an
+organization's access policy, which a live run never touches, and the
+live-test account has no Access Context Manager role. Before its first
+live run: an access policy for the tests, its number in the fixtures, the
+role on it, and a sweeper section for the run's descriptions.
+
+`AccessContextManagerGCPUserAccessBinding` (package `accesscontextmanager`,
+2026-11-23; its test skips live in code) needs an organization, a Google
+Group and an access policy's levels, which a live run never touches, and
+`roles/accesscontextmanager.gcpAccessAdmin` on the organization for the
+live-test account; before its first live run, those and a sweeper section
+for the run's bindings.
+
+`AccessContextManagerServicePerimeter` (package `accesscontextmanager`,
+2026-11-23) skips live for the same reasons; before its first live run it
+needs the same access policy and role, and a sweeper section for the
+run's perimeters.
+
+`ArtifactRegistryRepository`'s scanning config, `disallowUnspecifiedMode`
+and Apt and Yum upstreams (package `artifactregistry`, 2026-11-23, live
+pending): `task test-live PROJECT=$GCP_PROJECT KINDS=artifactregistry
+LIVE_RUN='TestArtifactRegistryRepositoryFields|TestArtifactRegistryAptYumRemoteRepositories'`
+makes five empty repositories (free) and deletes them; the public Debian
+and Rocky upstreams are validated live (the API must reach them), the
+custom Yum one is not. The live-test account already has
+`roles/artifactregistry.admin` for the kind's other tests.
+
+`MonitoringAlertPolicyFields` (package `monitoring`, 2026-11-23, live
+pending): `task test-live PROJECT=$GCP_PROJECT KINDS=monitoring
+LIVE_RUN=TestMonitoringAlertPolicyFields` makes one alert policy (a CPU
+threshold, no notification channel: free) and deletes it. It needs
+`roles/monitoring.alertPolicyEditor` (or `roles/monitoring.editor`) for
+the live-test account. The sweeper deletes alert policies whose display
+name carries a run ID.
+
+`MonitoringUptimeCheckConfigFields` (package `monitoring`, 2026-11-23, live
+pending): `task test-live PROJECT=$GCP_PROJECT KINDS=monitoring
+LIVE_RUN=TestMonitoringUptimeCheckConfigFields` makes two uptime checks of
+example.com (every 15 minutes, for the minutes they exist: free at that
+volume) and deletes them. It needs `monitoring.googleapis.com` on and
+`roles/monitoring.uptimeCheckConfigEditor` (or `roles/monitoring.editor`)
+for the live-test account. The sweeper deletes uptime checks whose
+display name carries a run ID. It shows whether the API takes
+`userLabels` and the nested `httpCheck.*` paths in an update mask.
+
+`RunJob` (package `run`, 2026-11-23, live pending): `task test-live
+PROJECT=$GCP_PROJECT KINDS=run LIVE_RUN=TestRunJob` makes two Cloud Run
+jobs on Cloud Run's public sample job image (free: a job is billed only
+while an execution runs, and the test runs none) and deletes them. Without
+`E2E_RUN_GPU=true` the jobs ask for no GPU (as `RunService`'s test); without
+`E2E_RUN_BINAUTHZ_POLICY` (a cloudRun platform policy's name) they use the
+project's default Binary Authorization policy. The account's
+`roles/run.admin` and `roles/iam.serviceAccountUser` on the compute
+default service account cover it. The sweeper deletes jobs whose name
+carries a run ID. It shows the server defaults the real API gives a job
+beyond mockgcp's, whether it takes a gRPC startup probe on a job's
+container, and whether it keeps `maxRetries` 0.
+
+`RunWorkerPool` (package `run`, 2026-11-23, live pending): `task
+test-live PROJECT=$GCP_PROJECT KINDS=run LIVE_RUN=TestRunWorkerPool` makes
+two worker pools scaled to no instances (free) on Cloud Run's public sample
+job image and deletes them; the named Binary Authorization policy only with
+`E2E_RUN_BINAUTHZ_POLICY`, and the policy change case skips live. The
+roles above cover it; the sweeper deletes worker pools in us-central1
+whose name carries a run ID.
+
+`PubSubSubscriptionFields` (package `pubsub`, 2026-11-23, live pending):
+`task test-live PROJECT=$GCP_PROJECT KINDS=pubsub
+LIVE_RUN=TestPubSubSubscriptionFields` makes one topic and one pull
+subscription (free with no messages) with a JavaScript transform and
+deletes them; the Bigtable, BigQuery and Cloud Storage export cases skip
+live (a Bigtable instance costs money; the exports need a table or bucket
+the project's Pub/Sub service agent can write to). It needs
+`pubsub.googleapis.com` on and `roles/pubsub.editor` for the live-test
+account. The sweeper deletes subscriptions and topics whose name carries
+a run ID.
+
+`PubSubTopicFields` (package `pubsub`, 2026-11-23, live pending): `task
+test-live PROJECT=$GCP_PROJECT KINDS=pubsub` makes one topic (free with no
+messages) with a JavaScript transform and deletes it; the Cloud Storage
+import case skips live (the topic's service agent would need to read a
+bucket). It needs `pubsub.googleapis.com` on and `roles/pubsub.editor`
+for the live-test account (AssetFeed's test already uses topics). The
+sweeper deletes topics whose name carries a run ID.
+
+Live pending, built 2026-11-23 (each kind's `docs/kinds/` file has the
+command): `ComputeServiceAttachment` and `ComputeSubnetwork` (package
+`compute`; the service attachment's Setup makes two internal passthrough
+load balancers, whose forwarding rules bill by the hour while they exist;
+the subnetwork's `insertonly` case skips live), `ComputeRegionSecurityPolicy`
+(package `compute`; a `CLOUD_ARMOR` policy, billed by Cloud Armor while it
+exists; the `network` case skips live without Cloud Armor Enterprise),
+`ComputeRegionSecurityPolicyRule` (package `compute`; its test makes a
+`CLOUD_ARMOR` policy by a `ComputeRegionSecurityPolicy` object and a few
+rules in it, billed by Cloud Armor while they exist; the network case
+skips live), `CertificateManagerTrustConfig` (package `certificatemanager`, free) and
+`BinaryAuthorizationPlatformPolicy` (package `binaryauthorization`, free;
+needs `binaryauthorization.googleapis.com` on and
+`roles/binaryauthorization.policyAdmin` for the live-test account). The
+sweeper covers each: service attachments and subnetworks in their own
+sections, the trust config through `discokinds.tsv`, regional security
+policies (with their rules) and GKE's platform policies in sections of
+their own.
+
+`PrivateCACAPoolFields` and `PrivateCACertificateTemplateFields`
+(package `privateca`) wait on Certificate Authority Service for the
+account: whether `privateca.googleapis.com` is on in `$GCP_PROJECT` and
+`cce-live-tests` has `roles/privateca.admin` has not been checked. Until
+both are, a live `privateca` run skips the tests and the sweeper leaves
+Private CA alone. With them:
+`E2E_PRIVATECA=true task test-live PROJECT=$GCP_PROJECT KINDS=privateca`.
+The tests make a DevOps-tier CA pool with no certificate authority and a
+certificate template, both in us-central1 and free, and delete them; the
+sweeper deletes pools and templates there whose name carries a run ID.
 
 `EndpointsService` (package `servicemanagement`) waits on Service
 Management for the account: run `cce-11130544-c338` (2026-11-13) was

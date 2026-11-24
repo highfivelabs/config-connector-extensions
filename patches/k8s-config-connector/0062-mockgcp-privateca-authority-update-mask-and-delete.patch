@@ -1,0 +1,59 @@
+config-connector-extensions patch 0062: a certificate authority's update
+replaces the masked fields, and an enabled authority is not deleted.
+
+UpdateCertificateAuthority merged the request into the stored authority
+whatever the update mask said, so labels taken off stayed and a changed
+URL list grew. It now replaces the masked fields it knows (labels and
+user_defined_access_urls, the ones the API changes) and refuses any
+other masked field; without a mask it merges, as before.
+DeleteCertificateAuthority now refuses an enabled authority
+(FailedPrecondition), as the API does (Terraform disables one before its
+delete; the error text is assumed, to be seen live). For
+PrivateCACertificateAuthority (ours; foundation item 25). Upstream
+candidate: yes, once Config Connector's own fixtures disable first.
+
+--- a/mockgcp/mockprivateca/certificateauthority.go
++++ b/mockgcp/mockprivateca/certificateauthority.go
+@@ -176,6 +176,16 @@
+ 
+ 	now := time.Now()
+ 
++	// An enabled authority is refused, as the API does (Terraform disables
++	// one before its delete).
++	existing := &pb.CertificateAuthority{}
++	if err := s.storage.Get(ctx, fqn, existing); err != nil {
++		return nil, err
++	}
++	if existing.GetState() == pb.CertificateAuthority_ENABLED {
++		return nil, status.Errorf(codes.FailedPrecondition, "certificate authority %q is enabled: disable it before deleting it", fqn)
++	}
++
+ 	oldObj := &pb.CertificateAuthority{}
+ 	if err := s.storage.Delete(ctx, fqn, oldObj); err != nil {
+ 		return nil, err
+@@ -285,8 +295,23 @@
+ 		return nil, err
+ 	}
+ 
+-	// TODO: FieldMask
+-	proto.Merge(obj, req.GetCertificateAuthority())
++	// The mask's fields are replaced (labels and user_defined_access_urls,
++	// the ones the API changes); without a mask the request is merged, as
++	// before.
++	if paths := req.GetUpdateMask().GetPaths(); len(paths) > 0 {
++		for _, path := range paths {
++			switch path {
++			case "labels":
++				obj.Labels = req.GetCertificateAuthority().GetLabels()
++			case "user_defined_access_urls", "userDefinedAccessUrls":
++				obj.UserDefinedAccessUrls = req.GetCertificateAuthority().GetUserDefinedAccessUrls()
++			default:
++				return nil, status.Errorf(codes.InvalidArgument, "field %q cannot be updated", path)
++			}
++		}
++	} else {
++		proto.Merge(obj, req.GetCertificateAuthority())
++	}
+ 
+ 	// service seems to remove "zero" values
+ 	pruneKU := func(ku *pb.KeyUsage) {

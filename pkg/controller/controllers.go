@@ -43,6 +43,7 @@ import (
 	crcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	accesscontextmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/accesscontextmanager/v1beta1"
 	aiplatformv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/aiplatform/v1beta1"
 	apigeev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1beta1"
 	artifactregistryv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/artifactregistry/v1beta1"
@@ -53,14 +54,20 @@ import (
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	containerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/container/v1beta1"
 	datacatalogv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/datacatalog/v1beta1"
+	dnsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1alpha1"
 	dnsv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/dns/v1beta1"
 	firestorev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/firestore/v1beta1"
 	iamv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1alpha1"
 	iamv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/iam/v1beta1"
 	kmsv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/kms/v1alpha1"
+	loggingv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1alpha1"
 	loggingv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/logging/v1beta1"
+	monitoringv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/monitoring/v1alpha1"
 	networksecurityv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/networksecurity/v1beta1"
+	privatecav1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/privateca/v1alpha1"
+	pubsubv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/pubsub/v1alpha1"
 	resourcemanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/resourcemanager/v1alpha1"
+	runv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1alpha1"
 	runv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/run/v1beta1"
 	secretmanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/secretmanager/v1beta1"
 	securitycenterv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/securitycenter/v1beta1"
@@ -70,6 +77,7 @@ import (
 	sqlv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sql/v1beta1"
 	sqladminv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/sqladmin/v1beta1"
 	storagev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/storage/v1beta1"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/accesscontextmanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/aiplatform"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/apigee"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/artifactregistry"
@@ -83,7 +91,10 @@ import (
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/iam"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/kms"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/logging"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/monitoring"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/networksecurity"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/privateca"
+	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/pubsub"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/resourcemanager"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/run"
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/secretmanager"
@@ -124,6 +135,8 @@ var Kinds = []kind{
 	{gvk: iamv1beta1.IAMBindingGVK, crdName: "iambindings.iam.gcp.hfl.dev", model: iam.NewBindingModel},
 	{gvk: iamv1beta1.IAMMemberGVK, crdName: "iammembers.iam.gcp.hfl.dev", model: iam.NewMemberModel},
 	{gvk: runv1beta1.RunServiceGVK, crdName: "runservices.run.gcp.hfl.dev", model: run.NewRunServiceModel, labels: slotguard.Spec},
+	{gvk: runv1beta1.RunWorkerPoolGVK, crdName: "runworkerpools.run.gcp.hfl.dev", model: run.NewWorkerPoolModel, labels: slotguard.Spec},
+	{gvk: runv1alpha1.RunJobGVK, crdName: "runjobs.run.gcp.hfl.dev", model: run.NewRunJobModel, labels: slotguard.Metadata},
 	{gvk: computev1beta1.ComputeRegionNetworkEndpointGVK, crdName: "computeregionnetworkendpoints.compute.gcp.hfl.dev", model: compute.NewRegionNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeNetworkEndpointGVK, crdName: "computenetworkendpoints.compute.gcp.hfl.dev", model: compute.NewComputeNetworkEndpointModel},
 	{gvk: computev1beta1.ComputeAutoscalerGVK, crdName: "computeautoscalers.compute.gcp.hfl.dev", model: compute.NewComputeAutoscalerModel},
@@ -155,6 +168,15 @@ var Kinds = []kind{
 	{gvk: kmsv1alpha1.KMSCryptoKeyFieldsGVK, crdName: "kmscryptokeyfields.kms.gcp.hfl.dev", model: kms.NewCryptoKeyFieldsModel},
 	{gvk: containerv1beta1.ContainerClusterFieldsGVK, crdName: "containerclusterfields.container.gcp.hfl.dev", model: container.NewClusterFieldsModel},
 	{gvk: containerv1beta1.ContainerNodePoolFieldsGVK, crdName: "containernodepoolfields.container.gcp.hfl.dev", model: container.NewNodePoolFieldsModel},
+	{gvk: computev1alpha1.ComputeServiceAttachmentFieldsGVK, crdName: "computeserviceattachmentfields.compute.gcp.hfl.dev", model: compute.NewServiceAttachmentFieldsModel},
+	{gvk: computev1alpha1.ComputeNetworkFieldsGVK, crdName: "computenetworkfields.compute.gcp.hfl.dev", model: compute.NewNetworkFieldsModel},
+	{gvk: computev1alpha1.ComputeSubnetworkFieldsGVK, crdName: "computesubnetworkfields.compute.gcp.hfl.dev", model: compute.NewSubnetworkFieldsModel},
+	{gvk: dnsv1alpha1.DNSPolicyFieldsGVK, crdName: "dnspolicyfields.dns.gcp.hfl.dev", model: dns.NewPolicyFieldsModel},
+	{gvk: loggingv1alpha1.LoggingLogBucketFieldsGVK, crdName: "logginglogbucketfields.logging.gcp.hfl.dev", model: logging.NewLogBucketFieldsModel},
+	{gvk: computev1alpha1.ComputeSecurityPolicyFieldsGVK, crdName: "computesecuritypolicyfields.compute.gcp.hfl.dev", model: compute.NewSecurityPolicyFieldsModel},
+	{gvk: privatecav1alpha1.PrivateCACAPoolFieldsGVK, crdName: "privatecacapoolfields.privateca.gcp.hfl.dev", model: privateca.NewCAPoolFieldsModel},
+	{gvk: privatecav1alpha1.PrivateCACertificateTemplateFieldsGVK, crdName: "privatecacertificatetemplatefields.privateca.gcp.hfl.dev", model: privateca.NewCertificateTemplateFieldsModel},
+	{gvk: privatecav1alpha1.PrivateCACertificateAuthorityGVK, crdName: "privatecacertificateauthorities.privateca.gcp.hfl.dev", model: privateca.NewCertificateAuthorityModel, labels: slotguard.Metadata},
 	{gvk: iamv1alpha1.IAMPolicyBindingGVK, crdName: "iampolicybindings.iam.gcp.hfl.dev", model: iam.NewPolicyBindingModel},
 	{gvk: iamv1beta1.IAMAccessPolicyGVK, crdName: "iamaccesspolicies.iam.gcp.hfl.dev", model: iam.NewAccessPolicyModel},
 	{gvk: computev1beta1.ComputeOrganizationSecurityPolicyGVK, crdName: "computeorganizationsecuritypolicies.compute.gcp.hfl.dev", model: compute.NewComputeOrganizationSecurityPolicyModel},
@@ -165,6 +187,14 @@ var Kinds = []kind{
 	{gvk: dnsv1beta1.DNSResponsePolicyGVK, crdName: "dnsresponsepolicies.dns.gcp.hfl.dev", model: dns.NewResponsePolicyModel, labels: slotguard.Metadata},
 	{gvk: dnsv1beta1.DNSResponsePolicyRuleGVK, crdName: "dnsresponsepolicyrules.dns.gcp.hfl.dev", model: dns.NewResponsePolicyRuleModel},
 	{gvk: computev1beta1.ComputeNetworkFirewallPolicyPacketMirroringRuleGVK, crdName: "computenetworkfirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewNetworkFirewallPolicyPacketMirroringRuleModel},
+	{gvk: computev1alpha1.ComputeFirewallPolicyPacketMirroringRuleGVK, crdName: "computefirewallpolicypacketmirroringrules.compute.gcp.hfl.dev", model: compute.NewFirewallPolicyPacketMirroringRuleModel},
+	{gvk: computev1alpha1.ComputeFirewallPolicyRuleGVK, crdName: "computefirewallpolicyrules.compute.gcp.hfl.dev", model: compute.NewFirewallPolicyRuleModel},
+	{gvk: computev1alpha1.ComputeRegionSecurityPolicyRuleGVK, crdName: "computeregionsecuritypolicyrules.compute.gcp.hfl.dev", model: compute.NewRegionSecurityPolicyRuleModel},
+	{gvk: pubsubv1alpha1.PubSubTopicFieldsGVK, crdName: "pubsubtopicfields.pubsub.gcp.hfl.dev", model: pubsub.NewTopicFieldsModel},
+	{gvk: pubsubv1alpha1.PubSubSubscriptionFieldsGVK, crdName: "pubsubsubscriptionfields.pubsub.gcp.hfl.dev", model: pubsub.NewSubscriptionFieldsModel},
+	{gvk: monitoringv1alpha1.MonitoringUptimeCheckConfigFieldsGVK, crdName: "monitoringuptimecheckconfigfields.monitoring.gcp.hfl.dev", model: monitoring.NewUptimeCheckConfigFieldsModel},
+	{gvk: monitoringv1alpha1.MonitoringAlertPolicyFieldsGVK, crdName: "monitoringalertpolicyfields.monitoring.gcp.hfl.dev", model: monitoring.NewAlertPolicyFieldsModel},
+	{gvk: accesscontextmanagerv1beta1.AccessContextManagerGCPUserAccessBindingGVK, crdName: "accesscontextmanagergcpuseraccessbindings.accesscontextmanager.gcp.hfl.dev", model: accesscontextmanager.NewGCPUserAccessBindingModel},
 	{gvk: computev1beta1.ComputeVPNTunnelGVK, crdName: "computevpntunnels.compute.gcp.hfl.dev", model: compute.NewVPNTunnelModel, labels: slotguard.Spec},
 	{gvk: firestorev1beta1.FirestoreBackupScheduleGVK, crdName: "firestorebackupschedules.firestore.gcp.hfl.dev", model: firestore.NewFirestoreBackupScheduleModel},
 	{gvk: apigeev1beta1.ApigeeNATAddressGVK, crdName: "apigeenataddresses.apigee.gcp.hfl.dev", model: apigee.NewApigeeNATAddressModel},
@@ -187,6 +217,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		artifactregistryv1beta1.AddToScheme,
 		iamv1alpha1.AddToScheme,
 		iamv1beta1.AddToScheme,
+		runv1alpha1.AddToScheme,
 		runv1beta1.AddToScheme,
 		computev1alpha1.AddToScheme,
 		computev1beta1.AddToScheme,
@@ -199,6 +230,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		chroniclev1alpha1.AddToScheme,
 		chroniclev1beta1.AddToScheme,
 		storagev1beta1.AddToScheme,
+		loggingv1alpha1.AddToScheme,
+		privatecav1alpha1.AddToScheme,
 		loggingv1beta1.AddToScheme,
 		serviceusagev1beta1.AddToScheme,
 		servicemanagementv1alpha1.AddToScheme,
@@ -208,6 +241,9 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		assetv1beta1.AddToScheme,
 		kmsv1alpha1.AddToScheme,
 		containerv1beta1.AddToScheme,
+		accesscontextmanagerv1beta1.AddToScheme,
+		pubsubv1alpha1.AddToScheme,
+		monitoringv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			return err

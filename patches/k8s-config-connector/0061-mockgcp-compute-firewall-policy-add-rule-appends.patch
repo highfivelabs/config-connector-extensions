@@ -1,0 +1,24 @@
+config-connector-extensions patch 0061: a hierarchical firewall policy's
+addRule adds the rule to the policy's rules.
+
+FirewallPoliciesV1.AddRule replaced the policy's rules with the one added,
+so adding a second rule removed the first (and the default rules the
+policy is made with). It now appends the rule, as
+NetworkFirewallPoliciesV1.AddRule does, for ComputeFirewallPolicyRule
+(ours; foundation item 19), whose test makes two rules in one policy.
+Upstream candidate: yes.
+
+--- a/mockgcp/mockcompute/firewallpoliciesv1.go
++++ b/mockgcp/mockcompute/firewallpoliciesv1.go
+@@ -199,7 +199,10 @@
+ 	r := req.GetFirewallPolicyRuleResource()
+ 	mockFieldValuesForRule(r)
+ 
+-	obj.Rules = []*pb.FirewallPolicyRule{r}
++	// A rule is added to the policy's rules, as the network policy's
++	// addRule does; it replaced them all, so a second rule removed the
++	// first and the default rules.
++	obj.Rules = append(obj.Rules, r)
+ 	if err := s.storage.Update(ctx, fqn, obj); err != nil {
+ 		return nil, err
+ 	}

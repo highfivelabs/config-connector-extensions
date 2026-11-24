@@ -61,6 +61,16 @@ has been released yet; each release moves its entries out of
 
 ### Fixed
 
+- **An `IAMWorkforcePoolProviderScimToken` no longer loses its token
+  when the manager's cache is behind.** The write after the create read
+  the Secret it had just reserved through the manager's cache, found
+  nothing, tried to make it again and failed, so the token the API
+  returns only once never reached the Secret and the object stayed not
+  Ready ("delete this object and make it again"). Now the write updates
+  the Secret the reservation made, tries again while the cache catches
+  up, and keeps the create's values even when the read after the create
+  fails (`docs/design.md` decision 38).
+
 - **Deleting or abandoning an object no longer waits forever when an
   object its spec names is already gone** (everything deleted at once: a
   namespace, a Helm release, a catalog chart). `LoggingSettings` stuck
@@ -103,6 +113,276 @@ has been released yet; each release moves its entries out of
   decision 32).
 
 ### Added
+
+- **`RunWorkerPool`** (`run.gcp.hfl.dev/v1beta1`): a stable Cloud Run
+  worker pool, where Config Connector's `RunWorkerPool` is alpha only, with
+  the revision template's `labels` and `binaryAuthorization.policy`
+  (`docs/kinds/RunWorkerPool.md` says how to move a worker pool to it).
+  `RunService` takes `binaryAuthorization.policy` too. Application queue
+  row 6.
+
+- **`RunJob`** (`run.gcp.hfl.dev/v1alpha1`): a Cloud Run job that owns the
+  whole job, with what Config Connector's `RunJob` cannot express: the
+  job's labels (`metadata.labels`) and its executions'
+  (`template.labels`), GPUs (`template.template.nodeSelector`,
+  `gpuZonalRedundancyDisabled`), gRPC probes and a Binary Authorization
+  policy by name (`binaryAuthorization.policy`) (`docs/kinds/RunJob.md`
+  says how to move a job to it). Application queue row 6.
+
+- **`ArtifactRegistryRepository`** takes `vulnerabilityScanningConfig`
+  (turn scanning off per repository), `disallowUnspecifiedMode`, and a
+  remote repository's `aptRepository` and `yumRepository` (Debian, Ubuntu,
+  CentOS, Rocky, EPEL bases, or a custom URI). Application queue row 4.
+
+- **`MonitoringAlertPolicyFields`** (`monitoring.gcp.hfl.dev/v1alpha1`, a
+  field kind): sets `documentation.subject`, `documentation.links` and
+  `alertStrategy.notificationPrompts` on an alert policy Config
+  Connector's `MonitoringAlertPolicy` owns, and only those
+  (`docs/kinds/MonitoringAlertPolicyFields.md`). A change Config Connector
+  makes to the policy's documentation or alert strategy drops them until
+  the next reconcile puts them back. Application queue row 3, its alert
+  policy half.
+
+- **`MonitoringUptimeCheckConfigFields`** (`monitoring.gcp.hfl.dev/v1alpha1`,
+  a field kind, in a new API group): sets `userLabels` and an HTTP check's
+  `customContentType`, `acceptedResponseStatusCodes`, `pingConfig` and
+  `serviceAgentAuthentication` on an uptime check Config Connector's
+  `MonitoringUptimeCheckConfig` owns, and only those
+  (`docs/kinds/MonitoringUptimeCheckConfigFields.md`). Application queue
+  row 3, its uptime check half.
+
+- **`PubSubSubscriptionFields`** (`pubsub.gcp.hfl.dev/v1alpha1`, a field
+  kind): sets `messageTransforms` (JavaScript UDFs), `bigtableConfig` (an
+  export to a Bigtable table) and fields of the BigQuery and Cloud Storage
+  exports (`serviceAccountEmail`, `filenameDatetimeFormat`, `maxMessages`,
+  `avroConfig.useTopicSchema`) on a subscription Config Connector's
+  `PubSubSubscription` owns, and only those
+  (`docs/kinds/PubSubSubscriptionFields.md`). Application queue row 1's
+  second half.
+
+- **`PubSubTopicFields`** (`pubsub.gcp.hfl.dev/v1alpha1`, a field kind):
+  sets `ingestionDataSourceSettings` (an import topic: Amazon Kinesis,
+  Cloud Storage, Azure Event Hubs, Amazon MSK or Confluent Cloud, with
+  platform logs) and `messageTransforms` (JavaScript UDFs) on a topic
+  Config Connector's `PubSubTopic` owns, and only those
+  (`docs/kinds/PubSubTopicFields.md`). The application queue's first row.
+
+- **`AccessContextManagerGCPUserAccessBinding`**
+  (`accesscontextmanager.gcp.hfl.dev/v1beta1`): the stable equivalent of
+  Config Connector's alpha kind, binding a Google Group to an
+  organization's access levels, with `dryRunAccessLevels`,
+  `sessionSettings` (Google Cloud session length),
+  `restrictedClientApplications` and `scopedAccessSettings`, which Config
+  Connector's lacks. The server names a binding: its ID is written back to
+  `spec.resourceID` (`docs/kinds/AccessContextManagerGCPUserAccessBinding.md`).
+
+- **`ComputeRegionSecurityPolicyRule`** (`compute.gcp.hfl.dev/v1alpha1`):
+  a rule of a regional Cloud Armor security policy (Terraform's
+  `google_compute_region_security_policy_rule`), named by its policy
+  (`securityPolicyRef`: our `ComputeRegionSecurityPolicy`, or any policy
+  by `external`) and `priority`: `match` (source ranges or an expression)
+  for a `CLOUD_ARMOR` policy, `networkMatch` for a `CLOUD_ARMOR_NETWORK`
+  one, `rateLimitOptions`, `preconfiguredWafConfig` and `preview`. An
+  object at priority 2147483647 takes over the policy's default rule, and
+  deleting it leaves the rule (`docs/kinds/ComputeRegionSecurityPolicyRule.md`).
+
+- **`BinaryAuthorizationPlatformPolicy`**
+  (`binaryauthorization.gcp.hfl.dev/v1beta1`, generated by
+  `hack/discokind`): a Binary Authorization platform policy for GKE's
+  continuous validation, the stable equivalent of Config Connector's
+  alpha-only kind (`docs/design.md` decision 26), with the API's
+  `gkePolicy` (check sets scoped to a namespace or a Kubernetes service
+  account; SLSA, attestation, vulnerability, image freshness and trusted
+  directory checks). An update replaces the whole policy
+  (`replacePlatformPolicy`). The manager's ClusterRole gains
+  `binaryauthorization.gcp.hfl.dev`.
+
+- **`CertificateManagerTrustConfig`**
+  (`certificatemanager.gcp.hfl.dev/v1beta1`, generated by
+  `hack/discokind`): a Certificate Manager trust config (the certificates
+  a load balancer checks mTLS client certificates against), the stable
+  equivalent of Config Connector's alpha-only kind (`docs/design.md`
+  decision 26), with `spiffeTrustStores`, `allowlistedCertificates`,
+  labels and input-only `tags`.
+
+- **`ComputeRegionSecurityPolicy`** (`compute.gcp.hfl.dev/v1alpha1`,
+  generated by `hack/discokind`): a regional Cloud Armor security policy,
+  which Config Connector has no kind for: a regional external load
+  balancer's (`CLOUD_ARMOR`) or a network edge policy
+  (`CLOUD_ARMOR_NETWORK`) with `ddosProtectionConfig` and
+  `userDefinedFields`. Its rules and labels are not part of it (the API
+  changes them only by its rule methods and `setLabels`); `type` is
+  immutable.
+
+- **`AccessContextManagerServicePerimeter`**
+  (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated by
+  `hack/discokind`): a VPC Service Controls perimeter that owns the whole
+  perimeter, with the API's field set in both the enforced (`status`) and
+  the dry-run (`spec`) configuration: an egress rule's `sources` and
+  `sourceRestriction`, ingress and egress rules' `roles` and `title`,
+  Private Service Connect endpoint sources and
+  `vpcAccessibleServices.allowedServicePatterns`, which Config Connector's
+  `AccessContextManagerServicePerimeter` lacks. `accessPolicy` is the
+  access policy's number; `perimeterType` is immutable. Never use it
+  beside Config Connector's perimeter or
+  `AccessContextManagerServicePerimeterResource` for one perimeter; to
+  move one, make ours with the same `resourceID`, then delete Config
+  Connector's with `cnrm.cloud.google.com/deletion-policy: abandon`.
+
+- **`ComputeSubnetwork`** (`compute.gcp.hfl.dev/v1alpha1`, generated by
+  `hack/discokind`): a VPC subnetwork that owns the whole subnet, with
+  the API's field set, for what Config Connector's `ComputeSubnetwork`
+  cannot set: `ipCollection` (a BYOIP IPv6 sub-prefix),
+  `externalIpv6Prefix`, `internalIpv6Prefix`, `resolveSubnetMask` and
+  `params.resourceManagerTags`, which the API takes only at insert, and a
+  secondary range's `ipCollection` and `ipVersion`. `ipCidrRange` and
+  `privateIpGoogleAccess` are immutable in ours (the API changes them
+  only by `expandIpCidrRange` and `setPrivateIpGoogleAccess`); a subnet
+  that needs those changes stays on Config Connector's kind. Never both
+  kinds for one subnet.
+
+- **`ComputeServiceAttachment`** (`compute.gcp.hfl.dev/v1alpha1`,
+  generated by `hack/discokind`): a Private Service Connect producer's
+  service attachment that owns the whole attachment, with the API's field
+  set: `consumerAcceptLists[].networkUrl` (accept a consumer network, not
+  only a project), `domainNames`, `metadata`, `natIpsPerEndpoint`,
+  `reconcileConnections` and `propagatedConnectionLimit`, which Config
+  Connector's `ComputeServiceAttachment` lacks or sends whole. References
+  are URLs (`targetService`, `natSubnets`), as in the API. Use it instead
+  of Config Connector's kind (and `ComputeServiceAttachmentFields`) for an
+  attachment that needs one of these, never both for one attachment; to
+  move one, make ours with the same name (`resourceID`), then delete
+  Config Connector's with `cnrm.cloud.google.com/deletion-policy: abandon`.
+  `targetService`, `domainNames` and `enableProxyProtocol` are immutable.
+
+- **`PrivateCACertificateAuthority`** (`privateca.gcp.hfl.dev/v1alpha1`):
+  a Certificate Authority Service authority made with the fields the API
+  takes only at create and Config Connector's kind lacks:
+  `config.x509Config.nameConstraints` and `aiaOcspServers`,
+  `config.subjectKeyId`, and `userDefinedAccessUrls` (which can change,
+  with the labels; everything else is immutable). A self-signed authority
+  is enabled after create and disabled before delete;
+  `spec.skipGracePeriod` deletes it without the 30-day grace period.
+
+- **`ComputeFirewallPolicyRule`** (`compute.gcp.hfl.dev/v1alpha1`): a
+  rule of a hierarchical (organization or folder) firewall policy that
+  owns the whole rule, with Config Connector's `ComputeFirewallPolicyRule`
+  schema plus `ruleName`, `securityProfileGroup` and `tlsInspect` (Cloud
+  NGFW Enterprise inspection), `targetSecureTags`, `match.srcSecureTags`,
+  the network contexts and `match.srcNetworks`. Use it instead of Config
+  Connector's kind for a rule that needs one of these, never both for one
+  rule; to move a rule, make ours at the same policy and priority, then
+  delete Config Connector's with `cnrm.cloud.google.com/deletion-policy:
+  abandon` (`docs/kinds/ComputeFirewallPolicyRule.md`).
+
+- **`ComputeRegionNetworkFirewallPolicyRule`**: `spec.securityProfileGroup`
+  and `spec.tlsInspect` (with action `apply_security_profile_group`),
+  `spec.match.srcNetworkContext`, `destNetworkContext` and `srcNetworks`,
+  as on `ComputeNetworkFirewallPolicyRule`.
+
+- **`ComputeNetworkFirewallPolicyRule`**: `spec.securityProfileGroup`
+  and `spec.tlsInspect` (Cloud NGFW Enterprise inspection, with action
+  `apply_security_profile_group`) and `spec.match.srcNetworks`.
+
+- **`ComputeSecurityPolicyFields`** (`compute.gcp.hfl.dev/v1alpha1`, a
+  field kind, `docs/design.md` decision 37): a global Cloud Armor
+  policy's Adaptive Protection `thresholdConfigs` and WAF
+  `requestBodyInspectionSize`, which Config Connector's
+  `ComputeSecurityPolicy` lacks, set on a policy it (or anything else)
+  made, by `spec.resourceRef`. It never creates or deletes the policy;
+  deleting it clears the fields. Not for a policy on Config Connector's
+  opt-in direct controller.
+
+- **`AccessContextManagerAuthorizedOrgsDesc`**
+  (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated by
+  `hack/discokind`): an access policy's authorized organizations
+  description (`assetType`, `authorizationDirection`, `authorizationType`,
+  `orgs`), which Config Connector has only in its open pull request
+  #14202. `spec.accessPolicy` is the policy's number. When Config
+  Connector releases its kind, objects move to it (`docs/design.md`
+  section 2.3).
+
+- **`PrivateCACAPoolFields`** and **`PrivateCACertificateTemplateFields`**
+  (`privateca.gcp.hfl.dev/v1alpha1`, field kinds, `docs/design.md`
+  decision 37): a CA pool's `issuancePolicy.backdateDuration` and
+  `issuancePolicy.baselineValues.nameConstraints`, and a certificate
+  template's `maximumLifetime` and `predefinedValues.nameConstraints`,
+  which Config Connector's `PrivateCACAPool` and
+  `PrivateCACertificateTemplate` lack, set on a pool or template it (or
+  anything else) made, by `spec.resourceRef`. They never create or delete
+  the resource; deleting one clears the fields it set. When Config
+  Connector changes its own issuance policy or predefined values, the API
+  clears ours until the next reconcile puts them back.
+
+- **`SecretManagerSecret` `versionDestroyTtl`, `customerManagedEncryption`
+  and `tags`**: delayed destruction of a secret's versions, a regional
+  secret's own Cloud KMS key, and resource manager tags bound when the
+  secret is made (immutable). Config Connector's types have the first two
+  as not yet served.
+
+- **`ContainerNodePoolFields`: soft eviction, memory and topology
+  managers, single-process OOM kill** (`spec.config.kubeletConfig`'s
+  `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`,
+  `evictionMaxPodGracePeriodSeconds`, `memoryManager`, `topologyManager`,
+  `singleProcessOomKill`): kubelet settings Config Connector's
+  `ContainerNodePool` lacks. Optional; the CRD stays `v1beta1`.
+
+- **`ComputeVPNTunnel` `spec.params.resourceManagerTags`**: resource
+  manager tags bound to the tunnel when it is made (Terraform's `params`
+  block). Immutable; the API takes them only at insert.
+
+- **`IAMOauthClientCredential` and `IAMWorkforcePoolProviderScimToken`**
+  (`iam.gcp.hfl.dev/v1alpha1`): an OAuth client's credential and a
+  workforce pool provider SCIM tenant's token, which no Config Connector
+  kind has. The secret the API returns (`clientSecret`, `securityToken`)
+  is written to a Kubernetes Secret in the object's namespace, owned by the
+  object and named by `spec.secretOutput.name` (default the object's name),
+  never to status (`docs/design.md` decision 38). The API returns a SCIM
+  token only when it makes it: if its Secret is lost, delete the object and
+  make it again. The manager's ClusterRole now creates and updates
+  Secrets (`config/operator/rbac.yaml`).
+
+- **`ComputeFirewallPolicyPacketMirroringRule`**
+  (`compute.gcp.hfl.dev/v1alpha1`): a packet mirroring rule of a
+  hierarchical (organization or folder) firewall policy, which no Config
+  Connector kind has; the same fields as
+  `ComputeNetworkFirewallPolicyPacketMirroringRule`, on Config Connector's
+  `ComputeFirewallPolicy` (`firewallPolicyRef`). The API has these calls
+  in its beta version only.
+
+- **`DNSPolicyFields`** (`dns.gcp.hfl.dev/v1alpha1`, a field kind,
+  `docs/design.md` decision 37): a Cloud DNS server policy's
+  `dns64Config`, which Config Connector's `DNSPolicy` lacks, set on a
+  policy it (or anything else) made, by `spec.resourceRef`. It never
+  creates or deletes the policy; deleting it turns DNS64 off. Not safe
+  beside Config Connector's opt-in direct `DNSPolicy` controller, whose
+  update replaces the whole policy.
+
+- **`ComputeNetworkFields` and `ComputeSubnetworkFields`**
+  (`compute.gcp.hfl.dev/v1alpha1`, field kinds, `docs/design.md` decision
+  37): a VPC network's BGP best path selection
+  (`routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`,
+  `bgpInterRegionCost`) and a subnet's `allowSubnetCidrRoutesOverlap`,
+  which Config Connector's `ComputeNetwork` and `ComputeSubnetwork` lack,
+  set on a network or subnet it (or anything else) made, by
+  `spec.resourceRef`. They never create or delete the resource; deleting
+  them leaves the fields.
+
+- **`LoggingLogBucketFields`** (`logging.gcp.hfl.dev/v1alpha1`, a field
+  kind, `docs/design.md` decision 37): a log bucket's `indexConfigs`,
+  `restrictedFields` and `cmekSettings`, which Config Connector's
+  `LoggingLogBucket` lacks, set on a bucket it (or anything else) made, by
+  `spec.resourceRef`, with an update mask naming only them. It never
+  creates or deletes the bucket; deleting it clears the index configs and
+  restricted fields, and leaves the CMEK key (the API cannot remove it).
+
+- **`ComputeServiceAttachmentFields`** (`compute.gcp.hfl.dev/v1alpha1`,
+  a field kind, `docs/design.md` decision 37): a Private Service Connect
+  service attachment's `reconcileConnections` and
+  `propagatedConnectionLimit`, which Config Connector's
+  `ComputeServiceAttachment` lacks, set on a service attachment it (or
+  anything else) made, by `spec.resourceRef`. It never creates or deletes
+  the service attachment; deleting it leaves the fields.
 
 - **`SecurityCenterBigQueryExport` and `SecurityCenterNotificationConfig`**
   (`securitycenter.gcp.hfl.dev/v1beta1`, generated by `hack/discokind`):

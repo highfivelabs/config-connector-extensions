@@ -152,6 +152,11 @@ kinds:
   # A project's or, with the organization-id annotation, an organization's
   # custom role (config/servicemappings/iam.yaml containers).
   IAMCustomRole: [iam.googleapis.com/projects.roles, iam.googleapis.com/Role]
+  # The name rule makes "caches" "cach", and the quota preference kind is
+  # named for the API's API (checked 2026-11-23, building application.yaml).
+  StorageAnywhereCache: [storage.googleapis.com/AnywhereCach]
+  StorageRapidCache: [storage.googleapis.com/RapidCach]
+  APIQuotaPreference: [cloudquotas.googleapis.com/QuotaPreference]
 
 # Kinds that are not an API resource with a create method (IAM policy
 # attachments, associations), with the reason.
@@ -165,6 +170,18 @@ no_resource:
   KMSCryptoKeyFields: a field kind, the keyAccessJustificationsPolicy of a key Config Connector's KMSCryptoKey owns, written with cryptoKeys.patch (decision 37)
   ContainerClusterFields: a field kind, fields of a cluster Config Connector's ContainerCluster owns, written with clusters.update (decision 37)
   ContainerNodePoolFields: a field kind, kubelet fields of a node pool Config Connector's ContainerNodePool owns, written with nodePools.update (decision 37)
+  ComputeServiceAttachmentFields: a field kind, reconcileConnections and propagatedConnectionLimit of a service attachment Config Connector's ComputeServiceAttachment owns, written with serviceAttachments.patch (decision 37)
+  LoggingLogBucketFields: a field kind, indexConfigs, restrictedFields and cmekSettings of a log bucket Config Connector's LoggingLogBucket owns, written with buckets.patch (decision 37)
+  ComputeNetworkFields: a field kind, the BGP best path selection of a network Config Connector's ComputeNetwork owns, written with networks.patch (decision 37)
+  ComputeSubnetworkFields: a field kind, allowSubnetCidrRoutesOverlap of a subnet Config Connector's ComputeSubnetwork owns, written with subnetworks.patch (decision 37)
+  PubSubTopicFields: a field kind, ingestionDataSourceSettings and messageTransforms of a topic Config Connector's PubSubTopic owns, written with topics.patch (decision 37)
+  PubSubSubscriptionFields: a field kind, messageTransforms, bigtableConfig and export fields of a subscription Config Connector's PubSubSubscription owns, written with subscriptions.patch (decision 37)
+  MonitoringUptimeCheckConfigFields: a field kind, userLabels and HTTP check fields of an uptime check Config Connector's MonitoringUptimeCheckConfig owns, written with uptimeCheckConfigs.patch (decision 37)
+  MonitoringAlertPolicyFields: a field kind, the documentation's subject and links and the notification prompts of an alert policy Config Connector's MonitoringAlertPolicy owns, written with alertPolicies.patch (decision 37)
+  DNSPolicyFields: a field kind, dns64Config of a DNS server policy Config Connector's DNSPolicy owns, written with policies.patch (decision 37)
+  ComputeSecurityPolicyFields: a field kind, Adaptive Protection threshold configs and the request body inspection size of a security policy Config Connector's ComputeSecurityPolicy owns, written with securityPolicies.patch (decision 37)
+  PrivateCACAPoolFields: a field kind, backdateDuration and baseline name constraints of a CA pool Config Connector's PrivateCACAPool owns, written with caPools.patch (decision 37)
+  PrivateCACertificateTemplateFields: a field kind, maximumLifetime and name constraints of a certificate template Config Connector's PrivateCACertificateTemplate owns, written with certificateTemplates.patch (decision 37)
   DiscoveryEngineCmekConfig: a Vertex AI Search CMEK config, made and changed with cmekConfigs.patch (no create method)
   LoggingSettings: the Log Router settings of an organization or folder, written with updateSettings (they always exist)
   SecretManagerSecretVersion: a secret version, written with secrets.addVersion
@@ -197,12 +214,24 @@ subresources:
   ComputeNetworkFirewallPolicyRule: compute.googleapis.com/NetworkFirewallPolicy:rules[]
   ComputeNetworkFirewallPolicyAssociation: compute.googleapis.com/NetworkFirewallPolicy:associations[]
   ComputeNetworkFirewallPolicyPacketMirroringRule: compute.googleapis.com/NetworkFirewallPolicy:packetMirroringRules[]
+  ComputeFirewallPolicyPacketMirroringRule: compute.googleapis.com/FirewallPolicy:packetMirroringRules[]
   ComputeOrganizationSecurityPolicyRule: compute.googleapis.com/OrganizationSecurityPolicy:rules[]
+  ComputeRegionSecurityPolicyRule: compute.googleapis.com/RegionSecurityPolicy:rules[]
   ComputeOrganizationSecurityPolicyAssociation: compute.googleapis.com/OrganizationSecurityPolicy:associations[]
   ComputeInstanceGroupNamedPort: compute.googleapis.com/InstanceGroup:namedPorts[]
   AccessContextManagerAccessLevelCondition: accesscontextmanager.googleapis.com/AccessPolicyAccessLevel:basic.conditions[]
   AccessContextManagerServicePerimeterResource: accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter:status.resources[]
   BigQueryDatasetAccess: bigquery.googleapis.com/Dataset:access[]
+
+# Our kinds that write the object's metadata.labels to the resource's
+# labels, as Config Connector's Terraform kinds do (pkg/controller's
+# slotLabelled, slotguard.Metadata).
+ours_metadata_labels:
+  - ArtifactRegistryRepository
+  - DNSResponsePolicy
+  - PrivateCACertificateAuthority
+  - RunJob
+  - SecretManagerSecret
 
 # A kind that also fills a list of another resource's body, in addition to
 # its own resource: "service/Resource:path".
@@ -232,3 +261,11 @@ aliases:
     config: nodeConfig
     locations: nodeLocations
     maxPodsConstraint.maxPodsPerNode: maxPodsPerNode
+  # Terraform's names for a record set's routing policy fencing and trickle
+  # traffic (google_dns_record_set's enable_geo_fencing,
+  # enable_geo_fencing_for_backups, trickle_ratio), which Config
+  # Connector's DNSRecordSet keeps (foundation item 15, checked 2026-11-23).
+  dns.googleapis.com/ResourceRecordSet:
+    routingPolicy.geo.enableFencing: routingPolicy.enableGeoFencing
+    routingPolicy.primaryBackup.backupGeoTargets.enableFencing: routingPolicy.primaryBackup.enableGeoFencingForBackups
+    routingPolicy.primaryBackup.trickleTraffic: routingPolicy.primaryBackup.trickleRatio

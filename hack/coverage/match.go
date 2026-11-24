@@ -18,6 +18,9 @@ type Overrides struct {
 	Subresources    map[string]string            `yaml:"subresources"`
 	Also            map[string]string            `yaml:"also"`
 	Aliases         map[string]map[string]string `yaml:"aliases"`
+	// Our kinds whose resource's labels are the object's metadata.labels
+	// (their CRDs cannot say so).
+	OursMetadataLabels []string `yaml:"ours_metadata_labels"`
 }
 
 // Match is how one CRD kind covers one API resource.
