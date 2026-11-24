@@ -579,7 +579,7 @@ admin. The fake answers so for every kind under
 cloud does, so a BigLake kind without it fails its test on the fake
 (`TestBigLake*MissingIs403`). Deleting a BigLake resource deletes the
 resources under its name with it, as the cloud's catalog delete does
-(catalog repository run `cat-11141549-4cb0`, 2026-11-14), and a list of
+(krm-packages repository run `cat-11141549-4cb0`, 2026-11-14), and a list of
 a collection whose parent is such a resource the fake does not hold
 answers 403 (a deleted catalog's databases). `SetDeny` on
 `mockenv.Env.Disco` makes one name answer 403 while it is still held, a

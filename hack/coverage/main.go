@@ -45,7 +45,7 @@ type Sources struct {
 		Fetched        string `yaml:"fetched"`
 		Digest         string `yaml:"digest"`
 	} `yaml:"config_connector"`
-	// Terraform is the catalog repository's Terraform comparison, vendored
+	// Terraform is the krm-packages repository's Terraform comparison, vendored
 	// under docs/coverage/inputs/terraform/ (terraform.go).
 	Terraform struct {
 		Repo                    string `yaml:"repo"`

@@ -328,7 +328,7 @@ func TestNameInBodyOnly(t *testing.T) {
 }
 
 // TestBigLakeCascade: deleting a BigLake catalog deletes its databases and
-// tables (catalog repository run cat-11141549-4cb0); they, and a list
+// tables (krm-packages repository run cat-11141549-4cb0); they, and a list
 // under the gone catalog, then answer 403. SetDeny answers 403 for a name
 // the fake holds.
 func TestBigLakeCascade(t *testing.T) {

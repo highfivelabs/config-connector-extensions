@@ -51,7 +51,7 @@ var foundationSpec = queueSpec{
 	title: "Foundation gap report",
 	intro: "The work queue for the kind agents: what is missing from the platform foundation and the security-adjacent services, ranked. " +
 		"Everything up through a managed Kubernetes cluster is table stakes for a platform team establishing a target; security teams need what sits next to it; application primitives (Pub/Sub, Storage, Run, SQL, BigQuery) come after. " +
-		"The Cloud Foundation Fabric modules guide where effort goes (`catalog/docs/gcp-inventory.md`, v60.0.0).\n\n",
+		"The Cloud Foundation Fabric modules guide where effort goes (`krm-packages/docs/gcp-inventory.md`, v60.0.0).\n\n",
 	where: "Where the foundation stands",
 	miss: "\nWhat these numbers miss, for the foundation:\n\n" +
 		"- **Kinds for operations that are not creates** (IAM policies and members, Shared VPC attachment, a project's metadata, Cloud NAT, routes of a router) are in no row's resource, but the kinds exist and their fields are counted against the parent they fill (`overrides.yaml`, `subresources`). Whole-resource gaps of that kind are in the queue below with `measured: n/a` where there is nothing to count against.\n" +
@@ -169,7 +169,7 @@ var applicationSpec = queueSpec{
 	cats:  []int{2},
 	title: "Application gap report",
 	intro: "The work queue for the kind agents after the foundation ([foundation.md](foundation.md)): what is missing from the application services (Pub/Sub, Storage, Run, SQL, BigQuery, Artifact Registry, Monitoring and the other services a tracked module creates), ranked. " +
-		"The services the Cloud Foundation Fabric foundational modules use come first, then those other tracked modules use, then the rest (`catalog/docs/gcp-inventory.md`, v60.0.0, by way of `priority.csv`).\n\n",
+		"The services the Cloud Foundation Fabric foundational modules use come first, then those other tracked modules use, then the rest (`krm-packages/docs/gcp-inventory.md`, v60.0.0, by way of `priority.csv`).\n\n",
 	where: "Where the application services stand",
 	miss: "\nWhat these numbers miss, for the application services:\n\n" +
 		"- **Runs and records count as resources.** The Discovery documents list builds, jobs, reports, time series and tasks as creatable; no platform declares them, and the queue leaves them out (`application.yaml` says which).\n" +
@@ -253,7 +253,7 @@ func queueReport(m *model, prio *Priority, catSums [4]counts, svcCat map[string]
 	w("## How the queue is ranked\n\n")
 	b.WriteString(q.importance)
 	w("2. **Kind of gap.** A whole resource (or a whole level of one) with no kind first, then a kind that exists only as alpha, then fields missing from a kind that exists.\n")
-	w("3. **Module need**: how many Cloud Foundation Fabric modules create the resource (`catalog/docs/gcp-inventory.md`), most first.\n")
+	w("3. **Module need**: how many Cloud Foundation Fabric modules create the resource (`krm-packages/docs/gcp-inventory.md`), most first.\n")
 	w("4. **Size**: S (a field or a parent on an existing kind, or one small new kind), M (one or a few new kinds, or tens of fields), L (a large kind or many).\n\n")
 	w("**Route.** A *whole* or *stability* gap is built here, in our API group, by the copy-upstream rule (`CONTRIBUTING.md`). A *field* gap on an official kind cannot be fixed here without a parallel kind of our own; `docs/design.md` decision 5 says to wait for the release unless a field is critical. Each field item says what upstream is doing, and the ones that need the builder to decide are marked **Decision**.\n\n")
 

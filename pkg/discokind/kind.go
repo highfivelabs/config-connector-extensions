@@ -114,7 +114,7 @@ type Kind struct {
 	// while deleting, a 403 on the read or the delete counts as gone only
 	// when a listing proves the resource, or a parent of it, gone
 	// (GoneAfter403): a catalog's delete takes its databases and tables
-	// along, and they then answer 403 (catalog repository run
+	// along, and they then answer 403 (krm-packages repository run
 	// cat-11141549-4cb0).
 	MissingIs403 bool
 	// Mockgcp: the fake cloud (pkg/discokind/fake) leaves the collection to

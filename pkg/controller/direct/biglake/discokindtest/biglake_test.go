@@ -18,7 +18,7 @@ package discokindtest
 // What the BigLake kinds need in the cloud, and what BigLake answers for a
 // resource that does not exist: 403 PERMISSION_DENIED, not 404, for a
 // catalog, a database or a table, even to an admin (live runs
-// cce-11141253-209c and, in the catalog repository, cat-11141340-9f1f).
+// cce-11141253-209c and, in the krm-packages repository, cat-11141340-9f1f).
 // A database needs its catalog and a table its catalog and database: the
 // generated kind tests' Setup makes them through the API (the fixtures'
 // ${ID}cat and ${ID}db, for the test's object and its abandoned one), in
@@ -225,7 +225,7 @@ func testMissingIs403(t *testing.T, kindName, base string, setup func(env *mocke
 func TestBigLakeDatabaseLive(t *testing.T) { kindtest.RunCase(t, "BigLakeDatabase", "live") }
 
 // TestBigLakeDatabaseMissingIs403: a catalog, then a database in it
-// (catalog repository run cat-11141340-9f1f: "Permission
+// (krm-packages repository run cat-11141340-9f1f: "Permission
 // 'biglake.databases.get' denied" before the database's create).
 func TestBigLakeDatabaseMissingIs403(t *testing.T) {
 	const base = "biglakedatabase-403"

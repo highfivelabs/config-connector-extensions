@@ -343,7 +343,7 @@ What `ComputeRouter` taught (decision 14, design.md 6.5):
 Read before choosing a route: `docs/prior-art.md` in `highfivelabs/factory`
 (lean on `controllerbuilder`; behaviour from Magic Modules' product YAML
 into the proto overlay) and `docs/terraform-leverage.md` in
-`highfivelabs/catalog` (the Terraform route is not ours, decision 2.1).
+`highfivelabs/krm-packages` (the Terraform route is not ours, decision 2.1).
 
 Still true from before:
 

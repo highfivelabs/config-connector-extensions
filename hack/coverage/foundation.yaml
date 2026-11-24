@@ -9,7 +9,7 @@
 #   attributes under the path). Leave empty when the API has no create to
 #   count against.
 # modules: Cloud Foundation Fabric v60.0.0 modules that create the resource
-#   (catalog/docs/gcp-inventory.md, catalog @ 6258f92).
+#   (krm-packages/docs/gcp-inventory.md, krm-packages @ 6258f92).
 # Upstream was read 2026-11-09: Config Connector master (3df0e2d5; its CRDs
 #   equal the pin's but for one AI Platform kind) and open pull requests,
 #   read-only.

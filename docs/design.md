@@ -304,14 +304,14 @@ use", "nested resources") is tried again for up to ten minutes before
 the reconciler's own retries take over. `missingIs403` marks a kind whose
 API answers 403, not 404, for a resource that does not exist
 (`BigLakeCatalog`; `BigLakeDatabase` and `BigLakeTable` too, from the
-catalog repository's live run `cat-11141340-9f1f`, 2026-11-14: BigLake
+krm-packages repository's live run `cat-11141340-9f1f`, 2026-11-14: BigLake
 answers a missing database or table 403 as it does a missing catalog): the read before a create takes that 403 as not found
 only while the object has never made or acquired its resource (no
 `status.externalRef`), and a real denial then fails the create; once
 made, a 403 is a denial on update as for any kind. While deleting, a 403
 on the read or on the delete counts as gone only when a listing proves
 it (decision 32, 2026-11-14: a catalog's delete takes its databases and
-tables along, and in the catalog repository's run `cat-11141549-4cb0`
+tables along, and in the krm-packages repository's run `cat-11141549-4cb0`
 their finalizers then held on the 403 for 30 minutes). Terraform
 has no special handling here because it never reads before a create.
 `getQuery` sends query parameters with every get (`view: FULL` for API
@@ -1258,7 +1258,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
   compares the name Google Cloud gives a project's feed,
   `projects/<number>/feeds/<id>`, with the project ID its `projectRef`
   resolves to on every reconcile after the create, so the feed is never
-  updated and cannot be deleted (catalog PR #215, fake-cloud runs
+  updated and cannot be deleted (krm-packages PR #215, fake-cloud runs
   `off-catalog-1115103624-5909` and `off-catalog-1115110334-29801`); this
   repository cannot patch the controller Config Connector runs (section 10,
   question 7). Upstream, checked 2026-11-15 (read-only): the same
@@ -1342,7 +1342,7 @@ What was built is described in "What is copied" in `UPSTREAM.md`, and:
 ### 6.5 From the seed catalog (read 2026-11-09)
 
 The catalog agent's inventory of Cloud Foundation Fabric v60.0.0 against
-Config Connector v1.160.0 (`highfivelabs/catalog`, `docs/gcp-inventory.md`
+Config Connector v1.160.0 (`highfivelabs/krm-packages`, `docs/gcp-inventory.md`
 at `a5a451a`, "Gaps for config-connector-extensions") ranks what fabric
 modules need and no Config Connector kind covers, by how many modules need
 it. Rechecked here read-only on 2026-11-09 against Config Connector
@@ -3362,7 +3362,7 @@ To raise confidence in `ArtifactRegistryRepository`:
     is then only an event and a log line, never a failed condition, as
     the builder asked ("never mark the object failed").
 32. **A 403 while deleting a `missingIs403` kind counts as gone only
-    when a listing proves it** (2026-11-14). The catalog repository's
+    when a listing proves it** (2026-11-14). The krm-packages repository's
     live run `cat-11141549-4cb0` deleted its `biglake-catalog` chart at
     once: BigLake's catalog delete took the database and table along,
     and their reads and deletes then answered 403, which BigLake gives

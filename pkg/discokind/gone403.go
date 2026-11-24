@@ -47,7 +47,7 @@ const maxListPages = 50
 // proof is a listing that succeeds: the resource's collection is listed,
 // and if the resource is not in it, it is gone. When the listing answers
 // 403 too, the parent may be gone (a catalog's delete takes its databases
-// and tables along, catalog repository run cat-11141549-4cb0), so the
+// and tables along, krm-packages repository run cat-11141549-4cb0), so the
 // parent's own collection is listed in the same way, and so on up while
 // the parent is a resource of a MissingIs403 kind of the same API. The
 // resource is gone when an ancestor's collection lists without that

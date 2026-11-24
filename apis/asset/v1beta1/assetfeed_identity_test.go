@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// The bug this kind fixes (catalog PR #215): Google Cloud names a project's
+// The bug this kind fixes (krm-packages PR #215): Google Cloud names a project's
 // feed projects/<number>/feeds/<id>, and Config Connector's AssetFeed
 // compares that number with the project ID its projectRef resolves to on
 // every reconcile after the create.
