@@ -229,14 +229,18 @@ func TestAccessContextManagerGCPUserAccessBinding(t *testing.T) {
 		}
 		creates := writes("POST")
 		taken := newBinding("taken-over", "04abcdefghijklm")
-		taken.Spec.RestrictedClientApplications = []krm.GCPUserAccessBindingApplication{{ClientID: mockenv.Ptr("123.apps.googleusercontent.com")}}
+		// The binding taken over gains a session length. (It gained a
+		// restricted client application until google.golang.org/api v0.310,
+		// whose GcpUserAccessBinding has no restrictedClientApplications:
+		// Discovery dropped the field, docs/design.md section 10.)
+		taken.Spec.SessionSettings = &krm.GCPUserAccessBindingSessionSettings{SessionLengthEnabled: mockenv.Ptr(true), SessionLength: mockenv.Ptr("3600s")}
 		if err := env.Kube.Create(env.Ctx, taken); err != nil {
 			t.Fatal(err)
 		}
 		u := env.WaitReady(gvk, namespace, "taken-over")
 		ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
 		got, err := cloud(ext)
-		if err != nil || len(got.RestrictedClientApplications) != 1 || got.RestrictedClientApplications[0].ClientId != "123.apps.googleusercontent.com" {
+		if err != nil || got.SessionSettings == nil || got.SessionSettings.SessionLength != "3600s" || !got.SessionSettings.SessionLengthEnabled {
 			t.Errorf("the binding taken over = %+v, %v", got, err)
 		}
 		if n := writes("POST") - creates; n != 0 {

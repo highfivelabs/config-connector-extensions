@@ -126,10 +126,14 @@ pass "manager pod runs as cnrm-system/${MANAGER}, mapped like Config Connector's
 me="system:serviceaccount:cnrm-system:${MANAGER}"
 kcc="system:serviceaccount:cnrm-system:cnrm-controller-manager"
 [[ "$(can create "${GAP}" -n example --as="${me}")" == yes ]] || fail "the manager may not manage gap kinds"
-[[ "$(can create secrets -n example --as="${me}")" == no ]] || fail "the manager may create Secrets"
+# Decision 38: the manager creates and updates the Secrets a generated kind
+# writes the API's secrets to (config/operator/rbac.yaml), and never deletes
+# one (its object owns it; garbage collection deletes it).
+[[ "$(can create secrets -n example --as="${me}")" == yes ]] || fail "the manager may not create Secrets (decision 38)"
+[[ "$(can delete secrets -n example --as="${me}")" == no ]] || fail "the manager may delete Secrets"
 [[ "$(can patch configconnectors.core.cnrm.cloud.google.com --as="${me}")" == no ]] || fail "the manager may change ConfigConnector"
 [[ "$(can create validatingwebhookconfigurations.admissionregistration.k8s.io --as="${me}")" == no ]] || fail "the manager may create webhooks"
-pass "the manager may manage gap kinds, and may not create Secrets, change ConfigConnector or create webhooks"
+pass "the manager may manage gap kinds and create Secrets (decision 38), and may not delete Secrets, change ConfigConnector or create webhooks"
 [[ "$(can create "${GAP}" -n example --as="${kcc}")" == no ]] || fail "Config Connector's service account may manage gap kinds"
 pass "Config Connector's service account has no rights on gap kinds"
 

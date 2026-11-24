@@ -10,32 +10,32 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Application | 549 | 345 | 24523 | 39.9% | 1.6% | 58.5% |
+| Application | 549 | 372 | 24523 | 42.4% | 1.4% | 56.2% |
 
 By service:
 
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| application | `aiplatform.googleapis.com` | 62 | 5625 | 16.6% | 0.0% | 83.4% |
-| application | `dlp.googleapis.com` | 22 | 3138 | 57.5% | 0.0% | 42.5% |
-| application | `compute.googleapis.com` | 63 | 2560 | 53.4% | 6.7% | 39.9% |
-| application | `dialogflow.googleapis.com` | 44 | 2455 | 40.4% | 0.0% | 59.6% |
+| application | `aiplatform.googleapis.com` | 62 | 5625 | 22.5% | 0.0% | 77.5% |
+| application | `dlp.googleapis.com` | 22 | 3138 | 59.7% | 0.0% | 40.3% |
+| application | `compute.googleapis.com` | 63 | 2560 | 56.3% | 4.7% | 38.9% |
+| application | `dialogflow.googleapis.com` | 44 | 2455 | 44.8% | 0.0% | 55.2% |
 | application | `monitoring.googleapis.com` | 12 | 2082 | 45.7% | 0.0% | 54.3% |
 | application | `dataproc.googleapis.com` | 9 | 1093 | 47.5% | 0.0% | 52.5% |
 | application | `cloudbuild.googleapis.com` | 10 | 667 | 38.7% | 0.4% | 60.9% |
 | application | `run.googleapis.com` | 6 | 599 | 38.1% | 5.8% | 56.1% |
 | application | `discoveryengine.googleapis.com` | 27 | 573 | 59.2% | 0.0% | 40.8% |
-| application | `bigquery.googleapis.com` | 5 | 552 | 26.6% | 0.0% | 73.4% |
+| application | `bigquery.googleapis.com` | 5 | 552 | 27.0% | 0.0% | 73.0% |
 | application | `apigee.googleapis.com` | 55 | 478 | 16.9% | 1.0% | 82.0% |
 | application | `chronicle.googleapis.com` | 10 | 474 | 15.6% | 0.0% | 84.4% |
 | application | `dataflow.googleapis.com` | 7 | 409 | 1.5% | 0.0% | 98.5% |
 | application | `networkservices.googleapis.com` | 21 | 356 | 54.2% | 11.2% | 34.6% |
-| application | `dataplex.googleapis.com` | 22 | 308 | 84.1% | 7.5% | 8.4% |
+| application | `dataplex.googleapis.com` | 22 | 308 | 83.8% | 8.1% | 8.1% |
 | application | `servicemanagement.googleapis.com` | 3 | 283 | 0.0% | 0.0% | 100.0% |
 | application | `sqladmin.googleapis.com` | 6 | 245 | 41.6% | 0.4% | 58.0% |
-| application | `clouddeploy.googleapis.com` | 7 | 240 | 56.7% | 2.5% | 40.8% |
+| application | `clouddeploy.googleapis.com` | 7 | 240 | 60.4% | 2.5% | 37.1% |
 | application | `storage.googleapis.com` | 10 | 202 | 31.7% | 4.0% | 64.4% |
-| application | `appengine.googleapis.com` | 7 | 169 | 60.4% | 0.0% | 39.6% |
+| application | `appengine.googleapis.com` | 7 | 169 | 62.1% | 0.0% | 37.9% |
 | application | `bigtableadmin.googleapis.com` | 9 | 135 | 30.4% | 0.0% | 69.6% |
 | application | `notebooks.googleapis.com` | 5 | 133 | 91.7% | 0.0% | 8.3% |
 | application | `alloydb.googleapis.com` | 4 | 112 | 56.2% | 0.0% | 43.8% |
@@ -49,7 +49,7 @@ By service:
 | application | `spanner.googleapis.com` | 7 | 80 | 42.5% | 0.0% | 57.5% |
 | application | `eventarc.googleapis.com` | 7 | 78 | 88.5% | 0.0% | 11.5% |
 | application | `tpu.googleapis.com` | 2 | 71 | 91.5% | 0.0% | 8.5% |
-| application | `backupdr.googleapis.com` | 9 | 70 | 40.0% | 0.0% | 60.0% |
+| application | `backupdr.googleapis.com` | 9 | 70 | 57.1% | 0.0% | 42.9% |
 | application | `artifactregistry.googleapis.com` | 4 | 63 | 68.3% | 27.0% | 4.8% |
 | application | `cloudfunctions.googleapis.com` | 1 | 61 | 80.3% | 19.7% | 0.0% |
 | application | `looker.googleapis.com` | 2 | 57 | 0.0% | 98.2% | 1.8% |
@@ -224,18 +224,18 @@ Our kinds in the application category, from the coverage data (the gaps above ar
 | ComputeAutoscaler | compute.googleapis.com/Autoscaler | 0 | false |
 | ComputeAutoscaler, ComputeRegionAutoscaler | compute.googleapis.com/RegionAutoscaler | 0 | false |
 | ComputeGlobalNetworkEndpointGroup | compute.googleapis.com/GlobalNetworkEndpointGroup | 11 | false |
-| ComputeGlobalVmExtensionPolicy | compute.googleapis.com/GlobalVmExtensionPolicy | 8 | false |
+| ComputeGlobalVmExtensionPolicy | compute.googleapis.com/GlobalVmExtensionPolicy | 0 | false |
 | ComputeRegionBackendBucket | compute.googleapis.com/RegionBackendBucket | 21 | false |
 | ComputeRegionCompositeHealthCheck | compute.googleapis.com/RegionCompositeHealthCheck | 4 | false |
-| ComputeRegionHealthAggregationPolicy | compute.googleapis.com/RegionHealthAggregationPolicy | 5 | false |
-| ComputeRegionHealthCheckService | compute.googleapis.com/RegionHealthCheckService | 6 | false |
-| ComputeRegionHealthSource | compute.googleapis.com/RegionHealthSource | 5 | false |
+| ComputeRegionHealthAggregationPolicy | compute.googleapis.com/RegionHealthAggregationPolicy | 0 | false |
+| ComputeRegionHealthCheckService | compute.googleapis.com/RegionHealthCheckService | 0 | false |
+| ComputeRegionHealthSource | compute.googleapis.com/RegionHealthSource | 0 | false |
 | ComputeRegionInstanceTemplate | compute.googleapis.com/RegionInstanceTemplate | 85 | false |
-| ComputeRegionNotificationEndpoint | compute.googleapis.com/RegionNotificationEndpoint | 8 | false |
-| ComputeRolloutPlan | compute.googleapis.com/RolloutPlan | 15 | false |
-| ComputeZoneVmExtensionPolicy | compute.googleapis.com/ZoneVmExtensionPolicy | 4 | false |
+| ComputeRegionNotificationEndpoint | compute.googleapis.com/RegionNotificationEndpoint | 0 | false |
+| ComputeRolloutPlan | compute.googleapis.com/RolloutPlan | 0 | false |
+| ComputeZoneVmExtensionPolicy | compute.googleapis.com/ZoneVmExtensionPolicy | 0 | false |
 | DataplexAspectType | dataplex.googleapis.com/AspectType | 2 | false |
-| DataplexAsset | dataplex.googleapis.com/LakeZoneAsset | 0 | false |
+| DataplexAsset | dataplex.googleapis.com/LakeZoneAsset | 2 | false |
 | DataplexDataScan | dataplex.googleapis.com/DataScan | 19 | false |
 | DataplexLake | dataplex.googleapis.com/Lake | 1 | false |
 | DataplexZone | dataplex.googleapis.com/LakeZone | 1 | false |
@@ -264,14 +264,21 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 
 | Kind | Resource | Attributes official |
 | --- | --- | ---: |
+| AIPlatformArtifact | aiplatform.googleapis.com/MetadataStoreArtifact | 7 |
+| AIPlatformBatchPredictionJob | aiplatform.googleapis.com/LocationBatchPredictionJob | 140 |
+| AIPlatformBatchPredictionJob | aiplatform.googleapis.com/BatchPredictionJob | 140 |
 | AIPlatformCachedContent | aiplatform.googleapis.com/CachedContent | 149 |
+| AIPlatformContext | aiplatform.googleapis.com/MetadataStoreContext | 6 |
 | AIPlatformCustomJob | aiplatform.googleapis.com/CustomJob | 51 |
+| AIPlatformExecution | aiplatform.googleapis.com/MetadataStoreExecution | 6 |
 | AIPlatformFeatureView | aiplatform.googleapis.com/FeatureOnlineStoreFeatureView | 19 |
 | AIPlatformHyperparameterTuningJob | aiplatform.googleapis.com/HyperparameterTuningJob | 93 |
 | AIPlatformModelDeploymentMonitoringJob | aiplatform.googleapis.com/ModelDeploymentMonitoringJob | 29 |
+| AIPlatformNotebookExecutionJob | aiplatform.googleapis.com/NotebookExecutionJob | 29 |
 | AIPlatformNotebookRuntimeTemplate | aiplatform.googleapis.com/NotebookRuntimeTemplate | 30 |
 | AIPlatformOnlineEvaluator | aiplatform.googleapis.com/OnlineEvaluator | 96 |
 | AIPlatformPersistentResource | aiplatform.googleapis.com/PersistentResource | 31 |
+| AIPlatformPipelineJob | aiplatform.googleapis.com/PipelineJob | 15 |
 | AIPlatformReasoningEngine | aiplatform.googleapis.com/LocationReasoningEngine | 24 |
 | AIPlatformReasoningEngine | aiplatform.googleapis.com/ReasoningEngine | 24 |
 | AIPlatformSchedule | aiplatform.googleapis.com/Schedule | 59 |
@@ -280,18 +287,22 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | APIGatewayGateway | apigateway.googleapis.com/Gateway | 3 |
 | ApigeeAPIProduct | apigee.googleapis.com/Apiproduct | 52 |
 | ApigeeNATAddress | apigee.googleapis.com/InstanceNatAddress | 1 |
+| AppEngineAuthorizedCertificate | appengine.googleapis.com/AppAuthorizedCertificate | 3 |
 | AppEngineDomainMapping | appengine.googleapis.com/AppDomainMapping | 2 |
 | AppEngineFlexibleAppVersion | appengine.googleapis.com/AppServiceVersion | 88 |
 | AppEngineStandardAppVersion | appengine.googleapis.com/AppServiceVersion | 42 |
 | ArtifactRegistryAttachment | artifactregistry.googleapis.com/RepositoryAttachment | 6 |
 | ArtifactRegistryRule | artifactregistry.googleapis.com/RepositoryRule | 8 |
+| BackupDRAutoProtectionPolicy | backupdr.googleapis.com/AutoProtectionPolicy | 5 |
 | BackupDRManagementServer | backupdr.googleapis.com/ManagementServer | 5 |
+| BackupDRRestoreVerificationPlan | backupdr.googleapis.com/RestoreVerificationPlan | 7 |
 | BigLakeCatalog | biglake.googleapis.com/Catalog | 0 |
 | BigLakeDatabase | biglake.googleapis.com/CatalogDatabase | 3 |
 | BigQueryAnalyticsHubQueryTemplate | analyticshub.googleapis.com/DataExchangeQueryTemplate | 7 |
 | BigQueryDatasetAccess | bigquery.googleapis.com/Dataset | 13 |
 | BigQueryReservationCapacityCommitment | bigqueryreservation.googleapis.com/CapacityCommitment | 4 |
 | BigQueryReservationReservationGroup | bigqueryreservation.googleapis.com/ReservationGroup | 1 |
+| BigQueryRowAccessPolicy | bigquery.googleapis.com/RowAccessPolicy | 2 |
 | BigtableAuthorizedView | bigtableadmin.googleapis.com/InstanceTableAuthorizedView | 3 |
 | BigtableBackup | bigtableadmin.googleapis.com/InstanceClusterBackup | 5 |
 | BigtableCluster | bigtableadmin.googleapis.com/InstanceCluster | 10 |
@@ -310,6 +321,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | CloudDeployAutomation | clouddeploy.googleapis.com/DeliveryPipelineAutomation | 25 |
 | CloudDeployCustomTargetType | clouddeploy.googleapis.com/CustomTargetType | 13 |
 | CloudDeployDeployPolicy | clouddeploy.googleapis.com/DeployPolicy | 32 |
+| CloudDeployRelease | clouddeploy.googleapis.com/DeliveryPipelineRelease | 9 |
 | CloudDeployTarget | clouddeploy.googleapis.com/Target | 29 |
 | CloudFunctions2Function | cloudfunctions.googleapis.com/Function | 46 |
 | ComposerUserWorkloadsConfigMap | composer.googleapis.com/EnvironmentUserWorkloadsConfigMap | 2 |
@@ -318,10 +330,24 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | ComputeAutoscaler | compute.googleapis.com/RegionAutoscaler | 18 |
 | ComputeFutureReservation | compute.googleapis.com/FutureReservation | 36 |
 | ComputeGlobalNetworkEndpointGroup | compute.googleapis.com/GlobalNetworkEndpointGroup | 4 |
+| ComputeGlobalVMExtensionPolicy | compute.googleapis.com/GlobalVmExtensionPolicy | 10 |
+| ComputeHealthAggregationPolicy | compute.googleapis.com/RegionHealthAggregationPolicy | 5 |
+| ComputeHealthCheckService | compute.googleapis.com/RegionHealthCheckService | 6 |
+| ComputeHealthSource | compute.googleapis.com/RegionHealthSource | 5 |
 | ComputeInstanceGroupNamedPort | compute.googleapis.com/InstanceGroup | 1 |
+| ComputeInstantSnapshot | compute.googleapis.com/InstantSnapshot | 3 |
+| ComputeInstantSnapshot | compute.googleapis.com/RegionInstantSnapshot | 3 |
+| ComputeInstantSnapshotGroup | compute.googleapis.com/InstantSnapshotGroup | 3 |
+| ComputeInstantSnapshotGroup | compute.googleapis.com/RegionInstantSnapshotGroup | 3 |
 | ComputeMachineImage | compute.googleapis.com/MachineImage | 8 |
+| ComputeNotificationEndpoint | compute.googleapis.com/RegionNotificationEndpoint | 8 |
 | ComputeRegionAutoscaler | compute.googleapis.com/RegionAutoscaler | 18 |
+| ComputeRolloutPlan | compute.googleapis.com/RolloutPlan | 15 |
+| ComputeStoragePool | compute.googleapis.com/StoragePool | 8 |
+| ComputeVMExtensionPolicy | compute.googleapis.com/GlobalVmExtensionPolicy | 6 |
+| ComputeVMExtensionPolicy | compute.googleapis.com/ZoneVmExtensionPolicy | 6 |
 | DLPConnection | dlp.googleapis.com/projects.locations.connections | 6 |
+| DLPContentPolicy | dlp.googleapis.com/ContentPolicy | 69 |
 | DLPDiscoveryConfig | dlp.googleapis.com/projects.locations.discoveryConfigs | 97 |
 | DataformFolder | dataform.googleapis.com/ProjectLocationFolder | 2 |
 | DataformReleaseConfig | dataform.googleapis.com/RepositoryReleaseConfig | 17 |
@@ -329,7 +355,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | DataformWorkflowConfig | dataform.googleapis.com/RepositoryWorkflowConfig | 14 |
 | DataformWorkspace | dataform.googleapis.com/RepositoryWorkspace | 2 |
 | DataplexAspectType | dataplex.googleapis.com/AspectType | 21 |
-| DataplexAsset | dataplex.googleapis.com/LakeZoneAsset | 16 |
+| DataplexAsset | dataplex.googleapis.com/LakeZoneAsset | 14 |
 | DataplexDataAsset | dataplex.googleapis.com/DataProductDataAsset | 3 |
 | DataplexDataAttributeBinding | dataplex.googleapis.com/DataDomainBinding | 2 |
 | DataplexDataProduct | dataplex.googleapis.com/DataProduct | 7 |
@@ -341,11 +367,12 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | DataplexEntryLink | dataplex.googleapis.com/EntryGroupEntryLink | 8 |
 | DataplexEntryType | dataplex.googleapis.com/EntryType | 7 |
 | DataplexGlossary | dataplex.googleapis.com/Glossary | 3 |
-| DataplexGlossaryCategory | dataplex.googleapis.com/GlossaryCategory | 4 |
+| DataplexGlossaryCategory | dataplex.googleapis.com/GlossaryCategory | 3 |
 | DataplexGlossaryTerm | dataplex.googleapis.com/GlossaryTerm | 3 |
 | DataplexLake | dataplex.googleapis.com/Lake | 3 |
 | DataplexMetadataFeed | dataplex.googleapis.com/MetadataFeed | 9 |
 | DataplexMetadataJob | dataplex.googleapis.com/MetadataJob | 16 |
+| DataplexPartition | dataplex.googleapis.com/LakeZoneEntityPartition | 2 |
 | DataplexTask | dataplex.googleapis.com/LakeTask | 40 |
 | DataplexZone | dataplex.googleapis.com/LakeZone | 14 |
 | DataprocBatch | dataproc.googleapis.com/Batch | 36 |
@@ -360,30 +387,32 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | DialogflowCXIntent | dialogflow.googleapis.com/AgentIntent | 12 |
 | DialogflowCXPage | dialogflow.googleapis.com/AgentFlowPage | 89 |
 | DialogflowCXWebhook | dialogflow.googleapis.com/AgentWebhook | 11 |
+| DialogflowCompanionAgent | dialogflow.googleapis.com/CompanionAgent | 19 |
 | DialogflowConversationDataset | dialogflow.googleapis.com/ConversationDataset | 2 |
-| DialogflowConversationModel | dialogflow.googleapis.com/ConversationModel | 6 |
 | DialogflowConversationModel | dialogflow.googleapis.com/LocationConversationModel | 6 |
+| DialogflowConversationModel | dialogflow.googleapis.com/ConversationModel | 6 |
+| DialogflowConversationProfile | dialogflow.googleapis.com/ConversationProfile | 87 |
 | DialogflowEntityType | dialogflow.googleapis.com/AgentEntityType | 5 |
 | DialogflowEnvironment | dialogflow.googleapis.com/AgentEnvironment | 48 |
 | DialogflowFlow | dialogflow.googleapis.com/AgentFlow | 211 |
 | DialogflowGenerator | dialogflow.googleapis.com/AgentGenerator | 2 |
 | DialogflowIntent | dialogflow.googleapis.com/AgentIntent | 4 |
-| DialogflowKnowledgeBase | dialogflow.googleapis.com/AgentKnowledgeBase | 3 |
-| DialogflowKnowledgeBase | dialogflow.googleapis.com/LocationKnowledgeBase | 3 |
 | DialogflowKnowledgeBase | dialogflow.googleapis.com/KnowledgeBase | 3 |
+| DialogflowKnowledgeBase | dialogflow.googleapis.com/LocationKnowledgeBase | 3 |
+| DialogflowKnowledgeBase | dialogflow.googleapis.com/AgentKnowledgeBase | 3 |
 | DialogflowPage | dialogflow.googleapis.com/AgentFlowPage | 373 |
 | DialogflowPlaybook | dialogflow.googleapis.com/AgentPlaybook | 135 |
 | DialogflowSecuritySettings | dialogflow.googleapis.com/SecuritySetting | 15 |
 | DialogflowSipTrunk | dialogflow.googleapis.com/SipTrunk | 3 |
-| DialogflowTransitionRouteGroup | dialogflow.googleapis.com/AgentTransitionRouteGroup | 60 |
 | DialogflowTransitionRouteGroup | dialogflow.googleapis.com/AgentFlowTransitionRouteGroup | 60 |
+| DialogflowTransitionRouteGroup | dialogflow.googleapis.com/AgentTransitionRouteGroup | 60 |
 | DialogflowWebhook | dialogflow.googleapis.com/AgentWebhook | 33 |
-| DiscoveryEngineControl | discoveryengine.googleapis.com/CollectionEngineControl | 29 |
 | DiscoveryEngineControl | discoveryengine.googleapis.com/CollectionDataStoreControl | 29 |
 | DiscoveryEngineControl | discoveryengine.googleapis.com/DataStoreControl | 29 |
-| DiscoveryEngineConversation | discoveryengine.googleapis.com/CollectionEngineConversation | 19 |
-| DiscoveryEngineConversation | discoveryengine.googleapis.com/CollectionDataStoreConversation | 19 |
+| DiscoveryEngineControl | discoveryengine.googleapis.com/CollectionEngineControl | 29 |
 | DiscoveryEngineConversation | discoveryengine.googleapis.com/DataStoreConversation | 19 |
+| DiscoveryEngineConversation | discoveryengine.googleapis.com/CollectionDataStoreConversation | 19 |
+| DiscoveryEngineConversation | discoveryengine.googleapis.com/CollectionEngineConversation | 19 |
 | DiscoveryEngineDataStore | discoveryengine.googleapis.com/DataStore | 8 |
 | DiscoveryEngineDataStore | discoveryengine.googleapis.com/CollectionDataStore | 8 |
 | DiscoveryEngineDataStoreTargetSite | discoveryengine.googleapis.com/DataStoreSiteSearchEngineTargetSite | 3 |
@@ -395,8 +424,8 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | DiscoveryEngineServingConfig | discoveryengine.googleapis.com/DataStoreServingConfig | 40 |
 | DiscoveryEngineServingConfig | discoveryengine.googleapis.com/CollectionEngineServingConfig | 40 |
 | DiscoveryEngineSession | discoveryengine.googleapis.com/CollectionDataStoreSession | 8 |
-| DiscoveryEngineSession | discoveryengine.googleapis.com/CollectionEngineSession | 8 |
 | DiscoveryEngineSession | discoveryengine.googleapis.com/DataStoreSession | 8 |
+| DiscoveryEngineSession | discoveryengine.googleapis.com/CollectionEngineSession | 8 |
 | DiscoveryEngineSitemap | discoveryengine.googleapis.com/DataStoreSiteSearchEngineSitemap | 1 |
 | EventarcChannel | eventarc.googleapis.com/Channel | 2 |
 | EventarcChannelConnection | eventarc.googleapis.com/ChannelConnection | 3 |
@@ -458,7 +487,6 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | VertexAIFeaturestoreEntityType | aiplatform.googleapis.com/FeaturestoreEntityType | 10 |
 | VertexAIFeaturestoreEntityTypeFeature | aiplatform.googleapis.com/FeaturestoreEntityTypeFeature | 3 |
 | VertexAIIndexEndpoint | aiplatform.googleapis.com/IndexEndpoint | 4 |
-| VertexAIPipelineJob | aiplatform.googleapis.com/PipelineJob | 15 |
 | VertexAIStudy | aiplatform.googleapis.com/Study | 40 |
 | VertexAITensorboard | aiplatform.googleapis.com/Tensorboard | 4 |
 | VertexAITensorboardExperiment | aiplatform.googleapis.com/TensorboardExperiment | 4 |
@@ -473,7 +501,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | Category | Resource | Official kinds | Ours | Attributes | Official | Ours beyond | Uncovered | Queue |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | :-: |
 | application | `aiplatform.googleapis.com/Agent` | - | - | 29 | 0 | 0 | 29 | - |
-| application | `aiplatform.googleapis.com/BatchPredictionJob` | - | - | 142 | 0 | 0 | 142 | - |
+| application | `aiplatform.googleapis.com/BatchPredictionJob` | AIPlatformBatchPredictionJob (alpha) | - | 142 | 140 | 0 | 2 | - |
 | application | `aiplatform.googleapis.com/CachedContent` | AIPlatformCachedContent (alpha) | - | 220 | 149 | 0 | 71 | - |
 | application | `aiplatform.googleapis.com/CustomJob` | AIPlatformCustomJob (alpha) | - | 53 | 51 | 0 | 2 | - |
 | application | `aiplatform.googleapis.com/DataLabelingJob` | VertexAIDataLabelingJob (alpha) | - | 16 | 16 | 0 | 0 | - |
@@ -497,7 +525,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `aiplatform.googleapis.com/IndexEndpoint` | VertexAIIndexEndpoint (alpha) | - | 11 | 4 | 0 | 7 | - |
 | application | `aiplatform.googleapis.com/Interaction` | - | - | 737 | 0 | 0 | 737 | - |
 | application | `aiplatform.googleapis.com/InteractionsHttp` | - | - | 3 | 0 | 0 | 3 | - |
-| application | `aiplatform.googleapis.com/LocationBatchPredictionJob` | - | - | 142 | 0 | 0 | 142 | - |
+| application | `aiplatform.googleapis.com/LocationBatchPredictionJob` | AIPlatformBatchPredictionJob (alpha) | - | 142 | 140 | 0 | 2 | - |
 | application | `aiplatform.googleapis.com/LocationDataset` | - | - | 10 | 0 | 0 | 10 | - |
 | application | `aiplatform.googleapis.com/LocationDatasetDatasetVersion` | - | - | 1 | 0 | 0 | 1 | - |
 | application | `aiplatform.googleapis.com/LocationReasoningEngine` | AIPlatformReasoningEngine (alpha) | AIPlatformReasoningEngine | 118 | 24 | 0 | 94 | - |
@@ -505,17 +533,17 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `aiplatform.googleapis.com/LocationReasoningEngineSandboxEnvironmentTemplate` | - | - | 19 | 0 | 0 | 19 | - |
 | application | `aiplatform.googleapis.com/MemoryBankMemory` | - | - | 18 | 0 | 0 | 18 | - |
 | application | `aiplatform.googleapis.com/MetadataStore` | VertexAIMetadataStore | - | 3 | 3 | 0 | 0 | - |
-| application | `aiplatform.googleapis.com/MetadataStoreArtifact` | - | - | 8 | 0 | 0 | 8 | - |
-| application | `aiplatform.googleapis.com/MetadataStoreContext` | - | - | 7 | 0 | 0 | 7 | - |
-| application | `aiplatform.googleapis.com/MetadataStoreExecution` | - | - | 7 | 0 | 0 | 7 | - |
+| application | `aiplatform.googleapis.com/MetadataStoreArtifact` | AIPlatformArtifact (alpha) | - | 8 | 7 | 0 | 1 | - |
+| application | `aiplatform.googleapis.com/MetadataStoreContext` | AIPlatformContext (alpha) | - | 7 | 6 | 0 | 1 | - |
+| application | `aiplatform.googleapis.com/MetadataStoreExecution` | AIPlatformExecution (alpha) | - | 7 | 6 | 0 | 1 | - |
 | application | `aiplatform.googleapis.com/MetadataStoreMetadataSchema` | - | - | 4 | 0 | 0 | 4 | - |
 | application | `aiplatform.googleapis.com/ModelDeploymentMonitoringJob` | AIPlatformModelDeploymentMonitoringJob (alpha) | - | 33 | 29 | 0 | 4 | - |
 | application | `aiplatform.googleapis.com/NasJob` | - | - | 114 | 0 | 0 | 114 | - |
-| application | `aiplatform.googleapis.com/NotebookExecutionJob` | - | - | 35 | 0 | 0 | 35 | - |
+| application | `aiplatform.googleapis.com/NotebookExecutionJob` | AIPlatformNotebookExecutionJob (alpha) | - | 35 | 29 | 0 | 6 | - |
 | application | `aiplatform.googleapis.com/NotebookRuntimeTemplate` | AIPlatformNotebookRuntimeTemplate (alpha) | - | 34 | 30 | 0 | 4 | - |
 | application | `aiplatform.googleapis.com/OnlineEvaluator` | AIPlatformOnlineEvaluator (alpha) | - | 249 | 96 | 0 | 153 | - |
 | application | `aiplatform.googleapis.com/PersistentResource` | AIPlatformPersistentResource (alpha) | - | 34 | 31 | 0 | 3 | - |
-| application | `aiplatform.googleapis.com/PipelineJob` | VertexAIPipelineJob (alpha) | - | 20 | 15 | 0 | 5 | - |
+| application | `aiplatform.googleapis.com/PipelineJob` | AIPlatformPipelineJob (alpha) | - | 20 | 15 | 0 | 5 | - |
 | application | `aiplatform.googleapis.com/RagCorpora` | - | - | 13 | 0 | 0 | 13 | - |
 | application | `aiplatform.googleapis.com/ReasoningEngine` | AIPlatformReasoningEngine (alpha) | AIPlatformReasoningEngine | 118 | 24 | 0 | 94 | - |
 | application | `aiplatform.googleapis.com/ReasoningEngineMemory` | - | - | 18 | 0 | 0 | 18 | - |
@@ -600,7 +628,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `apigee.googleapis.com/SiteApidoc` | - | - | 14 | 0 | 0 | 14 | - |
 | application | `apigee.googleapis.com/Space` | - | - | 1 | 0 | 0 | 1 | - |
 | application | `appengine.googleapis.com/App` | - | - | 17 | 0 | 0 | 17 | - |
-| application | `appengine.googleapis.com/AppAuthorizedCertificate` | - | - | 7 | 0 | 0 | 7 | - |
+| application | `appengine.googleapis.com/AppAuthorizedCertificate` | AppEngineAuthorizedCertificate (alpha) | - | 7 | 3 | 0 | 4 | - |
 | application | `appengine.googleapis.com/AppDomainMapping` | AppEngineDomainMapping (alpha) | - | 3 | 2 | 0 | 1 | - |
 | application | `appengine.googleapis.com/AppFirewallIngressRule` | - | - | 4 | 0 | 0 | 4 | - |
 | application | `appengine.googleapis.com/AppServiceVersion` | AppEngineFlexibleAppVersion (alpha), AppEngineStandardAppVersion (alpha) | - | 128 | 100 | 0 | 28 | - |
@@ -610,14 +638,14 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `artifactregistry.googleapis.com/RepositoryAttachment` | ArtifactRegistryAttachment (alpha) | - | 6 | 6 | 0 | 0 | - |
 | application | `artifactregistry.googleapis.com/RepositoryPackageTag` | - | ArtifactRegistryTag | 2 | 0 | 2 | 0 | - |
 | application | `artifactregistry.googleapis.com/RepositoryRule` | ArtifactRegistryRule (alpha) | - | 8 | 8 | 0 | 0 | - |
-| application | `backupdr.googleapis.com/AutoProtectionPolicy` | - | - | 5 | 0 | 0 | 5 | - |
+| application | `backupdr.googleapis.com/AutoProtectionPolicy` | BackupDRAutoProtectionPolicy (alpha) | - | 5 | 5 | 0 | 0 | - |
 | application | `backupdr.googleapis.com/AutoProtectionPolicyBinding` | - | - | 2 | 0 | 0 | 2 | - |
 | application | `backupdr.googleapis.com/BackupPlan` | BackupDRBackupPlan | - | 23 | 15 | 0 | 8 | - |
 | application | `backupdr.googleapis.com/BackupPlanAssociation` | BackupDRBackupPlanAssociation | - | 3 | 3 | 0 | 0 | - |
 | application | `backupdr.googleapis.com/BackupVault` | BackupDRBackupVault | - | 8 | 5 | 0 | 3 | - |
 | application | `backupdr.googleapis.com/ManagementServer` | BackupDRManagementServer (alpha) | BackupDRManagementServer | 5 | 5 | 0 | 0 | - |
 | application | `backupdr.googleapis.com/RestoreTemplate` | - | - | 12 | 0 | 0 | 12 | - |
-| application | `backupdr.googleapis.com/RestoreVerificationPlan` | - | - | 8 | 0 | 0 | 8 | - |
+| application | `backupdr.googleapis.com/RestoreVerificationPlan` | BackupDRRestoreVerificationPlan (alpha) | - | 8 | 7 | 0 | 1 | - |
 | application | `backupdr.googleapis.com/RestoreVerificationPlanAssociation` | - | - | 4 | 0 | 0 | 4 | - |
 | application | `biglake.googleapis.com/Catalog` | BigLakeCatalog (alpha) | BigLakeCatalog | 0 | 0 | 0 | 0 | - |
 | application | `biglake.googleapis.com/CatalogDatabase` | BigLakeDatabase (alpha) | BigLakeDatabase | 3 | 3 | 0 | 0 | - |
@@ -625,7 +653,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `bigquery.googleapis.com/Dataset` | BigQueryDatasetAccess (alpha), BigQueryDataset | - | 40 | 26 | 0 | 14 | 5 |
 | application | `bigquery.googleapis.com/Job` | BigQueryJob | - | 254 | 58 | 0 | 196 | - |
 | application | `bigquery.googleapis.com/Routine` | BigQueryRoutine | - | 60 | 9 | 0 | 51 | - |
-| application | `bigquery.googleapis.com/RowAccessPolicy` | - | - | 6 | 0 | 0 | 6 | - |
+| application | `bigquery.googleapis.com/RowAccessPolicy` | BigQueryRowAccessPolicy (alpha) | - | 6 | 2 | 0 | 4 | - |
 | application | `bigquery.googleapis.com/Table` | BigQueryTable | - | 192 | 54 | 0 | 138 | - |
 | application | `bigqueryconnection.googleapis.com/Connection` | BigQueryConnectionConnection | - | 46 | 16 | 0 | 30 | - |
 | application | `bigqueryreservation.googleapis.com/CapacityCommitment` | BigQueryReservationCapacityCommitment (alpha) | - | 5 | 4 | 0 | 1 | - |
@@ -664,7 +692,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `clouddeploy.googleapis.com/CustomTargetType` | CloudDeployCustomTargetType (alpha) | - | 23 | 13 | 0 | 10 | - |
 | application | `clouddeploy.googleapis.com/DeliveryPipeline` | CloudDeployDeliveryPipeline | - | 104 | 37 | 0 | 67 | - |
 | application | `clouddeploy.googleapis.com/DeliveryPipelineAutomation` | CloudDeployAutomation (alpha) | CloudDeployAutomation | 27 | 25 | 2 | 0 | - |
-| application | `clouddeploy.googleapis.com/DeliveryPipelineRelease` | - | - | 16 | 0 | 0 | 16 | - |
+| application | `clouddeploy.googleapis.com/DeliveryPipelineRelease` | CloudDeployRelease (alpha) | - | 16 | 9 | 0 | 7 | - |
 | application | `clouddeploy.googleapis.com/DeliveryPipelineReleaseRollout` | - | - | 5 | 0 | 0 | 5 | - |
 | application | `clouddeploy.googleapis.com/DeployPolicy` | CloudDeployDeployPolicy (alpha) | CloudDeployDeployPolicy | 35 | 32 | 3 | 0 | - |
 | application | `clouddeploy.googleapis.com/Target` | CloudDeployTarget (alpha) | CloudDeployTarget | 30 | 29 | 1 | 0 | - |
@@ -684,7 +712,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `compute.googleapis.com/FutureReservation` | ComputeFutureReservation (alpha) | - | 47 | 36 | 0 | 11 | - |
 | application | `compute.googleapis.com/GlobalForwardingRule` | ComputeForwardingRule | - | 31 | 27 | 0 | 4 | - |
 | application | `compute.googleapis.com/GlobalNetworkEndpointGroup` | ComputeGlobalNetworkEndpointGroup (alpha), ComputeNetworkEndpointGroup | ComputeGlobalNetworkEndpointGroup | 17 | 6 | 11 | 0 | - |
-| application | `compute.googleapis.com/GlobalVmExtensionPolicy` | - | ComputeGlobalVmExtensionPolicy | 10 | 0 | 8 | 2 | - |
+| application | `compute.googleapis.com/GlobalVmExtensionPolicy` | ComputeGlobalVMExtensionPolicy (alpha), ComputeVMExtensionPolicy (alpha) | ComputeGlobalVmExtensionPolicy | 10 | 10 | 0 | 0 | - |
 | application | `compute.googleapis.com/HealthCheck` | ComputeHealthCheck | - | 49 | 45 | 0 | 4 | - |
 | application | `compute.googleapis.com/HttpHealthCheck` | ComputeHTTPHealthCheck | - | 9 | 9 | 0 | 0 | - |
 | application | `compute.googleapis.com/HttpsHealthCheck` | ComputeHTTPSHealthCheck | - | 9 | 9 | 0 | 0 | - |
@@ -694,8 +722,8 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `compute.googleapis.com/InstanceGroupManager` | ComputeInstanceGroupManager | - | 85 | 26 | 0 | 59 | - |
 | application | `compute.googleapis.com/InstanceGroupManagerResizeRequest` | - | - | 17 | 0 | 0 | 17 | - |
 | application | `compute.googleapis.com/InstanceTemplate` | ComputeInstanceTemplate | - | 150 | 65 | 0 | 85 | - |
-| application | `compute.googleapis.com/InstantSnapshot` | - | - | 5 | 0 | 0 | 5 | - |
-| application | `compute.googleapis.com/InstantSnapshotGroup` | - | - | 3 | 0 | 0 | 3 | - |
+| application | `compute.googleapis.com/InstantSnapshot` | ComputeInstantSnapshot (alpha) | - | 5 | 3 | 0 | 2 | - |
+| application | `compute.googleapis.com/InstantSnapshotGroup` | ComputeInstantSnapshotGroup (alpha) | - | 3 | 3 | 0 | 0 | - |
 | application | `compute.googleapis.com/License` | - | - | 16 | 0 | 0 | 16 | - |
 | application | `compute.googleapis.com/MachineImage` | ComputeMachineImage (alpha) | - | 20 | 8 | 0 | 12 | - |
 | application | `compute.googleapis.com/NetworkEndpointGroup` | ComputeNetworkEndpointGroup | - | 17 | 6 | 0 | 11 | - |
@@ -707,17 +735,17 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `compute.googleapis.com/RegionCommitment` | - | - | 49 | 0 | 0 | 49 | - |
 | application | `compute.googleapis.com/RegionCompositeHealthCheck` | - | ComputeRegionCompositeHealthCheck | 4 | 0 | 4 | 0 | - |
 | application | `compute.googleapis.com/RegionDisk` | ComputeDisk | - | 48 | 27 | 0 | 21 | - |
-| application | `compute.googleapis.com/RegionHealthAggregationPolicy` | - | ComputeRegionHealthAggregationPolicy | 5 | 0 | 5 | 0 | - |
+| application | `compute.googleapis.com/RegionHealthAggregationPolicy` | ComputeHealthAggregationPolicy (alpha) | ComputeRegionHealthAggregationPolicy | 5 | 5 | 0 | 0 | - |
 | application | `compute.googleapis.com/RegionHealthCheck` | ComputeHealthCheck | - | 49 | 45 | 0 | 4 | - |
-| application | `compute.googleapis.com/RegionHealthCheckService` | - | ComputeRegionHealthCheckService | 6 | 0 | 6 | 0 | - |
-| application | `compute.googleapis.com/RegionHealthSource` | - | ComputeRegionHealthSource | 5 | 0 | 5 | 0 | - |
+| application | `compute.googleapis.com/RegionHealthCheckService` | ComputeHealthCheckService (alpha) | ComputeRegionHealthCheckService | 6 | 6 | 0 | 0 | - |
+| application | `compute.googleapis.com/RegionHealthSource` | ComputeHealthSource (alpha) | ComputeRegionHealthSource | 5 | 5 | 0 | 0 | - |
 | application | `compute.googleapis.com/RegionInstanceGroupManager` | ComputeInstanceGroupManager | - | 85 | 26 | 0 | 59 | - |
 | application | `compute.googleapis.com/RegionInstanceGroupManagerResizeRequest` | - | - | 17 | 0 | 0 | 17 | - |
 | application | `compute.googleapis.com/RegionInstanceTemplate` | ComputeInstanceTemplate | ComputeRegionInstanceTemplate | 150 | 65 | 85 | 0 | - |
-| application | `compute.googleapis.com/RegionInstantSnapshot` | - | - | 5 | 0 | 0 | 5 | - |
-| application | `compute.googleapis.com/RegionInstantSnapshotGroup` | - | - | 3 | 0 | 0 | 3 | - |
+| application | `compute.googleapis.com/RegionInstantSnapshot` | ComputeInstantSnapshot (alpha) | - | 5 | 3 | 0 | 2 | - |
+| application | `compute.googleapis.com/RegionInstantSnapshotGroup` | ComputeInstantSnapshotGroup (alpha) | - | 3 | 3 | 0 | 0 | - |
 | application | `compute.googleapis.com/RegionNetworkEndpointGroup` | ComputeNetworkEndpointGroup, ComputeRegionNetworkEndpointGroup | - | 17 | 12 | 0 | 5 | - |
-| application | `compute.googleapis.com/RegionNotificationEndpoint` | - | ComputeRegionNotificationEndpoint | 8 | 0 | 8 | 0 | - |
+| application | `compute.googleapis.com/RegionNotificationEndpoint` | ComputeNotificationEndpoint (alpha) | ComputeRegionNotificationEndpoint | 8 | 8 | 0 | 0 | - |
 | application | `compute.googleapis.com/RegionSnapshot` | ComputeSnapshot | - | 27 | 12 | 0 | 15 | - |
 | application | `compute.googleapis.com/RegionSslCertificate` | ComputeSSLCertificate | - | 8 | 4 | 0 | 4 | - |
 | application | `compute.googleapis.com/RegionTargetHttpProxy` | ComputeTargetHTTPProxy | - | 5 | 5 | 0 | 0 | - |
@@ -726,10 +754,10 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `compute.googleapis.com/RegionUrlMap` | ComputeURLMap | - | 355 | 225 | 0 | 130 | - |
 | application | `compute.googleapis.com/Reservation` | ComputeReservation | - | 32 | 13 | 0 | 19 | - |
 | application | `compute.googleapis.com/ResourcePolicy` | ComputeResourcePolicy | - | 29 | 23 | 0 | 6 | - |
-| application | `compute.googleapis.com/RolloutPlan` | - | ComputeRolloutPlan | 15 | 0 | 15 | 0 | - |
+| application | `compute.googleapis.com/RolloutPlan` | ComputeRolloutPlan (alpha) | ComputeRolloutPlan | 15 | 15 | 0 | 0 | - |
 | application | `compute.googleapis.com/Snapshot` | ComputeSnapshot | - | 27 | 12 | 0 | 15 | - |
 | application | `compute.googleapis.com/SslCertificate` | ComputeManagedSSLCertificate, ComputeSSLCertificate | - | 8 | 6 | 0 | 2 | - |
-| application | `compute.googleapis.com/StoragePool` | - | - | 14 | 0 | 0 | 14 | - |
+| application | `compute.googleapis.com/StoragePool` | ComputeStoragePool (alpha) | - | 14 | 8 | 0 | 6 | - |
 | application | `compute.googleapis.com/TargetGrpcProxy` | ComputeTargetGRPCProxy | - | 4 | 4 | 0 | 0 | - |
 | application | `compute.googleapis.com/TargetHttpProxy` | ComputeTargetHTTPProxy | - | 5 | 5 | 0 | 0 | - |
 | application | `compute.googleapis.com/TargetHttpsProxy` | ComputeTargetHTTPSProxy | - | 12 | 10 | 0 | 2 | - |
@@ -738,7 +766,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `compute.googleapis.com/TargetSslProxy` | ComputeTargetSSLProxy | - | 7 | 6 | 0 | 1 | - |
 | application | `compute.googleapis.com/TargetTcpProxy` | ComputeTargetTCPProxy | - | 6 | 4 | 0 | 2 | - |
 | application | `compute.googleapis.com/UrlMap` | ComputeURLMap | - | 355 | 225 | 0 | 130 | - |
-| application | `compute.googleapis.com/ZoneVmExtensionPolicy` | - | ComputeZoneVmExtensionPolicy | 6 | 0 | 4 | 2 | - |
+| application | `compute.googleapis.com/ZoneVmExtensionPolicy` | ComputeVMExtensionPolicy (alpha) | ComputeZoneVmExtensionPolicy | 6 | 6 | 0 | 0 | - |
 | application | `datacatalog.googleapis.com/Taxonomy` | DataCatalogTaxonomy | - | 4 | 4 | 0 | 0 | - |
 | application | `datacatalog.googleapis.com/TaxonomyPolicyTag` | DataCatalogPolicyTag | - | 4 | 4 | 0 | 0 | - |
 | application | `dataflow.googleapis.com/ConfigStoreSetting` | - | - | 3 | 0 | 0 | 3 | - |
@@ -770,14 +798,14 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `dataplex.googleapis.com/EntryGroupEntryLink` | DataplexEntryLink (alpha) | - | 8 | 8 | 0 | 0 | - |
 | application | `dataplex.googleapis.com/EntryType` | DataplexEntryType (alpha) | - | 8 | 7 | 0 | 1 | - |
 | application | `dataplex.googleapis.com/Glossary` | DataplexGlossary (alpha) | - | 3 | 3 | 0 | 0 | - |
-| application | `dataplex.googleapis.com/GlossaryCategory` | DataplexGlossaryCategory (alpha) | - | 4 | 4 | 0 | 0 | - |
+| application | `dataplex.googleapis.com/GlossaryCategory` | DataplexGlossaryCategory (alpha) | - | 4 | 3 | 0 | 1 | - |
 | application | `dataplex.googleapis.com/GlossaryTerm` | DataplexGlossaryTerm (alpha) | - | 4 | 3 | 0 | 1 | - |
 | application | `dataplex.googleapis.com/Lake` | DataplexLake (alpha) | DataplexLake | 4 | 3 | 1 | 0 | - |
 | application | `dataplex.googleapis.com/LakeTask` | DataplexTask (alpha) | - | 41 | 40 | 0 | 1 | - |
 | application | `dataplex.googleapis.com/LakeZone` | DataplexZone (alpha) | DataplexZone | 15 | 14 | 1 | 0 | - |
-| application | `dataplex.googleapis.com/LakeZoneAsset` | DataplexAsset (alpha) | DataplexAsset | 16 | 16 | 0 | 0 | - |
+| application | `dataplex.googleapis.com/LakeZoneAsset` | DataplexAsset (alpha) | DataplexAsset | 16 | 14 | 2 | 0 | - |
 | application | `dataplex.googleapis.com/LakeZoneEntity` | DataplexEntity (alpha) | - | 25 | 25 | 0 | 0 | - |
-| application | `dataplex.googleapis.com/LakeZoneEntityPartition` | - | - | 2 | 0 | 0 | 2 | - |
+| application | `dataplex.googleapis.com/LakeZoneEntityPartition` | DataplexPartition (alpha) | - | 2 | 2 | 0 | 0 | - |
 | application | `dataplex.googleapis.com/MetadataFeed` | DataplexMetadataFeed (alpha) | - | 9 | 9 | 0 | 0 | - |
 | application | `dataplex.googleapis.com/MetadataJob` | DataplexMetadataJob (alpha) | - | 19 | 16 | 0 | 3 | - |
 | application | `dataproc.googleapis.com/AutoscalingPolicy` | DataprocAutoscalingPolicy | - | 21 | 12 | 0 | 9 | - |
@@ -814,13 +842,13 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `dialogflow.googleapis.com/AgentToolVersion` | - | - | 29 | 0 | 0 | 29 | - |
 | application | `dialogflow.googleapis.com/AgentTransitionRouteGroup` | DialogflowTransitionRouteGroup (alpha) | - | 60 | 60 | 0 | 0 | - |
 | application | `dialogflow.googleapis.com/AgentWebhook` | DialogflowCXWebhook (alpha), DialogflowWebhook (alpha) | - | 41 | 33 | 0 | 8 | - |
-| application | `dialogflow.googleapis.com/CompanionAgent` | - | - | 29 | 0 | 0 | 29 | - |
+| application | `dialogflow.googleapis.com/CompanionAgent` | DialogflowCompanionAgent (alpha) | - | 29 | 19 | 0 | 10 | - |
 | application | `dialogflow.googleapis.com/Conversation` | - | - | 2 | 0 | 0 | 2 | - |
 | application | `dialogflow.googleapis.com/ConversationDataset` | DialogflowConversationDataset (alpha) | - | 2 | 2 | 0 | 0 | - |
 | application | `dialogflow.googleapis.com/ConversationModel` | DialogflowConversationModel (alpha) | - | 6 | 6 | 0 | 0 | - |
 | application | `dialogflow.googleapis.com/ConversationModelEvaluation` | - | - | 7 | 0 | 0 | 7 | - |
 | application | `dialogflow.googleapis.com/ConversationParticipant` | - | - | 6 | 0 | 0 | 6 | - |
-| application | `dialogflow.googleapis.com/ConversationProfile` | - | - | 124 | 0 | 0 | 124 | - |
+| application | `dialogflow.googleapis.com/ConversationProfile` | DialogflowConversationProfile (alpha) | - | 124 | 87 | 0 | 37 | - |
 | application | `dialogflow.googleapis.com/GeneratorEvaluation` | - | - | 98 | 0 | 0 | 98 | - |
 | application | `dialogflow.googleapis.com/KnowledgeBase` | DialogflowKnowledgeBase (alpha) | - | 3 | 3 | 0 | 0 | - |
 | application | `dialogflow.googleapis.com/KnowledgeBaseDocument` | - | - | 8 | 0 | 0 | 8 | - |
@@ -862,7 +890,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `discoveryengine.googleapis.com/IdentityMappingStore` | DiscoveryEngineIdentityMappingStore (alpha) | - | 2 | 2 | 0 | 0 | - |
 | application | `discoveryengine.googleapis.com/LicenseConfig` | DiscoveryEngineLicenseConfig (alpha) | - | 13 | 12 | 0 | 1 | - |
 | application | `dlp.googleapis.com/Connection` | - | - | 7 | 0 | 0 | 7 | - |
-| application | `dlp.googleapis.com/ContentPolicy` | - | - | 96 | 0 | 0 | 96 | - |
+| application | `dlp.googleapis.com/ContentPolicy` | DLPContentPolicy (alpha) | - | 96 | 69 | 0 | 27 | - |
 | application | `dlp.googleapis.com/DeidentifyTemplate` | DLPDeidentifyTemplate | - | 407 | 346 | 0 | 61 | - |
 | application | `dlp.googleapis.com/DiscoveryConfig` | - | - | 102 | 0 | 0 | 102 | - |
 | application | `dlp.googleapis.com/DlpJob` | - | - | 187 | 0 | 0 | 187 | - |

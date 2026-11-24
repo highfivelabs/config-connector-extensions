@@ -3804,6 +3804,15 @@ To raise confidence in `ArtifactRegistryRepository`:
       the queue text in `hack/coverage/foundation.yaml` that says "wait"
       is superseded by this decision until it is regenerated.
 
+40. **Coverage counts what upstream has released** (the builder,
+    2026-11-24, verbatim: "I think coverage should only include for
+    upstream what they've released, and we can compare that to what
+    we've released."). `docs/coverage` measures official at the nearest
+    release in `UPSTREAM.md` (now v1.162.0), not at the pin: kinds and
+    fields on `master` that no release carries are ours where our build
+    ships them (decision 39), and uncovered otherwise. Ours is this
+    repository's CRDs, which is what our next build releases.
+
 ## 9. The operator: Config Connector's identity, per namespace
 
 The goal: install the CRDs and run the managers so that a gap kind acts
@@ -4191,3 +4200,18 @@ moves to section 8.
     returned only at create is written once, and if its Secret is lost it
     must be deleted and made again. Decision 38; both kinds are built (the
     token as `IAMWorkforcePoolProviderScimToken`, decision 18).
+12. **`restrictedClientApplications` left the Access Context Manager API's
+    Discovery document** (found 2026-11-24, moving the pin; not yet
+    answered). Discovery (revision 20261115) and
+    `google.golang.org/api` v0.310.0, which the new pin requires, have no
+    `GcpUserAccessBinding.restrictedClientApplications`; a restricted
+    application is now only a scoped access setting's
+    `scope.clientScope.restrictedClientApplication`. Our controller turns
+    the spec into the client's struct, so since this pin it **drops the
+    field without saying so**. Recommendation: deprecate
+    `spec.restrictedClientApplications` in
+    `AccessContextManagerGCPUserAccessBinding`, and until it is removed
+    refuse it in the CRD (a CEL rule pointing to `scopedAccessSettings`)
+    rather than drop it; a live run would show whether the real API still
+    takes it. The builder, 2026-11-24: "Yes, this sounds correct to me,
+    but maybe it's worth a discussion." Left open for that discussion.
