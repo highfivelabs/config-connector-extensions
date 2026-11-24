@@ -25,6 +25,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
+	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
 	"github.com/highfivelabs/config-connector-extensions/pkg/iampolicy"
 )
 
@@ -93,6 +94,31 @@ func TestManagerRoleReadsEveryIAMResourceKind(t *testing.T) {
 			}
 			if !readable {
 				t.Errorf("ClusterRole config-connector-extensions-manager cannot get %s (IAM resourceRef kind %s)", gvk.Group, kind)
+			}
+		}
+	}
+}
+
+// A kind that writes the API's secrets to a Secret (discokind
+// SecretOutputs, docs/design.md decision 38) can: the manager's role
+// creates and updates Secrets. envtest has no RBAC, so only this sees it.
+func TestManagerRoleWritesSecretOutputs(t *testing.T) {
+	role := managerRole(t)
+	can := func(verb string) bool {
+		for _, rule := range role.Rules {
+			if slices.Contains(rule.APIGroups, "") && slices.Contains(rule.Resources, "secrets") && slices.Contains(rule.Verbs, verb) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, k := range discokind.Kinds() {
+		if len(k.SecretOutputs) == 0 {
+			continue
+		}
+		for _, verb := range []string{"get", "create", "update"} {
+			if !can(verb) {
+				t.Errorf("ClusterRole config-connector-extensions-manager cannot %s Secrets, which %s writes its %v to", verb, k.GVK.Kind, k.SecretOutputs)
 			}
 		}
 	}

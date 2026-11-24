@@ -22,6 +22,47 @@ import (
 //go:embed foundation.yaml
 var foundationYAML []byte
 
+// application.md is the same report for the application category, from
+// application.yaml.
+
+//go:embed application.yaml
+var applicationYAML []byte
+
+// queueSpec is what differs between the two reports: their queue file, the
+// categories they cover (indices into categories) and their words.
+type queueSpec struct {
+	yaml       []byte
+	file       string // the queue file, in hack/coverage
+	cats       []int
+	title      string
+	intro      string
+	where      string
+	miss       string
+	importance string
+	scope      string // "the two categories"
+	every      string
+	readOn     string // when upstream was read for the queue
+}
+
+var foundationSpec = queueSpec{
+	yaml:  foundationYAML,
+	file:  "foundation.yaml",
+	cats:  []int{0, 1},
+	title: "Foundation gap report",
+	intro: "The work queue for the kind agents: what is missing from the platform foundation and the security-adjacent services, ranked. " +
+		"Everything up through a managed Kubernetes cluster is table stakes for a platform team establishing a target; security teams need what sits next to it; application primitives (Pub/Sub, Storage, Run, SQL, BigQuery) come after. " +
+		"The Cloud Foundation Fabric modules guide where effort goes (`krm-packages/docs/gcp-inventory.md`, v60.0.0).\n\n",
+	where: "Where the foundation stands",
+	miss: "\nWhat these numbers miss, for the foundation:\n\n" +
+		"- **Kinds for operations that are not creates** (IAM policies and members, Shared VPC attachment, a project's metadata, Cloud NAT, routes of a router) are in no row's resource, but the kinds exist and their fields are counted against the parent they fill (`overrides.yaml`, `subresources`). Whole-resource gaps of that kind are in the queue below with `measured: n/a` where there is nothing to count against.\n" +
+		"- **Alpha-only kinds count as official.** Several foundation kinds exist only as `v1alpha1`, which the charts refuse; they are listed under \"Official but alpha-only\".\n" +
+		"- **Matching is by name.** Terraform-derived kinds that rename fields (Compute Engine, Kubernetes Engine) are undercounted by about 15% of their fields.\n\n",
+	importance: "1. **Importance.** A: platform foundation (organization, folders, projects, organization policy, IAM at every level, tags, contacts, Shared VPC, VPC networking, DNS, KMS, log sinks and buckets, a managed GKE cluster and Fleet). B: security-adjacent (Security Command Center, VPC Service Controls, Cloud Asset, audit, Binary Authorization, Secret Manager, CA, Armor). C: the rest.\n",
+	scope:      "the two categories",
+	every:      "All resources in the platform-foundation and security-adjacent categories",
+	readOn:     "2026-11-09",
+}
+
 type fItem struct {
 	Title       string   `yaml:"title"`
 	Importance  string   `yaml:"importance"` // A platform foundation, B security-adjacent and platform edge, C the rest
@@ -122,9 +163,43 @@ func codeList(ps []string, max int) string {
 
 func fpct(n, d int) string { return pct(n, d) + "%" }
 
+var applicationSpec = queueSpec{
+	yaml:  applicationYAML,
+	file:  "application.yaml",
+	cats:  []int{2},
+	title: "Application gap report",
+	intro: "The work queue for the kind agents after the foundation ([foundation.md](foundation.md)): what is missing from the application services (Pub/Sub, Storage, Run, SQL, BigQuery, Artifact Registry, Monitoring and the other services a tracked module creates), ranked. " +
+		"The services the Cloud Foundation Fabric foundational modules use come first, then those other tracked modules use, then the rest (`krm-packages/docs/gcp-inventory.md`, v60.0.0, by way of `priority.csv`).\n\n",
+	where: "Where the application services stand",
+	miss: "\nWhat these numbers miss, for the application services:\n\n" +
+		"- **Runs and records count as resources.** The Discovery documents list builds, jobs, reports, time series and tasks as creatable; no platform declares them, and the queue leaves them out (`application.yaml` says which).\n" +
+		"- **Alpha-only kinds count as official.** They are listed under \"Official but alpha-only\".\n" +
+		"- **Matching is by name.** Terraform-derived kinds that rename fields (Cloud Run's `template.template`, Storage's access controls) are undercounted; a row says when its measured list is mostly naming.\n\n",
+	importance: "1. **Importance.** A: a resource the Cloud Foundation Fabric foundational modules create (gcs, pubsub, cloud-run-v2, cloudsql-instance, bigquery-dataset, artifact-registry, and the project module's monitoring). B: one other tracked modules create. C: the rest.\n",
+	scope:  "the application category",
+	every:  "All resources in the application category",
+	readOn: "2026-11-23",
+}
+
 func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[string]map[string]counts) (string, error) {
+	return queueReport(m, prio, catSums, svcCat, foundationSpec)
+}
+
+func applicationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[string]map[string]counts) (string, error) {
+	return queueReport(m, prio, catSums, svcCat, applicationSpec)
+}
+
+func queueReport(m *model, prio *Priority, catSums [4]counts, svcCat map[string]map[string]counts, q queueSpec) (string, error) {
+	inScope := func(c string) bool {
+		for _, i := range q.cats {
+			if categories[i] == c {
+				return true
+			}
+		}
+		return false
+	}
 	var f fFile
-	if err := yaml.Unmarshal(foundationYAML, &f); err != nil {
+	if err := yaml.Unmarshal(q.yaml, &f); err != nil {
 		return "", err
 	}
 	// The ranking is the file order; check it follows the stated rule.
@@ -137,28 +212,26 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 				break
 			}
 			if ka[j] > kb[j] {
-				return "", fmt.Errorf("foundation.yaml: item %d (%q) ranks before item %d (%q): order is importance, then gap (whole, stability, field), then modules (most first), then size", i+1, b.Title, i, a.Title)
+				return "", fmt.Errorf("%s: item %d (%q) ranks before item %d (%q): order is importance, then gap (whole, stability, field), then modules (most first), then size", q.file, i+1, b.Title, i, a.Title)
 			}
 		}
 	}
 	var b strings.Builder
 	w := func(format string, args ...any) { fmt.Fprintf(&b, format, args...) }
 
-	w("# Foundation gap report\n\n")
-	w("The work queue for the kind agents: what is missing from the platform foundation and the security-adjacent services, ranked. ")
-	w("Everything up through a managed Kubernetes cluster is table stakes for a platform team establishing a target; security teams need what sits next to it; application primitives (Pub/Sub, Storage, Run, SQL, BigQuery) come after. ")
-	w("The Cloud Foundation Fabric modules guide where effort goes (`krm-packages/docs/gcp-inventory.md`, v60.0.0).\n\n")
-	w("Generated by `hack/coverage` from `hack/coverage/foundation.yaml` (the ranking and the judgement, by hand) and the coverage data (the numbers); do not edit. Read [README.md](README.md) first for what the numbers mean and how far to trust them.\n\n")
+	w("# %s\n\n", q.title)
+	b.WriteString(q.intro)
+	w("Generated by `hack/coverage` from `hack/coverage/%s` (the ranking and the judgement, by hand) and the coverage data (the numbers); do not edit. Read [README.md](README.md) first for what the numbers mean and how far to trust them.\n\n", q.file)
 
-	w("## Where the foundation stands\n\n")
+	w("## %s\n\n", q.where)
 	w("By category, counted in attributes of the create requests of the resources in it ([README](README.md#tiers-and-categories)):\n\n")
 	w("| Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
-	for i := 0; i < 2; i++ {
+	for _, i := range q.cats {
 		c := catSums[i]
 		w("| %s | %d | %d | %d | %s | %s | %s |\n", categoryNames[i], c.resources, c.resOff, c.attrs, fpct(c.off, c.attrs), fpct(c.beyond, c.attrs), fpct(c.uncovered, c.attrs))
 	}
 	w("\nBy service:\n\n| Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |\n| --- | --- | ---: | ---: | ---: | ---: | ---: |\n")
-	for i := 0; i < 2; i++ {
+	for _, i := range q.cats {
 		var hosts []string
 		for h := range svcCat[categories[i]] {
 			hosts = append(hosts, h)
@@ -175,13 +248,10 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 			w("| %s | `%s` | %d | %d | %s | %s | %s |\n", catShort(categories[i]), h, c.resources, c.attrs, fpct(c.off, c.attrs), fpct(c.beyond, c.attrs), fpct(c.uncovered, c.attrs))
 		}
 	}
-	w("\nWhat these numbers miss, for the foundation:\n\n")
-	w("- **Kinds for operations that are not creates** (IAM policies and members, Shared VPC attachment, a project's metadata, Cloud NAT, routes of a router) are in no row's resource, but the kinds exist and their fields are counted against the parent they fill (`overrides.yaml`, `subresources`). Whole-resource gaps of that kind are in the queue below with `measured: n/a` where there is nothing to count against.\n")
-	w("- **Alpha-only kinds count as official.** Several foundation kinds exist only as `v1alpha1`, which the charts refuse; they are listed under \"Official but alpha-only\".\n")
-	w("- **Matching is by name.** Terraform-derived kinds that rename fields (Compute Engine, Kubernetes Engine) are undercounted by about 15%% of their fields.\n\n")
+	b.WriteString(q.miss)
 
 	w("## How the queue is ranked\n\n")
-	w("1. **Importance.** A: platform foundation (organization, folders, projects, organization policy, IAM at every level, tags, contacts, Shared VPC, VPC networking, DNS, KMS, log sinks and buckets, a managed GKE cluster and Fleet). B: security-adjacent (Security Command Center, VPC Service Controls, Cloud Asset, audit, Binary Authorization, Secret Manager, CA, Armor). C: the rest.\n")
+	b.WriteString(q.importance)
 	w("2. **Kind of gap.** A whole resource (or a whole level of one) with no kind first, then a kind that exists only as alpha, then fields missing from a kind that exists.\n")
 	w("3. **Module need**: how many Cloud Foundation Fabric modules create the resource (`krm-packages/docs/gcp-inventory.md`), most first.\n")
 	w("4. **Size**: S (a field or a parent on an existing kind, or one small new kind), M (one or a few new kinds, or tens of fields), L (a large kind or many).\n\n")
@@ -252,7 +322,7 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 				w("  - uncovered in `%s` (measured): %s\n", sel, codeList(ms.paths, 10))
 			}
 		}
-		w("- **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): %s\n", strings.TrimSpace(it.Upstream))
+		w("- **Upstream** (Config Connector `master` at the pin and open pull requests, read %s): %s\n", q.readOn, strings.TrimSpace(it.Upstream))
 		w("- **Build:** %s\n", strings.TrimSpace(it.Build))
 		if it.Decided != "" {
 			w("- **Decided (2026-11-09):** %s\n", strings.TrimSpace(it.Decided))
@@ -264,13 +334,13 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 
 	// Already built.
 	w("## Already built here\n\n")
-	w("Our kinds in the two categories, from the coverage data (the gaps above are what is left after them).\n\n")
+	w("Our kinds in %s, from the coverage data (the gaps above are what is left after them).\n\n", q.scope)
 	w("| Kind | Resource | Ours beyond official | From an open PR |\n| --- | --- | ---: | :-: |\n")
 	var built [][]string
 	for _, host := range m.hosts {
 		for _, rr := range m.byHost[host] {
 			c := prio.Category(host, rr.r.ID())
-			if (c != "platform-foundation" && c != "security-adjacent") || len(rr.ours) == 0 {
+			if !inScope(c) || len(rr.ours) == 0 {
 				continue
 			}
 			var ks []string
@@ -280,8 +350,10 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 			built = append(built, []string{strings.Join(uniq(ks), ", "), rr.r.ID(), fmt.Sprint(rr.counts().beyond), b2s(rr.fromPR)})
 		}
 	}
-	for _, u := range m.oursUnmap {
-		built = append(built, []string{u.crd.Kind, "(not a create) " + u.reason, "n/a", "false"})
+	if inScope("platform-foundation") {
+		for _, u := range m.oursUnmap {
+			built = append(built, []string{u.crd.Kind, "(not a create) " + u.reason, "n/a", "false"})
+		}
 	}
 	sort.Slice(built, func(i, j int) bool { return built[i][0] < built[j][0] })
 	for _, r := range built {
@@ -290,14 +362,14 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 
 	// Alpha-only.
 	w("\n## Official but alpha-only\n\n")
-	w("Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts refuse alpha kinds, so for a platform team these are gaps until they reach `v1beta1` upstream or we ship a stable kind (item with gap `stability`).\n\n")
+	w("Kinds Config Connector has only as `v1alpha1`, in %s. The charts refuse alpha kinds, so for a platform team these are gaps until they reach `v1beta1` upstream or we ship a stable kind (item with gap `stability`).\n\n", q.scope)
 	w("| Kind | Resource | Attributes official |\n| --- | --- | ---: |\n")
 	var alpha [][]string
 	seen := map[string]bool{}
 	for _, host := range m.hosts {
 		for _, rr := range m.byHost[host] {
 			c := prio.Category(host, rr.r.ID())
-			if c != "platform-foundation" && c != "security-adjacent" {
+			if !inScope(c) {
 				continue
 			}
 			for _, mm := range rr.off {
@@ -328,12 +400,12 @@ func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[st
 		}
 	}
 	w("\n## Every resource\n\n")
-	w("<details><summary>All resources in the platform-foundation and security-adjacent categories, with the queue item that covers a gap (`-`: nothing to do, or not worth doing yet)</summary>\n\n")
+	w("<details><summary>%s, with the queue item that covers a gap (`-`: nothing to do, or not worth doing yet)</summary>\n\n", q.every)
 	w("| Category | Resource | Official kinds | Ours | Attributes | Official | Ours beyond | Uncovered | Queue |\n| --- | --- | --- | --- | ---: | ---: | ---: | ---: | :-: |\n")
 	for _, host := range m.hosts {
 		for _, rr := range m.byHost[host] {
 			c := prio.Category(host, rr.r.ID())
-			if c != "platform-foundation" && c != "security-adjacent" {
+			if !inScope(c) {
 				continue
 			}
 			var offk, oursk []string

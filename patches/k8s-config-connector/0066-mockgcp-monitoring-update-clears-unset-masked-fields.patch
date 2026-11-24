@@ -1,0 +1,79 @@
+config-connector-extensions patch 0066: an uptime check's update clears a
+masked field the request leaves unset.
+
+UpdateUptimeCheckConfig set each masked path from the request with
+protoreflect's Set; for a path the request leaves unset (a list, a map,
+a message: clearing httpCheck.acceptedResponseStatusCodes, userLabels or
+httpCheck.pingConfig) that value is read-only, and Set panicked (a list)
+or wrote an empty message. Now a masked field the request leaves unset
+is cleared, as the API does. MonitoringUptimeCheckConfigFields (ours;
+application queue item 3) clears its fields this way on delete. Upstream
+candidate: yes.
+
+--- a/mockgcp/mockmonitoring/fieldmaskutils.go
++++ b/mockgcp/mockmonitoring/fieldmaskutils.go
+@@ -28,6 +28,15 @@
+ 		return fmt.Errorf("path is not valid: %q", path)
+ 	}
+ 
++	// config-connector-extensions patch 0066: a masked field the request
++	// leaves unset is cleared, as the API does (setting it from the
++	// request's unset, read-only list or map panicked).
++	if set, err := hasFieldValue(src.ProtoReflect(), tokens); err != nil {
++		return err
++	} else if !set {
++		return clearFieldValue(dest.ProtoReflect(), tokens)
++	}
++
+ 	val, err := getFieldValue(src.ProtoReflect(), tokens)
+ 	if err != nil {
+ 		return err
+@@ -89,3 +98,48 @@
+ 		}
+ 	}
+ }
++
++// hasFieldValue reports whether src sets the field at path
++// (config-connector-extensions patch 0066).
++func hasFieldValue(src protoreflect.Message, path []string) (bool, error) {
++	for i, token := range path {
++		field := src.Descriptor().Fields().ByJSONName(token)
++		if field == nil {
++			return false, fmt.Errorf("field %q not found in path %q", token, strings.Join(path, "."))
++		}
++		if !src.Has(field) {
++			return false, nil
++		}
++		if i == len(path)-1 {
++			return true, nil
++		}
++		if field.Message() == nil || field.IsList() || field.IsMap() {
++			return false, fmt.Errorf("field %q in path %q is not a message", token, strings.Join(path, "."))
++		}
++		src = src.Get(field).Message()
++	}
++	return false, nil
++}
++
++// clearFieldValue clears the field at path in dest
++// (config-connector-extensions patch 0066).
++func clearFieldValue(dest protoreflect.Message, path []string) error {
++	for i, token := range path {
++		field := dest.Descriptor().Fields().ByJSONName(token)
++		if field == nil {
++			return fmt.Errorf("field %q not found in path %q", token, strings.Join(path, "."))
++		}
++		if i == len(path)-1 {
++			dest.Clear(field)
++			return nil
++		}
++		if !dest.Has(field) {
++			return nil
++		}
++		if field.Message() == nil || field.IsList() || field.IsMap() {
++			return fmt.Errorf("field %q in path %q is not a message", token, strings.Join(path, "."))
++		}
++		dest = dest.Mutable(field).Message()
++	}
++	return nil
++}

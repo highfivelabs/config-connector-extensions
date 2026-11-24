@@ -1,0 +1,51 @@
+config-connector-extensions patch 0065: a subscription's update takes its
+message transforms and Bigtable export, and keeps a Cloud Storage
+export's Avro format.
+
+UpdateSubscription refused the update mask paths message_transforms and
+bigtable_config (either spelling), which PubSubSubscriptionFields (ours;
+application queue item 1) sends, and replaced any Cloud Storage export's
+output format with text on every update, so an Avro export (and its
+useTopicSchema) was lost. A Bigtable export reads as ACTIVE, as the other
+exports do. Upstream candidate: yes.
+
+--- a/mockgcp/mockpubsub/subscription.go
++++ b/mockgcp/mockpubsub/subscription.go
+@@ -92,6 +92,12 @@
+ 	if obj.CloudStorageConfig != nil {
+ 		obj.CloudStorageConfig.State = pb.CloudStorageConfig_ACTIVE
+ 	}
++	// config-connector-extensions patch 0065: a Bigtable export's state.
++	if obj.BigtableConfig != nil {
++		// ACTIVE: v1 of the client library has no alias for v2's
++		// BigtableConfig_ACTIVE.
++		obj.BigtableConfig.State = 1
++	}
+ 
+ 	if obj.ExpirationPolicy == nil {
+ 		obj.ExpirationPolicy = &pb.ExpirationPolicy{
+@@ -163,13 +169,23 @@
+ 			updated.RetainAckedMessages = req.GetSubscription().RetainAckedMessages
+ 		case "messageRetentionDuration", "message_retention_duration":
+ 			updated.MessageRetentionDuration = req.GetSubscription().MessageRetentionDuration
++		// config-connector-extensions patch 0065: a subscription's message
++		// transforms and Bigtable export (PubSubSubscriptionFields).
++		case "messageTransforms", "message_transforms":
++			updated.MessageTransforms = req.GetSubscription().GetMessageTransforms()
++		case "bigtableConfig", "bigtable_config":
++			updated.BigtableConfig = req.GetSubscription().GetBigtableConfig()
+ 		default:
+ 			return nil, status.Errorf(codes.InvalidArgument, "update_mask path %q not supported by mock", path)
+ 		}
+ 	}
+ 
+ 	if updated.CloudStorageConfig != nil {
+-		updated.CloudStorageConfig.OutputFormat = &pb.CloudStorageConfig_TextConfig_{}
++		// config-connector-extensions patch 0065: text is the default
++		// format; an Avro format sent is kept (it was replaced by text).
++		if updated.CloudStorageConfig.OutputFormat == nil {
++			updated.CloudStorageConfig.OutputFormat = &pb.CloudStorageConfig_TextConfig_{}
++		}
+ 		if updated.CloudStorageConfig.MaxDuration != nil && int64(updated.AckDeadlineSeconds) < updated.CloudStorageConfig.MaxDuration.Seconds {
+ 			updated.AckDeadlineSeconds = int32(updated.CloudStorageConfig.MaxDuration.Seconds)
+ 		}

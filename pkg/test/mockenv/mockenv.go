@@ -61,6 +61,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/highfivelabs/config-connector-extensions/pkg/controller"
+	acmfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/accesscontextmanager/fake"
 	chroniclefake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/chronicle/fake"
 	smfake "github.com/highfivelabs/config-connector-extensions/pkg/controller/direct/servicemanagement/fake"
 	"github.com/highfivelabs/config-connector-extensions/pkg/discokind"
@@ -277,6 +278,8 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computerouters.compute.cnrm.cloud.google.com.yaml"),
 			// ComputeNetworkFirewallPolicyRule's policy.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computenetworkfirewallpolicies.compute.cnrm.cloud.google.com.yaml"),
+			// ComputeFirewallPolicyPacketMirroringRule's policy.
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computefirewallpolicies.compute.cnrm.cloud.google.com.yaml"),
 			// StorageBucketObject's bucket.
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml"),
 			// A managed folder, which IAMMember names by name.
@@ -306,10 +309,28 @@ func startCluster(t *testing.T) *cluster {
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_logginglogsinks.logging.cnrm.cloud.google.com.yaml"),
 			// The Config Connector objects the field kinds name by
 			// resourceRef (KMSCryptoKeyFields, ContainerClusterFields,
-			// ContainerNodePoolFields).
+			// ContainerNodePoolFields, ComputeServiceAttachmentFields,
+			// LoggingLogBucketFields, ComputeNetworkFields,
+			// ComputeSubnetworkFields, DNSPolicyFields,
+			// PrivateCACAPoolFields, PrivateCACertificateTemplateFields,
+			// ComputeSecurityPolicyFields, PubSubTopicFields,
+			// PubSubSubscriptionFields, MonitoringUptimeCheckConfigFields,
+			// MonitoringAlertPolicyFields).
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_kmscryptokeys.kms.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containerclusters.container.cnrm.cloud.google.com.yaml"),
 			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_containernodepools.container.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computeserviceattachments.compute.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_logginglogbuckets.logging.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computenetworks.compute.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computesubnetworks.compute.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_dnspolicies.dns.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_privatecacapools.privateca.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_privatecacertificatetemplates.privateca.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_computesecuritypolicies.compute.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_pubsubtopics.pubsub.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_pubsubsubscriptions.pubsub.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_monitoringuptimecheckconfigs.monitoring.cnrm.cloud.google.com.yaml"),
+			filepath.Join(kccCRDs, "apiextensions.k8s.io_v1_customresourcedefinition_monitoringalertpolicies.monitoring.cnrm.cloud.google.com.yaml"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}
@@ -349,8 +370,9 @@ func startCluster(t *testing.T) *cluster {
 		// (config/tests/samples/create/harness.go).
 		mockCloud := mockgcp.NewMockRoundTripperForTest(t, kube, storage.NewInMemoryStorage())
 		// The discokind kinds' collections are served by their own fake
-		// (pkg/discokind/fake), and Service Management and the Chronicle API by their own, in front of mockgcp.
-		disco = discofake.New(chroniclefake.New(smfake.New(mockCloud)), discokind.Kinds())
+		// (pkg/discokind/fake), and Service Management, the Chronicle API and
+		// Access Context Manager's user access bindings by their own, in front of mockgcp.
+		disco = discofake.New(chroniclefake.New(smfake.New(acmfake.New(mockCloud))), discokind.Kinds())
 		requests = &recorder{inner: disco}
 	}
 	gcpHTTP := &http.Client{Transport: requests}

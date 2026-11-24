@@ -7,6 +7,7 @@ APIGatewayGateway	https://apigateway.googleapis.com/v1/	projects/{project}/locat
 BackupDRManagementServer	https://backupdr.googleapis.com/v1/	projects/{project}/locations/global/managementServers	managementServers	-
 BigLakeCatalog	https://biglake.googleapis.com/v1/	projects/{project}/locations/us/catalogs	catalogs	-
 CertificateManagerCertificateIssuanceConfig	https://certificatemanager.googleapis.com/v1/	projects/{project}/locations/global/certificateIssuanceConfigs	certificateIssuanceConfigs	-
+CertificateManagerTrustConfig	https://certificatemanager.googleapis.com/v1/	projects/{project}/locations/global/trustConfigs	trustConfigs	-
 CloudBuildConnection	https://cloudbuild.googleapis.com/v2/	projects/{project}/locations/global/connections	connections	-
 CloudDeployDeployPolicy	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/deployPolicies	deployPolicies	-
 CloudDeployTarget	https://clouddeploy.googleapis.com/v1/	projects/{project}/locations/global/targets	targets	-

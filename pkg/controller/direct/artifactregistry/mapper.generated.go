@@ -22,7 +22,10 @@
 //   - the KRM types are this project's (artifactregistry.gcp.hfl.dev);
 //   - new (from the PR): remoteRepositoryConfig.{docker,maven,npm,python}Repository.customRepository;
 //   - written here: the remote repository's upstreamCredentials and
-//     disableUpstreamValidation, mapped in upstreamcredentials_mapping.go.
+//     disableUpstreamValidation, mapped in upstreamcredentials_mapping.go;
+//     vulnerabilityScanningConfig, disallowUnspecifiedMode and the Apt and
+//     Yum upstreams (upstream's "MISSING"), mapped in
+//     repositoryfields_mapping.go.
 
 package artifactregistry
 
@@ -234,8 +237,9 @@ func ArtifactRegistryRepositoryRemoteRepositoryConfig_v1beta1_FromProto(mapCtx *
 	out.MavenRepository = ArtifactRegistryRepositoryMavenRepository_v1beta1_FromProto(mapCtx, in.GetMavenRepository())
 	out.NpmRepository = ArtifactRegistryRepositoryNpmRepository_v1beta1_FromProto(mapCtx, in.GetNpmRepository())
 	out.PythonRepository = ArtifactRegistryRepositoryPythonRepository_v1beta1_FromProto(mapCtx, in.GetPythonRepository())
-	// MISSING: AptRepository
-	// MISSING: YumRepository
+	// Written here (repositoryfields_mapping.go).
+	out.AptRepository = ArtifactRegistryRepositoryAptRepository_v1beta1_FromProto(mapCtx, in.GetAptRepository())
+	out.YumRepository = ArtifactRegistryRepositoryYumRepository_v1beta1_FromProto(mapCtx, in.GetYumRepository())
 	out.CommonRepository = ArtifactRegistryRepositoryCommonRepository_v1beta1_FromProto(mapCtx, in.GetCommonRepository())
 	out.Description = direct.LazyPtr(in.GetDescription())
 	// Written here (upstreamcredentials_mapping.go).
@@ -260,8 +264,13 @@ func ArtifactRegistryRepositoryRemoteRepositoryConfig_v1beta1_ToProto(mapCtx *di
 	if oneof := ArtifactRegistryRepositoryPythonRepository_v1beta1_ToProto(mapCtx, in.PythonRepository); oneof != nil {
 		out.RemoteSource = &pb.RemoteRepositoryConfig_PythonRepository_{PythonRepository: oneof}
 	}
-	// MISSING: AptRepository
-	// MISSING: YumRepository
+	// Written here (repositoryfields_mapping.go).
+	if oneof := ArtifactRegistryRepositoryAptRepository_v1beta1_ToProto(mapCtx, in.AptRepository); oneof != nil {
+		out.RemoteSource = &pb.RemoteRepositoryConfig_AptRepository_{AptRepository: oneof}
+	}
+	if oneof := ArtifactRegistryRepositoryYumRepository_v1beta1_ToProto(mapCtx, in.YumRepository); oneof != nil {
+		out.RemoteSource = &pb.RemoteRepositoryConfig_YumRepository_{YumRepository: oneof}
+	}
 	if oneof := ArtifactRegistryRepositoryCommonRepository_v1beta1_ToProto(mapCtx, in.CommonRepository); oneof != nil {
 		out.RemoteSource = &pb.RemoteRepositoryConfig_CommonRepository{CommonRepository: oneof}
 	}
@@ -294,8 +303,9 @@ func ArtifactRegistryRepositorySpec_v1beta1_FromProto(mapCtx *direct.MapContext,
 	// MISSING: SizeBytes
 	// MISSING: SatisfiesPzs
 	out.CleanupPolicyDryRun = direct.LazyPtr(in.GetCleanupPolicyDryRun())
-	// MISSING: VulnerabilityScanningConfig
-	// MISSING: DisallowUnspecifiedMode
+	// Written here (repositoryfields_mapping.go).
+	out.VulnerabilityScanningConfig = Repository_VulnerabilityScanningConfig_v1beta1_FromProto(mapCtx, in.GetVulnerabilityScanningConfig())
+	out.DisallowUnspecifiedMode = direct.LazyPtr(in.GetDisallowUnspecifiedMode())
 	// MISSING: SatisfiesPzi
 	// MISSING: RegistryURI
 	return out
@@ -331,8 +341,9 @@ func ArtifactRegistryRepositorySpec_v1beta1_ToProto(mapCtx *direct.MapContext, i
 	// MISSING: SizeBytes
 	// MISSING: SatisfiesPzs
 	out.CleanupPolicyDryRun = direct.ValueOf(in.CleanupPolicyDryRun)
-	// MISSING: VulnerabilityScanningConfig
-	// MISSING: DisallowUnspecifiedMode
+	// Written here (repositoryfields_mapping.go).
+	out.VulnerabilityScanningConfig = Repository_VulnerabilityScanningConfig_v1beta1_ToProto(mapCtx, in.VulnerabilityScanningConfig)
+	out.DisallowUnspecifiedMode = direct.ValueOf(in.DisallowUnspecifiedMode)
 	// MISSING: SatisfiesPzi
 	// MISSING: RegistryURI
 	return out

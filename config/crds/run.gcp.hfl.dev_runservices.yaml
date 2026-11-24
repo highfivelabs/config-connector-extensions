@@ -74,12 +74,21 @@ spec:
                       using this justification. If use_default is False, then it must
                       be empty. For more information on breakglass, see https://cloud.google.com/binary-authorization/docs/using-breakglass
                     type: string
+                  policy:
+                    description: 'Optional. The path to a binary authorization policy.
+                      Format: `projects/{project}/platforms/cloudRun/{policy-name}`
+                      Written here (upstream comments it out: no KRM kind for the
+                      policy).'
+                    type: string
                   useDefault:
                     description: Optional. If True, indicates to use the default project's
                       binary authorization policy. If False, binary authorization
                       will be disabled.
                     type: boolean
                 type: object
+                x-kubernetes-validations:
+                - message: binaryAuthorization takes one of useDefault and policy
+                  rule: '!(has(self.useDefault) && has(self.policy))'
               client:
                 description: Arbitrary identifier for the API client.
                 type: string

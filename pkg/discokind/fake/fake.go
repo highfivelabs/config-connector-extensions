@@ -20,7 +20,11 @@
 // descriptors as the controller, so a new kind needs no mockgcp patch.
 // A kind's input-only fields (Kind.InputOnly and Kind.Secrets, such as a
 // Looker instance's OAuth client secret) are kept but never answered, as
-// the API does; Stored shows them to a test.
+// the API does; Stored shows them to a test. A secret the API makes
+// (Kind.SecretOutputs) is a random string; one the API returns only at
+// create (Kind.CreateOnlyOutputs) is in the create's answer and no read's.
+// A kind with Kind.DisableBeforeDelete refuses a delete, FAILED_PRECONDITION,
+// until that field is true, as its API's description asks.
 //
 // BigLake (every kind under biglake.googleapis.com) and any kind with
 // Kind.MissingIs403 answer 403 PERMISSION_DENIED, not 404, for a name the
@@ -38,6 +42,9 @@
 // resource still there until it ends, and a resource another one names
 // (a config its gateway serves) or that holds others refused in the
 // operation, FAILED_PRECONDITION, as the real API does.
+//
+// A kind with Kind.Mockgcp is not served here: its requests go to
+// mockgcp, which already serves the collection for other tests.
 //
 // What it cannot show (docs/testing.md): the API's validation (required
 // fields, enum values, cross-field rules), defaults the API fills in
@@ -256,6 +263,10 @@ func (c *Cloud) RoundTrip(req *http.Request) (*http.Response, error) {
 		return c.Next.RoundTrip(req)
 	}
 	for _, k := range c.Kinds {
+		if k.Mockgcp {
+			// mockgcp serves this collection (Kind.Mockgcp).
+			continue
+		}
 		path, ok, wrongHost := kindPath(k, full)
 		if !ok {
 			continue
@@ -290,6 +301,11 @@ func (c *Cloud) create(req *http.Request, k *discokind.Kind, coll string) (*http
 		id, _ = body["name"].(string)
 	case k.IDParam != "":
 		id = req.URL.Query().Get(k.IDParam)
+	case k.NameInBody:
+		// No ID parameter: the ID is the last segment of the body's name.
+		if got, _ := body["name"].(string); strings.HasPrefix(got, coll+"/") {
+			id = got[len(coll)+1:]
+		}
 	}
 	if id == "" {
 		return errorResponse(req, http.StatusBadRequest, "INVALID_ARGUMENT", "the resource's ID is required")
@@ -354,6 +370,12 @@ func newObject(k *discokind.Kind, name, id string, body map[string]any) map[stri
 		body["name"] = id
 	}
 	for _, f := range k.Output {
+		if contains(k.SecretOutputs, f) {
+			// A secret the API makes (an OAuth client credential's
+			// clientSecret, a SCIM token's securityToken).
+			body[f] = "fake-" + f + "-" + uuid.NewString()
+			continue
+		}
 		switch f {
 		case "createTime", "updateTime":
 			body[f] = now
@@ -370,6 +392,31 @@ func newObject(k *discokind.Kind, name, id string, body map[string]any) map[stri
 		}
 	}
 	return body
+}
+
+// readable is what a read of obj answers: obj without its input-only
+// fields (Kind.InputOnly, Kind.Secrets) and without the secrets the API
+// returns only in a create's answer (Kind.CreateOnlyOutputs).
+func readable(k *discokind.Kind, obj map[string]any) map[string]any {
+	out := k.Comparable(obj)
+	if len(k.CreateOnlyOutputs) == 0 {
+		return out
+	}
+	if len(k.InputOnly)+len(k.Secrets) == 0 {
+		out = copyMap(out)
+	}
+	for _, f := range k.CreateOnlyOutputs {
+		delete(out, f)
+	}
+	return out
+}
+
+func copyMap(m map[string]any) map[string]any {
+	out := make(map[string]any, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
 }
 
 // missing403APIs are the APIs that answer 403, not 404, for a resource
@@ -436,8 +483,9 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 	switch req.Method {
 	case http.MethodGet:
 		// Input-only fields (Kind.InputOnly, Kind.Secrets) are kept but
-		// never answered, as the API does (Stored shows them).
-		return jsonResponse(req, http.StatusOK, k.Comparable(obj))
+		// never answered, as the API does (Stored shows them); nor are the
+		// secrets only a create answers (Kind.CreateOnlyOutputs).
+		return jsonResponse(req, http.StatusOK, readable(k, obj))
 	case http.MethodPatch, http.MethodPut:
 		if !k.Updatable || (req.Method == http.MethodPut) != k.UpdatePUT {
 			return errorResponse(req, http.StatusMethodNotAllowed, "UNIMPLEMENTED", "no patch method")
@@ -498,9 +546,9 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		}
 		c.objects[key] = updated
 		if k.UpdateLRO {
-			return c.doneOp(req, k, name, k.Comparable(updated))
+			return c.doneOp(req, k, name, readable(k, updated))
 		}
-		return jsonResponse(req, http.StatusOK, k.Comparable(updated))
+		return jsonResponse(req, http.StatusOK, readable(k, updated))
 	case http.MethodDelete:
 		if deleted {
 			return errorResponse(req, http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s was not found", name))
@@ -508,6 +556,11 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		if p, ok := c.deleting[key]; ok {
 			// Already being deleted: the same operation.
 			return jsonResponse(req, http.StatusOK, p.op)
+		}
+		if f := k.DisableBeforeDelete; f != "" && obj[f] != true {
+			// As the API's description asks ("Before deleting an
+			// OauthClientCredential, it should first be disabled").
+			return errorResponse(req, http.StatusBadRequest, "FAILED_PRECONDITION", fmt.Sprintf("%s must be disabled (%s: true) before it is deleted", name, f))
 		}
 		refused := ""
 		if c.refuseInUse {
@@ -527,7 +580,7 @@ func (c *Cloud) serveObject(req *http.Request, k *discokind.Kind, name string) (
 		answer := map[string]any{}
 		if k.SoftDelete != nil {
 			obj[k.SoftDelete.Field] = k.SoftDelete.Value
-			answer = obj
+			answer = readable(k, obj)
 		} else {
 			delete(c.objects, key)
 			c.cascade(k, key)
@@ -556,7 +609,7 @@ func (c *Cloud) list(req *http.Request, k *discokind.Kind, coll string) (*http.R
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		items = append(items, k.Comparable(c.objects[key]))
+		items = append(items, readable(k, c.objects[key]))
 	}
 	field := coll[strings.LastIndex(coll, "/")+1:]
 	if k.InsertStyle {

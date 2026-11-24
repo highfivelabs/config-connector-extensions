@@ -185,6 +185,13 @@ spec:
                     description: 'The network context of the source (ingress rules):
                       INTERNET, NON_INTERNET, VPC_NETWORKS or INTRA_VPC.'
                     type: string
+                  srcNetworks:
+                    description: The VPC networks the source must be in (ingress rules,
+                      with srcNetworkContext VPC_NETWORKS), as "projects/{{projectID}}/global/networks/{{network}}"
+                      or the network's full URL.
+                    items:
+                      type: string
+                    type: array
                   srcRegionCodes:
                     description: Country codes for the source (ingress rules only).
                     items:
@@ -262,6 +269,14 @@ spec:
                 description: An optional name for the rule; it is not an identifier
                   and can change.
                 type: string
+              securityProfileGroup:
+                description: The security profile group a matching connection is sent
+                  to, when action is apply_security_profile_group (and only then),
+                  as "//networksecurity.googleapis.com/organizations/{{organizationID}}/locations/global/securityProfileGroups/{{name}}"
+                  or the group's https://networksecurity.googleapis.com/v1/... URL;
+                  a project's group (projects/{{projectID}}/...) where the API allows
+                  one. Cloud NGFW Enterprise inspects the traffic with it.
+                type: string
               targetSecureTags:
                 description: Secure tags (tag values, tagValues/{id}) whose instances
                   the rule applies to. Not together with targetServiceAccounts.
@@ -309,6 +324,11 @@ spec:
                       type: string
                   type: object
                 type: array
+              tlsInspect:
+                description: Whether the traffic is TLS-decrypted for inspection (the
+                  network needs a TLS inspection policy on its firewall endpoint).
+                  Only with action apply_security_profile_group. Unset means false.
+                type: boolean
             required:
             - action
             - direction
@@ -316,6 +336,11 @@ spec:
             - match
             - priority
             type: object
+            x-kubernetes-validations:
+            - message: securityProfileGroup is set exactly when action is apply_security_profile_group
+              rule: (self.action == 'apply_security_profile_group') == has(self.securityProfileGroup)
+            - message: tlsInspect needs action apply_security_profile_group
+              rule: '!has(self.tlsInspect) || !self.tlsInspect || self.action == ''apply_security_profile_group'''
           status:
             description: ComputeNetworkFirewallPolicyRuleStatus defines the observed
               state.

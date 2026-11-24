@@ -26,10 +26,18 @@ import (
 // TestIAMOauthClient runs testdata/discokind/IAMOauthClient/ on the fake cloud, or live.
 func TestIAMOauthClient(t *testing.T) { kindtest.Run(t, "IAMOauthClient") }
 
+// TestIAMOauthClientCredential runs testdata/discokind/IAMOauthClientCredential/ on the fake cloud, or live.
+func TestIAMOauthClientCredential(t *testing.T) { kindtest.Run(t, "IAMOauthClientCredential") }
+
 // TestIAMWorkforcePoolProviderKey runs testdata/discokind/IAMWorkforcePoolProviderKey/ on the fake cloud, or live.
 func TestIAMWorkforcePoolProviderKey(t *testing.T) { kindtest.Run(t, "IAMWorkforcePoolProviderKey") }
 
 // TestIAMWorkforcePoolProviderScimTenant runs testdata/discokind/IAMWorkforcePoolProviderScimTenant/ on the fake cloud, or live.
 func TestIAMWorkforcePoolProviderScimTenant(t *testing.T) {
 	kindtest.Run(t, "IAMWorkforcePoolProviderScimTenant")
+}
+
+// TestIAMWorkforcePoolProviderScimToken runs testdata/discokind/IAMWorkforcePoolProviderScimToken/ on the fake cloud, or live.
+func TestIAMWorkforcePoolProviderScimToken(t *testing.T) {
+	kindtest.Run(t, "IAMWorkforcePoolProviderScimToken")
 }

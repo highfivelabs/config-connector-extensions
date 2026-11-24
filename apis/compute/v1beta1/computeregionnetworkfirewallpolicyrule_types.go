@@ -26,6 +26,8 @@ var ComputeRegionNetworkFirewallPolicyRuleGVK = GroupVersion.WithKind("ComputeRe
 // ComputeRegionNetworkFirewallPolicyRuleSpec is one rule of a regional
 // network firewall policy. A rule is identified by its priority in the
 // policy.
+// +kubebuilder:validation:XValidation:rule="(self.action == 'apply_security_profile_group') == has(self.securityProfileGroup)",message="securityProfileGroup is set exactly when action is apply_security_profile_group"
+// +kubebuilder:validation:XValidation:rule="!has(self.tlsInspect) || !self.tlsInspect || self.action == 'apply_security_profile_group'",message="tlsInspect needs action apply_security_profile_group"
 type ComputeRegionNetworkFirewallPolicyRuleSpec struct {
 	// The policy the rule belongs to. Immutable.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="firewallPolicyRef is immutable"
@@ -76,6 +78,21 @@ type ComputeRegionNetworkFirewallPolicyRuleSpec struct {
 	// applies to. Not together with targetServiceAccounts.
 	// +optional
 	TargetSecureTags []RegionFirewallPolicyRuleSecureTag `json:"targetSecureTags,omitempty"`
+
+	// The security profile group a matching connection is sent to, when
+	// action is apply_security_profile_group (and only then), as
+	// "//networksecurity.googleapis.com/organizations/{{organizationID}}/locations/global/securityProfileGroups/{{name}}"
+	// or the group's https://networksecurity.googleapis.com/v1/... URL.
+	// Cloud NGFW Enterprise inspects the traffic with it. (Added
+	// 2026-11-23, as on ComputeNetworkFirewallPolicyRule.)
+	// +optional
+	SecurityProfileGroup *string `json:"securityProfileGroup,omitempty"`
+
+	// Whether the traffic is TLS-decrypted for inspection (the network
+	// needs a TLS inspection policy on its firewall endpoint). Only with
+	// action apply_security_profile_group. Unset means false.
+	// +optional
+	TLSInspect *bool `json:"tlsInspect,omitempty"`
 }
 
 // RegionFirewallPolicyRuleMatch is what traffic a rule matches.
@@ -115,6 +132,20 @@ type RegionFirewallPolicyRuleMatch struct {
 	// Secure tags (tagValues/{id}) the source must have.
 	// +optional
 	SrcSecureTags []RegionFirewallPolicyRuleSecureTag `json:"srcSecureTags,omitempty"`
+	// The network context of the source (ingress rules): INTERNET,
+	// NON_INTERNET, VPC_NETWORKS or INTRA_VPC.
+	// +optional
+	SrcNetworkContext *string `json:"srcNetworkContext,omitempty"`
+	// The network context of the destination (egress rules): INTERNET or
+	// NON_INTERNET.
+	// +optional
+	DestNetworkContext *string `json:"destNetworkContext,omitempty"`
+	// The VPC networks the source must be in (ingress rules, with
+	// srcNetworkContext VPC_NETWORKS), as
+	// "projects/{{projectID}}/global/networks/{{network}}" or the
+	// network's full URL.
+	// +optional
+	SrcNetworks []string `json:"srcNetworks,omitempty"`
 }
 
 // RegionFirewallPolicyRuleLayer4Config is an IP protocol and its ports.

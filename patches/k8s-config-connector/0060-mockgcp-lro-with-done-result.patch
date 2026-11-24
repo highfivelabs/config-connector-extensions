@@ -1,0 +1,25 @@
+config-connector-extensions patch 0060: StartLROWithDone answers with the
+finished operation, result included.
+
+StartLROWithDone stores the operation, runs the callback, marks the
+stored operation done with the callback's result, and then answered with
+the first copy, done but with no result. The Go REST clients' Wait fails
+on that ("unsupported result type <nil>"), so a direct controller could
+not create, update or delete a certificate template on mockgcp
+(PrivateCACertificateTemplateFields, ours; foundation item 25). It now
+answers with the operation as stored once done. Upstream candidate: yes.
+
+--- a/mockgcp/common/operations/operations.go
++++ b/mockgcp/common/operations/operations.go
+@@ -185,7 +185,10 @@
+ 		klog.Warningf("error updating LRO: %v", err2)
+ 	}
+ 
+-	return op, nil
++	// The operation as stored once done, with its result, as the
++	// real API answers a request that finishes at once: the Go
++	// clients' Wait fails on a done operation with no result.
++	return finished, nil
+ }
+ 
+ func markDone(op *pb.Operation, result proto.Message, err error, keepMetadataOnDone bool) error {

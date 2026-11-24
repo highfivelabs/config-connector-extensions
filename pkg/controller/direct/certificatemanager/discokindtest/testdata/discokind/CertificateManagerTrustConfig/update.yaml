@@ -1,0 +1,41 @@
+# The certificates are self-signed test certificates made for this
+# fixture (openssl, P-256, CN "config-connector-extensions test ..."); their
+# private keys were not kept.
+apiVersion: certificatemanager.gcp.hfl.dev/v1beta1
+kind: CertificateManagerTrustConfig
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: global
+  description: changed by a config-connector-extensions test
+  trustStores:
+  - trustAnchors:
+    - pemCertificate: |
+        -----BEGIN CERTIFICATE-----
+        MIIBuTCCAV+gAwIBAgIUfssBMD5fO6uRT+zinvHKeoOqnyMwCgYIKoZIzj0EAwIw
+        MjEwMC4GA1UEAwwnY29uZmlnLWNvbm5lY3Rvci1leHRlbnNpb25zIHRlc3QgYW5j
+        aG9yMB4XDTI2MTEyMzE4MTMzOVoXDTM2MTEyMDE4MTMzOVowMjEwMC4GA1UEAwwn
+        Y29uZmlnLWNvbm5lY3Rvci1leHRlbnNpb25zIHRlc3QgYW5jaG9yMFkwEwYHKoZI
+        zj0CAQYIKoZIzj0DAQcDQgAEq6S5QyaMXIGWvhy24Kaz9h7o3vaui8vuVxz0aOfh
+        XUUWqBnrVsn+t2/t2UMTKVomlZaRRpFE5TcBPRZAEtqq7qNTMFEwHQYDVR0OBBYE
+        FKI3tdPGMsSAdgGDYNlNTjhlbUVgMB8GA1UdIwQYMBaAFKI3tdPGMsSAdgGDYNlN
+        TjhlbUVgMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDSAAwRQIgE9JIYQ38
+        oOkHheJ6TVhj5k6zDLqzUCkwyEGtICSBPOECIQDv1ccSHIXM1/jZpoJGIic8E+Ji
+        x4Et/Tph+l5ZYN3oRQ==
+        -----END CERTIFICATE-----
+  allowlistedCertificates:
+  - pemCertificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIBtjCCAV2gAwIBAgIUDrJepL43vQsSWQTW0zYphfimRmMwCgYIKoZIzj0EAwIw
+      MTEvMC0GA1UEAwwmY29uZmlnLWNvbm5lY3Rvci1leHRlbnNpb25zIHRlc3QgYWxs
+      b3cwHhcNMjYxMTIzMTgxMzM5WhcNMzYxMTIwMTgxMzM5WjAxMS8wLQYDVQQDDCZj
+      b25maWctY29ubmVjdG9yLWV4dGVuc2lvbnMgdGVzdCBhbGxvdzBZMBMGByqGSM49
+      AgEGCCqGSM49AwEHA0IABK5f70IsONxpvLWOh3ersc2TxjWtmd4TBIxl/rnz6yHW
+      nttXBNkLay4Q3HwbIx0z9P05g2SnPQUKHeqi5deMtxejUzBRMB0GA1UdDgQWBBS6
+      wLUShfc7AqI/INwKGZHrdghWFDAfBgNVHSMEGDAWgBS6wLUShfc7AqI/INwKGZHr
+      dghWFDAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0cAMEQCIAyb/oZd0/2Q
+      QChNrTBkXnIckVWHoOpDytO4VJ1kxD5jAiAyv5n+JzHcGGFerfWojw0xgIwbSiok
+      5/M1M1vRoB1ffA==
+      -----END CERTIFICATE-----

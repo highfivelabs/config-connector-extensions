@@ -25,7 +25,6 @@ package compute
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -41,7 +40,6 @@ import (
 	"github.com/googleapis/gax-go/v2/apierror"
 	computev1 "google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -202,7 +200,7 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) Create(ctx context.Context, cre
 
 func (a *regionNetworkFirewallPolicyRuleAdapter) Update(ctx context.Context, updateOp *directbase.UpdateOperation) error {
 	log := klog.FromContext(ctx)
-	if proto.Equal(comparableRule(a.desired), comparableRule(a.actual)) {
+	if proto.Equal(comparableNetworkRule(a.desired), comparableNetworkRule(a.actual)) {
 		log.V(2).Info("no diff detected for ComputeRegionNetworkFirewallPolicyRule", "name", a.id.String())
 		return a.updateStatus(ctx, updateOp, a.actual)
 	}
@@ -226,49 +224,12 @@ func (a *regionNetworkFirewallPolicyRuleAdapter) Update(ctx context.Context, upd
 	return a.updateStatus(ctx, updateOp, updated)
 }
 
-// patchBody is the rule to send to patchRule. patchRule keeps a list the
-// request leaves out (a live run: a rule patched without its srcIpRanges
-// kept them), and the generated client leaves an empty list out, so a list
-// the cloud's rule has and the spec has not is sent as [] (a ForceSendFields
-// entry): that clears it.
+// patchBody is the rule to send to patchRule, as the global network
+// rule's (firewallPolicyRulePatchBody): a list the spec empties is sent as
+// [], a network context taken off as UNSPECIFIED, a security profile group
+// and TLS inspection taken off as "" and false.
 func (a *regionNetworkFirewallPolicyRuleAdapter) patchBody() (*computev1.FirewallPolicyRule, error) {
-	raw, err := protojson.Marshal(a.desired)
-	if err != nil {
-		return nil, err
-	}
-	body := &computev1.FirewallPolicyRule{}
-	if err := json.Unmarshal(raw, body); err != nil {
-		return nil, err
-	}
-	if body.Match == nil {
-		body.Match = &computev1.FirewallPolicyRuleMatcher{}
-	}
-	have, want := a.actual.GetMatch(), a.desired.GetMatch()
-	emptied := func(field string, haveLen, wantLen int, force *[]string) {
-		if haveLen > 0 && wantLen == 0 {
-			*force = append(*force, field)
-		}
-	}
-	m := &body.Match.ForceSendFields
-	emptied("SrcIpRanges", len(have.GetSrcIpRanges()), len(want.GetSrcIpRanges()), m)
-	emptied("DestIpRanges", len(have.GetDestIpRanges()), len(want.GetDestIpRanges()), m)
-	emptied("SrcAddressGroups", len(have.GetSrcAddressGroups()), len(want.GetSrcAddressGroups()), m)
-	emptied("DestAddressGroups", len(have.GetDestAddressGroups()), len(want.GetDestAddressGroups()), m)
-	emptied("SrcFqdns", len(have.GetSrcFqdns()), len(want.GetSrcFqdns()), m)
-	emptied("DestFqdns", len(have.GetDestFqdns()), len(want.GetDestFqdns()), m)
-	emptied("SrcRegionCodes", len(have.GetSrcRegionCodes()), len(want.GetSrcRegionCodes()), m)
-	emptied("DestRegionCodes", len(have.GetDestRegionCodes()), len(want.GetDestRegionCodes()), m)
-	emptied("SrcThreatIntelligences", len(have.GetSrcThreatIntelligences()), len(want.GetSrcThreatIntelligences()), m)
-	emptied("DestThreatIntelligences", len(have.GetDestThreatIntelligences()), len(want.GetDestThreatIntelligences()), m)
-	emptied("SrcSecureTags", len(have.GetSrcSecureTags()), len(want.GetSrcSecureTags()), m)
-	r := &body.ForceSendFields
-	// The optional strings and booleans are sent as "" and false when the
-	// spec leaves them unset (the generated client did this for the proto's
-	// optional fields; this client leaves a zero value out unless forced).
-	*r = append(*r, "Priority", "Description", "RuleName", "Disabled", "EnableLogging")
-	emptied("TargetServiceAccounts", len(a.actual.GetTargetServiceAccounts()), len(a.desired.GetTargetServiceAccounts()), r)
-	emptied("TargetSecureTags", len(a.actual.GetTargetSecureTags()), len(a.desired.GetTargetSecureTags()), r)
-	return body, nil
+	return firewallPolicyRulePatchBody(a.desired, a.actual)
 }
 
 // waitPatch waits for the regional operation patchRule started.
@@ -353,6 +314,10 @@ func regionNetworkFirewallPolicyRuleSpecToProto(in *krm.ComputeRegionNetworkFire
 		Description:   direct.PtrTo(direct.ValueOf(in.Description)),
 		Disabled:      direct.PtrTo(direct.ValueOf(in.Disabled)),
 		EnableLogging: direct.PtrTo(direct.ValueOf(in.EnableLogging)),
+		// Sent only when set: the API takes them only with action
+		// apply_security_profile_group.
+		SecurityProfileGroup: in.SecurityProfileGroup,
+		TlsInspect:           in.TLSInspect,
 		Match: &pb.FirewallPolicyRuleMatcher{
 			SrcIpRanges:             in.Match.SrcIPRanges,
 			DestIpRanges:            in.Match.DestIPRanges,
@@ -364,6 +329,9 @@ func regionNetworkFirewallPolicyRuleSpecToProto(in *krm.ComputeRegionNetworkFire
 			DestRegionCodes:         in.Match.DestRegionCodes,
 			SrcThreatIntelligences:  in.Match.SrcThreatIntelligences,
 			DestThreatIntelligences: in.Match.DestThreatIntelligences,
+			SrcNetworkContext:       in.Match.SrcNetworkContext,
+			DestNetworkContext:      in.Match.DestNetworkContext,
+			SrcNetworks:             in.Match.SrcNetworks,
 		},
 		TargetServiceAccounts: serviceAccounts,
 	}
@@ -385,9 +353,10 @@ func regionNetworkFirewallPolicyRuleSpecToProto(in *krm.ComputeRegionNetworkFire
 // comparableRule is the rule reduced to the fields the spec manages, in the
 // spelling the API returns, so a rule read can be compared with the one
 // wanted: the output-only fields (kind, ruleTupleCount, a secure tag's
-// state), fields this kind does not have (a security profile group, target
-// resources, network contexts) and the case of the action and direction are
-// left out.
+// state), target resources (no kind of ours that uses it has them) and the
+// case of the action and direction are left out; comparableNetworkRule adds
+// the security profile group, TLS inspection, network contexts and source
+// networks, and the rule kinds compare with it.
 func comparableRule(in *pb.FirewallPolicyRule) *pb.FirewallPolicyRule {
 	out := &pb.FirewallPolicyRule{
 		Priority:              in.Priority,

@@ -139,13 +139,15 @@ func run(repo, cache, kccDir, discDir, protoDir string, check, updateSources boo
 	if err := yaml.Unmarshal(sb, &src); err != nil {
 		return err
 	}
-	// The Config Connector pin is UPSTREAM.md's.
+	// Official is what Config Connector has released (decision 40): the
+	// nearest release at or before UPSTREAM.md's pin, not the pin itself,
+	// whose unreleased kinds ship in our build.
 	ub, err := os.ReadFile(filepath.Join(repo, "UPSTREAM.md"))
 	if err != nil {
 		return err
 	}
-	if m := regexp.MustCompile("(?m)^\\| Commit \\| `([0-9a-f]{40})`").FindSubmatch(ub); m == nil || string(m[1]) != src.ConfigConnector.Commit {
-		return fmt.Errorf("docs/coverage/sources.yaml pins Config Connector at %s, UPSTREAM.md at something else: update sources.yaml and regenerate", src.ConfigConnector.Commit)
+	if m := regexp.MustCompile("(?m)^\\| Nearest release \\| `v[^`]+` = `([0-9a-f]{40})`").FindSubmatch(ub); m == nil || string(m[1]) != src.ConfigConnector.Commit {
+		return fmt.Errorf("docs/coverage/sources.yaml measures Config Connector at %s, not UPSTREAM.md's nearest release: update sources.yaml and regenerate", src.ConfigConnector.Commit)
 	}
 	kccDigest, err := digestTree(kccDir, func(rel string) bool {
 		return strings.HasPrefix(rel, "config/crds/resources/") || strings.HasPrefix(rel, "config/servicemappings/") ||

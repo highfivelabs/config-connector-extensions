@@ -15,6 +15,25 @@ apiVersion: secretmanager.gcp.hfl.dev/v1beta1
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
+2026-11-23 (foundation item 26): `SecretManagerSecret` serves three more
+fields. `versionDestroyTtl` (delayed destruction of versions, a duration
+with an "s" suffix) and `customerManagedEncryption` (a regional secret's
+own Cloud KMS key, by `kmsKeyRef`; a global secret's key stays in its
+replication) are in Config Connector's types as `NOTYET`, still so on
+master, with no pull request; ours uncomments them and maps them.
+`tags` (resource manager tags bound at create, Terraform's `tags`) is
+input only and immutable (CEL): sent with the create, never compared. A
+change of the key is patched whole (`customerManagedEncryption`).
+Tested on the fake (`TestSecretFields`: the create sends the three, a
+resync patches nothing, a changed `versionDestroyTtl` is patched alone,
+`tags` cannot change; mockgcp patch 0059 takes `versionDestroyTtl` in the
+update mask). The fake keeps and returns `tags`, which the real API does
+not. Live: `versionDestroyTtl` runs live in the default `secretmanager`
+run; the key and the tags are fake only (the live-test project has no
+key the Secret Manager service agent may use and no tag to bind). Not
+built: `secretType` (immutable, a type for managed rotation features
+nothing here uses).
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

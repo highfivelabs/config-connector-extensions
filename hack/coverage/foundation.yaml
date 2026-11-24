@@ -91,7 +91,10 @@ items:
       policy (v1) and a hierarchical policy (beta only), none for a regional policy in any version.
       `ComputeNetworkFirewallPolicyPacketMirroringRule` (the global policy's) built 2026-11-10
       (`compute.gcp.hfl.dev/v1beta1` since 2026-11-16, built at `v1alpha1`; written here after our `ComputeNetworkFirewallPolicyRule`, Terraform's fields;
-      mockgcp patch 0032). Next: the hierarchical policy's, on the beta API, live pending the test folder.
+      mockgcp patch 0032). The hierarchical policy's, `ComputeFirewallPolicyPacketMirroringRule`, built 2026-11-23
+      (`compute.gcp.hfl.dev/v1alpha1`, the global kind's fields on Config Connector's `ComputeFirewallPolicy`; the beta
+      API's calls as REST, mockgcp patch 0058); live pending the test folder. The item is built but for the regional
+      packet mirroring rule, which the API has no calls for.
   - title: Organization-level custom IAM roles (covered by Config Connector's IAMCustomRole)
     importance: A
     gap: whole
@@ -138,13 +141,23 @@ items:
       OAuth client: `clientType`, `allowedGrantTypes[]`, `allowedRedirectUris[]`, `allowedScopes[]`, `disabled`.
       Also on the provider: `extendedAttributesOauth2Client`, `extraAttributesOauth2Client`, `scimUsage`,
       `vendorType`, `detailedAuditLogging` (field gaps on `IAMWorkforcePoolProvider`).
-    upstream: none. No kinds or pull requests for these resources.
+    upstream: >-
+      none. No kinds or pull requests for these resources (pull requests searched again 2026-11-23 for
+      `OauthClientCredential`, `ScimToken` and `scim`: none, open or closed).
     build: >-
       Five kinds in `iam.gcp.hfl.dev/v1alpha1` after our `IAMWorkloadIdentityPoolProviderKey` (the same
-      location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, `...ScimTenantToken`
-      (secret output, like a service account key), `IAMWorkforcePoolProviderKey`, `IAMOauthClient`,
-      `IAMOauthClientCredential`. API iam v1 `locations.workforcePools.providers.scimTenants` and `.keys`,
-      `projects.locations.oauthClients`. Tenants and tokens first (the module needs the tenant).
+      location-scoped create / soft-delete shape): `IAMWorkforcePoolProviderScimTenant`, its token,
+      `IAMWorkforcePoolProviderKey`, `IAMOauthClient`, `IAMOauthClientCredential`. API iam v1
+      `locations.workforcePools.providers.scimTenants` and `.keys`, `projects.locations.oauthClients`.
+      Tenants and tokens first (the module needs the tenant). The tenant, key and client were built
+      2026-11-11. Built 2026-11-23, by `hack/discokind` with its new `secretOutputs` option (`docs/design.md`
+      decision 38: a secret the API returns goes to a Kubernetes Secret owned by the object, never to status):
+      `IAMOauthClientCredential` (its `clientSecret`, returned on every read; a delete disables it first, as
+      the API asks) and the token as `IAMWorkforcePoolProviderScimToken` (decision 18: Terraform's
+      `google_iam_workforce_pool_provider_scim_token`, which did not exist when this item was written; its
+      `securityToken` is returned only by the create, so a lost Secret means deleting and making the token
+      again). Live pending: the credential in the live-test project, the token needs organization-level
+      access and a SCIM tenant.
   - title: A fleet's RBAC role bindings and rollout sequences
     importance: A
     gap: whole
@@ -319,9 +332,21 @@ items:
       `cipherSuite`: our `ComputeVPNTunnel` (`compute.gcp.hfl.dev/v1beta1`,
       built 2026-11-10): Config Connector's direct types and mapper copied,
       a whole tunnel made by insert with every field but labels immutable
-      (`docs/design.md` 6.6, the create-only pattern; patch 0033). The
-      interconnect attachment and interconnect fields are next (decision
-      19); track #11260.
+      (`docs/design.md` 6.6, the create-only pattern; patch 0033). Built
+      2026-11-23 on the same kind: `params.resourceManagerTags` (input only,
+      at insert; Terraform's `params` block), so the VPN tunnel's create
+      request is covered but for `sharedSecretHash`, which the API sets and
+      our kind keeps in status. The interconnect attachment's
+      `candidateIpv6Subnets`, the IPv6 router candidates and `l2Forwarding`
+      are in our generated `ComputeInterconnectAttachment` (built
+      2026-11-13); the measured `l2Forwarding.applianceMappings{}` fields
+      are in a map the CRD keeps as JSON, which the matcher cannot see into.
+      Not built: `applicationAwareInterconnect`, `aaiEnabled` and `params`
+      on the interconnect itself, whose only Config Connector kind is the
+      alpha `ComputeInterconnect`; they need a stable `ComputeInterconnect`
+      of ours (decision 26), which `hack/discokind` could generate, but a
+      real interconnect is a physical circuit no live run can order, so it
+      waits for a builder's call; track #11260.
   - title: Service attachment fields (Private Service Connect producers)
     importance: A
     gap: field
@@ -334,8 +359,17 @@ items:
       `consumerAcceptLists[]` (project or network, with a connection limit), `domainNames`, `natIpsPerEndpoint`,
       `propagatedConnectionLimit`, `reconcileConnections`, `metadata{}` on `ComputeServiceAttachment`.
     attributes: The measured list; `consumerAcceptLists` and `reconcileConnections` matter.
-    upstream: none found.
-    build: Wait (decision 5).
+    upstream: >-
+      none found (master read 2026-11-23 at bc464f55, and releases v1.161.0 and v1.162.0: the kind is still DCL-based,
+      with direct types and a mapper but no controller, and none of these fields; no open pull request for a direct
+      controller or the fields found).
+    build: >-
+      Field kind (decision 19, section 6.6 pattern 2): `ComputeServiceAttachmentFields` (`compute.gcp.hfl.dev/v1alpha1`,
+      built 2026-11-23) owns `reconcileConnections` and `propagatedConnectionLimit` (Config Connector's DCL patch never
+      sends them); live pending. The rest, `consumerAcceptLists[].networkUrl` (the DCL sends the whole list),
+      `domainNames` (create only), `metadata` and `natIpsPerEndpoint`: our whole-object `ComputeServiceAttachment`
+      (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind` 2026-11-23, the API's field set; tested on
+      mockgcp's service attachments); live pending. `producerForwardingRule` is `targetService`'s older name.
   - title: Logging fields (buckets, sinks) and saved queries
     importance: A
     gap: field
@@ -347,16 +381,18 @@ items:
       - logging.googleapis.com/Sink
       - logging.googleapis.com/SavedQuery
     missing: >-
-      On `LoggingLogBucket`: `analyticsEnabled`, `indexConfigs[]`, `restrictedFields[]` (CMEK is
-      `cmekSettings`, present on the kind); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren`
+      On `LoggingLogBucket`: `indexConfigs[]`, `restrictedFields[]`, `cmekSettings` (the kind has none; `analyticsEnabled`
+      is its `enableAnalytics`, matched by name only, so it shows as uncovered); on `LoggingLogSink`: `outputVersionFormat` (deprecated; `interceptChildren`
       is on our own `LoggingLogSink`, built 2026-11-15); whole: `LoggingSavedQuery`. The billing account parent of the sink has its own item.
     attributes: The measured lists.
     upstream: >-
       none for these fields. Open PRs #14233 (relative resource names in `LoggingLogBucket`), #11575 (export for
       `LoggingLogSink`) and #14429 (project annotation in the sink) are fixes.
     build: >-
-      Wait (decision 5) for the fields; `LoggingSavedQuery` is a small new kind (`logging.gcp.hfl.dev`, the API's
-      `savedQueries` under a project, folder or organization location) if a team asks.
+      Field kind (decision 19, section 6.6 pattern 2): `LoggingLogBucketFields` (`logging.gcp.hfl.dev/v1alpha1`, built
+      2026-11-23) owns `indexConfigs`, `restrictedFields` and `cmekSettings` with `buckets.patch` and a mask of only those
+      (Config Connector's DCL and direct updates mask only their own fields); live pending. `LoggingSavedQuery` is built
+      (generated). `outputVersionFormat` is deprecated: not built.
   - title: Organization policy fields (alternate policy)
     importance: A
     gap: field
@@ -375,7 +411,10 @@ items:
     upstream: >-
       none. Open PRs #12756 (stop `UpdatePolicy` on every reconcile) and #6719 (structured diff) are fixes to the
       existing kind.
-    build: Wait (decision 5); `dryRunSpec` covers the use for now.
+    build: >-
+      Not built (checked 2026-11-23): the API marks `Policy.alternate` deprecated ("Deprecated." in orgpolicy v2's
+      Discovery document), and `dryRunSpec`, which `OrgPolicyPolicy` has, replaces it. Every uncovered attribute of
+      the row is under `alternate`.
   - title: GKE cluster and node pool fields
     importance: A
     gap: field
@@ -405,8 +444,21 @@ items:
       (`controlPlaneDiskEncryptionKey`), #12906 (Managed Lustre CSI driver addon), #14239 (`nodePoolAutoConfig.networkTags`
       fix). They arrive with the releases.
     build: >-
-      Wait for the releases (decision 5): this is the kind where upstream is fastest. Re-measure after each Config
-      Connector release; do not build a parallel `ContainerCluster`.
+      Wait for the releases (decision 5) where upstream has a pull request: this is the kind where upstream is
+      fastest. Re-measure after each Config Connector release; do not build a parallel `ContainerCluster`. Where
+      upstream has none, a field the API changes in place goes in our field kinds (decision 37). Built
+      2026-11-16: `ContainerClusterFields` and `ContainerNodePoolFields` (`v1beta1`). Built 2026-11-23 on
+      `ContainerNodePoolFields` (pull requests searched for `eviction`, `memoryManager`, `kubeletConfig`: none
+      but #14187): `kubeletConfig`'s `evictionSoft`, `evictionSoftGracePeriod`, `evictionMinimumReclaim`,
+      `evictionMaxPodGracePeriodSeconds`, `memoryManager`, `topologyManager`, `singleProcessOomKill`, tested
+      on the fake, live pending (`E2E_GKE=true`). Not built: `reservedResourcesConfig` (not in the pinned Go
+      client's `NodeKubeletConfig`); `bootDisk` (it restates Config Connector's `diskType` and `diskSizeGb`,
+      which Terraform's update would send against it); `ephemeralStorageLocalSsdConfig`, `gpuDirectConfig`,
+      `bestEffortProvisioning`, `flexStart`, `containerdConfig.registryHosts` and
+      `advancedMachineFeatures.performanceMonitoringUnit` (set when the node pool is made, which a field kind
+      never does; they need our own node pool kind, which this item says not to build); and the cluster's
+      `controlPlaneDiskEncryptionKey`, maintenance exclusion `endTimeBehavior` and Managed Lustre CSI add-on,
+      which have upstream pull requests (#8135, #14193, #12906).
   - title: Cloud DNS fields (routing policies, forwarding and peering zones)
     importance: A
     gap: field
@@ -422,8 +474,22 @@ items:
       `DNSRecordSet`; `forwardingConfig.targetNameServers[].ipv6Address`, `alternativeNameServerConfig` IPv6,
       `dns64Config` on `DNSPolicy`.
     attributes: The measured lists; `routingPolicy` is the one the dns module exposes.
-    upstream: none found.
-    build: Wait (decision 5).
+    upstream: >-
+      none found. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0): no forwarding target
+      `ipv6Address` or `domainName` in any DNS CRD or direct type; open PR #9783 (a direct `DNSRecordSet` controller,
+      2026-06-12) and #15420 (rrdatas to a routing policy, 2026-11-11) touch only record sets.
+    build: >-
+      Field kind (decision 19, section 6.6 pattern 2): `DNSPolicyFields` (`dns.gcp.hfl.dev/v1alpha1`, built 2026-11-23)
+      owns a policy's `dns64Config` (Terraform's patch never sends it; Config Connector's opt-in direct `DNSPolicy`
+      replaces the whole policy and would clear it); live pending. `routingPolicy.geo.enableFencing`,
+      `primaryBackup.backupGeoTargets.enableFencing` and `primaryBackup.trickleTraffic` are not gaps: `DNSRecordSet`
+      has them under Terraform's names (`enableGeoFencing`, `enableGeoFencingForBackups`, `trickleRatio`), now
+      aliases in `overrides.yaml` (2026-11-23). Deferred below the security-adjacent items (2026-11-23, section 6: a
+      gap becomes a kind when a workload needs it, and no module here is known to set these): the DNSSEC
+      `signatureRrdatas` (pre-signed records), and the forwarding targets' `ipv6Address` and `domainName` (zone and
+      policy), which sit in objects Terraform sends whole (a zone's update is a PUT of the whole zone; a policy's patch
+      sends `alternativeNameServerConfig` with any change), so they need whole-object `DNSManagedZone` and `DNSPolicy`
+      kinds of ours, copied from upstream's opt-in direct controllers at the pin with the fields added.
   - title: Network and subnetwork fields (BGP best path, IP collection, subnet overlap)
     importance: A
     gap: field
@@ -441,8 +507,20 @@ items:
     upstream: >-
       none for the fields. Open PR #12521 "Implement direct controller and test fixtures for ComputeSubnetwork"
       (2026-10-28) and #13709 (`IPV6_ONLY` stack type) move the subnetwork to direct; `ComputeNetwork` has no
-      pull request.
-    build: Wait (decision 5); the subnetwork's direct migration is the vehicle.
+      pull request. Read again 2026-11-23 (master at bc464f55, releases v1.161.0 and v1.162.0, #12521's head
+      4e94076d of 2026-08-27): no release or pull request has `ipCollection`, `resolveSubnetMask` or
+      `params` on a subnetwork.
+    build: >-
+      Field kinds (decision 19, section 6.6 pattern 2), built 2026-11-23, live pending: `ComputeNetworkFields`
+      (`compute.gcp.hfl.dev/v1alpha1`; `routingConfig.bgpBestPathSelectionMode`, `bgpAlwaysCompareMed`,
+      `bgpInterRegionCost`) and `ComputeSubnetworkFields` (`allowSubnetCidrRoutesOverlap`); Terraform's updates send
+      only the fields that changed. The rest, built 2026-11-23, live pending: our whole-object `ComputeSubnetwork`
+      (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind`, the API's field set, tested on mockgcp's
+      subnetworks) takes `ipCollection`, the IPv6 prefixes, `resolveSubnetMask` and `params.resourceManagerTags` at
+      insert and the secondary ranges' `ipCollection` and `ipVersion`; `ipCidrRange` and `privateIpGoogleAccess` are
+      immutable there (the API changes them only by `expandIpCidrRange` and `setPrivateIpGoogleAccess`, which the
+      generated controller does not call), so a subnet that needs either change stays on Config Connector's kind.
+      `enableFlowLogs` is deprecated (`logConfig.enable`) and left out.
   - title: Billing account log sink
     importance: A
     gap: field
@@ -494,8 +572,26 @@ items:
       `ComputeOrganizationSecurityPolicyRule` that the API has and the Terraform-based kinds do not (the measured
       lists); the policy `displayName`/`shortName`.
     attributes: The measured lists.
-    upstream: none found (`ComputeFirewall` has #12102 "validate direct promotion").
-    build: Wait (decision 5); revisit after the regional firewall item, whose rule kind will have the full field set.
+    upstream: >-
+      none found (`ComputeFirewall` has #12102 "validate direct promotion"). Read again 2026-11-23 at the pin:
+      Config Connector's `ComputeFirewallPolicyRule` (hierarchical) is direct, without `securityProfileGroup`,
+      `tlsInspect`, `targetSecureTags`, `ruleName`, `srcSecureTags`, `srcNetworks` and the network types, and its
+      update sends the whole rule (`patchRule`), so a field kind beside it would be reset by every change. Read
+      again 2026-11-23 (master `bc464f5`, open pull requests searched for `ComputeFirewallPolicyRule`,
+      `securityProfileGroup` and `tlsInspect`): master's mapper still marks the four fields `MISSING`; the only open
+      pull request on the kind, #5440 (2025-10-16), changes its Go types' optionality and adds no field.
+    build: >-
+      Decision 19 replaces "wait". Built 2026-11-23 (fake only, live pending): our own
+      `ComputeNetworkFirewallPolicyRule` (global network policies) takes `securityProfileGroup`, `tlsInspect` and
+      `match.srcNetworks`; and our own `ComputeFirewallPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, a
+      whole-object kind beside Config Connector's direct one, section 6.6 pattern 3; `docs/design.md` section 2.3
+      says which to pick) copies Config Connector's types and controller and adds `ruleName`,
+      `securityProfileGroup`, `tlsInspect`, `targetSecureTags`, `match.srcSecureTags`, the network contexts and
+      `match.srcNetworks` (mockgcp patch 0061); its live test needs the test folder. Our regional
+      `ComputeRegionNetworkFirewallPolicyRule` (item 2) takes the group, TLS inspection, the network contexts and
+      `match.srcNetworks` too (2026-11-23, fake only). Left: the network types (`srcNetworkType`, `destNetworkType`: the network contexts are their
+      newer names); a global or regional network rule's `targetResources`; `targetForwardingRules` and `targetType`;
+      `ComputeOrganizationSecurityPolicyRule`'s Cloud Armor fields; the policy's `displayName`/`shortName`.
   # ---- B, whole resources ----
   - title: Security Command Center at folder and project level
     importance: B
@@ -553,10 +649,25 @@ items:
     attributes: The measured lists; the perimeter's dry-run `spec` is the one every VPC-SC rollout uses.
     upstream: >-
       partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08).
-      Nothing for the perimeter's dry-run fields.
+      Nothing for the perimeter's dry-run fields: read again 2026-11-23 (master at bc464f55, releases v1.161.0 and
+      v1.162.0), the perimeter is still Terraform-based, with direct types on master (no controller) that lack them.
+      The user access binding, read again 2026-11-23 (the same, and the heads of every pull request from #13500 to
+      #16331): Config Connector's direct alpha kind and controller are unchanged since the pin but for a label, and
+      no pull request adds the fields.
     build: >-
-      Take `AuthorizedOrgsDesc` from #14202 when it merges (while it is open, copy its code under the
-      copy-upstream rule: `UPSTREAM.md`, "Copied from open pull requests"). The perimeter fields: wait (decision 5).
+      `AccessContextManagerAuthorizedOrgsDesc` built 2026-11-23 (`accesscontextmanager.gcp.hfl.dev/v1alpha1`,
+      generated by `hack/discokind`, live pending): #14202 is a Terraform-based kind (a service mapping, no Go
+      code), which this manager cannot run, so its fixtures, field names and immutable fields are copied
+      (`UPSTREAM.md`) and `docs/design.md` section 2.3 says how objects move to Config Connector's kind once it
+      is released. The perimeter fields (decision 19 replaces "wait"): our whole-object
+      `AccessContextManagerServicePerimeter` (`accesscontextmanager.gcp.hfl.dev/v1alpha1`, generated 2026-11-23, the
+      API's field set for both `status` and the dry-run `spec`; Terraform's update sends either whole, so no field
+      kind can own them); live pending, as the authorized orgs description (organization access). The user access
+      binding's fields: our `AccessContextManagerGCPUserAccessBinding` (`accesscontextmanager.gcp.hfl.dev/v1beta1`,
+      2026-11-23, decision 26), Config Connector's direct types and controller copied, with `dryRunAccessLevels`,
+      `sessionSettings`, `restrictedClientApplications` and `scopedAccessSettings`, sent as REST (the pinned Go
+      client lacks them) and tested on an HTTP fake of ours; live skips (organization access). Not built:
+      `principal` (not in the pinned REST client).
   - title: Privileged Access Manager grants
     importance: B
     gap: whole
@@ -626,8 +737,45 @@ items:
       verify each against the CRD before building.) IAM on attestors and CA pools is `IAMMember`'s job and
       is built.
     attributes: The measured lists.
-    upstream: none found.
-    build: Verify each gap against the CRD, then wait (decision 5).
+    upstream: >-
+      none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper,
+      2025-12-19) and #13232 (direct `PrivateCACertificateTemplate` types, 2026-09-18) move the kinds to direct, where
+      new fields would land; #12260 (mockgcp for `BinaryAuthorizationPlatformPolicy`) and #13053 (direct
+      `CertificateManagerTrustConfig`) are for the alpha kinds.
+    build: >-
+      Decision 19 replaces "wait" (decision 5). Verified against the CRDs at the pin (2026-11-23): the attestor's
+      `userOwnedGrafeasNote` is Config Connector's `userOwnedDrydockNote` (Terraform's name), not a gap; the
+      platform policy and the trust config are alpha-only kinds (item 8's kind of gap). Real gaps: on
+      `PrivateCACAPool`, `encryptionSpec.cloudKmsKey` (CMEK, set when the pool is made) and `issuancePolicy`'s
+      `backdateDuration`, `allowRequesterSpecifiedNotBeforeTime` and `baselineValues.nameConstraints` (patchable);
+      on `PrivateCACertificateAuthority`, `config.x509Config.nameConstraints` and `aiaOcspServers`,
+      `config.subjectKeyId` (set when the authority is made) and `userDefinedAccessUrls`; on
+      `PrivateCACertificateTemplate`, `maximumLifetime` and `predefinedValues.nameConstraints` (patchable).
+      Built 2026-11-23 as field kinds (decision 37, `privateca.gcp.hfl.dev/v1alpha1`, live pending):
+      `PrivateCACAPoolFields` (`issuancePolicy.backdateDuration`, `issuancePolicy.baselineValues.nameConstraints`)
+      and `PrivateCACertificateTemplateFields` (`maximumLifetime`, `predefinedValues.nameConstraints`). Config
+      Connector's DCL update was read: its mask is the top-level names of its own diffs (`TopLevelUpdateMask`),
+      and the direct controller's is top-level too, so neither sees ours; but when it changes its own issuance
+      policy or predefined values it sends them whole without ours, and the API clears them until our next
+      reconcile (the partial case, as `ContainerNodePoolFields`' kubelet config); the template's
+      `maximumLifetime` is top-level and never in its mask. Not built: `allowRequesterSpecifiedNotBeforeTime`
+      (in neither the Go client at the pin nor mockgcp's protos). Built 2026-11-23 (fake only, live pending):
+      our own `PrivateCACertificateAuthority` (`privateca.gcp.hfl.dev/v1alpha1`, `docs/design.md` section 6.6
+      pattern 1, a create-only whole-object kind; section 2.3 says which kind to pick), Config Connector's
+      direct types and controller copied, with `config.x509Config.nameConstraints` and `aiaOcspServers`,
+      `config.subjectKeyId` and `userDefinedAccessUrls`; everything but the labels and the URLs immutable; a
+      self-signed authority enabled after create and disabled before delete (mockgcp patch 0062). Not built:
+      the pool's `encryptionSpec` (CMEK), which neither the pinned Go client (`cloud.google.com/go/security`
+      v1.24.0) nor mockgcp's protos have: a kind for it needs the REST client and a fake that keeps a field
+      its protos lack, or the pin's next Go client (recorded in `docs/design.md` section 7, item 45); the
+      authority's `subordinateConfig` and the subject's `rdnSequence`. The alpha-only trust config (decision 26):
+      our stable `CertificateManagerTrustConfig` (`certificatemanager.gcp.hfl.dev/v1beta1`, generated by
+      `hack/discokind` 2026-11-23, with `spiffeTrustStores`, `allowlistedCertificates`, labels and tags; #13053,
+      still alpha, was not copied: the API has the standard shape); live pending. The alpha-only platform policy:
+      our stable `BinaryAuthorizationPlatformPolicy` (`binaryauthorization.gcp.hfl.dev/v1beta1`, generated 2026-11-23,
+      the API's `gkePolicy` with SLSA, attestation, vulnerability, freshness and trusted directory checks and a
+      check set's Kubernetes service account scope; its update is a PUT named `replacePlatformPolicy`, now
+      `hack/discokind`'s `updateMethod`); live pending.
   - title: Secret Manager fields
     importance: B
     gap: field
@@ -645,7 +793,11 @@ items:
     upstream: 'regional secrets: PR #6651 (copied, `UPSTREAM.md`). No pull request for the others.'
     build: >-
       Our `SecretManagerSecret` is a copy of the upstream kind with our change: add `versionDestroyTtl` and `tags`
-      there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`).
+      there (S, `apis/secretmanager/v1beta1/secretmanagersecret_types.go`). Built 2026-11-23: `versionDestroyTtl`,
+      a regional secret's `customerManagedEncryption` (both `NOTYET` in Config Connector's types, still so on master,
+      no pull request) and `tags` (input only, immutable), mockgcp patch 0059; `TestSecretFields`. Not built:
+      `secretType`. The measured `customerManagedEncryption.kmsKeyName` and `topics[].name` are ours as `kmsKeyRef`
+      and `topics[].topicRef`, which the matcher does not pair by name.
   - title: Cloud Armor security policy fields
     importance: B
     gap: field
@@ -660,5 +812,27 @@ items:
       `userDefinedFields`, `ddosProtectionConfig`, `advancedOptionsConfig` details; rules beyond the common match
       and action. The hierarchical (organization) policy is alpha (the stability item).
     attributes: The measured lists (rules are `ComputeSecurityPolicy.spec.rule`).
-    upstream: none found.
-    build: Wait (decision 5).
+    upstream: >-
+      none found (read again 2026-11-23 at the pin: Config Connector's opt-in direct `ComputeSecurityPolicy` has no
+      threshold configs or inspection size, and its mapper reads a threshold config with auto-deploy fields as its
+      own `autoDeployConfig`). For the regional rules, read again 2026-11-23 (master `bc464f55`, releases to
+      `v1.162.0`, the file lists of every pull request head from #13500 to #16331 fetched read-only): no regional
+      security policy rule anywhere.
+    build: >-
+      Decision 19 replaces "wait". Built 2026-11-23, highest-value first, as a field kind (decision 37,
+      `compute.gcp.hfl.dev/v1alpha1`, live pending): `ComputeSecurityPolicyFields` owns
+      `adaptiveProtectionConfig.layer7DdosDefenseConfig.thresholdConfigs` (Adaptive Protection's tuning) and
+      `advancedOptionsConfig.requestBodyInspectionSize` (the WAF's body limit) of a global policy, written with
+      `securityPolicies.patch` as a merge patch of the sub-objects as read with ours changed, and an update mask
+      only to clear. Terraform's update sends only the sub-objects it changed, no mask; if the API replaces one,
+      ours come back at the next reconcile (to be seen live). `userDefinedFields` and `ddosProtectionConfig`
+      (regional network edge policies, which Config Connector has no kind for): our `ComputeRegionSecurityPolicy`
+      (`compute.gcp.hfl.dev/v1alpha1`, generated by `hack/discokind` 2026-11-23; a regional policy of either type,
+      without its rules, which the API changes only by its rule methods); live pending, the network edge case
+      skips live (Cloud Armor Enterprise). A regional policy's rules: our hand-written
+      `ComputeRegionSecurityPolicyRule` (`compute.gcp.hfl.dev/v1alpha1`, 2026-11-23, Terraform's
+      `google_compute_region_security_policy_rule`; getRule, addRule, patchRule with a mask, removeRule; mockgcp
+      patch 0063; live pending). Not built: rule fields beyond Config Connector's on a global policy (its
+      Terraform-based update adds, patches whole and removes rules to match `spec.rule`, so neither a field kind
+      nor a rule kind beside it is safe; `docs/design.md` section 7 item 53), and `headerAction` and
+      `redirectOptions` on a regional rule (the API takes them only on a global policy).

@@ -15,11 +15,11 @@ pins:
   - name: k8s-config-connector
     repo: GoogleCloudPlatform/k8s-config-connector
     branch: master
-    commit: 672414b8191fc2d2c12fff53f6faccf5ae291eef
-    commit_date: "2026-11-07T03:04:32Z"
-    nearest_release: v1.160.0
-    nearest_release_commit: c38b031c7f5e5657b6ac6afc18da95e039066ad8
-    pinned_on: "2026-11-07"
+    commit: cfc94312852c056b52ee86bc2d30efdf0a8166db
+    commit_date: "2026-11-24T10:51:24Z"
+    nearest_release: v1.162.0
+    nearest_release_commit: 5d80f8e69f1ae84940c8257c1af5026fbad90517
+    pinned_on: "2026-11-24"
     patches: patches/k8s-config-connector
     use: go.mod replace of third_party/k8s-config-connector (hack/upstream.sh)
 
@@ -33,7 +33,7 @@ pull_requests:
     head: 9611a6de02e08aca9a624affaf59bc104d1cb88f
     read_on: "2026-11-07"
     role: copied
-    for: SQLAdminBackup, patch 0003
+    for: SQLAdminBackup (closed unmerged; upstream built it on master 2026-11-18)
   - ref: GoogleCloudPlatform/k8s-config-connector#6651
     head: 9aab204dd9d87716863b966c724b7a12664fd85f
     read_on: "2026-11-07"
@@ -69,6 +69,11 @@ pull_requests:
     read_on: "2026-11-08"
     role: copied
     for: ArtifactRegistryRepository with customRepository
+  - ref: GoogleCloudPlatform/k8s-config-connector#14202
+    head: 2fe675c285623d7de638513ba9862f69a7679c77
+    read_on: "2026-11-23"
+    role: copied
+    for: AccessContextManagerAuthorizedOrgsDesc fixtures, field names and immutable fields; the kind is generated here (hack/discokind)
   - ref: GoogleCloudPlatform/k8s-config-connector#15278
     head: 8dc3b755721a756d8f46e50c089abde88a980879
     read_on: "2026-11-10"
@@ -153,7 +158,6 @@ pull_requests:
 patches:
   - {file: patches/k8s-config-connector/0001-mockgcp-sql-users-database-roles.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15278"}
   - {file: patches/k8s-config-connector/0002-mockgcp-listen-address-env.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15277"}
-  - {file: patches/k8s-config-connector/0003-mockgcp-sql-backup-runs.patch, pin: k8s-config-connector, upstream_candidate: "it is upstream's (PR #12553)"}
   - {file: patches/k8s-config-connector/0004-mockgcp-secretmanager-regional.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #6651"}
   - {file: patches/k8s-config-connector/0005-mockgcp-artifactregistry-upstream-credentials.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15281"}
   - {file: patches/k8s-config-connector/0006-mockgcp-iam-workload-identity-pool-namespaces.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #14209"}
@@ -199,6 +203,22 @@ patches:
   - {file: patches/k8s-config-connector/0051-mockgcp-serviceusage-identity-done-operation.patch, pin: k8s-config-connector, upstream_candidate: "with 0022"}
   - {file: patches/k8s-config-connector/0052-mockgcp-kms-key-access-justifications-policy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0053-mockgcp-container-cluster-fields-updates.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0054-mockgcp-compute-merge-patch-scalars.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0055-mockgcp-logging-bucket-fields.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0056-mockgcp-compute-network-subnetwork-fields.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0057-mockgcp-dns-policy-partial-patch.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0058-mockgcp-compute-firewall-policy-packet-mirroring-rules.patch, pin: k8s-config-connector, upstream_candidate: "with 0032, once mockgcp has beta protos"}
+  - {file: patches/k8s-config-connector/0059-mockgcp-secretmanager-version-destroy-ttl.patch, pin: k8s-config-connector, upstream_candidate: "yes, with the field"}
+  - {file: patches/k8s-config-connector/0060-mockgcp-lro-with-done-result.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0061-mockgcp-compute-firewall-policy-add-rule-appends.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0062-mockgcp-privateca-authority-update-mask-and-delete.patch, pin: k8s-config-connector, upstream_candidate: "yes, once Config Connector's fixtures disable first"}
+  - {file: patches/k8s-config-connector/0063-mockgcp-compute-region-security-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0064-mockgcp-pubsub-topic-ingestion-and-transforms.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0065-mockgcp-pubsub-subscription-transforms-and-bigtable.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0066-mockgcp-monitoring-update-clears-unset-masked-fields.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0067-mockgcp-monitoring-alert-policy-alert-strategy.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0068-mockgcp-artifactregistry-vulnerability-scanning-config.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
+  - {file: patches/k8s-config-connector/0069-mockgcp-run-job-update-replaces-the-job.patch, pin: k8s-config-connector, upstream_candidate: "yes, with the golden logs of Config Connector's RunJob fixtures updated"}
   - {file: patches/k8s-config-connector/0036-mockgcp-spanner-instance-config-labels.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
   - {file: patches/k8s-config-connector/0035-mockgcp-dns-response-policy-rules.patch, pin: k8s-config-connector, upstream_candidate: "yes"}
 
@@ -282,6 +302,44 @@ copied:
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computenetworkfirewallpolicy_identity.go]}
   - here: [pkg/controller/direct/compute/regionnetworkfirewallpolicy_controller.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computenetworkfirewallpolicy_controller.go, pkg/controller/direct/compute/computenetworkfirewallpolicy_mapper.go]}
+  - here: [apis/privateca/v1alpha1/privatecacertificateauthority_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/privatecacertificateauthority_types.go, apis/privateca/v1beta1/types.generated.go]}
+  - here: [apis/privateca/v1alpha1/privatecacertificateauthority_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/privatecacertificateauthority_identity.go]}
+  - here: [pkg/controller/direct/privateca/certificateauthority_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/privateca/mapper.go, pkg/controller/direct/privateca/mapper.generated.go]}
+  - here: [pkg/controller/direct/privateca/certificateauthority_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/privateca/privatecacertificateauthority_controller.go]}
+  - here: [apis/compute/v1alpha1/computefirewallpolicyrule_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computefirewallpolicyrule_types.go]}
+  - here: [apis/compute/v1alpha1/computefirewallpolicyrule_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computefirewallpolicyrule_identity.go]}
+  - here: [pkg/controller/direct/compute/firewallpolicyrule_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/compute/computefirewallpolicyrule_controller.go, pkg/controller/direct/compute/computefirewallpolicyrule_mapper.go, pkg/controller/direct/compute/firewallpolicyrule_resolverefs.go]}
+  - here: [apis/compute/v1alpha1/computeregionsecuritypolicyrule_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computesecuritypolicy_types.go, apis/compute/v1beta1/types.generated.go]}
+  - here: [apis/pubsub/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/pubsub/v1beta1/groupversion_info.go]}
+  - here: [apis/pubsub/v1alpha1/pubsubtopicfields_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/pubsub/v1beta1/types.generated.go]}
+  - here: [apis/pubsub/v1alpha1/pubsubsubscriptionfields_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/pubsub/v1beta1/types.generated.go]}
+  - here: [apis/monitoring/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/monitoring/v1beta1/groupversion_info.go]}
+  - here: [apis/monitoring/v1alpha1/monitoringuptimecheckconfigfields_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/monitoring/v1beta1/types.generated.go]}
+  - here: [apis/monitoring/v1alpha1/monitoringalertpolicyfields_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/monitoring/v1beta1/types.generated.go]}
+  - here: [apis/artifactregistry/v1beta1/repositoryfields_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/artifactregistry/v1beta1/types.generated.go]}
+  - here: [apis/accesscontextmanager/v1beta1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/groupversion_info.go]}
+  - here: [apis/accesscontextmanager/v1beta1/accesscontextmanagergcpuseraccessbinding_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/accesscontextmanagergcpuseraccessbinding_types.go]}
+  - here: [apis/accesscontextmanager/v1beta1/accesscontextmanagergcpuseraccessbinding_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/accesscontextmanager/v1alpha1/accesscontextmanagergcpuseraccessbinding_identity.go, apis/accesscontextmanager/v1alpha1/accesscontextmanagergcpuseraccessbinding_identity.generated.go]}
+  - here: [pkg/controller/direct/accesscontextmanager/gcpuseraccessbinding_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/accesscontextmanager/accesscontextmanagergcpuseraccessbinding_controller.go]}
   - here: [apis/compute/v1beta1/computerouter_types.go]
     from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/computerouter_types.go]}
   - here: [apis/compute/v1beta1/computerouter_identity.go]
@@ -395,6 +453,18 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/asset/assetfeed_mapper.go, pkg/controller/direct/asset/mapper.generated.go]}
   - here: [apis/kms/v1alpha1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/kms/v1alpha1/groupversion_info.go]}
+  - here: [apis/logging/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/logging/v1alpha1/groupversion_info.go]}
+  - here: [pkg/controller/direct/accesscontextmanager/discokindtest/testdata/discokind/AccessContextManagerAuthorizedOrgsDesc/create.yaml, pkg/controller/direct/accesscontextmanager/discokindtest/testdata/discokind/AccessContextManagerAuthorizedOrgsDesc/update.yaml]
+    from: {pr: GoogleCloudPlatform/k8s-config-connector#14202, paths: [pkg/test/resourcefixture/testdata/basic/accesscontextmanager/v1alpha1/accesscontextmanagerauthorizedorgsdesc/accesscontextmanagerauthorizedorgsdescbasic/create.yaml, pkg/test/resourcefixture/testdata/basic/accesscontextmanager/v1alpha1/accesscontextmanagerauthorizedorgsdesc/accesscontextmanagerauthorizedorgsdescbasic/update.yaml]}
+  - here: [apis/compute/v1alpha1/securitypolicy_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/compute/v1beta1/types.generated.go]}
+  - here: [apis/privateca/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/groupversion_info.go]}
+  - here: [apis/privateca/v1alpha1/types.go]
+    from: {pin: k8s-config-connector, paths: [apis/privateca/v1beta1/types.generated.go]}
+  - here: [pkg/controller/direct/privateca/fields.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/privateca/client.go]}
   - here: [apis/container/v1beta1/groupversion_info.go]
     from: {pin: k8s-config-connector, paths: [apis/container/v1beta1/groupversion_info.go]}
   - here: [pkg/controller/direct/container/operation.go]
@@ -611,6 +681,24 @@ copied:
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_mapper.go]}
   - here: [pkg/controller/direct/run/resolverefs.go]
     from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/resolverefs.go]}
+  - here: [apis/run/v1beta1/runworkerpool_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/runworkerpool_types.go, apis/run/v1alpha1/types.generated.go]}
+  - here: [apis/run/v1beta1/runworkerpool_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1alpha1/runworkerpool_identity.go]}
+  - here: [pkg/controller/direct/run/runworkerpool_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_controller.go]}
+  - here: [pkg/controller/direct/run/runworkerpool_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runworkerpool_mapper.go, pkg/controller/direct/run/mapper.generated.go]}
+  - here: [apis/run/v1alpha1/groupversion_info.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1beta1/groupversion_info.go]}
+  - here: [apis/run/v1alpha1/runjob_types.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1beta1/runjob_types.go, apis/run/v1beta1/types.generated.go]}
+  - here: [apis/run/v1alpha1/runjob_identity.go]
+    from: {pin: k8s-config-connector, paths: [apis/run/v1beta1/runjob_identity.go]}
+  - here: [pkg/controller/direct/run/runjob_controller.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/runjob_controller.go]}
+  - here: [pkg/controller/direct/run/runjob_mapper.go]
+    from: {pin: k8s-config-connector, paths: [pkg/controller/direct/run/mapper.generated.go]}
   - here:
       - apis/iam/v1beta1/iambinding_types.go
       - apis/iam/v1beta1/iambinding_identity.go

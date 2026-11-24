@@ -299,6 +299,34 @@ func TestNameInBody(t *testing.T) {
 	}
 }
 
+// TestNameInBodyOnly: a create with no ID parameter takes the ID from the
+// body's name (Access Context Manager's authorized orgs descriptions).
+func TestNameInBodyOnly(t *testing.T) {
+	ctx := context.Background()
+	k := &discokind.Kind{
+		BaseURL: "https://example.googleapis.com/v1/", Name: "accessPolicies/{accessPolicy}/authorizedOrgsDescs/{id}",
+		NameInBody: true,
+	}
+	api := &discokind.API{HTTP: &http.Client{Transport: New(unreachable{}, []*discokind.Kind{k})}, BaseURL: k.BaseURL, PollInterval: time.Millisecond}
+	coll := "accessPolicies/123/authorizedOrgsDescs"
+	if _, err := api.Do(ctx, http.MethodPost, coll, nil, map[string]any{"orgs": []any{"organizations/1"}}); !direct.HasHTTPCode(err, 400) {
+		t.Errorf("a create without the name in the body: err = %v, want 400", err)
+	}
+	if _, err := api.Do(ctx, http.MethodPost, coll, nil, map[string]any{"name": "accessPolicies/9/authorizedOrgsDescs/d1"}); !direct.HasHTTPCode(err, 400) {
+		t.Errorf("a create with a name under another parent: err = %v, want 400", err)
+	}
+	if _, err := api.Do(ctx, http.MethodPost, coll, nil, map[string]any{"name": coll + "/d1", "orgs": []any{"organizations/1"}}); err != nil {
+		t.Errorf("a create with the name in the body: %v", err)
+	}
+	got, err := api.Get(ctx, coll+"/d1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got["name"] != coll+"/d1" {
+		t.Errorf("name = %v, want %s/d1", got["name"], coll)
+	}
+}
+
 // TestBigLakeCascade: deleting a BigLake catalog deletes its databases and
 // tables (krm-packages repository run cat-11141549-4cb0); they, and a list
 // under the gone catalog, then answer 403. SetDeny answers 403 for a name
@@ -346,5 +374,29 @@ func TestBigLakeCascade(t *testing.T) {
 		t.Errorf("listing the catalogs: %v", err)
 	} else if items, _ := list["catalogs"].([]any); len(items) != 0 {
 		t.Errorf("listing the catalogs: %v, want none", list)
+	}
+}
+
+// A kind with Mockgcp is not served by the fake: every request for its
+// collection reaches the next round tripper (mockgcp), which serves it for
+// other tests too (ComputeServiceAttachment, beside the field kind's).
+func TestMockgcpKindsReachNext(t *testing.T) {
+	ctx := context.Background()
+	k := &discokind.Kind{
+		BaseURL: "https://example.googleapis.com/v1/", Name: "{parent}/locations/{location}/widgets/{id}",
+		Parents: []string{"project"}, IDParam: "widgetId", Updatable: true, Mockgcp: true,
+	}
+	n := &next{}
+	api := &discokind.API{HTTP: &http.Client{Transport: New(n, []*discokind.Kind{k})}, BaseURL: k.BaseURL, PollInterval: time.Millisecond}
+	name := "projects/p/locations/global/widgets/w1"
+	if _, err := api.Do(ctx, http.MethodPost, "projects/p/locations/global/widgets", map[string]string{"widgetId": "w1"}, map[string]any{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.Get(ctx, name); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"POST /v1/projects/p/locations/global/widgets", "GET /v1/" + name}
+	if len(n.paths) != len(want) || n.paths[0] != want[0] || n.paths[1] != want[1] {
+		t.Errorf("passed on %v, want %v", n.paths, want)
 	}
 }

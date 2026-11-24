@@ -1,0 +1,45 @@
+config-connector-extensions patch 0069: mockgcp's Cloud Run jobs.patch replaces the job.
+
+For run.gcp.hfl.dev RunJob (ours; application queue item 6), which owns the
+whole job. The API's UpdateJob takes no update mask and replaces the job
+with the one sent; the fake took only its template, so a change of the
+job's labels, annotations, client, client version, launch stage or Binary
+Authorization settings was dropped. Now they are taken from the request too
+(a launch stage left unset is GA, as at create), the generation moves on
+and the etag is computed again, as the API does. Upstream candidate: yes,
+with the golden logs of Config Connector's RunJob fixtures updated for the
+generation and etag.
+
+diff --git a/mockgcp/mockrun/job.go b/mockgcp/mockrun/job.go
+index 5f6415b42..2836e2fc3 100644
+--- a/mockgcp/mockrun/job.go
++++ b/mockgcp/mockrun/job.go
+@@ -156,6 +156,20 @@ func (s *RunV2) UpdateJob(ctx context.Context, req *pb.UpdateJobRequest) (*longr
+ 	// Update logic from request
+ 	updatedJob := req.GetJob()
+ 	obj.Template = updatedJob.GetTemplate()
++	// config-connector-extensions patch 0069: UpdateJob takes no update
++	// mask and replaces the job, so the job's other settable fields are
++	// taken from the request too (only the template was), and the
++	// generation moves on.
++	obj.Labels = updatedJob.GetLabels()
++	obj.Annotations = updatedJob.GetAnnotations()
++	obj.Client = updatedJob.GetClient()
++	obj.ClientVersion = updatedJob.GetClientVersion()
++	obj.LaunchStage = updatedJob.GetLaunchStage()
++	if obj.LaunchStage == 0 {
++		obj.LaunchStage = api.LaunchStage_GA
++	}
++	obj.BinaryAuthorization = updatedJob.GetBinaryAuthorization()
++	obj.Generation++
+ 
+ 	// Defaulting logic from CreateJob
+ 	if obj.Template == nil {
+@@ -202,6 +216,7 @@ func (s *RunV2) UpdateJob(ctx context.Context, req *pb.UpdateJobRequest) (*longr
+ 	}
+ 
+ 	obj.UpdateTime = timestamppb.Now()
++	obj.Etag = fields.ComputeWeakEtag(obj) // patch 0069
+ 
+ 	if err := s.storage.Update(ctx, fqn, obj); err != nil {
+ 		return nil, err

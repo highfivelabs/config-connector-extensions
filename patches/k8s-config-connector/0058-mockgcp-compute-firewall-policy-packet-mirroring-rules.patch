@@ -1,0 +1,225 @@
+config-connector-extensions patch 0058: mockgcp serves a hierarchical
+firewall policy's packet mirroring rules: firewallPolicies.addPacketMirroringRule,
+getPacketMirroringRule, patchPacketMirroringRule, removePacketMirroringRule.
+
+For compute.gcp.hfl.dev ComputeFirewallPolicyPacketMirroringRule. The
+calls are in the compute beta and alpha APIs only, so mockgcp's v1 protos
+have no RPC or HTTP route for them; they are served on the HTTP layer,
+before the beta-to-v1 rewrite, on the policy the v1 RPCs store, with the
+rules of a network firewall policy's packet mirroring rules (patch 0032,
+whose helpers this uses): a rule is addressed by its priority, a missing
+priority is a 400, a taken priority is refused on add, a patch replaces
+the rule, tlsInspect and an INGRESS rule without a source are refused.
+Operations are global organization operations, as the firewall policy's
+other calls. Upstream candidate: with 0032, once mockgcp has beta protos.
+
+diff --git a/mockgcp/mockcompute/service.go b/mockgcp/mockcompute/service.go
+index 034c104..8f0a277 100644
+--- a/mockgcp/mockcompute/service.go
++++ b/mockgcp/mockcompute/service.go
+@@ -420,6 +420,12 @@ func (s *MockService) NewHTTPMux(ctx context.Context, conn *grpc.ClientConn) (ht
+ 	// So far, it seems that all of beta is a direct mapping to v1 - though
+ 	// I'm sure eventually we'll find something that needs special handling.
+ 	rewriteBetaToV1 := func(w http.ResponseWriter, r *http.Request) {
++		// A hierarchical firewall policy's packet mirroring rules have no
++		// v1 RPC (config-connector-extensions,
++		// firewallpolicypacketmirroringrules.go).
++		if s.serveFirewallPolicyPacketMirroringRule(w, r) {
++			return
++		}
+ 		var presentFieldsStr string
+ 		if r.Body != nil && (r.Method == "PATCH" || r.Method == "PUT" || r.Method == "POST") {
+ 			bodyBytes, err := io.ReadAll(r.Body)
+diff --git a/mockgcp/mockcompute/firewallpolicypacketmirroringrules.go b/mockgcp/mockcompute/firewallpolicypacketmirroringrules.go
+new file mode 100644
+index 0000000..a35b5a8
+--- /dev/null
++++ b/mockgcp/mockcompute/firewallpolicypacketmirroringrules.go
+@@ -0,0 +1,187 @@
++// Copyright 2026 High Five Labs
++// SPDX-License-Identifier: Apache-2.0
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package mockcompute
++
++// Packet mirroring rules of a hierarchical firewall policy
++// (firewallPolicies.getPacketMirroringRule, addPacketMirroringRule,
++// patchPacketMirroringRule, removePacketMirroringRule), written for
++// config-connector-extensions' ComputeFirewallPolicyPacketMirroringRule.
++// The calls are in the compute beta (and alpha) API only, so mockgcp's v1
++// protos have no RPC for them: they are served here on the HTTP layer,
++// before the beta-to-v1 rewrite, on the policy the v1 RPCs store
++// (locations/global/firewallPolicies/{id}), with the same rules as a
++// network firewall policy's (networkfirewallpolicypacketmirroringrules.go):
++// a rule is addressed by its priority, a missing priority is a 400, a
++// priority already taken is refused on add, a patch replaces the rule, and
++// tlsInspect and an INGRESS rule without a source are refused.
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"io"
++	"net/http"
++	"regexp"
++	"strconv"
++
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/encoding/protojson"
++	"google.golang.org/protobuf/proto"
++
++	"github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/common/httpmux"
++	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/compute/v1"
++)
++
++var firewallPolicyPacketMirroringRulePath = regexp.MustCompile(`^/compute/(?:beta|alpha|v1)/locations/global/firewallPolicies/([^/]+)/(addPacketMirroringRule|getPacketMirroringRule|patchPacketMirroringRule|removePacketMirroringRule)$`)
++
++// serveFirewallPolicyPacketMirroringRule serves the call when r is one, and
++// reports whether it was.
++func (s *MockService) serveFirewallPolicyPacketMirroringRule(w http.ResponseWriter, r *http.Request) bool {
++	m := firewallPolicyPacketMirroringRulePath.FindStringSubmatch(r.URL.Path)
++	if m == nil {
++		return false
++	}
++	policy, method := m[1], m[2]
++	result, err := s.firewallPolicyPacketMirroringRule(r.Context(), r, policy, method)
++	if err != nil {
++		st, _ := status.FromError(err)
++		code := http.StatusInternalServerError
++		switch st.Code() {
++		case codes.InvalidArgument:
++			code = http.StatusBadRequest
++		case codes.NotFound:
++			code = http.StatusNotFound
++		}
++		body, _ := json.Marshal(map[string]any{"error": map[string]any{
++			"code": code, "message": st.Message(),
++			"errors": []any{map[string]any{"message": st.Message(), "domain": "global", "reason": "invalid"}},
++		}})
++		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
++		w.WriteHeader(code)
++		w.Write(body)
++		return true
++	}
++	body, err := httpmux.MarshalAsJSON(result)
++	if err != nil {
++		http.Error(w, err.Error(), http.StatusInternalServerError)
++		return true
++	}
++	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
++	w.WriteHeader(http.StatusOK)
++	w.Write(body)
++	return true
++}
++
++func (s *MockService) firewallPolicyPacketMirroringRule(ctx context.Context, r *http.Request, policy, method string) (proto.Message, error) {
++	fqn := "locations/global/firewallPolicies/" + policy
++	obj := &pb.FirewallPolicy{}
++	if err := s.storage.Get(ctx, fqn, obj); err != nil {
++		if status.Code(err) == codes.NotFound {
++			return nil, status.Errorf(codes.NotFound, "The resource '%s' was not found", fqn)
++		}
++		return nil, err
++	}
++	var priority int32
++	if p := r.URL.Query().Get("priority"); p != "" {
++		v, err := strconv.ParseInt(p, 10, 32)
++		if err != nil {
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'priority': '%s'.", p)
++		}
++		priority = int32(v)
++	}
++	readRule := func() (*pb.FirewallPolicyRule, error) {
++		body, err := io.ReadAll(r.Body)
++		if err != nil {
++			return nil, err
++		}
++		rule := &pb.FirewallPolicyRule{}
++		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(body, rule); err != nil {
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid JSON payload received: %v", err)
++		}
++		return rule, checkPacketMirroringRule(rule)
++	}
++	opType := ""
++	switch method {
++	case "getPacketMirroringRule":
++		for _, have := range obj.GetPacketMirroringRules() {
++			if have.GetPriority() == priority {
++				return have, nil
++			}
++		}
++		return nil, packetMirroringRuleMissing(priority)
++	case "addPacketMirroringRule":
++		rule, err := readRule()
++		if err != nil {
++			return nil, err
++		}
++		if rule.Priority == nil {
++			return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '0'. A priority is required.")
++		}
++		for _, have := range obj.GetPacketMirroringRules() {
++			if have.GetPriority() == rule.GetPriority() {
++				return nil, status.Errorf(codes.InvalidArgument, "Invalid value for field 'resource.priority': '%d'. The firewall policy already contains a packet mirroring rule at priority %d.", rule.GetPriority(), rule.GetPriority())
++			}
++		}
++		mockFieldValuesForPacketMirroringRule(rule)
++		obj.PacketMirroringRules = append(obj.PacketMirroringRules, rule)
++		opType = "addPacketMirroringRuleToFirewallPolicy"
++	case "patchPacketMirroringRule":
++		rule, err := readRule()
++		if err != nil {
++			return nil, err
++		}
++		found := false
++		for i, have := range obj.GetPacketMirroringRules() {
++			if have.GetPriority() == priority {
++				rule.Priority = PtrTo(priority)
++				mockFieldValuesForPacketMirroringRule(rule)
++				obj.PacketMirroringRules[i] = rule
++				found = true
++			}
++		}
++		if !found {
++			return nil, packetMirroringRuleMissing(priority)
++		}
++		opType = "patchPacketMirroringRuleInFirewallPolicy"
++	case "removePacketMirroringRule":
++		var kept []*pb.FirewallPolicyRule
++		for _, have := range obj.GetPacketMirroringRules() {
++			if have.GetPriority() != priority {
++				kept = append(kept, have)
++			}
++		}
++		if len(kept) == len(obj.GetPacketMirroringRules()) {
++			return nil, packetMirroringRuleMissing(priority)
++		}
++		obj.PacketMirroringRules = kept
++		opType = "removePacketMirroringRuleFromFirewallPolicy"
++	default:
++		return nil, fmt.Errorf("unknown method %q", method)
++	}
++	if err := s.storage.Update(ctx, fqn, obj); err != nil {
++		return nil, err
++	}
++	op := &pb.Operation{
++		TargetId:      obj.Id,
++		TargetLink:    obj.SelfLink,
++		OperationType: PtrTo(opType),
++		User:          PtrTo("user@example.com"),
++	}
++	return s.startGlobalOrganizationLRO(ctx, op, func() (proto.Message, error) {
++		return obj, nil
++	})
++}

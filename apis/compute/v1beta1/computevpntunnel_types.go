@@ -140,9 +140,27 @@ type ComputeVPNTunnelSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="cipherSuite is immutable"
 	CipherSuite *VPNTunnelCipherSuite `json:"cipherSuite,omitempty"`
 
+	/* Input only. Parameters sent with the insert and never returned:
+	resource manager tags to bind to the tunnel when it is made.
+	Immutable: the API takes them only at insert. */
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="params is immutable"
+	Params *VPNTunnelParams `json:"params,omitempty"`
+
 	/* Labels on the tunnel. The only field that changes in place. */
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// VPNTunnelParams is the API's VpnTunnelParams (Terraform's params block
+// on google_compute_vpn_tunnel).
+type VPNTunnelParams struct {
+	/* Resource manager tags bound to the tunnel at insert: keys as
+	tagKeys/{tag_key_id} and values as tagValues/{tag_value_id}, or both
+	in the namespaced form ({org_id}/{tag_key_short_name} and
+	{tag_value_short_name}). */
+	// +optional
+	ResourceManagerTags map[string]string `json:"resourceManagerTags,omitempty"`
 }
 
 // VPNTunnelCipherSuite is the API's VpnTunnelCipherSuite: the algorithms

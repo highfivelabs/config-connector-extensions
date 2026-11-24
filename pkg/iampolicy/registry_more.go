@@ -92,7 +92,7 @@ func moreTypes() []*ResourceType {
 			[]schema.GroupVersionKind{cnrm("logging", "v1beta1", "LoggingLogView")}, nil),
 		mixin("RunWorkerPool", "run.googleapis.com", "v2", false,
 			loc+`/workerPools/[^/]+`,
-			[]schema.GroupVersionKind{cnrm("run", "v1alpha1", "RunWorkerPool")}, inLocation("workerPools")),
+			[]schema.GroupVersionKind{gvk("run.gcp.hfl.dev", "v1beta1", "RunWorkerPool"), cnrm("run", "v1alpha1", "RunWorkerPool")}, inLocation("workerPools")),
 		mixin("PrivateCACAPool", "privateca.googleapis.com", "v1", false,
 			loc+`/caPools/[^/]+`,
 			[]schema.GroupVersionKind{cnrm("privateca", "v1beta1", "PrivateCACAPool")}, inLocation("caPools")),

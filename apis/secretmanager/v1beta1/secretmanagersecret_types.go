@@ -109,17 +109,18 @@ type SecretManagerSecretSpec struct {
 	// No more than 64 labels can be assigned to a given resource.
 	Labels map[string]string `json:"labels,omitempty"`
 
-	/*NOTYET
 	// Optional. Secret Version TTL after destruction request
 	//
 	//  This is a part of the Delayed secret version destroy feature.
 	//  For secret with TTL>0, version destruction doesn't happen immediately
 	//  on calling destroy instead the version goes to a disabled state and
 	//  destruction happens after the TTL expires.
+	//
+	// A duration in seconds with an "s" suffix ("86400s"). (Config
+	// Connector's types have this field commented out as NOTYET;
+	// config-connector-extensions serves it, foundation item 26.)
 	VersionDestroyTtl *string `json:"versionDestroyTtl,omitempty"`
-	*/
 
-	/*NOTYET
 	// Optional. The customer-managed encryption configuration of the Regionalised
 	//  Secrets. If no configuration is provided, Google-managed default encryption
 	//  is used.
@@ -129,8 +130,18 @@ type SecretManagerSecretSpec struct {
 	//  [SecretVersions][google.cloud.secretmanager.v1.SecretVersion] added
 	//  afterwards. They do not apply retroactively to existing
 	//  [SecretVersions][google.cloud.secretmanager.v1.SecretVersion].
+	//
+	// For a regional secret (spec.location); a global secret's key is in
+	// its replication. (NOTYET in Config Connector's types; served here.)
 	CustomerManagedEncryption *CustomerManagedEncryption `json:"customerManagedEncryption,omitempty"`
-	*/
+
+	// Optional. Input only. Immutable. Mapping of Tag keys/values directly
+	// bound to this resource, bound when the secret is made. For example:
+	// "123/environment": "production". The API never returns them, so a
+	// change made in the cloud is not seen. (Not in Config Connector's
+	// types; Terraform's google_secret_manager_secret tags.)
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="tags is immutable"
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // +kcc:proto=google.cloud.secretmanager.v1.Replication

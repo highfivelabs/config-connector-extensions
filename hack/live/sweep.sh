@@ -16,13 +16,14 @@
 # Swept: Artifact Registry repositories (every location), Secret Manager
 # secrets (global and the regions in SECRET_REGIONS), Cloud SQL instances
 # (their users and backups go with them), and Compute Engine network
-# firewall policies (their associations are removed first), backend services and health checks, network endpoint groups (their endpoints go with
+# firewall policies (their associations are removed first), service
+# attachments, forwarding rules, backend services and health checks, network endpoint groups (their endpoints go with
 # them), VPN tunnels, HA and external VPN gateways, addresses, Cloud Routers
 # (their route policies go with them), subnets and VPC
 # networks, which take no labels and are found by name, Cloud Storage
 # buckets (their managed folders go with them), by name, keys of the project's common instance metadata, by
 # name and aged by the run ID in them, and workload identity pools (with
-# what is in them) and Cloud Run services, by name, and Network Security
+# what is in them) and Cloud Run services, jobs and worker pools, by name, and Network Security
 # address groups (global and the regions in ADDRESS_GROUP_REGIONS), by
 # label or name, after the firewall policies that may use them, and
 # security profile groups and security profiles, by name, and IAM deny
@@ -43,8 +44,11 @@
 # gateways, APIs and configs and BigLake catalogs, by name, and the project's GKE Hub fleet
 # when a test made it, by label, global log buckets (with their links), by
 # name, where the account may list them, and BigQuery datasets, by name,
-# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), and Cloud
-# Endpoints services, by name, where the project has Service Management.
+# where the account has BigQuery (E2E_BIGQUERY_ADMIN=true), Cloud
+# Endpoints services, by name, where the project has Service Management,
+# CA pools and certificate templates in us-central1, by name, where the
+# account has Private CA (E2E_PRIVATECA=true), and global Cloud Armor
+# security policies, by name, where E2E_CLOUD_ARMOR=true.
 # A failed list or delete fails the sweep.
 set -o errexit -o nounset -o pipefail
 
@@ -410,6 +414,20 @@ if ! compgen -G "${HERE}/../../pkg/controller/direct/dataplex/discokindtest/test
     done <<<"${zones}"
   done <<<"${lakes}"
 fi
+# Binary Authorization platform policies (BinaryAuthorizationPlatformPolicy,
+# under a platform, so not in discokinds.tsv): GKE's, by the run's name,
+# unless the kind's test skips live.
+bina="https://binaryauthorization.googleapis.com/v1/"
+if ! compgen -G "${HERE}/../../pkg/controller/direct/binaryauthorization/discokindtest/testdata/discokind/BinaryAuthorizationPlatformPolicy/live-skip" >/dev/null; then
+  rows="$(disco_api GET "${bina}projects/${project}/platforms/gke/policies?pageSize=1000" \
+    | jq -r '.platformPolicies[]? | "\(.name) \(.updateTime // "-")"')"
+  while read -r name made; do
+    [[ -n "${name}" ]] || continue
+    [[ "${made}" != "-" ]] || made=""
+    by_run "${name##*/}" "${made}" || continue
+    act "Binary Authorization platform policy" "${name}" disco_delete "${bina}" "${name}"
+  done <<<"${rows}"
+fi
 while IFS=$'\t' read -r dkind base coll field soft; do
   [[ -n "${dkind}" && "${dkind}" != \#* ]] || continue
   # A kind whose test never runs live (its fixtures' live-skip) makes
@@ -435,6 +453,18 @@ while IFS=$'\t' read -r dkind base coll field soft; do
     act "${dkind}" "${name}" disco_delete "${base}" "${name}"
   done <<<"${rows}"
 done <"${HERE}/discokinds.tsv"
+# Regional Cloud Armor security policies (ComputeRegionSecurityPolicy, a
+# discokind kind that mockgcp serves, so not in discokinds.tsv; its rules,
+# ComputeRegionSecurityPolicyRule's, go with the policy), in us-central1,
+# by the run's name.
+crsp="https://compute.googleapis.com/compute/v1/"
+rows="$(disco_api GET "${crsp}projects/${project}/regions/us-central1/securityPolicies?maxResults=500" \
+  | jq -r '.items[]?.name')"
+while read -r name; do
+  [[ -n "${name}" ]] || continue
+  by_run "${name}" "" || continue
+  act "regional security policy" "${name}" disco_delete "${crsp}" "projects/${project}/regions/us-central1/securityPolicies/${name}"
+done <<<"${rows}"
 # API Gateway and BigLake, which the loop above leaves alone (their
 # kinds' generated tests skip live, or their collections sit under a
 # parent) while TestAPIGatewayDeleteGatewayAndConfigTogether, the
@@ -519,6 +549,21 @@ else
     failed=$((failed + 1))
   fi
 fi
+# Service attachments (the ComputeServiceAttachmentFields test's), then
+# forwarding rules, by name, before the backend services and subnets they
+# use.
+rows="$("${G[@]}" compute service-attachments list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "service attachment" "${name} ${region}" "${G[@]}" compute service-attachments delete "${name}" --region="${region}"
+done <<<"${rows}"
+rows="$("${G[@]}" compute forwarding-rules list --verbosity=error \
+  --filter="$(cfilter)" --format='value(name,region.basename())')"
+while read -r name region; do
+  [[ -n "${name}" ]] || continue
+  act "forwarding rule" "${name} ${region:-global}" "${G[@]}" compute forwarding-rules delete "${name}" "$(scope "${region}" "")"
+done <<<"${rows}"
 rows="$("${G[@]}" compute backend-services list --verbosity=error \
   --filter="$(cfilter)" --format='value(name,region.basename())')"
 while read -r name region; do
@@ -810,6 +855,26 @@ while read -r name region made; do
   act "Cloud Run service" "${name} ${region}" "${G[@]}" run services delete "${name}" --region="${region}"
 done <<<"${rows}"
 
+# Cloud Run worker pools (RunWorkerPool's test), in us-central1, the test's
+# region, by name, through the v2 API (gcloud lists them only in beta).
+rows="$(disco_api GET "https://run.googleapis.com/v2/projects/${project}/locations/us-central1/workerPools?pageSize=1000" \
+  | jq -r '.workerPools[]? | "\(.name) \(.createTime // "-")"')"
+while read -r name made; do
+  [[ -n "${name}" ]] || continue
+  [[ "${made}" != "-" ]] || made=""
+  by_run "${name##*/}" "${made}" || continue
+  act "Cloud Run worker pool" "${name}" disco_delete "https://run.googleapis.com/v2/" "${name}"
+done <<<"${rows}"
+
+# Cloud Run jobs (RunJob's test), every region, by name.
+rows="$("${G[@]}" run jobs list --verbosity=error \
+  --format='value(metadata.name,metadata.labels."cloud.googleapis.com/location",metadata.creationTimestamp)')"
+while read -r name region made; do
+  [[ -n "${name}" ]] || continue
+  by_run "${name}" "${made}" || continue
+  act "Cloud Run job" "${name} ${region}" "${G[@]}" run jobs delete "${name}" --region="${region}"
+done <<<"${rows}"
+
 # Log buckets (a live LoggingLink test's, with Log Analytics on), global,
 # by the run's name, links first (deleting a link is an operation). A
 # deleted bucket stays DELETE_REQUESTED for seven days: already gone. An
@@ -942,6 +1007,77 @@ elif jq -e '.error.code == 403' >/dev/null 2>&1 <<<"${out}"; then
 else
   echo "  FAILED to list endpoints services: ${out}" >&2
   failed=$((failed + 1))
+fi
+
+# Pub/Sub subscriptions (PubSubSubscriptionFields' test), by the run's
+# name, before their topics.
+rows="$("${G[@]}" pubsub subscriptions list --verbosity=error --format='value(name.basename())')"
+for name in ${rows}; do
+  by_run "${name}" || continue
+  act "Pub/Sub subscription" "${name}" "${G[@]}" pubsub subscriptions delete "${name}"
+done
+
+# Pub/Sub topics (PubSubTopicFields' and PubSubSubscriptionFields' tests,
+# and AssetFeed's), by the run's name.
+rows="$("${G[@]}" pubsub topics list --verbosity=error --format='value(name.basename())')"
+for name in ${rows}; do
+  by_run "${name}" || continue
+  act "Pub/Sub topic" "${name}" "${G[@]}" pubsub topics delete "${name}"
+done
+
+# Uptime checks (MonitoringUptimeCheckConfigFields' test), by the run's name
+# in their display name: the API names a check itself.
+while IFS=$'\t' read -r id display; do
+  [[ -n "${id}" ]] || continue
+  by_run "${display}" || continue
+  act "uptime check" "${display} (${id})" "${G[@]}" monitoring uptime delete "${id}" --quiet
+done < <("${G[@]}" monitoring uptime list-configs --verbosity=error --format='value[separator="\t"](name.basename(),displayName)')
+
+# Alert policies (MonitoringAlertPolicyFields' test), by the run's name in
+# their display name: the API names a policy itself.
+while IFS=$'\t' read -r id display; do
+  [[ -n "${id}" ]] || continue
+  by_run "${display}" || continue
+  act "alert policy" "${display} (${id})" "${G[@]}" monitoring policies delete "${id}" --quiet
+done < <("${G[@]}" monitoring policies list --verbosity=error --format='value[separator="\t"](name.basename(),displayName)')
+
+# Cloud Armor security policies (ComputeSecurityPolicyFields' test), global,
+# by name, only where the run made them (E2E_CLOUD_ARMOR=true); the test's
+# policy is attached to nothing.
+if [[ "${E2E_CLOUD_ARMOR:-}" == true ]]; then
+  rows="$("${G[@]}" compute security-policies list --verbosity=error --filter="$(cfilter)" --format='value(name)')"
+  for name in ${rows}; do
+    act "security policy" "${name}" "${G[@]}" compute security-policies delete "${name}" --global
+  done
+fi
+
+# Certificate Authority Service CA pools, their certificate authorities
+# and certificate templates (the Private CA kinds' tests), by the run's
+# name, in us-central1, only where the live-test account has Private CA
+# (E2E_PRIVATECA=true: privateca.googleapis.com on and roles/privateca.admin);
+# without it the tests do not run live. Only
+# TestPrivateCACertificateAuthority puts an authority in its pool; one left
+# behind is disabled and deleted without the grace period (a pool with an
+# authority in it, even one in its grace period, is not deleted).
+delete_root() { # delete_root POOL NAME: disable (if enabled), then delete
+  "${G[@]}" privateca roots disable "$2" --pool="$1" --location=us-central1 --quiet >/dev/null 2>&1 || true
+  "${G[@]}" privateca roots delete "$2" --pool="$1" --location=us-central1 --skip-grace-period --ignore-active-certificates --quiet
+}
+if [[ "${E2E_PRIVATECA:-}" == true ]]; then
+  rows="$("${G[@]}" privateca templates list --location=us-central1 --verbosity=error --format='value(name.basename())')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    act "certificate template" "${name}" "${G[@]}" privateca templates delete "${name}" --location=us-central1
+  done
+  rows="$("${G[@]}" privateca pools list --location=us-central1 --verbosity=error --format='value(name.basename())')"
+  for name in ${rows}; do
+    by_run "${name}" || continue
+    roots="$("${G[@]}" privateca roots list --pool="${name}" --location=us-central1 --verbosity=error --filter='state!=DELETED' --format='value(name.basename())')"
+    for root in ${roots}; do
+      act "certificate authority" "${name}/${root}" delete_root "${name}" "${root}"
+    done
+    act "CA pool" "${name}" "${G[@]}" privateca pools delete "${name}" --location=us-central1
+  done
 fi
 
 # GKE clusters (the container field kinds' test cluster, labelled

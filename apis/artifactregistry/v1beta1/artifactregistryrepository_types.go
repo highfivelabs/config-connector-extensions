@@ -25,7 +25,11 @@
 //   - written here (in no Config Connector code or pull request):
 //     remoteRepositoryConfig.upstreamCredentials and
 //     remoteRepositoryConfig.disableUpstreamValidation; their types are in
-//     upstreamcredentials_types.go.
+//     upstreamcredentials_types.go;
+//   - uncommented from upstream's generated types (application queue item
+//     4, 2026-11-23): vulnerabilityScanningConfig, disallowUnspecifiedMode
+//     and remoteRepositoryConfig.{apt,yum}Repository; their types are in
+//     repositoryfields_types.go.
 
 package v1beta1
 
@@ -92,6 +96,20 @@ type ArtifactRegistryRepositorySpec struct {
 	// Configuration specific for a Virtual Repository.
 	// +kcc:proto:field=google.devtools.artifactregistry.v1.Repository.virtual_repository_config
 	VirtualRepositoryConfig *ArtifactRegistryRepositoryVirtualRepositoryConfig `json:"virtualRepositoryConfig,omitempty"`
+
+	// Uncommented from upstream's generated types (repositoryfields_types.go).
+
+	// Optional. Config for vulnerability scanning of resources within this
+	//  Repository. Unset, the repository keeps what it has (by default
+	//  INHERITED).
+	// +kcc:proto:field=google.devtools.artifactregistry.v1.Repository.vulnerability_scanning_config
+	VulnerabilityScanningConfig *Repository_VulnerabilityScanningConfig `json:"vulnerabilityScanningConfig,omitempty"`
+
+	// Immutable. Optional. If this is true, an unspecified repo type will be
+	//  treated as error rather than defaulting to standard.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="disallowUnspecifiedMode is immutable"
+	// +kcc:proto:field=google.devtools.artifactregistry.v1.Repository.disallow_unspecified_mode
+	DisallowUnspecifiedMode *bool `json:"disallowUnspecifiedMode,omitempty"`
 }
 
 // +kcc:status:proto=google.devtools.artifactregistry.v1.Repository
@@ -166,6 +184,16 @@ type ArtifactRegistryRepositoryRemoteRepositoryConfig struct {
 	// Common remote repository settings.
 	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.common_repository
 	CommonRepository *ArtifactRegistryRepositoryCommonRepository `json:"commonRepository,omitempty"`
+
+	// Specific settings for an Apt remote repository (uncommented from
+	// upstream's generated types).
+	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.apt_repository
+	AptRepository *ArtifactRegistryRepositoryAptRepository `json:"aptRepository,omitempty"`
+
+	// Specific settings for a Yum remote repository (uncommented from
+	// upstream's generated types).
+	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.yum_repository
+	YumRepository *ArtifactRegistryRepositoryYumRepository `json:"yumRepository,omitempty"`
 
 	// The description of the remote source.
 	// +kcc:proto:field=google.devtools.artifactregistry.v1.RemoteRepositoryConfig.description

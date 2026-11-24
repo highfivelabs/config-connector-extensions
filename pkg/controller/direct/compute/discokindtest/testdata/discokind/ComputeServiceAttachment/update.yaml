@@ -1,0 +1,20 @@
+apiVersion: compute.gcp.hfl.dev/v1alpha1
+kind: ComputeServiceAttachment
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  targetService: projects/${PROJECT}/regions/us-central1/forwardingRules/${NAME}-fr
+  natSubnets:
+  - projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}-nat
+  connectionPreference: ACCEPT_MANUAL
+  consumerAcceptLists:
+  - networkUrl: projects/${PROJECT}/global/networks/${NAME}-net
+    connectionLimit: 3
+  domainNames: [${NAME}.example.com.]
+  enableProxyProtocol: false
+  reconcileConnections: true
+  propagatedConnectionLimit: 5
+  description: changed by a config-connector-extensions test

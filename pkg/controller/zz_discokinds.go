@@ -20,10 +20,12 @@ package controller
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	accesscontextmanagerv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/accesscontextmanager/v1alpha1"
 	apigatewayv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/apigateway/v1beta1"
 	apigeev1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/apigee/v1alpha1"
 	backupdrv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/backupdr/v1beta1"
 	biglakev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/biglake/v1beta1"
+	binaryauthorizationv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/binaryauthorization/v1beta1"
 	certificatemanagerv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/certificatemanager/v1beta1"
 	cloudbuildv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1alpha1"
 	cloudbuildv1beta1 "github.com/highfivelabs/config-connector-extensions/apis/cloudbuild/v1beta1"
@@ -99,6 +101,33 @@ var discoKinds = []*discokind.Kind{
 		Output:       []string{"baseUri", "purgeTime", "serviceAgent", "state"},
 		SoftDelete:   &discokind.FieldValue{Field: "state", Value: "DELETED"},
 		FakeDefaults: map[string]any{"state": "ACTIVE"},
+	},
+	{
+		GVK:       iamv1alpha1.IAMOauthClientCredentialGVK,
+		CRDName:   "iamoauthclientcredentials.iam.gcp.hfl.dev",
+		BaseURL:   "https://iam.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/oauthClients/{oauthClient}/credentials/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "oauthClientCredentialId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable:           true,
+		Output:              []string{"clientSecret"},
+		SecretOutputs:       []string{"clientSecret"},
+		DisableBeforeDelete: "disabled",
+	},
+	{
+		GVK:       iamv1alpha1.IAMWorkforcePoolProviderScimTokenGVK,
+		CRDName:   "iamworkforcepoolproviderscimtokens.iam.gcp.hfl.dev",
+		BaseURL:   "https://iam.googleapis.com/v1/",
+		Name:      "locations/{location}/workforcePools/{workforcePool}/providers/{provider}/scimTenants/{scimTenant}/tokens/{id}",
+		IDParam:   "workforcePoolProviderScimTokenId",
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable:         true,
+		Output:            []string{"securityToken", "state"},
+		SoftDelete:        &discokind.FieldValue{Field: "state", Value: "DELETED"},
+		SecretOutputs:     []string{"securityToken"},
+		CreateOnlyOutputs: []string{"securityToken"},
+		FakeDefaults:      map[string]any{"state": "ACTIVE"},
 	},
 	{
 		GVK:       gkehubv1alpha1.GKEHubMembershipRBACRoleBindingGVK,
@@ -321,6 +350,43 @@ var discoKinds = []*discokind.Kind{
 		Output:    []string{"attachmentGroup", "cloudRouterIpAddress", "cloudRouterIpv6Address", "configurationConstraints", "creationTimestamp", "customerRouterIpAddress", "customerRouterIpv6Address", "dataplaneVersion", "googleReferenceId", "id", "kind", "operationalStatus", "privateInterconnectInfo", "region", "remoteService", "satisfiesPzs", "selfLink", "state"},
 	},
 	{
+		GVK:         computev1alpha1.ComputeServiceAttachmentGVK,
+		CRDName:     "computeserviceattachments.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/serviceAttachments/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		Mockgcp:   true,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"connectedEndpoints", "creationTimestamp", "fingerprint", "id", "kind", "pscServiceAttachmentId", "region", "selfLink"},
+	},
+	{
+		GVK:         computev1alpha1.ComputeSubnetworkGVK,
+		CRDName:     "computesubnetworks.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/subnetworks/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		Mockgcp:   true,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"creationTimestamp", "fingerprint", "gatewayAddress", "id", "ipv6CidrRange", "ipv6GceEndpoint", "kind", "selfLink", "state", "systemReservedExternalIpv6Ranges", "systemReservedInternalIpv6Ranges", "utilizationDetails"},
+		InputOnly: []string{"params.resourceManagerTags"},
+	},
+	{
+		GVK:         computev1alpha1.ComputeRegionSecurityPolicyGVK,
+		CRDName:     "computeregionsecuritypolicies.compute.gcp.hfl.dev",
+		BaseURL:     "https://compute.googleapis.com/compute/v1/",
+		Name:        "{parent}/regions/{region}/securityPolicies/{id}",
+		Parents:     []string{"project"},
+		InsertStyle: true, UpdatePUT: false,
+		Mockgcp:   true,
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"creationTimestamp", "fingerprint", "id", "kind", "parent", "region", "selfLink"},
+	},
+	{
 		GVK:         computev1alpha1.ComputeRegionInstanceTemplateGVK,
 		CRDName:     "computeregioninstancetemplates.compute.gcp.hfl.dev",
 		BaseURL:     "https://compute.googleapis.com/compute/v1/",
@@ -453,6 +519,30 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+	},
+	{
+		GVK:       certificatemanagerv1beta1.CertificateManagerTrustConfigGVK,
+		CRDName:   "certificatemanagertrustconfigs.certificatemanager.gcp.hfl.dev",
+		BaseURL:   "https://certificatemanager.googleapis.com/v1/",
+		Name:      "{parent}/locations/{location}/trustConfigs/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "trustConfigId",
+		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+		Output:    []string{"createTime", "updateTime"},
+		InputOnly: []string{"tags"},
+	},
+	{
+		GVK:       binaryauthorizationv1beta1.BinaryAuthorizationPlatformPolicyGVK,
+		CRDName:   "binaryauthorizationplatformpolicies.binaryauthorization.gcp.hfl.dev",
+		BaseURL:   "https://binaryauthorization.googleapis.com/v1/",
+		Name:      "{parent}/platforms/{platform}/policies/{id}",
+		Parents:   []string{"project"},
+		IDParam:   "policyId",
+		UpdatePUT: true,
+		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
+		Updatable: true,
+		Output:    []string{"name", "updateTime"},
 	},
 	{
 		GVK:       backupdrv1beta1.BackupDRManagementServerGVK,
@@ -835,6 +925,24 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
 	},
+	{
+		GVK:        accesscontextmanagerv1alpha1.AccessContextManagerAuthorizedOrgsDescGVK,
+		CRDName:    "accesscontextmanagerauthorizedorgsdescs.accesscontextmanager.gcp.hfl.dev",
+		BaseURL:    "https://accesscontextmanager.googleapis.com/v1/",
+		Name:       "accessPolicies/{accessPolicy}/authorizedOrgsDescs/{id}",
+		NameInBody: true,
+		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+	},
+	{
+		GVK:        accesscontextmanagerv1alpha1.AccessContextManagerServicePerimeterGVK,
+		CRDName:    "accesscontextmanagerserviceperimeters.accesscontextmanager.gcp.hfl.dev",
+		BaseURL:    "https://accesscontextmanager.googleapis.com/v1/",
+		Name:       "accessPolicies/{accessPolicy}/servicePerimeters/{id}",
+		NameInBody: true,
+		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
+		Updatable: true,
+	},
 }
 
 var discoSchemes = []func(*runtime.Scheme) error{
@@ -851,6 +959,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	resourcemanagerv1alpha1.AddToScheme,
 	networkconnectivityv1alpha1.AddToScheme,
 	certificatemanagerv1beta1.AddToScheme,
+	binaryauthorizationv1beta1.AddToScheme,
 	backupdrv1beta1.AddToScheme,
 	networksecurityv1beta1.AddToScheme,
 	gkebackupv1beta1.AddToScheme,
@@ -865,6 +974,7 @@ var discoSchemes = []func(*runtime.Scheme) error{
 	discoveryenginev1alpha1.AddToScheme,
 	securitycenterv1beta1.AddToScheme,
 	dnsv1alpha1.AddToScheme,
+	accesscontextmanagerv1alpha1.AddToScheme,
 }
 
 func init() {

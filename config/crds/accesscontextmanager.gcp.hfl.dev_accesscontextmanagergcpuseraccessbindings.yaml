@@ -1,0 +1,351 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    gcp.hfl.dev/gap: "true"
+  name: accesscontextmanagergcpuseraccessbindings.accesscontextmanager.gcp.hfl.dev
+spec:
+  group: accesscontextmanager.gcp.hfl.dev
+  names:
+    categories:
+    - gcp
+    - hfl
+    kind: AccessContextManagerGCPUserAccessBinding
+    listKind: AccessContextManagerGCPUserAccessBindingList
+    plural: accesscontextmanagergcpuseraccessbindings
+    shortNames:
+    - hflaccesscontextmanagergcpuseraccessbinding
+    - hflaccesscontextmanagergcpuseraccessbindings
+    singular: accesscontextmanagergcpuseraccessbinding
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: When 'True', the most recent reconcile of the resource succeeded
+      jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: Ready
+      type: string
+    - description: The reason for the value in 'Ready'
+      jsonPath: .status.conditions[?(@.type=='Ready')].reason
+      name: Status
+      type: string
+    - description: The last transition time for the value in 'Status'
+      jsonPath: .status.conditions[?(@.type=='Ready')].lastTransitionTime
+      name: Status Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: AccessContextManagerGCPUserAccessBinding binds a Google Group's
+          members to an organization's access levels and session policy (context-aware
+          access to Google Cloud).
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              accessLevels:
+                description: 'Access level that a user must have to be granted access.
+                  Only one access level is supported, not multiple. Example: "accessPolicies/9522/accessLevels/device_trusted".'
+                items:
+                  type: string
+                maxItems: 1
+                type: array
+                x-kubernetes-list-type: atomic
+              dryRunAccessLevels:
+                description: 'Dry run access level that is evaluated but not enforced;
+                  a denial it would make is logged. Only one access level is supported.
+                  Example: "accessPolicies/9522/accessLevels/device_trusted".'
+                items:
+                  type: string
+                maxItems: 1
+                type: array
+                x-kubernetes-list-type: atomic
+              groupKey:
+                description: 'Immutable. Google Group id whose members are subject
+                  to this binding''s restrictions. See "id" in the G Suite Directory
+                  API''s Groups resource. If a group''s email address/alias is changed,
+                  this resource will continue to point at the changed group. This
+                  field does not accept group email addresses or aliases. Example:
+                  "01d520gv4vjcrht".'
+                minLength: 1
+                type: string
+                x-kubernetes-validations:
+                - message: groupKey is immutable
+                  rule: self == oldSelf
+              organizationRef:
+                description: Immutable. The organization that this resource belongs
+                  to.
+                properties:
+                  external:
+                    description: The organization, as organizations/{id} or {id}.
+                    type: string
+                required:
+                - external
+                type: object
+                x-kubernetes-validations:
+                - message: organizationRef is immutable
+                  rule: self == oldSelf
+              resourceID:
+                description: Immutable. Optional. The service-generated name of the
+                  resource (the last part of its name). Used for acquisition only.
+                  Leave unset to create a new resource; it is set after the create.
+                type: string
+              restrictedClientApplications:
+                description: A list of applications that are subject to this binding's
+                  restrictions. If the list is empty, the binding restrictions apply
+                  to all applications.
+                items:
+                  description: GCPUserAccessBindingApplication is an application a
+                    binding restricts.
+                  properties:
+                    clientId:
+                      description: The OAuth client ID of the application.
+                      type: string
+                    name:
+                      description: 'The name of the application. Example: "Cloud Console".'
+                      type: string
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
+              scopedAccessSettings:
+                description: A list of scoped access settings that set this binding's
+                  restrictions on a subset of applications. It cannot be set together
+                  with restrictedClientApplications.
+                items:
+                  description: GCPUserAccessBindingScopedAccessSettings are the access
+                    settings of one scope (an application).
+                  properties:
+                    activeSettings:
+                      description: Access settings for this scope. May be empty if
+                        dryRunSettings is set.
+                      properties:
+                        accessLevels:
+                          description: Access level that a user must have to be granted
+                            access. Only one access level is supported.
+                          items:
+                            type: string
+                          maxItems: 1
+                          type: array
+                          x-kubernetes-list-type: atomic
+                        sessionSettings:
+                          description: Session settings applied to user access on
+                            the scope.
+                          properties:
+                            maxInactivity:
+                              description: How long a user is allowed to take between
+                                actions before a new access token must be issued,
+                                as a duration ("3600s"). Only set for Google Cloud
+                                apps.
+                              type: string
+                            sessionLength:
+                              description: The session length, as a duration ("43200s").
+                                Zero disables the session; sessionLengthEnabled false
+                                makes it infinite.
+                              type: string
+                            sessionLengthEnabled:
+                              description: Enables Google Cloud session length. When
+                                false, the other fields are disregarded and the session
+                                length is infinite.
+                              type: boolean
+                            sessionReauthMethod:
+                              description: 'How the user signs in again when the session
+                                is up: LOGIN (the default), SECURITY_KEY or PASSWORD.'
+                              enum:
+                              - SESSION_REAUTH_METHOD_UNSPECIFIED
+                              - LOGIN
+                              - SECURITY_KEY
+                              - PASSWORD
+                              type: string
+                            useOidcMaxAge:
+                              description: 'Only for OIDC apps: when true, the re-auth
+                                period is the minimum of sessionLength and the OIDC
+                                max_age parameter.'
+                              type: boolean
+                          type: object
+                      type: object
+                    dryRunSettings:
+                      description: Dry-run access settings for this scope. May be
+                        empty if activeSettings is set.
+                      properties:
+                        accessLevels:
+                          description: Access level that a user must have to be granted
+                            access. Only one access level is supported.
+                          items:
+                            type: string
+                          maxItems: 1
+                          type: array
+                          x-kubernetes-list-type: atomic
+                        sessionSettings:
+                          description: Session settings applied to user access on
+                            the scope.
+                          properties:
+                            maxInactivity:
+                              description: How long a user is allowed to take between
+                                actions before a new access token must be issued,
+                                as a duration ("3600s"). Only set for Google Cloud
+                                apps.
+                              type: string
+                            sessionLength:
+                              description: The session length, as a duration ("43200s").
+                                Zero disables the session; sessionLengthEnabled false
+                                makes it infinite.
+                              type: string
+                            sessionLengthEnabled:
+                              description: Enables Google Cloud session length. When
+                                false, the other fields are disregarded and the session
+                                length is infinite.
+                              type: boolean
+                            sessionReauthMethod:
+                              description: 'How the user signs in again when the session
+                                is up: LOGIN (the default), SECURITY_KEY or PASSWORD.'
+                              enum:
+                              - SESSION_REAUTH_METHOD_UNSPECIFIED
+                              - LOGIN
+                              - SECURITY_KEY
+                              - PASSWORD
+                              type: string
+                            useOidcMaxAge:
+                              description: 'Only for OIDC apps: when true, the re-auth
+                                period is the minimum of sessionLength and the OIDC
+                                max_age parameter.'
+                              type: boolean
+                          type: object
+                      type: object
+                    scope:
+                      description: 'The application the settings apply to: the scoped
+                        access settings'' key, unique and non-empty.'
+                      properties:
+                        clientScope:
+                          description: Client scope for this access scope.
+                          properties:
+                            restrictedClientApplication:
+                              description: The application that is subject to this
+                                binding's scope.
+                              properties:
+                                clientId:
+                                  description: The OAuth client ID of the application.
+                                  type: string
+                                name:
+                                  description: 'The name of the application. Example:
+                                    "Cloud Console".'
+                                  type: string
+                              type: object
+                          type: object
+                      type: object
+                  required:
+                  - scope
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
+              sessionSettings:
+                description: The Google Cloud session length (GCSL) policy for the
+                  group key.
+                properties:
+                  maxInactivity:
+                    description: How long a user is allowed to take between actions
+                      before a new access token must be issued, as a duration ("3600s").
+                      Only set for Google Cloud apps.
+                    type: string
+                  sessionLength:
+                    description: The session length, as a duration ("43200s"). Zero
+                      disables the session; sessionLengthEnabled false makes it infinite.
+                    type: string
+                  sessionLengthEnabled:
+                    description: Enables Google Cloud session length. When false,
+                      the other fields are disregarded and the session length is infinite.
+                    type: boolean
+                  sessionReauthMethod:
+                    description: 'How the user signs in again when the session is
+                      up: LOGIN (the default), SECURITY_KEY or PASSWORD.'
+                    enum:
+                    - SESSION_REAUTH_METHOD_UNSPECIFIED
+                    - LOGIN
+                    - SECURITY_KEY
+                    - PASSWORD
+                    type: string
+                  useOidcMaxAge:
+                    description: 'Only for OIDC apps: when true, the re-auth period
+                      is the minimum of sessionLength and the OIDC max_age parameter.'
+                    type: boolean
+                type: object
+            required:
+            - groupKey
+            - organizationRef
+            type: object
+            x-kubernetes-validations:
+            - message: resourceID is immutable once set
+              rule: '!has(oldSelf.resourceID) || (has(self.resourceID) && self.resourceID
+                == oldSelf.resourceID)'
+            - message: restrictedClientApplications and scopedAccessSettings cannot
+                both be set
+              rule: '!has(self.restrictedClientApplications) || !has(self.scopedAccessSettings)'
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the latest available observation
+                  of the resource's current state.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition.
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition. Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  type: object
+                type: array
+              externalRef:
+                description: The binding's name, as status.name; a delete uses it
+                  and resolves nothing.
+                type: string
+              name:
+                description: 'Immutable. Assigned by the server during creation. The
+                  last segment has an arbitrary length and has only URI unreserved
+                  characters (as defined by RFC 3986 Section 2.3). Should not be specified
+                  by the client during creation. Example: "organizations/256/gcpUserAccessBindings/b3-BhcX_Ud5N".'
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the generation of the resource
+                  that was most recently observed by the Config Connector controller.
+                  If this is equal to metadata.generation, then that means that the
+                  current reported status reflects the most recent desired state of
+                  the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

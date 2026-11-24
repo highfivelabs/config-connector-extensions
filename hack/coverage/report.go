@@ -207,7 +207,7 @@ func rootSection(sums []svcSum, prio *Priority, tierSums [3]counts, tierSvcs [3]
 	var b strings.Builder
 	b.WriteString("## Coverage\n\n")
 	fmt.Fprintf(&b, "How much of Google Cloud's API can be managed as Kubernetes resources, counted in attributes (writable fields of a resource's create request) across %d services and %d resources. ", nServices, total.resources)
-	b.WriteString("**Official** is what Config Connector's CRDs at the pin (`UPSTREAM.md`) cover; **ours beyond official** is what only this repository's kinds cover; **uncovered** is in the API and in neither. ")
+	b.WriteString("**Official** is what Config Connector's latest release at or before our pin (`UPSTREAM.md`, Nearest release) covers; **ours beyond official** is what only this repository's kinds cover; **uncovered** is in the API and in neither. ")
 	b.WriteString("The counts come from matching CRD fields to API fields by name, so they are estimates: see [docs/coverage](docs/coverage/README.md) for the method, its error and how to regenerate.\n\n")
 	b.WriteString("![All services](docs/coverage/bars/_total.svg)\n\n")
 	fmt.Fprintf(&b, "The purple bar under each blue and green one is **Terraform**: the share of the same attributes that a writable attribute of the `%s` provider matches (lenient rule, L2), with the strict rule (L1) as a dark tick; `%s` differs by under a point and is a column in the tables. It is an estimate from the krm-packages repository's `docs/terraform/` at `%s`, with the error described under \"Method and error\" in its `docs/terraform-leverage.md` ([source and pin](docs/coverage/README.md#terraform)).\n\n", tfBarProvider, tfOtherProvider, short(src.Terraform.Commit))
@@ -218,7 +218,7 @@ func rootSection(sums []svcSum, prio *Priority, tierSums [3]counts, tierSvcs [3]
 	b.WriteString("![Coverage by category](docs/coverage/bars/_categories.svg)\n\n")
 	b.WriteString("By tier, counted per service:\n\n")
 	b.WriteString("![Coverage by tier](docs/coverage/bars/_tiers.svg)\n\n")
-	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Purple: Terraform `google-beta` (L2), the dark tick L1. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md).</sub>\n\n")
+	b.WriteString("<sub>Blue: official. Green: ours beyond official. Grey: uncovered. Each bar reads official / ours beyond / uncovered. Purple: Terraform `google-beta` (L2), the dark tick L1. Rollups: [`categories.csv`](docs/coverage/categories.csv), [`tiers.csv`](docs/coverage/tiers.csv); every service: [`services.csv`](docs/coverage/services.csv). What to build first for the foundation: [`foundation.md`](docs/coverage/foundation.md); then for the application services: [`application.md`](docs/coverage/application.md).</sub>\n\n")
 	row := func(s svcSum) string {
 		tb, okB := tf.service(tfBarProvider, s.host)
 		tg, okG := tf.service(tfOtherProvider, s.host)

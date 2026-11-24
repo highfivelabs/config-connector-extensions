@@ -27,3 +27,8 @@ import (
 func TestCertificateManagerCertificateIssuanceConfig(t *testing.T) {
 	kindtest.Run(t, "CertificateManagerCertificateIssuanceConfig")
 }
+
+// TestCertificateManagerTrustConfig runs testdata/discokind/CertificateManagerTrustConfig/ on the fake cloud, or live.
+func TestCertificateManagerTrustConfig(t *testing.T) {
+	kindtest.Run(t, "CertificateManagerTrustConfig")
+}

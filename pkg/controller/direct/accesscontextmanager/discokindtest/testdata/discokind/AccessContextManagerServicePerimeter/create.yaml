@@ -1,0 +1,39 @@
+apiVersion: accesscontextmanager.gcp.hfl.dev/v1alpha1
+kind: AccessContextManagerServicePerimeter
+metadata:
+  name: ${NAME}
+spec:
+  accessPolicy: "100000000001"
+  resourceID: ${ID}
+  title: ${ID}
+  description: made by a config-connector-extensions test
+  perimeterType: PERIMETER_TYPE_REGULAR
+  status:
+    resources: [projects/100000000002]
+    restrictedServices: [storage.googleapis.com]
+    vpcAccessibleServices:
+      enableRestriction: true
+      allowedServices: [RESTRICTED-SERVICES]
+    ingressPolicies:
+    - title: from-ci
+      ingressFrom:
+        identityType: ANY_SERVICE_ACCOUNT
+        sources:
+        - resource: projects/100000000003
+      ingressTo:
+        resources: ["*"]
+        roles: [roles/storage.objectViewer]
+    egressPolicies:
+    - title: to-logs
+      egressFrom:
+        identityType: ANY_IDENTITY
+        sources:
+        - accessLevel: "*"
+        sourceRestriction: SOURCE_RESTRICTION_ENABLED
+      egressTo:
+        resources: [projects/100000000004]
+        roles: [roles/logging.logWriter]
+  useExplicitDryRunSpec: true
+  spec:
+    resources: [projects/100000000002]
+    restrictedServices: [storage.googleapis.com, bigquery.googleapis.com]
