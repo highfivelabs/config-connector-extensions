@@ -3765,6 +3765,16 @@ To raise confidence in `ArtifactRegistryRepository`:
       extensions.** What `master` has and no release has yet ships in
       our build; what we fixed ships as `patches/`; what we extend ships
       as our kinds.
+      The builder, 2026-11-24, on what the build carries, verbatim: "our
+      build has the contents of their main - if there are merged but
+      unreleased contents in their repo that we coudl use to fill in gaps
+      on attributes or resources, we shoudl take them and publish them on
+      our extensions controller". So upstream stays installed beside us at
+      its release, and our extensions controller serves what upstream has
+      merged on its main branch but not released, wherever it fills a gap
+      in resources or attributes: as our own kinds in our API group
+      (copied by the copy-upstream rule), or as field kinds on upstream's
+      kinds. When upstream releases it, ours retires.
     - **Transition is expected.** When upstream ships a field or kind we
       carry, it retires ours by section 3.4. Users moving across is
       accepted churn, and the experience is something to observe and
