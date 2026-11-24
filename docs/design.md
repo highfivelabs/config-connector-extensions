@@ -806,11 +806,11 @@ mark in its custom metadata and the compute kinds that have
 
 ### 3.2 Moving the pin
 
-The procedure is in `UPSTREAM.md`. Cadence: when a gap closes upstream,
-when a copied file changes upstream, or before a release, at least
-monthly while upstream ships every two to three weeks. A release names
-the Config Connector release it is installed beside, and pins a `master`
-commit at or after that release.
+The procedure is in `UPSTREAM.md`. The pin follows Config Connector's
+`master` (decision 39): move it to the head of `master` at least weekly,
+whenever a gap closes upstream or a copied file changes upstream, and
+before every release of ours. A release of ours pins a `master` commit
+and names the nearest Config Connector release at or before it.
 
 ### 3.3 Generating CRDs and code
 
@@ -926,22 +926,28 @@ existing Config Connector kind covers it. Counting missing fields does not
 rank them: Config Connector's existing kinds lack thousands of fields that
 Terraform or the API have, and most of them nobody is blocked on.
 
-### 6.1 Upstream first
+### 6.1 Upstream: take its `master`, never wait (decision 39)
 
-- **Code on Config Connector `master`, not released.** If the next release
-  is near, no kind of ours is needed: install beside that release.
-- **An open upstream pull request.** Copy its code under the copy-upstream
-  rule, and watch the pull request (`hack/upstream-pr.sh`); when it merges
-  and a release ships it, retire ours (section 3.4).
-- **A field missing on a large existing kind** (such as
-  `SQLInstance.retainBackupsOnDelete`): wait for the Config Connector
-  release that carries it. A gap kind for an existing kind, carrying the
-  field, is built only when a workload cannot work without the field and
-  the release is not expected soon enough. It lives in our group, as
-  `SQLUser` does, and retires when the release lands. Config Connector's
-  own manager is never rebuilt with a patch.
+Decided 2026-11-24 (decision 39), replacing the "upstream first, wait for
+the release" rules that stood here:
+
+- **Code on Config Connector `master`, not released.** Ours takes it: the
+  pin follows `master` (section 3.2), and our latest build carries what
+  `master` has, our fixes, and our extensions.
+- **An open upstream pull request.** Do not wait for it: we cannot know
+  when it lands. Copy its code under the copy-upstream rule if it works,
+  or build the gap here if it does not, and watch the pull request
+  (`hack/upstream-pr.sh`). When it merges, take it from `master` and
+  retire ours (section 3.4).
+- **A field missing on an existing kind** (such as
+  `SQLInstance.retainBackupsOnDelete`): build it now, as a field kind
+  (decision 37) or our own kind owning the object (decisions 11, 14, 19),
+  whether or not upstream has a pull request for it.
 - **In the Google API, in no Config Connector code or pull request.**
   Written here from the API and Terraform's behaviour, read not copied.
+
+Users moving from our kinds to upstream's when upstream catches up is
+expected churn, and wanted: we want to see what that transition is like.
 
 ### 6.2 What "missing" means
 
@@ -3039,7 +3045,8 @@ To raise confidence in `ArtifactRegistryRepository`:
    `ConfigConnectorContext`, watching only its namespace (section 9).
 5. **Field gaps on large existing kinds** wait for Config Connector's
    release, with the exception in section 6.1. **Reversed on
-   2026-11-10: decision 19.** Never a fork. Exceptions
+   2026-11-10: decision 19; reversed in full on 2026-11-24: decision 39
+   (never wait on an upstream release or pull request).** Never a fork. Exceptions
    made: decisions 11 and 14 (and 13, 16 for whole
    kinds). A parallel kind copied from an upstream migration pull
    request, owning the whole object, is now the accepted pattern when a
@@ -3731,6 +3738,43 @@ To raise confidence in `ArtifactRegistryRepository`:
     made; delete disables the credential first; and no value is in any
     log line, at every verbosity, or any event). Live: pending (section
     7, item 44).
+
+39. **Track upstream `master`; never wait on an upstream pull request or
+    release** (the builder, 2026-11-24, reversing decision 5 and what
+    was left of it after decision 19, for all of the KRM extensions
+    repositories). The builder, verbatim: "I think we shoudl not wait and
+    make the extensions repo take these or build them and pull ahead. we
+    can afford right now to have some churn in having folks transition
+    and actually want to see what that experience looks like" and "let's
+    reverse the earlier decision. I think if it's in PR we have no idea
+    how long it'll take to land. for all krm extnsions repos let's take
+    changes that land on main and of course those on official releases
+    but our latest build should have the contents of their main + any
+    fixes + what we extend". So:
+    - **A gap with an upstream pull request is built now**, from the
+      pull request's code where it works, otherwise here. "Wait for the
+      release" and "wait for #NNNN" are no longer reasons to skip a
+      gap. This applies at once to `docs/coverage/foundation.md` item 14
+      (GKE: `controlPlaneDiskEncryptionKey` #8135, maintenance exclusion
+      `endTimeBehavior` #14193, the Managed Lustre CSI add-on #12906,
+      and the node pool fields it set aside), item 27 (Cloud Armor), the
+      firewall policy items, and every row whose "Upstream" column names
+      a pull request.
+    - **The pin follows `master`** (section 3.2), at least weekly.
+    - **Our latest build is upstream `master` + our fixes + our
+      extensions.** What `master` has and no release has yet ships in
+      our build; what we fixed ships as `patches/`; what we extend ships
+      as our kinds.
+    - **Transition is expected.** When upstream ships a field or kind we
+      carry, it retires ours by section 3.4. Users moving across is
+      accepted churn, and the experience is something to observe and
+      write down (`docs/design.md` section 7).
+    - Unchanged: the copy-upstream rule, `patches/` for changes to
+      upstream code, never editing `third_party/`, the merge gate, and
+      the live-run rules.
+    - `docs/coverage/` still measures "official" at the pin's CRDs;
+      the queue text in `hack/coverage/foundation.yaml` that says "wait"
+      is superseded by this decision until it is regenerated.
 
 ## 9. The operator: Config Connector's identity, per namespace
 

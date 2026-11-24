@@ -21,10 +21,12 @@ itself lives in its own repository and is never changed from here.
   `task upstream` (or `task tools`), with `patches/` applied in order.
 - **Unreleased upstream code** (master, pull requests): `docs/design.md`
   §2.3 and "Switching to PR #7148" (building from an upstream pull request), §3 (pin, patches, moving the pin, generating CRDs and code, retiring a kind); `task upstream-pr` watches the pull requests we depend on.
-- **What to build next:** `docs/design.md` §6 "Choosing gaps". Upstream first: a gap
-  is built here only when upstream has neither released it nor has a
-  pull request close to merging; when it does, wait for the release
-  unless a field is critical.
+- **What to build next:** `docs/design.md` §6 "Choosing gaps". Never wait on
+  upstream (decision 39, 2026-11-24): the pin follows Config Connector's
+  `master`, and a gap with an open upstream pull request is built now,
+  from that pull request's code where it works. Our latest build is
+  upstream `master` + our fixes + our extensions; when upstream ships a
+  kind or field we carry, ours retires (§3.4).
 - **What is left and known gaps:** `docs/design.md` §7 "What is left".
 - **The fake cloud:** docs/fake-cloud.md (mockgcp).
 - **Live runs against a real project:** `docs/live-runs.md` (the switch,
