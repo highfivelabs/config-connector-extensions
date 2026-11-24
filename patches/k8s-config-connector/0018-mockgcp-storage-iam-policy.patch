@@ -7,9 +7,8 @@ already serves for every other service. They are now served from the same
 per-resource store: the PUT body is the policy itself, the etag is checked,
 and the store does not know whether the bucket exists.
 Upstream candidate: yes.
-
 diff --git a/mockgcp/mockgcp_http.go b/mockgcp/mockgcp_http.go
-index eff79f7..052a254 100644
+index 0ca2f0d04..96ebd369e 100644
 --- a/mockgcp/mockgcp_http.go
 +++ b/mockgcp/mockgcp_http.go
 @@ -303,6 +303,37 @@ func (m *mockRoundTripper) roundTripIAMPolicy(req *http.Request) (*http.Response
@@ -30,7 +29,7 @@ index eff79f7..052a254 100644
 +	resourcePath := req.URL.Host + strings.TrimSuffix(req.URL.Path, "/iam")
 +	switch req.Method {
 +	case "GET":
-+		return m.iamPolicies.serveGetIAMPolicy(resourcePath)
++		return m.iamPolicies.serveGetIAMPolicy(req.Context(), resourcePath)
 +	case "PUT":
 +		policy, err := io.ReadAll(req.Body)
 +		if err != nil {
@@ -38,7 +37,7 @@ index eff79f7..052a254 100644
 +		}
 +		wrapped := *req
 +		wrapped.Body = io.NopCloser(strings.NewReader(`{"policy":` + string(policy) + `}`))
-+		return m.iamPolicies.serveSetIAMPolicy(resourcePath, &wrapped)
++		return m.iamPolicies.serveSetIAMPolicy(req.Context(), resourcePath, &wrapped)
 +	}
 +	return &http.Response{
 +		StatusCode: http.StatusMethodNotAllowed,

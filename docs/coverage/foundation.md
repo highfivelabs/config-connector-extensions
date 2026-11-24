@@ -10,22 +10,22 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Platform foundation | 150 | 101 | 3121 | 39.0% | 19.3% | 41.7% |
-| Security-adjacent | 82 | 69 | 1406 | 67.2% | 12.7% | 20.1% |
+| Platform foundation | 150 | 106 | 3121 | 39.6% | 18.8% | 41.6% |
+| Security-adjacent | 82 | 69 | 1406 | 67.1% | 12.7% | 20.2% |
 
 By service:
 
 | Category | Service | Resources | Attributes | Official | Ours beyond | Uncovered |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | foundation | `container.googleapis.com` | 2 | 928 | 43.3% | 0.0% | 56.7% |
-| foundation | `compute.googleapis.com` | 26 | 678 | 40.4% | 26.3% | 33.3% |
+| foundation | `compute.googleapis.com` | 26 | 678 | 42.8% | 23.9% | 33.3% |
 | foundation | `logging.googleapis.com` | 33 | 484 | 24.0% | 67.4% | 8.7% |
 | foundation | `dns.googleapis.com` | 7 | 258 | 30.6% | 3.5% | 65.9% |
 | foundation | `gkehub.googleapis.com` | 9 | 176 | 16.5% | 8.0% | 75.6% |
 | foundation | `networkconnectivity.googleapis.com` | 14 | 153 | 60.1% | 15.0% | 24.8% |
 | foundation | `orgpolicy.googleapis.com` | 4 | 121 | 67.8% | 0.0% | 32.2% |
 | foundation | `iam.googleapis.com` | 16 | 113 | 39.8% | 25.7% | 34.5% |
-| foundation | `cloudresourcemanager.googleapis.com` | 12 | 55 | 40.0% | 41.8% | 18.2% |
+| foundation | `cloudresourcemanager.googleapis.com` | 12 | 55 | 45.5% | 41.8% | 12.7% |
 | foundation | `cloudidentity.googleapis.com` | 8 | 47 | 21.3% | 0.0% | 78.7% |
 | foundation | `cloudkms.googleapis.com` | 8 | 42 | 42.9% | 0.0% | 57.1% |
 | foundation | `billingbudgets.googleapis.com` | 1 | 28 | 85.7% | 0.0% | 14.3% |
@@ -38,7 +38,7 @@ By service:
 | security | `compute.googleapis.com` | 6 | 199 | 48.7% | 14.6% | 36.7% |
 | security | `accesscontextmanager.googleapis.com` | 5 | 131 | 51.9% | 42.0% | 6.1% |
 | security | `securitycenter.googleapis.com` | 16 | 124 | 58.9% | 15.3% | 25.8% |
-| security | `securityposture.googleapis.com` | 2 | 63 | 93.7% | 0.0% | 6.3% |
+| security | `securityposture.googleapis.com` | 2 | 63 | 92.1% | 0.0% | 7.9% |
 | security | `certificatemanager.googleapis.com` | 6 | 44 | 75.0% | 11.4% | 13.6% |
 | security | `binaryauthorization.googleapis.com` | 2 | 37 | 75.7% | 13.5% | 10.8% |
 | security | `recaptchaenterprise.googleapis.com` | 2 | 35 | 74.3% | 0.0% | 25.7% |
@@ -73,7 +73,7 @@ What these numbers miss, for the foundation:
 | 4 | [Workforce identity (SCIM tenants, provider keys) and OAuth clients](#4-workforce-identity-scim-tenants-provider-keys-and-oauth-clients) | A | whole | 1 | M | 0 / 20 (0.0%) | none |
 | 5 | [A fleet's RBAC role bindings and rollout sequences](#5-a-fleets-rbac-role-bindings-and-rollout-sequences) | A | whole | 0 | M | 117 / 131 (0.0%) | none found for either (searches for `RBACRoleBinding membership` and `RolloutSequence` return nothing) |
 | 6 | [Organization-level network security objects (address groups, security profiles)](#6-organization-level-network-security-objects-address-groups-security-profiles) | A | whole | 0 | M | 23 / 52 (0.0%) | none |
-| 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 2 / 57 (0.0%) | none |
+| 7 | [BYOIP prefixes and cross-site interconnect groups](#7-byoip-prefixes-and-cross-site-interconnect-groups) | A | whole | 0 | M | 2 / 57 (28.1%) | none |
 | 8 | [Stable kinds for the alpha-only foundation kinds (deny policies, principal access boundary, hierarchical security policy, network firewall rules, response policies)](#8-stable-kinds-for-the-alpha-only-foundation-kinds-deny-policies-principal-access-boundary-hierarchical-security-policy-network-firewall-rules-response-policies) | A | stability | 6 | L | 153 / 218 (21.6%) | IAM deny policies: open PR #7303 "Add IAM deny policies support" (2026-07-08, review required) |
 | 9 | [Cloud Router fields (BGP peers, NAT, interfaces, MD5 keys)](#9-cloud-router-fields-bgp-peers-nat-interfaces-md5-keys) | A | field | 6 | S | 5 / 81 (70.4%) | no pull request for these fields |
 | 10 | [VPN tunnel and Interconnect attachment fields](#10-vpn-tunnel-and-interconnect-attachment-fields) | A | field | 5 | S | 14 / 85 (51.8%) | none for the fields |
@@ -89,7 +89,7 @@ What these numbers miss, for the foundation:
 | 20 | [Security Command Center at folder and project level](#20-security-command-center-at-folder-and-project-level) | B | whole | 3 | M | 25 / 40 (0.0%) | in progress: open PR #7673 "direct SCC resources" (2026-05-05) and #14181 (direct controller for `SecuritycenterSecurityHealthAnalyticsCusto... |
 | 21 | [VPC Service Controls (authorized orgs descriptions, dry-run spec, user access bindings)](#21-vpc-service-controls-authorized-orgs-descriptions-dry-run-spec-user-access-bindings) | B | whole | 3 | M | 4 / 105 (43.8%) | partly in progress: open PR #14202 "Add support for AccessContextManagerAuthorizedOrgsDesc" (2026-11-08) |
 | 22 | [Privileged Access Manager grants](#22-privileged-access-manager-grants) | B | whole | 0 | S | 7 / 18 (61.1%) | none found. |
-| 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 3 / 12 (0.0%) | none. |
+| 23 | [Resource Manager capability configs, boundaries and tag holds](#23-resource-manager-capability-configs-boundaries-and-tag-holds) | B | whole | 0 | S | 0 / 12 (25.0%) | none. |
 | 24 | [Cloud Identity SSO profiles, assignments and policies](#24-cloud-identity-sso-profiles-assignments-and-policies) | B | whole | 0 | M | 26 / 26 (0.0%) | none for these |
 | 25 | [Binary Authorization, Private CA and Certificate Manager fields](#25-binary-authorization-private-ca-and-certificate-manager-fields) | B | field | 3 | M | 38 / 209 (71.3%) | none for the fields (open pull requests searched 2026-11-23): #5859 (`PrivateCACAPool` direct CRD and mapper, 2025-12-19) and #13232 (direct... |
 | 26 | [Secret Manager fields](#26-secret-manager-fields) | B | field | 1 | S | 4 / 30 (33.3%) | regional secrets: PR #6651 (copied, `UPSTREAM.md`) |
@@ -180,13 +180,13 @@ What these numbers miss, for the foundation:
 
 - **Importance** A, **gap** whole, **size** M, **modules** 0 (none).
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
-  - `compute.googleapis.com/PublicAdvertisedPrefix`: 0 / 7 / 0 of 7; ComputePublicAdvertisedPrefix (ours)
+  - `compute.googleapis.com/PublicAdvertisedPrefix`: 5 / 2 / 0 of 7; ComputePublicAdvertisedPrefix (alpha), ComputePublicAdvertisedPrefix (ours)
   - `compute.googleapis.com/PublicDelegatedPrefix`: 0 / 15 / 0 of 15; ComputePublicDelegatedPrefix (ours)
   - `compute.googleapis.com/GlobalPublicDelegatedPrefix`: 0 / 15 / 0 of 15; ComputeGlobalPublicDelegatedPrefix (ours), ComputePublicDelegatedPrefix (ours)
-  - `compute.googleapis.com/InterconnectGroup`: 0 / 4 / 0 of 4; ComputeInterconnectGroup (ours)
-  - `compute.googleapis.com/InterconnectAttachmentGroup`: 0 / 5 / 0 of 5; ComputeInterconnectAttachmentGroup (ours)
+  - `compute.googleapis.com/InterconnectGroup`: 4 / 0 / 0 of 4; ComputeInterconnectGroup (alpha), ComputeInterconnectGroup (ours)
+  - `compute.googleapis.com/InterconnectAttachmentGroup`: 5 / 0 / 0 of 5; ComputeInterconnectAttachmentGroup (alpha), ComputeInterconnectAttachmentGroup (ours)
   - `compute.googleapis.com/WireGroup`: 0 / 7 / 2 of 9; ComputeWireGroup (ours)
-  - `compute.googleapis.com/CrossSiteNetwork`: 0 / 2 / 0 of 2; ComputeCrossSiteNetwork (ours)
+  - `compute.googleapis.com/CrossSiteNetwork`: 2 / 0 / 0 of 2; ComputeCrossSiteNetwork (alpha), ComputeCrossSiteNetwork (ours)
 - **Missing, whole resources:** `ComputePublicAdvertisedPrefix`, `ComputePublicDelegatedPrefix` (regional and global), `ComputeInterconnectGroup`, `ComputeInterconnectAttachmentGroup`, `ComputeWireGroup`, `ComputeCrossSiteNetwork`.
 - **Missing, attributes that matter:** Prefixes: `ipCidrRange`, `pdpScope`, `parentPrefix`, `mode`, `allocatablePrefixLength`, `publicDelegatedSubPrefixs[]`; groups: `intent`, `interconnects{}`/`attachments{}`; wire group: `wireProperties`, `endpoints{}`, `adminEnabled`.
   - uncovered in `compute.googleapis.com/WireGroup` (measured): `endpoints{}.interconnects{}.interconnect`, `endpoints{}.interconnects{}.vlanTags[]`
@@ -405,10 +405,9 @@ What these numbers miss, for the foundation:
 - **Measured** (resource: official / ours beyond / uncovered of attributes; official kinds):
   - `cloudresourcemanager.googleapis.com/organizations.capabilityConfigs`: 0 / 5 / 0 of 5; ResourceManagerCapabilityConfig (ours)
   - `cloudresourcemanager.googleapis.com/organizations.boundaries`: 0 / 4 / 0 of 4; ResourceManagerBoundary (ours)
-  - `cloudresourcemanager.googleapis.com/TagValueTagHold`: 0 / 0 / 3 of 3; no kind
+  - `cloudresourcemanager.googleapis.com/TagValueTagHold`: 3 / 0 / 0 of 3; ResourceManagerTagHold (alpha)
 - **Missing, whole resources:** `CapabilityConfig`, `Boundary` (organization governance, new in the API) and `TagValueTagHold`.
 - **Missing, attributes that matter:** Capability config `types`, `boundaries`, `managementProject`; boundary `resourceFilter`.
-  - uncovered in `cloudresourcemanager.googleapis.com/TagValueTagHold` (measured): `helpLink`, `holder`, `origin`
 - **Upstream** (Config Connector `master` at the pin and open pull requests, read 2026-11-09): none.
 - **Build:** Defer: new and unused by any module.
 
@@ -489,13 +488,13 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | CertificateManagerCertificateIssuanceConfig | certificatemanager.googleapis.com/CertificateIssuanceConfig | 2 | false |
 | CertificateManagerTrustConfig | certificatemanager.googleapis.com/TrustConfig | 3 | false |
 | ChronicleRuleDeployment | (not a create) no API resource named like ruledeployment/chronicleruledeployment in chronicle.googleapis.com | n/a | false |
-| ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 | false |
+| ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 0 | false |
 | ComputeDiskResourcePolicyAttachment | (not a create) no API resource named like diskresourcepolicyattachment/computediskresourcepolicyattachment in compute.googleapis.com | n/a | false |
 | ComputeFirewallPolicyPacketMirroringRule, ComputeFirewallPolicyRule | compute.googleapis.com/FirewallPolicy | 17 | false |
 | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | compute.googleapis.com/GlobalPublicDelegatedPrefix | 15 | false |
 | ComputeInterconnectAttachment | compute.googleapis.com/InterconnectAttachment | 19 | false |
-| ComputeInterconnectAttachmentGroup | compute.googleapis.com/InterconnectAttachmentGroup | 5 | false |
-| ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 | false |
+| ComputeInterconnectAttachmentGroup | compute.googleapis.com/InterconnectAttachmentGroup | 0 | false |
+| ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 0 | false |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 0 | false |
 | ComputeNetworkEndpoint | (not a create) no API resource named like networkendpoint/computenetworkendpoint in compute.googleapis.com | n/a | false |
 | ComputeNetworkFields | (not a create) a field kind, the BGP best path selection of a network Config Connector's ComputeNetwork owns, written with networks.patch (decision 37) | n/a | false |
@@ -504,7 +503,7 @@ Our kinds in the two categories, from the coverage data (the gaps above are what
 | ComputePerInstanceConfig | (not a create) no API resource named like perinstanceconfig/computeperinstanceconfig in compute.googleapis.com | n/a | false |
 | ComputeProjectDefaultNetworkTier | (not a create) a project's default network tier, written with projects.setDefaultNetworkTier (it always exists) | n/a | false |
 | ComputeProjectMetadataItem | (not a create) one key of a project's common instance metadata, written with projects.setCommonInstanceMetadata (no create method) | n/a | false |
-| ComputePublicAdvertisedPrefix | compute.googleapis.com/PublicAdvertisedPrefix | 7 | false |
+| ComputePublicAdvertisedPrefix | compute.googleapis.com/PublicAdvertisedPrefix | 2 | false |
 | ComputePublicDelegatedPrefix | compute.googleapis.com/PublicDelegatedPrefix | 15 | false |
 | ComputeRegionDiskResourcePolicyAttachment | (not a create) no API resource named like regiondiskresourcepolicyattachment/computeregiondiskresourcepolicyattachment in compute.googleapis.com | n/a | false |
 | ComputeRegionNetworkEndpoint | (not a create) an endpoint of a regional network endpoint group, written with regionNetworkEndpointGroups.attachNetworkEndpoints | n/a | false |
@@ -619,13 +618,17 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | CloudAssetFolderFeed | cloudasset.googleapis.com/Feed | 10 |
 | CloudAssetOrganizationFeed | cloudasset.googleapis.com/Feed | 10 |
 | CloudAssetProjectFeed | cloudasset.googleapis.com/Feed | 10 |
+| ComputeCrossSiteNetwork | compute.googleapis.com/CrossSiteNetwork | 2 |
 | ComputeInterconnect | compute.googleapis.com/Interconnect | 16 |
+| ComputeInterconnectAttachmentGroup | compute.googleapis.com/InterconnectAttachmentGroup | 5 |
+| ComputeInterconnectGroup | compute.googleapis.com/InterconnectGroup | 4 |
 | ComputeNetworkAttachment | compute.googleapis.com/NetworkAttachment | 6 |
 | ComputeNetworkEdgeSecurityService | compute.googleapis.com/NetworkEdgeSecurityService | 3 |
 | ComputeNetworkFirewallPolicyRule | compute.googleapis.com/NetworkFirewallPolicy | 23 |
 | ComputeOrganizationSecurityPolicy | compute.googleapis.com/OrganizationSecurityPolicy | 3 |
 | ComputeOrganizationSecurityPolicyAssociation | compute.googleapis.com/OrganizationSecurityPolicy | 1 |
 | ComputeOrganizationSecurityPolicyRule | compute.googleapis.com/OrganizationSecurityPolicy | 8 |
+| ComputePublicAdvertisedPrefix | compute.googleapis.com/PublicAdvertisedPrefix | 5 |
 | ComputeRegionSSLPolicy | compute.googleapis.com/RegionSslPolicy | 5 |
 | DNSResponsePolicy | dns.googleapis.com/ResponsePolicy | 3 |
 | DNSResponsePolicyRule | dns.googleapis.com/ResponsePolicyRule | 6 |
@@ -637,8 +640,8 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | KMSCryptoKeyVersion | cloudkms.googleapis.com/KeyRingCryptoKeyCryptoKeyVersion | 1 |
 | KMSEkmConnection | cloudkms.googleapis.com/EkmConnection | 6 |
 | KMSKeyRingImportJob | cloudkms.googleapis.com/KeyRingImportJob | 2 |
-| LoggingLogScope | logging.googleapis.com/LogScope | 1 |
 | LoggingLogScope | logging.googleapis.com/organizations.locations.logScopes | 1 |
+| LoggingLogScope | logging.googleapis.com/LogScope | 1 |
 | LoggingLogScope | logging.googleapis.com/projects.locations.logScopes | 1 |
 | NetworkConnectivityDestination | networkconnectivity.googleapis.com/MulticloudDataTransferConfigDestination | 5 |
 | NetworkConnectivityInternalRange | networkconnectivity.googleapis.com/InternalRange | 14 |
@@ -672,8 +675,9 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | NetworkSecurityTLSInspectionPolicy | networksecurity.googleapis.com/TlsInspectionPolicy | 8 |
 | NetworkSecurityURLList | networksecurity.googleapis.com/UrlList | 3 |
 | ReCAPTCHAEnterpriseFirewallPolicy | recaptchaenterprise.googleapis.com/Firewallpolicy | 11 |
-| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 4 |
+| ResourceManagerTagHold | cloudresourcemanager.googleapis.com/TagValueTagHold | 3 |
 | SecurityCenterBigQueryExport | securitycenter.googleapis.com/BigQueryExport | 4 |
+| SecurityCenterBigQueryExport | securitycenter.googleapis.com/organizations.bigQueryExports | 4 |
 | SecurityCenterManagementEventThreatDetectionCustomModule | securitycentermanagement.googleapis.com/EventThreatDetectionCustomModule | 6 |
 | SecurityCenterManagementSecurityHealthAnalyticsCustomModule | securitycentermanagement.googleapis.com/SecurityHealthAnalyticsCustomModule | 16 |
 | SecurityCenterMuteConfig | securitycenter.googleapis.com/MuteConfig | 5 |
@@ -681,13 +685,13 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/NotificationConfig | 4 |
 | SecurityCenterNotificationConfig | securitycenter.googleapis.com/organizations.notificationConfigs | 4 |
 | SecurityCenterSource | securitycenter.googleapis.com/Source | 3 |
-| SecuritycenterEventThreatDetectionCustomModule | securitycenter.googleapis.com/EventThreatDetectionSettingCustomModule | 6 |
 | SecuritycenterEventThreatDetectionCustomModule | securitycenter.googleapis.com/organizations.eventThreatDetectionSettings.customModules | 6 |
 | SecuritycenterEventThreatDetectionCustomModule | securitycenter.googleapis.com/organizations.securityHealthAnalyticsSettings.customModules | 3 |
+| SecuritycenterEventThreatDetectionCustomModule | securitycenter.googleapis.com/EventThreatDetectionSettingCustomModule | 6 |
 | SecuritycenterSecurityHealthAnalyticsCustomModule | securitycenter.googleapis.com/organizations.eventThreatDetectionSettings.customModules | 3 |
 | SecuritycenterSecurityHealthAnalyticsCustomModule | securitycenter.googleapis.com/organizations.securityHealthAnalyticsSettings.customModules | 16 |
 | SecuritycenterSecurityHealthAnalyticsCustomModule | securitycenter.googleapis.com/SecurityHealthAnalyticsSettingCustomModule | 16 |
-| SecurityposturePosture | securityposture.googleapis.com/Posture | 53 |
+| SecurityposturePosture | securityposture.googleapis.com/Posture | 52 |
 | SecurityposturePostureDeployment | securityposture.googleapis.com/PostureDeployment | 6 |
 | ServiceNetworkingPeeredDNSDomain | servicenetworking.googleapis.com/ServiceNetworkPeeredDnsDomain | 2 |
 | WebSecurityScannerScanConfig | websecurityscanner.googleapis.com/ScanConfig | 18 |
@@ -743,12 +747,12 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `cloudresourcemanager.googleapis.com/TagBinding` | TagsLocationTagBinding, TagsTagBinding | - | 3 | 2 | 0 | 1 | - |
 | foundation | `cloudresourcemanager.googleapis.com/TagKey` | TagsTagKey | - | 7 | 6 | 0 | 1 | - |
 | foundation | `cloudresourcemanager.googleapis.com/TagValue` | TagsTagValue | - | 4 | 4 | 0 | 0 | - |
-| foundation | `cloudresourcemanager.googleapis.com/TagValueTagHold` | - | - | 3 | 0 | 0 | 3 | 23 |
+| foundation | `cloudresourcemanager.googleapis.com/TagValueTagHold` | ResourceManagerTagHold (alpha) | - | 3 | 3 | 0 | 0 | 23 |
 | foundation | `cloudresourcemanager.googleapis.com/organizations.boundaries` | - | ResourceManagerBoundary | 4 | 0 | 4 | 0 | 23 |
 | foundation | `cloudresourcemanager.googleapis.com/organizations.capabilityConfigs` | - | ResourceManagerCapabilityConfig | 5 | 0 | 5 | 0 | 23 |
 | foundation | `cloudresourcemanager.googleapis.com/projects.capabilityConfigs` | - | ResourceManagerCapabilityConfig | 5 | 0 | 5 | 0 | - |
 | foundation | `compute.googleapis.com/Address` | ComputeAddress | - | 15 | 13 | 0 | 2 | - |
-| foundation | `compute.googleapis.com/CrossSiteNetwork` | - | ComputeCrossSiteNetwork | 2 | 0 | 2 | 0 | 7 |
+| foundation | `compute.googleapis.com/CrossSiteNetwork` | ComputeCrossSiteNetwork (alpha) | ComputeCrossSiteNetwork | 2 | 2 | 0 | 0 | 7 |
 | foundation | `compute.googleapis.com/ExternalVpnGateway` | ComputeExternalVPNGateway | - | 8 | 5 | 0 | 3 | - |
 | foundation | `compute.googleapis.com/Firewall` | ComputeFirewall | - | 19 | 17 | 0 | 2 | - |
 | foundation | `compute.googleapis.com/FirewallPolicy` | ComputeFirewallPolicy, ComputeFirewallPolicyAssociation, ComputeFirewallPolicyRule | ComputeFirewallPolicyPacketMirroringRule, ComputeFirewallPolicyRule | 73 | 24 | 17 | 32 | 2 |
@@ -756,15 +760,15 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | foundation | `compute.googleapis.com/GlobalPublicDelegatedPrefix` | - | ComputeGlobalPublicDelegatedPrefix, ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/Interconnect` | ComputeInterconnect (alpha) | - | 25 | 16 | 0 | 9 | 10 |
 | foundation | `compute.googleapis.com/InterconnectAttachment` | ComputeInterconnectAttachment | ComputeInterconnectAttachment | 36 | 13 | 19 | 4 | 10 |
-| foundation | `compute.googleapis.com/InterconnectAttachmentGroup` | - | ComputeInterconnectAttachmentGroup | 5 | 0 | 5 | 0 | 7 |
-| foundation | `compute.googleapis.com/InterconnectGroup` | - | ComputeInterconnectGroup | 4 | 0 | 4 | 0 | 7 |
+| foundation | `compute.googleapis.com/InterconnectAttachmentGroup` | ComputeInterconnectAttachmentGroup (alpha) | ComputeInterconnectAttachmentGroup | 5 | 5 | 0 | 0 | 7 |
+| foundation | `compute.googleapis.com/InterconnectGroup` | ComputeInterconnectGroup (alpha) | ComputeInterconnectGroup | 4 | 4 | 0 | 0 | 7 |
 | foundation | `compute.googleapis.com/Network` | ComputeNetwork | - | 14 | 9 | 0 | 5 | 16 |
 | foundation | `compute.googleapis.com/NetworkAttachment` | ComputeNetworkAttachment (alpha) | ComputeNetworkAttachment | 6 | 6 | 0 | 0 | - |
 | security | `compute.googleapis.com/NetworkEdgeSecurityService` | ComputeNetworkEdgeSecurityService (alpha) | - | 3 | 3 | 0 | 0 | - |
 | foundation | `compute.googleapis.com/NetworkFirewallPolicy` | ComputeNetworkFirewallPolicy, ComputeNetworkFirewallPolicyAssociation, ComputeNetworkFirewallPolicyRule (alpha) | ComputeNetworkFirewallPolicyPacketMirroringRule, ComputeNetworkFirewallPolicyRule | 73 | 26 | 15 | 32 | 2 |
 | foundation | `compute.googleapis.com/OrganizationSecurityPolicy` | ComputeOrganizationSecurityPolicy (alpha), ComputeOrganizationSecurityPolicyAssociation (alpha), ComputeOrganizationSecurityPolicyRule (alpha) | ComputeOrganizationSecurityPolicy, ComputeOrganizationSecurityPolicyAssociation, ComputeOrganizationSecurityPolicyRule | 86 | 12 | 2 | 72 | 8 |
 | security | `compute.googleapis.com/PacketMirroring` | ComputePacketMirroring | - | 12 | 12 | 0 | 0 | - |
-| foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | - | ComputePublicAdvertisedPrefix | 7 | 0 | 7 | 0 | 7 |
+| foundation | `compute.googleapis.com/PublicAdvertisedPrefix` | ComputePublicAdvertisedPrefix (alpha) | ComputePublicAdvertisedPrefix | 7 | 5 | 2 | 0 | 7 |
 | foundation | `compute.googleapis.com/PublicDelegatedPrefix` | - | ComputePublicDelegatedPrefix | 15 | 0 | 15 | 0 | 7 |
 | foundation | `compute.googleapis.com/RegionNetworkFirewallPolicy` | - | ComputeRegionNetworkFirewallPolicy, ComputeRegionNetworkFirewallPolicyAssociation, ComputeRegionNetworkFirewallPolicyRule | 73 | 0 | 27 | 46 | 2 |
 | security | `compute.googleapis.com/RegionSecurityPolicy` | ComputeSecurityPolicy | ComputeRegionSecurityPolicy, ComputeRegionSecurityPolicyRule | 86 | 36 | 29 | 21 | - |
@@ -924,7 +928,7 @@ Kinds Config Connector has only as `v1alpha1`, in the two categories. The charts
 | security | `securitycenter.googleapis.com/projects.securityHealthAnalyticsSettings.customModules` | - | - | 17 | 0 | 0 | 17 | 20 |
 | security | `securitycentermanagement.googleapis.com/EventThreatDetectionCustomModule` | SecurityCenterManagementEventThreatDetectionCustomModule (alpha) | - | 6 | 6 | 0 | 0 | - |
 | security | `securitycentermanagement.googleapis.com/SecurityHealthAnalyticsCustomModule` | SecurityCenterManagementSecurityHealthAnalyticsCustomModule (alpha) | - | 16 | 16 | 0 | 0 | - |
-| security | `securityposture.googleapis.com/Posture` | SecurityposturePosture (alpha) | - | 57 | 53 | 0 | 4 | - |
+| security | `securityposture.googleapis.com/Posture` | SecurityposturePosture (alpha) | - | 57 | 52 | 0 | 5 | - |
 | security | `securityposture.googleapis.com/PostureDeployment` | SecurityposturePostureDeployment (alpha) | - | 6 | 6 | 0 | 0 | - |
 | foundation | `servicenetworking.googleapis.com/ServiceConnection` | ServiceNetworkingConnection | - | 2 | 2 | 0 | 0 | - |
 | foundation | `servicenetworking.googleapis.com/ServiceNetworkPeeredDnsDomain` | ServiceNetworkingPeeredDNSDomain (alpha) | - | 2 | 2 | 0 | 0 | - |

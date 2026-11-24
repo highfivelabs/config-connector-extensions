@@ -12,9 +12,8 @@ same policy both passed the check and the later write replaced the
 earlier (a lost update the real API answers with 409 for one of them). A
 mutex now makes each read and each check-and-write atomic.
 Upstream candidate: yes.
-
 diff --git a/mockgcp/mockgcp_http.go b/mockgcp/mockgcp_http.go
-index 052a254fe..7a7a639e6 100644
+index 96ebd369e..3ce1757a1 100644
 --- a/mockgcp/mockgcp_http.go
 +++ b/mockgcp/mockgcp_http.go
 @@ -334,6 +334,30 @@ func (m *mockRoundTripper) roundTripStorageIAMPolicy(req *http.Request) (*http.R
@@ -34,9 +33,9 @@ index 052a254fe..7a7a639e6 100644
 +	resourcePath := req.URL.Host + strings.TrimSuffix(req.URL.Path, "/"+verb)
 +	switch {
 +	case verb == "getIamPolicy" && req.Method == "GET":
-+		return m.iamPolicies.serveGetIAMPolicy(resourcePath)
++		return m.iamPolicies.serveGetIAMPolicy(req.Context(), resourcePath)
 +	case verb == "setIamPolicy" && req.Method == "POST":
-+		return m.iamPolicies.serveSetIAMPolicy(resourcePath, req)
++		return m.iamPolicies.serveSetIAMPolicy(req.Context(), resourcePath, req)
 +	}
 +	return &http.Response{
 +		StatusCode: http.StatusMethodNotAllowed,
@@ -59,39 +58,42 @@ index 052a254fe..7a7a639e6 100644
  	var mux http.Handler
  	for _, service := range m.services {
 diff --git a/mockgcp/mockiampolicies.go b/mockgcp/mockiampolicies.go
-index 08ed44006..853171a39 100644
+index d19eda6f3..8768688cc 100644
 --- a/mockgcp/mockiampolicies.go
 +++ b/mockgcp/mockiampolicies.go
-@@ -21,12 +21,16 @@ import (
- 	"fmt"
+@@ -23,6 +23,7 @@ import (
  	"io"
  	"net/http"
+ 	"strings"
 +	"sync"
  
  	"cloud.google.com/go/iam/apiv1/iampb"
- 	"google.golang.org/protobuf/proto"
+ 	pb "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/bigquery/v2"
+@@ -31,7 +32,10 @@ import (
  )
  
  type mockIAMPolicies struct {
+-	storage  storage.Storage
++	storage storage.Storage
 +	// mu makes a read-modify-write of a policy atomic, as the real API's
 +	// etag check is: two writers racing see one 409, not a lost update.
 +	mu       sync.Mutex
  	policies map[string]*iampb.Policy
  }
  
-@@ -70,6 +74,8 @@ func (m *mockIAMPolicies) getIAMPolicy(resourcePath string) (*iampb.Policy, erro
+@@ -91,6 +95,8 @@ func (m *mockIAMPolicies) getIAMPolicy(ctx context.Context, resourcePath string)
  }
  
- func (m *mockIAMPolicies) serveGetIAMPolicy(resourcePath string) (*http.Response, error) {
+ func (m *mockIAMPolicies) serveGetIAMPolicy(ctx context.Context, resourcePath string) (*http.Response, error) {
 +	m.mu.Lock()
 +	defer m.mu.Unlock()
- 	policy, err := m.getIAMPolicy(resourcePath)
+ 	policy, err := m.getIAMPolicy(ctx, resourcePath)
  	if err != nil {
  		return nil, err
-@@ -78,6 +84,8 @@ func (m *mockIAMPolicies) serveGetIAMPolicy(resourcePath string) (*http.Response
+@@ -99,6 +105,8 @@ func (m *mockIAMPolicies) serveGetIAMPolicy(ctx context.Context, resourcePath st
  }
  
- func (m *mockIAMPolicies) serveSetIAMPolicy(resourcePath string, httpRequest *http.Request) (*http.Response, error) {
+ func (m *mockIAMPolicies) serveSetIAMPolicy(ctx context.Context, resourcePath string, httpRequest *http.Request) (*http.Response, error) {
 +	m.mu.Lock()
 +	defer m.mu.Unlock()
  	request := &iampb.SetIamPolicyRequest{}

@@ -15,11 +15,11 @@ pins:
   - name: k8s-config-connector
     repo: GoogleCloudPlatform/k8s-config-connector
     branch: master
-    commit: 672414b8191fc2d2c12fff53f6faccf5ae291eef
-    commit_date: "2026-11-07T03:04:32Z"
-    nearest_release: v1.160.0
-    nearest_release_commit: c38b031c7f5e5657b6ac6afc18da95e039066ad8
-    pinned_on: "2026-11-07"
+    commit: cfc94312852c056b52ee86bc2d30efdf0a8166db
+    commit_date: "2026-11-24T10:51:24Z"
+    nearest_release: v1.162.0
+    nearest_release_commit: 5d80f8e69f1ae84940c8257c1af5026fbad90517
+    pinned_on: "2026-11-24"
     patches: patches/k8s-config-connector
     use: go.mod replace of third_party/k8s-config-connector (hack/upstream.sh)
 
@@ -33,7 +33,7 @@ pull_requests:
     head: 9611a6de02e08aca9a624affaf59bc104d1cb88f
     read_on: "2026-11-07"
     role: copied
-    for: SQLAdminBackup, patch 0003
+    for: SQLAdminBackup (closed unmerged; upstream built it on master 2026-11-18)
   - ref: GoogleCloudPlatform/k8s-config-connector#6651
     head: 9aab204dd9d87716863b966c724b7a12664fd85f
     read_on: "2026-11-07"
@@ -158,7 +158,6 @@ pull_requests:
 patches:
   - {file: patches/k8s-config-connector/0001-mockgcp-sql-users-database-roles.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15278"}
   - {file: patches/k8s-config-connector/0002-mockgcp-listen-address-env.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15277"}
-  - {file: patches/k8s-config-connector/0003-mockgcp-sql-backup-runs.patch, pin: k8s-config-connector, upstream_candidate: "it is upstream's (PR #12553)"}
   - {file: patches/k8s-config-connector/0004-mockgcp-secretmanager-regional.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #6651"}
   - {file: patches/k8s-config-connector/0005-mockgcp-artifactregistry-upstream-credentials.patch, pin: k8s-config-connector, upstream_candidate: "offered: GoogleCloudPlatform/k8s-config-connector#15281"}
   - {file: patches/k8s-config-connector/0006-mockgcp-iam-workload-identity-pool-namespaces.patch, pin: k8s-config-connector, upstream_candidate: "yes, with PR #14209"}

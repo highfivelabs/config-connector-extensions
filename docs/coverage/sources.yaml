@@ -22,12 +22,12 @@ googleapis:
   digest: 0113444e1cae9feeca52ddd2c137991f57381ba9251005e7f2c48615743b6c30
 config_connector:
   repo: https://github.com/GoogleCloudPlatform/k8s-config-connector
-  commit: 672414b8191fc2d2c12fff53f6faccf5ae291eef
-  commit_date: "2026-11-07T03:04:32Z"
-  nearest_release: v1.160.0
-  fetched: "2026-11-09"
+  commit: cfc94312852c056b52ee86bc2d30efdf0a8166db
+  commit_date: "2026-11-24T10:51:24Z"
+  nearest_release: v1.162.0
+  fetched: "2026-11-24"
   # sha256 over config/crds/resources/*, config/servicemappings/* and apis/*/*/*_types.go
-  digest: 1aca77e2fdc159c3f859927ac5e46d344b544a3de50c0abfee24a42ff278a3ba
+  digest: 1d51efb62512c3a602ca089482e525398f39e8f97d2b379e47d1aedb024d0635
 terraform:
   # The Terraform comparison (google, google-beta) of the catalog repository,
   # a private repository: the two files of path/ are vendored byte for byte
