@@ -4173,3 +4173,17 @@ moves to section 8.
     returned only at create is written once, and if its Secret is lost it
     must be deleted and made again. Decision 38; both kinds are built (the
     token as `IAMWorkforcePoolProviderScimToken`, decision 18).
+12. **`restrictedClientApplications` left the Access Context Manager API's
+    Discovery document** (found 2026-11-24, moving the pin; not yet
+    answered). Discovery (revision 20261115) and
+    `google.golang.org/api` v0.310.0, which the new pin requires, have no
+    `GcpUserAccessBinding.restrictedClientApplications`; a restricted
+    application is now only a scoped access setting's
+    `scope.clientScope.restrictedClientApplication`. Our controller turns
+    the spec into the client's struct, so since this pin it **drops the
+    field without saying so**. Recommendation: deprecate
+    `spec.restrictedClientApplications` in
+    `AccessContextManagerGCPUserAccessBinding`, and until it is removed
+    refuse it in the CRD (a CEL rule pointing to `scopedAccessSettings`)
+    rather than drop it; a live run would show whether the real API still
+    takes it.
