@@ -28,6 +28,9 @@ package accesscontextmanager_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"slices"
 	"strings"
 	"testing"
@@ -35,6 +38,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/k8s"
 	api "google.golang.org/api/accesscontextmanager/v1"
+	htransport "google.golang.org/api/transport/http"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -62,6 +66,28 @@ func TestAccessContextManagerGCPUserAccessBinding(t *testing.T) {
 	}
 	cloud := func(name string) (*api.GcpUserAccessBinding, error) {
 		return svc.Organizations.GcpUserAccessBindings.Get(name).Context(env.Ctx).Do()
+	}
+	type rawBinding struct {
+		RestrictedClientApplications []struct {
+			ClientID string `json:"clientId"`
+			Name     string `json:"name"`
+		} `json:"restrictedClientApplications"`
+	}
+	rawCloud := func(name string) (*rawBinding, error) {
+		hc, _, err := htransport.NewClient(env.Ctx, env.GCPOptions()...)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := hc.Get(svc.BasePath + "v1/" + name)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("GET %s: %s", name, resp.Status)
+		}
+		out := &rawBinding{}
+		return out, json.NewDecoder(resp.Body).Decode(out)
 	}
 	writes := func(method string) int {
 		n := 0
@@ -236,8 +262,12 @@ func TestAccessContextManagerGCPUserAccessBinding(t *testing.T) {
 		u := env.WaitReady(gvk, namespace, "taken-over")
 		ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
 		got, err := cloud(ext)
-		if err != nil || len(got.RestrictedClientApplications) != 1 || got.RestrictedClientApplications[0].ClientId != "123.apps.googleusercontent.com" {
-			t.Errorf("the binding taken over = %+v, %v", got, err)
+		// google.golang.org/api v0.310's GcpUserAccessBinding no longer has
+		// restrictedClientApplications (Discovery dropped it), so the
+		// binding is read as JSON here; the controller sends it as JSON.
+		raw, rawErr := rawCloud(ext)
+		if err != nil || rawErr != nil || len(raw.RestrictedClientApplications) != 1 || raw.RestrictedClientApplications[0].ClientID != "123.apps.googleusercontent.com" {
+			t.Errorf("the binding taken over = %+v, %+v, %v, %v", got, raw, err, rawErr)
 		}
 		if n := writes("POST") - creates; n != 0 {
 			t.Errorf("taking the binding over made %d, want 0", n)
