@@ -86,8 +86,27 @@ open pull request, copy its code and change as little as possible:
   `*.cnrm.cloud.google.com`, and retire when a Config Connector release
   ships them (`docs/design.md`, "Retiring a gap kind").
 
-Behaviour taken from the Terraform Google provider (MPL-2.0) is read and
-followed, never copied.
+### Code under the Mozilla Public License (decision 41)
+
+The Terraform Google provider and HashiCorp's plugin libraries are
+MPL-2.0. Config Connector links them, and so do our binaries. Four rules
+(`hack/check-mpl.sh`, run by `task check`):
+
+- **Link MPL modules unmodified.** Never patch the provider or any other
+  MPL file: no patch in `patches/` touches
+  `third_party/github.com/hashicorp/`. A fix there is a reason to write
+  a direct controller.
+- **Copy nothing from them**: not code, not comments, not documentation
+  text. Facts are fine: API paths, field names, which call is made when.
+  Take facts from Google's API reference and protos first. Where only the
+  provider shows a behaviour, read it, follow the API calls in our own
+  words, and record the file read in `UPSTREAM.md` ("read, not copied").
+- **No BSL code.** Never depend on Terraform core (BSL since 1.6), Vault,
+  Consul, Nomad, Boundary, Packer or Waypoint.
+- **Name every MPL module in `NOTICE`** (`task licenses` lists them).
+
+A kind we write ourselves is a direct controller (Google's API through
+its Go client), never one built on the Terraform provider.
 
 ## Choosing what to build
 

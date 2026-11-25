@@ -213,7 +213,7 @@ tasks:
   # check without build and the tests: what every pull request runs, whatever
   # it changed (hack/ci/select.sh; a kind's own tests follow).
   "check:static":
-    desc: check's pin, generated-files, gofmt, vet, SPDX and shell-syntax checks, without the build and the tests.
+    desc: check's pin, generated-files, gofmt, vet, SPDX, MPL and shell-syntax checks, without the build and the tests.
     cmds:
       - task: upstream-check
       - task: upstream:yaml-check
@@ -226,6 +226,7 @@ tasks:
       - go vet -tags fakecloud ./cmd/manager
       - hack/check-no-fake-cloud.sh
       - hack/check-spdx.sh
+      - hack/check-mpl.sh
       - hack/check-shell.sh
       - go run ./hack/kinddocs -check
 
