@@ -3857,6 +3857,33 @@ To raise confidence in `ArtifactRegistryRepository`:
     ships them (decision 39), and uncovered otherwise. Ours is this
     repository's CRDs, which is what our next build releases.
 
+41. **MPL is linked unmodified, never copied; no BSL; our kinds are
+    direct** (the builder, 2026-11-25, for HFL-714, agreeing to four
+    rules: "these seem like the right recommendations. let's move ahead
+    under those rules"). Config Connector's Terraform-based controllers
+    link `terraform-provider-google-beta` and HashiCorp's plugin
+    libraries, which are MPL-2.0. MPL allows that in a larger work under
+    another licence. The cost is file-level copyleft on whatever is
+    modified or copied, and a review step in adopters' licence policies.
+    The builder asked how far a startup aiming at broad adoption should
+    stay from MPL. The answer, now the rule:
+    - **Linked, unmodified, as upstream does.** This repository stays as
+      it is and was not part of the HFL-714 rebuild. No patch touches
+      `third_party/github.com/hashicorp/`.
+    - **Nothing copied**: code, comments or documentation text. Facts are
+      taken from Google's API reference and protos first. The three
+      behaviours read from the provider (`UPSTREAM.md`, "read, not
+      copied") stay, as facts in our own words.
+    - **No BSL modules** (Terraform core since 1.6, Vault, Consul, Nomad,
+      Boundary, Packer, Waypoint). `hack/licenses.sh` already accepts only
+      Apache-2.0, MIT, BSD, ISC and MPL-2.0.
+    - **`NOTICE` names every MPL module.**
+    - **Kinds we write are direct controllers**, never built on the
+      provider, which is where upstream is moving too.
+
+    `hack/check-mpl.sh` (in `task check:static`) enforces the first
+    four; `CONTRIBUTING.md` has them for contributors.
+
 ## 9. The operator: Config Connector's identity, per namespace
 
 The goal: install the CRDs and run the managers so that a gap kind acts
