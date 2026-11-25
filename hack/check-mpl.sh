@@ -52,14 +52,25 @@ while IFS= read -r m; do
 done <<<"$(grep -E "${bsl}" <<<"${mods}" || true)"
 
 # 4. Every MPL module in the licence list is named in NOTICE.
+#    A HashiCorp module may be named by its repository (NOTICE says
+#    "github.com/hashicorp/terraform-plugin-sdk, ..., hcl, errwrap"); any
+#    other module by its full path, without a /vN or /version suffix. Either
+#    must appear as a whole word.
+[[ -r docs/third-party-licenses.csv ]] || { echo "docs/third-party-licenses.csv missing (task licenses)" >&2; exit 1; }
+mpl="$(awk -F, 'NR > 1 && $2 == "MPL-2.0" {print $1}' docs/third-party-licenses.csv)"
 while IFS= read -r m; do
-  name="${m#github.com/hashicorp/}"
-  name="${name%%/*}"
-  if ! grep -F -- "${name}" NOTICE >/dev/null; then
+  [[ -n "${m}" ]] || continue
+  path="$(sed -E 's#/(v[0-9]+|version)$##' <<<"${m}")"
+  name="${path}"
+  if [[ "${path}" == github.com/hashicorp/* ]]; then
+    name="${path#github.com/hashicorp/}"
+    name="${name%%/*}"
+  fi
+  if [[ -z "${name}" ]] || ! grep -wF -- "${name}" NOTICE >/dev/null; then
     echo "MPL module not named in NOTICE: ${m}" >&2
     fail=1
   fi
-done < <(awk -F, 'NR > 1 && $2 == "MPL-2.0" {print $1}' docs/third-party-licenses.csv)
+done <<<"${mpl}"
 
 if [[ ${fail} -ne 0 ]]; then
   echo "MPL/BSL rules broken; see docs/design.md, decision 41" >&2
