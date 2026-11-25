@@ -1,6 +1,8 @@
 module github.com/highfivelabs/config-connector-extensions
 
-go 1.26.0
+go 1.27.0
+
+toolchain go1.27.4
 
 require github.com/GoogleCloudPlatform/k8s-config-connector v1.129.2
 
