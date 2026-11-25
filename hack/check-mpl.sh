@@ -39,14 +39,17 @@ done < <(git ls-files --cached --others --exclude-standard -- \
 
 # 3. BSL modules in go.mod (direct or indirect). terraform-json,
 #    terraform-exec and the plugin libraries are MPL and allowed.
+#    The JSON is captured first so a failing `go mod edit` stops the script
+#    (errexit) instead of feeding the loop nothing. Replace paths count too.
 bsl='^github\.com/hashicorp/(terraform|vault|consul|nomad|boundary|packer|waypoint)(/v[0-9]+)?$'
+modjson="$(go mod edit -json)"
+mods="$(sed -n 's/^[[:space:]]*"Path": "\([^"]*\)".*/\1/p' <<<"${modjson}" | sort -u)"
+[[ -n "${mods}" ]] || { echo "no module paths read from go.mod" >&2; exit 1; }
 while IFS= read -r m; do
+  [[ -n "${m}" ]] || continue
   echo "BSL module required in go.mod: ${m}" >&2
   fail=1
-done < <(go mod edit -json | python3 -c '
-import json, sys
-for r in json.load(sys.stdin).get("Require") or []:
-    print(r["Path"])' | grep -E "${bsl}" || true)
+done <<<"$(grep -E "${bsl}" <<<"${mods}" || true)"
 
 # 4. Every MPL module in the licence list is named in NOTICE.
 while IFS= read -r m; do
