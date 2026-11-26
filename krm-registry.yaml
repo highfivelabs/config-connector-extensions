@@ -1,0 +1,29 @@
+# Copyright 2026 High Five Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# How krm-registry (registry.highfivelabs.dev) shows this provider. Its build
+# reads this file from main (krm-registry config.py has the format).
+#
+# install: the provider page's Install card, one entry per variant. A variant
+# with oci: names where the chart is published on cr.highfivelabs.dev; the
+# registry shows it only once that chart is published, at the newest
+# release-shaped tag there ({version}). Until then the page has no card.
+schema: 1
+install:
+  - name: High Five Labs chart
+    oci: charts/config-connector-extensions
+    when: clusters running Config Connector (its operator, or the config-connector chart)
+    note: >-
+      The operator starts a manager where Config Connector runs its own (cnrm-system, one per
+      ConfigConnectorContext in namespaced mode), each as its own Kubernetes service account.
+      With Workload Identity, bind it to the same Google service account as Config Connector
+      (the gcloud command below); without that binding gap objects stay not Ready with a 403.
+      The config-connector chart can also install it: --set extensions.enabled=true.
+    steps: |
+      helm install config-connector-extensions oci://cr.highfivelabs.dev/charts/config-connector-extensions \
+        --version {version} \
+        --namespace config-connector-extensions-system --create-namespace
+
+      gcloud iam service-accounts add-iam-policy-binding kcc@PROJECT_ID.iam.gserviceaccount.com \
+        --role=roles/iam.workloadIdentityUser \
+        --member="serviceAccount:PROJECT_ID.svc.id.goog[cnrm-system/config-connector-extensions-manager]"
