@@ -16,6 +16,18 @@
 # docs-only pull request costs a checkout.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
+# The pinned tools (hack/ci/tools.sh) first on PATH. The Taskfile's env
+# PATH does not reach the tasks' commands (Task keeps the PATH it was
+# started with), so a runner without ko on its image needs this.
+PATH="$(hack/ci/tools.sh --dir):${PATH}"
+export PATH
+# GitHub's hosted runner has 4 vCPUs and a slow disk: every envtest
+# package starts its own etcd, and four at once time out ("etcdserver:
+# request timed out", #165). Two packages at a time there; offload VMs and
+# laptops keep Go's default.
+if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted ]]; then
+  export GOFLAGS="${GOFLAGS:+${GOFLAGS} }-p=2"
+fi
 
 what="${1:?usage: hack/ci/pr.sh check|e2e}"
 
@@ -56,7 +68,9 @@ case "${what}" in
         exit 1
       fi
     fi
-    if [[ "${emulator}" == true ]] && task --list-all 2>/dev/null | grep -q '^\* test:aws-emulator:ack:'; then
+    # The task list is read whole before grep, so grep -q's early exit
+    # cannot kill the writer (SIGPIPE under pipefail).
+    if [[ "${emulator}" == true ]] && grep -q '^\* test:aws-emulator:ack:' <<<"$(task --list-all 2>/dev/null)"; then
       task test:aws-emulator:ack
     fi
     ;;
