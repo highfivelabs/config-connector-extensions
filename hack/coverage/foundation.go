@@ -176,9 +176,9 @@ var applicationSpec = queueSpec{
 		"- **Alpha-only kinds count as official.** They are listed under \"Official but alpha-only\".\n" +
 		"- **Matching is by name.** Terraform-derived kinds that rename fields (Cloud Run's `template.template`, Storage's access controls) are undercounted; a row says when its measured list is mostly naming.\n\n",
 	importance: "1. **Importance.** A: a resource the Cloud Foundation Fabric foundational modules create (gcs, pubsub, cloud-run-v2, cloudsql-instance, bigquery-dataset, artifact-registry, and the project module's monitoring). B: one other tracked modules create. C: the rest.\n",
-	scope:  "the application category",
-	every:  "All resources in the application category",
-	readOn: "2026-11-23",
+	scope:      "the application category",
+	every:      "All resources in the application category",
+	readOn:     "2026-11-23",
 }
 
 func foundationReport(m *model, prio *Priority, catSums [4]counts, svcCat map[string]map[string]counts) (string, error) {
