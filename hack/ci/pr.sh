@@ -21,6 +21,13 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 # started with), so a runner without ko on its image needs this.
 PATH="$(hack/ci/tools.sh --dir):${PATH}"
 export PATH
+# GitHub's hosted runner has 4 vCPUs and a slow disk: every envtest
+# package starts its own etcd, and four at once time out ("etcdserver:
+# request timed out", #165). Two packages at a time there; offload VMs and
+# laptops keep Go's default.
+if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted ]]; then
+  export GOFLAGS="${GOFLAGS:+${GOFLAGS} }-p=2"
+fi
 
 what="${1:?usage: hack/ci/pr.sh check|e2e}"
 
