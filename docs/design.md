@@ -2246,7 +2246,12 @@ Notes on what was built from this table:
   `BigQueryConnectionConnection`, `SecureSourceManagerInstance`,
   `SecureSourceManagerRepository`, `DataCatalogTagTemplate`,
   `CloudBuildConnection`, `WorkbenchInstance`, `EndpointsService`,
-  `IAPTunnelInstance`, `IAPWebCloudRunService`, and, with the third
+  `IAPTunnelInstance`, `IAPWebCloudRunService`, the rest of IAP's
+  resources (2026-11-26, for the tf-infra offramp: `IAPWeb`,
+  `IAPWebTypeCompute`, `IAPWebBackendService`, `IAPWebRegionBackendService`,
+  `IAPWebTypeAppEngine`, `IAPAppEngineService`, `IAPAppEngineVersion`,
+  `IAPTunnel`, `IAPTunnelDestGroup`; upstream's k8s-config-connector#7692
+  is open, decision 39), and, with the third
   protocol, `ComputeBackendService` (global and regional) and
   `ComputeMachineImage`. The kinds Config Connector has can be named by
   `name` (the project, `spec.location` and the ID make the full name, or

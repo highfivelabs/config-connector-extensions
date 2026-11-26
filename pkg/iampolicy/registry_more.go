@@ -180,6 +180,28 @@ func moreTypes() []*ResourceType {
 			`projects/[^/]+/iap_tunnel/zones/[^/]+/instances/[^/]+`, nil, nil),
 		mixin("IAPWebCloudRunService", "iap.googleapis.com", "v1", true,
 			`projects/[^/]+/iap_web/cloud_run-[^/]+/services/[^/]+`, nil, nil),
+		// The rest of IAP's resources, Terraform's google_iap_*_iam_*
+		// (upstream: k8s-config-connector#7692, open, covers the backend
+		// service and the tunnel instance). External only: IAP's names
+		// are not a Config Connector object's.
+		mixin("IAPWeb", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web`, nil, nil),
+		mixin("IAPWebTypeCompute", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web/compute`, nil, nil),
+		mixin("IAPWebBackendService", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web/compute/services/[^/]+`, nil, nil),
+		mixin("IAPWebRegionBackendService", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web/compute-[^/]+/services/[^/]+`, nil, nil),
+		mixin("IAPWebTypeAppEngine", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web/appengine-[^/]+`, nil, nil),
+		mixin("IAPAppEngineService", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web/appengine-[^/]+/services/[^/]+`, nil, nil),
+		mixin("IAPAppEngineVersion", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_web/appengine-[^/]+/services/[^/]+/versions/[^/]+`, nil, nil),
+		mixin("IAPTunnel", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_tunnel`, nil, nil),
+		mixin("IAPTunnelDestGroup", "iap.googleapis.com", "v1", true,
+			`projects/[^/]+/iap_tunnel/locations/[^/]+/destGroups/[^/]+`, nil, nil),
 
 		// A BigQuery dataset, whose policy is its access list (bigquery.go).
 		{
