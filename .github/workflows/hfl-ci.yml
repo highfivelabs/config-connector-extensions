@@ -21,12 +21,12 @@ concurrency:
 
 jobs:
   krm:
-    uses: highfivelabs/krm-ci/.github/workflows/krm-ci.yml@a19229e684a2d19add5a2ed907e82b56e5073c2d # v1.2.4
+    uses: highfivelabs/krm-ci/.github/workflows/krm-ci.yml@1e9128313ade71e05c31d8e357eb90c21a1c8615 # v1.2.5
     permissions:
       contents: read
       statuses: read
     with:
-      ci-ref: a19229e684a2d19add5a2ed907e82b56e5073c2d
+      ci-ref: 1e9128313ade71e05c31d8e357eb90c21a1c8615
       setup-command: ""
       lint-setup-command: "task upstream"
       check-command: "hack/ci/pr.sh check"

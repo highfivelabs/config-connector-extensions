@@ -21,13 +21,12 @@ concurrency:
 
 jobs:
   krm:
-    uses: highfivelabs/krm-ci/.github/workflows/krm-security.yml@a19229e684a2d19add5a2ed907e82b56e5073c2d # v1.2.4
+    uses: highfivelabs/krm-ci/.github/workflows/krm-security.yml@1e9128313ade71e05c31d8e357eb90c21a1c8615 # v1.2.5
     permissions:
       contents: read
       id-token: write
-      issues: write
       security-events: write
     with:
-      ci-ref: a19229e684a2d19add5a2ed907e82b56e5073c2d
+      ci-ref: 1e9128313ade71e05c31d8e357eb90c21a1c8615
       setup-command: "task upstream"
       govulncheck-packages: "./cmd/manager ./cmd/operator"
