@@ -24,10 +24,13 @@
 #             (group coverage)
 #   adjacent  what a kind's pull request also touches and check:static or
 #             the operator e2e covers: config/crds/, pkg/controller/
-#             controllers.go, pkg/test/mockenv/, tests/operator/
+#             controllers.go, pkg/test/mockenv/, tests/operator/; and
+#             CI's own files, .github/ and hack/ci/ (the lint job checks
+#             the workflows; a change to how CI runs is exercised by the
+#             run itself)
 #   full      everything else: go.mod, patches/, the pin, upstream.yaml,
-#             cmd/, pkg/ (the runtime, the operator), hack/, Taskfile.yml,
-#             taskfiles/, config/ (the rest), .github/
+#             cmd/, pkg/ (the runtime, the operator), hack/ (the rest),
+#             Taskfile.yml, taskfiles/, config/ (the rest)
 # A pull request is full if any path is; else groups if any path is a
 # group or adjacent; else none. The nightly run (nightly.yml) runs
 # everything on main, which catches what a group's tests miss.
@@ -50,6 +53,7 @@ classify() {
       g="${p#pkg/controller/direct/}"; echo "group ${g%%/*}" ;;
     hack/coverage/*) echo "group coverage" ;;
     config/crds/*|pkg/controller/controllers.go|pkg/test/mockenv/*|tests/operator/*) echo adjacent ;;
+    .github/*|hack/ci/*) echo adjacent ;;
     *) echo full ;;
   esac
 }
