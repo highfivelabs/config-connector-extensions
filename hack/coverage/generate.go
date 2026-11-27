@@ -602,7 +602,11 @@ func generate(repo, kccDir, discDir, protoDir string, src *Sources) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, prio, tierSums, tierSvcs, catSums, catN, total, len(m.hosts), len(uniq(m.excluded)), src, tf))
+	upjetLine, err := upjetFiles(repo, m, files)
+	if err != nil {
+		return nil, err
+	}
+	nr, err := replaceBlock(root, "<!-- coverage:start -->", "<!-- coverage:end -->", rootSection(sums, prio, tierSums, tierSvcs, catSums, catN, total, len(m.hosts), len(uniq(m.excluded)), src, tf)+"\n"+upjetLine+"\n")
 	if err != nil {
 		return nil, fmt.Errorf("README.md: %w", err)
 	}

@@ -21,7 +21,9 @@ type CPath struct {
 	Type string
 	Free bool // a free-form object: covers whatever is under it
 	Ref  bool // a reference object (name/external): one field
-	key  string
+	// Secret: a value/valueFrom object (Config Connector's secret.Legacy).
+	Secret bool
+	key    string
 }
 
 // CRD is one custom resource definition reduced to what the matching needs.
@@ -164,7 +166,7 @@ func flatCRD(n map[string]any, path string, out *[]CPath) {
 			return
 		}
 		if path != "" && isValueProps(props) {
-			*out = append(*out, CPath{Path: path, Type: "string"})
+			*out = append(*out, CPath{Path: path, Type: "string", Secret: true})
 			return
 		}
 		for _, k := range sortedKeys(props) {

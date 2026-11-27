@@ -10,7 +10,7 @@ By category, counted in attributes of the create requests of the resources in it
 
 | Category | Resources | With an official kind | Attributes | Official | Ours beyond | Uncovered |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Application | 549 | 372 | 24523 | 42.4% | 1.4% | 56.2% |
+| Application | 549 | 372 | 24523 | 42.4% | 1.3% | 56.2% |
 
 By service:
 
@@ -18,7 +18,7 @@ By service:
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | application | `aiplatform.googleapis.com` | 62 | 5625 | 22.5% | 0.0% | 77.5% |
 | application | `dlp.googleapis.com` | 22 | 3138 | 59.7% | 0.0% | 40.3% |
-| application | `compute.googleapis.com` | 63 | 2560 | 56.3% | 4.7% | 38.9% |
+| application | `compute.googleapis.com` | 63 | 2560 | 56.3% | 4.5% | 39.2% |
 | application | `dialogflow.googleapis.com` | 44 | 2455 | 44.8% | 0.0% | 55.2% |
 | application | `monitoring.googleapis.com` | 12 | 2082 | 45.7% | 0.0% | 54.3% |
 | application | `dataproc.googleapis.com` | 9 | 1093 | 47.5% | 0.0% | 52.5% |
@@ -230,7 +230,7 @@ Our kinds in the application category, from the coverage data (the gaps above ar
 | ComputeRegionHealthAggregationPolicy | compute.googleapis.com/RegionHealthAggregationPolicy | 0 | false |
 | ComputeRegionHealthCheckService | compute.googleapis.com/RegionHealthCheckService | 0 | false |
 | ComputeRegionHealthSource | compute.googleapis.com/RegionHealthSource | 0 | false |
-| ComputeRegionInstanceTemplate | compute.googleapis.com/RegionInstanceTemplate | 85 | false |
+| ComputeRegionInstanceTemplate | compute.googleapis.com/RegionInstanceTemplate | 79 | false |
 | ComputeRegionNotificationEndpoint | compute.googleapis.com/RegionNotificationEndpoint | 0 | false |
 | ComputeRolloutPlan | compute.googleapis.com/RolloutPlan | 0 | false |
 | ComputeZoneVmExtensionPolicy | compute.googleapis.com/ZoneVmExtensionPolicy | 0 | false |
@@ -741,7 +741,7 @@ Kinds Config Connector has only as `v1alpha1`, in the application category. The 
 | application | `compute.googleapis.com/RegionHealthSource` | ComputeHealthSource (alpha) | ComputeRegionHealthSource | 5 | 5 | 0 | 0 | - |
 | application | `compute.googleapis.com/RegionInstanceGroupManager` | ComputeInstanceGroupManager | - | 85 | 26 | 0 | 59 | - |
 | application | `compute.googleapis.com/RegionInstanceGroupManagerResizeRequest` | - | - | 17 | 0 | 0 | 17 | - |
-| application | `compute.googleapis.com/RegionInstanceTemplate` | ComputeInstanceTemplate | ComputeRegionInstanceTemplate | 150 | 65 | 85 | 0 | - |
+| application | `compute.googleapis.com/RegionInstanceTemplate` | ComputeInstanceTemplate | ComputeRegionInstanceTemplate | 150 | 65 | 79 | 6 | - |
 | application | `compute.googleapis.com/RegionInstantSnapshot` | ComputeInstantSnapshot (alpha) | - | 5 | 3 | 0 | 2 | - |
 | application | `compute.googleapis.com/RegionInstantSnapshotGroup` | ComputeInstantSnapshotGroup (alpha) | - | 3 | 3 | 0 | 0 | - |
 | application | `compute.googleapis.com/RegionNetworkEndpointGroup` | ComputeNetworkEndpointGroup, ComputeRegionNetworkEndpointGroup | - | 17 | 12 | 0 | 5 | - |

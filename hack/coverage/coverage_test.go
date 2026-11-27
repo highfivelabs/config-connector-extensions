@@ -4,6 +4,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -138,5 +140,36 @@ func TestParseTerraform(t *testing.T) {
 	}
 	if _, err := parseTerraform(strings.NewReader("service,provider\nx,y\n")); err == nil {
 		t.Errorf("missing columns should fail")
+	}
+}
+
+// TestUpjetHelpers: a Terraform write-only field stands for its base
+// field, and the live ledger keeps a kind's best result, by its first word.
+func TestUpjetHelpers(t *testing.T) {
+	for in, want := range map[string]string{"password_wo": "password", "shared_secret_wo_version": "shared_secret", "content": "content"} {
+		if got := upjetWriteOnlyBase(in); got != want {
+			t.Errorf("upjetWriteOnlyBase(%q) = %q, want %q", in, got, want)
+		}
+	}
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "docs"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	ledger := "# Live\n\n## Ledger\n\n| Date | Commit | Kind | Mock | Live | Differences | Cost |\n| --- | --- | --- | --- | --- | --- | --- |\n" +
+		"| 2026-11-01 | `a` | SQLUser | PASS | FAIL | x | y |\n" +
+		"| 2026-11-02 | `b` | SQLUser, RunJob | PASS | PASS | x | y |\n" +
+		"| 2026-11-03 | `c` | SQLUser | PASS | FAIL | x | y |\n" +
+		"| 2026-11-03 | `c` | `LoggingLink` | PASS | pending, needs access: x | x | y |\n" +
+		"\n## After\n\n| 2026-11-04 | `d` | DNSResponsePolicy | PASS | PASS | x | y |\n"
+	if err := os.WriteFile(filepath.Join(dir, "docs", "live-runs.md"), []byte(ledger), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := loadLedger(dir, map[string]bool{"SQLUser": true, "RunJob": true, "LoggingLink": true, "DNSResponsePolicy": true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{"SQLUser": "PASS", "RunJob": "PASS", "LoggingLink": "pending"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("loadLedger = %v, want %v", got, want)
 	}
 }

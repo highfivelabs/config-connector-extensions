@@ -19,7 +19,9 @@
 # getQuery (query parameters every get sends, such as view: FULL);
 # secrets (dotted paths of string fields taken as value or
 # valueFrom.secretKeyRef, Config Connector's secret.Legacy, decision 33);
-# inputOnly (dotted paths of fields the API never returns); mockgcp (the
+# secretWaivers (spec paths, [] after a list, that the secret guard in
+# hack/discokind/secrets_test.go holds secret but stay plain strings, each
+# with why); inputOnly (dotted paths of fields the API never returns); mockgcp (the
 # fake leaves the collection to mockgcp, which serves it for other tests;
 # not swept by the discokind loop); updateMethod (a PUT method that
 # replaces the resource, for an API with no patch: the whole spec, no
@@ -349,6 +351,18 @@
   parents: [project]
   terraform: google_compute_region_instance_template
   note: "A regional instance template; Config Connector's ComputeInstanceTemplate is global only."
+  # HFL-699: the customer-supplied keys (CSEK) are left out. A key would
+  # sit in the manifest in plain text, secrets cannot reach a list item,
+  # Terraform marks raw_key Sensitive, and Google calls CSEK deprecated
+  # in favour of Cloud KMS keys (CMEK: kmsKeyName, kmsKeyServiceAccount,
+  # which stay). The three keys share one struct (CustomerEncryptionKey).
+  skip:
+    properties.disks[].diskEncryptionKey.rawKey: &csek "a customer-supplied key (CSEK) would sit in the manifest in plain text; the API calls CSEK deprecated in favour of kmsKeyName (CMEK), which stays"
+    properties.disks[].diskEncryptionKey.rsaEncryptedKey: *csek
+    properties.disks[].initializeParams.sourceImageEncryptionKey.rawKey: *csek
+    properties.disks[].initializeParams.sourceImageEncryptionKey.rsaEncryptedKey: *csek
+    properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rawKey: *csek
+    properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rsaEncryptedKey: *csek
 
 - kind: LookerInstance
   group: looker.gcp.hfl.dev
@@ -679,6 +693,8 @@
   parents: [project]
   terraform: google_cloudbuildv2_connection
   note: "A Cloud Build connection to a GitHub, GitLab or Bitbucket host."
+  secretWaivers:
+    githubEnterpriseConfig.apiKey: "The key the API uses to authenticate webhook events (Discovery: not input-only, so the controller compares it with what get returns); the host's own credentials (private key, webhook secret) are Secret Manager version names, not values. Moving it to secrets is open (docs/design.md section 7)."
 
 - kind: CloudBuildRepository
   group: cloudbuild.gcp.hfl.dev

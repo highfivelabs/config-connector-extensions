@@ -8,6 +8,19 @@ has been released yet; each release moves its entries out of
 
 ### Changed
 
+- **`ComputeRegionInstanceTemplate` no longer takes customer-supplied
+  encryption keys (CSEK)** (`docs/design.md` section 7, item 56;
+  HFL-699). `rawKey` and `rsaEncryptedKey` are gone from
+  `spec.properties.disks[].diskEncryptionKey`,
+  `.initializeParams.sourceImageEncryptionKey` and
+  `.initializeParams.sourceSnapshotEncryptionKey`: they were plain
+  strings, so the key sat in the manifest, and Google has deprecated
+  CSEK in favour of Cloud KMS keys. Use `kmsKeyName` (and
+  `kmsKeyServiceAccount`), which stay. A manifest that sets either field
+  is now refused by `kubectl`'s strict field validation, or has the
+  field pruned by a client that does not validate; move the key to
+  Cloud KMS.
+
 - **`LoggingBillingAccountSink` is `v1beta1`**
   (`logging.gcp.hfl.dev/v1beta1`; `docs/design.md` decision 27: it passed
   live in run `cce-11181701-a6f8` as `live-tests@` and its CRD has not

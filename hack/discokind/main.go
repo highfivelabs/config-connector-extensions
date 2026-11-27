@@ -84,7 +84,12 @@ type Config struct {
 	// Immutable are top-level fields the API cannot patch beyond those
 	// its descriptions call Immutable.
 	Immutable []string `json:"immutable,omitempty"`
-	// Skip are writable fields left out of the spec, with why.
+	// Skip are writable fields left out of the spec, with why: a top-level
+	// field's name, or a nested field's dotted path with [] after a list
+	// (properties.disks[].diskEncryptionKey.rawKey, as secretWaivers). A
+	// nested path must name a writable field, and a struct the Discovery
+	// document shares between paths must skip the same fields at each
+	// (typeGen.checkSkips).
 	Skip map[string]string `json:"skip,omitempty"`
 	// Note is a sentence for the kind's doc comment.
 	Note string `json:"note,omitempty"`
@@ -125,6 +130,11 @@ type Config struct {
 	// Looker instance's oauthConfig.clientSecret, decision 33). The API
 	// never returns them (Kind.Secrets).
 	Secrets []string `json:"secrets,omitempty"`
+	// SecretWaivers are spec fields the secret guard holds secret (their
+	// names, or Upjet's Sensitive and write-only Terraform fields) that
+	// stay plain strings, path -> why (hack/discokind/secrets_test.go).
+	// Only the guard reads them.
+	SecretWaivers map[string]string `json:"secretWaivers,omitempty"`
 	// InputOnly are dotted paths of fields the API takes but never
 	// returns ("Input only." in their descriptions), so they are never a
 	// difference (Kind.InputOnly).
