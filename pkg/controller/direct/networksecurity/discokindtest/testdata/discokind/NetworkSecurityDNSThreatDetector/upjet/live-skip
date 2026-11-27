@@ -1,0 +1,1 @@
+DNS threat detection is billed per query, a project has at most one detector, and it changes DNS for every network of the shared live-test project; live: pending a test project of its own

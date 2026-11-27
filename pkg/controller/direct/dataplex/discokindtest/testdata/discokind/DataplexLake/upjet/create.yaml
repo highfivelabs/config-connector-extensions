@@ -1,0 +1,16 @@
+# The hand-written example of Crossplane's Upjet provider for Google Cloud,
+# v3.1.0 (9fc3f0375399ebd62666438e873b3d331310af5e):
+# examples/dataplex/cluster/v1beta2/lake.yaml
+# (Apache-2.0), with our object's names (docs/coverage/upjet.md).
+apiVersion: dataplex.gcp.hfl.dev/v1beta1
+kind: DataplexLake
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  displayName: Lake for DCL
+  description: Lake for DCL
+  labels:
+    my-lake: exists

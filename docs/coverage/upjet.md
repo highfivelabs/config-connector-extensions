@@ -32,7 +32,7 @@ Each of our kinds is set against each Terraform resource Upjet serves for the sa
 | … plain, not waived | 0 |
 | Pairs Upjet's maintainers did not test / … and no live PASS here | 11 / 9 |
 | Fields Upjet keeps out of late initialization | 1 |
-| Hand-written Upjet examples / their fields no field of ours matches by name / fields our fixtures never set | 62 / 5 / 7 |
+| Hand-written Upjet examples / their fields no field of ours matches by name / fields our fixtures never set | 62 / 5 / 4 |
 
 ## Gaps, ranked
 
@@ -148,11 +148,9 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | Kind | Terraform | Not in our spec | Not in our fixtures |
 | --- | --- | --- | --- |
 | `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | `parent` |  |
-| `CertificateManagerTrustConfig` | `google_certificate_manager_trust_config` |  | `labels` |
 | `ComputeInterconnectAttachment` | `google_compute_interconnect_attachment` |  | `edge_availability_domain`, `mtu` |
-| `DataplexLake` | `google_dataplex_lake` |  | `labels` |
 | `NetworkSecurityAddressGroup` | `google_network_security_address_group` | `parent` |  |
-| `NetworkSecurityDNSThreatDetector` | `google_network_security_dns_threat_detector` | `threat_detector_provider` | `labels` |
+| `NetworkSecurityDNSThreatDetector` | `google_network_security_dns_threat_detector` | `threat_detector_provider` |  |
 | `NetworkSecurityTLSInspectionPolicy` | `google_network_security_tls_inspection_policy` |  | `exclude_public_ca_set` |
 | `NetworkServicesGateway` | `google_network_services_gateway` | `delete_swg_autogen_router_on_destroy` | `addresses` |
 | `PrivateCACertificateAuthority` | `google_privateca_certificate_authority` | `deletion_protection` |  |
