@@ -1,0 +1,14 @@
+# gitleaks false positives, by fingerprint (commit:file:rule:line); krm-ci's
+# gitleaks.toml asks for them here rather than a disabled rule. Each one was
+# read and is not a credential: example values from the vendor's API spec,
+# made-up test inputs, or generated IDs (HFL-815).
+2d789abb1f5d6cc810ca3f30a1d5f024b12f1a27:config/crds/compute.gcp.hfl.dev_computeregioninstancetemplates.yaml:generic-api-key:263
+2d789abb1f5d6cc810ca3f30a1d5f024b12f1a27:config/crds/compute.gcp.hfl.dev_computeregioninstancetemplates.yaml:generic-api-key:271
+2d789abb1f5d6cc810ca3f30a1d5f024b12f1a27:config/crds/compute.gcp.hfl.dev_computeregioninstancetemplates.yaml:generic-api-key:512
+2d789abb1f5d6cc810ca3f30a1d5f024b12f1a27:config/crds/compute.gcp.hfl.dev_computeregioninstancetemplates.yaml:generic-api-key:577
+5aff11d4db23664915572a5542a2fce1abbd3177:pkg/controller/direct/apigateway/apigateway_test.go:generic-api-key:46
+869d7835e07713b909bf997dfda9e3813120119f:docs/live-runs.md:generic-api-key:348
+f3462ea6ce712e73ad71d04e3d2aa427f8990f09:apis/iam/v1alpha1/iamworkloadidentitypoolproviderkey_types.go:generic-api-key:93
+f3462ea6ce712e73ad71d04e3d2aa427f8990f09:config/crds/iam.gcp.hfl.dev_iamworkloadidentitypoolproviderkeys.yaml:generic-api-key:207
+f487ab07a83e1ea24d9b5c809d1e3d477433780e:docs/kinds/AccessContextManagerGCPUserAccessBinding.md:generic-api-key:27
+f487ab07a83e1ea24d9b5c809d1e3d477433780e:pkg/controller/direct/accesscontextmanager/gcpuseraccessbinding_mockgcp_test.go:generic-api-key:200
