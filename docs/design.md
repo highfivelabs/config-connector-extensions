@@ -3075,6 +3075,32 @@ To raise confidence in `ArtifactRegistryRepository`:
     gained `status.externalRef` and now delete from it without resolving
     references; `noRecord` is no longer needed on any kind in
     `pkg/controller`.)
+56. Secret fields left plain (2026-11-27, HFL-699). The secret guard
+    (`hack/discokind/secrets_test.go`, run by `go test ./...`) holds a
+    spec field secret when its name says so (`password`, `rawKey`,
+    `rsaEncryptedKey`, `sharedSecret`, `privateKey`, `clientSecret`,
+    `apiKey` and a few more) or when Crossplane's Upjet provider marks
+    the Terraform field Sensitive or write-only
+    (`hack/upjet/provider-upjet-gcp.json`). Every such field must take
+    a value or `valueFrom.secretKeyRef` (decision 33), or have a
+    `<field>From.secretKeyRef` beside it, unless `kinds.yaml` waives it
+    with a reason. `SQLUser.password`, `ComputeVPNTunnel.sharedSecret`
+    and `LookerInstance.oauthConfig.clientSecret` are secrets;
+    `StorageBucketObject.content` has `contentFrom`. Two kinds are
+    waived and still open:
+    - `ComputeRegionInstanceTemplate`: the six customer-supplied key
+      fields under `properties.disks[]` (`diskEncryptionKey`,
+      `sourceImageEncryptionKey`, `sourceSnapshotEncryptionKey`; each
+      `rawKey` and `rsaEncryptedKey`) are plain strings, so a key would
+      sit in the manifest. Terraform marks `raw_key` and
+      `rsa_encrypted_key` Sensitive. `secrets` reaches only paths
+      through objects, not list items. Recommended: leave the six out
+      of the spec (`skip`), since the API calls CSEK deprecated in
+      favour of CMEK (`kmsKeyName` stays); else teach `secrets` list
+      paths.
+    - `CloudBuildConnection`: `githubEnterpriseConfig.apiKey`, the key
+      the API uses for webhook events. Recommended: make it a secret
+      once a live run shows whether `get` returns it.
 
 ## 8. Decisions
 

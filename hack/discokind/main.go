@@ -125,6 +125,11 @@ type Config struct {
 	// Looker instance's oauthConfig.clientSecret, decision 33). The API
 	// never returns them (Kind.Secrets).
 	Secrets []string `json:"secrets,omitempty"`
+	// SecretWaivers are spec fields the secret guard holds secret (their
+	// names, or Upjet's Sensitive and write-only Terraform fields) that
+	// stay plain strings, path -> why (hack/discokind/secrets_test.go).
+	// Only the guard reads them.
+	SecretWaivers map[string]string `json:"secretWaivers,omitempty"`
 	// InputOnly are dotted paths of fields the API takes but never
 	// returns ("Input only." in their descriptions), so they are never a
 	// difference (Kind.InputOnly).
