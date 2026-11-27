@@ -24,6 +24,6 @@ install:
         --version {version} \
         --namespace config-connector-extensions-system --create-namespace
 
-      gcloud iam service-accounts add-iam-policy-binding kcc@PROJECT_ID.iam.gserviceaccount.com \
+      gcloud iam service-accounts add-iam-policy-binding config-connector@PROJECT_ID.iam.gserviceaccount.com \
         --role=roles/iam.workloadIdentityUser \
         --member="serviceAccount:PROJECT_ID.svc.id.goog[cnrm-system/config-connector-extensions-manager]"
