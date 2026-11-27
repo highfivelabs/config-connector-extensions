@@ -205,11 +205,13 @@ func fixtureFields(repo, kind string) map[string]bool {
 		var obj struct {
 			Spec map[string]any `yaml:"spec"`
 		}
-		if yaml.Unmarshal(b, &obj) != nil {
+		// The test's placeholders (${NAME}) are not YAML inside a flow list.
+		b = regexp.MustCompile(`\$\{[A-Z_]+\}`).ReplaceAll(b, []byte("x"))
+		if err := yaml.Unmarshal(b, &obj); err != nil {
 			continue
 		}
 		for k := range obj.Spec {
-			out[norm(strings.TrimSuffix(k, "Ref"))] = true
+			out[singular(norm(strings.TrimSuffix(k, "Ref")))] = true
 		}
 	}
 	return out
@@ -409,7 +411,7 @@ func buildUpjet(repo string, m *model) (*upjetSlice, []*upjetPair, error) {
 				case under:
 				case !hasKey(k):
 					p.exUnmapped = append(p.exUnmapped, f)
-				case fx != nil && !strings.Contains(f, ".") && !fx[norm(f)] && !fx[singular(norm(f))]:
+				case fx != nil && !strings.Contains(f, ".") && !fx[singular(norm(f))]:
 					p.exNotInFixtures = append(p.exNotInFixtures, f)
 				}
 			}
