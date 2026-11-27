@@ -26,9 +26,9 @@ Each of our kinds is set against each Terraform resource Upjet serves for the sa
 | … a plain string here | 40 |
 | … a plain string here, to a kind served here (a gap) | 40 |
 | … a field our spec does not have | 22 |
-| Secret fields (by name, or Upjet Sensitive or write-only) | 8 |
+| Secret fields (by name, or Upjet Sensitive or write-only) | 2 |
 | … a secret here (value/valueFrom, or `<field>From.secretKeyRef`) | 2 |
-| … plain, waived in `kinds.yaml` (open) | 6 |
+| … plain, waived in `kinds.yaml` (open) | 0 |
 | … plain, not waived | 0 |
 | Pairs Upjet's maintainers did not test / … and no live PASS here | 11 / 9 |
 | Fields Upjet keeps out of late initialization | 1 |
@@ -40,16 +40,16 @@ Score: 5 a plain secret field, 2 a reference to a kind served here taken as a pl
 
 | # | Kind | Score | What |
 | ---: | --- | ---: | --- |
-| 1 | `ComputeRegionInstanceTemplate` | 30 | secret `properties.disks[].diskEncryptionKey.rawKey` is plain (waived); secret `properties.disks[].diskEncryptionKey.rsaEncryptedKey` is plain (waived); secret `properties.disks[].initializeParams.sourceImageEncryptionKey.rawKey` is plain (waived); secret `properties.disks[].initializeParams.sourceImageEncryptionKey.rsaEncryptedKey` is plain (waived); secret `properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rawKey` is plain (waived); secret `properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rsaEncryptedKey` is plain (waived) |
-| 2 | `CloudFunctions2Function` | 22 | 11 reference(s) to kinds served here taken as plain strings (`google_cloudfunctions2_function`) |
-| 3 | `NetworkServicesGateway` | 9 | 4 reference(s) to kinds served here taken as plain strings (`google_network_services_gateway`); Upjet example fields no field of our spec matches by name: `delete_swg_autogen_router_on_destroy` |
-| 4 | `AccessContextManagerServicePerimeter` | 7 | 3 reference(s) to kinds served here taken as plain strings (`google_access_context_manager_service_perimeter`); Upjet example fields no field of our spec matches by name: `parent` |
-| 5 | `ComputeServiceAttachment` | 6 | 3 reference(s) to kinds served here taken as plain strings (`google_compute_service_attachment`) |
-| 6 | `ComputeFirewallPolicyRule` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_firewall_policy_rule`) |
-| 7 | `ComputeInterconnectAttachment` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_interconnect_attachment`) |
-| 8 | `DNSResponsePolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy`) |
-| 9 | `GKEBackupBackupPlan` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_gke_backup_backup_plan`) |
-| 10 | `NetworkSecurityTLSInspectionPolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_network_security_tls_inspection_policy`) |
+| 1 | `CloudFunctions2Function` | 22 | 11 reference(s) to kinds served here taken as plain strings (`google_cloudfunctions2_function`) |
+| 2 | `NetworkServicesGateway` | 9 | 4 reference(s) to kinds served here taken as plain strings (`google_network_services_gateway`); Upjet example fields no field of our spec matches by name: `delete_swg_autogen_router_on_destroy` |
+| 3 | `AccessContextManagerServicePerimeter` | 7 | 3 reference(s) to kinds served here taken as plain strings (`google_access_context_manager_service_perimeter`); Upjet example fields no field of our spec matches by name: `parent` |
+| 4 | `ComputeServiceAttachment` | 6 | 3 reference(s) to kinds served here taken as plain strings (`google_compute_service_attachment`) |
+| 5 | `ComputeFirewallPolicyRule` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_firewall_policy_rule`) |
+| 6 | `ComputeInterconnectAttachment` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_interconnect_attachment`) |
+| 7 | `DNSResponsePolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy`) |
+| 8 | `GKEBackupBackupPlan` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_gke_backup_backup_plan`) |
+| 9 | `NetworkSecurityTLSInspectionPolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_network_security_tls_inspection_policy`) |
+| 10 | `AssetFeed` | 3 | `google_cloud_asset_folder_feed` untested by Upjet and no live PASS here; `google_cloud_asset_organization_feed` untested by Upjet and no live PASS here; `google_cloud_asset_project_feed` untested by Upjet and no live PASS here |
 
 ## Where we and Upjet disagree
 
@@ -59,12 +59,6 @@ Score: 5 a plain secret field, 2 a reference to a kind served here taken as a pl
 
 | Kind | Field | Why it is secret | Here |
 | --- | --- | --- | --- |
-| `ComputeRegionInstanceTemplate` | `properties.disks[].diskEncryptionKey.rawKey` | named `rawKey` | waived |
-| `ComputeRegionInstanceTemplate` | `properties.disks[].diskEncryptionKey.rsaEncryptedKey` | named `rsaEncryptedKey` | waived |
-| `ComputeRegionInstanceTemplate` | `properties.disks[].initializeParams.sourceImageEncryptionKey.rawKey` | named `rawKey` | waived |
-| `ComputeRegionInstanceTemplate` | `properties.disks[].initializeParams.sourceImageEncryptionKey.rsaEncryptedKey` | named `rsaEncryptedKey` | waived |
-| `ComputeRegionInstanceTemplate` | `properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rawKey` | named `rawKey` | waived |
-| `ComputeRegionInstanceTemplate` | `properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rsaEncryptedKey` | named `rsaEncryptedKey` | waived |
 | `ComputeVPNTunnel` | `sharedSecret` | named `sharedSecret`; Upjet write-only `shared_secret_wo_version` [`config/cluster/compute/config.go:512`](https://github.com/crossplane-contrib/provider-upjet-gcp/blob/9fc3f0375399ebd62666438e873b3d331310af5e/config/cluster/compute/config.go#L512) | secret |
 | `SQLUser` | `password` | named `password`; Upjet write-only `password_wo_version` [`config/cluster/sql/config.go:144`](https://github.com/crossplane-contrib/provider-upjet-gcp/blob/9fc3f0375399ebd62666438e873b3d331310af5e/config/cluster/sql/config.go#L144) | secret |
 
@@ -195,7 +189,7 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | `ComputeOrganizationSecurityPolicy` | `google_compute_security_policy` | resource | true | pending | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeOrganizationSecurityPolicyAssociation` | `google_compute_security_policy` | resource | true | pending | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeOrganizationSecurityPolicyRule` | `google_compute_security_policy` | resource | true | pending | 0 (0 / 0 / 0) | none | 1 |
-| `ComputeRegionInstanceTemplate` | `google_compute_instance_from_template` | resource | true | no row | 3 (0 / 0 / 3) | waived, waived, waived, waived, waived, waived | 1 |
+| `ComputeRegionInstanceTemplate` | `google_compute_instance_from_template` | resource | true | no row | 3 (0 / 0 / 3) | none | 1 |
 | `ComputeRegionNetworkFirewallPolicy` | `google_compute_firewall_policy` (related) | resource | true | PASS | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeRegionNetworkFirewallPolicy` | `google_compute_network_firewall_policy` (related) | resource | true | PASS | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeRegionNetworkFirewallPolicy` | `google_compute_region_network_firewall_policy` | name | true | PASS | 0 (0 / 0 / 0) | none | 1 |

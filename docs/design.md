@@ -3086,18 +3086,24 @@ To raise confidence in `ArtifactRegistryRepository`:
     `<field>From.secretKeyRef` beside it, unless `kinds.yaml` waives it
     with a reason. `SQLUser.password`, `ComputeVPNTunnel.sharedSecret`
     and `LookerInstance.oauthConfig.clientSecret` are secrets;
-    `StorageBucketObject.content` has `contentFrom`. Two kinds are
-    waived and still open:
-    - `ComputeRegionInstanceTemplate`: the six customer-supplied key
-      fields under `properties.disks[]` (`diskEncryptionKey`,
-      `sourceImageEncryptionKey`, `sourceSnapshotEncryptionKey`; each
-      `rawKey` and `rsaEncryptedKey`) are plain strings, so a key would
-      sit in the manifest. Terraform marks `raw_key` and
-      `rsa_encrypted_key` Sensitive. `secrets` reaches only paths
-      through objects, not list items. Recommended: leave the six out
-      of the spec (`skip`), since the API calls CSEK deprecated in
-      favour of CMEK (`kmsKeyName` stays); else teach `secrets` list
-      paths.
+    `StorageBucketObject.content` has `contentFrom`. One kind is
+    waived and still open, and one is resolved:
+    - `ComputeRegionInstanceTemplate` (resolved 2026-11-27, HFL-699):
+      the six customer-supplied key fields under `properties.disks[]`
+      (`diskEncryptionKey`, `sourceImageEncryptionKey`,
+      `sourceSnapshotEncryptionKey`; each `rawKey` and
+      `rsaEncryptedKey`) were plain strings, so a key would sit in the
+      manifest. Terraform marks `raw_key` and `rsa_encrypted_key`
+      Sensitive, and `secrets` reaches only paths through objects, not
+      list items. They are left out of the spec now: `skip` in
+      `kinds.yaml` takes a nested path (`[]` after a list, as
+      `secretWaivers`), and checks that it names a writable field and
+      that a struct the Discovery document shares between paths
+      (`CustomerEncryptionKey` here) is skipped alike at each
+      (`hack/discokind/skip_test.go`). The API calls CSEK deprecated in
+      favour of CMEK, so `kmsKeyName` and `kmsKeyServiceAccount` stay
+      and are the supported path; the waivers are gone, and the guard
+      fails if a key field comes back.
     - `CloudBuildConnection`: `githubEnterpriseConfig.apiKey`, the key
       the API uses for webhook events. Recommended: make it a secret
       once a live run shows whether `get` returns it.

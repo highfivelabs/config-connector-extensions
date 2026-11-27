@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -70,6 +71,11 @@ type typeGen struct {
 	usesJSON bool
 	// secrets are the Config.Secrets paths given secret.Legacy.
 	secrets map[string]bool
+	// skipped are the Config.Skip paths left out of the spec; refPaths
+	// are the paths each $ref struct is used at, the first where it is
+	// written (checkSkips).
+	skipped  map[string]bool
+	refPaths map[string][]string
 }
 
 // comment is a description as // lines.
@@ -117,6 +123,9 @@ func (g *typeGen) goType(s *Schema, typeName, path string) string {
 		if len(ref.Properties) == 0 && ref.AdditionalProperties == nil {
 			g.usesJSON = true
 			return "*apiextensionsv1.JSON"
+		}
+		if g.refPaths != nil {
+			g.refPaths[name] = append(g.refPaths[name], path)
 		}
 		if _, done := g.defs[name]; !done {
 			g.defs[name] = "" // reserve
@@ -195,12 +204,15 @@ func (g *typeGen) structDef(name string, s *Schema, top bool, path string) strin
 		if !g.status && (isOutput(p) || (top && f == "name") || (g.k.insertStyle && f == "fingerprint")) {
 			continue
 		}
-		if top && g.k.c.Skip[f] != "" {
-			continue
-		}
 		fieldPath := f
 		if path != "" {
 			fieldPath = path + "." + f
+		}
+		if !g.status && g.k.c.Skip[fieldPath] != "" {
+			if g.skipped != nil {
+				g.skipped[fieldPath] = true
+			}
+			continue
 		}
 		t := g.goType(p, name+goName(f), fieldPath)
 		secretField := !g.status && contains(g.k.c.Secrets, fieldPath)
@@ -247,14 +259,67 @@ func (g *typeGen) structDef(name string, s *Schema, top bool, path string) strin
 	return b.String()
 }
 
+// checkSkips, after the spec is written: every nested Config.Skip path
+// was left out, and a struct the Discovery document shares between
+// paths ($ref) skips the same fields at each, since one Go type serves
+// them all (it is written at the first path and reused at the others).
+func (g *typeGen) checkSkips() error {
+	// applied: p was left out, where its struct is written.
+	applied := func(p string) bool {
+		for range 16 {
+			if g.skipped[p] {
+				return true
+			}
+			moved := false
+			for _, paths := range g.refPaths {
+				for _, other := range paths[1:] {
+					if rest, ok := strings.CutPrefix(p, other+"."); ok && other != paths[0] {
+						p, moved = paths[0]+"."+rest, true
+					}
+				}
+			}
+			if !moved {
+				return false
+			}
+		}
+		return false
+	}
+	var errs []string
+	for p := range g.k.c.Skip {
+		if strings.ContainsAny(p, ".[") && !applied(p) {
+			errs = append(errs, p+" is not a writable field of the spec")
+		}
+	}
+	for _, paths := range g.refPaths {
+		for _, other := range paths[1:] {
+			for _, pair := range [][2]string{{paths[0], other}, {other, paths[0]}} {
+				for p := range g.k.c.Skip {
+					if rest, ok := strings.CutPrefix(p, pair[0]+"."); ok && g.k.c.Skip[pair[1]+"."+rest] == "" {
+						errs = append(errs, fmt.Sprintf("%s is in a struct shared with %s: skip %s.%s too", p, pair[1], pair[1], rest))
+					}
+				}
+			}
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	sort.Strings(errs)
+	return fmt.Errorf("%s", strings.Join(slices.Compact(errs), "; "))
+}
+
 func (k *built) typesFile() []byte {
 	c := k.c
 	var b bytes.Buffer
 	b.WriteString(header)
 	fmt.Fprintf(&b, "package %s\n\n", c.Version)
 
-	spec := &typeGen{k: k, defs: map[string]string{}, inStack: map[string]bool{}, secrets: map[string]bool{}}
+	spec := &typeGen{k: k, defs: map[string]string{}, inStack: map[string]bool{}, secrets: map[string]bool{},
+		skipped: map[string]bool{}, refPaths: map[string][]string{}}
 	specBody := spec.structDef(c.Kind+"Spec", k.schema, true, "")
+	if err := spec.checkSkips(); err != nil {
+		fatalf("%s: skip: %v", c.Kind, err)
+	}
 	for _, p := range c.Secrets {
 		if !spec.secrets[p] {
 			fatalf("%s: secrets: %s is not a field of the spec (a struct shared with another path, or under a list, is not supported)", c.Kind, p)

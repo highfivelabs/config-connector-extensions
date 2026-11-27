@@ -405,7 +405,7 @@ compute.googleapis.com,compute.googleapis.com/RegionHealthCheckService,6,Compute
 compute.googleapis.com,compute.googleapis.com/RegionHealthSource,5,ComputeHealthSource,5,ComputeRegionHealthSource,0,0,false,api=v1:regionHealthSources; official-spec-fields-unmatched=4/8; ours-spec-fields-unmatched=3/7
 compute.googleapis.com,compute.googleapis.com/RegionInstanceGroupManager,85,ComputeInstanceGroupManager,26,,0,59,false,api=v1:regionInstanceGroupManagers; official-spec-fields-unmatched=9/34
 compute.googleapis.com,compute.googleapis.com/RegionInstanceGroupManagerResizeRequest,17,,0,,0,17,false,api=v1:regionInstanceGroupManagerResizeRequests; request-wrapper=InstanceGroupManagerResizeRequest
-compute.googleapis.com,compute.googleapis.com/RegionInstanceTemplate,150,ComputeInstanceTemplate,65,ComputeRegionInstanceTemplate,85,0,false,api=v1:regionInstanceTemplates; official-spec-fields-unmatched=19/83; ours-spec-fields-unmatched=3/152
+compute.googleapis.com,compute.googleapis.com/RegionInstanceTemplate,150,ComputeInstanceTemplate,65,ComputeRegionInstanceTemplate,79,6,false,api=v1:regionInstanceTemplates; official-spec-fields-unmatched=19/83; ours-spec-fields-unmatched=3/146
 compute.googleapis.com,compute.googleapis.com/RegionInstantSnapshot,5,ComputeInstantSnapshot,3,,0,2,false,api=v1:regionInstantSnapshots; official-spec-fields-unmatched=3/5
 compute.googleapis.com,compute.googleapis.com/RegionInstantSnapshotGroup,3,ComputeInstantSnapshotGroup,3,,0,0,false,api=v1:regionInstantSnapshotGroups; official-spec-fields-unmatched=3/5
 compute.googleapis.com,compute.googleapis.com/RegionNetworkEndpointGroup,17,ComputeNetworkEndpointGroup;ComputeRegionNetworkEndpointGroup,12,,0,5,false,api=v1:regionNetworkEndpointGroups

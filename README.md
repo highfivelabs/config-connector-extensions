@@ -35,7 +35,7 @@ Tier 1, 16 services, most covered attributes first:
 
 | Tier | Category | Service | Coverage | Official | Ours beyond | Uncovered | Terraform `google-beta` | Terraform `google` |
 | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 53.1% | 9.2% | 37.7% | 56.0% | 53.2% |
+| 1 | foundation | `compute.googleapis.com` | ![compute.googleapis.com](docs/coverage/bars/compute.googleapis.com.svg) | 53.1% | 9.0% | 37.9% | 56.0% | 53.2% |
 | 1 | foundation | `logging.googleapis.com` | ![logging.googleapis.com](docs/coverage/bars/logging.googleapis.com.svg) | 24.0% | 67.4% | 8.7% | 37.6% | 37.6% |
 | 1 | foundation | `container.googleapis.com` | ![container.googleapis.com](docs/coverage/bars/container.googleapis.com.svg) | 43.3% | 0.0% | 56.7% | 68.6% | 68.2% |
 | 1 | foundation | `networkconnectivity.googleapis.com` | ![networkconnectivity.googleapis.com](docs/coverage/bars/networkconnectivity.googleapis.com.svg) | 60.1% | 15.0% | 24.8% | 74.5% | 73.2% |
@@ -219,7 +219,7 @@ Tier 1, 16 services, most covered attributes first:
 
 </details>
 
-Against Crossplane's Upjet provider (v3.1.0): 51 of our kinds have an Upjet resource; of the 88 references Upjet resolves on them, 26 are references here and 40 are plain strings to a kind served here; 2 secret fields are secrets here and 6 are open ([`upjet.md`](docs/coverage/upjet.md)).
+Against Crossplane's Upjet provider (v3.1.0): 51 of our kinds have an Upjet resource; of the 88 references Upjet resolves on them, 26 are references here and 40 are plain strings to a kind served here; 2 secret fields are secrets here and 0 are open ([`upjet.md`](docs/coverage/upjet.md)).
 <!-- coverage:end -->
 
 The kinds:

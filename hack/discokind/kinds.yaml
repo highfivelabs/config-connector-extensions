@@ -351,8 +351,13 @@
   parents: [project]
   terraform: google_compute_region_instance_template
   note: "A regional instance template; Config Connector's ComputeInstanceTemplate is global only."
-  secretWaivers:
-    properties.disks[].diskEncryptionKey.rawKey: &csek "Open gap (docs/design.md section 7): a customer-supplied key inside disks[], which secrets cannot reach (they take paths through objects only). The API calls CSEK deprecated; Terraform marks raw_key and rsa_encrypted_key Sensitive."
+  # HFL-699: the customer-supplied keys (CSEK) are left out. A key would
+  # sit in the manifest in plain text, secrets cannot reach a list item,
+  # Terraform marks raw_key Sensitive, and Google calls CSEK deprecated
+  # in favour of Cloud KMS keys (CMEK: kmsKeyName, kmsKeyServiceAccount,
+  # which stay). The three keys share one struct (CustomerEncryptionKey).
+  skip:
+    properties.disks[].diskEncryptionKey.rawKey: &csek "a customer-supplied key (CSEK) would sit in the manifest in plain text; the API calls CSEK deprecated in favour of kmsKeyName (CMEK), which stays"
     properties.disks[].diskEncryptionKey.rsaEncryptedKey: *csek
     properties.disks[].initializeParams.sourceImageEncryptionKey.rawKey: *csek
     properties.disks[].initializeParams.sourceImageEncryptionKey.rsaEncryptedKey: *csek

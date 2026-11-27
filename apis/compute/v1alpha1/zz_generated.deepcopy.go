@@ -3659,16 +3659,6 @@ func (in *ComputeRegionInstanceTemplateCustomerEncryptionKey) DeepCopyInto(out *
 		*out = new(string)
 		**out = **in
 	}
-	if in.RawKey != nil {
-		in, out := &in.RawKey, &out.RawKey
-		*out = new(string)
-		**out = **in
-	}
-	if in.RsaEncryptedKey != nil {
-		in, out := &in.RsaEncryptedKey, &out.RsaEncryptedKey
-		*out = new(string)
-		**out = **in
-	}
 	if in.Sha256 != nil {
 		in, out := &in.Sha256, &out.Sha256
 		*out = new(string)

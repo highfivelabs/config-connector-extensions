@@ -366,16 +366,10 @@ func TestSecretGuardNamedKinds(t *testing.T) {
 		// content may be plain or from a Secret; Upjet takes content and
 		// customer_encryption as not Sensitive. No customerEncryption field.
 		"StorageBucketObject": {},
-		// The six CSEK keys are plain strings inside disks[] (waived:
-		// secrets cannot reach a list item; docs/design.md section 7).
-		"ComputeRegionInstanceTemplate": {
-			"properties.disks[].diskEncryptionKey.rawKey":                                     false,
-			"properties.disks[].diskEncryptionKey.rsaEncryptedKey":                            false,
-			"properties.disks[].initializeParams.sourceImageEncryptionKey.rawKey":             false,
-			"properties.disks[].initializeParams.sourceImageEncryptionKey.rsaEncryptedKey":    false,
-			"properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rawKey":          false,
-			"properties.disks[].initializeParams.sourceSnapshotEncryptionKey.rsaEncryptedKey": false,
-		},
+		// No secret field: the six customer-supplied keys (CSEK) under
+		// properties.disks[] are skipped (kinds.yaml, HFL-699), and the
+		// guard finds any that comes back.
+		"ComputeRegionInstanceTemplate": {},
 		// Config Connector's CloudFunctionsFunction is ours as
 		// CloudFunctions2Function: its secret environment variables and
 		// volumes name Secret Manager secrets, they hold no value.

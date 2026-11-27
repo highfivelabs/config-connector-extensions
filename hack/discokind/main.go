@@ -84,7 +84,12 @@ type Config struct {
 	// Immutable are top-level fields the API cannot patch beyond those
 	// its descriptions call Immutable.
 	Immutable []string `json:"immutable,omitempty"`
-	// Skip are writable fields left out of the spec, with why.
+	// Skip are writable fields left out of the spec, with why: a top-level
+	// field's name, or a nested field's dotted path with [] after a list
+	// (properties.disks[].diskEncryptionKey.rawKey, as secretWaivers). A
+	// nested path must name a writable field, and a struct the Discovery
+	// document shares between paths must skip the same fields at each
+	// (typeGen.checkSkips).
 	Skip map[string]string `json:"skip,omitempty"`
 	// Note is a sentence for the kind's doc comment.
 	Note string `json:"note,omitempty"`
