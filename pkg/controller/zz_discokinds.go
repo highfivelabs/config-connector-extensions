@@ -348,6 +348,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"attachmentGroup", "cloudRouterIpAddress", "cloudRouterIpv6Address", "configurationConstraints", "creationTimestamp", "customerRouterIpAddress", "customerRouterIpv6Address", "dataplaneVersion", "googleReferenceId", "id", "kind", "operationalStatus", "privateInterconnectInfo", "region", "remoteService", "satisfiesPzs", "selfLink", "state"},
+		Refs: []discokind.Ref{
+			{Path: "ipsecInternalAddresses", List: true, Target: "ComputeAddress", Upjet: "google_compute_address"},
+			{Path: "router", Target: "ComputeRouter", Upjet: "google_compute_router"},
+		},
 	},
 	{
 		GVK:         computev1alpha1.ComputeServiceAttachmentGVK,

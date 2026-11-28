@@ -271,6 +271,9 @@
   terraform: google_compute_interconnect_attachment
   immutable: [interconnect, type, router, edgeAvailabilityDomain, candidateSubnets, candidateIpv6Subnets, candidateCloudRouterIpAddress, candidateCloudRouterIpv6Address, candidateCustomerRouterIpAddress, candidateCustomerRouterIpv6Address, vlanTag8021q, ipsecInternalAddresses, encryption, subnetLength, pairingKey, l2Forwarding]
   note: "A VLAN attachment: an interconnect's connection to a Cloud Router, with the router and customer addresses chosen from candidates."
+  refs:
+    ipsecInternalAddresses: {target: ComputeAddress}
+    router: {target: ComputeRouter}
 
 # Foundation item 11 (2026-11-23): Config Connector's DCL-based
 # ComputeServiceAttachment sends consumerAcceptLists whole and has no

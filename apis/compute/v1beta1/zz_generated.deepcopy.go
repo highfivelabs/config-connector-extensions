@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -1325,6 +1326,11 @@ func (in *ComputeInterconnectAttachmentSpec) DeepCopyInto(out *ComputeInterconne
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.IPsecInternalAddressRefs != nil {
+		in, out := &in.IPsecInternalAddressRefs, &out.IPsecInternalAddressRefs
+		*out = make([]commonv1alpha1.ResourceRef, len(*in))
+		copy(*out, *in)
+	}
 	if in.L2Forwarding != nil {
 		in, out := &in.L2Forwarding, &out.L2Forwarding
 		*out = new(ComputeInterconnectAttachmentInterconnectAttachmentL2Forwarding)
@@ -1370,6 +1376,11 @@ func (in *ComputeInterconnectAttachmentSpec) DeepCopyInto(out *ComputeInterconne
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
 		*out = new(string)
+		**out = **in
+	}
+	if in.RouterRef != nil {
+		in, out := &in.RouterRef, &out.RouterRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.StackType != nil {

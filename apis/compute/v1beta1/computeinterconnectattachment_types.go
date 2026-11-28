@@ -20,12 +20,15 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ComputeInterconnectAttachmentGVK = GroupVersion.WithKind("ComputeInterconnectAttachment")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.ipsecInternalAddresses) && has(self.ipsecInternalAddressRefs))",message="set ipsecInternalAddresses or ipsecInternalAddressRefs, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.router) && has(self.routerRef))",message="set router or routerRef, not both"
 type ComputeInterconnectAttachmentSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -198,6 +201,15 @@ type ComputeInterconnectAttachmentSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="ipsecInternalAddresses is immutable"
 	IPsecInternalAddresses []string `json:"ipsecInternalAddresses,omitempty"`
 
+	// References to the ComputeAddresss that fill ipsecInternalAddresses, in its
+	// place: external (the value ipsecInternalAddresses takes), or the name (and
+	// namespace) of a ComputeAddress object, this repository's kind of that name
+	// first, then Config Connector's. Set ipsecInternalAddresses or this, not
+	// both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="ipsecInternalAddressRefs is immutable"
+	IPsecInternalAddressRefs []commonv1alpha1.ResourceRef `json:"ipsecInternalAddressRefs,omitempty"`
+
 	// L2 Interconnect Attachment related config. This field is required if the
 	// type is L2_DEDICATED.
 	// The configuration specifies how VLAN tags (like dot1q, qinq, or dot1ad)
@@ -268,6 +280,14 @@ type ComputeInterconnectAttachmentSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="router is immutable"
 	Router *string `json:"router,omitempty"`
+
+	// A reference to the ComputeRouter that fills router, in its place: external
+	// (the value router takes), or the name (and namespace) of a ComputeRouter
+	// object, this repository's kind of that name first, then Config Connector's.
+	// Set router or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="routerRef is immutable"
+	RouterRef *commonv1alpha1.ResourceRef `json:"routerRef,omitempty"`
 
 	// The stack type for this interconnect attachment to identify whether the
 	// IPv6 feature is enabled or not. If not specified, IPV4_ONLY

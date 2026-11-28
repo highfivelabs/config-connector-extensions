@@ -204,6 +204,53 @@ spec:
                 x-kubernetes-validations:
                 - message: interconnect is immutable
                   rule: self == oldSelf
+              ipsecInternalAddressRefs:
+                description: 'References to the ComputeAddresss that fill ipsecInternalAddresses,
+                  in its place: external (the value ipsecInternalAddresses takes),
+                  or the name (and namespace) of a ComputeAddress object, this repository''s
+                  kind of that name first, then Config Connector''s. Set ipsecInternalAddresses
+                  or this, not both.'
+                items:
+                  description: 'ResourceRef is a reference a generated kind''s spec
+                    takes beside a string field the API fills from another resource
+                    (hack/discokind kinds.yaml refs, docs/design.md section 2.4):
+                    Config Connector''s shape, either external, or the name (and namespace)
+                    of an object in the cluster. The controller resolves it to the
+                    string before every write.'
+                  oneOf:
+                  - not:
+                      required:
+                      - external
+                    required:
+                    - name
+                  - not:
+                      anyOf:
+                      - required:
+                        - name
+                      - required:
+                        - namespace
+                    required:
+                    - external
+                  properties:
+                    external:
+                      description: 'The value itself, as the string field beside the
+                        reference takes it: the resource''s name, or for a service
+                        account its email.'
+                      type: string
+                    name:
+                      description: 'The name of an object of the referenced kind:
+                        this repository''s kind of that name first, then Config Connector''s.
+                        The controller takes the value from the object''s status.'
+                      type: string
+                    namespace:
+                      description: The object's namespace; the referencing object's
+                        when unset.
+                      type: string
+                  type: object
+                type: array
+                x-kubernetes-validations:
+                - message: ipsecInternalAddressRefs is immutable
+                  rule: self == oldSelf
               ipsecInternalAddresses:
                 description: A list of URLs of addresses that have been reserved for
                   the VLAN attachment. Used only for the VLAN attachment that has
@@ -417,6 +464,45 @@ spec:
                 x-kubernetes-validations:
                 - message: router is immutable
                   rule: self == oldSelf
+              routerRef:
+                description: 'A reference to the ComputeRouter that fills router,
+                  in its place: external (the value router takes), or the name (and
+                  namespace) of a ComputeRouter object, this repository''s kind of
+                  that name first, then Config Connector''s. Set router or this, not
+                  both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: routerRef is immutable
+                  rule: self == oldSelf
               stackType:
                 description: |-
                   The stack type for this interconnect attachment to identify whether the
@@ -469,6 +555,12 @@ spec:
             - projectRef
             - region
             type: object
+            x-kubernetes-validations:
+            - message: set ipsecInternalAddresses or ipsecInternalAddressRefs, not
+                both
+              rule: '!(has(self.ipsecInternalAddresses) && has(self.ipsecInternalAddressRefs))'
+            - message: set router or routerRef, not both
+              rule: '!(has(self.router) && has(self.routerRef))'
           status:
             properties:
               conditions:

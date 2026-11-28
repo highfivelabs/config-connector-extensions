@@ -1,0 +1,17 @@
+# A Partner Interconnect attachment, as Upjet's hand-written example makes
+# one: no interconnect, an edge availability domain and an MTU.
+apiVersion: compute.gcp.hfl.dev/v1beta1
+kind: ComputeInterconnectAttachment
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  region: us-central1
+  type: PARTNER
+  edgeAvailabilityDomain: AVAILABILITY_DOMAIN_1
+  mtu: 1500
+  routerRef:
+    external: projects/${PROJECT}/regions/us-central1/routers/${NAME}-router
+  adminEnabled: true
+  description: made by a config-connector-extensions test
