@@ -41,6 +41,7 @@ import (
 	networksecurityv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/networksecurity/v1alpha1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/privateca/privatecarefs"
 	pubsubv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/pubsub/v1beta1"
+	apirefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	secretmanagerv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/secretmanager/v1beta1"
 	storagev1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/storage/v1beta1"
@@ -373,7 +374,7 @@ func byName(ctx context.Context, reader client.Reader, sources []refSource, key 
 				// A kind of ours that records its name as a Compute Engine
 				// self link instead (ComputeRouter, as Config Connector's).
 				link, _, _ := unstructured.NestedString(u.Object, "status", "selfLink")
-				ext = refsv1beta1.TrimComputeURIPrefix(link)
+				ext = apirefs.TrimComputeURIPrefix(link)
 			}
 			if ext == "" {
 				return "", k8s.NewReferenceNotReadyError(s.gvk, key)
