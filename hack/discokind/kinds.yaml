@@ -583,6 +583,9 @@
   parents: [project]
   terraform: google_network_security_tls_inspection_policy
   note: "How a Secure Web Proxy inspects TLS: the CA pool that issues its interception certificates."
+  refs:
+    caPool: {target: PrivateCACAPool}
+    trustConfig: {target: CertificateManagerTrustConfig}
   sweepLocation: us-central1
 
 # The catalog's geap-agent-gateway module (2026-11-13): fabric's iap_config

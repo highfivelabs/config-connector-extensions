@@ -627,6 +627,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "caPool", Target: "PrivateCACAPool", Upjet: "google_privateca_ca_pool"},
+			{Path: "trustConfig", Target: "CertificateManagerTrustConfig", Upjet: "google_certificate_manager_trust_config"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityAuthzPolicyGVK,

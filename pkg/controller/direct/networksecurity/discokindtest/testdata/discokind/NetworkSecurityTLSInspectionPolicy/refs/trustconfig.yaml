@@ -1,0 +1,11 @@
+# The trust config the policy's trustConfigRef names by name (kindtest's
+# refs/): ours, in the policy's region, made first.
+apiVersion: certificatemanager.gcp.hfl.dev/v1beta1
+kind: CertificateManagerTrustConfig
+metadata:
+  name: ${KIND_NAME}-trust
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  description: made by a config-connector-extensions test
