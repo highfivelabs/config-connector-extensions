@@ -22,9 +22,9 @@ Each of our kinds is set against each Terraform resource Upjet serves for the sa
 | Pairs counted (kind × Terraform resource) / related, not counted | 72 / 12 |
 | `hack/discokind` kinds joined by their `terraform:` / with a `terraform:` | 18 / 63 |
 | Upjet references on counted pairs | 88 |
-| … a reference here too (`*Ref`) | 58 |
-| … a plain string here | 8 |
-| … a plain string here, to a kind served here (a gap) | 8 |
+| … a reference here too (`*Ref`) | 61 |
+| … a plain string here | 5 |
+| … a plain string here, to a kind served here (a gap) | 5 |
 | … a field our spec does not have | 22 |
 | Secret fields (by name, or Upjet Sensitive or write-only) | 2 |
 | … a secret here (value/valueFrom, or `<field>From.secretKeyRef`) | 2 |
@@ -41,15 +41,15 @@ Score: 5 a plain secret field, 2 a reference to a kind served here taken as a pl
 | # | Kind | Score | What |
 | ---: | --- | ---: | --- |
 | 1 | `ComputeFirewallPolicyRule` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_firewall_policy_rule`) |
-| 2 | `DNSResponsePolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy`) |
-| 3 | `AssetFeed` | 3 | `google_cloud_asset_folder_feed` untested by Upjet and no live PASS here; `google_cloud_asset_organization_feed` untested by Upjet and no live PASS here; `google_cloud_asset_project_feed` untested by Upjet and no live PASS here |
-| 4 | `ApigeeNATAddress` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_apigee_nat_address`) |
-| 5 | `ArtifactRegistryRepository` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_artifact_registry_repository`) |
-| 6 | `CloudFunctions2Function` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_cloudfunctions2_function`) |
-| 7 | `DNSResponsePolicyRule` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy_rule`) |
-| 8 | `LoggingLink` | 2 | `google_logging_billing_account_bucket_config` untested by Upjet and no live PASS here; `google_logging_organization_bucket_config` untested by Upjet and no live PASS here |
-| 9 | `AccessContextManagerGCPUserAccessBinding` | 1 | `google_access_context_manager_gcp_user_access_binding` untested by Upjet and no live PASS here |
-| 10 | `AccessContextManagerServicePerimeter` | 1 | Upjet example fields no field of our spec matches by name: `parent` |
+| 2 | `AssetFeed` | 3 | `google_cloud_asset_folder_feed` untested by Upjet and no live PASS here; `google_cloud_asset_organization_feed` untested by Upjet and no live PASS here; `google_cloud_asset_project_feed` untested by Upjet and no live PASS here |
+| 3 | `ApigeeNATAddress` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_apigee_nat_address`) |
+| 4 | `ArtifactRegistryRepository` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_artifact_registry_repository`) |
+| 5 | `CloudFunctions2Function` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_cloudfunctions2_function`) |
+| 6 | `LoggingLink` | 2 | `google_logging_billing_account_bucket_config` untested by Upjet and no live PASS here; `google_logging_organization_bucket_config` untested by Upjet and no live PASS here |
+| 7 | `AccessContextManagerGCPUserAccessBinding` | 1 | `google_access_context_manager_gcp_user_access_binding` untested by Upjet and no live PASS here |
+| 8 | `AccessContextManagerServicePerimeter` | 1 | Upjet example fields no field of our spec matches by name: `parent` |
+| 9 | `CloudDeployTarget` | 1 | `google_clouddeploy_target` untested by Upjet and no live PASS here |
+| 10 | `ComputeFirewallPolicyPacketMirroringRule` | 1 | `google_compute_region_network_firewall_policy_rule` untested by Upjet and no live PASS here |
 
 ## Where we and Upjet disagree
 
@@ -73,9 +73,6 @@ Upjet resolves these fields from another managed resource; our spec takes a stri
 | `CloudFunctions2Function` | `google_cloudfunctions2_function` | `event_trigger.event_filters.value → google_storage_bucket (StorageBucket)` |
 | `ComputeFirewallPolicyRule` | `google_compute_firewall_policy_rule` | `match.dest_address_groups → google_network_security_address_group (NetworkSecurityAddressGroup)` |
 | `ComputeFirewallPolicyRule` | `google_compute_firewall_policy_rule` | `match.src_networks → google_compute_network (ComputeNetwork)` |
-| `DNSResponsePolicy` | `google_dns_response_policy` | `gke_clusters.gke_cluster_name → google_container_cluster (ContainerCluster, ContainerNodePool)` |
-| `DNSResponsePolicy` | `google_dns_response_policy` | `networks.network_url → google_compute_network (ComputeNetwork)` |
-| `DNSResponsePolicyRule` | `google_dns_response_policy_rule` | `response_policy → google_dns_response_policy (DNSResponsePolicy)` |
 
 ### Not tested by Upjet
 
@@ -171,8 +168,8 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | `ComputeServiceAttachment` | `google_compute_service_attachment` | terraform | true | no row | 3 (3 / 0 / 0) | none | 1 |
 | `ComputeSubnetwork` | `google_compute_subnetwork` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
 | `ComputeVPNTunnel` | `google_compute_vpn_tunnel` | name | true | PASS | 4 (4 / 0 / 0) | secret | 1 |
-| `DNSResponsePolicy` | `google_dns_response_policy` | name | true | pending | 2 (0 / 2 / 0) | none | 1 |
-| `DNSResponsePolicyRule` | `google_dns_response_policy_rule` | name | true | no row | 1 (0 / 1 / 0) | none | 1 |
+| `DNSResponsePolicy` | `google_dns_response_policy` | name | true | pending | 2 (2 / 0 / 0) | none | 1 |
+| `DNSResponsePolicyRule` | `google_dns_response_policy_rule` | name | true | no row | 1 (1 / 0 / 0) | none | 1 |
 | `DataplexAspectType` | `google_dataplex_aspect_type` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
 | `DataplexAsset` | `google_dataplex_asset` | terraform | true | no row | 2 (1 / 0 / 1) | none | 1 |
 | `DataplexLake` | `google_dataplex_lake` | terraform | true | no row | 0 (0 / 0 / 0) | none | 2 |
