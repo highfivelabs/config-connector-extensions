@@ -4410,3 +4410,17 @@ moves to section 8.
     against mockgcp; kinds it cannot serve without a large patch fall
     back to copying. It changes how decision 39's "our kinds" are made,
     so it is the builder's call.
+
+14. **The strings beside the references** (2026-11-28, HFL-699, section
+    2.4 "References"). A generated kind's field the API fills from another
+    resource now takes `<field>Ref` beside the string, and the string stays
+    so no manifest or chart breaks. Two calls are the builder's: whether
+    the strings are deprecated once the catalog's charts use the
+    references (a breaking change for any manifest that keeps them), and
+    whether the references keep their mechanical names (`networkUrlRef`
+    for `networkUrl`) or take Config Connector's where it has one
+    (`networkRef`), which would need a table the generator, the coverage
+    report and the guard share. Recommendation: keep both forms and the
+    mechanical names, and have the catalog prefer the references; revisit
+    when a kind moves to Config Connector's own (section 3.4), whose names
+    then win.
