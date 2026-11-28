@@ -370,6 +370,12 @@ func byName(ctx context.Context, reader client.Reader, sources []refSource, key 
 		if s.upstream == nil {
 			ext, _, _ := unstructured.NestedString(u.Object, "status", "externalRef")
 			if ext == "" {
+				// A kind of ours that records its name as a Compute Engine
+				// self link instead (ComputeRouter, as Config Connector's).
+				link, _, _ := unstructured.NestedString(u.Object, "status", "selfLink")
+				ext = refsv1beta1.TrimComputeURIPrefix(link)
+			}
+			if ext == "" {
 				return "", k8s.NewReferenceNotReadyError(s.gvk, key)
 			}
 			return ext, nil

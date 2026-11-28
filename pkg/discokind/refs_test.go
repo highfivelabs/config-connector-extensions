@@ -36,6 +36,7 @@ var (
 	ccSecret  = schema.GroupVersionKind{Group: "secretmanager.cnrm.cloud.google.com", Version: "v1beta1", Kind: "SecretManagerSecret"}
 	ourSecret = schema.GroupVersionKind{Group: "secretmanager.gcp.hfl.dev", Version: "v1beta1", Kind: "SecretManagerSecret"}
 	ourObject = schema.GroupVersionKind{Group: "storage.gcp.hfl.dev", Version: "v1beta1", Kind: "StorageBucketObject"}
+	ourRouter = schema.GroupVersionKind{Group: "compute.gcp.hfl.dev", Version: "v1beta1", Kind: "ComputeRouter"}
 )
 
 func obj(gvk schema.GroupVersionKind, ns, name string, status map[string]any) *unstructured.Unstructured {
@@ -52,7 +53,7 @@ func obj(gvk schema.GroupVersionKind, ns, name string, status map[string]any) *u
 func refClient(t *testing.T, objs ...*unstructured.Unstructured) client.Client {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	for _, gvk := range []schema.GroupVersionKind{ccNetwork, ccSA, ccSecret, ourSecret, ourObject} {
+	for _, gvk := range []schema.GroupVersionKind{ccNetwork, ccSA, ccSecret, ourSecret, ourObject, ourRouter} {
 		scheme.AddKnownTypeWithName(gvk, &unstructured.Unstructured{})
 		scheme.AddKnownTypeWithName(gvk.GroupVersion().WithKind(gvk.Kind+"List"), &unstructured.UnstructuredList{})
 	}
@@ -94,7 +95,7 @@ func TestRefFieldName(t *testing.T) {
 // or by an object's name, through lists and nested objects; the
 // reference itself leaves the body.
 func TestResolveRefs(t *testing.T) {
-	withOurKinds(t, ourSecret, ourObject)
+	withOurKinds(t, ourSecret, ourObject, ourRouter)
 	k := &Kind{GVK: schema.GroupVersionKind{Kind: "TestKind"}, Refs: []Ref{
 		{Path: "network", Target: "ComputeNetwork"},
 		{Path: "consumers[].networkUrl", Target: "ComputeNetwork"},
@@ -103,6 +104,7 @@ func TestResolveRefs(t *testing.T) {
 		{Path: "trigger.serviceAccountEmail", Target: "IAMServiceAccount"},
 		{Path: "secrets[].secret", Target: "SecretManagerSecret", Format: FormatID},
 		{Path: "source.object", Target: "StorageBucketObject", Format: FormatID},
+		{Path: "router", Target: "ComputeRouter"},
 	}}
 	c := refClient(t,
 		// Config Connector's network, Terraform-based: no externalRef, a selfLink.
@@ -114,6 +116,8 @@ func TestResolveRefs(t *testing.T) {
 		obj(ccSecret, "ns", "s", map[string]any{"externalRef": "projects/p/secrets/theirs"}),
 		obj(ccSecret, "ns", "only-cc", map[string]any{"externalRef": "projects/p/secrets/cc"}),
 		obj(ourObject, "ns", "zip", map[string]any{"externalRef": "projects/_/buckets/b/objects/src/function.zip"}),
+		// Ours, with its name only in status.selfLink.
+		obj(ourRouter, "ns", "r", map[string]any{"selfLink": "https://www.googleapis.com/compute/v1/projects/p/regions/us-central1/routers/r"}),
 	)
 	body := map[string]any{
 		"networkRef": map[string]any{"name": "net"},
@@ -133,7 +137,8 @@ func TestResolveRefs(t *testing.T) {
 			map[string]any{"secretRef": map[string]any{"external": "bare-id"}},
 			map[string]any{"secretRef": map[string]any{"external": "projects/p/secrets/full"}},
 		},
-		"source": map[string]any{"objectRef": map[string]any{"name": "zip"}},
+		"source":    map[string]any{"objectRef": map[string]any{"name": "zip"}},
+		"routerRef": map[string]any{"name": "r"},
 	}
 	if err := k.ResolveRefs(context.Background(), c, "ns", body); err != nil {
 		t.Fatal(err)
@@ -154,6 +159,7 @@ func TestResolveRefs(t *testing.T) {
 			map[string]any{"secret": "full"},
 		},
 		"source": map[string]any{"object": "src/function.zip"},
+		"router": "projects/p/regions/us-central1/routers/r",
 	}
 	if !reflect.DeepEqual(body, want) {
 		t.Errorf("resolved\n%v\nwant\n%v", body, want)

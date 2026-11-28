@@ -711,8 +711,9 @@ refs:
   compares or writes (`Kind.ResolveRefs`, `pkg/discokind/refs.go`), and a
   delete never does (it uses `status.externalRef`). By name it reads our
   kind of the target's name first (a generated kind, or a hand-written one
-  in `pkg/controller`'s list), whose value is its `status.externalRef`,
-  then Config Connector's, through upstream's own reference type and its
+  in `pkg/controller`'s list), whose value is its `status.externalRef`
+  (or its Compute Engine `status.selfLink`, as our `ComputeRouter`
+  records its name), then Config Connector's, through upstream's own reference type and its
   `Normalize` (`ComputeNetworkRef` with its `status.selfLink` fallback for
   the Terraform-based kind, `IAMServiceAccountRef`'s `status.email`); an
   `external` is validated by the same type. Nothing is copied: the types
