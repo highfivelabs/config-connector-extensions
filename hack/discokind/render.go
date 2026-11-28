@@ -76,7 +76,17 @@ type typeGen struct {
 	// written (checkSkips).
 	skipped  map[string]bool
 	refPaths map[string][]string
+	// refs are the kind's references by path (Config.Refs); refApplied
+	// the paths whose reference was written; usesRef whether any was.
+	refs       map[string]builtRef
+	refApplied map[string]bool
+	usesRef    bool
 }
+
+// celReserved are CEL's reserved words, which a rule cannot name a field by.
+var celReserved = map[string]bool{"as": true, "break": true, "const": true, "continue": true, "else": true,
+	"for": true, "function": true, "if": true, "import": true, "let": true, "loop": true, "package": true,
+	"namespace": true, "return": true, "var": true, "in": true, "true": true, "false": true, "null": true}
 
 // comment is a description as // lines.
 func comment(desc string) string {
@@ -191,12 +201,12 @@ func (g *typeGen) goType(s *Schema, typeName, path string) string {
 // dotted JSON path in the spec ("" at the top).
 func (g *typeGen) structDef(name string, s *Schema, top bool, path string) string {
 	var b strings.Builder
+	var rules []string
 	fields := make([]string, 0, len(s.Properties))
 	for f := range s.Properties {
 		fields = append(fields, f)
 	}
 	sort.Strings(fields)
-	fmt.Fprintf(&b, "type %s struct {\n", name)
 	for _, f := range fields {
 		p := s.Properties[f]
 		// The resource's own name is the object's (its ID and parents);
@@ -225,6 +235,25 @@ func (g *typeGen) structDef(name string, s *Schema, top bool, path string) strin
 			t = "*secret.Legacy"
 			g.secrets[fieldPath] = true
 		}
+		ref, isRef := g.refs[fieldPath]
+		if g.status {
+			isRef = false
+		}
+		refName := ""
+		required := !g.status && strings.HasPrefix(strings.TrimSpace(p.Description), "Required.")
+		if isRef {
+			refName = refFieldName(f, ref.list)
+			if celReserved[f] {
+				fatalf("%s: refs: %s cannot be named in a CEL rule", g.k.c.Kind, fieldPath)
+			}
+			if required {
+				rules = append(rules, fmt.Sprintf("// +kubebuilder:validation:XValidation:rule=\"has(self.%s) != has(self.%s)\",message=\"exactly one of %s and %s is required\"\n", f, refName, f, refName))
+			} else {
+				rules = append(rules, fmt.Sprintf("// +kubebuilder:validation:XValidation:rule=\"!(has(self.%s) && has(self.%s))\",message=\"set %s or %s, not both\"\n", f, refName, f, refName))
+			}
+			g.refApplied[fieldPath] = true
+			g.usesRef = true
+		}
 		b.WriteString(comment(p.Description))
 		if secretField {
 			b.WriteString("//\n// Takes value, or valueFrom.secretKeyRef (name, key) of a Secret in the\n// object's namespace, which the controller reads and sends; the API never\n// returns it.\n")
@@ -234,8 +263,9 @@ func (g *typeGen) structDef(name string, s *Schema, top bool, path string) strin
 		if len(p.Enum) > 0 && !g.status {
 			b.WriteString("//\n// One of " + strings.Join(p.Enum, ", ") + ".\n")
 		}
+		immutable := top && (!g.k.updatable || strings.Contains(p.Description, "Immutable.") || contains(g.k.c.Immutable, f))
 		if !g.status {
-			if strings.HasPrefix(strings.TrimSpace(p.Description), "Required.") {
+			if required && !isRef {
 				b.WriteString("// +kubebuilder:validation:Required\n")
 			} else {
 				b.WriteString("// +optional\n")
@@ -243,7 +273,7 @@ func (g *typeGen) structDef(name string, s *Schema, top bool, path string) strin
 			if n := maxLength(p); n != "" {
 				fmt.Fprintf(&b, "// +kubebuilder:validation:MaxLength=%s\n", n)
 			}
-			if top && (!g.k.updatable || strings.Contains(p.Description, "Immutable.") || contains(g.k.c.Immutable, f)) {
+			if immutable {
 				fmt.Fprintf(&b, "// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"%s is immutable\"\n", f)
 			}
 		}
@@ -254,9 +284,27 @@ func (g *typeGen) structDef(name string, s *Schema, top bool, path string) strin
 			}
 		}
 		fmt.Fprintf(&b, "%s %s `json:\"%s,omitempty\"`\n\n", goName(f), t, f)
+		if isRef {
+			if t != "*string" && t != "[]string" {
+				fatalf("%s: refs: %s is %s, not a string or a list of strings", g.k.c.Kind, fieldPath, t)
+			}
+			b.WriteString(refComment(ref, f))
+			b.WriteString("// +optional\n")
+			if immutable {
+				fmt.Fprintf(&b, "// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"%s is immutable\"\n", refName)
+			}
+			rt := "*commonv1alpha1.ResourceRef"
+			if ref.list {
+				rt = "[]commonv1alpha1.ResourceRef"
+			}
+			goRef := goName(f) + "Ref"
+			if ref.list {
+				goRef = goName(singularField(f)) + "Refs"
+			}
+			fmt.Fprintf(&b, "%s %s `json:\"%s,omitempty\"`\n\n", goRef, rt, refName)
+		}
 	}
-	b.WriteString("}\n")
-	return b.String()
+	return strings.Join(rules, "") + fmt.Sprintf("type %s struct {\n", name) + b.String() + "}\n"
 }
 
 // checkSkips, after the spec is written: every nested Config.Skip path
@@ -308,6 +356,41 @@ func (g *typeGen) checkSkips() error {
 	return fmt.Errorf("%s", strings.Join(slices.Compact(errs), "; "))
 }
 
+// checkRefs, after the spec is written: every Config.Refs path got its
+// reference, and a struct the Discovery document shares between paths has
+// the same references at each (one Go type serves them all).
+func (g *typeGen) checkRefs() error {
+	same := func(a, b builtRef) bool { return a.target == b.target && a.format == b.format && a.list == b.list }
+	var errs []string
+	for p, r := range g.refs {
+		ok := g.refApplied[p]
+		for _, paths := range g.refPaths {
+			for _, other := range paths[1:] {
+				if rest, found := strings.CutPrefix(p, other+"."); found {
+					// Written where the shared struct is: at its first path.
+					first, there := g.refs[paths[0]+"."+rest]
+					ok = there && g.refApplied[paths[0]+"."+rest] && same(first, r)
+				}
+			}
+			for _, other := range paths[1:] {
+				if rest, found := strings.CutPrefix(p, paths[0]+"."); found {
+					if o, there := g.refs[other+"."+rest]; !there || !same(o, r) {
+						errs = append(errs, fmt.Sprintf("%s is in a struct shared with %s: name %s.%s in refs too, alike", p, other, other, rest))
+					}
+				}
+			}
+		}
+		if !ok {
+			errs = append(errs, p+" got no reference: not a string field the spec writes, or in a struct shared with another path")
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	sort.Strings(errs)
+	return fmt.Errorf("%s", strings.Join(slices.Compact(errs), "; "))
+}
+
 func (k *built) typesFile() []byte {
 	c := k.c
 	var b bytes.Buffer
@@ -315,11 +398,18 @@ func (k *built) typesFile() []byte {
 	fmt.Fprintf(&b, "package %s\n\n", c.Version)
 
 	spec := &typeGen{k: k, defs: map[string]string{}, inStack: map[string]bool{}, secrets: map[string]bool{},
-		skipped: map[string]bool{}, refPaths: map[string][]string{}}
+		skipped: map[string]bool{}, refPaths: map[string][]string{}, refs: map[string]builtRef{}, refApplied: map[string]bool{}}
+	for _, r := range k.refs {
+		spec.refs[r.path] = r
+	}
 	specBody := spec.structDef(c.Kind+"Spec", k.schema, true, "")
 	if err := spec.checkSkips(); err != nil {
 		fatalf("%s: skip: %v", c.Kind, err)
 	}
+	if err := spec.checkRefs(); err != nil {
+		fatalf("%s: refs: %v", c.Kind, err)
+	}
+	specRules, specBody, _ := strings.Cut(specBody, "type "+c.Kind+"Spec struct {\n")
 	for _, p := range c.Secrets {
 		if !spec.secrets[p] {
 			fatalf("%s: secrets: %s is not a field of the spec (a struct shared with another path, or under a list, is not supported)", c.Kind, p)
@@ -348,6 +438,9 @@ func (k *built) typesFile() []byte {
 	if len(spec.secrets) > 0 {
 		b.WriteString("\"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1/secret\"\n")
 	}
+	if spec.usesRef {
+		b.WriteString("commonv1alpha1 \"github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1\"\n")
+	}
 	b.WriteString("\"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1\"\n")
 	if spec.usesJSON || status.usesJSON {
 		b.WriteString("apiextensionsv1 \"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1\"\n")
@@ -369,6 +462,7 @@ func (k *built) typesFile() []byte {
 		fmt.Fprintf(&head, "// +kubebuilder:validation:XValidation:rule=\"[%s].filter(x, x).size() == 1\",message=\"exactly one of %s is required\"\n",
 			strings.Join(has, ", "), strings.Join(names, ", "))
 	}
+	head.WriteString(specRules)
 	fmt.Fprintf(&head, "type %sSpec struct {\n", c.Kind)
 	for _, p := range c.Parents {
 		typ := map[string]string{
@@ -414,7 +508,7 @@ func (k *built) typesFile() []byte {
 		fmt.Fprintf(&head, "%s %s `json:\"%s,omitempty\"`\n\n", goName(q), t, q)
 	}
 	b.WriteString(head.String())
-	b.WriteString(strings.TrimPrefix(specBody, "type "+c.Kind+"Spec struct {\n"))
+	b.WriteString(specBody)
 	b.WriteString("\n")
 
 	for _, n := range spec.order {
@@ -597,6 +691,24 @@ func registryFile(kinds []*built) []byte {
 		}
 		if c.DisableBeforeDelete != "" {
 			fmt.Fprintf(&b, "DisableBeforeDelete: %q,\n", c.DisableBeforeDelete)
+		}
+		if len(k.refs) > 0 {
+			b.WriteString("Refs: []discokind.Ref{\n")
+			for _, r := range k.refs {
+				fmt.Fprintf(&b, "{Path: %q, ", r.path)
+				if r.list {
+					b.WriteString("List: true, ")
+				}
+				fmt.Fprintf(&b, "Target: %q", r.target)
+				if r.format != "" {
+					fmt.Fprintf(&b, ", Format: %q", r.format)
+				}
+				if r.upjet != "" {
+					fmt.Fprintf(&b, ", Upjet: %q", r.upjet)
+				}
+				b.WriteString("},\n")
+			}
+			b.WriteString("},\n")
 		}
 		if len(c.FakeDefaults) > 0 {
 			var keys []string

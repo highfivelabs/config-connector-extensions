@@ -20,6 +20,7 @@
 //	testdata/discokind/<Kind>/create.yaml   the object to create
 //	testdata/discokind/<Kind>/update.yaml   optional: the same object with a changed spec
 //	testdata/discokind/<Kind>/live-skip     optional: why it cannot run live (one line)
+//	testdata/discokind/<Kind>/refs/*.yaml   optional: objects the fixtures' references name (Kind.Refs), made first
 //	testdata/discokind/<Kind>/<case>/...    optional: another set, for RunCase
 //
 // The fixtures are YAML with placeholders: ${PROJECT} (mockenv.Project),
@@ -121,6 +122,7 @@ func run(t *testing.T, kindName, caseName string) {
 	if s := setups[setupKey]; s != nil {
 		s(t, env)
 	}
+	makeReferenced(t, env, dir, base)
 	api := &discokind.API{HTTP: env.HTTP, BaseURL: k.BaseURL, LocationHost: k.LocationHost, GetQuery: k.GetQuery}
 	if !mockenv.Live() {
 		api.PollInterval = 200 * time.Millisecond
@@ -212,9 +214,14 @@ func run(t *testing.T, kindName, caseName string) {
 	// spec is what a read of the object's resource shows: its body without
 	// input-only fields (Kind.InputOnly, Kind.Secrets), which the API
 	// never returns. A kind's own test checks what was sent for them.
+	// References (Kind.Refs) are the values they resolve to.
 	spec := func(u *unstructured.Unstructured) map[string]any {
 		s, _, _ := unstructured.NestedMap(u.Object, "spec")
-		return k.Comparable(k.Body(s))
+		body := k.Body(s)
+		if err := k.ResolveRefs(env.Ctx, env.Kube, namespace, body); err != nil {
+			t.Fatalf("resolving the fixture's references: %v", err)
+		}
+		return k.Comparable(body)
 	}
 
 	obj := create.DeepCopy()
@@ -309,6 +316,36 @@ func run(t *testing.T, kindName, caseName string) {
 			t.Errorf("the abandoned %s is gone from the cloud", name)
 		}
 	})
+}
+
+// makeReferenced makes the objects in dir/refs/ (one per file), which the
+// fixtures' references name by name, and waits for each to be Ready; they
+// carry the run's labels, and are deleted when the test ends, after
+// everything that references them.
+func makeReferenced(t *testing.T, env *mockenv.Env, dir, base string) {
+	files, _ := filepath.Glob(filepath.Join(dir, "refs", "*.yaml"))
+	for _, f := range files {
+		u := load(t, f, base, base)
+		labels := u.GetLabels()
+		if labels == nil {
+			labels = map[string]string{}
+		}
+		for k, v := range mockenv.Labels() {
+			labels[k] = v
+		}
+		u.SetLabels(labels)
+		if err := env.Kube.Create(env.Ctx, u); err != nil {
+			t.Fatalf("making %s: %v", f, err)
+		}
+		t.Cleanup(func() {
+			if err := env.Kube.Delete(env.Ctx, u); err != nil {
+				t.Errorf("cleanup: deleting %s %s: %v", u.GetKind(), u.GetName(), err)
+				return
+			}
+			env.WaitGone(u)
+		})
+		env.WaitReady(u.GroupVersionKind(), namespace, u.GetName())
+	}
 }
 
 // load reads a fixture with its placeholders filled for base, the object's

@@ -16,4 +16,8 @@ spec:
   serviceConfig:
     availableMemory: 256M
     maxInstanceCount: 1
+    secretEnvironmentVariables:
+    - key: API_TOKEN
+      secret: ${KIND_NAME}-secret
+      version: latest
   description: changed

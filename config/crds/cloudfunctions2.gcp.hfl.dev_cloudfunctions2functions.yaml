@@ -89,6 +89,43 @@ spec:
                       region. It must match the pattern `projects/{project}/locations/{location}/repositories/{repository}`.
                       Repository format must be 'DOCKER'.
                     type: string
+                  dockerRepositoryRef:
+                    description: 'A reference to the ArtifactRegistryRepository that
+                      fills dockerRepository, in its place: external (the value dockerRepository
+                      takes), or the name (and namespace) of an ArtifactRegistryRepository
+                      object, this repository''s kind of that name first, then Config
+                      Connector''s. Set dockerRepository or this, not both.'
+                    oneOf:
+                    - not:
+                        required:
+                        - external
+                      required:
+                      - name
+                    - not:
+                        anyOf:
+                        - required:
+                          - name
+                        - required:
+                          - namespace
+                      required:
+                      - external
+                    properties:
+                      external:
+                        description: 'The value itself, as the string field beside
+                          the reference takes it: the resource''s name, or for a service
+                          account its email.'
+                        type: string
+                      name:
+                        description: 'The name of an object of the referenced kind:
+                          this repository''s kind of that name first, then Config
+                          Connector''s. The controller takes the value from the object''s
+                          status.'
+                        type: string
+                      namespace:
+                        description: The object's namespace; the referencing object's
+                          when unset.
+                        type: string
+                    type: object
                   entryPoint:
                     description: The name of the function (as defined in source code)
                       that will be executed. Defaults to the resource name suffix,
@@ -115,6 +152,43 @@ spec:
                     description: Service account to be used for building the container.
                       The format of this field is `projects/{projectId}/serviceAccounts/{serviceAccountEmail}`.
                     type: string
+                  serviceAccountRef:
+                    description: 'A reference to the IAMServiceAccount that fills
+                      serviceAccount, in its place: external (the service account''s
+                      email), or the name (and namespace) of an IAMServiceAccount
+                      object, this repository''s kind of that name first, then Config
+                      Connector''s. Set serviceAccount or this, not both.'
+                    oneOf:
+                    - not:
+                        required:
+                        - external
+                      required:
+                      - name
+                    - not:
+                        anyOf:
+                        - required:
+                          - name
+                        - required:
+                          - namespace
+                      required:
+                      - external
+                    properties:
+                      external:
+                        description: 'The value itself, as the string field beside
+                          the reference takes it: the resource''s name, or for a service
+                          account its email.'
+                        type: string
+                      name:
+                        description: 'The name of an object of the referenced kind:
+                          this repository''s kind of that name first, then Config
+                          Connector''s. The controller takes the value from the object''s
+                          status.'
+                        type: string
+                      namespace:
+                        description: The object's namespace; the referencing object's
+                          when unset.
+                        type: string
+                    type: object
                   source:
                     description: The location of the function source code.
                     properties:
@@ -164,6 +238,44 @@ spec:
                             description: Google Cloud Storage bucket containing the
                               source (see [Bucket Name Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
                             type: string
+                          bucketRef:
+                            description: 'A reference to the StorageBucket that fills
+                              bucket, in its place: external (the ID bucket takes,
+                              or the resource''s full name), or the name (and namespace)
+                              of a StorageBucket object, this repository''s kind of
+                              that name first, then Config Connector''s. Set bucket
+                              or this, not both.'
+                            oneOf:
+                            - not:
+                                required:
+                                - external
+                              required:
+                              - name
+                            - not:
+                                anyOf:
+                                - required:
+                                  - name
+                                - required:
+                                  - namespace
+                              required:
+                              - external
+                            properties:
+                              external:
+                                description: 'The value itself, as the string field
+                                  beside the reference takes it: the resource''s name,
+                                  or for a service account its email.'
+                                type: string
+                              name:
+                                description: 'The name of an object of the referenced
+                                  kind: this repository''s kind of that name first,
+                                  then Config Connector''s. The controller takes the
+                                  value from the object''s status.'
+                                type: string
+                              namespace:
+                                description: The object's namespace; the referencing
+                                  object's when unset.
+                                type: string
+                            type: object
                           generation:
                             description: Google Cloud Storage generation for the object.
                               If the generation is omitted, the latest generation
@@ -175,12 +287,55 @@ spec:
                               source. This object must be a gzipped archive file (`.tar.gz`)
                               containing source to build.
                             type: string
+                          objectRef:
+                            description: 'A reference to the StorageBucketObject that
+                              fills object, in its place: external (the ID object
+                              takes, or the resource''s full name), or the name (and
+                              namespace) of a StorageBucketObject object, this repository''s
+                              kind of that name first, then Config Connector''s. Set
+                              object or this, not both.'
+                            oneOf:
+                            - not:
+                                required:
+                                - external
+                              required:
+                              - name
+                            - not:
+                                anyOf:
+                                - required:
+                                  - name
+                                - required:
+                                  - namespace
+                              required:
+                              - external
+                            properties:
+                              external:
+                                description: 'The value itself, as the string field
+                                  beside the reference takes it: the resource''s name,
+                                  or for a service account its email.'
+                                type: string
+                              name:
+                                description: 'The name of an object of the referenced
+                                  kind: this repository''s kind of that name first,
+                                  then Config Connector''s. The controller takes the
+                                  value from the object''s status.'
+                                type: string
+                              namespace:
+                                description: The object's namespace; the referencing
+                                  object's when unset.
+                                type: string
+                            type: object
                           sourceUploadUrl:
                             description: When the specified storage bucket is a 1st
                               gen function uploard url bucket, this field should be
                               set as the generated upload url for 1st gen deployment.
                             type: string
                         type: object
+                        x-kubernetes-validations:
+                        - message: set bucket or bucketRef, not both
+                          rule: '!(has(self.bucket) && has(self.bucketRef))'
+                        - message: set object or objectRef, not both
+                          rule: '!(has(self.object) && has(self.objectRef))'
                     type: object
                   sourceToken:
                     description: 'An identifier for Firebase function sources. Disclaimer:
@@ -196,7 +351,51 @@ spec:
                       must be granted the role Cloud Build Custom Workers Builder
                       (roles/cloudbuild.customworkers.builder) in the project.
                     type: string
+                  workerPoolRef:
+                    description: 'A reference to the CloudBuildWorkerPool that fills
+                      workerPool, in its place: external (the value workerPool takes),
+                      or the name (and namespace) of a CloudBuildWorkerPool object,
+                      this repository''s kind of that name first, then Config Connector''s.
+                      Set workerPool or this, not both.'
+                    oneOf:
+                    - not:
+                        required:
+                        - external
+                      required:
+                      - name
+                    - not:
+                        anyOf:
+                        - required:
+                          - name
+                        - required:
+                          - namespace
+                      required:
+                      - external
+                    properties:
+                      external:
+                        description: 'The value itself, as the string field beside
+                          the reference takes it: the resource''s name, or for a service
+                          account its email.'
+                        type: string
+                      name:
+                        description: 'The name of an object of the referenced kind:
+                          this repository''s kind of that name first, then Config
+                          Connector''s. The controller takes the value from the object''s
+                          status.'
+                        type: string
+                      namespace:
+                        description: The object's namespace; the referencing object's
+                          when unset.
+                        type: string
+                    type: object
                 type: object
+                x-kubernetes-validations:
+                - message: set dockerRepository or dockerRepositoryRef, not both
+                  rule: '!(has(self.dockerRepository) && has(self.dockerRepositoryRef))'
+                - message: set serviceAccount or serviceAccountRef, not both
+                  rule: '!(has(self.serviceAccount) && has(self.serviceAccountRef))'
+                - message: set workerPool or workerPoolRef, not both
+                  rule: '!(has(self.workerPool) && has(self.workerPoolRef))'
               description:
                 description: User-provided description of a function.
                 type: string
@@ -248,6 +447,43 @@ spec:
                       is only valid for events of type `google.cloud.pubsub.topic.v1.messagePublished`.
                       The topic provided here will not be deleted at function deletion.'
                     type: string
+                  pubsubTopicRef:
+                    description: 'A reference to the PubSubTopic that fills pubsubTopic,
+                      in its place: external (the value pubsubTopic takes), or the
+                      name (and namespace) of a PubSubTopic object, this repository''s
+                      kind of that name first, then Config Connector''s. Set pubsubTopic
+                      or this, not both.'
+                    oneOf:
+                    - not:
+                        required:
+                        - external
+                      required:
+                      - name
+                    - not:
+                        anyOf:
+                        - required:
+                          - name
+                        - required:
+                          - namespace
+                      required:
+                      - external
+                    properties:
+                      external:
+                        description: 'The value itself, as the string field beside
+                          the reference takes it: the resource''s name, or for a service
+                          account its email.'
+                        type: string
+                      name:
+                        description: 'The name of an object of the referenced kind:
+                          this repository''s kind of that name first, then Config
+                          Connector''s. The controller takes the value from the object''s
+                          status.'
+                        type: string
+                      namespace:
+                        description: The object's namespace; the referencing object's
+                          when unset.
+                        type: string
+                    type: object
                   retryPolicy:
                     description: |-
                       Optional. If unset, then defaults to ignoring failures (i.e. not retrying
@@ -268,6 +504,43 @@ spec:
                       services, the permission is `run.routes.invoke`. If empty, defaults
                       to the Compute Engine default service account: `{project_number}-compute@developer.gserviceaccount.com`.'
                     type: string
+                  serviceAccountEmailRef:
+                    description: 'A reference to the IAMServiceAccount that fills
+                      serviceAccountEmail, in its place: external (the service account''s
+                      email), or the name (and namespace) of an IAMServiceAccount
+                      object, this repository''s kind of that name first, then Config
+                      Connector''s. Set serviceAccountEmail or this, not both.'
+                    oneOf:
+                    - not:
+                        required:
+                        - external
+                      required:
+                      - name
+                    - not:
+                        anyOf:
+                        - required:
+                          - name
+                        - required:
+                          - namespace
+                      required:
+                      - external
+                    properties:
+                      external:
+                        description: 'The value itself, as the string field beside
+                          the reference takes it: the resource''s name, or for a service
+                          account its email.'
+                        type: string
+                      name:
+                        description: 'The name of an object of the referenced kind:
+                          this repository''s kind of that name first, then Config
+                          Connector''s. The controller takes the value from the object''s
+                          status.'
+                        type: string
+                      namespace:
+                        description: The object's namespace; the referencing object's
+                          when unset.
+                        type: string
+                    type: object
                   triggerRegion:
                     description: The region that the trigger will be in. The trigger
                       will only receive events originating in this region. It can
@@ -278,11 +551,53 @@ spec:
                 required:
                 - eventType
                 type: object
+                x-kubernetes-validations:
+                - message: set pubsubTopic or pubsubTopicRef, not both
+                  rule: '!(has(self.pubsubTopic) && has(self.pubsubTopicRef))'
+                - message: set serviceAccountEmail or serviceAccountEmailRef, not
+                    both
+                  rule: '!(has(self.serviceAccountEmail) && has(self.serviceAccountEmailRef))'
               kmsKeyName:
                 description: Resource name of a KMS crypto key (managed by the user)
                   used to encrypt/decrypt function resources. It must match the pattern
                   `projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}`.
                 type: string
+              kmsKeyNameRef:
+                description: 'A reference to the KMSCryptoKey that fills kmsKeyName,
+                  in its place: external (the value kmsKeyName takes), or the name
+                  (and namespace) of a KMSCryptoKey object, this repository''s kind
+                  of that name first, then Config Connector''s. Set kmsKeyName or
+                  this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
               labels:
                 additionalProperties:
                   type: string
@@ -457,6 +772,44 @@ spec:
                           description: Name of the secret in secret manager (not the
                             full resource name).
                           type: string
+                        secretRef:
+                          description: 'A reference to the SecretManagerSecret that
+                            fills secret, in its place: external (the ID secret takes,
+                            or the resource''s full name), or the name (and namespace)
+                            of a SecretManagerSecret object, this repository''s kind
+                            of that name first, then Config Connector''s. Set secret
+                            or this, not both.'
+                          oneOf:
+                          - not:
+                              required:
+                              - external
+                            required:
+                            - name
+                          - not:
+                              anyOf:
+                              - required:
+                                - name
+                              - required:
+                                - namespace
+                            required:
+                            - external
+                          properties:
+                            external:
+                              description: 'The value itself, as the string field
+                                beside the reference takes it: the resource''s name,
+                                or for a service account its email.'
+                              type: string
+                            name:
+                              description: 'The name of an object of the referenced
+                                kind: this repository''s kind of that name first,
+                                then Config Connector''s. The controller takes the
+                                value from the object''s status.'
+                              type: string
+                            namespace:
+                              description: The object's namespace; the referencing
+                                object's when unset.
+                              type: string
+                          type: object
                         version:
                           description: Version of the secret (version number or the
                             string 'latest'). It is recommended to use a numeric version
@@ -464,6 +817,9 @@ spec:
                             secret value is not reflected until new instances start.
                           type: string
                       type: object
+                      x-kubernetes-validations:
+                      - message: set secret or secretRef, not both
+                        rule: '!(has(self.secret) && has(self.secretRef))'
                     type: array
                   secretVolumes:
                     description: Secret volumes configuration.
@@ -487,6 +843,44 @@ spec:
                           description: Name of the secret in secret manager (not the
                             full resource name).
                           type: string
+                        secretRef:
+                          description: 'A reference to the SecretManagerSecret that
+                            fills secret, in its place: external (the ID secret takes,
+                            or the resource''s full name), or the name (and namespace)
+                            of a SecretManagerSecret object, this repository''s kind
+                            of that name first, then Config Connector''s. Set secret
+                            or this, not both.'
+                          oneOf:
+                          - not:
+                              required:
+                              - external
+                            required:
+                            - name
+                          - not:
+                              anyOf:
+                              - required:
+                                - name
+                              - required:
+                                - namespace
+                            required:
+                            - external
+                          properties:
+                            external:
+                              description: 'The value itself, as the string field
+                                beside the reference takes it: the resource''s name,
+                                or for a service account its email.'
+                              type: string
+                            name:
+                              description: 'The name of an object of the referenced
+                                kind: this repository''s kind of that name first,
+                                then Config Connector''s. The controller takes the
+                                value from the object''s status.'
+                              type: string
+                            namespace:
+                              description: The object's namespace; the referencing
+                                object's when unset.
+                              type: string
+                          type: object
                         versions:
                           description: List of secret versions to mount for this secret.
                             If empty, the `latest` version of the secret will be made
@@ -510,6 +904,9 @@ spec:
                             type: object
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: set secret or secretRef, not both
+                        rule: '!(has(self.secret) && has(self.secretRef))'
                     type: array
                   securityLevel:
                     description: |-
@@ -524,6 +921,43 @@ spec:
                     description: The email of the service's service account. If empty,
                       defaults to `{project_number}-compute@developer.gserviceaccount.com`.
                     type: string
+                  serviceAccountEmailRef:
+                    description: 'A reference to the IAMServiceAccount that fills
+                      serviceAccountEmail, in its place: external (the service account''s
+                      email), or the name (and namespace) of an IAMServiceAccount
+                      object, this repository''s kind of that name first, then Config
+                      Connector''s. Set serviceAccountEmail or this, not both.'
+                    oneOf:
+                    - not:
+                        required:
+                        - external
+                      required:
+                      - name
+                    - not:
+                        anyOf:
+                        - required:
+                          - name
+                        - required:
+                          - namespace
+                      required:
+                      - external
+                    properties:
+                      external:
+                        description: 'The value itself, as the string field beside
+                          the reference takes it: the resource''s name, or for a service
+                          account its email.'
+                        type: string
+                      name:
+                        description: 'The name of an object of the referenced kind:
+                          this repository''s kind of that name first, then Config
+                          Connector''s. The controller takes the value from the object''s
+                          status.'
+                        type: string
+                      namespace:
+                        description: The object's namespace; the referencing object's
+                          when unset.
+                        type: string
+                    type: object
                   timeoutSeconds:
                     description: The function execution timeout. Execution is considered
                       failed and can be terminated if the function is not completed
@@ -542,10 +976,17 @@ spec:
                       One of VPC_CONNECTOR_EGRESS_SETTINGS_UNSPECIFIED, PRIVATE_RANGES_ONLY, ALL_TRAFFIC.
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - message: set serviceAccountEmail or serviceAccountEmailRef, not
+                    both
+                  rule: '!(has(self.serviceAccountEmail) && has(self.serviceAccountEmailRef))'
             required:
             - location
             - projectRef
             type: object
+            x-kubernetes-validations:
+            - message: set kmsKeyName or kmsKeyNameRef, not both
+              rule: '!(has(self.kmsKeyName) && has(self.kmsKeyNameRef))'
           status:
             properties:
               conditions:

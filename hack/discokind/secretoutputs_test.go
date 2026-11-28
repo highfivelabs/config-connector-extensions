@@ -51,7 +51,7 @@ func TestSecretOutputs(t *testing.T) {
 	}
 	c := base()
 	c.SecretOutputs, c.CreateOnlyOutputs, c.DisableBeforeDelete = []string{"token"}, []string{"token"}, "disabled"
-	k, err := build(c, secretDiscovery())
+	k, err := build(c, secretDiscovery(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func TestSecretOutputs(t *testing.T) {
 	} {
 		c := base()
 		tc.set(c)
-		if _, err := build(c, secretDiscovery()); err == nil || !strings.Contains(err.Error(), tc.want) {
+		if _, err := build(c, secretDiscovery(), nil); err == nil || !strings.Contains(err.Error(), tc.want) {
 			t.Errorf("%s: err = %v, want %q", name, err, tc.want)
 		}
 	}

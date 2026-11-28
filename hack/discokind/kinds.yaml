@@ -744,6 +744,22 @@
   # catalog's live run, 2026-11-13); Terraform sends it too.
   nameInBody: true
   sweepLocation: us-central1
+  # HFL-699: the fields Upjet resolves from another resource, and the KMS
+  # key the API's description names (ours).
+  refs:
+    buildConfig.dockerRepository: {target: ArtifactRegistryRepository}
+    buildConfig.serviceAccount: {target: IAMServiceAccount, format: serviceAccountName}
+    buildConfig.source.storageSource.bucket: {target: StorageBucket, format: id}
+    buildConfig.source.storageSource.object: {target: StorageBucketObject, format: id}
+    buildConfig.workerPool: {target: CloudBuildWorkerPool}
+    eventTrigger.pubsubTopic: {target: PubSubTopic}
+    eventTrigger.serviceAccountEmail: {target: IAMServiceAccount}
+    kmsKeyName: {target: KMSCryptoKey}
+    serviceConfig.secretEnvironmentVariables[].secret: {target: SecretManagerSecret, format: id}
+    serviceConfig.secretVolumes[].secret: {target: SecretManagerSecret, format: id}
+    serviceConfig.serviceAccountEmail: {target: IAMServiceAccount}
+  refWaivers:
+    eventTrigger.eventFilters[].value: "a filter's value names a bucket only when its attribute is bucket; a reference to a bucket would be wrong for every other attribute"
 
 - kind: DataplexLake
   group: dataplex.gcp.hfl.dev

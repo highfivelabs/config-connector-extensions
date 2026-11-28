@@ -24,6 +24,18 @@ parameter; Terraform sends both. The kind is `nameInBody` in
 `hack/discokind/kinds.yaml`, so create sends both, and the fake refuses a
 `nameInBody` kind's create without the name.
 
+The fields Crossplane's Upjet provider resolves from another resource
+take a reference beside them (2026-11-28, `docs/design.md` 2.4,
+"References"): `buildConfig.dockerRepositoryRef`, `serviceAccountRef`,
+`workerPoolRef` and `source.storageSource.bucketRef` and `objectRef`;
+`eventTrigger.pubsubTopicRef` and `serviceAccountEmailRef`;
+`serviceConfig.serviceAccountEmailRef` and each secret environment
+variable's and volume's `secretRef`; and `kmsKeyNameRef` (ours). An event
+filter's `value` stays a string: it names a bucket only for the attribute
+`bucket`. The fixtures name the source by reference, and a secret
+environment variable's secret by the name of a `SecretManagerSecret` the
+test makes first (`refs/`).
+
 Live, `setup_test.go` makes each function's source first: a bucket
 `${NAME}-source` in us-central1 holding `function.zip` (one Python HTTP
 function). Afterwards it deletes the buckets, the copies Cloud Functions

@@ -153,6 +153,9 @@ func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructure
 		return "", nil, "", err
 	}
 	body := k.Body(spec)
+	if err := k.ResolveRefs(ctx, reader, u.GetNamespace(), body); err != nil {
+		return "", nil, "", err
+	}
 	version, err := k.resolveSecrets(ctx, reader, u.GetNamespace(), body)
 	if err != nil {
 		return "", nil, "", err

@@ -20,12 +20,14 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var CloudFunctions2FunctionGVK = GroupVersion.WithKind("CloudFunctions2Function")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.kmsKeyName) && has(self.kmsKeyNameRef))",message="set kmsKeyName or kmsKeyNameRef, not both"
 type CloudFunctions2FunctionSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -68,6 +70,13 @@ type CloudFunctions2FunctionSpec struct {
 	// `projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}`.
 	// +optional
 	KmsKeyName *string `json:"kmsKeyName,omitempty"`
+
+	// A reference to the KMSCryptoKey that fills kmsKeyName, in its place:
+	// external (the value kmsKeyName takes), or the name (and namespace) of a
+	// KMSCryptoKey object, this repository's kind of that name first, then Config
+	// Connector's. Set kmsKeyName or this, not both.
+	// +optional
+	KmsKeyNameRef *commonv1alpha1.ResourceRef `json:"kmsKeyNameRef,omitempty"`
 
 	// Labels associated with this Cloud Function.
 	// +optional
@@ -116,11 +125,20 @@ type CloudFunctions2FunctionRepoSource struct {
 	TagName *string `json:"tagName,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.bucket) && has(self.bucketRef))",message="set bucket or bucketRef, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.object) && has(self.objectRef))",message="set object or objectRef, not both"
 type CloudFunctions2FunctionStorageSource struct {
 	// Google Cloud Storage bucket containing the source (see [Bucket Name
 	// Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
 	// +optional
 	Bucket *string `json:"bucket,omitempty"`
+
+	// A reference to the StorageBucket that fills bucket, in its place: external
+	// (the ID bucket takes, or the resource's full name), or the name (and
+	// namespace) of a StorageBucket object, this repository's kind of that name
+	// first, then Config Connector's. Set bucket or this, not both.
+	// +optional
+	BucketRef *commonv1alpha1.ResourceRef `json:"bucketRef,omitempty"`
 
 	// Google Cloud Storage generation for the object. If the generation is
 	// omitted, the latest generation will be used.
@@ -131,6 +149,13 @@ type CloudFunctions2FunctionStorageSource struct {
 	// gzipped archive file (`.tar.gz`) containing source to build.
 	// +optional
 	Object *string `json:"object,omitempty"`
+
+	// A reference to the StorageBucketObject that fills object, in its place:
+	// external (the ID object takes, or the resource's full name), or the name
+	// (and namespace) of a StorageBucketObject object, this repository's kind of
+	// that name first, then Config Connector's. Set object or this, not both.
+	// +optional
+	ObjectRef *commonv1alpha1.ResourceRef `json:"objectRef,omitempty"`
 
 	// When the specified storage bucket is a 1st gen function uploard url bucket,
 	// this field should be set as the generated upload url for 1st gen
@@ -155,6 +180,9 @@ type CloudFunctions2FunctionSource struct {
 	StorageSource *CloudFunctions2FunctionStorageSource `json:"storageSource,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.dockerRepository) && has(self.dockerRepositoryRef))",message="set dockerRepository or dockerRepositoryRef, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.serviceAccount) && has(self.serviceAccountRef))",message="set serviceAccount or serviceAccountRef, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.workerPool) && has(self.workerPoolRef))",message="set workerPool or workerPoolRef, not both"
 type CloudFunctions2FunctionBuildConfig struct {
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
@@ -186,6 +214,14 @@ type CloudFunctions2FunctionBuildConfig struct {
 	// +optional
 	DockerRepository *string `json:"dockerRepository,omitempty"`
 
+	// A reference to the ArtifactRegistryRepository that fills dockerRepository,
+	// in its place: external (the value dockerRepository takes), or the name (and
+	// namespace) of an ArtifactRegistryRepository object, this repository's kind
+	// of that name first, then Config Connector's. Set dockerRepository or this,
+	// not both.
+	// +optional
+	DockerRepositoryRef *commonv1alpha1.ResourceRef `json:"dockerRepositoryRef,omitempty"`
+
 	// The name of the function (as defined in source code) that will be executed.
 	// Defaults to the resource name suffix, if not specified. For backward
 	// compatibility, if function with given name is not found, then the system
@@ -213,6 +249,13 @@ type CloudFunctions2FunctionBuildConfig struct {
 	// +optional
 	ServiceAccount *string `json:"serviceAccount,omitempty"`
 
+	// A reference to the IAMServiceAccount that fills serviceAccount, in its
+	// place: external (the service account's email), or the name (and namespace)
+	// of an IAMServiceAccount object, this repository's kind of that name first,
+	// then Config Connector's. Set serviceAccount or this, not both.
+	// +optional
+	ServiceAccountRef *commonv1alpha1.ResourceRef `json:"serviceAccountRef,omitempty"`
+
 	// The location of the function source code.
 	// +optional
 	Source *CloudFunctions2FunctionSource `json:"source,omitempty"`
@@ -233,6 +276,13 @@ type CloudFunctions2FunctionBuildConfig struct {
 	// (roles/cloudbuild.customworkers.builder) in the project.
 	// +optional
 	WorkerPool *string `json:"workerPool,omitempty"`
+
+	// A reference to the CloudBuildWorkerPool that fills workerPool, in its
+	// place: external (the value workerPool takes), or the name (and namespace)
+	// of a CloudBuildWorkerPool object, this repository's kind of that name
+	// first, then Config Connector's. Set workerPool or this, not both.
+	// +optional
+	WorkerPoolRef *commonv1alpha1.ResourceRef `json:"workerPoolRef,omitempty"`
 }
 
 type CloudFunctions2FunctionEventFilter struct {
@@ -252,6 +302,8 @@ type CloudFunctions2FunctionEventFilter struct {
 	Value *string `json:"value,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.pubsubTopic) && has(self.pubsubTopicRef))",message="set pubsubTopic or pubsubTopicRef, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.serviceAccountEmail) && has(self.serviceAccountEmailRef))",message="set serviceAccountEmail or serviceAccountEmailRef, not both"
 type CloudFunctions2FunctionEventTrigger struct {
 	// Optional. The name of the channel associated with the trigger in
 	// `projects/{project}/locations/{location}/channels/{channel}` format. You
@@ -277,6 +329,13 @@ type CloudFunctions2FunctionEventTrigger struct {
 	// +optional
 	PubsubTopic *string `json:"pubsubTopic,omitempty"`
 
+	// A reference to the PubSubTopic that fills pubsubTopic, in its place:
+	// external (the value pubsubTopic takes), or the name (and namespace) of a
+	// PubSubTopic object, this repository's kind of that name first, then Config
+	// Connector's. Set pubsubTopic or this, not both.
+	// +optional
+	PubsubTopicRef *commonv1alpha1.ResourceRef `json:"pubsubTopicRef,omitempty"`
+
 	// Optional. If unset, then defaults to ignoring failures (i.e. not retrying
 	// them).
 	//
@@ -298,6 +357,13 @@ type CloudFunctions2FunctionEventTrigger struct {
 	// service account: `{project_number}-compute@developer.gserviceaccount.com`.
 	// +optional
 	ServiceAccountEmail *string `json:"serviceAccountEmail,omitempty"`
+
+	// A reference to the IAMServiceAccount that fills serviceAccountEmail, in its
+	// place: external (the service account's email), or the name (and namespace)
+	// of an IAMServiceAccount object, this repository's kind of that name first,
+	// then Config Connector's. Set serviceAccountEmail or this, not both.
+	// +optional
+	ServiceAccountEmailRef *commonv1alpha1.ResourceRef `json:"serviceAccountEmailRef,omitempty"`
 
 	// The region that the trigger will be in. The trigger will only receive
 	// events originating in this region. It can be the same region as the
@@ -327,6 +393,7 @@ type CloudFunctions2FunctionDirectVpcNetworkInterface struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.secret) && has(self.secretRef))",message="set secret or secretRef, not both"
 type CloudFunctions2FunctionSecretEnvVar struct {
 	// Name of the environment variable.
 	// +optional
@@ -341,6 +408,13 @@ type CloudFunctions2FunctionSecretEnvVar struct {
 	// Name of the secret in secret manager (not the full resource name).
 	// +optional
 	Secret *string `json:"secret,omitempty"`
+
+	// A reference to the SecretManagerSecret that fills secret, in its place:
+	// external (the ID secret takes, or the resource's full name), or the name
+	// (and namespace) of a SecretManagerSecret object, this repository's kind of
+	// that name first, then Config Connector's. Set secret or this, not both.
+	// +optional
+	SecretRef *commonv1alpha1.ResourceRef `json:"secretRef,omitempty"`
 
 	// Version of the secret (version number or the string 'latest'). It is
 	// recommended to use a numeric version for secret environment variables as
@@ -364,6 +438,7 @@ type CloudFunctions2FunctionSecretVersion struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.secret) && has(self.secretRef))",message="set secret or secretRef, not both"
 type CloudFunctions2FunctionSecretVolume struct {
 	// The path within the container to mount the secret volume. For example,
 	// setting the mount_path as `/etc/secrets` would mount the secret value files
@@ -383,6 +458,13 @@ type CloudFunctions2FunctionSecretVolume struct {
 	// +optional
 	Secret *string `json:"secret,omitempty"`
 
+	// A reference to the SecretManagerSecret that fills secret, in its place:
+	// external (the ID secret takes, or the resource's full name), or the name
+	// (and namespace) of a SecretManagerSecret object, this repository's kind of
+	// that name first, then Config Connector's. Set secret or this, not both.
+	// +optional
+	SecretRef *commonv1alpha1.ResourceRef `json:"secretRef,omitempty"`
+
 	// List of secret versions to mount for this secret. If empty, the `latest`
 	// version of the secret will be made available in a file named after the
 	// secret under the mount point.
@@ -390,6 +472,7 @@ type CloudFunctions2FunctionSecretVolume struct {
 	Versions []CloudFunctions2FunctionSecretVersion `json:"versions,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.serviceAccountEmail) && has(self.serviceAccountEmailRef))",message="set serviceAccountEmail or serviceAccountEmailRef, not both"
 type CloudFunctions2FunctionServiceConfig struct {
 	// Whether 100% of traffic is routed to the latest revision. On CreateFunction
 	// and UpdateFunction, when set to true, the revision being deployed will
@@ -490,6 +573,13 @@ type CloudFunctions2FunctionServiceConfig struct {
 	// `{project_number}-compute@developer.gserviceaccount.com`.
 	// +optional
 	ServiceAccountEmail *string `json:"serviceAccountEmail,omitempty"`
+
+	// A reference to the IAMServiceAccount that fills serviceAccountEmail, in its
+	// place: external (the service account's email), or the name (and namespace)
+	// of an IAMServiceAccount object, this repository's kind of that name first,
+	// then Config Connector's. Set serviceAccountEmail or this, not both.
+	// +optional
+	ServiceAccountEmailRef *commonv1alpha1.ResourceRef `json:"serviceAccountEmailRef,omitempty"`
 
 	// The function execution timeout. Execution is considered failed and can be
 	// terminated if the function is not completed at the end of the timeout
