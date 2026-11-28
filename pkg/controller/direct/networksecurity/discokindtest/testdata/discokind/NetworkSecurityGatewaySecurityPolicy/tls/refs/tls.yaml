@@ -1,0 +1,12 @@
+# The TLS inspection policy the gateway security policy's
+# tlsInspectionPolicyRef names by name (kindtest's refs/): ours, made first.
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityTLSInspectionPolicy
+metadata:
+  name: ${KIND_NAME}-tls
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  caPool: projects/${PROJECT}/locations/us-central1/caPools/${KIND_NAME}-pool
+  description: made by a config-connector-extensions test

@@ -583,6 +583,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "excludedNetworks", List: true, Target: "ComputeNetwork", Upjet: "google_compute_network"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyGVK,
@@ -594,6 +597,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "tlsInspectionPolicy", Target: "NetworkSecurityTLSInspectionPolicy", Upjet: "google_network_security_tls_inspection_policy"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyRuleGVK,

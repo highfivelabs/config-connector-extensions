@@ -1,0 +1,11 @@
+# The same policy, its TLS inspection policy by the string it resolves to.
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityGatewaySecurityPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  tlsInspectionPolicy: projects/${PROJECT}/locations/us-central1/tlsInspectionPolicies/${KIND_NAME}-tls
+  description: changed

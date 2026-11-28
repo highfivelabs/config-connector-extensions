@@ -20,11 +20,13 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var NetworkSecurityGatewaySecurityPolicyGVK = GroupVersion.WithKind("NetworkSecurityGatewaySecurityPolicy")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.tlsInspectionPolicy) && has(self.tlsInspectionPolicyRef))",message="set tlsInspectionPolicy or tlsInspectionPolicyRef, not both"
 type NetworkSecurityGatewaySecurityPolicySpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -50,6 +52,14 @@ type NetworkSecurityGatewaySecurityPolicySpec struct {
 	// inspection will be performed for any rule(s) which enables it.
 	// +optional
 	TlsInspectionPolicy *string `json:"tlsInspectionPolicy,omitempty"`
+
+	// A reference to the NetworkSecurityTLSInspectionPolicy that fills
+	// tlsInspectionPolicy, in its place: external (the value tlsInspectionPolicy
+	// takes), or the name (and namespace) of a NetworkSecurityTLSInspectionPolicy
+	// object, this repository's kind of that name first, then Config Connector's.
+	// Set tlsInspectionPolicy or this, not both.
+	// +optional
+	TlsInspectionPolicyRef *commonv1alpha1.ResourceRef `json:"tlsInspectionPolicyRef,omitempty"`
 }
 
 // NetworkSecurityGatewaySecurityPolicyObservedState is the API's read-only fields.

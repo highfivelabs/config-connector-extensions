@@ -1058,6 +1058,11 @@ func (in *NetworkSecurityDNSThreatDetectorSpec) DeepCopyInto(out *NetworkSecurit
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExcludedNetworkRefs != nil {
+		in, out := &in.ExcludedNetworkRefs, &out.ExcludedNetworkRefs
+		*out = make([]commonv1alpha1.ResourceRef, len(*in))
+		copy(*out, *in)
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
@@ -1401,6 +1406,11 @@ func (in *NetworkSecurityGatewaySecurityPolicySpec) DeepCopyInto(out *NetworkSec
 	if in.TlsInspectionPolicy != nil {
 		in, out := &in.TlsInspectionPolicy, &out.TlsInspectionPolicy
 		*out = new(string)
+		**out = **in
+	}
+	if in.TlsInspectionPolicyRef != nil {
+		in, out := &in.TlsInspectionPolicyRef, &out.TlsInspectionPolicyRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 }

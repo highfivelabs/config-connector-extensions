@@ -61,6 +61,50 @@ spec:
             type: object
           spec:
             properties:
+              excludedNetworkRefs:
+                description: 'References to the ComputeNetworks that fill excludedNetworks,
+                  in its place: external (the value excludedNetworks takes), or the
+                  name (and namespace) of a ComputeNetwork object, this repository''s
+                  kind of that name first, then Config Connector''s. Set excludedNetworks
+                  or this, not both.'
+                items:
+                  description: 'ResourceRef is a reference a generated kind''s spec
+                    takes beside a string field the API fills from another resource
+                    (hack/discokind kinds.yaml refs, docs/design.md section 2.4):
+                    Config Connector''s shape, either external, or the name (and namespace)
+                    of an object in the cluster. The controller resolves it to the
+                    string before every write.'
+                  oneOf:
+                  - not:
+                      required:
+                      - external
+                    required:
+                    - name
+                  - not:
+                      anyOf:
+                      - required:
+                        - name
+                      - required:
+                        - namespace
+                    required:
+                    - external
+                  properties:
+                    external:
+                      description: 'The value itself, as the string field beside the
+                        reference takes it: the resource''s name, or for a service
+                        account its email.'
+                      type: string
+                    name:
+                      description: 'The name of an object of the referenced kind:
+                        this repository''s kind of that name first, then Config Connector''s.
+                        The controller takes the value from the object''s status.'
+                      type: string
+                    namespace:
+                      description: The object's namespace; the referencing object's
+                        when unset.
+                      type: string
+                  type: object
+                type: array
               excludedNetworks:
                 description: 'Optional. A list of network resource names which aren''t
                   monitored by this DnsThreatDetector. Example: `projects/PROJECT_ID/global/networks/NETWORK_NAME`.'
@@ -133,6 +177,9 @@ spec:
             - projectRef
             - provider
             type: object
+            x-kubernetes-validations:
+            - message: set excludedNetworks or excludedNetworkRefs, not both
+              rule: '!(has(self.excludedNetworks) && has(self.excludedNetworkRefs))'
           status:
             properties:
               conditions:

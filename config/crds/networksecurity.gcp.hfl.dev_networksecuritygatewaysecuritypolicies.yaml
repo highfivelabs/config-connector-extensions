@@ -118,10 +118,49 @@ spec:
                   defines how TLS inspection will be performed for any rule(s) which
                   enables it.
                 type: string
+              tlsInspectionPolicyRef:
+                description: 'A reference to the NetworkSecurityTLSInspectionPolicy
+                  that fills tlsInspectionPolicy, in its place: external (the value
+                  tlsInspectionPolicy takes), or the name (and namespace) of a NetworkSecurityTLSInspectionPolicy
+                  object, this repository''s kind of that name first, then Config
+                  Connector''s. Set tlsInspectionPolicy or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
             required:
             - location
             - projectRef
             type: object
+            x-kubernetes-validations:
+            - message: set tlsInspectionPolicy or tlsInspectionPolicyRef, not both
+              rule: '!(has(self.tlsInspectionPolicy) && has(self.tlsInspectionPolicyRef))'
           status:
             properties:
               conditions:

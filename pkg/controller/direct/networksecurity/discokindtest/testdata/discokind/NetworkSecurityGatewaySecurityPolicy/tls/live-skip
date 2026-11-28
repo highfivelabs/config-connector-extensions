@@ -1,0 +1,1 @@
+its TLS inspection policy needs a Certificate Authority Service CA pool, which the live-test project does not have (NetworkSecurityTLSInspectionPolicy's live-skip)

@@ -20,11 +20,13 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var NetworkSecurityDNSThreatDetectorGVK = GroupVersion.WithKind("NetworkSecurityDNSThreatDetector")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.excludedNetworks) && has(self.excludedNetworkRefs))",message="set excludedNetworks or excludedNetworkRefs, not both"
 type NetworkSecurityDNSThreatDetectorSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -47,6 +49,13 @@ type NetworkSecurityDNSThreatDetectorSpec struct {
 	// `projects/PROJECT_ID/global/networks/NETWORK_NAME`.
 	// +optional
 	ExcludedNetworks []string `json:"excludedNetworks,omitempty"`
+
+	// References to the ComputeNetworks that fill excludedNetworks, in its place:
+	// external (the value excludedNetworks takes), or the name (and namespace) of
+	// a ComputeNetwork object, this repository's kind of that name first, then
+	// Config Connector's. Set excludedNetworks or this, not both.
+	// +optional
+	ExcludedNetworkRefs []commonv1alpha1.ResourceRef `json:"excludedNetworkRefs,omitempty"`
 
 	// Optional. Any labels associated with the DnsThreatDetector, listed as key
 	// value pairs.

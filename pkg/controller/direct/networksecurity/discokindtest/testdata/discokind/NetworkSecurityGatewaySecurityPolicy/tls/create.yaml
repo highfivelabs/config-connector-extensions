@@ -1,0 +1,12 @@
+# A policy that inspects TLS, its TLS inspection policy by reference.
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityGatewaySecurityPolicy
+metadata:
+  name: ${NAME}
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  tlsInspectionPolicyRef:
+    name: ${KIND_NAME}-tls
+  description: made by a config-connector-extensions test

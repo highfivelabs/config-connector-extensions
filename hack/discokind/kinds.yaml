@@ -545,6 +545,8 @@
   parents: [project]
   terraform: google_network_security_dns_threat_detector
   note: "DNS threat detection for a project's VPC networks."
+  refs:
+    excludedNetworks: {target: ComputeNetwork}
 
 - kind: NetworkSecurityGatewaySecurityPolicy
   group: networksecurity.gcp.hfl.dev
@@ -554,6 +556,8 @@
   parents: [project]
   terraform: google_network_security_gateway_security_policy
   note: "A Secure Web Proxy's policy: the rules a gateway applies to its traffic."
+  refs:
+    tlsInspectionPolicy: {target: NetworkSecurityTLSInspectionPolicy}
   sweepLocation: us-central1
 
 - kind: NetworkSecurityGatewaySecurityPolicyRule
