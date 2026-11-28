@@ -918,3 +918,13 @@
   immutable: [perimeterType]
   skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
   note: "A VPC Service Controls perimeter of an access policy, with its enforced (status) and dry-run (spec) configurations; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."
+  # HFL-699: Upjet resolves the access levels; the spec (dry-run) and
+  # status (enforced) configurations share one struct, so both take them,
+  # and so do the egress sources (ours: the same field).
+  refs:
+    spec.accessLevels: {target: AccessContextManagerAccessLevel}
+    spec.egressPolicies[].egressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}
+    spec.ingressPolicies[].ingressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}
+    status.accessLevels: {target: AccessContextManagerAccessLevel}
+    status.egressPolicies[].egressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}
+    status.ingressPolicies[].ingressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}

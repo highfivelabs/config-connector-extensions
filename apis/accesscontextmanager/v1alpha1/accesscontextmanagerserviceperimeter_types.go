@@ -19,6 +19,7 @@ package v1alpha1
 
 import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -91,6 +92,7 @@ type AccessContextManagerServicePerimeterPrivateServiceConnectEndpoint struct {
 	ForwardingRule *string `json:"forwardingRule,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.accessLevel) && has(self.accessLevelRef))",message="set accessLevel or accessLevelRef, not both"
 type AccessContextManagerServicePerimeterEgressSource struct {
 	// An AccessLevel resource name that allows protected resources inside the
 	// ServicePerimeters to access outside the ServicePerimeter boundaries.
@@ -103,6 +105,14 @@ type AccessContextManagerServicePerimeterEgressSource struct {
 	// allowed.
 	// +optional
 	AccessLevel *string `json:"accessLevel,omitempty"`
+
+	// A reference to the AccessContextManagerAccessLevel that fills accessLevel,
+	// in its place: external (the value accessLevel takes), or the name (and
+	// namespace) of an AccessContextManagerAccessLevel object, this repository's
+	// kind of that name first, then Config Connector's. Set accessLevel or this,
+	// not both.
+	// +optional
+	AccessLevelRef *commonv1alpha1.ResourceRef `json:"accessLevelRef,omitempty"`
 
 	// A PrivateServiceConnectEndpoint that is allowed to access data outside the
 	// perimeter. The Private Service Connect endpoint may be in any organization,
@@ -233,6 +243,7 @@ type AccessContextManagerServicePerimeterEgressPolicy struct {
 	Title *string `json:"title,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.accessLevel) && has(self.accessLevelRef))",message="set accessLevel or accessLevelRef, not both"
 type AccessContextManagerServicePerimeterIngressSource struct {
 	// An AccessLevel resource name that allows resources within the
 	// ServicePerimeters to be accessed from the internet. AccessLevels listed
@@ -244,6 +255,14 @@ type AccessContextManagerServicePerimeterIngressSource struct {
 	// specified for `access_level`, then all IngressSources will be allowed.
 	// +optional
 	AccessLevel *string `json:"accessLevel,omitempty"`
+
+	// A reference to the AccessContextManagerAccessLevel that fills accessLevel,
+	// in its place: external (the value accessLevel takes), or the name (and
+	// namespace) of an AccessContextManagerAccessLevel object, this repository's
+	// kind of that name first, then Config Connector's. Set accessLevel or this,
+	// not both.
+	// +optional
+	AccessLevelRef *commonv1alpha1.ResourceRef `json:"accessLevelRef,omitempty"`
 
 	// A PrivateServiceConnectEndpoint that is allowed to access the perimeter.
 	// The Private Service Connect endpoint may be in any organization, not just
@@ -383,6 +402,7 @@ type AccessContextManagerServicePerimeterVpcAccessibleServices struct {
 	ServicePatternsEnforcementScopes []string `json:"servicePatternsEnforcementScopes,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.accessLevels) && has(self.accessLevelRefs))",message="set accessLevels or accessLevelRefs, not both"
 type AccessContextManagerServicePerimeterServicePerimeterConfig struct {
 	// A list of `AccessLevel` resource names that allow resources within the
 	// `ServicePerimeter` to be accessed from the internet. `AccessLevels` listed
@@ -394,6 +414,14 @@ type AccessContextManagerServicePerimeterServicePerimeterConfig struct {
 	// Bridge, must be empty.
 	// +optional
 	AccessLevels []string `json:"accessLevels,omitempty"`
+
+	// References to the AccessContextManagerAccessLevels that fill accessLevels,
+	// in its place: external (the value accessLevels takes), or the name (and
+	// namespace) of an AccessContextManagerAccessLevel object, this repository's
+	// kind of that name first, then Config Connector's. Set accessLevels or this,
+	// not both.
+	// +optional
+	AccessLevelRefs []commonv1alpha1.ResourceRef `json:"accessLevelRefs,omitempty"`
 
 	// List of EgressPolicies to apply to the perimeter. A perimeter may have
 	// multiple EgressPolicies, each of which is evaluated separately. Access is

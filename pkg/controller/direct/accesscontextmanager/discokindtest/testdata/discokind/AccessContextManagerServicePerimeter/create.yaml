@@ -10,6 +10,9 @@ spec:
   perimeterType: PERIMETER_TYPE_REGULAR
   status:
     resources: [projects/100000000002]
+    # References (kinds.yaml refs); update.yaml sets the strings.
+    accessLevelRefs:
+    - external: accessPolicies/100000000001/accessLevels/corp
     restrictedServices: [storage.googleapis.com]
     vpcAccessibleServices:
       enableRestriction: true
@@ -20,6 +23,8 @@ spec:
         identityType: ANY_SERVICE_ACCOUNT
         sources:
         - resource: projects/100000000003
+        - accessLevelRef:
+            external: accessPolicies/100000000001/accessLevels/corp
       ingressTo:
         resources: ["*"]
         roles: [roles/storage.objectViewer]

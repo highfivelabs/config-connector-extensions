@@ -961,6 +961,14 @@ var discoKinds = []*discokind.Kind{
 		NameInBody: true,
 		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
+		Refs: []discokind.Ref{
+			{Path: "spec.accessLevels", List: true, Target: "AccessContextManagerAccessLevel", Upjet: "google_access_context_manager_access_level"},
+			{Path: "spec.egressPolicies[].egressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel"},
+			{Path: "spec.ingressPolicies[].ingressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel"},
+			{Path: "status.accessLevels", List: true, Target: "AccessContextManagerAccessLevel", Upjet: "google_access_context_manager_access_level"},
+			{Path: "status.egressPolicies[].egressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel"},
+			{Path: "status.ingressPolicies[].ingressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel", Upjet: "google_access_context_manager_access_level"},
+		},
 	},
 }
 

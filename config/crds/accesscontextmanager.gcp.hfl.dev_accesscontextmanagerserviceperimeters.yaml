@@ -100,6 +100,51 @@ spec:
                   configuration without enforcing actual access restrictions. Only
                   allowed to be set when the `use_explicit_dry_run_spec` flag is set.
                 properties:
+                  accessLevelRefs:
+                    description: 'References to the AccessContextManagerAccessLevels
+                      that fill accessLevels, in its place: external (the value accessLevels
+                      takes), or the name (and namespace) of an AccessContextManagerAccessLevel
+                      object, this repository''s kind of that name first, then Config
+                      Connector''s. Set accessLevels or this, not both.'
+                    items:
+                      description: 'ResourceRef is a reference a generated kind''s
+                        spec takes beside a string field the API fills from another
+                        resource (hack/discokind kinds.yaml refs, docs/design.md section
+                        2.4): Config Connector''s shape, either external, or the name
+                        (and namespace) of an object in the cluster. The controller
+                        resolves it to the string before every write.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: 'The value itself, as the string field beside
+                            the reference takes it: the resource''s name, or for a
+                            service account its email.'
+                          type: string
+                        name:
+                          description: 'The name of an object of the referenced kind:
+                            this repository''s kind of that name first, then Config
+                            Connector''s. The controller takes the value from the
+                            object''s status.'
+                          type: string
+                        namespace:
+                          description: The object's namespace; the referencing object's
+                            when unset.
+                          type: string
+                      type: object
+                    type: array
                   accessLevels:
                     description: 'A list of `AccessLevel` resource names that allow
                       resources within the `ServicePerimeter` to be accessed from
@@ -168,6 +213,47 @@ spec:
                                       If a single `*` is specified for `access_level`,
                                       then all EgressSources will be allowed.'
                                     type: string
+                                  accessLevelRef:
+                                    description: 'A reference to the AccessContextManagerAccessLevel
+                                      that fills accessLevel, in its place: external
+                                      (the value accessLevel takes), or the name (and
+                                      namespace) of an AccessContextManagerAccessLevel
+                                      object, this repository''s kind of that name
+                                      first, then Config Connector''s. Set accessLevel
+                                      or this, not both.'
+                                    oneOf:
+                                    - not:
+                                        required:
+                                        - external
+                                      required:
+                                      - name
+                                    - not:
+                                        anyOf:
+                                        - required:
+                                          - name
+                                        - required:
+                                          - namespace
+                                      required:
+                                      - external
+                                    properties:
+                                      external:
+                                        description: 'The value itself, as the string
+                                          field beside the reference takes it: the
+                                          resource''s name, or for a service account
+                                          its email.'
+                                        type: string
+                                      name:
+                                        description: 'The name of an object of the
+                                          referenced kind: this repository''s kind
+                                          of that name first, then Config Connector''s.
+                                          The controller takes the value from the
+                                          object''s status.'
+                                        type: string
+                                      namespace:
+                                        description: The object's namespace; the referencing
+                                          object's when unset.
+                                        type: string
+                                    type: object
                                   pscEndpoint:
                                     description: A PrivateServiceConnectEndpoint that
                                       is allowed to access data outside the perimeter.
@@ -193,6 +279,10 @@ spec:
                                       resources.
                                     type: string
                                 type: object
+                                x-kubernetes-validations:
+                                - message: set accessLevel or accessLevelRef, not
+                                    both
+                                  rule: '!(has(self.accessLevel) && has(self.accessLevelRef))'
                               type: array
                           type: object
                         egressTo:
@@ -327,6 +417,47 @@ spec:
                                       If a single `*` is specified for `access_level`,
                                       then all IngressSources will be allowed.'
                                     type: string
+                                  accessLevelRef:
+                                    description: 'A reference to the AccessContextManagerAccessLevel
+                                      that fills accessLevel, in its place: external
+                                      (the value accessLevel takes), or the name (and
+                                      namespace) of an AccessContextManagerAccessLevel
+                                      object, this repository''s kind of that name
+                                      first, then Config Connector''s. Set accessLevel
+                                      or this, not both.'
+                                    oneOf:
+                                    - not:
+                                        required:
+                                        - external
+                                      required:
+                                      - name
+                                    - not:
+                                        anyOf:
+                                        - required:
+                                          - name
+                                        - required:
+                                          - namespace
+                                      required:
+                                      - external
+                                    properties:
+                                      external:
+                                        description: 'The value itself, as the string
+                                          field beside the reference takes it: the
+                                          resource''s name, or for a service account
+                                          its email.'
+                                        type: string
+                                      name:
+                                        description: 'The name of an object of the
+                                          referenced kind: this repository''s kind
+                                          of that name first, then Config Connector''s.
+                                          The controller takes the value from the
+                                          object''s status.'
+                                        type: string
+                                      namespace:
+                                        description: The object's namespace; the referencing
+                                          object's when unset.
+                                        type: string
+                                    type: object
                                   pscEndpoint:
                                     description: A PrivateServiceConnectEndpoint that
                                       is allowed to access the perimeter. The Private
@@ -357,6 +488,10 @@ spec:
                                       is not supported.'
                                     type: string
                                 type: object
+                                x-kubernetes-validations:
+                                - message: set accessLevel or accessLevelRef, not
+                                    both
+                                  rule: '!(has(self.accessLevel) && has(self.accessLevelRef))'
                               type: array
                           type: object
                         ingressTo:
@@ -502,11 +637,59 @@ spec:
                         type: array
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: set accessLevels or accessLevelRefs, not both
+                  rule: '!(has(self.accessLevels) && has(self.accessLevelRefs))'
               status:
                 description: Current ServicePerimeter configuration. Specifies sets
                   of resources, restricted services, and access levels that determine
                   perimeter content and boundaries.
                 properties:
+                  accessLevelRefs:
+                    description: 'References to the AccessContextManagerAccessLevels
+                      that fill accessLevels, in its place: external (the value accessLevels
+                      takes), or the name (and namespace) of an AccessContextManagerAccessLevel
+                      object, this repository''s kind of that name first, then Config
+                      Connector''s. Set accessLevels or this, not both.'
+                    items:
+                      description: 'ResourceRef is a reference a generated kind''s
+                        spec takes beside a string field the API fills from another
+                        resource (hack/discokind kinds.yaml refs, docs/design.md section
+                        2.4): Config Connector''s shape, either external, or the name
+                        (and namespace) of an object in the cluster. The controller
+                        resolves it to the string before every write.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: 'The value itself, as the string field beside
+                            the reference takes it: the resource''s name, or for a
+                            service account its email.'
+                          type: string
+                        name:
+                          description: 'The name of an object of the referenced kind:
+                            this repository''s kind of that name first, then Config
+                            Connector''s. The controller takes the value from the
+                            object''s status.'
+                          type: string
+                        namespace:
+                          description: The object's namespace; the referencing object's
+                            when unset.
+                          type: string
+                      type: object
+                    type: array
                   accessLevels:
                     description: 'A list of `AccessLevel` resource names that allow
                       resources within the `ServicePerimeter` to be accessed from
@@ -575,6 +758,47 @@ spec:
                                       If a single `*` is specified for `access_level`,
                                       then all EgressSources will be allowed.'
                                     type: string
+                                  accessLevelRef:
+                                    description: 'A reference to the AccessContextManagerAccessLevel
+                                      that fills accessLevel, in its place: external
+                                      (the value accessLevel takes), or the name (and
+                                      namespace) of an AccessContextManagerAccessLevel
+                                      object, this repository''s kind of that name
+                                      first, then Config Connector''s. Set accessLevel
+                                      or this, not both.'
+                                    oneOf:
+                                    - not:
+                                        required:
+                                        - external
+                                      required:
+                                      - name
+                                    - not:
+                                        anyOf:
+                                        - required:
+                                          - name
+                                        - required:
+                                          - namespace
+                                      required:
+                                      - external
+                                    properties:
+                                      external:
+                                        description: 'The value itself, as the string
+                                          field beside the reference takes it: the
+                                          resource''s name, or for a service account
+                                          its email.'
+                                        type: string
+                                      name:
+                                        description: 'The name of an object of the
+                                          referenced kind: this repository''s kind
+                                          of that name first, then Config Connector''s.
+                                          The controller takes the value from the
+                                          object''s status.'
+                                        type: string
+                                      namespace:
+                                        description: The object's namespace; the referencing
+                                          object's when unset.
+                                        type: string
+                                    type: object
                                   pscEndpoint:
                                     description: A PrivateServiceConnectEndpoint that
                                       is allowed to access data outside the perimeter.
@@ -600,6 +824,10 @@ spec:
                                       resources.
                                     type: string
                                 type: object
+                                x-kubernetes-validations:
+                                - message: set accessLevel or accessLevelRef, not
+                                    both
+                                  rule: '!(has(self.accessLevel) && has(self.accessLevelRef))'
                               type: array
                           type: object
                         egressTo:
@@ -734,6 +962,47 @@ spec:
                                       If a single `*` is specified for `access_level`,
                                       then all IngressSources will be allowed.'
                                     type: string
+                                  accessLevelRef:
+                                    description: 'A reference to the AccessContextManagerAccessLevel
+                                      that fills accessLevel, in its place: external
+                                      (the value accessLevel takes), or the name (and
+                                      namespace) of an AccessContextManagerAccessLevel
+                                      object, this repository''s kind of that name
+                                      first, then Config Connector''s. Set accessLevel
+                                      or this, not both.'
+                                    oneOf:
+                                    - not:
+                                        required:
+                                        - external
+                                      required:
+                                      - name
+                                    - not:
+                                        anyOf:
+                                        - required:
+                                          - name
+                                        - required:
+                                          - namespace
+                                      required:
+                                      - external
+                                    properties:
+                                      external:
+                                        description: 'The value itself, as the string
+                                          field beside the reference takes it: the
+                                          resource''s name, or for a service account
+                                          its email.'
+                                        type: string
+                                      name:
+                                        description: 'The name of an object of the
+                                          referenced kind: this repository''s kind
+                                          of that name first, then Config Connector''s.
+                                          The controller takes the value from the
+                                          object''s status.'
+                                        type: string
+                                      namespace:
+                                        description: The object's namespace; the referencing
+                                          object's when unset.
+                                        type: string
+                                    type: object
                                   pscEndpoint:
                                     description: A PrivateServiceConnectEndpoint that
                                       is allowed to access the perimeter. The Private
@@ -764,6 +1033,10 @@ spec:
                                       is not supported.'
                                     type: string
                                 type: object
+                                x-kubernetes-validations:
+                                - message: set accessLevel or accessLevelRef, not
+                                    both
+                                  rule: '!(has(self.accessLevel) && has(self.accessLevelRef))'
                               type: array
                           type: object
                         ingressTo:
@@ -909,6 +1182,9 @@ spec:
                         type: array
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: set accessLevels or accessLevelRefs, not both
+                  rule: '!(has(self.accessLevels) && has(self.accessLevelRefs))'
               title:
                 description: Human readable title. Must be unique within the Policy.
                 type: string
