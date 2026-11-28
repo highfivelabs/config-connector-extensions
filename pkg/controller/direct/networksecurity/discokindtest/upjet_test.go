@@ -27,3 +27,11 @@ import (
 func TestNetworkSecurityDNSThreatDetectorUpjet(t *testing.T) {
 	kindtest.RunCase(t, "NetworkSecurityDNSThreatDetector", "upjet")
 }
+
+// TestNetworkSecurityGatewaySecurityPolicyTLS makes a policy that names a
+// TLS inspection policy, the one the test makes first, by reference, and
+// then by the string it resolves to; live it skips (tls/live-skip: the
+// TLS inspection policy needs a CA pool).
+func TestNetworkSecurityGatewaySecurityPolicyTLS(t *testing.T) {
+	kindtest.RunCase(t, "NetworkSecurityGatewaySecurityPolicy", "tls")
+}

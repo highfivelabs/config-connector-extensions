@@ -348,6 +348,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"attachmentGroup", "cloudRouterIpAddress", "cloudRouterIpv6Address", "configurationConstraints", "creationTimestamp", "customerRouterIpAddress", "customerRouterIpv6Address", "dataplaneVersion", "googleReferenceId", "id", "kind", "operationalStatus", "privateInterconnectInfo", "region", "remoteService", "satisfiesPzs", "selfLink", "state"},
+		Refs: []discokind.Ref{
+			{Path: "ipsecInternalAddresses", List: true, Target: "ComputeAddress", Upjet: "google_compute_address"},
+			{Path: "router", Target: "ComputeRouter", Upjet: "google_compute_router"},
+		},
 	},
 	{
 		GVK:         computev1alpha1.ComputeServiceAttachmentGVK,
@@ -360,6 +364,11 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"connectedEndpoints", "creationTimestamp", "fingerprint", "id", "kind", "pscServiceAttachmentId", "region", "selfLink"},
+		Refs: []discokind.Ref{
+			{Path: "consumerAcceptLists[].networkUrl", Target: "ComputeNetwork", Upjet: "google_compute_network"},
+			{Path: "natSubnets", List: true, Target: "ComputeSubnetwork", Upjet: "google_compute_subnetwork"},
+			{Path: "targetService", Target: "ComputeForwardingRule", Upjet: "google_compute_forwarding_rule"},
+		},
 	},
 	{
 		GVK:         computev1alpha1.ComputeSubnetworkGVK,
@@ -373,6 +382,9 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"creationTimestamp", "fingerprint", "gatewayAddress", "id", "ipv6CidrRange", "ipv6GceEndpoint", "kind", "selfLink", "state", "systemReservedExternalIpv6Ranges", "systemReservedInternalIpv6Ranges", "utilizationDetails"},
 		InputOnly: []string{"params.resourceManagerTags"},
+		Refs: []discokind.Ref{
+			{Path: "network", Target: "ComputeNetwork", Upjet: "google_compute_network"},
+		},
 	},
 	{
 		GVK:         computev1alpha1.ComputeRegionSecurityPolicyGVK,
@@ -442,6 +454,12 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "selfLink", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "certificateUrls", List: true, Target: "CertificateManagerCertificate", Upjet: "google_certificate_manager_certificate"},
+			{Path: "gatewaySecurityPolicy", Target: "NetworkSecurityGatewaySecurityPolicy", Upjet: "google_network_security_gateway_security_policy"},
+			{Path: "network", Target: "ComputeNetwork", Upjet: "google_compute_network"},
+			{Path: "subnetwork", Target: "ComputeSubnetwork", Upjet: "google_compute_subnetwork"},
+		},
 	},
 	{
 		GVK:       networkservicesv1beta1.NetworkServicesAuthzExtensionGVK,
@@ -565,6 +583,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: false, UpdateLRO: false, DeleteLRO: false,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "excludedNetworks", List: true, Target: "ComputeNetwork", Upjet: "google_compute_network"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyGVK,
@@ -576,6 +597,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "tlsInspectionPolicy", Target: "NetworkSecurityTLSInspectionPolicy", Upjet: "google_network_security_tls_inspection_policy"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityGatewaySecurityPolicyRuleGVK,
@@ -587,6 +611,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "gatewaySecurityPolicy", NamePart: true, Target: "NetworkSecurityGatewaySecurityPolicy", Upjet: "google_network_security_gateway_security_policy"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityURLListGVK,
@@ -609,6 +636,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "caPool", Target: "PrivateCACAPool", Upjet: "google_privateca_ca_pool"},
+			{Path: "trustConfig", Target: "CertificateManagerTrustConfig", Upjet: "google_certificate_manager_trust_config"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityAuthzPolicyGVK,
@@ -631,6 +662,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"backupChannel", "createTime", "etag", "lastSuccessfulBackupTime", "name", "protectedNamespaceCount", "protectedPodCount", "rpoRiskLevel", "rpoRiskReason", "state", "stateReason", "uid", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "backupConfig.encryptionKey.gcpKmsEncryptionKey", Target: "KMSCryptoKey", Upjet: "google_kms_crypto_key"},
+			{Path: "cluster", Target: "ContainerCluster", Upjet: "google_container_cluster"},
+		},
 	},
 	{
 		GVK:       gkebackupv1beta1.GKEBackupRestorePlanGVK,
@@ -801,6 +836,19 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "satisfiesPzi", "satisfiesPzs", "state", "stateMessages", "updateTime", "upgradeInfo", "url"},
+		Refs: []discokind.Ref{
+			{Path: "buildConfig.dockerRepository", Target: "ArtifactRegistryRepository", Upjet: "google_artifact_registry_repository"},
+			{Path: "buildConfig.serviceAccount", Target: "IAMServiceAccount", Format: "serviceAccountName", Upjet: "google_service_account"},
+			{Path: "buildConfig.source.storageSource.bucket", Target: "StorageBucket", Format: "id", Upjet: "google_storage_bucket"},
+			{Path: "buildConfig.source.storageSource.object", Target: "StorageBucketObject", Format: "id", Upjet: "google_storage_bucket_object"},
+			{Path: "buildConfig.workerPool", Target: "CloudBuildWorkerPool", Upjet: "google_cloudbuild_worker_pool"},
+			{Path: "eventTrigger.pubsubTopic", Target: "PubSubTopic", Upjet: "google_pubsub_topic"},
+			{Path: "eventTrigger.serviceAccountEmail", Target: "IAMServiceAccount", Upjet: "google_service_account"},
+			{Path: "kmsKeyName", Target: "KMSCryptoKey"},
+			{Path: "serviceConfig.secretEnvironmentVariables[].secret", Target: "SecretManagerSecret", Format: "id", Upjet: "google_secret_manager_secret"},
+			{Path: "serviceConfig.secretVolumes[].secret", Target: "SecretManagerSecret", Format: "id", Upjet: "google_secret_manager_secret"},
+			{Path: "serviceConfig.serviceAccountEmail", Target: "IAMServiceAccount", Upjet: "google_service_account"},
+		},
 	},
 	{
 		GVK:       dataplexv1beta1.DataplexLakeGVK,
@@ -823,6 +871,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"assetStatus", "createTime", "name", "state", "uid", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "lake", NamePart: true, Target: "DataplexLake", Upjet: "google_dataplex_lake"},
+		},
 	},
 	{
 		GVK:       dataplexv1beta1.DataplexAssetGVK,
@@ -834,6 +885,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "discoveryStatus", "name", "resourceStatus", "securityStatus", "state", "uid", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "lake", NamePart: true, Target: "DataplexLake", Upjet: "google_dataplex_lake"},
+			{Path: "zone", NamePart: true, Target: "DataplexZone"},
+		},
 	},
 	{
 		GVK:       dataplexv1beta1.DataplexAspectTypeGVK,
@@ -942,6 +997,14 @@ var discoKinds = []*discokind.Kind{
 		NameInBody: true,
 		CreateLRO:  true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
+		Refs: []discokind.Ref{
+			{Path: "spec.accessLevels", List: true, Target: "AccessContextManagerAccessLevel", Upjet: "google_access_context_manager_access_level"},
+			{Path: "spec.egressPolicies[].egressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel"},
+			{Path: "spec.ingressPolicies[].ingressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel"},
+			{Path: "status.accessLevels", List: true, Target: "AccessContextManagerAccessLevel", Upjet: "google_access_context_manager_access_level"},
+			{Path: "status.egressPolicies[].egressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel"},
+			{Path: "status.ingressPolicies[].ingressFrom.sources[].accessLevel", Target: "AccessContextManagerAccessLevel", Upjet: "google_access_context_manager_access_level"},
+		},
 	},
 }
 

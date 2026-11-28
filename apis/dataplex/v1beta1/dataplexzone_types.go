@@ -20,11 +20,13 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var DataplexZoneGVK = GroupVersion.WithKind("DataplexZone")
 
+// +kubebuilder:validation:XValidation:rule="has(self.lake) != has(self.lakeRef)",message="exactly one of lake and lakeRef is required"
 type DataplexZoneSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -37,9 +39,18 @@ type DataplexZoneSpec struct {
 	Location string `json:"location"`
 
 	// Immutable. The lake, part of the resource's name ({parent}/locations/{location}/lakes/{lake}/zones/{id}).
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="lake is immutable"
-	Lake string `json:"lake"`
+	Lake string `json:"lake,omitempty"`
+
+	// Immutable. A reference to the DataplexLake whose ID is lake, in its place:
+	// external (its full name), or the name (and namespace) of a DataplexLake
+	// object, this repository's kind of that name first, then Config Connector's.
+	// Its name must be the start of this resource's: the same project and
+	// location. Set lake or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="lakeRef is immutable"
+	LakeRef *commonv1alpha1.ResourceRef `json:"lakeRef,omitempty"`
 
 	// Immutable. The resource's ID, the last part of its name. When unset,
 	// metadata.name is used.

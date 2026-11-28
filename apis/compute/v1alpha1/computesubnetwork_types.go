@@ -20,11 +20,13 @@ package v1alpha1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ComputeSubnetworkGVK = GroupVersion.WithKind("ComputeSubnetwork")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.network) && has(self.networkRef))",message="set network or networkRef, not both"
 type ComputeSubnetworkSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -125,6 +127,14 @@ type ComputeSubnetworkSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="network is immutable"
 	Network *string `json:"network,omitempty"`
+
+	// A reference to the ComputeNetwork that fills network, in its place:
+	// external (the value network takes), or the name (and namespace) of a
+	// ComputeNetwork object, this repository's kind of that name first, then
+	// Config Connector's. Set network or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="networkRef is immutable"
+	NetworkRef *commonv1alpha1.ResourceRef `json:"networkRef,omitempty"`
 
 	// Input only. [Input Only] Additional params passed with the request, but not
 	// persisted

@@ -46,6 +46,8 @@ skips live.
 Live: pending. `task test-live PROJECT=$GCP_PROJECT KINDS=compute
 LIVE_RUN=TestComputeSubnetwork`.
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): `networkRef` takes a `ComputeNetwork` beside `network`, as Upjet resolves it; immutable as `network` is.
+
 ## Live runs
 
 One row per run.

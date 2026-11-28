@@ -20,11 +20,14 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var NetworkSecurityTLSInspectionPolicyGVK = GroupVersion.WithKind("NetworkSecurityTLSInspectionPolicy")
 
+// +kubebuilder:validation:XValidation:rule="has(self.caPool) != has(self.caPoolRef)",message="exactly one of caPool and caPoolRef is required"
+// +kubebuilder:validation:XValidation:rule="!(has(self.trustConfig) && has(self.trustConfigRef))",message="set trustConfig or trustConfigRef, not both"
 type NetworkSecurityTLSInspectionPolicySpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -45,8 +48,15 @@ type NetworkSecurityTLSInspectionPolicySpec struct {
 	// Required. A CA pool resource used to issue interception certificates. The
 	// CA pool string has a relative resource path following the form
 	// "projects/{project}/locations/{location}/caPools/{ca_pool}".
-	// +kubebuilder:validation:Required
+	// +optional
 	CaPool *string `json:"caPool,omitempty"`
+
+	// A reference to the PrivateCACAPool that fills caPool, in its place:
+	// external (the value caPool takes), or the name (and namespace) of a
+	// PrivateCACAPool object, this repository's kind of that name first, then
+	// Config Connector's. Set caPool or this, not both.
+	// +optional
+	CaPoolRef *commonv1alpha1.ResourceRef `json:"caPoolRef,omitempty"`
 
 	// Optional. The mode used to issue certificates (local CA signing vs direct
 	// leaf).
@@ -109,6 +119,14 @@ type NetworkSecurityTLSInspectionPolicySpec struct {
 	// Proxy does not yet honor this field.
 	// +optional
 	TrustConfig *string `json:"trustConfig,omitempty"`
+
+	// A reference to the CertificateManagerTrustConfig that fills trustConfig, in
+	// its place: external (the value trustConfig takes), or the name (and
+	// namespace) of a CertificateManagerTrustConfig object, this repository's
+	// kind of that name first, then Config Connector's. Set trustConfig or this,
+	// not both.
+	// +optional
+	TrustConfigRef *commonv1alpha1.ResourceRef `json:"trustConfigRef,omitempty"`
 }
 
 // NetworkSecurityTLSInspectionPolicyObservedState is the API's read-only fields.

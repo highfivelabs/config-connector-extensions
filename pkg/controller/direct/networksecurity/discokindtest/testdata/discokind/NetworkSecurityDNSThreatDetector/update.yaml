@@ -7,4 +7,6 @@ spec:
     external: ${PROJECT}
   location: global
   provider: INFOBLOX
-  excludedNetworks: [projects/${PROJECT}/global/networks/${NAME}-net]
+  # A reference (kinds.yaml refs).
+  excludedNetworkRefs:
+  - external: projects/${PROJECT}/global/networks/${NAME}-net

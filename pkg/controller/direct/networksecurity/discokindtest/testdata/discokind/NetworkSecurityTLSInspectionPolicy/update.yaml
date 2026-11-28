@@ -7,5 +7,7 @@ spec:
     external: ${PROJECT}
   location: us-central1
   caPool: projects/${PROJECT}/locations/us-central1/caPools/${NAME}-pool
+  trustConfig: projects/${PROJECT}/locations/us-central1/trustConfigs/${KIND_NAME}-trust
+  excludePublicCaSet: false
   minTlsVersion: TLS_1_1
   description: changed

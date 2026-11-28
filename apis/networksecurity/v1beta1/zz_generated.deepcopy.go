@@ -24,6 +24,7 @@ import (
 	networksecurityv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/networksecurity/v1alpha1"
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -1057,6 +1058,11 @@ func (in *NetworkSecurityDNSThreatDetectorSpec) DeepCopyInto(out *NetworkSecurit
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExcludedNetworkRefs != nil {
+		in, out := &in.ExcludedNetworkRefs, &out.ExcludedNetworkRefs
+		*out = make([]commonv1alpha1.ResourceRef, len(*in))
+		copy(*out, *in)
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
@@ -1292,6 +1298,11 @@ func (in *NetworkSecurityGatewaySecurityPolicyRuleSpec) DeepCopyInto(out *Networ
 		*out = new(refsv1beta1.ProjectRef)
 		**out = **in
 	}
+	if in.GatewaySecurityPolicyRef != nil {
+		in, out := &in.GatewaySecurityPolicyRef, &out.GatewaySecurityPolicyRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.ResourceID != nil {
 		in, out := &in.ResourceID, &out.ResourceID
 		*out = new(string)
@@ -1400,6 +1411,11 @@ func (in *NetworkSecurityGatewaySecurityPolicySpec) DeepCopyInto(out *NetworkSec
 	if in.TlsInspectionPolicy != nil {
 		in, out := &in.TlsInspectionPolicy, &out.TlsInspectionPolicy
 		*out = new(string)
+		**out = **in
+	}
+	if in.TlsInspectionPolicyRef != nil {
+		in, out := &in.TlsInspectionPolicyRef, &out.TlsInspectionPolicyRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 }
@@ -1963,6 +1979,11 @@ func (in *NetworkSecurityTLSInspectionPolicySpec) DeepCopyInto(out *NetworkSecur
 		*out = new(string)
 		**out = **in
 	}
+	if in.CaPoolRef != nil {
+		in, out := &in.CaPoolRef, &out.CaPoolRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.CertificateIssuanceMode != nil {
 		in, out := &in.CertificateIssuanceMode, &out.CertificateIssuanceMode
 		*out = new(string)
@@ -1996,6 +2017,11 @@ func (in *NetworkSecurityTLSInspectionPolicySpec) DeepCopyInto(out *NetworkSecur
 	if in.TrustConfig != nil {
 		in, out := &in.TrustConfig, &out.TrustConfig
 		*out = new(string)
+		**out = **in
+	}
+	if in.TrustConfigRef != nil {
+		in, out := &in.TrustConfigRef, &out.TrustConfigRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 }

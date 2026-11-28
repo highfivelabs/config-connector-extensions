@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/iam/iamrefs"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	k8sv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	computev1beta1 "github.com/highfivelabs/config-connector-extensions/apis/compute/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -6300,6 +6301,11 @@ func (in *ComputeServiceAttachmentServiceAttachmentConsumerProjectLimit) DeepCop
 		*out = new(string)
 		**out = **in
 	}
+	if in.NetworkURLRef != nil {
+		in, out := &in.NetworkURLRef, &out.NetworkURLRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.ProjectIdOrNum != nil {
 		in, out := &in.ProjectIdOrNum, &out.ProjectIdOrNum
 		*out = new(string)
@@ -6379,6 +6385,11 @@ func (in *ComputeServiceAttachmentSpec) DeepCopyInto(out *ComputeServiceAttachme
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.NatSubnetRefs != nil {
+		in, out := &in.NatSubnetRefs, &out.NatSubnetRefs
+		*out = make([]commonv1alpha1.ResourceRef, len(*in))
+		copy(*out, *in)
+	}
 	if in.PropagatedConnectionLimit != nil {
 		in, out := &in.PropagatedConnectionLimit, &out.PropagatedConnectionLimit
 		*out = new(int64)
@@ -6392,6 +6403,11 @@ func (in *ComputeServiceAttachmentSpec) DeepCopyInto(out *ComputeServiceAttachme
 	if in.TargetService != nil {
 		in, out := &in.TargetService, &out.TargetService
 		*out = new(string)
+		**out = **in
+	}
+	if in.TargetServiceRef != nil {
+		in, out := &in.TargetServiceRef, &out.TargetServiceRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 }
@@ -6862,6 +6878,11 @@ func (in *ComputeSubnetworkSpec) DeepCopyInto(out *ComputeSubnetworkSpec) {
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
 		*out = new(string)
+		**out = **in
+	}
+	if in.NetworkRef != nil {
+		in, out := &in.NetworkRef, &out.NetworkRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.Params != nil {

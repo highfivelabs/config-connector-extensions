@@ -23,6 +23,7 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -352,6 +353,11 @@ func (in *NetworkServicesGatewaySpec) DeepCopyInto(out *NetworkServicesGatewaySp
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.CertificateURLRefs != nil {
+		in, out := &in.CertificateURLRefs, &out.CertificateURLRefs
+		*out = make([]commonv1alpha1.ResourceRef, len(*in))
+		copy(*out, *in)
+	}
 	if in.Description != nil {
 		in, out := &in.Description, &out.Description
 		*out = new(string)
@@ -365,6 +371,11 @@ func (in *NetworkServicesGatewaySpec) DeepCopyInto(out *NetworkServicesGatewaySp
 	if in.GatewaySecurityPolicy != nil {
 		in, out := &in.GatewaySecurityPolicy, &out.GatewaySecurityPolicy
 		*out = new(string)
+		**out = **in
+	}
+	if in.GatewaySecurityPolicyRef != nil {
+		in, out := &in.GatewaySecurityPolicyRef, &out.GatewaySecurityPolicyRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.IpVersion != nil {
@@ -382,6 +393,11 @@ func (in *NetworkServicesGatewaySpec) DeepCopyInto(out *NetworkServicesGatewaySp
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
 		*out = new(string)
+		**out = **in
+	}
+	if in.NetworkRef != nil {
+		in, out := &in.NetworkRef, &out.NetworkRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.Ports != nil {
@@ -407,6 +423,11 @@ func (in *NetworkServicesGatewaySpec) DeepCopyInto(out *NetworkServicesGatewaySp
 	if in.Subnetwork != nil {
 		in, out := &in.Subnetwork, &out.Subnetwork
 		*out = new(string)
+		**out = **in
+	}
+	if in.SubnetworkRef != nil {
+		in, out := &in.SubnetworkRef, &out.SubnetworkRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.Type != nil {

@@ -1,0 +1,11 @@
+# The gateway security policy the gateway's gatewaySecurityPolicyRef names
+# by name (kindtest's refs/): ours, made first.
+apiVersion: networksecurity.gcp.hfl.dev/v1beta1
+kind: NetworkSecurityGatewaySecurityPolicy
+metadata:
+  name: ${KIND_NAME}-gsp
+spec:
+  projectRef:
+    external: ${PROJECT}
+  location: us-central1
+  description: made by a config-connector-extensions test

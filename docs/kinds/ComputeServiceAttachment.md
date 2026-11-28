@@ -53,6 +53,8 @@ list entry by `networkUrl`, `domainNames` at create, and whether a resync
 then writes nothing (the API's defaults for fields the spec leaves out are
 not compared).
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): `targetServiceRef`, `natSubnetRefs` and each consumer accept list's `networkUrlRef` take a `ComputeForwardingRule`, `ComputeSubnetwork`s (ours first, then Config Connector's) and a `ComputeNetwork` beside the strings, as Upjet resolves them. The create fixture names them by reference.
+
 ## Live runs
 
 One row per run.

@@ -12,6 +12,8 @@ spec:
   network: projects/${PROJECT}/global/networks/${KIND_NAME}-net
   subnetwork: projects/${PROJECT}/regions/us-central1/subnetworks/${KIND_NAME}-subnet
   gatewaySecurityPolicy: projects/${PROJECT}/locations/us-central1/gatewaySecurityPolicies/${KIND_NAME}-gsp
+  certificateUrls:
+  - projects/${PROJECT}/locations/us-central1/certificates/${KIND_NAME}-cert
   labels:
     purpose: swg-changed
   description: changed

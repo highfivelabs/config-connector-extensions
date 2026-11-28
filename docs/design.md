@@ -275,9 +275,9 @@ in front of mockgcp, and `pkg/discokind/kindtest` is every such kind's
 end-to-end test, on the fake or live. Nothing is copied from upstream,
 since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
-`docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: no
-references beyond the parent (the other parts of a name are IDs), no
-secrets in status: a secret the API returns (`secretOutputs` in
+`docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: a
+field the API fills from another resource, a part of the name included,
+takes a reference beside it ("References" below), no secrets in status: a secret the API returns (`secretOutputs` in
 `kinds.yaml`) goes to a Kubernetes Secret the object owns, named by
 `spec.secretOutput.name`, never to status (decision 38, 2026-11-23). A string field the API takes as a secret can take
 Config Connector's `secret.Legacy` instead (`secrets` in `kinds.yaml`:
@@ -682,6 +682,82 @@ resource: the controller sends the whole spec with no mask, where
 Compute Engine's `update` keeps its own path). Its update fixture changes
 only the description, so a replace that sent only the changed field would
 lose the policy's checks and fail the test (checked by breaking it once).
+
+**References (2026-11-28, HFL-699).** Crossplane's Upjet provider
+resolves 88 fields of our kinds from another managed resource
+(`docs/coverage/upjet.md`); 40 of them were plain strings here to a kind
+this repository or Config Connector serves, 30 of those on generated
+kinds, whose generator took only the parent as a reference. `kinds.yaml`
+`refs` now gives such a field a reference:
+
+```yaml
+refs:
+  network: {target: ComputeNetwork}
+  serviceConfig.secretEnvironmentVariables[].secret: {target: SecretManagerSecret, format: id}
+```
+
+- **Shape.** The string field stays (no manifest or chart breaks) and
+  `<field>Ref` sits beside it, `<singular field>Refs` for a list of
+  strings (`natSubnets`, `natSubnetRefs`), as
+  `apis/common/v1alpha1.ResourceRef`: Config Connector's shape, `external`
+  or `name` and `namespace`. A CEL rule on the holding struct allows one
+  of the two, and asks for exactly one where the API requires the field; a
+  reference to an immutable top-level field is immutable too. The name is
+  mechanical (`networkUrlRef` for `networkUrl`, not Config Connector's
+  `networkRef`), so the generator, the coverage report and the guard
+  agree without a table of names.
+- **Resolution.** The controller resolves every reference before it
+  compares or writes (`Kind.ResolveRefs`, `pkg/discokind/refs.go`), and a
+  delete never does (it uses `status.externalRef`). By name it reads our
+  kind of the target's name first (a generated kind, or a hand-written one
+  in `pkg/controller`'s list), whose value is its `status.externalRef`
+  (or its Compute Engine `status.selfLink`, as our `ComputeRouter`
+  records its name), then Config Connector's, through upstream's own reference type and its
+  `Normalize` (`ComputeNetworkRef` with its `status.selfLink` fallback for
+  the Terraform-based kind, `IAMServiceAccountRef`'s `status.email`); an
+  `external` is validated by the same type. Nothing is copied: the types
+  are imported from the pinned module. The value is what that reference
+  gives (a name, `projects/P/global/networks/N`; a service account's
+  email), or, by `format`, its ID (`id`: a bucket, a Secret Manager secret,
+  a Cloud Storage object; a bare `external` with no slash is taken as the
+  ID) or `projects/P/serviceAccounts/EMAIL` (`serviceAccountName`). A
+  missing or unready object is Config Connector's dependency error, and
+  the object retries. The manager's ClusterRole reads every group a
+  reference can name (`TestManagerRoleReadsEveryReferencedKind`).
+- **Provenance and the stricter rule** (factory `docs/design.md` 5.4).
+  The generator reads the Upjet slice: a reference Upjet also resolves
+  records Upjet's Terraform target (`Kind.Refs[].Upjet`) and must name a
+  kind that serves that target here, or the generator fails (the two
+  sources disagree); one Upjet does not resolve is ours, from the API's
+  description (`CloudFunctions2Function.kmsKeyName`). A field either
+  source calls a reference is one: the guard
+  (`hack/discokind/refs_test.go`) fails on an Upjet reference to a kind
+  served here that `refs` neither takes nor waives with a reason
+  (`refWaivers`).
+- **Tests.** `pkg/discokind/refs_test.go` resolves by external and by
+  name, ours before Config Connector's, through lists, and refuses both a
+  field and its reference, a bad external, and a missing or unready
+  object. `kindtest` compares the cloud with the fixtures' resolved
+  references, and makes the objects in a kind's `refs/` first, so a
+  fixture can name one by name on the fake and live
+  (`CloudFunctions2Function`'s secret).
+- **Hand-written kinds** take the same fields, by hand: Config Connector's
+  typed reference (`ComputeNetworkRef`, `ContainerClusterRef`, or ours,
+  `DNSResponsePolicyRef`) beside the string, resolved by upstream's
+  `common.NormalizeReferences` or the identity, which copies the value
+  into the string (`DNSResponsePolicy`, `DNSResponsePolicyRule`). Their
+  rows have no guard; the coverage report lists what is left.
+- **Parts of the name.** A part of the name (a Dataplex zone's `lake`, a
+  gateway security policy rule's `gatewaySecurityPolicy`) takes a
+  reference too (`Kind.Refs[].NamePart`): it gives the target's ID, and
+  the controller refuses one whose name is not where this resource's name
+  begins (another project or location), before any call. The field and its
+  reference are both immutable and exactly one is required.
+- **Not covered.** A field whose target depends on another field (a Cloud
+  Functions event filter's `value`, a bucket only for the attribute
+  `bucket`) is waived. Switching an immutable field between its string and
+  its reference is allowed by the CRD (a transition rule sees only one of
+  the two); a different value is then the API's refusal, not the CRD's.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
@@ -4334,3 +4410,17 @@ moves to section 8.
     against mockgcp; kinds it cannot serve without a large patch fall
     back to copying. It changes how decision 39's "our kinds" are made,
     so it is the builder's call.
+
+14. **The strings beside the references** (2026-11-28, HFL-699, section
+    2.4 "References"). A generated kind's field the API fills from another
+    resource now takes `<field>Ref` beside the string, and the string stays
+    so no manifest or chart breaks. Two calls are the builder's: whether
+    the strings are deprecated once the catalog's charts use the
+    references (a breaking change for any manifest that keeps them), and
+    whether the references keep their mechanical names (`networkUrlRef`
+    for `networkUrl`) or take Config Connector's where it has one
+    (`networkRef`), which would need a table the generator, the coverage
+    report and the guard share. Recommendation: keep both forms and the
+    mechanical names, and have the catalog prefer the references; revisit
+    when a kind moves to Config Connector's own (section 3.4), whose names
+    then win.

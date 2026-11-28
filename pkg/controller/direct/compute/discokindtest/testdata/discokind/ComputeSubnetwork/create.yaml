@@ -6,7 +6,9 @@ spec:
   projectRef:
     external: ${PROJECT}
   region: us-central1
-  network: projects/${PROJECT}/global/networks/${NAME}-net
+  # A reference (kinds.yaml refs); update.yaml sets the string.
+  networkRef:
+    external: projects/${PROJECT}/global/networks/${NAME}-net
   ipCidrRange: 10.30.0.0/24
   description: made by a config-connector-extensions test
   privateIpGoogleAccess: true

@@ -51,6 +51,8 @@ Terraform does not unless `delete_swg_autogen_router_on_destroy` is set;
 whoever deletes the network deletes the router first. The live test's
 cleanup and the sweeper do.
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): `networkRef`, `subnetworkRef`, `gatewaySecurityPolicyRef` and `certificateUrlRefs` take a `ComputeNetwork`, `ComputeSubnetwork`, gateway security policy (ours, then Config Connector's) and Certificate Manager certificates beside the strings, as Upjet resolves them. The fixtures name the policy by the name of a `NetworkSecurityGatewaySecurityPolicy` the test makes first (`refs/`). Upjet's `delete_swg_autogen_router_on_destroy` is Terraform's own switch, not an API field; the router is kept, as Terraform does by default (above).
+
 ## Live runs
 
 One row per run.

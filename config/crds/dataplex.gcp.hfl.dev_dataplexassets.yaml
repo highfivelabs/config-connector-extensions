@@ -149,6 +149,46 @@ spec:
                 x-kubernetes-validations:
                 - message: lake is immutable
                   rule: self == oldSelf
+              lakeRef:
+                description: 'Immutable. A reference to the DataplexLake whose ID
+                  is lake, in its place: external (its full name), or the name (and
+                  namespace) of a DataplexLake object, this repository''s kind of
+                  that name first, then Config Connector''s. Its name must be the
+                  start of this resource''s: the same project and location. Set lake
+                  or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: lakeRef is immutable
+                  rule: self == oldSelf
               location:
                 description: Immutable. The location, part of the resource's name
                   ({parent}/locations/{location}/lakes/{lake}/zones/{zone}/assets/{id}).
@@ -229,13 +269,56 @@ spec:
                 x-kubernetes-validations:
                 - message: zone is immutable
                   rule: self == oldSelf
+              zoneRef:
+                description: 'Immutable. A reference to the DataplexZone whose ID
+                  is zone, in its place: external (its full name), or the name (and
+                  namespace) of a DataplexZone object, this repository''s kind of
+                  that name first, then Config Connector''s. Its name must be the
+                  start of this resource''s: the same project and location. Set zone
+                  or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: zoneRef is immutable
+                  rule: self == oldSelf
             required:
-            - lake
             - location
             - projectRef
             - resourceSpec
-            - zone
             type: object
+            x-kubernetes-validations:
+            - message: exactly one of lake and lakeRef is required
+              rule: has(self.lake) != has(self.lakeRef)
+            - message: exactly one of zone and zoneRef is required
+              rule: has(self.zone) != has(self.zoneRef)
           status:
             properties:
               conditions:

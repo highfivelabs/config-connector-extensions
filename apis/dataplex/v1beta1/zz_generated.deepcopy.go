@@ -23,6 +23,7 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -802,6 +803,16 @@ func (in *DataplexAssetSpec) DeepCopyInto(out *DataplexAssetSpec) {
 	if in.ProjectRef != nil {
 		in, out := &in.ProjectRef, &out.ProjectRef
 		*out = new(refsv1beta1.ProjectRef)
+		**out = **in
+	}
+	if in.LakeRef != nil {
+		in, out := &in.LakeRef, &out.LakeRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
+	if in.ZoneRef != nil {
+		in, out := &in.ZoneRef, &out.ZoneRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.ResourceID != nil {
@@ -4360,6 +4371,11 @@ func (in *DataplexZoneSpec) DeepCopyInto(out *DataplexZoneSpec) {
 	if in.ProjectRef != nil {
 		in, out := &in.ProjectRef, &out.ProjectRef
 		*out = new(refsv1beta1.ProjectRef)
+		**out = **in
+	}
+	if in.LakeRef != nil {
+		in, out := &in.LakeRef, &out.LakeRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.ResourceID != nil {

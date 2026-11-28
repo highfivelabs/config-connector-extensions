@@ -11,9 +11,18 @@ spec:
     entryPoint: main
     source:
       storageSource:
-        bucket: ${NAME}-source
-        object: function.zip
+        # References (kinds.yaml refs) by their IDs; update.yaml sets the
+        # strings they resolve to, which changes nothing in the cloud.
+        bucketRef:
+          external: ${NAME}-source
+        objectRef:
+          external: function.zip
   serviceConfig:
     availableMemory: 256M
     maxInstanceCount: 1
+    secretEnvironmentVariables:
+    - key: API_TOKEN
+      secretRef:
+        name: ${KIND_NAME}-secret
+      version: latest
   description: made by a config-connector-extensions test

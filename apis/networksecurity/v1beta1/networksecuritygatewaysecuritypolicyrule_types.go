@@ -20,11 +20,13 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var NetworkSecurityGatewaySecurityPolicyRuleGVK = GroupVersion.WithKind("NetworkSecurityGatewaySecurityPolicyRule")
 
+// +kubebuilder:validation:XValidation:rule="has(self.gatewaySecurityPolicy) != has(self.gatewaySecurityPolicyRef)",message="exactly one of gatewaySecurityPolicy and gatewaySecurityPolicyRef is required"
 type NetworkSecurityGatewaySecurityPolicyRuleSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -37,9 +39,19 @@ type NetworkSecurityGatewaySecurityPolicyRuleSpec struct {
 	Location string `json:"location"`
 
 	// Immutable. The gatewaySecurityPolicy, part of the resource's name ({parent}/locations/{location}/gatewaySecurityPolicies/{gatewaySecurityPolicy}/rules/{id}).
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="gatewaySecurityPolicy is immutable"
-	GatewaySecurityPolicy string `json:"gatewaySecurityPolicy"`
+	GatewaySecurityPolicy string `json:"gatewaySecurityPolicy,omitempty"`
+
+	// Immutable. A reference to the NetworkSecurityGatewaySecurityPolicy whose ID
+	// is gatewaySecurityPolicy, in its place: external (its full name), or the
+	// name (and namespace) of a NetworkSecurityGatewaySecurityPolicy object, this
+	// repository's kind of that name first, then Config Connector's. Its name
+	// must be the start of this resource's: the same project and location. Set
+	// gatewaySecurityPolicy or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="gatewaySecurityPolicyRef is immutable"
+	GatewaySecurityPolicyRef *commonv1alpha1.ResourceRef `json:"gatewaySecurityPolicyRef,omitempty"`
 
 	// Immutable. The resource's ID, the last part of its name. When unset,
 	// metadata.name is used.

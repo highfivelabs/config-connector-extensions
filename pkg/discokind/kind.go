@@ -161,6 +161,10 @@ type Kind struct {
 	// disabled: "Before deleting an OauthClientCredential, it should first
 	// be disabled"); the controller patches it to true first.
 	DisableBeforeDelete string
+	// Refs are the spec fields a reference beside them can fill
+	// (kinds.yaml refs; refs.go): the controller resolves each reference
+	// before it compares or writes.
+	Refs []Ref
 }
 
 // SecretOutputSpec is the spec field that names the Secret a kind with

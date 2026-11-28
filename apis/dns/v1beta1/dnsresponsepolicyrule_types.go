@@ -19,6 +19,8 @@
 // kind (v1beta1, docs/design.md decision 13). Changed: projectRef,
 // resourceID and responsePolicy are immutable by CEL rules (decision 20;
 // they make the rule's name); status.externalRef, which upstream's status lacks;
+// responsePolicyRef beside responsePolicy, which Crossplane's Upjet provider
+// resolves too (docs/design.md 2.4, "References"; one of the two required);
 // group, labels and short names are ours.
 
 package v1beta1
@@ -56,6 +58,7 @@ type ResponsepolicyruleLocalDatas struct {
 }
 
 // +openapi:ResponsePolicyRule
+// +kubebuilder:validation:XValidation:rule="has(self.responsePolicy) != has(self.responsePolicyRef)",message="exactly one of responsePolicy and responsePolicyRef is required"
 type DNSResponsePolicyRuleSpec struct {
 	/* Answer this query with a behavior rather than DNS data. Acceptable values are 'behaviorUnspecified', and 'bypassResponsePolicy'. */
 	// +optional
@@ -80,8 +83,14 @@ type DNSResponsePolicyRuleSpec struct {
 
 	/* Identifies the response policy addressed by this request, as
 	projects/{project}/responsePolicies/{responsePolicy}. Immutable. */
+	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="responsePolicy is immutable"
-	ResponsePolicy string `json:"responsePolicy"`
+	ResponsePolicy string `json:"responsePolicy,omitempty"`
+
+	/* Immutable. A reference to the DNSResponsePolicy that fills responsePolicy, in its place: external (its name, projects/{project}/responsePolicies/{responsePolicy}), or the name (and namespace) of a DNSResponsePolicy object. Set responsePolicy or this, not both. */
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="responsePolicyRef is immutable"
+	ResponsePolicyRef *DNSResponsePolicyRef `json:"responsePolicyRef,omitempty"`
 }
 
 type DNSResponsePolicyRuleStatus struct {

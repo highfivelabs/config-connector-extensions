@@ -11,6 +11,8 @@ spec:
     allNamespaces: true
     includeVolumeData: false
     includeSecrets: false
+    encryptionKey:
+      gcpKmsEncryptionKey: projects/${PROJECT}/locations/us-central1/keyRings/${NAME}-ring/cryptoKeys/${NAME}-key
   retentionPolicy:
     backupRetainDays: 14
   description: made by a config-connector-extensions test

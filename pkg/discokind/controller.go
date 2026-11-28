@@ -148,11 +148,21 @@ func (k *Kind) resolve(ctx context.Context, reader client.Reader, u *unstructure
 		v, _ := spec[p].(string)
 		params[p] = v
 	}
+	refNames, err := k.NameRefs(ctx, reader, u.GetNamespace(), spec, params)
+	if err != nil {
+		return "", nil, "", err
+	}
 	name, err := k.Render(parent, id, params)
 	if err != nil {
 		return "", nil, "", err
 	}
+	if err := k.CheckNameRefs(name, refNames); err != nil {
+		return "", nil, "", err
+	}
 	body := k.Body(spec)
+	if err := k.ResolveRefs(ctx, reader, u.GetNamespace(), body); err != nil {
+		return "", nil, "", err
+	}
 	version, err := k.resolveSecrets(ctx, reader, u.GetNamespace(), body)
 	if err != nil {
 		return "", nil, "", err
@@ -251,6 +261,11 @@ func (k *Kind) Body(spec map[string]any) map[string]any {
 	}
 	for _, p := range k.PathParams() {
 		delete(body, p)
+	}
+	for _, r := range k.Refs {
+		if r.NamePart {
+			delete(body, RefFieldName(r.Path, false))
+		}
 	}
 	return body
 }

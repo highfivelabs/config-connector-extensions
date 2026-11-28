@@ -100,8 +100,7 @@ insert style, server-assigned IDs), 127 lack a create, get or delete
 document (proto only).
 
 What it does not do: field gaps on Config Connector's kinds (decision 19
-keeps those on the copy-upstream route), references beyond the parent
-(other parts of the name are plain IDs), secrets (a read-only secret
+keeps those on the copy-upstream route), secrets (a read-only secret
 would land in status, so a kind like `IAMOauthClientCredential` is not
 generated yet), prerequisites in the test (a kind whose parent is
 another resource, like a log bucket's link, needs that made first), and

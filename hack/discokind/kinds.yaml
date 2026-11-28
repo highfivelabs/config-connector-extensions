@@ -271,6 +271,9 @@
   terraform: google_compute_interconnect_attachment
   immutable: [interconnect, type, router, edgeAvailabilityDomain, candidateSubnets, candidateIpv6Subnets, candidateCloudRouterIpAddress, candidateCloudRouterIpv6Address, candidateCustomerRouterIpAddress, candidateCustomerRouterIpv6Address, vlanTag8021q, ipsecInternalAddresses, encryption, subnetLength, pairingKey, l2Forwarding]
   note: "A VLAN attachment: an interconnect's connection to a Cloud Router, with the router and customer addresses chosen from candidates."
+  refs:
+    ipsecInternalAddresses: {target: ComputeAddress}
+    router: {target: ComputeRouter}
 
 # Foundation item 11 (2026-11-23): Config Connector's DCL-based
 # ComputeServiceAttachment sends consumerAcceptLists whole and has no
@@ -292,6 +295,10 @@
   immutable: [targetService, domainNames, enableProxyProtocol]
   skip: {producerForwardingRule: "the API's older name for targetService, which replaces it"}
   note: "A Private Service Connect producer's service attachment: the internal load balancer it publishes, its NAT subnets, and the consumer projects and networks it accepts."
+  refs:
+    consumerAcceptLists[].networkUrl: {target: ComputeNetwork}
+    natSubnets: {target: ComputeSubnetwork}
+    targetService: {target: ComputeForwardingRule}
 
 # Foundation item 16 (2026-11-23): Config Connector's Terraform-based
 # ComputeSubnetwork lacks ipCollection, externalIpv6Prefix,
@@ -316,6 +323,8 @@
   inputOnly: [params.resourceManagerTags]
   skip: {enableFlowLogs: "deprecated by the API in favour of logConfig.enable"}
   note: "A VPC subnetwork, with what the API takes only at insert: a BYOIP IPv6 prefix (ipCollection), the IPv6 prefixes, subnet mask resolution and resource manager tags."
+  refs:
+    network: {target: ComputeNetwork}
 
 # Foundation item 27 (2026-11-23): a regional Cloud Armor security policy,
 # which Config Connector has no kind for (its ComputeSecurityPolicy is
@@ -411,6 +420,11 @@
   immutable: [addresses, allPorts, allowGlobalAccess, envoyHeaders, ipVersion, network, ports, routingMode, scope, subnetwork]
   note: "A gateway: an OPEN_MESH gateway's listener, or a Secure Web Proxy (SECURE_WEB_GATEWAY) in a VPC network."
   sweepLocation: us-central1
+  refs:
+    certificateUrls: {target: CertificateManagerCertificate}
+    gatewaySecurityPolicy: {target: NetworkSecurityGatewaySecurityPolicy}
+    network: {target: ComputeNetwork}
+    subnetwork: {target: ComputeSubnetwork}
 # The catalog's geap-agent-gateway module (2026-11-13): an authorization
 # extension that delegates to a Google service (IAP or Model Armor) by its
 # service field. Config Connector's NetworkServicesAuthzExtension is alpha,
@@ -531,6 +545,8 @@
   parents: [project]
   terraform: google_network_security_dns_threat_detector
   note: "DNS threat detection for a project's VPC networks."
+  refs:
+    excludedNetworks: {target: ComputeNetwork}
 
 - kind: NetworkSecurityGatewaySecurityPolicy
   group: networksecurity.gcp.hfl.dev
@@ -540,6 +556,8 @@
   parents: [project]
   terraform: google_network_security_gateway_security_policy
   note: "A Secure Web Proxy's policy: the rules a gateway applies to its traffic."
+  refs:
+    tlsInspectionPolicy: {target: NetworkSecurityTLSInspectionPolicy}
   sweepLocation: us-central1
 
 - kind: NetworkSecurityGatewaySecurityPolicyRule
@@ -550,6 +568,8 @@
   parents: [project]
   terraform: google_network_security_gateway_security_policy_rule
   note: "A rule of a Secure Web Proxy's gateway security policy: allow or deny traffic a session and application matcher selects."
+  refs:
+    gatewaySecurityPolicy: {target: NetworkSecurityGatewaySecurityPolicy}
 
 - kind: NetworkSecurityURLList
   group: networksecurity.gcp.hfl.dev
@@ -569,6 +589,9 @@
   parents: [project]
   terraform: google_network_security_tls_inspection_policy
   note: "How a Secure Web Proxy inspects TLS: the CA pool that issues its interception certificates."
+  refs:
+    caPool: {target: PrivateCACAPool}
+    trustConfig: {target: CertificateManagerTrustConfig}
   sweepLocation: us-central1
 
 # The catalog's geap-agent-gateway module (2026-11-13): fabric's iap_config
@@ -597,6 +620,9 @@
   parents: [project]
   terraform: google_gke_backup_backup_plan
   note: "What Backup for GKE backs up from a cluster, and when."
+  refs:
+    backupConfig.encryptionKey.gcpKmsEncryptionKey: {target: KMSCryptoKey}
+    cluster: {target: ContainerCluster}
 
 - kind: GKEBackupRestorePlan
   group: gkebackup.gcp.hfl.dev
@@ -744,6 +770,22 @@
   # catalog's live run, 2026-11-13); Terraform sends it too.
   nameInBody: true
   sweepLocation: us-central1
+  # HFL-699: the fields Upjet resolves from another resource, and the KMS
+  # key the API's description names (ours).
+  refs:
+    buildConfig.dockerRepository: {target: ArtifactRegistryRepository}
+    buildConfig.serviceAccount: {target: IAMServiceAccount, format: serviceAccountName}
+    buildConfig.source.storageSource.bucket: {target: StorageBucket, format: id}
+    buildConfig.source.storageSource.object: {target: StorageBucketObject, format: id}
+    buildConfig.workerPool: {target: CloudBuildWorkerPool}
+    eventTrigger.pubsubTopic: {target: PubSubTopic}
+    eventTrigger.serviceAccountEmail: {target: IAMServiceAccount}
+    kmsKeyName: {target: KMSCryptoKey}
+    serviceConfig.secretEnvironmentVariables[].secret: {target: SecretManagerSecret, format: id}
+    serviceConfig.secretVolumes[].secret: {target: SecretManagerSecret, format: id}
+    serviceConfig.serviceAccountEmail: {target: IAMServiceAccount}
+  refWaivers:
+    eventTrigger.eventFilters[].value: "a filter's value names a bucket only when its attribute is bucket; a reference to a bucket would be wrong for every other attribute"
 
 - kind: DataplexLake
   group: dataplex.gcp.hfl.dev
@@ -763,6 +805,8 @@
   parents: [project]
   terraform: google_dataplex_zone
   note: "A raw or curated zone of a Dataplex lake."
+  refs:
+    lake: {target: DataplexLake}
 
 - kind: DataplexAsset
   group: dataplex.gcp.hfl.dev
@@ -772,6 +816,9 @@
   parents: [project]
   terraform: google_dataplex_asset
   note: "A bucket or dataset attached to a Dataplex zone."
+  refs:
+    lake: {target: DataplexLake}
+    zone: {target: DataplexZone}
 
 - kind: DataplexAspectType
   group: dataplex.gcp.hfl.dev
@@ -897,3 +944,13 @@
   immutable: [perimeterType]
   skip: {etag: "the API's optimistic-locking token, which it generates; a spec that held it would go stale with every change"}
   note: "A VPC Service Controls perimeter of an access policy, with its enforced (status) and dry-run (spec) configurations; accessPolicy is the access policy's number. The ID starts with a letter, then letters, digits or _."
+  # HFL-699: Upjet resolves the access levels; the spec (dry-run) and
+  # status (enforced) configurations share one struct, so both take them,
+  # and so do the egress sources (ours: the same field).
+  refs:
+    spec.accessLevels: {target: AccessContextManagerAccessLevel}
+    spec.egressPolicies[].egressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}
+    spec.ingressPolicies[].ingressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}
+    status.accessLevels: {target: AccessContextManagerAccessLevel}
+    status.egressPolicies[].egressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}
+    status.ingressPolicies[].ingressFrom.sources[].accessLevel: {target: AccessContextManagerAccessLevel}

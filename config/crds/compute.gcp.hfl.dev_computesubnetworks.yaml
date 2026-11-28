@@ -190,6 +190,45 @@ spec:
                 x-kubernetes-validations:
                 - message: network is immutable
                   rule: self == oldSelf
+              networkRef:
+                description: 'A reference to the ComputeNetwork that fills network,
+                  in its place: external (the value network takes), or the name (and
+                  namespace) of a ComputeNetwork object, this repository''s kind of
+                  that name first, then Config Connector''s. Set network or this,
+                  not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: networkRef is immutable
+                  rule: self == oldSelf
               params:
                 description: Input only. [Input Only] Additional params passed with
                   the request, but not persisted as part of resource payload.
@@ -382,6 +421,9 @@ spec:
             - projectRef
             - region
             type: object
+            x-kubernetes-validations:
+            - message: set network or networkRef, not both
+              rule: '!(has(self.network) && has(self.networkRef))'
           status:
             properties:
               conditions:

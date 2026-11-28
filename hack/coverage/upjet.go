@@ -613,7 +613,7 @@ func upjetMD(s *upjetSlice, pairs []*upjetPair, discoTF map[string]bool) string 
 		}
 	}
 	b.WriteString("\n### References taken as plain strings\n\n")
-	b.WriteString("Upjet resolves these fields from another managed resource; our spec takes a string, though a kind here serves the target. A `hack/discokind` kind takes only its parent as a reference, so its rows are expected until the generator learns references.\n\n")
+	b.WriteString("Upjet resolves these fields from another managed resource; our spec takes a string, though a kind here serves the target. A `hack/discokind` kind takes such a field as a reference through `kinds.yaml` `refs`, or waives it there with a reason (`refWaivers`; `hack/discokind/refs_test.go` holds every one of its rows to one or the other), so its rows here are waivers; a hand-written kind's are open work.\n\n")
 	b.WriteString("| Kind | Terraform | Field → target (kinds here) |\n| --- | --- | --- |\n")
 	for _, p := range pairs {
 		if !p.counted {

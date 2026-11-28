@@ -123,3 +123,30 @@ func TestManagerRoleWritesSecretOutputs(t *testing.T) {
 		}
 	}
 }
+
+// Every kind a generated kind's reference can name by name (discokind
+// Kind.Refs) is readable by the manager, ours and Config Connector's, and
+// every reference's target resolves: envtest has no RBAC, so a group
+// missing here is a 403 only a real install shows.
+func TestManagerRoleReadsEveryReferencedKind(t *testing.T) {
+	role := managerRole(t)
+	for _, k := range discokind.Kinds() {
+		for _, r := range k.Refs {
+			if !discokind.RefTargetKnown(r.Target) {
+				t.Errorf("%s: %s names %s, which nothing resolves (pkg/discokind refs.go)", k.GVK.Kind, r.Path, r.Target)
+				continue
+			}
+			for _, gvk := range discokind.RefTargetGVKs(r.Target) {
+				readable := false
+				for _, rule := range role.Rules {
+					if slices.Contains(rule.APIGroups, gvk.Group) && slices.Contains(rule.Resources, "*") && slices.Contains(rule.Verbs, "get") {
+						readable = true
+					}
+				}
+				if !readable {
+					t.Errorf("ClusterRole config-connector-extensions-manager cannot get %s (%s's %s names a %s)", gvk.Group, k.GVK.Kind, r.Path, r.Target)
+				}
+			}
+		}
+	}
+}

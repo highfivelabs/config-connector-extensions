@@ -51,6 +51,8 @@ Context Manager roles on it, which the live-test account does not have.
 With them, `task test-live PROJECT=$GCP_PROJECT KINDS=accesscontextmanager
 LIVE_RUN=TestAccessContextManagerServicePerimeter`.
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): each configuration's `accessLevelRefs` and its ingress and egress sources' `accessLevelRef` take Config Connector's `AccessContextManagerAccessLevel` beside the strings. Upjet resolves the enforced configuration's access levels and its ingress sources' access level; the dry-run (`spec`) configuration is the same struct, so it takes them too, and the egress sources' field is the same field (ours). A wildcard (`"*"`) stays in the string. Upjet's example sets `parent`, Terraform's name for the access policy, which is `accessPolicy` here.
+
 ## Live runs
 
 One row per run.

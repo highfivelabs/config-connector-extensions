@@ -6,11 +6,16 @@ spec:
   projectRef:
     external: ${PROJECT}
   location: us-central1
-  cluster: projects/${PROJECT}/locations/us-central1/clusters/${NAME}-cluster
+  # A reference (kinds.yaml refs); update.yaml sets the string.
+  clusterRef:
+    external: projects/${PROJECT}/locations/us-central1/clusters/${NAME}-cluster
   backupConfig:
     allNamespaces: true
     includeVolumeData: false
     includeSecrets: false
+    encryptionKey:
+      gcpKmsEncryptionKeyRef:
+        external: projects/${PROJECT}/locations/us-central1/keyRings/${NAME}-ring/cryptoKeys/${NAME}-key
   retentionPolicy:
     backupRetainDays: 7
   description: made by a config-connector-extensions test

@@ -91,11 +91,51 @@ spec:
                       description: The network URL for the network to set the limit
                         for.
                       type: string
+                    networkUrlRef:
+                      description: 'A reference to the ComputeNetwork that fills networkUrl,
+                        in its place: external (the value networkUrl takes), or the
+                        name (and namespace) of a ComputeNetwork object, this repository''s
+                        kind of that name first, then Config Connector''s. Set networkUrl
+                        or this, not both.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: 'The value itself, as the string field beside
+                            the reference takes it: the resource''s name, or for a
+                            service account its email.'
+                          type: string
+                        name:
+                          description: 'The name of an object of the referenced kind:
+                            this repository''s kind of that name first, then Config
+                            Connector''s. The controller takes the value from the
+                            object''s status.'
+                          type: string
+                        namespace:
+                          description: The object's namespace; the referencing object's
+                            when unset.
+                          type: string
+                      type: object
                     projectIdOrNum:
                       description: The project id or number for the project to set
                         the limit for.
                       type: string
                   type: object
+                  x-kubernetes-validations:
+                  - message: set networkUrl or networkUrlRef, not both
+                    rule: '!(has(self.networkUrl) && has(self.networkUrlRef))'
                 type: array
               consumerRejectLists:
                 description: Specifies a list of projects or networks that are not
@@ -141,6 +181,50 @@ spec:
                   endpoint. If not specified, the default value is 1.
                 format: int64
                 type: integer
+              natSubnetRefs:
+                description: 'References to the ComputeSubnetworks that fill natSubnets,
+                  in its place: external (the value natSubnets takes), or the name
+                  (and namespace) of a ComputeSubnetwork object, this repository''s
+                  kind of that name first, then Config Connector''s. Set natSubnets
+                  or this, not both.'
+                items:
+                  description: 'ResourceRef is a reference a generated kind''s spec
+                    takes beside a string field the API fills from another resource
+                    (hack/discokind kinds.yaml refs, docs/design.md section 2.4):
+                    Config Connector''s shape, either external, or the name (and namespace)
+                    of an object in the cluster. The controller resolves it to the
+                    string before every write.'
+                  oneOf:
+                  - not:
+                      required:
+                      - external
+                    required:
+                    - name
+                  - not:
+                      anyOf:
+                      - required:
+                        - name
+                      - required:
+                        - namespace
+                    required:
+                    - external
+                  properties:
+                    external:
+                      description: 'The value itself, as the string field beside the
+                        reference takes it: the resource''s name, or for a service
+                        account its email.'
+                      type: string
+                    name:
+                      description: 'The name of an object of the referenced kind:
+                        this repository''s kind of that name first, then Config Connector''s.
+                        The controller takes the value from the object''s status.'
+                      type: string
+                    namespace:
+                      description: The object's namespace; the referencing object's
+                        when unset.
+                      type: string
+                  type: object
+                type: array
               natSubnets:
                 description: An array of URLs where each entry is the URL of a subnet
                   provided by the service producer to use for NAT in this service
@@ -227,10 +311,54 @@ spec:
                 x-kubernetes-validations:
                 - message: targetService is immutable
                   rule: self == oldSelf
+              targetServiceRef:
+                description: 'A reference to the ComputeForwardingRule that fills
+                  targetService, in its place: external (the value targetService takes),
+                  or the name (and namespace) of a ComputeForwardingRule object, this
+                  repository''s kind of that name first, then Config Connector''s.
+                  Set targetService or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: targetServiceRef is immutable
+                  rule: self == oldSelf
             required:
             - projectRef
             - region
             type: object
+            x-kubernetes-validations:
+            - message: set natSubnets or natSubnetRefs, not both
+              rule: '!(has(self.natSubnets) && has(self.natSubnetRefs))'
+            - message: set targetService or targetServiceRef, not both
+              rule: '!(has(self.targetService) && has(self.targetServiceRef))'
           status:
             properties:
               conditions:

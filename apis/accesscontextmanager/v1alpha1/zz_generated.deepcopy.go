@@ -22,6 +22,7 @@ package v1alpha1
 
 import (
 	k8sv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -308,6 +309,11 @@ func (in *AccessContextManagerServicePerimeterEgressSource) DeepCopyInto(out *Ac
 		*out = new(string)
 		**out = **in
 	}
+	if in.AccessLevelRef != nil {
+		in, out := &in.AccessLevelRef, &out.AccessLevelRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.PscEndpoint != nil {
 		in, out := &in.PscEndpoint, &out.PscEndpoint
 		*out = new(AccessContextManagerServicePerimeterPrivateServiceConnectEndpoint)
@@ -435,6 +441,11 @@ func (in *AccessContextManagerServicePerimeterIngressSource) DeepCopyInto(out *A
 	if in.AccessLevel != nil {
 		in, out := &in.AccessLevel, &out.AccessLevel
 		*out = new(string)
+		**out = **in
+	}
+	if in.AccessLevelRef != nil {
+		in, out := &in.AccessLevelRef, &out.AccessLevelRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.PscEndpoint != nil {
@@ -626,6 +637,11 @@ func (in *AccessContextManagerServicePerimeterServicePerimeterConfig) DeepCopyIn
 	if in.AccessLevels != nil {
 		in, out := &in.AccessLevels, &out.AccessLevels
 		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.AccessLevelRefs != nil {
+		in, out := &in.AccessLevelRefs, &out.AccessLevelRefs
+		*out = make([]commonv1alpha1.ResourceRef, len(*in))
 		copy(*out, *in)
 	}
 	if in.EgressPolicies != nil {

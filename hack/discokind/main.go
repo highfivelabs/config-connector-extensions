@@ -157,6 +157,17 @@ type Config struct {
 	// is updatable, and an update sends the whole spec with no mask
 	// (Kind.UpdatePUT outside Compute Engine's shape).
 	UpdateMethod string `json:"updateMethod,omitempty"`
+	// Refs are spec string fields (or lists of strings) the API fills from
+	// another resource, dotted path ([] after a list of objects) ->
+	// target: each gets a <field>Ref beside it (<singular>Refs for a
+	// list), which the controller resolves (Kind.Refs, refs.go). Where
+	// Upjet resolves the same field, its target must be served by the
+	// kind named here.
+	Refs map[string]RefConfig `json:"refs,omitempty"`
+	// RefWaivers are fields Upjet resolves from a kind served here that
+	// stay plain strings, path -> why (hack/discokind/refs_test.go). Only
+	// the guard reads them.
+	RefWaivers map[string]string `json:"refWaivers,omitempty"`
 }
 
 // Discovery is the part of a Discovery document used here.
@@ -218,6 +229,8 @@ func main() {
 	var cfgs []Config
 	must(yaml.UnmarshalStrict(b, &cfgs))
 
+	upjet, err := loadUpjetFacts(root)
+	must(err)
 	outputs := map[string][]byte{}
 	var kinds []*built
 	for i := range cfgs {
@@ -226,7 +239,7 @@ func main() {
 		if err != nil {
 			fatalf("%s: %v", c.Kind, err)
 		}
-		k, err := build(c, d)
+		k, err := build(c, d, upjet)
 		if err != nil {
 			fatalf("%s: %v", c.Kind, err)
 		}
@@ -385,6 +398,7 @@ type built struct {
 	schema       *Schema
 	output       []string
 	sweep        string // the collection under a project, for the sweeper
+	refs         []builtRef
 }
 
 func findRes(d *Discovery, path string) *DRes {
@@ -444,7 +458,7 @@ func isLRO(d *Discovery, m *Method) bool {
 	return s.Properties["done"].Type == "boolean"
 }
 
-func build(c *Config, d *Discovery) (*built, error) {
+func build(c *Config, d *Discovery, upjet *upjetFacts) (*built, error) {
 	if !strings.HasSuffix(c.Group, ".gcp.hfl.dev") {
 		return nil, fmt.Errorf("group %s is not <service>.gcp.hfl.dev", c.Group)
 	}
@@ -612,6 +626,10 @@ func build(c *Config, d *Discovery) (*built, error) {
 		}
 	}
 	sort.Strings(k.output)
+	var err error
+	if k.refs, err = buildRefs(c, d, k.schema, k.pathParams, upjet); err != nil {
+		return nil, err
+	}
 	if contains(c.Parents, "project") {
 		k.sweep = strings.Replace(collectionTemplate(k.name), "{parent}", "projects/{project}", 1)
 	}

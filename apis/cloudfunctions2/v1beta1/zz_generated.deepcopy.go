@@ -22,7 +22,8 @@ package v1beta1
 
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
-	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	k8sv1alpha1 "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	"github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -72,6 +73,11 @@ func (in *CloudFunctions2FunctionBuildConfig) DeepCopyInto(out *CloudFunctions2F
 		*out = new(string)
 		**out = **in
 	}
+	if in.DockerRepositoryRef != nil {
+		in, out := &in.DockerRepositoryRef, &out.DockerRepositoryRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.EntryPoint != nil {
 		in, out := &in.EntryPoint, &out.EntryPoint
 		*out = new(string)
@@ -99,6 +105,11 @@ func (in *CloudFunctions2FunctionBuildConfig) DeepCopyInto(out *CloudFunctions2F
 		*out = new(string)
 		**out = **in
 	}
+	if in.ServiceAccountRef != nil {
+		in, out := &in.ServiceAccountRef, &out.ServiceAccountRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.Source != nil {
 		in, out := &in.Source, &out.Source
 		*out = new(CloudFunctions2FunctionSource)
@@ -112,6 +123,11 @@ func (in *CloudFunctions2FunctionBuildConfig) DeepCopyInto(out *CloudFunctions2F
 	if in.WorkerPool != nil {
 		in, out := &in.WorkerPool, &out.WorkerPool
 		*out = new(string)
+		**out = **in
+	}
+	if in.WorkerPoolRef != nil {
+		in, out := &in.WorkerPoolRef, &out.WorkerPoolRef
+		*out = new(v1alpha1.ResourceRef)
 		**out = **in
 	}
 }
@@ -211,6 +227,11 @@ func (in *CloudFunctions2FunctionEventTrigger) DeepCopyInto(out *CloudFunctions2
 		*out = new(string)
 		**out = **in
 	}
+	if in.PubsubTopicRef != nil {
+		in, out := &in.PubsubTopicRef, &out.PubsubTopicRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.RetryPolicy != nil {
 		in, out := &in.RetryPolicy, &out.RetryPolicy
 		*out = new(string)
@@ -224,6 +245,11 @@ func (in *CloudFunctions2FunctionEventTrigger) DeepCopyInto(out *CloudFunctions2
 	if in.ServiceAccountEmail != nil {
 		in, out := &in.ServiceAccountEmail, &out.ServiceAccountEmail
 		*out = new(string)
+		**out = **in
+	}
+	if in.ServiceAccountEmailRef != nil {
+		in, out := &in.ServiceAccountEmailRef, &out.ServiceAccountEmailRef
+		*out = new(v1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.TriggerRegion != nil {
@@ -1064,6 +1090,11 @@ func (in *CloudFunctions2FunctionSecretEnvVar) DeepCopyInto(out *CloudFunctions2
 		*out = new(string)
 		**out = **in
 	}
+	if in.SecretRef != nil {
+		in, out := &in.SecretRef, &out.SecretRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.Version != nil {
 		in, out := &in.Version, &out.Version
 		*out = new(string)
@@ -1122,6 +1153,11 @@ func (in *CloudFunctions2FunctionSecretVolume) DeepCopyInto(out *CloudFunctions2
 	if in.Secret != nil {
 		in, out := &in.Secret, &out.Secret
 		*out = new(string)
+		**out = **in
+	}
+	if in.SecretRef != nil {
+		in, out := &in.SecretRef, &out.SecretRef
+		*out = new(v1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.Versions != nil {
@@ -1229,6 +1265,11 @@ func (in *CloudFunctions2FunctionServiceConfig) DeepCopyInto(out *CloudFunctions
 		*out = new(string)
 		**out = **in
 	}
+	if in.ServiceAccountEmailRef != nil {
+		in, out := &in.ServiceAccountEmailRef, &out.ServiceAccountEmailRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.TimeoutSeconds != nil {
 		in, out := &in.TimeoutSeconds, &out.TimeoutSeconds
 		*out = new(int32)
@@ -1324,6 +1365,11 @@ func (in *CloudFunctions2FunctionSpec) DeepCopyInto(out *CloudFunctions2Function
 		*out = new(string)
 		**out = **in
 	}
+	if in.KmsKeyNameRef != nil {
+		in, out := &in.KmsKeyNameRef, &out.KmsKeyNameRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
@@ -1353,7 +1399,7 @@ func (in *CloudFunctions2FunctionStatus) DeepCopyInto(out *CloudFunctions2Functi
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]v1alpha1.Condition, len(*in))
+		*out = make([]k8sv1alpha1.Condition, len(*in))
 		copy(*out, *in)
 	}
 	if in.ObservedGeneration != nil {
@@ -1391,6 +1437,11 @@ func (in *CloudFunctions2FunctionStorageSource) DeepCopyInto(out *CloudFunctions
 		*out = new(string)
 		**out = **in
 	}
+	if in.BucketRef != nil {
+		in, out := &in.BucketRef, &out.BucketRef
+		*out = new(v1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.Generation != nil {
 		in, out := &in.Generation, &out.Generation
 		*out = new(int64)
@@ -1399,6 +1450,11 @@ func (in *CloudFunctions2FunctionStorageSource) DeepCopyInto(out *CloudFunctions
 	if in.Object != nil {
 		in, out := &in.Object, &out.Object
 		*out = new(string)
+		**out = **in
+	}
+	if in.ObjectRef != nil {
+		in, out := &in.ObjectRef, &out.ObjectRef
+		*out = new(v1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.SourceUploadURL != nil {
