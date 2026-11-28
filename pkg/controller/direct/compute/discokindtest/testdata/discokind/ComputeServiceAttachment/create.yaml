@@ -6,14 +6,17 @@ spec:
   projectRef:
     external: ${PROJECT}
   region: us-central1
-  targetService: projects/${PROJECT}/regions/us-central1/forwardingRules/${NAME}-fr
-  natSubnets:
-  - projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}-nat
+  # References (kinds.yaml refs); update.yaml sets the strings.
+  targetServiceRef:
+    external: projects/${PROJECT}/regions/us-central1/forwardingRules/${NAME}-fr
+  natSubnetRefs:
+  - external: projects/${PROJECT}/regions/us-central1/subnetworks/${NAME}-nat
   connectionPreference: ACCEPT_MANUAL
   consumerAcceptLists:
   - projectIdOrNum: ${PROJECT}
     connectionLimit: 2
-  - networkUrl: projects/${PROJECT}/global/networks/${NAME}-net
+  - networkUrlRef:
+      external: projects/${PROJECT}/global/networks/${NAME}-net
     connectionLimit: 1
   domainNames: [${NAME}.example.com.]
   enableProxyProtocol: false

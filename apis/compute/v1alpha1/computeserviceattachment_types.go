@@ -20,11 +20,14 @@ package v1alpha1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ComputeServiceAttachmentGVK = GroupVersion.WithKind("ComputeServiceAttachment")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.natSubnets) && has(self.natSubnetRefs))",message="set natSubnets or natSubnetRefs, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.targetService) && has(self.targetServiceRef))",message="set targetService or targetServiceRef, not both"
 type ComputeServiceAttachmentSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -103,6 +106,13 @@ type ComputeServiceAttachmentSpec struct {
 	// +optional
 	NatSubnets []string `json:"natSubnets,omitempty"`
 
+	// References to the ComputeSubnetworks that fill natSubnets, in its place:
+	// external (the value natSubnets takes), or the name (and namespace) of a
+	// ComputeSubnetwork object, this repository's kind of that name first, then
+	// Config Connector's. Set natSubnets or this, not both.
+	// +optional
+	NatSubnetRefs []commonv1alpha1.ResourceRef `json:"natSubnetRefs,omitempty"`
+
 	// The number of consumer spokes that connected Private Service Connect
 	// endpoints can be propagated to through Network Connectivity Center. This
 	// limit lets the service producer limit how many propagated Private Service
@@ -135,8 +145,18 @@ type ComputeServiceAttachmentSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="targetService is immutable"
 	TargetService *string `json:"targetService,omitempty"`
+
+	// A reference to the ComputeForwardingRule that fills targetService, in its
+	// place: external (the value targetService takes), or the name (and
+	// namespace) of a ComputeForwardingRule object, this repository's kind of
+	// that name first, then Config Connector's. Set targetService or this, not
+	// both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="targetServiceRef is immutable"
+	TargetServiceRef *commonv1alpha1.ResourceRef `json:"targetServiceRef,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.networkUrl) && has(self.networkUrlRef))",message="set networkUrl or networkUrlRef, not both"
 type ComputeServiceAttachmentServiceAttachmentConsumerProjectLimit struct {
 	// The value of the limit to set. For endpoint_url, the limit should be no
 	// more than 1.
@@ -150,6 +170,13 @@ type ComputeServiceAttachmentServiceAttachmentConsumerProjectLimit struct {
 	// The network URL for the network to set the limit for.
 	// +optional
 	NetworkURL *string `json:"networkUrl,omitempty"`
+
+	// A reference to the ComputeNetwork that fills networkUrl, in its place:
+	// external (the value networkUrl takes), or the name (and namespace) of a
+	// ComputeNetwork object, this repository's kind of that name first, then
+	// Config Connector's. Set networkUrl or this, not both.
+	// +optional
+	NetworkURLRef *commonv1alpha1.ResourceRef `json:"networkUrlRef,omitempty"`
 
 	// The project id or number for the project to set the limit for.
 	// +optional

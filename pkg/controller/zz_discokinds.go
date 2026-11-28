@@ -360,6 +360,11 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"connectedEndpoints", "creationTimestamp", "fingerprint", "id", "kind", "pscServiceAttachmentId", "region", "selfLink"},
+		Refs: []discokind.Ref{
+			{Path: "consumerAcceptLists[].networkUrl", Target: "ComputeNetwork", Upjet: "google_compute_network"},
+			{Path: "natSubnets", List: true, Target: "ComputeSubnetwork", Upjet: "google_compute_subnetwork"},
+			{Path: "targetService", Target: "ComputeForwardingRule", Upjet: "google_compute_forwarding_rule"},
+		},
 	},
 	{
 		GVK:         computev1alpha1.ComputeSubnetworkGVK,

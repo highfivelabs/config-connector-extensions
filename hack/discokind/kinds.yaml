@@ -292,6 +292,10 @@
   immutable: [targetService, domainNames, enableProxyProtocol]
   skip: {producerForwardingRule: "the API's older name for targetService, which replaces it"}
   note: "A Private Service Connect producer's service attachment: the internal load balancer it publishes, its NAT subnets, and the consumer projects and networks it accepts."
+  refs:
+    consumerAcceptLists[].networkUrl: {target: ComputeNetwork}
+    natSubnets: {target: ComputeSubnetwork}
+    targetService: {target: ComputeForwardingRule}
 
 # Foundation item 16 (2026-11-23): Config Connector's Terraform-based
 # ComputeSubnetwork lacks ipCollection, externalIpv6Prefix,
