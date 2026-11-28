@@ -22,9 +22,9 @@ Each of our kinds is set against each Terraform resource Upjet serves for the sa
 | Pairs counted (kind × Terraform resource) / related, not counted | 72 / 12 |
 | `hack/discokind` kinds joined by their `terraform:` / with a `terraform:` | 18 / 63 |
 | Upjet references on counted pairs | 88 |
-| … a reference here too (`*Ref`) | 26 |
-| … a plain string here | 40 |
-| … a plain string here, to a kind served here (a gap) | 40 |
+| … a reference here too (`*Ref`) | 58 |
+| … a plain string here | 8 |
+| … a plain string here, to a kind served here (a gap) | 8 |
 | … a field our spec does not have | 22 |
 | Secret fields (by name, or Upjet Sensitive or write-only) | 2 |
 | … a secret here (value/valueFrom, or `<field>From.secretKeyRef`) | 2 |
@@ -32,7 +32,7 @@ Each of our kinds is set against each Terraform resource Upjet serves for the sa
 | … plain, not waived | 0 |
 | Pairs Upjet's maintainers did not test / … and no live PASS here | 11 / 9 |
 | Fields Upjet keeps out of late initialization | 1 |
-| Hand-written Upjet examples / their fields no field of ours matches by name / fields our fixtures never set | 62 / 5 / 4 |
+| Hand-written Upjet examples / their fields no field of ours matches by name / fields our fixtures never set | 62 / 5 / 1 |
 
 ## Gaps, ranked
 
@@ -40,16 +40,16 @@ Score: 5 a plain secret field, 2 a reference to a kind served here taken as a pl
 
 | # | Kind | Score | What |
 | ---: | --- | ---: | --- |
-| 1 | `CloudFunctions2Function` | 22 | 11 reference(s) to kinds served here taken as plain strings (`google_cloudfunctions2_function`) |
-| 2 | `NetworkServicesGateway` | 9 | 4 reference(s) to kinds served here taken as plain strings (`google_network_services_gateway`); Upjet example fields no field of our spec matches by name: `delete_swg_autogen_router_on_destroy` |
-| 3 | `AccessContextManagerServicePerimeter` | 7 | 3 reference(s) to kinds served here taken as plain strings (`google_access_context_manager_service_perimeter`); Upjet example fields no field of our spec matches by name: `parent` |
-| 4 | `ComputeServiceAttachment` | 6 | 3 reference(s) to kinds served here taken as plain strings (`google_compute_service_attachment`) |
-| 5 | `ComputeFirewallPolicyRule` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_firewall_policy_rule`) |
-| 6 | `ComputeInterconnectAttachment` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_interconnect_attachment`) |
-| 7 | `DNSResponsePolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy`) |
-| 8 | `GKEBackupBackupPlan` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_gke_backup_backup_plan`) |
-| 9 | `NetworkSecurityTLSInspectionPolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_network_security_tls_inspection_policy`) |
-| 10 | `AssetFeed` | 3 | `google_cloud_asset_folder_feed` untested by Upjet and no live PASS here; `google_cloud_asset_organization_feed` untested by Upjet and no live PASS here; `google_cloud_asset_project_feed` untested by Upjet and no live PASS here |
+| 1 | `ComputeFirewallPolicyRule` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_compute_firewall_policy_rule`) |
+| 2 | `DNSResponsePolicy` | 4 | 2 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy`) |
+| 3 | `AssetFeed` | 3 | `google_cloud_asset_folder_feed` untested by Upjet and no live PASS here; `google_cloud_asset_organization_feed` untested by Upjet and no live PASS here; `google_cloud_asset_project_feed` untested by Upjet and no live PASS here |
+| 4 | `ApigeeNATAddress` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_apigee_nat_address`) |
+| 5 | `ArtifactRegistryRepository` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_artifact_registry_repository`) |
+| 6 | `CloudFunctions2Function` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_cloudfunctions2_function`) |
+| 7 | `DNSResponsePolicyRule` | 2 | 1 reference(s) to kinds served here taken as plain strings (`google_dns_response_policy_rule`) |
+| 8 | `LoggingLink` | 2 | `google_logging_billing_account_bucket_config` untested by Upjet and no live PASS here; `google_logging_organization_bucket_config` untested by Upjet and no live PASS here |
+| 9 | `AccessContextManagerGCPUserAccessBinding` | 1 | `google_access_context_manager_gcp_user_access_binding` untested by Upjet and no live PASS here |
+| 10 | `AccessContextManagerServicePerimeter` | 1 | Upjet example fields no field of our spec matches by name: `parent` |
 
 ## Where we and Upjet disagree
 
@@ -64,50 +64,18 @@ Score: 5 a plain secret field, 2 a reference to a kind served here taken as a pl
 
 ### References taken as plain strings
 
-Upjet resolves these fields from another managed resource; our spec takes a string, though a kind here serves the target. A `hack/discokind` kind takes only its parent as a reference, so its rows are expected until the generator learns references.
+Upjet resolves these fields from another managed resource; our spec takes a string, though a kind here serves the target. A `hack/discokind` kind takes such a field as a reference through `kinds.yaml` `refs`, or waives it there with a reason (`refWaivers`; `hack/discokind/refs_test.go` holds every one of its rows to one or the other), so its rows here are waivers; a hand-written kind's are open work.
 
 | Kind | Terraform | Field → target (kinds here) |
 | --- | --- | --- |
-| `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | `spec.access_levels → google_access_context_manager_access_level (AccessContextManagerAccessLevel, AccessContextManagerAccessLevelCondition)` |
-| `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | `status.access_levels → google_access_context_manager_access_level (AccessContextManagerAccessLevel, AccessContextManagerAccessLevelCondition)` |
-| `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | `status.ingress_policies.ingress_from.sources.access_level → google_access_context_manager_access_level (AccessContextManagerAccessLevel, AccessContextManagerAccessLevelCondition)` |
 | `ApigeeNATAddress` | `google_apigee_nat_address` | `instance_id → google_apigee_instance (ApigeeInstance)` |
 | `ArtifactRegistryRepository` | `google_artifact_registry_repository` | `remote_repository_config.common_repository.uri → google_artifact_registry_repository (ArtifactRegistryRepository)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `build_config.docker_repository → google_artifact_registry_repository (ArtifactRegistryRepository)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `build_config.service_account → google_service_account (IAMServiceAccount)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `build_config.source.storage_source.bucket → google_storage_bucket (StorageBucket)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `build_config.source.storage_source.object → google_storage_bucket_object (StorageBucketObject)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `build_config.worker_pool → google_cloudbuild_worker_pool (CloudBuildWorkerPool)` |
 | `CloudFunctions2Function` | `google_cloudfunctions2_function` | `event_trigger.event_filters.value → google_storage_bucket (StorageBucket)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `event_trigger.pubsub_topic → google_pubsub_topic (PubSubTopic)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `event_trigger.service_account_email → google_service_account (IAMServiceAccount)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `service_config.secret_environment_variables.secret → google_secret_manager_secret (SecretManagerSecret)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `service_config.secret_volumes.secret → google_secret_manager_secret (SecretManagerSecret)` |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | `service_config.service_account_email → google_service_account (IAMServiceAccount)` |
 | `ComputeFirewallPolicyRule` | `google_compute_firewall_policy_rule` | `match.dest_address_groups → google_network_security_address_group (NetworkSecurityAddressGroup)` |
 | `ComputeFirewallPolicyRule` | `google_compute_firewall_policy_rule` | `match.src_networks → google_compute_network (ComputeNetwork)` |
-| `ComputeInterconnectAttachment` | `google_compute_interconnect_attachment` | `ipsec_internal_addresses → google_compute_address (ComputeAddress)` |
-| `ComputeInterconnectAttachment` | `google_compute_interconnect_attachment` | `router → google_compute_router (ComputeRouter, ComputeRouterInterface, ComputeRouterNAT, ComputeRouterPeer)` |
-| `ComputeServiceAttachment` | `google_compute_service_attachment` | `consumer_accept_lists.network_url → google_compute_network (ComputeNetwork)` |
-| `ComputeServiceAttachment` | `google_compute_service_attachment` | `nat_subnets → google_compute_subnetwork (ComputeSubnetwork)` |
-| `ComputeServiceAttachment` | `google_compute_service_attachment` | `target_service → google_compute_forwarding_rule (ComputeForwardingRule)` |
-| `ComputeSubnetwork` | `google_compute_subnetwork` | `network → google_compute_network (ComputeNetwork)` |
 | `DNSResponsePolicy` | `google_dns_response_policy` | `gke_clusters.gke_cluster_name → google_container_cluster (ContainerCluster, ContainerNodePool)` |
 | `DNSResponsePolicy` | `google_dns_response_policy` | `networks.network_url → google_compute_network (ComputeNetwork)` |
 | `DNSResponsePolicyRule` | `google_dns_response_policy_rule` | `response_policy → google_dns_response_policy (DNSResponsePolicy)` |
-| `DataplexAsset` | `google_dataplex_asset` | `lake → google_dataplex_lake (DataplexLake)` |
-| `DataplexZone` | `google_dataplex_zone` | `lake → google_dataplex_lake (DataplexLake)` |
-| `GKEBackupBackupPlan` | `google_gke_backup_backup_plan` | `backup_config.encryption_key.gcp_kms_encryption_key → google_kms_crypto_key (KMSCryptoKey)` |
-| `GKEBackupBackupPlan` | `google_gke_backup_backup_plan` | `cluster → google_container_cluster (ContainerCluster, ContainerNodePool)` |
-| `NetworkSecurityDNSThreatDetector` | `google_network_security_dns_threat_detector` | `excluded_networks → google_compute_network (ComputeNetwork)` |
-| `NetworkSecurityGatewaySecurityPolicy` | `google_network_security_gateway_security_policy` | `tls_inspection_policy → google_network_security_tls_inspection_policy (NetworkSecurityTLSInspectionPolicy)` |
-| `NetworkSecurityGatewaySecurityPolicyRule` | `google_network_security_gateway_security_policy_rule` | `gateway_security_policy → google_network_security_gateway_security_policy (NetworkSecurityGatewaySecurityPolicy)` |
-| `NetworkSecurityTLSInspectionPolicy` | `google_network_security_tls_inspection_policy` | `ca_pool → google_privateca_ca_pool (PrivateCACAPool)` |
-| `NetworkSecurityTLSInspectionPolicy` | `google_network_security_tls_inspection_policy` | `trust_config → google_certificate_manager_trust_config (CertificateManagerTrustConfig)` |
-| `NetworkServicesGateway` | `google_network_services_gateway` | `certificate_urls → google_certificate_manager_certificate (CertificateManagerCertificate)` |
-| `NetworkServicesGateway` | `google_network_services_gateway` | `gateway_security_policy → google_network_security_gateway_security_policy (NetworkSecurityGatewaySecurityPolicy)` |
-| `NetworkServicesGateway` | `google_network_services_gateway` | `network → google_compute_network (ComputeNetwork)` |
-| `NetworkServicesGateway` | `google_network_services_gateway` | `subnetwork → google_compute_subnetwork (ComputeSubnetwork)` |
 
 ### Not tested by Upjet
 
@@ -142,10 +110,8 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | Kind | Terraform | Not in our spec | Not in our fixtures |
 | --- | --- | --- | --- |
 | `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | `parent` |  |
-| `ComputeInterconnectAttachment` | `google_compute_interconnect_attachment` |  | `edge_availability_domain`, `mtu` |
 | `NetworkSecurityAddressGroup` | `google_network_security_address_group` | `parent` |  |
 | `NetworkSecurityDNSThreatDetector` | `google_network_security_dns_threat_detector` | `threat_detector_provider` |  |
-| `NetworkSecurityTLSInspectionPolicy` | `google_network_security_tls_inspection_policy` |  | `exclude_public_ca_set` |
 | `NetworkServicesGateway` | `google_network_services_gateway` | `delete_swg_autogen_router_on_destroy` | `addresses` |
 | `PrivateCACertificateAuthority` | `google_privateca_certificate_authority` | `deletion_protection` |  |
 
@@ -155,7 +121,7 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | --- | --- | --- | --- | --- | --- | --- | ---: |
 | `AIPlatformReasoningEngine` | `google_vertex_ai_reasoning_engine` | resource | true | no row | 4 (3 / 0 / 1) | none | 1 |
 | `AccessContextManagerGCPUserAccessBinding` | `google_access_context_manager_gcp_user_access_binding` | name | false | no row | 0 (0 / 0 / 0) | none | 0 |
-| `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | terraform | true | no row | 3 (0 / 3 / 0) | none | 1 |
+| `AccessContextManagerServicePerimeter` | `google_access_context_manager_service_perimeter` | terraform | true | no row | 3 (3 / 0 / 0) | none | 1 |
 | `ApigeeNATAddress` | `google_apigee_nat_address` | name | true | no row | 1 (0 / 1 / 0) | none | 1 |
 | `ArtifactRegistryRepository` | `google_artifact_registry_repository` | name | true | PASS | 3 (2 / 1 / 0) | none | 1 |
 | `AssetFeed` | `google_cloud_asset_folder_feed` | resource | false | no row | 0 (0 / 0 / 0) | none | 0 |
@@ -163,7 +129,7 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | `AssetFeed` | `google_cloud_asset_project_feed` | resource | false | no row | 0 (0 / 0 / 0) | none | 0 |
 | `CertificateManagerTrustConfig` | `google_certificate_manager_trust_config` | terraform | true | no row | 0 (0 / 0 / 0) | none | 1 |
 | `CloudDeployTarget` | `google_clouddeploy_target` | terraform | false | no row | 0 (0 / 0 / 0) | none | 0 |
-| `CloudFunctions2Function` | `google_cloudfunctions2_function` | terraform | true | no row | 11 (0 / 11 / 0) | none | 1 |
+| `CloudFunctions2Function` | `google_cloudfunctions2_function` | terraform | true | no row | 11 (10 / 1 / 0) | none | 1 |
 | `CloudFunctions2Function` | `google_cloudfunctions_function` (related) | resource | true | no row | 2 (0 / 0 / 2) | none | 1 |
 | `ComputeAutoscaler` | `google_compute_autoscaler` | name | true | no row | 1 (1 / 0 / 0) | none | 1 |
 | `ComputeAutoscaler` | `google_compute_region_autoscaler` (related) | resource | true | no row | 1 (1 / 0 / 0) | none | 1 |
@@ -179,7 +145,7 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | `ComputeFirewallPolicyRule` | `google_compute_network_firewall_policy_rule` (related) | resource | true | no row | 5 (1 / 2 / 2) | none | 1 |
 | `ComputeFirewallPolicyRule` | `google_compute_region_network_firewall_policy` (related) | resource | true | no row | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeFirewallPolicyRule` | `google_compute_region_network_firewall_policy_rule` (related) | resource | false | no row | 0 (0 / 0 / 0) | none | 0 |
-| `ComputeInterconnectAttachment` | `google_compute_interconnect_attachment` | terraform | true | no row | 2 (0 / 2 / 0) | none | 1 |
+| `ComputeInterconnectAttachment` | `google_compute_interconnect_attachment` | terraform | true | no row | 2 (2 / 0 / 0) | none | 1 |
 | `ComputeNetworkFirewallPolicyPacketMirroringRule` | `google_compute_firewall_policy` | resource | true | FAIL | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeNetworkFirewallPolicyPacketMirroringRule` | `google_compute_network_firewall_policy` | resource | true | FAIL | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeNetworkFirewallPolicyPacketMirroringRule` | `google_compute_region_network_firewall_policy` | resource | true | FAIL | 0 (0 / 0 / 0) | none | 1 |
@@ -202,16 +168,16 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | `ComputeRegionSecurityPolicy` | `google_compute_security_policy` | resource | true | no row | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeRegionSecurityPolicyRule` | `google_compute_security_policy` | resource | true | no row | 0 (0 / 0 / 0) | none | 1 |
 | `ComputeRouter` | `google_compute_router` | name | true | PASS | 2 (1 / 0 / 1) | none | 1 |
-| `ComputeServiceAttachment` | `google_compute_service_attachment` | terraform | true | no row | 3 (0 / 3 / 0) | none | 1 |
-| `ComputeSubnetwork` | `google_compute_subnetwork` | terraform | true | no row | 1 (0 / 1 / 0) | none | 1 |
+| `ComputeServiceAttachment` | `google_compute_service_attachment` | terraform | true | no row | 3 (3 / 0 / 0) | none | 1 |
+| `ComputeSubnetwork` | `google_compute_subnetwork` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
 | `ComputeVPNTunnel` | `google_compute_vpn_tunnel` | name | true | PASS | 4 (4 / 0 / 0) | secret | 1 |
 | `DNSResponsePolicy` | `google_dns_response_policy` | name | true | pending | 2 (0 / 2 / 0) | none | 1 |
 | `DNSResponsePolicyRule` | `google_dns_response_policy_rule` | name | true | no row | 1 (0 / 1 / 0) | none | 1 |
 | `DataplexAspectType` | `google_dataplex_aspect_type` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
-| `DataplexAsset` | `google_dataplex_asset` | terraform | true | no row | 2 (0 / 1 / 1) | none | 1 |
+| `DataplexAsset` | `google_dataplex_asset` | terraform | true | no row | 2 (1 / 0 / 1) | none | 1 |
 | `DataplexLake` | `google_dataplex_lake` | terraform | true | no row | 0 (0 / 0 / 0) | none | 2 |
-| `DataplexZone` | `google_dataplex_zone` | terraform | true | no row | 1 (0 / 1 / 0) | none | 0 |
-| `GKEBackupBackupPlan` | `google_gke_backup_backup_plan` | terraform | true | no row | 2 (0 / 2 / 0) | none | 1 |
+| `DataplexZone` | `google_dataplex_zone` | terraform | true | no row | 1 (1 / 0 / 0) | none | 0 |
+| `GKEBackupBackupPlan` | `google_gke_backup_backup_plan` | terraform | true | no row | 2 (2 / 0 / 0) | none | 1 |
 | `LoggingBillingAccountSink` | `google_logging_billing_account_sink` | name | false | pending | 0 (0 / 0 / 0) | none | 0 |
 | `LoggingBillingAccountSink` | `google_logging_folder_sink` (related) | resource | true | pending | 1 (0 / 0 / 1) | none | 1 |
 | `LoggingBillingAccountSink` | `google_logging_organization_sink` (related) | resource | false | pending | 0 (0 / 0 / 0) | none | 0 |
@@ -224,12 +190,12 @@ Fields Upjet's hand-written examples set (for the kind's own resource) that no f
 | `LoggingLogSink` | `google_logging_organization_sink` | resource | false | PASS | 0 (0 / 0 / 0) | none | 0 |
 | `LoggingLogSink` | `google_logging_project_sink` | resource | true | PASS | 1 (0 / 0 / 1) | none | 1 |
 | `NetworkSecurityAddressGroup` | `google_network_security_address_group` | name | true | PASS | 0 (0 / 0 / 0) | none | 1 |
-| `NetworkSecurityDNSThreatDetector` | `google_network_security_dns_threat_detector` | terraform | true | no row | 1 (0 / 1 / 0) | none | 1 |
-| `NetworkSecurityGatewaySecurityPolicy` | `google_network_security_gateway_security_policy` | terraform | true | no row | 1 (0 / 1 / 0) | none | 1 |
-| `NetworkSecurityGatewaySecurityPolicyRule` | `google_network_security_gateway_security_policy_rule` | terraform | true | no row | 1 (0 / 1 / 0) | none | 1 |
-| `NetworkSecurityTLSInspectionPolicy` | `google_network_security_tls_inspection_policy` | terraform | true | no row | 2 (0 / 2 / 0) | none | 1 |
+| `NetworkSecurityDNSThreatDetector` | `google_network_security_dns_threat_detector` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
+| `NetworkSecurityGatewaySecurityPolicy` | `google_network_security_gateway_security_policy` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
+| `NetworkSecurityGatewaySecurityPolicyRule` | `google_network_security_gateway_security_policy_rule` | terraform | true | no row | 1 (1 / 0 / 0) | none | 1 |
+| `NetworkSecurityTLSInspectionPolicy` | `google_network_security_tls_inspection_policy` | terraform | true | no row | 2 (2 / 0 / 0) | none | 1 |
 | `NetworkSecurityURLList` | `google_network_security_url_lists` | terraform | true | no row | 0 (0 / 0 / 0) | none | 1 |
-| `NetworkServicesGateway` | `google_network_services_gateway` | terraform | true | no row | 4 (0 / 4 / 0) | none | 1 |
+| `NetworkServicesGateway` | `google_network_services_gateway` | terraform | true | no row | 4 (4 / 0 / 0) | none | 1 |
 | `PrivateCACertificateAuthority` | `google_privateca_certificate_authority` | name | true | no row | 2 (0 / 0 / 2) | none | 1 |
 | `RunJob` | `google_cloud_run_v2_job` | resource | true | no row | 3 (3 / 0 / 0) | none | 1 |
 | `RunService` | `google_cloud_run_service` | resource | true | PASS | 3 (0 / 0 / 3) | none | 1 |

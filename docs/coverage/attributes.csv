@@ -33,7 +33,7 @@ accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPo
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,description,string,false,both,AccessContextManagerServicePerimeter:spec.description,spec.description
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,name,string,false,both,AccessContextManagerServicePerimeter:metadata.name,metadata.name
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,perimeterType,string,false,both,AccessContextManagerServicePerimeter:spec.perimeterType,spec.perimeterType
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.accessLevels[],string,false,both,AccessContextManagerServicePerimeter:spec.spec.accessLevels[],spec.spec.accessLevels[]
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.accessLevels[],string,false,both,AccessContextManagerServicePerimeter:spec.spec.accessLevels[],spec.spec.accessLevelRefs[]
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.egressPolicies[].egressFrom.identities[],string,false,both,AccessContextManagerServicePerimeter:spec.spec.egressPolicies[].egressFrom.identities[].serviceAccountRef,spec.spec.egressPolicies[].egressFrom.identities[]
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.egressPolicies[].egressFrom.identityType,string,false,both,AccessContextManagerServicePerimeter:spec.spec.egressPolicies[].egressFrom.identityType,spec.spec.egressPolicies[].egressFrom.identityType
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.egressPolicies[].egressFrom.sourceRestriction,string,false,ours,,spec.spec.egressPolicies[].egressFrom.sourceRestriction
@@ -67,7 +67,7 @@ accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPo
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.vpcAccessibleServices.allowedServices[],string,false,both,AccessContextManagerServicePerimeter:spec.spec.vpcAccessibleServices.allowedServices[],spec.spec.vpcAccessibleServices.allowedServices[]
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.vpcAccessibleServices.enableRestriction,boolean,false,both,AccessContextManagerServicePerimeter:spec.spec.vpcAccessibleServices.enableRestriction,spec.spec.vpcAccessibleServices.enableRestriction
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,spec.vpcAccessibleServices.servicePatternsEnforcementScopes[],string,false,ours,,spec.spec.vpcAccessibleServices.servicePatternsEnforcementScopes[]
-accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,status.accessLevels[],string,false,both,AccessContextManagerServicePerimeter:spec.status.accessLevels[],spec.status.accessLevels[]
+accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,status.accessLevels[],string,false,both,AccessContextManagerServicePerimeter:spec.status.accessLevels[],spec.status.accessLevelRefs[]
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,status.egressPolicies[].egressFrom.identities[],string,false,both,AccessContextManagerServicePerimeter:spec.status.egressPolicies[].egressFrom.identities[].serviceAccountRef,spec.status.egressPolicies[].egressFrom.identities[]
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,status.egressPolicies[].egressFrom.identityType,string,false,both,AccessContextManagerServicePerimeter:spec.status.egressPolicies[].egressFrom.identityType,spec.status.egressPolicies[].egressFrom.identityType
 accesscontextmanager.googleapis.com,accesscontextmanager.googleapis.com/AccessPolicyServicePerimeter,status.egressPolicies[].egressFrom.sourceRestriction,string,false,ours,,spec.status.egressPolicies[].egressFrom.sourceRestriction
@@ -12322,7 +12322,7 @@ compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,description
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,edgeAvailabilityDomain,string,false,both,spec.edgeAvailabilityDomain,spec.edgeAvailabilityDomain
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,encryption,string,false,both,spec.encryption,spec.encryption
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,interconnect,string,false,both,spec.interconnect,spec.interconnect
-compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,ipsecInternalAddresses[],string,false,both,spec.ipsecInternalAddresses[],spec.ipsecInternalAddresses[]
+compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,ipsecInternalAddresses[],string,false,both,spec.ipsecInternalAddresses[],spec.ipsecInternalAddressRefs[]
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,l2Forwarding.applianceMappings{}.applianceIpAddress,string,false,none,,
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerApplianceIpAddress,string,true,none,,
 compute.googleapis.com,compute.googleapis.com/InterconnectAttachment,l2Forwarding.applianceMappings{}.innerVlanToApplianceMappings[].innerVlanTags[],string,true,none,,
@@ -14126,7 +14126,7 @@ compute.googleapis.com,compute.googleapis.com/ServiceAttachment,enableProxyProto
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,metadata{},string,false,ours,,spec.metadata{}
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,name,string,false,both,metadata.name,metadata.name
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,natIpsPerEndpoint,integer,false,ours,,spec.natIpsPerEndpoint
-compute.googleapis.com,compute.googleapis.com/ServiceAttachment,natSubnets[],string,false,both,spec.natSubnets[],spec.natSubnets[]
+compute.googleapis.com,compute.googleapis.com/ServiceAttachment,natSubnets[],string,false,both,spec.natSubnets[],spec.natSubnetRefs[]
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,producerForwardingRule,string,false,none,,
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,propagatedConnectionLimit,integer,false,ours,,spec.propagatedConnectionLimit
 compute.googleapis.com,compute.googleapis.com/ServiceAttachment,reconcileConnections,boolean,false,ours,,spec.reconcileConnections
@@ -36659,7 +36659,7 @@ networksecurity.googleapis.com,networksecurity.googleapis.com/ClientTlsPolicy,na
 networksecurity.googleapis.com,networksecurity.googleapis.com/ClientTlsPolicy,serverValidationCa[].certificateProviderInstance.pluginInstance,string,true,official,spec.serverValidationCa[].certificateProviderInstance.pluginInstance,
 networksecurity.googleapis.com,networksecurity.googleapis.com/ClientTlsPolicy,serverValidationCa[].grpcEndpoint.targetUri,string,true,official,spec.serverValidationCa[].grpcEndpoint.targetUri,
 networksecurity.googleapis.com,networksecurity.googleapis.com/ClientTlsPolicy,sni,string,false,official,spec.sni,
-networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,excludedNetworks[],string,false,both,spec.excludedNetworkRefs[],spec.excludedNetworks[]
+networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,excludedNetworks[],string,false,both,spec.excludedNetworkRefs[],spec.excludedNetworkRefs[]
 networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,labels{},string,false,both,spec.labels{},spec.labels{}
 networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,name,string,false,both,metadata.name,metadata.name
 networksecurity.googleapis.com,networksecurity.googleapis.com/DnsThreatDetector,provider,string,true,both,spec.provider,spec.provider
@@ -36982,7 +36982,7 @@ networkservices.googleapis.com,networkservices.googleapis.com/ExtensionBinding,t
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,addresses[],string,false,both,spec.addresses[],spec.addresses[]
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,allPorts,boolean,false,ours,,spec.allPorts
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,allowGlobalAccess,boolean,false,ours,,spec.allowGlobalAccess
-networkservices.googleapis.com,networkservices.googleapis.com/Gateway,certificateUrls[],string,false,ours,,spec.certificateUrls[]
+networkservices.googleapis.com,networkservices.googleapis.com/Gateway,certificateUrls[],string,false,ours,,spec.certificateUrlRefs[]
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,description,string,false,both,spec.description,spec.description
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,envoyHeaders,string,false,ours,,spec.envoyHeaders
 networkservices.googleapis.com,networkservices.googleapis.com/Gateway,gatewaySecurityPolicy,string,false,ours,,spec.gatewaySecurityPolicy

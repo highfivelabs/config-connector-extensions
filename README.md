@@ -219,7 +219,7 @@ Tier 1, 16 services, most covered attributes first:
 
 </details>
 
-Against Crossplane's Upjet provider (v3.1.0): 51 of our kinds have an Upjet resource; of the 88 references Upjet resolves on them, 26 are references here and 40 are plain strings to a kind served here; 2 secret fields are secrets here and 0 are open ([`upjet.md`](docs/coverage/upjet.md)).
+Against Crossplane's Upjet provider (v3.1.0): 51 of our kinds have an Upjet resource; of the 88 references Upjet resolves on them, 58 are references here and 8 are plain strings to a kind served here; 2 secret fields are secrets here and 0 are open ([`upjet.md`](docs/coverage/upjet.md)).
 <!-- coverage:end -->
 
 The kinds:
