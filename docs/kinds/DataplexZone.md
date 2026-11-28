@@ -24,6 +24,8 @@ as it goes on. The test reads the cloud every 10 s live and retries its
 own refused calls. Live, `setup_test.go` makes each zone's lake first (and the abandoned zone's) and deletes it afterwards. The sweeper deletes a run's zones and assets before
 its lakes.
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): `lakeRef` takes a `DataplexLake` beside `lake`, as Upjet resolves it; it gives the lake's ID, and a lake in another project or location is refused.
+
 ## Live runs
 
 One row per run.

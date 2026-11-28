@@ -611,6 +611,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "gatewaySecurityPolicy", NamePart: true, Target: "NetworkSecurityGatewaySecurityPolicy", Upjet: "google_network_security_gateway_security_policy"},
+		},
 	},
 	{
 		GVK:       networksecurityv1beta1.NetworkSecurityURLListGVK,
@@ -868,6 +871,9 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"assetStatus", "createTime", "name", "state", "uid", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "lake", NamePart: true, Target: "DataplexLake", Upjet: "google_dataplex_lake"},
+		},
 	},
 	{
 		GVK:       dataplexv1beta1.DataplexAssetGVK,
@@ -879,6 +885,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "discoveryStatus", "name", "resourceStatus", "securityStatus", "state", "uid", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "lake", NamePart: true, Target: "DataplexLake", Upjet: "google_dataplex_lake"},
+			{Path: "zone", NamePart: true, Target: "DataplexZone"},
+		},
 	},
 	{
 		GVK:       dataplexv1beta1.DataplexAspectTypeGVK,

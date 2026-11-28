@@ -85,6 +85,47 @@ spec:
                 x-kubernetes-validations:
                 - message: gatewaySecurityPolicy is immutable
                   rule: self == oldSelf
+              gatewaySecurityPolicyRef:
+                description: 'Immutable. A reference to the NetworkSecurityGatewaySecurityPolicy
+                  whose ID is gatewaySecurityPolicy, in its place: external (its full
+                  name), or the name (and namespace) of a NetworkSecurityGatewaySecurityPolicy
+                  object, this repository''s kind of that name first, then Config
+                  Connector''s. Its name must be the start of this resource''s: the
+                  same project and location. Set gatewaySecurityPolicy or this, not
+                  both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: gatewaySecurityPolicyRef is immutable
+                  rule: self == oldSelf
               location:
                 description: Immutable. The location, part of the resource's name
                   ({parent}/locations/{location}/gatewaySecurityPolicies/{gatewaySecurityPolicy}/rules/{id}).
@@ -150,12 +191,15 @@ spec:
             required:
             - basicProfile
             - enabled
-            - gatewaySecurityPolicy
             - location
             - priority
             - projectRef
             - sessionMatcher
             type: object
+            x-kubernetes-validations:
+            - message: exactly one of gatewaySecurityPolicy and gatewaySecurityPolicyRef
+                is required
+              rule: has(self.gatewaySecurityPolicy) != has(self.gatewaySecurityPolicyRef)
           status:
             properties:
               conditions:

@@ -6,7 +6,10 @@ spec:
   projectRef:
     external: ${PROJECT}
   location: us-central1
-  gatewaySecurityPolicy: ${KIND_NAME}-gsp
+  # A reference (kinds.yaml refs) to the policy the test makes first;
+  # update.yaml sets its ID.
+  gatewaySecurityPolicyRef:
+    external: projects/${PROJECT}/locations/us-central1/gatewaySecurityPolicies/${KIND_NAME}-gsp
   basicProfile: ALLOW
   enabled: true
   priority: 10

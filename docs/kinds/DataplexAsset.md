@@ -30,6 +30,8 @@ the same (`sameBucket` in `pkg/discokind`), where it used to see a
 difference and patch the asset on every reconcile (run
 `cce-11140351-e560`: Ready, but updated for 15 minutes).
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): `lakeRef` and `zoneRef` take a `DataplexLake` and a `DataplexZone` beside `lake` and `zone` (Upjet resolves the lake and, as `dataplex_zone`, the zone); each gives its ID, and one in another project, location or lake is refused.
+
 ## Live runs
 
 One row per run.

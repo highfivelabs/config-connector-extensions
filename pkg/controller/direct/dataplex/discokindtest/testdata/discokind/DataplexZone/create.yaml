@@ -6,7 +6,10 @@ spec:
   projectRef:
     external: ${PROJECT}
   location: us-central1
-  lake: ${NAME}-lake
+  # A reference (kinds.yaml refs) to the lake the Setup makes;
+  # update.yaml sets its ID.
+  lakeRef:
+    external: projects/${PROJECT}/locations/us-central1/lakes/${NAME}-lake
   type: RAW
   resourceSpec:
     locationType: SINGLE_REGION

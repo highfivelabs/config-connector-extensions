@@ -1298,6 +1298,11 @@ func (in *NetworkSecurityGatewaySecurityPolicyRuleSpec) DeepCopyInto(out *Networ
 		*out = new(refsv1beta1.ProjectRef)
 		**out = **in
 	}
+	if in.GatewaySecurityPolicyRef != nil {
+		in, out := &in.GatewaySecurityPolicyRef, &out.GatewaySecurityPolicyRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.ResourceID != nil {
 		in, out := &in.ResourceID, &out.ResourceID
 		*out = new(string)

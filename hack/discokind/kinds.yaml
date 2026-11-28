@@ -568,6 +568,8 @@
   parents: [project]
   terraform: google_network_security_gateway_security_policy_rule
   note: "A rule of a Secure Web Proxy's gateway security policy: allow or deny traffic a session and application matcher selects."
+  refs:
+    gatewaySecurityPolicy: {target: NetworkSecurityGatewaySecurityPolicy}
 
 - kind: NetworkSecurityURLList
   group: networksecurity.gcp.hfl.dev
@@ -803,6 +805,8 @@
   parents: [project]
   terraform: google_dataplex_zone
   note: "A raw or curated zone of a Dataplex lake."
+  refs:
+    lake: {target: DataplexLake}
 
 - kind: DataplexAsset
   group: dataplex.gcp.hfl.dev
@@ -812,6 +816,9 @@
   parents: [project]
   terraform: google_dataplex_asset
   note: "A bucket or dataset attached to a Dataplex zone."
+  refs:
+    lake: {target: DataplexLake}
+    zone: {target: DataplexZone}
 
 - kind: DataplexAspectType
   group: dataplex.gcp.hfl.dev
