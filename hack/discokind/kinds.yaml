@@ -411,6 +411,11 @@
   immutable: [addresses, allPorts, allowGlobalAccess, envoyHeaders, ipVersion, network, ports, routingMode, scope, subnetwork]
   note: "A gateway: an OPEN_MESH gateway's listener, or a Secure Web Proxy (SECURE_WEB_GATEWAY) in a VPC network."
   sweepLocation: us-central1
+  refs:
+    certificateUrls: {target: CertificateManagerCertificate}
+    gatewaySecurityPolicy: {target: NetworkSecurityGatewaySecurityPolicy}
+    network: {target: ComputeNetwork}
+    subnetwork: {target: ComputeSubnetwork}
 # The catalog's geap-agent-gateway module (2026-11-13): an authorization
 # extension that delegates to a Google service (IAP or Model Armor) by its
 # service field. Config Connector's NetworkServicesAuthzExtension is alpha,

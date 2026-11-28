@@ -9,9 +9,16 @@ spec:
   type: SECURE_WEB_GATEWAY
   ports: [443]
   routingMode: EXPLICIT_ROUTING_MODE
-  network: projects/${PROJECT}/global/networks/${KIND_NAME}-net
-  subnetwork: projects/${PROJECT}/regions/us-central1/subnetworks/${KIND_NAME}-subnet
-  gatewaySecurityPolicy: projects/${PROJECT}/locations/us-central1/gatewaySecurityPolicies/${KIND_NAME}-gsp
+  # References (kinds.yaml refs); update.yaml sets the strings they
+  # resolve to, which changes nothing in the cloud.
+  networkRef:
+    external: projects/${PROJECT}/global/networks/${KIND_NAME}-net
+  subnetworkRef:
+    external: projects/${PROJECT}/regions/us-central1/subnetworks/${KIND_NAME}-subnet
+  gatewaySecurityPolicyRef:
+    name: ${KIND_NAME}-gsp
+  certificateUrlRefs:
+  - external: projects/${PROJECT}/locations/us-central1/certificates/${KIND_NAME}-cert
   labels:
     purpose: swg-test
   description: made by a config-connector-extensions test

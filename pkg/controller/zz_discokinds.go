@@ -442,6 +442,12 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"createTime", "selfLink", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "certificateUrls", List: true, Target: "CertificateManagerCertificate", Upjet: "google_certificate_manager_certificate"},
+			{Path: "gatewaySecurityPolicy", Target: "NetworkSecurityGatewaySecurityPolicy", Upjet: "google_network_security_gateway_security_policy"},
+			{Path: "network", Target: "ComputeNetwork", Upjet: "google_compute_network"},
+			{Path: "subnetwork", Target: "ComputeSubnetwork", Upjet: "google_compute_subnetwork"},
+		},
 	},
 	{
 		GVK:       networkservicesv1beta1.NetworkServicesAuthzExtensionGVK,

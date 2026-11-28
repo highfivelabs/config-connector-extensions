@@ -20,11 +20,16 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var NetworkServicesGatewayGVK = GroupVersion.WithKind("NetworkServicesGateway")
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.certificateUrls) && has(self.certificateUrlRefs))",message="set certificateUrls or certificateUrlRefs, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.gatewaySecurityPolicy) && has(self.gatewaySecurityPolicyRef))",message="set gatewaySecurityPolicy or gatewaySecurityPolicyRef, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.network) && has(self.networkRef))",message="set network or networkRef, not both"
+// +kubebuilder:validation:XValidation:rule="!(has(self.subnetwork) && has(self.subnetworkRef))",message="set subnetwork or subnetworkRef, not both"
 type NetworkServicesGatewaySpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -71,6 +76,14 @@ type NetworkServicesGatewaySpec struct {
 	// +optional
 	CertificateURLs []string `json:"certificateUrls,omitempty"`
 
+	// References to the CertificateManagerCertificates that fill certificateUrls,
+	// in its place: external (the value certificateUrls takes), or the name (and
+	// namespace) of a CertificateManagerCertificate object, this repository's
+	// kind of that name first, then Config Connector's. Set certificateUrls or
+	// this, not both.
+	// +optional
+	CertificateURLRefs []commonv1alpha1.ResourceRef `json:"certificateUrlRefs,omitempty"`
+
 	// Optional. A free-text description of the resource. Max length 1024
 	// characters.
 	// +optional
@@ -93,6 +106,15 @@ type NetworkServicesGatewaySpec struct {
 	// +optional
 	GatewaySecurityPolicy *string `json:"gatewaySecurityPolicy,omitempty"`
 
+	// A reference to the NetworkSecurityGatewaySecurityPolicy that fills
+	// gatewaySecurityPolicy, in its place: external (the value
+	// gatewaySecurityPolicy takes), or the name (and namespace) of a
+	// NetworkSecurityGatewaySecurityPolicy object, this repository's kind of that
+	// name first, then Config Connector's. Set gatewaySecurityPolicy or this, not
+	// both.
+	// +optional
+	GatewaySecurityPolicyRef *commonv1alpha1.ResourceRef `json:"gatewaySecurityPolicyRef,omitempty"`
+
 	// Optional. The IP Version that will be used by this gateway. Valid options
 	// are IPV4 or IPV6. Default is IPV4.
 	//
@@ -112,6 +134,14 @@ type NetworkServicesGatewaySpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="network is immutable"
 	Network *string `json:"network,omitempty"`
+
+	// A reference to the ComputeNetwork that fills network, in its place:
+	// external (the value network takes), or the name (and namespace) of a
+	// ComputeNetwork object, this repository's kind of that name first, then
+	// Config Connector's. Set network or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="networkRef is immutable"
+	NetworkRef *commonv1alpha1.ResourceRef `json:"networkRef,omitempty"`
 
 	// Required. One or more port numbers (1-65535), on which the Gateway will
 	// receive traffic. The proxy binds to the specified ports. Gateways of type
@@ -151,6 +181,14 @@ type NetworkServicesGatewaySpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="subnetwork is immutable"
 	Subnetwork *string `json:"subnetwork,omitempty"`
+
+	// A reference to the ComputeSubnetwork that fills subnetwork, in its place:
+	// external (the value subnetwork takes), or the name (and namespace) of a
+	// ComputeSubnetwork object, this repository's kind of that name first, then
+	// Config Connector's. Set subnetwork or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="subnetworkRef is immutable"
+	SubnetworkRef *commonv1alpha1.ResourceRef `json:"subnetworkRef,omitempty"`
 
 	// Immutable. The type of the customer managed gateway. This field is
 	// required. If unspecified, an error is returned.

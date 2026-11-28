@@ -88,6 +88,50 @@ spec:
                 x-kubernetes-validations:
                 - message: allowGlobalAccess is immutable
                   rule: self == oldSelf
+              certificateUrlRefs:
+                description: 'References to the CertificateManagerCertificates that
+                  fill certificateUrls, in its place: external (the value certificateUrls
+                  takes), or the name (and namespace) of a CertificateManagerCertificate
+                  object, this repository''s kind of that name first, then Config
+                  Connector''s. Set certificateUrls or this, not both.'
+                items:
+                  description: 'ResourceRef is a reference a generated kind''s spec
+                    takes beside a string field the API fills from another resource
+                    (hack/discokind kinds.yaml refs, docs/design.md section 2.4):
+                    Config Connector''s shape, either external, or the name (and namespace)
+                    of an object in the cluster. The controller resolves it to the
+                    string before every write.'
+                  oneOf:
+                  - not:
+                      required:
+                      - external
+                    required:
+                    - name
+                  - not:
+                      anyOf:
+                      - required:
+                        - name
+                      - required:
+                        - namespace
+                    required:
+                    - external
+                  properties:
+                    external:
+                      description: 'The value itself, as the string field beside the
+                        reference takes it: the resource''s name, or for a service
+                        account its email.'
+                      type: string
+                    name:
+                      description: 'The name of an object of the referenced kind:
+                        this repository''s kind of that name first, then Config Connector''s.
+                        The controller takes the value from the object''s status.'
+                      type: string
+                    namespace:
+                      description: The object's namespace; the referencing object's
+                        when unset.
+                      type: string
+                  type: object
+                type: array
               certificateUrls:
                 description: Optional. A fully-qualified Certificates URL reference.
                   The proxy presents a Certificate (selected based on SNI) when establishing
@@ -117,6 +161,42 @@ spec:
                   inbound (VM to Proxy) initiated connections. For example: `projects/*/locations/*/gatewaySecurityPolicies/swg-policy`.
                   This policy is specific to gateways of type ''SECURE_WEB_GATEWAY''.'
                 type: string
+              gatewaySecurityPolicyRef:
+                description: 'A reference to the NetworkSecurityGatewaySecurityPolicy
+                  that fills gatewaySecurityPolicy, in its place: external (the value
+                  gatewaySecurityPolicy takes), or the name (and namespace) of a NetworkSecurityGatewaySecurityPolicy
+                  object, this repository''s kind of that name first, then Config
+                  Connector''s. Set gatewaySecurityPolicy or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
               ipVersion:
                 description: |-
                   Optional. The IP Version that will be used by this gateway. Valid options
@@ -147,6 +227,45 @@ spec:
                 type: string
                 x-kubernetes-validations:
                 - message: network is immutable
+                  rule: self == oldSelf
+              networkRef:
+                description: 'A reference to the ComputeNetwork that fills network,
+                  in its place: external (the value network takes), or the name (and
+                  namespace) of a ComputeNetwork object, this repository''s kind of
+                  that name first, then Config Connector''s. Set network or this,
+                  not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: networkRef is immutable
                   rule: self == oldSelf
               ports:
                 description: 'Required. One or more port numbers (1-65535), on which
@@ -238,6 +357,45 @@ spec:
                 x-kubernetes-validations:
                 - message: subnetwork is immutable
                   rule: self == oldSelf
+              subnetworkRef:
+                description: 'A reference to the ComputeSubnetwork that fills subnetwork,
+                  in its place: external (the value subnetwork takes), or the name
+                  (and namespace) of a ComputeSubnetwork object, this repository''s
+                  kind of that name first, then Config Connector''s. Set subnetwork
+                  or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: 'The value itself, as the string field beside the
+                      reference takes it: the resource''s name, or for a service account
+                      its email.'
+                    type: string
+                  name:
+                    description: 'The name of an object of the referenced kind: this
+                      repository''s kind of that name first, then Config Connector''s.
+                      The controller takes the value from the object''s status.'
+                    type: string
+                  namespace:
+                    description: The object's namespace; the referencing object's
+                      when unset.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: subnetworkRef is immutable
+                  rule: self == oldSelf
               type:
                 description: |-
                   Immutable. The type of the customer managed gateway. This field is
@@ -253,6 +411,16 @@ spec:
             - ports
             - projectRef
             type: object
+            x-kubernetes-validations:
+            - message: set certificateUrls or certificateUrlRefs, not both
+              rule: '!(has(self.certificateUrls) && has(self.certificateUrlRefs))'
+            - message: set gatewaySecurityPolicy or gatewaySecurityPolicyRef, not
+                both
+              rule: '!(has(self.gatewaySecurityPolicy) && has(self.gatewaySecurityPolicyRef))'
+            - message: set network or networkRef, not both
+              rule: '!(has(self.network) && has(self.networkRef))'
+            - message: set subnetwork or subnetworkRef, not both
+              rule: '!(has(self.subnetwork) && has(self.subnetworkRef))'
           status:
             properties:
               conditions:
