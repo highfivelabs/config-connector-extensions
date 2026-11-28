@@ -19,7 +19,8 @@
 // Changed: status.externalRef is written; the object's metadata.labels are
 // the policy's labels (upstream leaves labels out; docs/design.md decision
 // 19), sent on create and update and compared; the model is returned to our
-// manager instead of registered with Config Connector's registry; our KRM
+// manager instead of registered with Config Connector's registry; a
+// network's and a cluster's reference fill the strings beside them; our KRM
 // types (stable, dns.gcp.hfl.dev/v1beta1, docs/design.md decision 13).
 
 package dns
@@ -100,6 +101,18 @@ func (m *responsePolicyModel) AdapterForObject(ctx context.Context, op *directba
 	// Always call common.NormalizeReferences to resolve references
 	if err := common.NormalizeReferences(ctx, reader, obj, nil); err != nil {
 		return nil, fmt.Errorf("normalizing references: %w", err)
+	}
+	// A network's and a cluster's reference fill the string beside it
+	// (ours: docs/design.md 2.4, "References").
+	for i := range obj.Spec.Networks {
+		if r := obj.Spec.Networks[i].NetworkUrlRef; r != nil {
+			obj.Spec.Networks[i].NetworkUrl = r.External
+		}
+	}
+	for i := range obj.Spec.GkeClusters {
+		if r := obj.Spec.GkeClusters[i].GkeClusterNameRef; r != nil {
+			obj.Spec.GkeClusters[i].GkeClusterName = r.External
+		}
 	}
 
 	idVal, err := obj.GetIdentity(ctx, reader)

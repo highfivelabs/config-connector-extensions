@@ -71,9 +71,45 @@ spec:
                         to. This should be specified in the format like 'projects/*
                         /locations/* /clusters/*'.
                       type: string
-                  required:
-                  - gkeClusterName
+                    gkeClusterNameRef:
+                      description: 'A reference to the ContainerCluster that fills
+                        gkeClusterName, in its place: external (its name), or the
+                        name (and namespace) of a ContainerCluster object. Set gkeClusterName
+                        or this, not both.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: 'The GKE cluster. Valid formats: `projects/{projectID}/locations/{location}/clusters/{clusterID}`
+                            `projects/{projectID}/zones/{zone}/clusters/{clusterID}`'
+                          type: string
+                        name:
+                          description: 'Name of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            */'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the project resource. More info:
+                            https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                            */'
+                          type: string
+                      type: object
                   type: object
+                  x-kubernetes-validations:
+                  - message: exactly one of gkeClusterName and gkeClusterNameRef is
+                      required
+                    rule: has(self.gkeClusterName) != has(self.gkeClusterNameRef)
                 type: array
               networks:
                 description: The list of network names specifying networks to which
@@ -84,9 +120,41 @@ spec:
                       description: The fully qualified URL of the VPC network to bind
                         to. This should be formatted like 'https://www.googleapis.com/compute/v1/projects/{project}/global/networks/{network}'.
                       type: string
-                  required:
-                  - networkUrl
+                    networkUrlRef:
+                      description: 'A reference to the ComputeNetwork that fills networkUrl,
+                        in its place: external (its name, projects/{project}/global/networks/{network},
+                        or its URL), or the name (and namespace) of a ComputeNetwork
+                        object. Set networkUrl or this, not both.'
+                      oneOf:
+                      - not:
+                          required:
+                          - external
+                        required:
+                        - name
+                      - not:
+                          anyOf:
+                          - required:
+                            - name
+                          - required:
+                            - namespace
+                        required:
+                        - external
+                      properties:
+                        external:
+                          description: A reference to an externally managed ComputeNetwork
+                            resource. Should be in the format "projects/{{projectID}}/global/networks/{{networkID}}".
+                          type: string
+                        name:
+                          description: The name of a ComputeNetwork resource.
+                          type: string
+                        namespace:
+                          description: The namespace of a ComputeNetwork resource.
+                          type: string
+                      type: object
                   type: object
+                  x-kubernetes-validations:
+                  - message: exactly one of networkUrl and networkUrlRef is required
+                    rule: has(self.networkUrl) != has(self.networkUrlRef)
                 type: array
               projectRef:
                 description: The project that this resource belongs to. Immutable.

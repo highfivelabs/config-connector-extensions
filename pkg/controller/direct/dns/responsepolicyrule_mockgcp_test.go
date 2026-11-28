@@ -67,7 +67,7 @@ func TestDNSResponsePolicyRule(t *testing.T) {
 		return cloud.ResponsePolicyRules.Get(mockenv.Project, policy, rule).Context(env.Ctx).Do()
 	}
 	t.Cleanup(func() {
-		for _, base := range []string{"intranet", "kept"} {
+		for _, base := range []string{"intranet", "kept", "by-ref"} {
 			rule := mockenv.Name(base)
 			if err := cloud.ResponsePolicyRules.Delete(mockenv.Project, policy, rule).Context(env.Ctx).Do(); err != nil && !direct.IsNotFound(err) {
 				t.Errorf("deleting rule %s: %v", rule, err)
@@ -221,5 +221,53 @@ func TestDNSResponsePolicyRule(t *testing.T) {
 		if _, err := getRule(mockenv.Name("kept")); err != nil {
 			t.Errorf("after abandon, reading the rule: %v, want it kept", err)
 		}
+	})
+
+	t.Run("a rule names its policy by reference", func(t *testing.T) {
+		// The policy as an object: it acquires the one the test made by its
+		// resourceID, and is abandoned at the end, so the API-made policy's
+		// cleanup still deletes it.
+		pol := &dnsv1beta1.DNSResponsePolicy{
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "rules-policy", Labels: mockenv.Labels(),
+				Annotations: map[string]string{"cnrm.cloud.google.com/deletion-policy": "abandon"}},
+			Spec: dnsv1beta1.DNSResponsePolicySpec{
+				ProjectRef:  refs.ProjectRef{External: "projects/" + mockenv.Project},
+				ResourceID:  mockenv.Ptr(policy),
+				Description: mockenv.Ptr("the landing zone's DNS firewall"),
+			},
+		}
+		if err := env.Kube.Create(env.Ctx, pol); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			if err := env.Kube.Delete(env.Ctx, pol); err == nil {
+				env.WaitGone(pol)
+			}
+		})
+		env.WaitReady(dnsv1beta1.DNSResponsePolicyGVK, namespace, "rules-policy")
+		r := newRule("by-ref", "docs.example.com.", "10.0.0.40")
+		r.Spec.ResponsePolicy = ""
+		r.Spec.ResponsePolicyRef = &dnsv1beta1.DNSResponsePolicyRef{Name: "rules-policy"}
+		if err := env.Kube.Create(env.Ctx, r); err != nil {
+			t.Fatal(err)
+		}
+		u := env.WaitReady(gvk, namespace, "by-ref")
+		want := policyPath + "/rules/" + mockenv.Name("by-ref")
+		if ref, _, _ := unstructured.NestedString(u.Object, "status", "externalRef"); ref != want {
+			t.Errorf("status.externalRef = %q, want %q", ref, want)
+		}
+		if _, err := getRule(mockenv.Name("by-ref")); err != nil {
+			t.Errorf("reading the rule: %v", err)
+		}
+		// Both the string and the reference: the CRD refuses it.
+		bad := newRule("both", "both.example.com.", "10.0.0.50")
+		bad.Spec.ResponsePolicyRef = &dnsv1beta1.DNSResponsePolicyRef{Name: "rules-policy"}
+		if err := env.Kube.Create(env.Ctx, bad); err == nil || !strings.Contains(err.Error(), "exactly one of responsePolicy and responsePolicyRef") {
+			t.Errorf("a rule with responsePolicy and responsePolicyRef: err = %v, want the CRD's refusal", err)
+		}
+		if err := env.Kube.Delete(env.Ctx, getObj(t, "by-ref")); err != nil {
+			t.Fatal(err)
+		}
+		env.WaitGone(&dnsv1beta1.DNSResponsePolicyRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "by-ref"}})
 	})
 }

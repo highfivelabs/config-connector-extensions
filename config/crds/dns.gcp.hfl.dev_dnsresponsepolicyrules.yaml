@@ -150,11 +150,48 @@ spec:
                 x-kubernetes-validations:
                 - message: responsePolicy is immutable
                   rule: self == oldSelf
+              responsePolicyRef:
+                description: 'Immutable. A reference to the DNSResponsePolicy that
+                  fills responsePolicy, in its place: external (its name, projects/{project}/responsePolicies/{responsePolicy}),
+                  or the name (and namespace) of a DNSResponsePolicy object. Set responsePolicy
+                  or this, not both.'
+                oneOf:
+                - not:
+                    required:
+                    - external
+                  required:
+                  - name
+                - not:
+                    anyOf:
+                    - required:
+                      - name
+                    - required:
+                      - namespace
+                  required:
+                  - external
+                properties:
+                  external:
+                    description: A reference to an externally managed DNSResponsePolicy
+                      resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/responsePolicies/{{responsePolicy}}"
+                      or "projects/{{projectID}}/responsePolicies/{{responsePolicy}}".
+                    type: string
+                  name:
+                    description: The name of a DNSResponsePolicy resource.
+                    type: string
+                  namespace:
+                    description: The namespace of a DNSResponsePolicy resource.
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: responsePolicyRef is immutable
+                  rule: self == oldSelf
             required:
             - dnsName
             - projectRef
-            - responsePolicy
             type: object
+            x-kubernetes-validations:
+            - message: exactly one of responsePolicy and responsePolicyRef is required
+              rule: has(self.responsePolicy) != has(self.responsePolicyRef)
           status:
             properties:
               conditions:

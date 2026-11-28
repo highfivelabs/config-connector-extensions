@@ -741,6 +741,12 @@ refs:
   references, and makes the objects in a kind's `refs/` first, so a
   fixture can name one by name on the fake and live
   (`CloudFunctions2Function`'s secret).
+- **Hand-written kinds** take the same fields, by hand: Config Connector's
+  typed reference (`ComputeNetworkRef`, `ContainerClusterRef`, or ours,
+  `DNSResponsePolicyRef`) beside the string, resolved by upstream's
+  `common.NormalizeReferences` or the identity, which copies the value
+  into the string (`DNSResponsePolicy`, `DNSResponsePolicyRule`). Their
+  rows have no guard; the coverage report lists what is left.
 - **Parts of the name.** A part of the name (a Dataplex zone's `lake`, a
   gateway security policy rule's `gatewaySecurityPolicy`) takes a
   reference too (`Kind.Refs[].NamePart`): it gives the target's ID, and

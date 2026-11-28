@@ -22,6 +22,7 @@ package dns_test
 // (DNSResponsePolicyRule) answer or block names before Cloud DNS does.
 
 import (
+	computerefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/refs"
 	"strings"
 	"testing"
 	"time"
@@ -144,11 +145,13 @@ func TestDNSResponsePolicy(t *testing.T) {
 		}
 	})
 
-	t.Run("a second network, a new description and a changed label are one update", func(t *testing.T) {
+	t.Run("a second network by reference, a new description and a changed label are one update", func(t *testing.T) {
 		before := writes("PUT", id)
 		o := getObj(t, "dns-firewall")
 		o.Spec.Description = mockenv.Ptr("the landing zone's DNS firewall, both networks")
-		o.Spec.Networks = append(o.Spec.Networks, dnsv1beta1.ResponsepolicyNetworks{NetworkUrl: networkURL(other)})
+		// The second network by reference (networkUrlRef), its external a
+		// short path: the controller sends the full URL.
+		o.Spec.Networks = append(o.Spec.Networks, dnsv1beta1.ResponsepolicyNetworks{NetworkUrlRef: &computerefs.ComputeNetworkRef{External: other}})
 		o.Labels["team"] = "network"
 		if err := env.Kube.Update(env.Ctx, o); err != nil {
 			t.Fatal(err)
@@ -158,7 +161,7 @@ func TestDNSResponsePolicy(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			return len(got.Networks) == 2 && got.Description == "the landing zone's DNS firewall, both networks" && got.Labels["team"] == "network"
+			return len(got.Networks) == 2 && got.Networks[1].NetworkUrl == networkURL(other) && got.Description == "the landing zone's DNS firewall, both networks" && got.Labels["team"] == "network"
 		})
 		env.WaitReady(gvk, namespace, "dns-firewall")
 		if n := writes("PUT", id) - before; n != 1 {

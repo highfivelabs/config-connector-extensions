@@ -16,6 +16,7 @@
 
 // Modified by High Five Labs for config-connector-extensions: copied from Config Connector
 // apis/dns/v1alpha1/dnsresponsepolicyrule_identity.go (UPSTREAM.md); the package is v1beta1.
+// Changed: the policy comes from spec.responsePolicyRef when it is set.
 
 package v1beta1
 
@@ -87,8 +88,17 @@ func getIdentityFromDNSResponsePolicyRuleSpec(ctx context.Context, reader client
 	}
 
 	responsePolicyStr := obj.Spec.ResponsePolicy
+	if r := obj.Spec.ResponsePolicyRef; r != nil {
+		if responsePolicyStr != "" {
+			return nil, fmt.Errorf("spec.responsePolicyRef: set responsePolicy or responsePolicyRef, not both")
+		}
+		if err := r.Normalize(ctx, reader, obj.GetNamespace()); err != nil {
+			return nil, err
+		}
+		responsePolicyStr = r.External
+	}
 	if responsePolicyStr == "" {
-		return nil, fmt.Errorf("spec.responsePolicy is required")
+		return nil, fmt.Errorf("spec.responsePolicy or spec.responsePolicyRef is required")
 	}
 
 	var responsePolicyID string

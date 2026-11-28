@@ -15,6 +15,8 @@ apiVersion: dns.gcp.hfl.dev/v1beta1
 Notes from before 2026-11-11 are in `docs/design.md` (section 6 and
 section 7, under the kind's name); new ones go here.
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): a network's `networkUrlRef` (Config Connector's `ComputeNetworkRef`) and a cluster's `gkeClusterNameRef` (`ContainerClusterRef`) sit beside the strings, as Upjet resolves them; one of each pair is required. Upstream's `common.NormalizeReferences` resolves them and the controller copies the value into the string, which it then sends as a full URL as before. `TestDNSResponsePolicy` adds its second network by reference.
+
 ## Live runs
 
 Runs before 2026-11-11 are in the ledger in `docs/live-runs.md`; new rows

@@ -36,6 +36,8 @@ DNS role (`roles/dns.admin`), so the test skips live unless
 `E2E_DNS_ADMIN=true`. The sweeper deletes a policy's rules before the
 policy.
 
+References (2026-11-28, `docs/design.md` 2.4, "References"): `responsePolicyRef` (our `DNSResponsePolicyRef`) sits beside `responsePolicy`, as Upjet resolves it; one of the two is required, both immutable. `TestDNSResponsePolicyRule` makes a rule whose policy it names by an object's name, and checks the CRD refuses both at once.
+
 ## Live runs
 
 One row per run.

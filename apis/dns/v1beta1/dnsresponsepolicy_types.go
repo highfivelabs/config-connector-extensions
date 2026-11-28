@@ -20,12 +20,17 @@
 // are immutable by CEL rules (decision 20; upstream says so only in the
 // description); status.externalRef, which upstream's status lacks; the
 // object's metadata.labels are the policy's labels (the controller; upstream
-// leaves them out, docs/design.md decision 19); group, labels and short names
+// leaves them out, docs/design.md decision 19); a network's networkUrlRef and
+// a cluster's gkeClusterNameRef beside the strings, which Crossplane's Upjet
+// provider resolves too (docs/design.md 2.4, "References"; the strings
+// became optional, one of each pair required); group, labels and short names
 // are ours.
 
 package v1beta1
 
 import (
+	computerefs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/compute/refs"
+	containerv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/container/v1beta1"
 	refs "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,19 +39,31 @@ import (
 var DNSResponsePolicyGVK = GroupVersion.WithKind("DNSResponsePolicy")
 
 // +openapi:ResponsePolicyGKECluster
+// +kubebuilder:validation:XValidation:rule="has(self.gkeClusterName) != has(self.gkeClusterNameRef)",message="exactly one of gkeClusterName and gkeClusterNameRef is required"
 type ResponsepolicyGkeClusters struct {
 	/* The resource name of the cluster to bind this ManagedZone to.
 	This should be specified in the format like
 	'projects/* /locations/* /clusters/*'. */
-	GkeClusterName string `json:"gkeClusterName"`
+	// +optional
+	GkeClusterName string `json:"gkeClusterName,omitempty"`
+
+	/* A reference to the ContainerCluster that fills gkeClusterName, in its place: external (its name), or the name (and namespace) of a ContainerCluster object. Set gkeClusterName or this, not both. */
+	// +optional
+	GkeClusterNameRef *containerv1beta1.ContainerClusterRef `json:"gkeClusterNameRef,omitempty"`
 }
 
 // +openapi:ResponsePolicyNetwork
+// +kubebuilder:validation:XValidation:rule="has(self.networkUrl) != has(self.networkUrlRef)",message="exactly one of networkUrl and networkUrlRef is required"
 type ResponsepolicyNetworks struct {
 	/* The fully qualified URL of the VPC network to bind to.
 	This should be formatted like
 	'https://www.googleapis.com/compute/v1/projects/{project}/global/networks/{network}'. */
-	NetworkUrl string `json:"networkUrl"`
+	// +optional
+	NetworkUrl string `json:"networkUrl,omitempty"`
+
+	/* A reference to the ComputeNetwork that fills networkUrl, in its place: external (its name, projects/{project}/global/networks/{network}, or its URL), or the name (and namespace) of a ComputeNetwork object. Set networkUrl or this, not both. */
+	// +optional
+	NetworkUrlRef *computerefs.ComputeNetworkRef `json:"networkUrlRef,omitempty"`
 }
 
 // +openapi:ResponsePolicy
