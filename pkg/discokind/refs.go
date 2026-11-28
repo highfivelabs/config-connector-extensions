@@ -64,6 +64,11 @@ type Ref struct {
 	// List: the field is a list of strings, and its reference a list
 	// (<singular field>Refs).
 	List bool
+	// NamePart: the field is a part of the name (a Dataplex zone's lake,
+	// Kind.PathParams). Its reference gives the ID, the last part of the
+	// target's name, and the target's name must be where this resource's
+	// begins (NameRefs).
+	NamePart bool
 	// Target is the kind the reference names (ComputeNetwork): this
 	// repository's kind of that name first, then Config Connector's.
 	Target string
@@ -217,6 +222,9 @@ func sourcesOf(target string) []refSource {
 // object's) unless the reference names another.
 func (k *Kind) ResolveRefs(ctx context.Context, reader client.Reader, namespace string, body map[string]any) error {
 	for _, r := range k.Refs {
+		if r.NamePart {
+			continue
+		}
 		err := eachRefHolder(body, strings.Split(r.Path, "."), "spec", func(m map[string]any, leaf, at string) error {
 			field := RefFieldName(leaf, r.List)
 			raw, ok := m[field]
@@ -421,4 +429,43 @@ func RefFormats() []string {
 	out := []string{"", FormatID, FormatServiceAccountName}
 	sort.Strings(out)
 	return out
+}
+
+// NameRefs resolves the references that give parts of the name
+// (Ref.NamePart) into params, and returns the names they resolve to: the
+// resource's name must start with each (CheckNameRefs).
+func (k *Kind) NameRefs(ctx context.Context, reader client.Reader, namespace string, spec map[string]any, params map[string]string) ([]string, error) {
+	var names []string
+	for _, r := range k.Refs {
+		if !r.NamePart {
+			continue
+		}
+		field := RefFieldName(r.Path, false)
+		raw, ok := spec[field]
+		if !ok || raw == nil {
+			continue
+		}
+		if v, _ := spec[r.Path].(string); v != "" {
+			return nil, fmt.Errorf("spec.%s: set %s or %s, not both", field, r.Path, field)
+		}
+		name, err := resolveRef(ctx, reader, namespace, &r, raw, "spec."+field)
+		if err != nil {
+			return nil, err
+		}
+		params[r.Path] = name[strings.LastIndex(name, "/")+1:]
+		names = append(names, name)
+	}
+	return names, nil
+}
+
+// CheckNameRefs: the resource's name starts with each name a name part's
+// reference resolved to, so the referenced resource is in the same
+// project and location as the name says.
+func (k *Kind) CheckNameRefs(name string, refNames []string) error {
+	for _, n := range refNames {
+		if !strings.HasPrefix(name, n+"/") {
+			return fmt.Errorf("%s %s: a reference names %s, which is not where the name starts (the project or location differs)", k.GVK.Kind, name, n)
+		}
+	}
+	return nil
 }

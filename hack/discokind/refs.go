@@ -115,6 +115,9 @@ type builtRef struct {
 	target string
 	format string
 	upjet  string
+	// namePart: the field is a part of the name (a zone's lake), whose
+	// reference gives the ID and must agree with the rest of the name.
+	namePart bool
 }
 
 // buildRefs checks a kind's refs against its schema and Upjet, and works
@@ -136,7 +139,21 @@ func buildRefs(c *Config, d *Discovery, s *Schema, nameParts []string, u *upjetF
 			return nil, fmt.Errorf("refs: %s: format %q is not one of \"\", id, serviceAccountName", p, rc.Format)
 		}
 		if contains(nameParts, p) {
-			return nil, fmt.Errorf("refs: %s is a part of the name, which stays an ID", p)
+			if rc.Format != "" {
+				return nil, fmt.Errorf("refs: %s is a part of the name, whose reference takes no format (its ID is the name's)", p)
+			}
+			b := builtRef{path: p, target: rc.Target, namePart: true}
+			for _, ur := range ups {
+				if normRefPath(ur.field) == normRefPath(p) {
+					if !contains(ur.served, rc.Target) {
+						return nil, fmt.Errorf("refs: %s names %s, but Upjet resolves %s from %s, which %s serves here (%s)",
+							p, rc.Target, ur.field, ur.target, orNothing(ur.served), ur.at)
+					}
+					b.upjet = ur.target
+				}
+			}
+			out = append(out, b)
+			continue
 		}
 		if c.Skip[p] != "" || contains(c.Secrets, p) || contains(c.InputOnly, p) {
 			return nil, fmt.Errorf("refs: %s is skipped, a secret or input-only", p)
@@ -251,13 +268,18 @@ func refComment(r builtRef, field string) string {
 	case r.target == "IAMServiceAccount":
 		what = "the service account's email"
 	}
-	an := "a"
-	if strings.ContainsAny(r.target[:1], "AEIOU") {
-		an = "an"
-	}
+	an := article(r.target)
 	one := "A reference to the " + r.target + " that fills " + field
 	if r.list {
 		one = "References to the " + r.target + "s that fill " + field
 	}
 	return comment(one + ", in its place: external (" + what + "), or the name (and namespace) of " + an + " " + r.target + " object, this repository's kind of that name first, then Config Connector's. Set " + field + " or this, not both.")
+}
+
+// article is "a" or "an" before a kind's name.
+func article(kind string) string {
+	if kind != "" && strings.ContainsAny(kind[:1], "AEIOU") {
+		return "an"
+	}
+	return "a"
 }

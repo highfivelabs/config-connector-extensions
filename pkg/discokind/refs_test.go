@@ -225,3 +225,55 @@ func TestRefTargetsResolve(t *testing.T) {
 		}
 	}
 }
+
+// TestNameRefs: a reference that gives a part of the name (a zone's lake)
+// resolves to the target's ID, and the name must start with the target's
+// name: a lake in another location is refused.
+func TestNameRefs(t *testing.T) {
+	lake := &Kind{GVK: schema.GroupVersionKind{Group: "dataplex.gcp.hfl.dev", Version: "v1beta1", Kind: "TestLake"},
+		Name: "{parent}/locations/{location}/lakes/{id}", Parents: []string{"project"}}
+	Register(lake)
+	t.Cleanup(func() { registered = registered[:len(registered)-1] })
+	withOurKinds(t)
+	zone := &Kind{GVK: schema.GroupVersionKind{Kind: "TestZone"}, Name: "{parent}/locations/{location}/lakes/{lake}/zones/{id}",
+		Parents: []string{"project"}, Refs: []Ref{{Path: "lake", NamePart: true, Target: "TestLake"}}}
+	c := refClient(t)
+	for _, tc := range []struct {
+		name     string
+		spec     map[string]any
+		wantLake string
+		wantErr  string
+	}{
+		{"by external", map[string]any{"location": "us-central1", "lakeRef": map[string]any{"external": "projects/p/locations/us-central1/lakes/l"}}, "l", ""},
+		{"in another location", map[string]any{"location": "europe-west1", "lakeRef": map[string]any{"external": "projects/p/locations/us-central1/lakes/l"}}, "l", "not where the name starts"},
+		{"not a lake's name", map[string]any{"location": "us-central1", "lakeRef": map[string]any{"external": "projects/p/lakes/l"}}, "", "not a TestLake name"},
+		{"both", map[string]any{"location": "us-central1", "lake": "l", "lakeRef": map[string]any{"external": "projects/p/locations/us-central1/lakes/l"}}, "", "not both"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			params := map[string]string{"location": tc.spec["location"].(string)}
+			names, err := zone.NameRefs(context.Background(), c, "ns", tc.spec, params)
+			if err == nil {
+				var name string
+				if name, err = zone.Render("projects/p", "z", params); err == nil {
+					err = zone.CheckNameRefs(name, names)
+				}
+			}
+			if tc.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("err = %v, want %q", err, tc.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if params["lake"] != tc.wantLake {
+				t.Errorf("lake = %q, want %q", params["lake"], tc.wantLake)
+			}
+		})
+	}
+	// The body leaves the reference out, as it does the name's parts.
+	if b := zone.Body(map[string]any{"lake": "l", "lakeRef": map[string]any{}, "x": "y"}); len(b) != 1 {
+		t.Errorf("Body = %v, want only x", b)
+	}
+}

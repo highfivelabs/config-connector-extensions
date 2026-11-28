@@ -169,3 +169,40 @@ func sharedRefsErr(k *built) error {
 	g.structDef(k.c.Kind+"Spec", k.schema, true, "")
 	return g.checkRefs()
 }
+
+// TestRefsNamePart: a part of the name takes a reference beside it,
+// exactly one of the two, both immutable, and the registry marks it.
+func TestRefsNamePart(t *testing.T) {
+	d := refDiscovery()
+	d.Resources = map[string]*DRes{"projects": {Resources: map[string]*DRes{"pools": {Resources: map[string]*DRes{"things": {Methods: map[string]*Method{
+		"create": {HTTPMethod: "POST", Parameters: map[string]*Param{"thingId": {Location: "query", Type: "string"}}, Request: &Schema{Ref: "Thing"}},
+		"get":    {HTTPMethod: "GET", Path: "v1/{+name}", FlatPath: "v1/projects/{projectsId}/pools/{poolsId}/things/{thingsId}"},
+		"patch":  {HTTPMethod: "PATCH"},
+		"delete": {HTTPMethod: "DELETE"},
+	}}}}}}}
+	c := refConfig()
+	c.Resource = "projects.pools.things"
+	c.Refs = map[string]RefConfig{"pool": {Target: "XPool"}}
+	k, err := build(c, d, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	types := string(k.typesFile())
+	for _, want := range []string{
+		"Pool string `json:\"pool,omitempty\"`",
+		"PoolRef *commonv1alpha1.ResourceRef `json:\"poolRef,omitempty\"`",
+		`rule="has(self.pool) != has(self.poolRef)",message="exactly one of pool and poolRef is required"`,
+		`rule="self == oldSelf",message="poolRef is immutable"`,
+	} {
+		if !strings.Contains(types, want) {
+			t.Errorf("the types lack %s", want)
+		}
+	}
+	if reg := string(registryFile([]*built{k})); !strings.Contains(reg, `{Path: "pool", NamePart: true, Target: "XPool"},`) {
+		t.Error("the registry does not mark the name part")
+	}
+	c.Refs = map[string]RefConfig{"pool": {Target: "XPool", Format: "id"}}
+	if _, err := build(c, d, nil); err == nil || !strings.Contains(err.Error(), "takes no format") {
+		t.Errorf("a name part with a format: err = %v", err)
+	}
+}

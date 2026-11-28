@@ -401,6 +401,9 @@ func (k *built) typesFile() []byte {
 		skipped: map[string]bool{}, refPaths: map[string][]string{}, refs: map[string]builtRef{}, refApplied: map[string]bool{}}
 	for _, r := range k.refs {
 		spec.refs[r.path] = r
+		if r.namePart {
+			spec.refApplied[r.path] = true
+		}
 	}
 	specBody := spec.structDef(c.Kind+"Spec", k.schema, true, "")
 	if err := spec.checkSkips(); err != nil {
@@ -410,6 +413,9 @@ func (k *built) typesFile() []byte {
 		fatalf("%s: refs: %v", c.Kind, err)
 	}
 	specRules, specBody, _ := strings.Cut(specBody, "type "+c.Kind+"Spec struct {\n")
+	if len(k.refs) > 0 {
+		spec.usesRef = true
+	}
 	for _, p := range c.Secrets {
 		if !spec.secrets[p] {
 			fatalf("%s: secrets: %s is not a field of the spec (a struct shared with another path, or under a list, is not supported)", c.Kind, p)
@@ -463,6 +469,12 @@ func (k *built) typesFile() []byte {
 			strings.Join(has, ", "), strings.Join(names, ", "))
 	}
 	head.WriteString(specRules)
+	for _, p := range k.pathParams {
+		if _, isRef := spec.refs[p]; isRef {
+			rn := refFieldName(p, false)
+			fmt.Fprintf(&head, "// +kubebuilder:validation:XValidation:rule=\"has(self.%s) != has(self.%s)\",message=\"exactly one of %s and %s is required\"\n", p, rn, p, rn)
+		}
+	}
 	fmt.Fprintf(&head, "type %sSpec struct {\n", c.Kind)
 	for _, p := range c.Parents {
 		typ := map[string]string{
@@ -482,9 +494,22 @@ func (k *built) typesFile() []byte {
 	}
 	for _, p := range k.pathParams {
 		fmt.Fprintf(&head, "// Immutable. The %s, part of the resource's name (%s).\n", p, k.name)
-		head.WriteString("// +kubebuilder:validation:Required\n")
+		ref, isRef := spec.refs[p]
+		if !isRef {
+			head.WriteString("// +kubebuilder:validation:Required\n")
+			fmt.Fprintf(&head, "// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"%s is immutable\"\n", p)
+			fmt.Fprintf(&head, "%s string `json:\"%s\"`\n\n", goName(p), p)
+			continue
+		}
+		// A reference that gives the ID (refs, namePart).
+		rn := refFieldName(p, false)
+		head.WriteString("// +optional\n")
 		fmt.Fprintf(&head, "// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"%s is immutable\"\n", p)
-		fmt.Fprintf(&head, "%s string `json:\"%s\"`\n\n", goName(p), p)
+		fmt.Fprintf(&head, "%s string `json:\"%s,omitempty\"`\n\n", goName(p), p)
+		head.WriteString(comment("Immutable. A reference to the " + ref.target + " whose ID is " + p + ", in its place: external (its full name), or the name (and namespace) of " + article(ref.target) + " " + ref.target + " object, this repository's kind of that name first, then Config Connector's. Its name must be the start of this resource's: the same project and location. Set " + p + " or this, not both."))
+		head.WriteString("// +optional\n")
+		fmt.Fprintf(&head, "// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"%s is immutable\"\n", rn)
+		fmt.Fprintf(&head, "%sRef *commonv1alpha1.ResourceRef `json:\"%s,omitempty\"`\n\n", goName(p), rn)
 	}
 	head.WriteString("// Immutable. The resource's ID, the last part of its name. When unset,\n// metadata.name is used.\n// +optional\n")
 	head.WriteString("// +kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"resourceID is immutable\"\n")
@@ -698,6 +723,9 @@ func registryFile(kinds []*built) []byte {
 				fmt.Fprintf(&b, "{Path: %q, ", r.path)
 				if r.list {
 					b.WriteString("List: true, ")
+				}
+				if r.namePart {
+					b.WriteString("NamePart: true, ")
 				}
 				fmt.Fprintf(&b, "Target: %q", r.target)
 				if r.format != "" {

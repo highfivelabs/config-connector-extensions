@@ -275,10 +275,9 @@ in front of mockgcp, and `pkg/discokind/kindtest` is every such kind's
 end-to-end test, on the fake or live. Nothing is copied from upstream,
 since upstream has nothing for these kinds; when upstream adds a kind for
 one, it retires as any other (section 3.4). Why, and what it reaches:
-`docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: the
-other parts of a name are IDs, not references (a field the API fills
-from another resource takes a reference beside it: "References" below), no
-secrets in status: a secret the API returns (`secretOutputs` in
+`docs/throughput.md`. How it is tested: `docs/testing.md`. Limits: a
+field the API fills from another resource, a part of the name included,
+takes a reference beside it ("References" below), no secrets in status: a secret the API returns (`secretOutputs` in
 `kinds.yaml`) goes to a Kubernetes Secret the object owns, named by
 `spec.secretOutput.name`, never to status (decision 38, 2026-11-23). A string field the API takes as a secret can take
 Config Connector's `secret.Legacy` instead (`secrets` in `kinds.yaml`:
@@ -742,11 +741,17 @@ refs:
   references, and makes the objects in a kind's `refs/` first, so a
   fixture can name one by name on the fake and live
   (`CloudFunctions2Function`'s secret).
-- **Not covered.** Parts of the name stay IDs (a Dataplex zone's `lake`,
-  a gateway security policy rule's policy): a reference there would have
-  to agree with the object's own location and project. A field whose
-  target depends on another field (a Cloud Functions event filter's
-  `value`, a bucket only for the attribute `bucket`) is waived.
+- **Parts of the name.** A part of the name (a Dataplex zone's `lake`, a
+  gateway security policy rule's `gatewaySecurityPolicy`) takes a
+  reference too (`Kind.Refs[].NamePart`): it gives the target's ID, and
+  the controller refuses one whose name is not where this resource's name
+  begins (another project or location), before any call. The field and its
+  reference are both immutable and exactly one is required.
+- **Not covered.** A field whose target depends on another field (a Cloud
+  Functions event filter's `value`, a bucket only for the attribute
+  `bucket`) is waived. Switching an immutable field between its string and
+  its reference is allowed by the CRD (a transition rule sees only one of
+  the two); a different value is then the API's refusal, not the CRD's.
 
 What the first live runs added (2026-11-12, run `cce-11120814-5d2a`):
 a string field whose Discovery description says "Cannot exceed N
