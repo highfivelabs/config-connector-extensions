@@ -611,6 +611,9 @@
   parents: [project]
   terraform: google_gke_backup_backup_plan
   note: "What Backup for GKE backs up from a cluster, and when."
+  refs:
+    backupConfig.encryptionKey.gcpKmsEncryptionKey: {target: KMSCryptoKey}
+    cluster: {target: ContainerCluster}
 
 - kind: GKEBackupRestorePlan
   group: gkebackup.gcp.hfl.dev

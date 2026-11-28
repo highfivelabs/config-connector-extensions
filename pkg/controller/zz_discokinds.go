@@ -649,6 +649,10 @@ var discoKinds = []*discokind.Kind{
 		CreateLRO: true, UpdateLRO: true, DeleteLRO: true,
 		Updatable: true,
 		Output:    []string{"backupChannel", "createTime", "etag", "lastSuccessfulBackupTime", "name", "protectedNamespaceCount", "protectedPodCount", "rpoRiskLevel", "rpoRiskReason", "state", "stateReason", "uid", "updateTime"},
+		Refs: []discokind.Ref{
+			{Path: "backupConfig.encryptionKey.gcpKmsEncryptionKey", Target: "KMSCryptoKey", Upjet: "google_kms_crypto_key"},
+			{Path: "cluster", Target: "ContainerCluster", Upjet: "google_container_cluster"},
+		},
 	},
 	{
 		GVK:       gkebackupv1beta1.GKEBackupRestorePlanGVK,

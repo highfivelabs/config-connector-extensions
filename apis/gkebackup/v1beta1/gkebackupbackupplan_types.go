@@ -20,11 +20,13 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var GKEBackupBackupPlanGVK = GroupVersion.WithKind("GKEBackupBackupPlan")
 
+// +kubebuilder:validation:XValidation:rule="has(self.cluster) != has(self.clusterRef)",message="exactly one of cluster and clusterRef is required"
 type GKEBackupBackupPlanSpec struct {
 	// Immutable. The project the resource belongs to.
 	// +kubebuilder:validation:Required
@@ -54,9 +56,17 @@ type GKEBackupBackupPlanSpec struct {
 	// Required. Immutable. The source cluster from which Backups will be created
 	// via this BackupPlan. Valid formats: - `projects/*/locations/*/clusters/*` -
 	// `projects/*/zones/*/clusters/*`
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="cluster is immutable"
 	Cluster *string `json:"cluster,omitempty"`
+
+	// A reference to the ContainerCluster that fills cluster, in its place:
+	// external (the value cluster takes), or the name (and namespace) of a
+	// ContainerCluster object, this repository's kind of that name first, then
+	// Config Connector's. Set cluster or this, not both.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="clusterRef is immutable"
+	ClusterRef *commonv1alpha1.ResourceRef `json:"clusterRef,omitempty"`
 
 	// Optional. This flag indicates whether this BackupPlan has been deactivated.
 	// Setting this field to True locks the BackupPlan such that no further
@@ -80,11 +90,19 @@ type GKEBackupBackupPlanSpec struct {
 	RetentionPolicy *GKEBackupBackupPlanRetentionPolicy `json:"retentionPolicy,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!(has(self.gcpKmsEncryptionKey) && has(self.gcpKmsEncryptionKeyRef))",message="set gcpKmsEncryptionKey or gcpKmsEncryptionKeyRef, not both"
 type GKEBackupBackupPlanEncryptionKey struct {
 	// Optional. Google Cloud KMS encryption key. Format:
 	// `projects/*/locations/*/keyRings/*/cryptoKeys/*`
 	// +optional
 	GcpKmsEncryptionKey *string `json:"gcpKmsEncryptionKey,omitempty"`
+
+	// A reference to the KMSCryptoKey that fills gcpKmsEncryptionKey, in its
+	// place: external (the value gcpKmsEncryptionKey takes), or the name (and
+	// namespace) of a KMSCryptoKey object, this repository's kind of that name
+	// first, then Config Connector's. Set gcpKmsEncryptionKey or this, not both.
+	// +optional
+	GcpKmsEncryptionKeyRef *commonv1alpha1.ResourceRef `json:"gcpKmsEncryptionKeyRef,omitempty"`
 }
 
 type GKEBackupBackupPlanNamespacedName struct {

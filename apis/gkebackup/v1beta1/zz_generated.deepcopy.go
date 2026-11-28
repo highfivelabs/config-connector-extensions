@@ -23,6 +23,7 @@ package v1beta1
 import (
 	refsv1beta1 "github.com/GoogleCloudPlatform/k8s-config-connector/apis/refs/v1beta1"
 	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/apis/k8s/v1alpha1"
+	commonv1alpha1 "github.com/highfivelabs/config-connector-extensions/apis/common/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -340,6 +341,11 @@ func (in *GKEBackupBackupPlanEncryptionKey) DeepCopyInto(out *GKEBackupBackupPla
 	if in.GcpKmsEncryptionKey != nil {
 		in, out := &in.GcpKmsEncryptionKey, &out.GcpKmsEncryptionKey
 		*out = new(string)
+		**out = **in
+	}
+	if in.GcpKmsEncryptionKeyRef != nil {
+		in, out := &in.GcpKmsEncryptionKeyRef, &out.GcpKmsEncryptionKeyRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 }
@@ -728,6 +734,11 @@ func (in *GKEBackupBackupPlanSpec) DeepCopyInto(out *GKEBackupBackupPlanSpec) {
 	if in.Cluster != nil {
 		in, out := &in.Cluster, &out.Cluster
 		*out = new(string)
+		**out = **in
+	}
+	if in.ClusterRef != nil {
+		in, out := &in.ClusterRef, &out.ClusterRef
+		*out = new(commonv1alpha1.ResourceRef)
 		**out = **in
 	}
 	if in.Deactivated != nil {
