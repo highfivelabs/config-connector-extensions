@@ -378,6 +378,9 @@ var discoKinds = []*discokind.Kind{
 		Updatable: true,
 		Output:    []string{"creationTimestamp", "fingerprint", "gatewayAddress", "id", "ipv6CidrRange", "ipv6GceEndpoint", "kind", "selfLink", "state", "systemReservedExternalIpv6Ranges", "systemReservedInternalIpv6Ranges", "utilizationDetails"},
 		InputOnly: []string{"params.resourceManagerTags"},
+		Refs: []discokind.Ref{
+			{Path: "network", Target: "ComputeNetwork", Upjet: "google_compute_network"},
+		},
 	},
 	{
 		GVK:         computev1alpha1.ComputeRegionSecurityPolicyGVK,

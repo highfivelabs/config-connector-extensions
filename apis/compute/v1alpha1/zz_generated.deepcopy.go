@@ -6880,6 +6880,11 @@ func (in *ComputeSubnetworkSpec) DeepCopyInto(out *ComputeSubnetworkSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.NetworkRef != nil {
+		in, out := &in.NetworkRef, &out.NetworkRef
+		*out = new(commonv1alpha1.ResourceRef)
+		**out = **in
+	}
 	if in.Params != nil {
 		in, out := &in.Params, &out.Params
 		*out = new(ComputeSubnetworkSubnetworkParams)

@@ -320,6 +320,8 @@
   inputOnly: [params.resourceManagerTags]
   skip: {enableFlowLogs: "deprecated by the API in favour of logConfig.enable"}
   note: "A VPC subnetwork, with what the API takes only at insert: a BYOIP IPv6 prefix (ipCollection), the IPv6 prefixes, subnet mask resolution and resource manager tags."
+  refs:
+    network: {target: ComputeNetwork}
 
 # Foundation item 27 (2026-11-23): a regional Cloud Armor security policy,
 # which Config Connector has no kind for (its ComputeSecurityPolicy is
